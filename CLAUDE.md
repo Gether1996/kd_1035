@@ -51,7 +51,8 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Sync mení **len návody s `auto_update=True`** a ukladá len skutočné zmeny (dátum „Aktualizované“ = reálna zmena). Ručne písané návody ani návod s rovnakým slugom, ktorý nie je auto, nikdy neprepíše. Auto návod vypadnutý z dát sa skryje, nezmaže.
 - Ručná úprava nadpisu/obsahu auto návodu v admine vypne `auto_update` (inak by ho ďalšia aktualizácia prepísala). Zapnúť späť = zaškrtnúť políčko.
 - Každý modul má `VERIFIED = 'RRRR-MM'` → v návodoch „Stav k októbru 2026“. Texty píšeme vlastnými slovami (SK aj CZ), fakty len z datovaných zdrojov uvedených pod návodom. LootBar blog je nespoľahlivý (vymýšľa predmety), rokboom.com neexistuje.
-- **Mesačná aktualizácia:** workflow `.claude/workflows/kd-meta-update.js` (research agent na každý modul → kd-builder upraví moduly a zvýši `VERIFIED` → kd-critic overí každé tvrdenie oproti zdroju → push). Spúšťa ho naplánovaná úloha Claude desktop appky `kd1035-meta-update` (1. deň v mesiaci 18:00, beží len keď je appka otvorená, inak pri ďalšom spustení). Ručne: „spusti kd-meta-update“.
+- **Mesačná aktualizácia:** workflow `.claude/workflows/kd-meta-update.js` (research agent na každý modul → kd-builder upraví moduly a zvýši `VERIFIED` → kd-critic overí každé tvrdenie oproti zdroju → push). Spúšťa ho naplánovaná úloha Claude desktop appky `kd1035-meta-update` (7. deň v mesiaci 18:00, prvý beh 7. 11. 2026; beží len keď je appka otvorená, inak pri ďalšom spustení) s args `{date: 'RRRR-MM-DD'}`. Ručne: „spusti kd-meta-update“.
+- Pätička webu ukazuje „Informácie aktualizované <dátum>“ z `/api/status/` = neskorší z `LAST_UPDATE` (`guides/meta/__init__.py`, mesačná aktualizácia ho posunie aj bez zmien) a poslednej zmeny zverejneného návodu. Načítava sa len v prehliadači, pri chybe API sa riadok skryje.
 - Nový obsah generovaný Claudom patrí do `guides/meta`, nie do migrácií ani len do DB.
 
 ## Notifikácie

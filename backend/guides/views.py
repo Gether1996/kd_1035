@@ -1,9 +1,15 @@
+from datetime import date
 from xml.sax.saxutils import escape
 
 from django.conf import settings
+from django.db.models import Max
 from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from . import meta
 from .models import Guide
 from .serializers import GuideDetailSerializer, GuideListSerializer
 
@@ -20,6 +26,16 @@ class GuideDetail(RetrieveAPIView):
     serializer_class = GuideDetailSerializer
     queryset = Guide.objects.filter(is_published=True)
     lookup_field = 'slug'
+
+
+class SiteStatus(APIView):
+    """Footer "information updated on": the later of the monthly meta check and the last change of a guide."""
+
+    def get(self, request):
+        verified = date.fromisoformat(meta.LAST_UPDATE)
+        changed = Guide.objects.filter(is_published=True).aggregate(last=Max('updated_at'))['last']
+        updated = max(verified, timezone.localdate(changed)) if changed else verified
+        return Response({'updated': updated.isoformat(), 'meta_verified': verified.isoformat()})
 
 
 def sitemap(request):

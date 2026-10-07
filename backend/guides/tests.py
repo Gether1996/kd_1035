@@ -1,10 +1,11 @@
 import tempfile
+from datetime import UTC, datetime
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
-from .meta import MODULES
+from .meta import LAST_UPDATE, MODULES
 from .meta.render import render, verified_note
 from .meta.sync import rendered_guides, sync_guides
 from .models import Guide
@@ -119,6 +120,19 @@ class AdminAutoUpdateTests(TestCase):
         Guide.objects.filter(pk=self.guide.pk).update(auto_update=False)
         self.save(html_sk='<p>c</p>')  # ticking the box in the same save keeps it on
         self.assertTrue(self.guide.auto_update)
+
+
+class SiteStatusTests(TestCase):
+    def test_reports_the_meta_check_or_a_newer_guide_change(self):
+        Guide.objects.all().delete()
+        self.assertEqual(self.client.get('/api/status/').json(), {'updated': LAST_UPDATE, 'meta_verified': LAST_UPDATE})
+
+        guide = Guide.objects.create(category='vybava', slug='novy', title_sk='Nový', html_sk='<p>x</p>')
+        Guide.objects.filter(pk=guide.pk).update(updated_at=datetime(2030, 1, 2, 12, tzinfo=UTC))
+        self.assertEqual(self.client.get('/api/status/').json()['updated'], '2030-01-02')
+
+        Guide.objects.filter(pk=guide.pk).update(is_published=False)  # hidden guides do not count
+        self.assertEqual(self.client.get('/api/status/').json()['updated'], LAST_UPDATE)
 
 
 class GuideApiTests(TestCase):

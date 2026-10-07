@@ -133,5 +133,6 @@ export const cs: Dict = {
   footer: {
     fanSite: 'Neoficiální fanouškovská stránka. Rise of Kingdoms je ochranná známka Lilith Games.',
     madeBy: 'Vytvořil',
+    updated: 'Informace aktualizovány',
   },
 };

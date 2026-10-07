@@ -1,7 +1,7 @@
 export const meta = {
   name: 'kd-meta-update',
   description: 'Monthly KD 1035 meta update: research commanders, equipment and events, update backend/guides/meta, fact-check every change, push',
-  whenToUse: 'Once a month (scheduled task) or on demand. args: {month: "YYYY-MM" (required – the current month)}',
+  whenToUse: 'Once a month (scheduled task) or on demand. args: {date: "YYYY-MM-DD" (required – today)}',
   phases: [
     { title: 'Research', detail: 'one researcher per meta module (commanders, equipment, events)' },
     { title: 'Update', detail: 'kd-builder edits backend/guides/meta and bumps VERIFIED' },
@@ -9,8 +9,9 @@ export const meta = {
   ],
 }
 
-const MONTH = args && args.month
-if (!MONTH || !/^\d{4}-\d{2}$/.test(MONTH)) return { error: 'pass args {month: "YYYY-MM"} with the current month' }
+const DATE = args && args.date
+if (!DATE || !/^\d{4}-\d{2}-\d{2}$/.test(DATE)) return { error: 'pass args {date: "YYYY-MM-DD"} with today' }
+const MONTH = DATE.slice(0, 7)
 const TRAILER = 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
 
 const MODULES = [
@@ -112,6 +113,7 @@ Rules:
 - Write every changed or new text yourself in Slovak AND Czech (correct diacritics, short, no ballast), keep the existing data structure and block types (see backend/guides/meta/render.py), add/replace sources with their dates.
 - Apply only changes with solid evidence; list anything you skip in "skipped" with the reason.
 - Set VERIFIED = '${MONTH}' in ${verifiedModules.map(k => `backend/guides/meta/${k}.py`).join(', ')} (checked this month, even without changes). Do not bump modules whose research failed.
+- Set LAST_UPDATE = '${DATE}' in backend/guides/meta/__init__.py (the site footer shows it as "Informácie aktualizované").
 - New guides: unique slug, right CATEGORY module, first paragraph ≤ 160 chars (it is the excerpt), a ('note',) block, sources.
 - Verify: \`docker compose -f docker-compose.dev.yml run --rm backend python manage.py test\`, then \`sh .githooks/dbsync.sh sync\` (or \`docker compose -f docker-compose.dev.yml exec backend python manage.py sync_meta_guides\`) and open a changed guide on http://localhost:4200 to check it renders.
 - Commit locally ("Update RoK meta guides ${MONTH}", message ending with "${TRAILER}"); do not push.
@@ -130,7 +132,7 @@ for (let round = 1; round <= 2; round++) {
   review = await run(
     'kd-critic',
     `Fact-check the monthly meta update of the KD 1035 guides: commits ${base}..HEAD (backend/guides/meta/*).
-For EVERY changed or added claim (commander pair, item, stat value, event rule, number) open the cited source with WebFetch (load it via ToolSearch "select:WebFetch,WebSearch") and confirm the source really says it and is current. Unsupported or invented claims are blockers. Also check: texts are original (not copied prose), SK and CZ both correct, VERIFIED bumped only for researched modules, tests pass (\`docker compose -f docker-compose.dev.yml run --rm backend python manage.py test\`).
+For EVERY changed or added claim (commander pair, item, stat value, event rule, number) open the cited source with WebFetch (load it via ToolSearch "select:WebFetch,WebSearch") and confirm the source really says it and is current. Unsupported or invented claims are blockers. Also check: texts are original (not copied prose), SK and CZ both correct, VERIFIED bumped only for researched modules, LAST_UPDATE = ${DATE}, tests pass (\`docker compose -f docker-compose.dev.yml run --rm backend python manage.py test\`).
 Research brief the update was based on:
 ${brief}
 

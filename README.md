@@ -66,7 +66,7 @@ Skripty, `<style>` bloky a nebezpečné atribúty sa pri uložení odstránia. V
 
 ### Automaticky aktualizované návody
 
-Návody o pároch commanderov, výbave a eventoch (políčko **aktualizovať automaticky**) sa raz za mesiac aktualizujú podľa aktuálnej mety. Robí to naplánovaná úloha `kd1035-meta-update` v Claude desktop appke (1. v mesiaci o 18:00; ak je appka zavretá, spustí sa pri ďalšom otvorení). Obsah je v `backend/guides/meta/`, do databázy ho pri štarte zapíše `manage.py sync_meta_guides`. Na server sa dostane bežným nasadením (`git pull && docker compose up -d --build`).
+Návody o pároch commanderov, výbave a eventoch (políčko **aktualizovať automaticky**) sa raz za mesiac aktualizujú podľa aktuálnej mety. Robí to naplánovaná úloha `kd1035-meta-update` v Claude desktop appke (7. v mesiaci o 18:00, prvýkrát 7. 11. 2026; ak je appka zavretá, spustí sa pri ďalšom otvorení). Dátum poslednej aktualizácie je vždy dole v pätičke webu. Obsah je v `backend/guides/meta/`, do databázy ho pri štarte zapíše `manage.py sync_meta_guides`. Na server sa dostane bežným nasadením (`git pull && docker compose up -d --build`).
 
 Keď takýto návod upravíš ručne v admine, automatika ho prestane prepisovať. Ak ju chceš späť, zaškrtni políčko.
 

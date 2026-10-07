@@ -8,4 +8,7 @@ The monthly meta update (.claude/workflows/kd-meta-update.js) edits these module
 
 from . import commanders, equipment, events
 
+# day of the last monthly meta update (bumped by kd-meta-update even without changes) – shown in the site footer
+LAST_UPDATE = '2026-10-07'
+
 MODULES = (commanders, equipment, events)

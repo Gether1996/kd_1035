@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { KingdomApi } from '../../core/api';
 import { I18n } from '../../core/i18n/i18n';
@@ -25,6 +25,11 @@ import { Logo } from '../../shared/logo';
     </div>
     <div class="container footer__bottom">
       <p class="footer__note">{{ i18n.t().footer.fanSite }}</p>
+      @if (updated(); as updated) {
+        <p class="footer__updated">
+          {{ i18n.t().footer.updated }} <time [attr.datetime]="updated.iso">{{ updated.text }}</time>
+        </p>
+      }
       <p class="watermark">{{ i18n.t().footer.madeBy }} <span>Gether</span> · 2026</p>
     </div>
   `,
@@ -34,4 +39,14 @@ import { Logo } from '../../shared/logo';
 export class Footer {
   protected readonly i18n = inject(I18n);
   protected readonly api = inject(KingdomApi);
+
+  protected readonly updated = computed(() => {
+    const iso = this.api.updated();
+    if (!iso) return null;
+    // noon keeps the calendar day in every time zone
+    const text = new Intl.DateTimeFormat(this.i18n.locale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(
+      new Date(`${iso}T12:00:00`),
+    );
+    return { iso, text };
+  });
 }

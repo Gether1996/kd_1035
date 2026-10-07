@@ -131,6 +131,7 @@ export const sk = {
   footer: {
     fanSite: 'Neoficiálna fanúšikovská stránka. Rise of Kingdoms je ochranná známka Lilith Games.',
     madeBy: 'Vytvoril',
+    updated: 'Informácie aktualizované',
   },
 };
 
