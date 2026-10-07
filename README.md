@@ -71,6 +71,20 @@ Skripty, `<style>` bloky a nebezpečné atribúty sa pri uložení odstránia. V
 3. `docker compose up -d` (načíta nový `.env`).
 4. Admin (iba superuser) → **Discord notifikácie** → nadpis, text, čas. Worker správu pošle v zadanom čase. Akcia „Odoslať na Discord hneď“ slúži na test.
 
+Produkčný webhook patrí **iba do `.env` na serveri**. Do vývojového `.env` ho nedávaj (databáza putuje cez git na každé PC a jeho worker by posielal tiež) – na skúšanie si sprav webhook do testovacieho kanála.
+
+### Opakovaný event (napr. každý týždeň)
+
+Admin → **Eventy kráľovstva → Pridať** (zakladaj ich priamo v produkčnom admine):
+
+1. **Názov** (SK, voliteľne CZ) a **text na Discord**. V texte môžeš použiť `{name}`, `{start}` (dátum a čas), `{relative}` („o 2 hodiny“), `{end}` (koniec). Discord ukáže časy každému v jeho časovom pásme.
+2. **Prvý začiatok** (čas v Bratislave), **trvanie**, **opakovať každých** N dní (0 = raz, 1 = denne, 7 = týždenne, 14 = každé 2 týždne), voliteľne **do** (vrátane).
+3. **Čas sa drží v:** *UTC* pre herné eventy (u nás sa po zmene letného/zimného času posunú o hodinu), *Europe/Bratislava* pre veci podľa nášho času.
+4. **Pripomienky:** zaškrtni, kedy pred začiatkom poslať správu (1 deň … pri začiatku). Voliteľne vlastné **ID roly** na ping.
+5. Ulož. Tabuľka **Najbližšie termíny** ukáže 5 ďalších termínov a časy pripomienok (Bratislava aj UTC).
+
+Worker vytvára pripomienky 48 h vopred, nájdeš ich v **Discord notifikácie** (filter podľa eventu). Jednu pripomienku zrušíš akciou **Zrušiť (neposielať)**. Po úprave eventu sa jeho budúce naplánované pripomienky vytvoria nanovo (ručné úpravy v nich sa stratia, odoslané a zrušené ostanú). Bez `DISCORD_WEBHOOK_URL` sa pripomienky neplánujú.
+
 ## Testy
 
 ```bash

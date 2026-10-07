@@ -49,6 +49,13 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 ## Notifikácie
 - **Discord** (nie e-mail, nie WhatsApp – WhatsApp Cloud API vyžaduje Meta Business účet a platí sa za správy). Webhook do kanála, voliteľne ping roly. Premenné `DISCORD_WEBHOOK_URL`, `DISCORD_EVENT_ROLE_ID`.
 - Model `EventNotification` – plánovať (dátum a čas) smie **iba superuser** v admine. Posiela ich kontajner `worker` (`manage.py run_worker`, kontrola každých 30 s). Notifikácia zmeškaná o viac ako 6 h sa už neposiela.
+- Opakované eventy = model **`KingdomEvent`** (admin „Eventy kráľovstva“, iba superuser): prvý začiatok, opakovanie každých N dní (0 = jednorazovo), voliteľne „do“ (vrátane celého dňa), pripomienky X minút pred začiatkom (1 deň, 3 h, 1 h, 30 min, 15 min, pri začiatku). Logika v `backend/kingdom/events.py`.
+  - **UTC vs. lokálny čas:** `time_basis='utc'` = herný čas, termín sa drží v rovnakej UTC hodine (u nás sa pri zmene letného času posunie o hodinu); `'local'` = rovnaká hodina v Europe/Bratislava celý rok. Testy pokrývajú poslednú októbrovú nedeľu.
+  - Worker každých 5 min volá `plan_reminders()`: vytvorí PENDING `EventNotification` pre každú pripomienku, ktorej čas odoslania je v najbližších **48 h**. Unikátny index (event, termín, offset) → žiadne duplikáty; existujúci riadok (aj zrušený či odoslaný) sa už nevytvorí znova.
+  - Uloženie eventu v admine volá `replan()`: zmaže jeho budúce PENDING riadky a naplánuje nové. Ručné úpravy takých riadkov sa tým stratia; odoslané, chybné a zrušené ostanú. Jednu pripomienku zrušíš akciou „Zrušiť (neposielať)“ (stav Zrušená).
+  - Bez `DISCORD_WEBHOOK_URL` sa nič neplánuje (admin ukáže varovanie). Správa má Discord časové značky `<t:UNIX:F>` / `<t:UNIX:R>` – každý vidí čas vo svojom pásme. Rola na ping: ID na notifikácii → ID na evente → `DISCORD_EVENT_ROLE_ID`.
+  - **Produkčný webhook nikdy nedávaj do dev `.env`** – eventy putujú v snapshote na každé dev PC a ich worker by posielal tiež. Na skúšanie testovací kanál. Skutočné eventy zakladaj priamo v produkčnom admine (snapshot sa na server nedostane).
+  - `show_on_web` a `guide` sú pripravené pre budúci kalendár eventov na webe. Nepravidelné eventy (fázy KvK a pod.) ostávajú ako jednorazové záznamy – nevymýšľame hernú rotáciu.
 
 ## Dáta a zálohy
 - SQLite súbor a nahrané súbory sú v Docker named volumes `db_data` a `uploads`. Prežijú `docker compose up --build`, rebuild aj `docker compose down`.
