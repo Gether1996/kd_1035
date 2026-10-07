@@ -1,6 +1,7 @@
 """Database snapshot committed to git, so the whole content moves between dev machines with push/pull.
 
-The snapshot is a plain SQLite copy of the live database without login sessions. Every machine remembers
+The snapshot is a plain SQLite copy of the live database without login sessions and without players signed in
+with Discord (personal data, see remove_players). Every machine remembers
 which snapshot its database was last synced with (SNAPSHOT_BASE_PATH, next to the database), so an export
 from a database that missed a pulled snapshot is refused instead of silently overwriting newer content.
 """
@@ -45,6 +46,46 @@ def _dump(path: Path) -> str:
         conn.close()
 
 
+def remove_players(conn: sqlite3.Connection) -> None:
+    """Players signed in with Discord are personal data of this machine – they never go into git.
+
+    Removes every accounts_* row and the discord_<id> users with everything that points to them. The raw
+    sqlite3 connection does not enforce foreign keys, so the dependent rows are deleted explicitly.
+    """
+    tables = _tables(conn)
+    if 'auth_user' not in tables:
+        return
+    accounts = sorted(t for t in tables if t.startswith('accounts_'))
+    who = r"username LIKE 'discord\_%' ESCAPE '\'"
+    if 'accounts_player' in tables:
+        who += ' OR id IN (SELECT user_id FROM accounts_player)'
+    users = f'SELECT id FROM auth_user WHERE {who}'
+
+    touched = []
+    if 'django_admin_log' in tables:
+        # entries about players or Discord users name them in object_repr, whoever made the change
+        conn.execute(
+            'DELETE FROM django_admin_log WHERE content_type_id IN '
+            "(SELECT id FROM django_content_type WHERE app_label = 'accounts') "
+            'OR (content_type_id IN '
+            "(SELECT id FROM django_content_type WHERE app_label = 'auth' AND model = 'user') "
+            f'AND object_id IN (SELECT CAST(id AS TEXT) FROM auth_user WHERE {who}))'
+        )
+    for table in ('django_admin_log', 'auth_user_groups', 'auth_user_user_permissions'):
+        if table in tables:
+            conn.execute(f'DELETE FROM {table} WHERE user_id IN ({users})')
+            touched.append(table)
+    conn.execute(f'DELETE FROM auth_user WHERE id IN ({users})')
+    for table in accounts:
+        conn.execute(f'DELETE FROM "{table}"')
+    # AUTOINCREMENT counters would still change with every local sign-in (noise in git)
+    if 'sqlite_sequence' in tables:
+        for table in ['auth_user', *touched, *accounts]:
+            conn.execute(
+                f'UPDATE sqlite_sequence SET seq = (SELECT IFNULL(MAX(id), 0) FROM "{table}") WHERE name = ?', [table]
+            )
+
+
 def database_is_empty() -> bool:
     conn = _connect_db()
     try:
@@ -77,7 +118,8 @@ def export_snapshot(force: bool = False) -> bool:
         # login sessions belong to each machine, they would only add noise (and secrets) to git
         if 'django_session' in _tables(dest):
             dest.execute('DELETE FROM django_session')
-            dest.commit()
+        remove_players(dest)
+        dest.commit()
         dest.execute('PRAGMA journal_mode = DELETE')
         dest.execute('VACUUM')
     finally:
