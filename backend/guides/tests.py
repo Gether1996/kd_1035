@@ -25,8 +25,21 @@ class SanitizeTests(TestCase):
         self.assertIn('<iframe></iframe>', html)
 
 
+class SeededGuidesTests(TestCase):
+    def test_seeded_guides_survive_sanitizing_and_have_excerpts(self):
+        guides = Guide.objects.all()
+        self.assertGreaterEqual(guides.filter(category='commanderi').count(), 10)
+        self.assertGreaterEqual(guides.filter(category='vybava').count(), 7)
+        for guide in guides:
+            for html in (guide.html_sk, guide.html_cs):
+                self.assertEqual(clean_html(html), html, guide.slug)
+            self.assertTrue(guide.excerpt('sk') and guide.excerpt('cs'), guide.slug)
+            self.assertLessEqual(len(guide.excerpt('sk')), 160, guide.slug)
+
+
 class GuideApiTests(TestCase):
     def setUp(self):
+        Guide.objects.all().delete()  # drop the seeded guides
         self.guide = Guide.objects.create(
             category='vybava', title_sk='Najlepšia výbava', slug='najlepsia-vybava', html_sk='<p>Text&nbsp;SK</p><script>x</script>'
         )
