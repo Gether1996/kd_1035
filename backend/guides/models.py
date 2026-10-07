@@ -32,6 +32,12 @@ class Guide(models.Model):
     )
     html_cs = models.TextField('obsah HTML (CZ)', blank=True, help_text='Prázdne = použije sa slovenský obsah.')
     is_published = models.BooleanField('zverejnený', default=True)
+    auto_update = models.BooleanField(
+        'aktualizovať automaticky',
+        default=False,
+        help_text='Obsah udržiava mesačná aktualizácia mety (backend/guides/meta). Ručná úprava nadpisu alebo '
+        'obsahu ju vypne, aby ju ďalšia aktualizácia neprepísala.',
+    )
     order = models.PositiveSmallIntegerField('poradie', default=0, help_text='Menšie číslo = vyššie v zozname.')
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)

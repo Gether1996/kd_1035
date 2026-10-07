@@ -33,5 +33,6 @@ class Command(BaseCommand):
         import_snapshot()
         # the snapshot may predate migrations that came with the same pull
         call_command('migrate', interactive=False, verbosity=0)
+        call_command('sync_meta_guides')
         call_command('ensure_superuser')
         self.stdout.write(self.style.SUCCESS(f'Database imported from {snapshot.name}.'))

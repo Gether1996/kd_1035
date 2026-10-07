@@ -1,4 +1,9 @@
 #!/bin/sh
 # A pull brought a new database snapshot → load it into the local dev database.
-git diff --quiet ORIG_HEAD HEAD -- backend/snapshot/db.sqlite3 2>/dev/null && exit 0
+if git diff --quiet ORIG_HEAD HEAD -- backend/snapshot/db.sqlite3 2>/dev/null; then
+  # no new database, but maybe new meta guides (the import below syncs them too)
+  git diff --quiet ORIG_HEAD HEAD -- backend/guides/meta 2>/dev/null && exit 0
+  sh .githooks/dbsync.sh sync || echo "post-merge: sync návodov zlyhal. Spusti ručne: sh .githooks/dbsync.sh sync" >&2
+  exit 0
+fi
 sh .githooks/dbsync.sh import || echo "post-merge: import databázy zlyhal. Spusti ručne: sh .githooks/dbsync.sh import" >&2

@@ -1,8 +1,12 @@
 import tempfile
 from pathlib import Path
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
+from .meta import MODULES
+from .meta.render import render, verified_note
+from .meta.sync import rendered_guides, sync_guides
 from .models import Guide
 from .sanitize import clean_html
 
@@ -25,16 +29,95 @@ class SanitizeTests(TestCase):
         self.assertIn('<iframe></iframe>', html)
 
 
-class SeededGuidesTests(TestCase):
-    def test_seeded_guides_survive_sanitizing_and_have_excerpts(self):
-        guides = Guide.objects.all()
-        self.assertGreaterEqual(guides.filter(category='commanderi').count(), 10)
-        self.assertGreaterEqual(guides.filter(category='vybava').count(), 7)
-        for guide in guides:
-            for html in (guide.html_sk, guide.html_cs):
-                self.assertEqual(clean_html(html), html, guide.slug)
-            self.assertTrue(guide.excerpt('sk') and guide.excerpt('cs'), guide.slug)
-            self.assertLessEqual(len(guide.excerpt('sk')), 160, guide.slug)
+class MetaGuidesTests(TestCase):
+    def test_rendered_guides_are_clean_bilingual_with_short_excerpts(self):
+        for module in MODULES:
+            note = verified_note(module.VERIFIED, module.NOTE)
+            for guide in module.GUIDES:
+                for lang in ('sk', 'cs'):
+                    html = render(guide['blocks'], lang, note)
+                    # what the sync writes is exactly what the sanitizer keeps
+                    self.assertEqual(clean_html(html), html, guide['slug'])
+        guides = list(rendered_guides())
+        slugs = [g['slug'] for g in guides]
+        self.assertEqual(len(slugs), len(set(slugs)))
+        self.assertGreaterEqual(len([g for g in guides if g['category'] == 'commanderi']), 10)
+        self.assertGreaterEqual(len([g for g in guides if g['category'] == 'vybava']), 7)
+        for data in guides:
+            self.assertIn(data['category'], Guide.Category.values)
+            self.assertNotEqual(data['html_sk'], data['html_cs'], data['slug'])
+            guide = Guide(**data)
+            for lang in ('sk', 'cs'):
+                self.assertTrue(0 < len(guide.excerpt(lang)) <= 160, data['slug'])
+
+    def test_verified_note(self):
+        note = verified_note('2026-07', {'sk': 'A.', 'cs': 'B.'})
+        self.assertEqual(note, {'sk': 'Stav k júlu 2026. A.', 'cs': 'Stav k červenci 2026. B.'})
+
+
+class MetaSyncTests(TestCase):
+    def setUp(self):
+        Guide.objects.all().delete()
+
+    def test_creates_guides_and_second_run_changes_nothing(self):
+        stats = sync_guides()
+        self.assertEqual(stats['created'], len(list(rendered_guides())))
+        self.assertTrue(Guide.objects.filter(auto_update=True, is_published=True).exists())
+        before = dict(Guide.objects.values_list('slug', 'updated_at'))
+        self.assertEqual(sync_guides(), {'created': 0, 'updated': 0, 'unpublished': 0})
+        self.assertEqual(dict(Guide.objects.values_list('slug', 'updated_at')), before)
+
+    def test_updates_only_auto_guides(self):
+        sync_guides()
+        Guide.objects.filter(slug='pary-pre-jazdu').update(html_sk='<p>stará meta</p>')
+        Guide.objects.filter(slug='pary-pre-pechotu').update(html_sk='<p>môj text</p>', auto_update=False)
+        self.assertEqual(sync_guides()['updated'], 1)
+        self.assertNotEqual(Guide.objects.get(slug='pary-pre-jazdu').html_sk, '<p>stará meta</p>')
+        self.assertEqual(Guide.objects.get(slug='pary-pre-pechotu').html_sk, '<p>môj text</p>')
+
+    def test_hand_written_guide_with_the_same_slug_is_left_alone(self):
+        Guide.objects.create(category='vybava', slug='vybava-pre-jazdu', title_sk='Môj set', html_sk='<p>môj</p>')
+        sync_guides()
+        self.assertEqual(Guide.objects.get(slug='vybava-pre-jazdu').title_sk, 'Môj set')
+
+    def test_auto_guide_dropped_from_the_content_is_unpublished(self):
+        Guide.objects.create(category='vybava', slug='stary-navod', title_sk='x', html_sk='<p>x</p>', auto_update=True)
+        Guide.objects.create(category='vybava', slug='rucny-navod', title_sk='y', html_sk='<p>y</p>')
+        self.assertEqual(sync_guides()['unpublished'], 1)
+        self.assertFalse(Guide.objects.get(slug='stary-navod').is_published)
+        self.assertTrue(Guide.objects.get(slug='rucny-navod').is_published)
+
+
+class AdminAutoUpdateTests(TestCase):
+    def setUp(self):
+        self.client.force_login(get_user_model().objects.create_superuser('boss', password='test-only'))
+        self.guide = Guide.objects.create(
+            category='vybava', slug='set', title_sk='Set', html_sk='<p>a</p>', auto_update=True
+        )
+
+    def save(self, **changes):
+        data = {
+            'category': 'vybava', 'title_sk': 'Set', 'title_cs': '', 'slug': 'set', 'is_published': 'on',
+            'auto_update': 'on', 'order': 0, 'html_sk': '<p>a</p>', 'html_cs': '',
+            'images-TOTAL_FORMS': 0, 'images-INITIAL_FORMS': 0, 'images-MIN_NUM_FORMS': 0, 'images-MAX_NUM_FORMS': 1000,
+        }  # fmt: skip
+        data.update(changes)
+        response = self.client.post(f'/admin/guides/guide/{self.guide.pk}/change/', data)
+        self.assertEqual(response.status_code, 302)
+        self.guide.refresh_from_db()
+
+    def test_saving_without_content_change_keeps_auto_update(self):
+        self.save(html_sk='<p>a</p>\r\n', order=3)  # browsers send CRLF
+        self.assertTrue(self.guide.auto_update)
+
+    def test_hand_edit_turns_auto_update_off(self):
+        self.save(html_sk='<p>b</p>')
+        self.assertFalse(self.guide.auto_update)
+
+    def test_ticking_the_checkbox_while_editing_keeps_it_on(self):
+        Guide.objects.filter(pk=self.guide.pk).update(auto_update=False)
+        self.save(html_sk='<p>c</p>')  # ticking the box in the same save keeps it on
+        self.assertTrue(self.guide.auto_update)
 
 
 class GuideApiTests(TestCase):

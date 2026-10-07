@@ -3,6 +3,7 @@
 #   sh .githooks/dbsync.sh export [--force]  → backend/snapshot/db.sqlite3 + backend/media, staged for commit
 #   sh .githooks/dbsync.sh import            → snapshot into the local dev database (old one is backed up)
 #   sh .githooks/dbsync.sh push ["message"]  → export + commit + git push (when only content changed)
+#   sh .githooks/dbsync.sh sync              → auto-updated guides from backend/guides/meta into the database
 # Enable the hooks once per clone: git config core.hooksPath .githooks
 set -e
 cd "$(git rev-parse --show-toplevel)"
@@ -31,6 +32,9 @@ case "$1" in
   import)
     manage import_snapshot
     ;;
+  sync)
+    manage sync_meta_guides
+    ;;
   push)
     # content-only changes: git refuses an otherwise empty commit before the pre-commit hook adds files
     manage export_snapshot
@@ -43,7 +47,7 @@ case "$1" in
     git push
     ;;
   *)
-    echo "usage: sh .githooks/dbsync.sh export [--force] | import | push [\"commit message\"]" >&2
+    echo "usage: sh .githooks/dbsync.sh export [--force] | import | sync | push [\"commit message\"]" >&2
     exit 2
     ;;
 esac

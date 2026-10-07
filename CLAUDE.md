@@ -46,6 +46,14 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Úvod (excerpt) pre zoznam a meta description = prvý odsek `<p>` obsahu.
 - Obsah (návody, obrázky) žije v databáze. Medzi vývojovými PC sa prenáša cez git (sekcia **Synchronizácia databázy cez git**), na serveri je vo volumes `db_data` a `uploads`.
 
+### Automaticky aktualizované návody (meta)
+- Návody o commanderoch, výbave a eventoch sú **dáta v kóde**: `backend/guides/meta/commanders.py`, `equipment.py`, `events.py` (bloky → HTML cez `meta/render.py`). `manage.py sync_meta_guides` (beží v `entrypoint.sh` pri každom štarte, po `import_snapshot` a po pulle, ktorý zmení `guides/meta`) ich zapíše do DB.
+- Sync mení **len návody s `auto_update=True`** a ukladá len skutočné zmeny (dátum „Aktualizované“ = reálna zmena). Ručne písané návody ani návod s rovnakým slugom, ktorý nie je auto, nikdy neprepíše. Auto návod vypadnutý z dát sa skryje, nezmaže.
+- Ručná úprava nadpisu/obsahu auto návodu v admine vypne `auto_update` (inak by ho ďalšia aktualizácia prepísala). Zapnúť späť = zaškrtnúť políčko.
+- Každý modul má `VERIFIED = 'RRRR-MM'` → v návodoch „Stav k októbru 2026“. Texty píšeme vlastnými slovami (SK aj CZ), fakty len z datovaných zdrojov uvedených pod návodom. LootBar blog je nespoľahlivý (vymýšľa predmety), rokboom.com neexistuje.
+- **Mesačná aktualizácia:** workflow `.claude/workflows/kd-meta-update.js` (research agent na každý modul → kd-builder upraví moduly a zvýši `VERIFIED` → kd-critic overí každé tvrdenie oproti zdroju → push). Spúšťa ho naplánovaná úloha Claude desktop appky `kd1035-meta-update` (1. deň v mesiaci 18:00, beží len keď je appka otvorená, inak pri ďalšom spustení). Ručne: „spusti kd-meta-update“.
+- Nový obsah generovaný Claudom patrí do `guides/meta`, nie do migrácií ani len do DB.
+
 ## Notifikácie
 - **Discord** (nie e-mail, nie WhatsApp – WhatsApp Cloud API vyžaduje Meta Business účet a platí sa za správy). Webhook do kanála, voliteľne ping roly. Premenné `DISCORD_WEBHOOK_URL`, `DISCORD_EVENT_ROLE_ID`.
 - Model `EventNotification` – plánovať (dátum a čas) smie **iba superuser** v admine. Posiela ich kontajner `worker` (`manage.py run_worker`, kontrola každých 30 s). Notifikácia zmeškaná o viac ako 6 h sa už neposiela.

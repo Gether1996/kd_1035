@@ -64,6 +64,12 @@ Iba superuser, v admine → **Návody → Pridať návod**:
 
 Skripty, `<style>` bloky a nebezpečné atribúty sa pri uložení odstránia. Vzhľad (nadpisy, tabuľky, zoznamy) dodá web sám.
 
+### Automaticky aktualizované návody
+
+Návody o pároch commanderov, výbave a eventoch (políčko **aktualizovať automaticky**) sa raz za mesiac aktualizujú podľa aktuálnej mety. Robí to naplánovaná úloha `kd1035-meta-update` v Claude desktop appke (1. v mesiaci o 18:00; ak je appka zavretá, spustí sa pri ďalšom otvorení). Obsah je v `backend/guides/meta/`, do databázy ho pri štarte zapíše `manage.py sync_meta_guides`. Na server sa dostane bežným nasadením (`git pull && docker compose up -d --build`).
+
+Keď takýto návod upravíš ručne v admine, automatika ho prestane prepisovať. Ak ju chceš späť, zaškrtni políčko.
+
 ## Discord notifikácie o eventoch
 
 1. Discord: **Server Settings → Integrations → Webhooks → New Webhook** → vyber kanál → **Copy Webhook URL** → `DISCORD_WEBHOOK_URL` v `.env`.
