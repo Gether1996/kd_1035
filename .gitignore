@@ -11,11 +11,13 @@ venv/
 .pytest_cache/
 
 # Django runtime data
+# (backend/media and backend/snapshot/db.sqlite3 ARE committed – database sync through git, see .githooks)
 backend/data/
-backend/media/
 backend/staticfiles/
 *.sqlite3
 *.sqlite3-*
+!backend/snapshot/db.sqlite3
+backend/snapshot/*.tmp*
 
 # Tooling caches
 tools/**/.cache/

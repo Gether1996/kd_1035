@@ -1,0 +1,6 @@
+#!/bin/sh
+# Puts the current dev database and uploads into every commit. Skip once: git commit --no-verify
+sh .githooks/dbsync.sh export || {
+  echo "pre-commit: export databázy zlyhal (viac vyššie). Commit bez databázy: git commit --no-verify" >&2
+  exit 1
+}

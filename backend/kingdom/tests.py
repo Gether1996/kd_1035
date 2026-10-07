@@ -100,3 +100,41 @@ class BackupTests(TransactionTestCase):
                 Alliance.objects.all().delete()
                 backups.restore_backup(first)
                 self.assertTrue(Alliance.objects.filter(tag='CS35').exists())
+
+
+class SnapshotTests(TransactionTestCase):
+    def test_export_import_and_outdated_guard(self):
+        from django.contrib.sessions.backends.db import SessionStore
+
+        from . import snapshot
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            with override_settings(
+                SNAPSHOT_PATH=folder / 'snapshot' / 'db.sqlite3', SNAPSHOT_BASE_PATH=folder / 'snapshot_base'
+            ):
+                Alliance.objects.get_or_create(tag='CS35', defaults={'name': 'CZ/SK Legends'})
+                SessionStore().create()
+                self.assertTrue(snapshot.export_snapshot())
+                path = folder / 'snapshot' / 'db.sqlite3'
+                conn = sqlite3.connect(path)
+                self.assertEqual(conn.execute('SELECT COUNT(*) FROM django_session').fetchone()[0], 0)
+                self.assertEqual(conn.execute('SELECT COUNT(*) FROM kingdom_alliance').fetchone()[0], 1)
+                conn.close()
+
+                # same data → the committed file stays byte-identical
+                before = path.read_bytes()
+                SessionStore().create()
+                self.assertFalse(snapshot.export_snapshot())
+                self.assertEqual(path.read_bytes(), before)
+
+                # a pulled snapshot that was not imported must not be overwritten
+                snapshot.write_base('something-else')
+                with self.assertRaises(snapshot.SnapshotOutdated):
+                    snapshot.export_snapshot()
+
+                Alliance.objects.all().delete()
+                snapshot.import_snapshot()
+                self.assertTrue(Alliance.objects.filter(tag='CS35').exists())
+                self.assertEqual(snapshot.read_base(), snapshot.file_hash(path))
+                self.assertFalse(snapshot.export_snapshot())

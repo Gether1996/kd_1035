@@ -44,7 +44,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Obrázky: inline „Obrázky“ pri návode → po uložení admin ukáže kód `<img src="/uploads/guides/...">` na skopírovanie do HTML. Súbor sa zmaže spolu s obrázkom/návodom.
 - Web: `/navody/<kategória>` = zoznam (záložky kategórií), `/navody/<kategória>/<slug>` = článok. Všade **breadcrumbs** (Domov › Kategória › Článok), aj ako JSON-LD.
 - Úvod (excerpt) pre zoznam a meta description = prvý odsek `<p>` obsahu.
-- Obsah (návody, obrázky) žije v databáze a volume `uploads`, nie v gite. Testovací článok „Najlepší set pre kone“ je zatiaľ len v lokálnej dev databáze.
+- Obsah (návody, obrázky) žije v databáze. Medzi vývojovými PC sa prenáša cez git (sekcia **Synchronizácia databázy cez git**), na serveri je vo volumes `db_data` a `uploads`.
 
 ## Notifikácie
 - **Discord** (nie e-mail, nie WhatsApp – WhatsApp Cloud API vyžaduje Meta Business účet a platí sa za správy). Webhook do kanála, voliteľne ping roly. Premenné `DISCORD_WEBHOOK_URL`, `DISCORD_EVENT_ROLE_ID`.
@@ -56,6 +56,17 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - `worker` robí zálohu každých `BACKUP_INTERVAL_DAYS` (7) dní do `BACKUP_PATH` (`./backups` na hoste), necháva `BACKUP_KEEP` (8) posledných. Používa SQLite backup API (bezpečné za behu).
 - Ručne: `docker compose exec -u app worker python manage.py backup_db` / `restore_db <súbor>`. **Vždy s `-u app`** – ako root by vznikli súbory DB s iným vlastníkom a backend by nemohol zapisovať.
 - Migrácie nikdy needituj spätne po nasadení na server. Zatiaľ nič nie je nasadené.
+
+## Synchronizácia databázy cez git (vývoj)
+- Celá dev databáza ide do gitu ako `backend/snapshot/db.sqlite3` (bez prihlasovacích session) a nahrané súbory ako `backend/media/` (v dev je to bind mount = živý MEDIA_ROOT). Repo je privátne, snapshot obsahuje aj hash hesla admina.
+- Hooky v `.githooks/` (zapnúť raz na každom PC: `git config core.hooksPath .githooks`):
+  - `pre-commit` → `export_snapshot` + `git add` snapshotu a `backend/media`. Ak sa dáta nezmenili, súbor ostane bajtovo rovnaký (žiadny šum v commitoch). Bez Dockera commit zlyhá; obísť: `git commit --no-verify`.
+  - `post-merge` / `post-rewrite` (pull) → ak pull priniesol nový snapshot, `import_snapshot`: záloha starej DB do `./backups`, import, `migrate`, `ensure_superuser`.
+  - Ručne: `sh .githooks/dbsync.sh export [--force]` / `sh .githooks/dbsync.sh import`.
+- Poistka: každé PC si pamätá, s ktorým snapshotom je jeho DB zosynchronizovaná (`/app/data/snapshot_base`). Export z DB, ktorá nenačítala novší snapshot z pullu, sa odmietne (inak by prepísal cudzie zmeny).
+- Konflikt (obsah menený na dvoch PC naraz) sa nedá zlúčiť – binárny súbor. Vyber jednu verziu (`git checkout --theirs|--ours backend/snapshot/db.sqlite3`), načítaj ju (`dbsync.sh import`) a zmeny z druhej doplň ručne.
+- Čerstvý clone: `entrypoint.sh` pri prázdnej DB načíta snapshot sám (`import_snapshot --if-empty`).
+- Nový obsah, ktorý má ísť aj na server (napr. návody pripravené Claudom), patrí do **dátovej migrácie** (upsert podľa slugu), nie iba do snapshotu – snapshot sa na server nedostane (`backend/.dockerignore`) a server si drží vlastné dáta.
 
 ## Technológie
 - **Frontend:** Angular 22 (standalone, signals, zoneless, `@if/@for`, `httpResource`), SCSS, `frontend/`.
@@ -76,6 +87,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 ## Git
 - Po každej dokončenej a overenej zmene rovno **commit + push** do `main` (github.com/Gether1996/kd_1035).
 - Malé, zrozumiteľné commity s anglickou správou.
+- Pred commitom musí bežať Docker (pre-commit hook exportuje databázu). Pred prácou s obsahom vždy najprv `git pull`.
 
 ## Príkazy
 ```bash

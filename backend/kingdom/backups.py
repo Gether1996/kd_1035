@@ -73,17 +73,22 @@ def restore_backup(archive: Path) -> None:
     with gzip.open(archive, 'rb') as src, tmp.open('wb') as dst:
         shutil.copyfileobj(src, dst)
     try:
-        source = sqlite3.connect(tmp)
-        try:
-            if source.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
-                raise ValueError(f'{archive.name} je poškodená')
-            connection.close()
-            target = _connect_db()
-            try:
-                source.backup(target)
-            finally:
-                target.close()
-        finally:
-            source.close()
+        restore_database(tmp, label=archive.name)
     finally:
         tmp.unlink(missing_ok=True)
+
+
+def restore_database(path: Path, label: str = '') -> None:
+    """Replaces the live database with a plain SQLite file (checked first, copied via the backup API)."""
+    source = sqlite3.connect(path)
+    try:
+        if source.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+            raise ValueError(f'{label or path.name} je poškodená')
+        connection.close()
+        target = _connect_db()
+        try:
+            source.backup(target)
+        finally:
+            target.close()
+    finally:
+        source.close()

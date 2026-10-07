@@ -1,0 +1,5 @@
+#!/bin/sh
+# git pull --rebase: same as post-merge
+[ "$1" = "rebase" ] || exit 0
+git diff --quiet ORIG_HEAD HEAD -- backend/snapshot/db.sqlite3 2>/dev/null && exit 0
+sh .githooks/dbsync.sh import || echo "post-rewrite: import databázy zlyhal. Spusti ručne: sh .githooks/dbsync.sh import" >&2

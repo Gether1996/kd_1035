@@ -14,6 +14,20 @@ docker compose -f docker-compose.dev.yml up --build
 - web: http://localhost:4200 (hot reload)
 - admin: http://localhost:8000/admin/ (meno a heslo z `.env`)
 
+### Databáza medzi PC (cez git)
+
+Celá dev databáza (`backend/snapshot/db.sqlite3`) aj nahrané obrázky (`backend/media/`) sú v gite. Raz na každom PC zapni hooky:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+- **commit** – databáza a obrázky sa pridajú do commitu samé (musí bežať Docker)
+- **pull** – ak prišla nová databáza, načíta sa sama (stará sa predtým zálohuje do `./backups`)
+- ručne: `sh .githooks/dbsync.sh export` / `sh .githooks/dbsync.sh import`
+
+Obsah meň vždy len na jednom PC naraz a pred prácou daj `git pull`. Binárnu databázu git nevie zlúčiť.
+
 ## Nasadenie na server
 
 1. `git clone https://github.com/Gether1996/kd_1035.git && cd kd_1035`

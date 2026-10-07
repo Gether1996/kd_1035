@@ -71,6 +71,11 @@ DATABASES = {
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Database snapshot synced between dev machines through git (.githooks/dbsync.sh). Not part of the
+# production image (.dockerignore); the base file says which snapshot this database was last synced with.
+SNAPSHOT_PATH = BASE_DIR / 'snapshot' / 'db.sqlite3'
+SNAPSHOT_BASE_PATH = SQLITE_PATH.parent / 'snapshot_base'
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

@@ -1,0 +1,4 @@
+#!/bin/sh
+# A pull brought a new database snapshot → load it into the local dev database.
+git diff --quiet ORIG_HEAD HEAD -- backend/snapshot/db.sqlite3 2>/dev/null && exit 0
+sh .githooks/dbsync.sh import || echo "post-merge: import databázy zlyhal. Spusti ručne: sh .githooks/dbsync.sh import" >&2
