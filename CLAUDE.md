@@ -4,6 +4,10 @@ Promo web pre kráľovstvo **1035** v hre Rise of Kingdoms (https://rok.lilith.c
 
 Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové dôležité rozhodnutie (konfigurácia, dizajn, architektúra, workflow) hneď zapíš sem.
 
+## Automatizácia agentmi
+- Web vylepšujú agenti v kolách (`kd-improve`) a návody sa mesačne aktualizujú (`kd-meta-update`). Plán, pravidlá a postup: `docs/agenti.md`, konfigurácia a stav kôl: `.claude/kd-agents.json`, čo je hotové a čo čaká: `docs/backlog.md`.
+- Keď Gether povie „pokračuj“ (aj na inom PC), najprv si prečítaj tieto tri súbory a pokračuj podľa `next` v `.claude/kd-agents.json`.
+
 ## Komunikácia
 - S používateľom (Gether) komunikuj po slovensky.
 - Kód, názvy v kóde a komentáre píš po anglicky. Texty na webe idú výhradne cez i18n (SK/CZ).

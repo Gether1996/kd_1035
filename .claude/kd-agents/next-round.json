@@ -1,0 +1,391 @@
+{
+  "_doc": "Args for the next kd-improve round (see docs/agenti.md). Ideas and critic verdicts from round 1 (2026-10-07); recurring-kingdom-events is shipped and removed. discord-login is built but not reviewed yet (branch wip/discord-login).",
+  "features": 4,
+  "date": "YYYY-MM-DD",
+  "ideas": [
+    {
+      "id": "discord-preview-and-test-send",
+      "title": "Discord message preview, test send and duplicate in admin",
+      "title_sk": "Náhľad Discord správy, testovacie odoslanie a duplikovanie v admine",
+      "audience": "Superadmin (Gether)",
+      "user_value": "Today the only way to see what a notification looks like is the 'Odoslať na Discord hneď' action, which posts to the real channel, pings the role and marks the row as sent. A preview plus a test send to a private channel lets Gether check wording, pings and timestamps safely before anything reaches members. Duplicating a notification a week ahead saves retyping for irregular repeats.",
+      "spec": "1) discord.py: build_payload(notification) + send(payload, url). If recurring-kingdom-events already introduced them, reuse them; otherwise do the refactor here and keep post() as a wrapper. New setting DISCORD_TEST_WEBHOOK_URL (env; .env.example: 'webhook of a PRIVATE test channel, used by the admin action Poslať test').\n2) kingdom/admin_preview.py: render_preview(payload) returns HTML that approximates a Discord message, with the same inline-style approach as the guide preview in guides/admin.py. Discord colors are allowed as a brand exception: #313338 background, gold left border (GOLD), bot name 'Kingdom 1035', role chip '@rola' when a ping is set, bold title, description, embed fields, footer 'KD 1035 · CZ/SK'. Every piece of user text goes through escape()/format_html. Supported markdown is limited to newlines → <br>, **bold**, and [text](https url). <t:X:F>/<t:X:R>/<t:X:t> tokens are shown as Bratislava date/time text. A small label reads 'približný náhľad'.\n3) EventNotificationAdmin: read-only field 'Náhľad na Discorde' (shown after the first save), save_on_top=True. Action 'Poslať test do testovacieho kanála': posts the payload with title '[TEST] …', empty content and allowed_mentions {'parse': []} to DISCORD_TEST_WEBHOOK_URL. It never changes status, sent_at or error. When the env var is missing it shows an error message and sends nothing. An object-tool button 'Poslať test' on the change form (custom admin URL <pk>/test/, POST with CSRF, superuser only, redirect back with a message).\n4) Action 'Duplikovať o týždeň': copies title, message, mention_role, mention_role_id and event_start (+7 days if set) with send_at + 7 days and status PENDING. Event-generated rows are copied without the event link.\n5) list_display: a 'kedy' column with relative Slovak text ('o 2 h 15 min', 'pred 3 dňami') and a colored status pill (format_html, fixed admin-only colors).\n6) If KingdomEvent exists: the same preview on its change form (rendered for the next occurrence) and the same test action.\n7) README: test channel setup.\nTESTS: the test action posts to the test URL without a role mention and the status stays PENDING; a missing test URL gives an error and no HTTP call (mock urlopen); duplicate shifts send_at by 7 days; the preview escapes '<script>' in title/message.",
+      "acceptance_criteria": [
+        "The change form of a saved notification shows a Discord-like preview with title, text, role chip (when a ping is set) and timestamps rendered as readable Bratislava time.",
+        "'Poslať test' posts to DISCORD_TEST_WEBHOOK_URL with a '[TEST]' title and no role mention; the notification's status, sent_at and error are unchanged (test).",
+        "Without DISCORD_TEST_WEBHOOK_URL the action shows a clear Slovak error and makes no HTTP request (test).",
+        "'Duplikovať o týždeň' creates PENDING copies with send_at (and event_start) shifted by exactly 7 days.",
+        "HTML or script in a title or message appears escaped in the preview (test).",
+        "All new admin views and actions are available only to superusers; DISCORD_TEST_WEBHOOK_URL is documented in .env.example without a value."
+      ],
+      "effort": "S",
+      "depends_on": [],
+      "needs_from_user": [
+        "Webhook URL of a private test channel on the kingdom Discord (DISCORD_TEST_WEBHOOK_URL in .env)"
+      ],
+      "risks": "Discord markdown is only approximated, so the preview must be labelled as approximate. If the test webhook points to a public channel, tests leak to members; README must say 'private channel'. Low risk otherwise."
+    },
+    {
+      "id": "public-event-calendar",
+      "title": "Public SK/CZ event calendar page",
+      "title_sk": "Verejný kalendár eventov (SK/CZ)",
+      "audience": "Members and prospective migrants",
+      "user_value": "Members get one place that shows what happens in the kingdom and when, in their own local time with the game time (UTC) next to it, without scrolling Discord history. Migrants see an active, organized kingdom. Each event can link to its guide.",
+      "spec": "BACKEND\n1) GET /api/events/?days=N (default 31, clamp 1–62), kingdom/views.py + serializer. Returns occurrences of active KingdomEvents with show_on_web, from (now − duration) so running events appear, up to now + N days. Sorted by start, capped at 300 items. Item: {id, name_sk, name_cs, start (ISO, UTC), end (ISO or null when duration 0), repeat_days, guide: {category, slug, title_sk, title_cs} | null (only published guides)}. Reuses kingdom/events.occurrences. Never exposes message or role fields. Response header Cache-Control: public, max-age=300.\n2) guides/views.py STATIC_PAGES += ['/kalendar'].\nFRONTEND\n3) core/events-api.ts EventsApi (providedIn root, httpResource only in the browser, same pattern as GuidesApi): ready(), failed(), all(), name(e) with CS→SK fallback, a days() computed that groups by local calendar day.\n4) pages/calendar/calendar.ts|html|scss: route 'kalendar' in pages() (so /kalendar and /cz/kalendar both exist), Page 'calendar' in i18n.ts parseUrl plus I18n.path('calendar'). Prerendered shell (covered by the '**' Prerender server route); data loads in the browser. app-page-header with crumbs Domov › Kalendár.\n   Agenda list grouped by day; the heading is 'Dnes' / 'Zajtra' / weekday + date via Intl in i18n.locale(). Row: local time range 'HH:mm–HH:mm', secondary 'UTC 12:00', name, tag 'Prebieha' while now is between start and end, a small repeat label ('každý týždeň', 'každé 2 týždne', 'denne'), and a 'Návod' link (routerLink via i18n.guidePath) when a guide is set.\n   States: 3 skeleton rows while loading, empty state 'Zatiaľ nie sú naplánované žiadne eventy.', error text. One short note line: local times and UTC = game time.\n   'Prebieha' refreshes through a 60 s signal timer started in afterNextRender and cleared on destroy (SSR-safe).\n5) Header: new nav item 'Kalendár' (desktop + drawer) → i18n.path('calendar') with routerLinkActive. Verify the bar still fits at 900, 1024 and 1280 px.\n6) Seo: t.seo.calendar {title, description} in both dictionaries; Seo uses fixed texts for 'calendar' the way it does for home/about. Keywords stay natural (e.g. 'Kalendár eventov · KD 1035 Rise of Kingdoms CZ/SK').\n7) i18n: a 'calendar' section in sk.ts and cs.ts with identical structure; repeat labels use Intl.PluralRules like GuidesApi.count.\n8) Styles: only tokens from styles.scss, dark, visible focus, transform/opacity animations with prefers-reduced-motion, 320 px → 2560 px. Screenshots at 360/768/1280/1920/2560.\nTESTS: backend (inactive or hidden events excluded; running event included; days clamped; no message/role keys; unpublished guide → null); frontend: day grouping/labels unit test and parseUrl cases for /kalendar and /cz/kalendar.",
+      "acceptance_criteria": [
+        "/kalendar and /cz/kalendar are prerendered at build time without the API, have correct title/description/canonical/hreflang, and both appear in sitemap.xml.",
+        "With events in the DB, the page lists the next 31 days grouped by day with local times and UTC times; a running event shows 'Prebieha'.",
+        "Events with show_on_web=false or is_active=false never appear in /api/events/; the response contains no message or mention_role_id (test).",
+        "An event linked to a published guide shows a working 'Návod' link in the correct language.",
+        "With no events the page shows the empty state; with the API down it shows the error text; nothing breaks.",
+        "The header contains 'Kalendár' on desktop and in the mobile drawer, keyboard reachable, with no overflow at 900–1280 px.",
+        "Every text exists in SK and CZ; the i18n spec, ng build and backend tests pass."
+      ],
+      "effort": "M",
+      "depends_on": [
+        "recurring-kingdom-events"
+      ],
+      "needs_from_user": [
+        "Which events are public and their Czech names"
+      ],
+      "risks": "An empty calendar looks dead until leadership fills it, so the empty state must look intentional. The server must always send UTC ISO and the browser converts it. A 6th nav item may crowd the header at mid widths; check the screenshots."
+    },
+    {
+      "id": "discord-login",
+      "title": "Sign in with Discord (player accounts)",
+      "title_sk": "Prihlásenie cez Discord (hráčske účty)",
+      "audience": "All members (prerequisite for Governor ID registration); leadership",
+      "user_value": "The community lives on Discord, so signing in with Discord means no new password. It gives leadership a verified Discord identity behind every registration, and it is the base for Governor ID registration and R4 admin access.",
+      "spec": "BACKEND: new Django app backend/accounts (INSTALLED_APPS; config/urls.py path('api/', include('accounts.urls'))).\n1) Model Player: user (OneToOne auth.User, CASCADE, related_name='player'), discord_id (CharField 24, unique), username (40), global_name (64, blank), avatar (64, blank: Discord avatar hash), created_at. avatar_url property: https://cdn.discordapp.com/avatars/{id}/{hash}.png?size=64, else the default https://cdn.discordapp.com/embed/avatars/{(int(id) >> 22) % 6}.png.\n2) accounts/discord_oauth.py (stdlib urllib, same User-Agent pattern as kingdom/discord.py): authorize_url(state, redirect_uri) → https://discord.com/oauth2/authorize?response_type=code&client_id=…&scope=identify&state=…&redirect_uri=…&prompt=none. exchange_code(code, redirect_uri) → POST https://discord.com/api/v10/oauth2/token (form-encoded, client credentials). fetch_user(token) → GET https://discord.com/api/v10/users/@me. Errors raise OAuthError. Scope is identify only: no e-mail, no guilds.\n3) Settings/env: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET (.env.example with step-by-step Developer Portal instructions and both redirect URIs). redirect_uri = SITE_URL + '/api/auth/discord/callback/' (dev SITE_URL=http://localhost:4200 goes through the ng proxy). LOGIN_ENABLED = both set. REST_FRAMEWORK DEFAULT_AUTHENTICATION_CLASSES = ['rest_framework.authentication.SessionAuthentication'], which drops unused Basic auth.\n4) Views (accounts/views.py, urls under /api/auth/):\n   - GET discord/login/?next=… : 404 when disabled. Store state = secrets.token_urlsafe(24) and next (validated with url_has_allowed_host_and_scheme, must start with '/', default '/ucet') in the session, then 302 to Discord.\n   - GET discord/callback/ : pop state, compare with secrets.compare_digest; mismatch or missing → redirect next?login=error. error=access_denied → next?login=cancelled. On success: get_or_create User username 'discord_<id>' (set_unusable_password, never staff) and update/create Player fields, django.contrib.auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend'), redirect to next. OAuthError → ?login=error, logged with log.warning and without tokens.\n   - GET me/ : @ensure_csrf_cookie, Cache-Control: no-store. Returns {login_enabled, user: null | {discord_id, name (global_name or username), avatar_url, is_staff}}.\n   - POST logout/ : logout(), 204 (CSRF enforced by SessionAuthentication).\n   - DELETE me/ : delete the User (cascades Player), logout, 204. Returns 403 for is_staff or is_superuser so admins cannot delete themselves by accident.\n5) Admin: PlayerAdmin(SuperuserOnlyAdmin): name, discord_id, avatar thumbnail, created_at, user.last_login; search by username/discord_id; read-only Discord fields.\n6) Snapshot privacy: kingdom/snapshot.py export removes player data from the git snapshot. Delete rows from accounts_* tables, and Discord users (username LIKE 'discord\\_%') with their auth_user_groups, auth_user_user_permissions and django_admin_log rows (FKs are not enforced in the raw sqlite connection, so delete explicitly). Personal Discord data must never land in git.\nFRONTEND\n7) app.config.ts: provideHttpClient(withFetch(), withXsrfConfiguration({cookieName: 'csrftoken', headerName: 'X-CSRFToken'})).\n8) core/auth.ts Auth service: httpResource<Me>('/api/auth/me/') only in the browser; enabled(), user(), loginUrl(next = current path) → '/api/auth/discord/login/?next=' + encodeURIComponent(next); logout() and deleteAccount() via HttpClient, then reload the resource.\n9) Header: when auth.enabled(), anonymous users get an <a href> (full navigation, not routerLink) 'Prihlásiť' with the discord icon; logged-in users get an avatar (28 px, alt '') + truncated name linking to /ucet. The same appears in the mobile drawer. Before the API answers, render nothing (no layout jump in the prerendered HTML).\n10) pages/account/account.ts|html|scss: route 'ucet' in pages(), Page 'account' in parseUrl, I18n.path('account'). Prerendered shell, not in STATIC_PAGES/sitemap. Seo: extend PageMeta with noindex?: boolean → <meta name='robots' content='noindex'> (removed when leaving) and use it here. States: loading skeleton; disabled ('Prihlásenie zatiaľ nie je zapnuté.'); anonymous (card with 'Prihlásiť cez Discord' button + one sentence on what is stored); logged in (avatar, name, Discord ID, 'Odhlásiť', 'Zmazať účet' with a two-step confirm button); ?login=error|cancelled shows a short message.\n11) i18n: 'account' section + nav.login/nav.account in sk.ts and cs.ts.\n12) Docs: CLAUDE.md (Discord login decision, accounts app, snapshot excludes player data) and README (Discord application setup).\nTESTS (Discord mocked): state mismatch, access_denied, success creates user+player and logs in, second login updates and does not duplicate, open-redirect protection, CSRF on logout, delete forbidden for staff, me/ without config → login_enabled false, snapshot export contains no player rows.",
+      "acceptance_criteria": [
+        "Without DISCORD_CLIENT_ID/SECRET, /api/auth/me/ returns login_enabled=false, no login button is rendered anywhere, /ucet shows 'Prihlásenie zatiaľ nie je zapnuté', and the rest of the site is unchanged.",
+        "/api/auth/discord/login/ answers 302 to discord.com/oauth2/authorize with client_id, scope=identify, a random state and redirect_uri = SITE_URL + /api/auth/discord/callback/.",
+        "A callback with a missing or wrong state never logs anyone in and redirects with ?login=error; error=access_denied redirects with ?login=cancelled.",
+        "A successful callback (mocked) creates a non-staff User with an unusable password plus a Player, logs the user in and redirects to next; a second login updates the name and avatar without creating a new user.",
+        "next values like 'https://evil.example' or '//evil.example' fall back to /ucet (test).",
+        "GET /api/auth/me/ sets the csrftoken cookie with Cache-Control no-store; POST /api/auth/logout/ without X-CSRFToken → 403, with it → 204 and the session ends.",
+        "DELETE /api/auth/me/ removes a normal player's User and Player and returns 403 for staff or superusers.",
+        "The header shows 'Prihlásiť' for anonymous visitors and avatar + name for signed-in players, on desktop and in the mobile drawer, keyboard accessible and responsive at 320 px.",
+        "/ucet and /cz/ucet prerender without the API, carry meta robots noindex and are absent from sitemap.xml.",
+        "export_snapshot produces a file without accounts_* rows and without discord_* users (test).",
+        "All texts are in SK and CZ; backend tests, ng test and ng build pass."
+      ],
+      "effort": "M",
+      "depends_on": [],
+      "needs_from_user": [
+        "A Discord application in the Developer Portal: Client ID and Client Secret into .env",
+        "Redirect URIs registered in the Discord app: http://localhost:4200/api/auth/discord/callback/ and https://<production domain>/api/auth/discord/callback/",
+        "Confirmation that anyone with a Discord account may sign in (registration approval is the gate)"
+      ],
+      "risks": "The client secret must stay in .env only. The OAuth redirect needs the session cookie to be SameSite=Lax (Django default), so this must not be tightened to Strict. If SITE_URL does not match the registered redirect URI, Discord rejects the login. This collects personal data, so privacy-page must ship before login is enabled in production. Dropping DRF BasicAuthentication is intentional, as nothing uses it.",
+      "resume_branch": "wip/discord-login"
+    },
+    {
+      "id": "governor-registration",
+      "title": "Governor ID registration with R4/admin approval",
+      "title_sk": "Registrácia Governor ID so schválením R4/adminom",
+      "audience": "Members (register their main and farm accounts); R4/R5 (approve, keep a roster)",
+      "user_value": "Leadership gets a verified roster that maps a Discord identity to Governor ID and in-game name, which is essential for KvK coordination, migration checks and reaching inactive players. Players get a clear status (pending, approved, rejected with a reason) instead of chasing an R4 on Discord. RoK has no API, so a human approval is the only trustworthy check.",
+      "spec": "BACKEND (accounts app)\n1) Model Governor: player (FK Player, CASCADE, related_name='governors'), governor_id (CharField 12, RegexValidator ^\\d{6,12}$), name (CharField 32, in-game name, stripped), kind (choices 'main' = 'Hlavný účet', 'farm' = 'Farma'; default main), alliance (FK kingdom.Alliance, SET_NULL, null/blank = other/none), status ('pending' = 'Čaká na schválenie', 'approved' = 'Schválený', 'rejected' = 'Zamietnutý'; default pending), review_note (CharField 200, blank; shown to the player), reviewed_by (FK User, SET_NULL, null), reviewed_at (null), created_at, updated_at. UniqueConstraint(fields=['governor_id'], condition=~Q(status='rejected'), name='governor_id_taken') so one ID cannot be claimed twice, while a rejected ID can be resubmitted. Ordering: pending first, then -created_at.\n2) Data migration: Group 'R4' get_or_create plus permissions view/change governor and view player. Default permissions are created for the migration via emit_post_migrate_signal or create_permissions inside RunPython.\n3) API (authenticated only, IsAuthenticated + session/CSRF), accounts/urls.py:\n   - GET /api/me/governors/ → the player's own governors {id, governor_id, name, kind, alliance: {id, tag} | null, status, review_note, created_at}.\n   - POST /api/me/governors/ → creates a pending entry. Validation returns stable error codes for i18n: {code: 'invalid_id' | 'taken' | 'limit' | 'invalid_name'}. Limit is 5 governors per player. ScopedRateThrottle scope 'governors' 10/hour (DEFAULT_THROTTLE_RATES in settings).\n   - DELETE /api/me/governors/<id>/ → only own entries, any status (the player leaves or fixes a typo); 404 for someone else's entry.\n4) Admin GovernorAdmin uses normal model permissions, not SuperuserOnlyAdmin, so group R4 works. list_display: name, governor_id, kind, alliance tag, Discord name (link https://discord.com/users/<id>), colored status, created_at. list_filter: status, kind, alliance. search_fields: name, governor_id, player__username, player__global_name. Actions 'Schváliť' and 'Zamietnuť' (bulk). status and review_note are editable on the change form. save_model and the actions stamp reviewed_by/reviewed_at whenever status changes. player and created_at are read-only. add_permission is False (entries come only from players).\nFRONTEND (/ucet page from discord-login)\n5) New section 'Moje governory' for signed-in users: list rows with name, Governor ID, kind, alliance tag and a status badge (gold = approved, muted = pending, red accent = rejected + review_note), plus a delete button with a two-step confirm. Form: Governor ID (inputmode=numeric, pattern), in-game name, kind (Hlavný účet/Farma), alliance select from KingdomApi.alliances() + 'Iná / žiadna', submit. API error codes map to i18n messages ('Tento Governor ID už je zaregistrovaný – ozvi sa R4.', etc.). Hint: Governor ID is in the governor profile in game. Disabled when the limit is reached.\n6) Shared form styles (.field, .input, .select, error text) as tokens in styles.scss, dark, with a visible focus ring.\n7) i18n 'account.governors' section in sk.ts and cs.ts. Docs: CLAUDE.md (registration model, R4 group) and README (how R4 approves).\nTESTS: create / list / delete own; cannot see or delete another player's entries; anonymous 403; invalid ID; duplicate of a pending/approved ID → 'taken', but resubmitting a rejected ID works; limit 5; throttle; approve action stamps reviewed_by/at; an R4 group user (staff) can open the changelist and approve.",
+      "acceptance_criteria": [
+        "A signed-in player can submit Governor ID + name + kind + alliance on /ucet and immediately sees it as 'Čaká na schválenie'.",
+        "A second registration of a Governor ID that is pending or approved fails with a localized 'already registered' message; a previously rejected ID can be submitted again (tests).",
+        "IDs that are not 6–12 digits are rejected client-side and server-side; more than 5 governors per player is refused.",
+        "Anonymous requests to /api/me/governors/ return 403; a player can never list or delete another player's governors (tests).",
+        "In admin, a superuser or a staff user in group R4 can filter pending registrations and approve or reject them in bulk; reviewed_by and reviewed_at are filled.",
+        "A rejected entry shows its review_note to the player on /ucet; an approved one shows the gold badge.",
+        "The form works by keyboard, shows errors next to fields, and is usable at 320 px; all texts are in SK and CZ.",
+        "Migrations are additive; backend tests, ng test and ng build pass."
+      ],
+      "effort": "M",
+      "depends_on": [
+        "discord-login"
+      ],
+      "needs_from_user": [
+        "Decision: maximum governors per player (proposed 5) and whether farms may be registered",
+        "Which leaders will approve (they become R4 staff users)"
+      ],
+      "risks": "Governor IDs cannot be verified automatically, so R4 must check in game (by name / in the alliance member list); the admin help text says so. Abuse is limited by login, throttling and the uniqueness rule. Governor IDs and names are personal-ish data and are covered by privacy-page and excluded from the git snapshot (accounts_* tables, already handled by discord-login)."
+    },
+    {
+      "id": "privacy-page",
+      "title": "Privacy page and data minimisation for player accounts",
+      "title_sk": "Stránka Ochrana údajov a minimalizácia uložených dát",
+      "audience": "All visitors who sign in; Gether as the operator",
+      "user_value": "With Discord login and Governor registration the site starts storing personal data. A short, factual privacy page plus automatic clean-up of stale data keeps the site GDPR-compliant and builds trust in a small community where everyone knows each other.",
+      "spec": "1) Page /ochrana-udajov and /cz/ochrana-udajov: route in pages(), Page 'privacy' in parseUrl, I18n.path('privacy'), prerendered, STATIC_PAGES += ['/ochrana-udajov'], Seo fixed texts t.seo.privacy. Same layout as About (app-page-header + structured blocks), short.\n2) Content in the sk.ts / cs.ts 'privacyPage' section, as headings plus 1–2 sentences or short lists each: who runs the site (controller, from Gether); what we store (Discord ID, name, avatar hash; Governor ID, in-game name, kind, alliance, registration status); why (identity for R4 approval, kingdom roster); who sees it (R4 and admins only; nothing is public); how long (until account deletion; rejected registrations 90 days); cookies (only the technically necessary session + csrftoken, so no consent banner); how to delete ('Zmazať účet' on /ucet); contact. It must match the fields that actually exist; no promises about features that do not exist.\n3) Links: footer (small link next to the fan-site note), the login note on /ucet, and under the governor registration form.\n4) Worker data minimisation: once a day (monotonic gate) delete Governor rows with status 'rejected' and reviewed_at older than 90 days (function in accounts, called from run_worker, logged count).\n5) CLAUDE.md: rule that every new personal-data field must be added to the privacy page.\nTESTS: purge deletes only old rejected entries; parseUrl for the new path; dictionary shape test passes.",
+      "acceptance_criteria": [
+        "/ochrana-udajov and /cz/ochrana-udajov are prerendered with their own title/description, appear in sitemap.xml and are linked from the footer on every page.",
+        "The page lists exactly the data fields stored by the accounts app, retention, cookie use (session + csrftoken only) and how to delete the account.",
+        "/ucet links to the page from the login note and from the registration form.",
+        "The worker deletes rejected registrations older than 90 days and keeps everything else (unit test).",
+        "All texts are in SK and CZ with correct diacritics; the layout is readable at 320 px and 1920 px."
+      ],
+      "effort": "S",
+      "depends_on": [
+        "discord-login"
+      ],
+      "needs_from_user": [
+        "Name/contact of the data controller (Gether or the kingdom leadership) and a contact channel",
+        "Confirmation of the 90-day retention for rejected registrations"
+      ],
+      "risks": "This is not legal advice; keep it factual and in sync with the code. It is a legal page and an exception to the 'no text ballast' rule, but it should still be short and structured. Low technical risk."
+    },
+    {
+      "id": "admin-dashboard",
+      "title": "Admin overview: worker health, upcoming and failed notifications",
+      "title_sk": "Prehľad v admine: stav workera, najbližšie a zlyhané notifikácie",
+      "audience": "Superadmin (Gether), R4 (registration block only)",
+      "user_value": "The site has to run with little effort. Today Gether cannot tell from the admin whether the worker is alive, whether the last backup is recent, whether a reminder failed, or what goes out next. One panel on the admin start page answers all of that in a few seconds.",
+      "spec": "1) Worker heartbeat without DB noise: run_worker writes /app/data/worker_status.json (on the db_data volume shared by backend and worker in both compose files) once per tick: {last_tick (ISO), last_backup_at, last_backup_file}, written atomically via a temp file + os.replace. It is a file, not a DB row, so the git snapshot does not change every 30 s. The backend reads it; production backend does not mount BACKUP_DIR, which is why backup info comes from this file.\n2) TEMPLATES['DIRS'] = [BASE_DIR / 'templates'] (if not already added by r4-admin-access). backend/templates/admin/index.html extends 'admin/index.html' and adds a 'Prehľad' block above the app list. The context comes from a small helper (kingdom/dashboard.py), passed by wrapping admin.site.index with extra_context, or via a custom AdminSite subclass keeping the same registry.\n3) Superuser blocks: worker status (OK if last_tick < 2 min, otherwise red 'Worker nebeží' with the time); last backup age (warning when older than BACKUP_INTERVAL_DAYS + 1 day or missing); next 5 PENDING notifications (time in Bratislava, title, link to change page); FAILED notifications in the last 7 days (count + link to the changelist filtered by ?status__exact=failed); configuration flags as 'nastavené' / 'chýba' for DISCORD_WEBHOOK_URL, DISCORD_EVENT_ROLE_ID, DISCORD_TEST_WEBHOOK_URL, DISCORD_STAFF_WEBHOOK_URL, Discord login. Values are never shown, only booleans (use getattr with default, since some settings come from later slices). Guides published/unpublished counts.\n4) Blocks for staff with the permission: pending governor registrations count + link (only when the accounts.Governor model exists and the user has view_governor).\n5) Styling uses Django admin CSS variables (--body-fg, --message-error-bg, --message-warning-bg …) so it works in admin light/dark; no new design-system colors.\nTESTS: helper returns 'stale' for an old heartbeat and 'missing' without the file; the index page renders for a superuser with the blocks; a staff user without permissions does not see notification data; no secret value appears in the HTML (assert the webhook URL is not in the response).",
+      "acceptance_criteria": [
+        "The admin start page shows a 'Prehľad' panel for superusers with worker status, last backup age, the next 5 pending notifications and the count of failed notifications in the last 7 days, all linking to the right admin pages.",
+        "Stopping the worker container makes the panel show 'Worker nebeží' within 2 minutes.",
+        "Configuration rows show only 'nastavené'/'chýba'; no webhook URL or secret appears in the HTML (test).",
+        "A non-superuser staff user sees no notification or worker data; with the registration feature present, R4 sees only the pending-registrations count.",
+        "No DB writes happen per worker tick (heartbeat is a file); export_snapshot stays byte-identical when content did not change."
+      ],
+      "effort": "S",
+      "depends_on": [],
+      "needs_from_user": [],
+      "risks": "The admin template override must keep the default app list intact across Django upgrades; extending admin/index.html and only adding a block keeps it safe. The heartbeat file lives in the db_data volume, so check file ownership (the worker runs as app via setpriv)."
+    },
+    {
+      "id": "r4-admin-access",
+      "title": "R4 access to the admin via Discord login and roster export",
+      "title_sk": "Prístup R4 do adminu cez Discord a export zoznamu governorov",
+      "audience": "R4/R5 leadership; superadmin who grants access",
+      "user_value": "R4s approve registrations without Gether creating and sharing passwords: they sign in with Discord and land in the admin with only the rights they need. Leadership can export the approved roster to a spreadsheet for KvK planning.",
+      "spec": "1) TEMPLATES['DIRS'] = [BASE_DIR / 'templates'] (if not already present). backend/templates/admin/login.html extends 'admin/login.html' and adds a 'Prihlásiť cez Discord' button below the form, linking to /api/auth/discord/login/?next=/admin/, shown only when Discord login is configured (context processor or template tag reading settings). Password login stays for the superuser. Because Discord login calls django login(), the same session works in /admin/ (same origin behind nginx; in dev cookies are shared across ports on localhost).\n2) PlayerAdmin actions (superuser only): 'Pridať do R4 (prístup do adminu)' → user.is_staff=True + add group 'R4' (get_or_create); 'Odobrať R4' → remove the group and set is_staff=False unless the user is a superuser. list_display gets an 'R4' boolean column. Messages in Slovak.\n3) GovernorAdmin action 'Exportovať schválených do CSV' (available to anyone with view_governor): an HttpResponse text/csv with UTF-8 BOM, ';' separator (Excel in SK/CZ locale), columns: Meno v hre, Governor ID, Typ, Aliancia, Discord meno, Discord ID, Schválené (date). Exports only approved rows among the selected ones (or all approved when 'select all'). Filename kd1035-governori-YYYY-MM-DD.csv.\n4) /api/auth/me/ adds pending_governors (int, only when the user has accounts.view_governor, otherwise omitted). /ucet shows for staff: an 'Administrácia' link (/admin/) and 'Čaká na schválenie: N' when N > 0.\n5) README: how to make someone R4 (they sign in once with Discord → Admin → Hráči → action). CLAUDE.md: R4 = staff + group R4 via Discord login.\nTESTS: actions toggle is_staff/group; removing R4 from a superuser keeps is_staff; CSV contains only approved rows and starts with a BOM; me/ returns pending_governors only with the permission; the admin login page contains the Discord button only when configured.",
+      "acceptance_criteria": [
+        "After the superuser applies 'Pridať do R4' to a player, that player can open /admin/ after signing in with Discord, sees only Governor registrations (and read-only players), and can approve them.",
+        "'Odobrať R4' immediately removes admin access (is_staff false, group removed), but never removes is_staff from a superuser.",
+        "The admin login page shows 'Prihlásiť cez Discord' only when DISCORD_CLIENT_ID/SECRET are set, and that flow lands on /admin/.",
+        "The CSV export opens correctly in Excel with diacritics (UTF-8 BOM, ';') and contains only approved governors (test).",
+        "/ucet shows an 'Administrácia' link and the pending count for R4; normal players see neither.",
+        "Texts are in SK and CZ on the website; admin texts are in Slovak; all tests pass."
+      ],
+      "effort": "S",
+      "depends_on": [
+        "discord-login",
+        "governor-registration"
+      ],
+      "needs_from_user": [
+        "Which Discord users become R4",
+        "Decision: should R4 also edit Alliance/Officer/Links in admin (default: registrations only)"
+      ],
+      "risks": "A compromised R4 Discord account means access to the roster, so recommend Discord 2FA for R4 in the README and keep R4 permissions minimal. The superuser keeps password login as a fallback."
+    },
+    {
+      "id": "leadership-discord-alerts",
+      "title": "Leadership alerts on Discord: new registrations and failed reminders",
+      "title_sk": "Upozornenia pre vedenie na Discorde: nové registrácie a zlyhané pripomienky",
+      "audience": "R4/R5 and superadmin",
+      "user_value": "Registrations get approved quickly because R4s see them where they already are, with a direct link to the admin. Gether learns about a failed or missed member reminder right away instead of discovering it days later.",
+      "spec": "1) Env DISCORD_STAFF_WEBHOOK_URL (.env.example: PRIVATE leadership channel). Empty → the feature is silently off (one info log at worker start).\n2) Uses discord.send(payload, url) from the refactor (build it here if missing). Staff messages never ping anyone: allowed_mentions {'parse': []}.\n3) Governor.staff_notified_at (DateTime, null; additive migration). On each worker tick, pending governors with staff_notified_at null get one embed 'Nová registrácia governora': name, Governor ID, kind, alliance tag, Discord <@id> (rendered as a mention but not pinged), and a link SITE_URL + /admin/accounts/governor/<pk>/change/. On success staff_notified_at = now. When there are more than 5 at once, send one summary message ('N nových registrácií' + changelist link ?status__exact=pending) and mark them all. On failure, leave staff_notified_at null and retry next tick, with log.warning and no alert loop.\n4) EventNotification.staff_alerted (bool, default False; additive). When a notification becomes FAILED (from deliver() or the missed-6h path in send_due), the worker sends 'Notifikácia sa neodoslala: <title>' with the error (truncated to 300 chars) and an admin link, then sets staff_alerted=True. A failure of the staff webhook itself is only logged.\n5) Pre-existing pending governors and old failed notifications at deploy time: a data migration marks them as already alerted so the first run does not spam.\n6) README: create the staff webhook in a private channel.\nTESTS (urlopen mocked): one alert per new registration; no alert when unset; summary for >5; failed notification alerts once; staff webhook failure does not raise and retries next tick; the migration marks existing rows.",
+      "acceptance_criteria": [
+        "A new governor registration produces exactly one message in the staff channel within one worker tick (≤30 s), with the admin link and no ping (test asserts allowed_mentions parse is empty).",
+        "A reminder that fails or is skipped as missed produces exactly one staff alert containing the error text.",
+        "Without DISCORD_STAFF_WEBHOOK_URL nothing is sent and nothing errors.",
+        "If the staff webhook is down, the worker keeps running, retries the registration alert on the next tick, and never alerts about its own failure.",
+        "Deploying the migration does not send alerts for registrations or failures that existed before."
+      ],
+      "effort": "S",
+      "depends_on": [
+        "governor-registration"
+      ],
+      "needs_from_user": [
+        "DISCORD_STAFF_WEBHOOK_URL of a private leadership channel"
+      ],
+      "risks": "A staff webhook in a public channel would leak Governor IDs, so the README must stress 'private'. Keep the per-tick volume bounded (summary message) so Discord rate limits are not hit."
+    },
+    {
+      "id": "home-upcoming-events",
+      "title": "Upcoming events teaser on the home page",
+      "title_sk": "Najbližšie eventy na úvodnej stránke",
+      "audience": "Members and visitors landing on the home page",
+      "user_value": "Most visits start on the home page. Showing the next three events there makes the site something members check regularly, and it shows migrants an active kingdom, without opening the calendar.",
+      "spec": "1) New home section component pages/home/upcoming/upcoming.ts|scss (id 'events'), placed between <app-alliance> and <app-guides> in home.ts.\n2) Data from EventsApi (public-event-calendar): the next 3 occurrences that are running or start in the future. Compact cards: day label ('Dnes', 'Zajtra', short date), local time + 'UTC hh:mm', name, 'Prebieha' tag when running, guide link when set. Below: 'Celý kalendár' link → i18n.path('calendar').\n3) The section is not rendered at all while loading, when the API fails, or when there are no events (follows the 'section hides' rule; prerendered HTML has no empty box). It appears with appReveal (transform/opacity, reduced-motion respected).\n4) i18n: 'upcoming' section (eyebrow, title, link) in sk.ts and cs.ts. Tokens only, responsive (1 column on mobile, 3 on desktop).\n5) Screenshots at 360/768/1280/1920/2560 with events present.",
+      "acceptance_criteria": [
+        "With public events in the DB, the home page (SK and CZ) shows at most 3 upcoming or running events with local and UTC times and a working 'Celý kalendár' link.",
+        "With no events, or with the API down, the section is absent and the home page looks exactly as before.",
+        "The prerendered home HTML contains no empty events section; there is no console error during prerender.",
+        "Cards are keyboard accessible, readable at 320 px, and respect prefers-reduced-motion."
+      ],
+      "effort": "S",
+      "depends_on": [
+        "public-event-calendar"
+      ],
+      "needs_from_user": [],
+      "risks": "The section appears after hydration, which shifts content below it. It sits below the fold under the alliance card, so the impact is small, but check it in screenshots."
+    },
+    {
+      "id": "ics-calendar-feed",
+      "title": "Subscribable iCal feed of kingdom events",
+      "title_sk": "Odber kalendára eventov (iCal) do mobilu",
+      "audience": "Members who are not always on Discord",
+      "user_value": "One tap adds the kingdom calendar to Google, Apple or Outlook calendars, so the phone's own reminders work even for members who mute Discord. It needs no bot and no paid service, and updates arrive automatically.",
+      "spec": "1) GET /api/calendar.ics?lang=sk|cs (kingdom/views.py, plain Django view): Content-Type text/calendar; charset=utf-8, filename kd1035.ics (inline). VCALENDAR with VERSION:2.0, PRODID:-//KD 1035//Kalendar//SK, CALSCALE:GREGORIAN, X-WR-CALNAME:'KD 1035 – eventy' (CZ variant by lang), REFRESH-INTERVAL;VALUE=DURATION:PT6H and X-PUBLISHED-TTL:PT6H.\n2) Occurrences for the next 60 days (plus running ones) of show_on_web events via kingdom/events.occurrences, each as a VEVENT: UID '<event id>-<YYYYMMDDTHHMMSSZ>@kd1035', DTSTAMP, DTSTART/DTEND in UTC with 'Z' (DTEND omitted when duration 0), SUMMARY (name in lang with CS→SK fallback), URL (guide URL in lang when set, else the calendar page; SITE_URL based). RFC 5545 escaping of \\ ; , and newlines, CRLF line endings, folding at 75 octets (UTF-8 safe). Stdlib only, no new dependency. Expanded occurrences rather than RRULE, so edits propagate and no VTIMEZONE is needed.\n3) Calendar page: 'Pridať do kalendára' button → webcal://<host>/api/calendar.ics?lang=<lang> (host from location in the browser only) plus a secondary 'Kopírovať odkaz' button with the https URL (navigator.clipboard, feedback text). i18n in SK and CZ.\n4) Cache-Control public, max-age=900.\nTESTS: valid structure (BEGIN/END pairs), UTC times, escaping of ';' and ',', folding of a long Czech name stays valid UTF-8, hidden events excluded, lang=cs uses name_cs.",
+      "acceptance_criteria": [
+        "/api/calendar.ics returns text/calendar that imports without errors into Google Calendar and validates with an iCalendar validator (manual check documented in the PR/commit).",
+        "Each public occurrence in the next 60 days is a VEVENT with a stable UID, UTC DTSTART/DTEND and the name in the requested language.",
+        "Hidden or inactive events never appear (test).",
+        "Lines are CRLF-terminated, folded at 75 octets without breaking multibyte characters, and special characters are escaped (tests).",
+        "The calendar page offers 'Pridať do kalendára' (webcal link) and 'Kopírovať odkaz' in SK and CZ, keyboard accessible."
+      ],
+      "effort": "S",
+      "depends_on": [
+        "recurring-kingdom-events",
+        "public-event-calendar"
+      ],
+      "needs_from_user": [],
+      "risks": "Google Calendar refreshes subscribed feeds slowly (often several hours), so the button tooltip should not promise instant updates. robots.txt already disallows /api/, which is fine for a feed."
+    },
+    {
+      "id": "not-found-page",
+      "title": "Real 404 page in SK and CZ instead of a silent redirect home",
+      "title_sk": "Skutočná stránka 404 (SK/CZ) namiesto tichého presmerovania domov",
+      "audience": "Every visitor following an old or mistyped link; SEO",
+      "user_value": "Today any unknown URL silently redirects to the home page (`{ path: '**', redirectTo: '' }`), so visitors from an outdated Discord or Facebook link don't know the page is gone and Czech visitors land on the Slovak home page. A clear 404 with ways forward keeps them on the site, and the URL stays as typed.",
+      "spec": "1) app.routes.ts: replace `{ path: '**', redirectTo: '' }` with `{ path: '**', component: NotFound }` at the root and add the same wildcard inside the 'cz' children, so /cz/xyz renders in Czech. Verify ng build does not try to prerender the wildcard (server route '**' stays Prerender for real pages; unknown URLs are served by nginx's existing `error_page 404 /index.csr.html` with a real 404 status).\n2) pages/not-found/not-found.ts: app-page-header (crumbs Domov), title 'Táto stránka neexistuje', one sentence, buttons: Domov (btn--gold), Návody (i18n.guidePath('commanderi')), plus Kalendár when that page exists.\n3) Seo: PageMeta.noindex (add it if discord-login has not yet) → meta robots noindex. When noindex is set, also remove the canonical and hreflang link elements so no canonical points at a non-existent URL; restore them on the next page.\n4) Guide detail notFound state and invalid category on the list also call seo.set with noindex.\n5) i18n 'notFound' section in sk.ts and cs.ts.\nTESTS: frontend router test that /neexistuje resolves to NotFound and /cz/neexistuje too, with i18n.lang() = 'cs'; Seo test that noindex removes the canonical link; production check: `curl -I http://localhost:8080/neexistuje` → 404 (documented).",
+      "acceptance_criteria": [
+        "/neexistuje shows the Slovak 404 page and the address bar keeps /neexistuje; /cz/neexistuje shows the Czech version.",
+        "The page has meta robots noindex and no canonical/hreflang links; navigating to a normal page afterwards restores the canonical and hreflang links and removes noindex.",
+        "Production nginx answers unknown URLs with HTTP 404 and the 404 content renders (no redirect to /).",
+        "An unknown guide slug and an invalid guide category also set noindex.",
+        "The page is responsive, keyboard accessible and fully translated."
+      ],
+      "effort": "S",
+      "depends_on": [],
+      "needs_from_user": [],
+      "risks": "Low. Make sure the wildcard inside 'cz' does not shadow real Czech routes (order matters: the wildcard goes last). If noindex was already added by discord-login, reuse it rather than duplicating the logic."
+    }
+  ],
+  "critique": {
+    "reviews": [
+      {
+        "id": "discord-preview-and-test-send",
+        "verdict": "revise",
+        "reasons": "The test send to a private channel solves a real problem. The only check today is 'Odoslať na Discord hneď' (kingdom/admin.py send_now), which posts to the real channel, pings the role and flips the status. Most of the rest is decoration or duplicates existing features. A test post shows Discord's real rendering, including <t:…> timestamps, so a hand-made HTML approximation of Discord adds maintenance (markdown subset, timestamp formatting, styling) for little extra value. 'Duplikovať o týždeň' duplicates Django's built-in `save_as = True` ('Uložiť ako nové'), which is one line, and once recurring-kingdom-events exists, irregular repeats are rare. The relative 'kedy' column and status pills are cosmetic. The custom object-tool URL <pk>/test/ adds a view, CSRF handling and a template for something an admin action already covers. The trimmed slice is about XS.",
+        "required_changes": [
+          "Keep only: DISCORD_TEST_WEBHOOK_URL setting (+ .env.example entry stressing PRIVATE channel), action 'Poslať test do testovacieho kanála' (title prefixed '[TEST] ', content '', allowed_mentions {'parse': []}, never touches status/sent_at/error, clear error and no HTTP call when unset), and `save_as = True` on EventNotificationAdmin.",
+          "Drop the HTML Discord preview, the 'kedy' column, the status pills and the custom <pk>/test/ admin URL/button.",
+          "Reuse build_payload/send from recurring-kingdom-events (build after it); if KingdomEvent exists, offer the same test action rendering its next occurrence.",
+          "Tests as proposed for the test action (mock urlopen, assert URL, no role, status unchanged; missing URL → no call)."
+        ]
+      },
+      {
+        "id": "public-event-calendar",
+        "verdict": "revise",
+        "reasons": "It has value once real events exist, and it is buildable: GuidesApi is the right pattern, the '**' Prerender server route covers the shell, and STATIC_PAGES/parseUrl/I18n.path/Seo need small extensions (I18n.path currently only accepts 'home' | 'about'; the Seo effect only has fixed texts for home/about). Three problems. (1) A 31-day agenda that expands a daily event (repeat_days=1) produces 31 identical rows, which bury the weekly events that matter. (2) Nothing is seeded, and Gether has not provided the event list. A header nav item that leads to 'Zatiaľ nie sú naplánované žiadne eventy' makes the kingdom look dead to migrants, which is the opposite of the stated value. (3) The header currently has 4 nav items (header.ts items()), not 5, but discord-login also adds a login control, so 'Kalendár' plus login plus lang switch must be checked together. Do not build this until recurring-kingdom-events is live and Gether has entered the regular public events.",
+        "required_changes": [
+          "Show daily events once in a compact 'Každý deň' block (local + UTC time) above the agenda instead of expanding them per day; the agenda expands only events with repeat_days != 1.",
+          "Build only after recurring-kingdom-events is deployed and real public events exist (process gate); acceptance screenshots must use realistic data, not invented schedules committed anywhere.",
+          "Verify header fit at 320/900/1024/1280 together with the discord-login control if that feature has landed; if it does not fit, move 'Kalendár' to the drawer + footer + home teaser instead of the desktop bar.",
+          "Widen I18n.path() type and Seo fixed-text branch for 'calendar' explicitly; add parseUrl spec cases.",
+          "Fix the risk text: it would be the 5th nav item, not the 6th."
+        ]
+      },
+      {
+        "id": "discord-login",
+        "verdict": "revise",
+        "reasons": "On its own it gives almost nothing, but it is the right base for the Governor ID registration that CLAUDE.md lists as planned. Discord identity is how R4 actually reaches players. The spec is technically sound: the state lives in the session, SameSite=Lax works for the top-level Discord redirect, the nginx /api/ proxy and ng proxy '/api' cover the callback, CSRF goes through SessionAuthentication, and the scope is identify only. I checked these gaps in the code. (1) Privacy: this starts collecting personal data, but privacy-page depends on this feature and also needs governor fields, so nothing enforces that the page exists before production login is enabled. (2) In kingdom/snapshot.py the raw-sqlite cleanup needs `LIKE 'discord\\_%' ESCAPE '\\'`, otherwise `_` is a wildcard and the backslash is literal. (3) Users get username 'discord_<id>' only, so Gether cannot find a person in the Django Users admin when granting R4 rights. (4) The prerendered header has no login control, so adding one after hydration shifts the bar. At 320 px, brand + lang switch + burger + avatar may not fit. (5) The Django test client skips CSRF checks by default, so the 'logout without X-CSRFToken → 403' test needs Client(enforce_csrf_checks=True). (6) The callback is a public endpoint that triggers an outbound call to Discord's token endpoint and can be scripted after obtaining a state. Discord rate limits would then hit real logins.",
+        "required_changes": [
+          "README/CLAUDE.md: DISCORD_CLIENT_ID/SECRET must not be set on the production server until privacy-page is deployed; build order keeps privacy-page in the same batch.",
+          "Snapshot cleanup uses an explicit ESCAPE clause, also nulls/deletes django_admin_log rows of removed users; test that a user named 'discordX' (no underscore) is kept and 'discord_1' is removed.",
+          "On login also set User.first_name = global_name or username (truncated to 150) so the Users admin is readable.",
+          "Header: reserve the login slot's width (fixed min-width placeholder) to avoid layout shift; below the desktop breakpoint show login/account only inside the drawer; verify at 320 px.",
+          "Throttle the callback (e.g. AnonRateThrottle or a simple per-IP scope, ~20/hour) and verify the state before any Discord request.",
+          "Tests for CSRF use Client(enforce_csrf_checks=True)."
+        ]
+      },
+      {
+        "id": "governor-registration",
+        "verdict": "revise",
+        "reasons": "Highest-value item on the roadmap: CLAUDE.md names Governor ID registration with R4/admin approval as planned, RoK has no API, and human approval is the only check. The design is sound: a partial UniqueConstraint lets a rejected ID be resubmitted, there are stable error codes for i18n, and the limit is 5. Effort M is honest, and the moderation load on R4 is a real ongoing cost. Concrete defects I found. (1) The ScopedRateThrottle 'governors' 10/hour is applied to the view, so it also counts GET (the list loads on every /ucet visit) and DELETE. A player who reloads /ucet 10 times gets 429 and an empty list. (2) The R4 group gets 'view player', but discord-login defines PlayerAdmin(SuperuserOnlyAdmin), which overrides model permissions, so the permission does nothing. r4-admin-access then promises R4 'read-only players', which contradicts it. (3) DRF throttling uses the default LocMemCache, which is per gunicorn worker (3 workers), so the real limit is about 3x. (4) An R4 with an unusable password who opens /admin/ directly lands on the password form and is stuck unless they signed in on the website first.",
+        "required_changes": [
+          "Apply the throttle to POST only (override get_throttles() or a custom throttle with allow_request returning True for safe methods); test that 11 GETs still work.",
+          "Remove 'view player' from the R4 group (GovernorAdmin shows Discord name/link through player__ lookups, search via player__username works without it) – keep PlayerAdmin superuser-only.",
+          "Note the per-process cache in a comment or configure a FileBasedCache/DB cache for throttling; either is acceptable, but document which.",
+          "README: how Gether makes an R4 (Users admin → staff + group R4) and that R4 must sign in via Discord on /ucet before opening /admin/ (until r4-admin-access adds the button on the admin login page).",
+          "Permissions in the data migration via create_permissions(apps.get_app_config('accounts'), apps=apps) before assigning them, with a test on a fresh DB.",
+          "Update the privacy page content (Governor fields) in the same change if privacy-page already exists; otherwise privacy-page must include them."
+        ]
+      },
+      {
+        "id": "privacy-page",
+        "verdict": "revise",
+        "reasons": "Mandatory before login goes live, and a factual, short legal page is an acceptable exception to the no-ballast rule. Its declared dependency is wrong, though: it lists Governor fields and a worker purge of rejected Governor rows, which need governor-registration, not just discord-login. Several statements would also be inaccurate as specified. 'Cookies: only session + csrftoken' leaves out the localStorage key 'kd1035.lang' (i18n.ts remember()). Every visitor gets csrftoken, because the header Auth service calls me/ with @ensure_csrf_cookie on every page. 'What we store' ignores server access logs: gunicorn runs with --access-logfile -, nginx logs client IPs, and Docker json-file logs have no rotation configured in either compose file. Discord is a third party in the login flow. Fonts are self-hosted via @fontsource (angular.json), so no Google Fonts transfer needs to be disclosed. The controller can be stated factually from existing data (Gether, the operator per the footer watermark, contact through his Discord via the Officer contact), but Gether must confirm it. Nothing may be invented.",
+        "required_changes": [
+          "depends_on: discord-login AND governor-registration; build it right after governor-registration and before Discord credentials are set in production.",
+          "Content must list: localStorage language preference, csrftoken for every visitor (security), session cookie only for signed-in users, server access logs (IP, time, URL) with their retention, Discord as the OAuth provider (link to its policy).",
+          "Add log rotation to both compose files (logging: driver json-file, options max-size/max-file) so the stated log retention is true; mention the effective retention on the page.",
+          "Controller/contact: use Gether + the existing Discord contact unless Gether supplies something else; no invented addresses or legal claims ('GDPR-compliant' wording out).",
+          "CLAUDE.md rule as proposed (every new personal-data field → privacy page); purge test as proposed."
+        ]
+      },
+      {
+        "id": "admin-dashboard",
+        "verdict": "revise",
+        "reasons": "Useful for running the site with little effort, and the architecture is right. A heartbeat file on db_data, which backend and worker share in both compose files, avoids DB churn in the git snapshot. Backup info has to come from the worker because the production backend has no BACKUP_DIR mount (I checked docker-compose.yml). TEMPLATES['DIRS'] is empty today, and a same-named admin/index.html extending 'admin/index.html' is supported by Django. But the spec builds in coupling to features that may never ship: a conditional Governor block, flags for DISCORD_TEST_WEBHOOK_URL / DISCORD_STAFF_WEBHOOK_URL / Discord login via getattr defaults. Guide published/unpublished counts are ballast because the Guides changelist already filters by is_published. Medium value, so not in this batch.",
+        "required_changes": [
+          "Only show blocks/flags for things that exist at build time (worker heartbeat, last backup, next 5 pending, failed in last 7 days, DISCORD_WEBHOOK_URL/DISCORD_EVENT_ROLE_ID); each later feature adds its own row in its own change.",
+          "Drop the guide counts.",
+          "Provide the context via a simple template tag (`{% kd_overview as o %}` checking request.user.is_superuser) instead of wrapping admin.site.index or subclassing AdminSite.",
+          "Heartbeat write must swallow OSError with a log.warning (never crash the worker loop); test 'missing' and 'stale' states as proposed."
+        ]
+      },
+      {
+        "id": "r4-admin-access",
+        "verdict": "revise",
+        "reasons": "Most of this is glue. R4s can already get admin access once Gether sets is_staff + group R4 in the Users admin, because the Discord login session also works on /admin/ (same origin). The 'Pridať do R4' action and the Discord button on the admin login page are real conveniences, and the CSV roster export has value for KvK planning. Two defects. (1) The CSV contains user-controlled strings (in-game name, Discord global_name). Opened in Excel, values starting with = + - @ are executed as formulas (CSV injection). (2) Acceptance criterion 1 promises R4 'read-only players', but PlayerAdmin is SuperuserOnlyAdmin. Keep R4 minimal, as governor-registration's revision requires. It depends on two unfinished features, so it goes in a later batch.",
+        "required_changes": [
+          "Neutralise formula injection: prefix cells starting with =, +, -, @, tab or CR with a single quote; test with a name '=HYPERLINK(...)'.",
+          "Drop 'read-only players' from the acceptance criteria; R4 sees only Governor registrations.",
+          "Admin login template: show the Discord button via a context processor/template tag reading settings, only when both client ID and secret are set; next=/admin/ goes through the same url_has_allowed_host_and_scheme check.",
+          "README: recommend Discord 2FA for every R4 as proposed."
+        ]
+      },
+      {
+        "id": "leadership-discord-alerts",
+        "verdict": "revise",
+        "reasons": "Fast approval of registrations and visible failures add real operational value, and it reuses the webhook infrastructure at no cost. Problems. (1) Retry on every tick: send() has a 15 s timeout, so with the staff webhook down and up to 5 pending governors the 30 s loop can stall for about 75 s per tick, delaying member reminders in send_due(). (2) Failed-notification alerts have no per-tick cap the way registrations do. A Discord outage marks many reminders FAILED at once and floods the staff channel when Discord comes back. (3) Posting Governor IDs and Discord IDs into a Discord channel is a further transfer of personal data, which the privacy page must state. Later batch, after governor-registration.",
+        "required_changes": [
+          "After a staff-webhook failure, back off (monotonic gate, e.g. retry no sooner than 5 min) instead of retrying every tick.",
+          "Cap failed-notification alerts the same way as registrations: >5 in one tick → one summary with a link to ?status__exact=failed.",
+          "Update the privacy page: registration alerts go to a private leadership Discord channel.",
+          "Keep allowed_mentions {'parse': []} and the data migration marking existing rows, with tests as proposed."
+        ]
+      },
+      {
+        "id": "home-upcoming-events",
+        "verdict": "approve",
+        "reasons": "Small and consistent with the 'section hides' rule: it is not rendered while loading, on API failure or when there are no events, so the prerendered home is unchanged and an empty kingdom calendar never shows on the home page. It reuses EventsApi, so the extra cost is a component and i18n keys. It sits below the hero and alliance card, so the post-hydration shift is below the fold. It depends on public-event-calendar and should ship in the same batch, ideally as part of that slice, once real events exist. Apply the calendar's 'Každý deň' rule here too, so the 3 cards are not filled by one daily event repeated three times."
+      },
+      {
+        "id": "ics-calendar-feed",
+        "verdict": "revise",
+        "reasons": "Moderate value for members who mute Discord. It needs only the stdlib, no paid service, and expanded occurrences avoid VTIMEZONE/RRULE pitfalls. The risk analysis is wrong in one important point: frontend/public/robots.txt has 'Disallow: /api/', and Google Calendar's URL subscription fetcher (Google-Calendar-Importer) has been reported to refuse feeds blocked by robots.txt ('Could not fetch the url because robots.txt prevents us from crawling the url'). As specified, the headline use case (Google Calendar) can fail. webcal:// has no handler on Android Chrome, so the copy-link button is the main path there. A daily event adds 60 VEVENTs to a subscriber's calendar, so per-event opt-out from the feed may matter. Later batch.",
+        "required_changes": [
+          "Either add 'Allow: /api/calendar.ics' above the Disallow line in robots.txt or serve the feed at a non-/api path proxied by nginx and the ng dev proxy; verify a Google Calendar subscription manually and note it in the commit.",
+          "On the calendar page, make 'Kopírovať odkaz' (https URL) equally prominent, with a one-line hint for Google Calendar ('Pridať kalendár → Z webovej adresy'); no promise of instant updates.",
+          "Consider excluding repeat_days=1 events from the feed or adding a feed flag on KingdomEvent; decide explicitly.",
+          "RFC 5545 tests as proposed (CRLF, 75-octet UTF-8-safe folding, escaping)."
+        ]
+      },
+      {
+        "id": "not-found-page",
+        "verdict": "approve",
+        "reasons": "I verified the bug. app.routes.ts ends with `{ path: '**', redirectTo: '' }` at the root, so /cz/anything redirects Czech visitors to the Slovak home '/', and the typed URL is lost. nginx already answers unknown paths with a real 404 status through `error_page 404 /index.csr.html` (frontend/nginx/default.conf.template), so the fix is purely client-side: a wildcard inside the 'cz' children (last) plus a root wildcard with a NotFound component. parseUrl('/neexistuje') returns page 'home' with rest '/neexistuje' (see i18n.spec), so NotFound must call seo.set({…, noindex: true}). Removing canonical/hreflang while noindex is set and restoring them afterwards is correct. Effort S is honest and it needs nothing from Gether. Notes for the builder: reuse PageMeta.noindex if discord-login added it; confirm ng build does not try to prerender the wildcard routes; the App's afterNextRender language redirect will move Czech browsers to /cz/<path>, which is the desired behaviour; add the 'Kalendár' button only if that page exists at build time. Not in this batch only because of the 4-item limit; it is the first candidate for the next one."
+      }
+    ],
+    "build_order": [
+      "discord-login",
+      "governor-registration",
+      "privacy-page",
+      "not-found-page"
+    ],
+    "site_finished": false,
+    "must_haves_left": []
+  }
+}

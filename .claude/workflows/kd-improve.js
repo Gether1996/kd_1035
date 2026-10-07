@@ -1,7 +1,7 @@
 export const meta = {
   name: 'kd-improve',
   description: 'KD 1035 web: kd-ideator proposes features, kd-critic filters them, kd-builder implements each, kd-critic reviews and pushes',
-  whenToUse: 'An autonomous improvement round of the KD 1035 website. args: {features?: number (default 4), focus?: string, date?: "YYYY-MM-DD"}',
+  whenToUse: 'An autonomous improvement round of the KD 1035 website. args: {features?: number (default 4), focus?: string, date?: "YYYY-MM-DD", ideas?, critique?} – passing ideas + critique (e.g. .claude/kd-agents/next-round.json) skips ideation',
   phases: [
     { title: 'Ideate', detail: 'kd-ideator proposes ranked features' },
     { title: 'Critique', detail: 'kd-critic approves, revises or rejects and sets the build order' },
@@ -115,6 +115,13 @@ async function run(type, prompt, extra) {
 }
 
 // ---------------------------------------------------------------------------------------------
+let ideas, critique
+if (opts.ideas && opts.critique) {
+  // resume: ideas and verdicts of an earlier round (.claude/kd-agents/next-round.json) – no new ideation
+  ideas = opts.ideas
+  critique = opts.critique
+  log(`using ${ideas.length} ideas and the critic's verdicts passed in args`)
+} else {
 phase('Ideate')
 const proposal = await run(
   'kd-ideator',
@@ -124,12 +131,12 @@ Inventory the current state first (code, running site, docs/backlog.md). Each id
   { label: 'ideator', phase: 'Ideate', schema: IDEAS },
 )
 if (!proposal || !proposal.ideas.length) return { error: 'ideator returned nothing' }
-const ideas = proposal.ideas
+ideas = proposal.ideas
 log(`${ideas.length} ideas: ${ideas.map(i => i.id).join(', ')}`)
 
 // ---------------------------------------------------------------------------------------------
 phase('Critique')
-const critique = await run(
+critique = await run(
   'kd-critic',
   `Review these feature proposals for the KD 1035 website. Check the code where a claim needs verifying (does it already exist? is it feasible?).
 Give a verdict for every idea, then a build_order of at most ${MAX_FEATURES} approved/revised ids to build now, in dependency order, best value first.
@@ -139,6 +146,7 @@ ${JSON.stringify(ideas, null, 2)}`,
   { label: 'critic:ideas', phase: 'Critique', schema: CRITIQUE },
 )
 if (!critique) return { error: 'critic returned nothing', ideas }
+}
 
 const byId = Object.fromEntries(ideas.map(i => [i.id, i]))
 const reviewOf = id => critique.reviews.find(r => r.id === id) || {}
@@ -155,7 +163,8 @@ for (const id of order) {
   let build = await run(
     'kd-builder',
     `Implement this approved feature of the KD 1035 website end-to-end, verify it and commit it locally (do not push).
-
+${byId[id].resume_branch ? `An earlier round already built most of it on branch ${byId[id].resume_branch} (not reviewed yet). Record base_sha = \`git rev-parse HEAD\` on main FIRST, then bring the branch in (\`git merge --ff-only ${byId[id].resume_branch}\`, or rebase the branch onto main if that fails), check it against the spec, finish and fix it, verify everything and commit.
+` : ''}
 ${spec}`,
     { label: `build:${id}`, phase: 'Build', schema: BUILD },
   )

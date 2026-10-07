@@ -1,0 +1,39 @@
+{
+  "_doc": "Konfigurácia a stav automatizácie agentmi pre web KD 1035. Návod pre ľudí aj pre Clauda: docs/agenti.md. Po každom kole aktualizuj 'rounds' a 'next'.",
+  "goal": "Opakovať kolá kd-improve, kým nie je web viac-menej hotový – použiteľný promo aj každodenný nástroj pre členov a vedenie kráľovstva 1035.",
+  "stop_when": "kd-critic v kole vráti site_finished=true a prázdne must_haves_left, alebo kolá prinášajú už len nice-to-have veci.",
+  "after_finish": "Napísať docs/odporucania.md (po slovensky): odporúčania a veci, ktoré potrebujú Getherovu pozornosť – nastavenia, rozhodnutia, obsah, nasadenie, riziká.",
+  "agents": {
+    "kd-ideator": ".claude/agents/kd-ideator.md",
+    "kd-critic": ".claude/agents/kd-critic.md",
+    "kd-builder": ".claude/agents/kd-builder.md"
+  },
+  "kd-improve": {
+    "workflow": ".claude/workflows/kd-improve.js",
+    "features_per_round": 4,
+    "fix_rounds_per_feature": 2,
+    "next_round_args": ".claude/kd-agents/next-round.json",
+    "default_args": { "features": 4, "date": "YYYY-MM-DD" },
+    "focus_hint": "Čo by členovia a vedenie kráľovstva 1035 naozaj používali: prihlásenie, registrácia Governor ID, Discord notifikácie, plánovanie eventov pre superadmina, quality of life."
+  },
+  "kd-meta-update": {
+    "workflow": ".claude/workflows/kd-meta-update.js",
+    "args": { "date": "YYYY-MM-DD" },
+    "scheduled_task_id": "kd1035-meta-update",
+    "cron": "0 18 7 * *",
+    "first_run": "2026-11-07T18:00",
+    "task_prompt": ".claude/kd-agents/scheduled-meta-update.md",
+    "scheduled_on": "iba PC, na ktorom bola úloha vytvorená (Desktop\\kd_1035, 7. 10. 2026) – na druhom PC ju nevytváraj, inak pobežia dve aktualizácie"
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "date": "2026-10-07",
+      "shipped": ["recurring-kingdom-events"],
+      "unreviewed_branches": { "discord-login": "wip/discord-login" },
+      "not_started": ["governor-registration", "privacy-page"],
+      "note": "Kolo zastavené na pokyn Gethera počas review discord-login. Nápady a verdikty kritika sú v next-round.json."
+    }
+  ],
+  "next": "Spusti workflow kd-improve s args z .claude/kd-agents/next-round.json (doplň date). Ako prvé sa dokončí a zrevidovaná vetva wip/discord-login."
+}
