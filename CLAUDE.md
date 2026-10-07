@@ -127,6 +127,11 @@ docker run --rm --add-host=host.docker.internal:host-gateway -v "$PWD:/work" -w 
   mcr.microsoft.com/playwright:v1.63.0-noble sh -c \
   "cd tools/screenshots && npm i --no-save playwright@1.63.0 >/dev/null && node shoot.mjs"
 
+# Docker Desktop na Windows občas zlyhá pri bind mounte s vnoreným volume (I/O error, „cannot allocate memory“,
+# „No tests found“). Pomôže `docker desktop restart`, alebo testy úplne bez bind mountu:
+tar -c --exclude=__pycache__ --exclude=data --exclude=media -C backend . | docker run -i --rm -u root -e DJANGO_DEBUG=1   -w /app --entrypoint sh kd1035-dev-backend -c "tar -x && python manage.py test"
+tar -c --exclude=node_modules --exclude=.angular --exclude=dist -C frontend . | docker run -i --rm   -v kd1035-dev_frontend_node_modules:/app/node_modules -w /app node:24-alpine sh -c "tar -x && npx ng test --watch=false"
+
 # pregenerovanie hero grafiky + og-image + ikon aplikácie
 docker build -t kd1035-artgen tools/background
 docker run --rm -v "$PWD:/work" kd1035-artgen --raster
