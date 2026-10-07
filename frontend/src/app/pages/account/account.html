@@ -1,0 +1,69 @@
+@let a = t().account;
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="a.eyebrow" [title]="a.title" />
+
+<div class="container content">
+  <div role="status">
+    @if (notice(); as n) {
+      <p class="notice" [class.notice--error]="n.error">{{ n.text }}</p>
+    }
+  </div>
+
+  @if (!auth.ready()) {
+    <div class="card" aria-hidden="true">
+      <span class="skeleton skeleton--avatar"></span>
+      <span class="skeleton skeleton--name"></span>
+      <span class="skeleton skeleton--line"></span>
+    </div>
+  } @else if (auth.failed()) {
+    <p class="state">{{ a.error }}</p>
+  } @else if (!auth.enabled()) {
+    <p class="state">{{ a.disabled }}</p>
+  } @else if (auth.user(); as user) {
+    <section class="card" aria-labelledby="account-name">
+      <img class="card__avatar" [src]="user.avatar_url" alt="" width="64" height="64" />
+      <h2 class="card__title" id="account-name">{{ user.name }}</h2>
+      <p class="card__meta">
+        {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
+      </p>
+
+      <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="logout()">
+        <svg appIcon="log-out"></svg> {{ a.logout }}
+      </button>
+
+      <div class="danger-zone">
+        @if (user.is_staff) {
+          <p class="hint">{{ a.staff }}</p>
+        } @else {
+          <div class="danger-zone__actions">
+            <button
+              type="button"
+              class="danger"
+              [class.is-armed]="confirming()"
+              [disabled]="busy()"
+              [attr.aria-describedby]="confirming() ? 'delete-hint' : null"
+              (click)="remove()"
+            >
+              <svg appIcon="trash-2"></svg> {{ confirming() ? a.confirmDelete : a.delete }}
+            </button>
+            @if (confirming()) {
+              <button type="button" class="cancel" [disabled]="busy()" (click)="confirming.set(false)">
+                {{ a.cancel }}
+              </button>
+            }
+          </div>
+          @if (confirming()) {
+            <p class="hint" id="delete-hint">{{ a.confirmText }}</p>
+          }
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="card" aria-labelledby="account-login">
+      <span class="card__badge"><svg appIcon="discord"></svg></span>
+      <h2 class="card__title" id="account-login">{{ a.loginTitle }}</h2>
+      <p class="card__text">{{ a.stored }}</p>
+      <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ a.login }}</a>
+    </section>
+  }
+</div>

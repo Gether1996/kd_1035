@@ -13,6 +13,8 @@ describe('parseUrl', () => {
     expect(parseUrl('/navody/vybava')).toEqual({ lang: 'sk', page: 'guides', rest: '/navody/vybava' });
     expect(parseUrl('/cz/navody/eventy/mge')).toEqual({ lang: 'cs', page: 'guide', rest: '/navody/eventy/mge' });
     expect(parseUrl('/czech')).toEqual({ lang: 'sk', page: 'home', rest: '/czech' });
+    expect(parseUrl('/ucet?login=error')).toEqual({ lang: 'sk', page: 'account', rest: '/ucet' });
+    expect(parseUrl('/cz/ucet')).toEqual({ lang: 'cs', page: 'account', rest: '/ucet' });
   });
 });
 

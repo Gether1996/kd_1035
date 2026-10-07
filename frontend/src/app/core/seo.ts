@@ -15,6 +15,8 @@ export interface PageMeta {
   title: string;
   description: string;
   breadcrumbs?: Crumb[];
+  /** private pages (the player's account) – <meta name="robots" content="noindex"> */
+  noindex?: boolean;
 }
 
 /**
@@ -39,7 +41,7 @@ export class Seo {
       const page = i18n.page();
       const t = i18n.t();
       const fixed = page === 'home' || page === 'about' ? t.seo[page] : null;
-      const current = this.override() ?? fixed ?? t.seo.home;
+      const current: PageMeta = this.override() ?? fixed ?? t.seo.home;
       const origin = this.origin();
       const url = (l: Lang = lang) => origin + i18n.switchPath(l);
 
@@ -51,6 +53,8 @@ export class Seo {
       meta.updateTag({ property: 'og:locale', content: OG_LOCALE[lang] });
       meta.updateTag({ property: 'og:locale:alternate', content: OG_LOCALE[lang === 'sk' ? 'cs' : 'sk'] });
       meta.updateTag({ property: 'og:image', content: `${origin}/og-image.jpg` });
+      if (current.noindex) meta.updateTag({ name: 'robots', content: 'noindex' });
+      else meta.removeTag('name="robots"');
 
       this.link('canonical', url());
       this.link('alternate', url('sk'), 'sk');

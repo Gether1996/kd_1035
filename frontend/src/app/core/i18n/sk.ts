@@ -11,6 +11,10 @@ export const sk = {
       description:
         'Hľadáš slovenské alebo české KD v Rise of Kingdoms? KD 1035 je jediný kingdom v hre zložený výhradne zo Slovákov a Čechov. Zisti, ako sa k nám pridať.',
     },
+    account: {
+      title: 'Môj účet | KD 1035',
+      description: 'Prihlásenie hráčov kráľovstva KD 1035 cez Discord.',
+    },
   },
   nav: {
     home: 'Domov',
@@ -24,6 +28,8 @@ export const sk = {
     close: 'Zavrieť menu',
     language: 'Jazyk',
     skip: 'Preskočiť na obsah',
+    login: 'Prihlásiť',
+    account: 'Môj účet',
   },
   hero: {
     tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',
@@ -128,6 +134,26 @@ export const sk = {
       ],
     },
     cta: 'Pridaj sa k nám',
+  },
+  account: {
+    eyebrow: 'Hráčsky účet',
+    title: 'Môj účet',
+    loginTitle: 'Prihlás sa cez Discord',
+    stored: 'Uložíme iba tvoje Discord ID, meno a avatar. E-mail ani tvoje servery nevidíme.',
+    login: 'Prihlásiť cez Discord',
+    disabled: 'Prihlásenie zatiaľ nie je zapnuté.',
+    error: 'Účet sa nepodarilo načítať. Skús to znova o chvíľu.',
+    loginError: 'Prihlásenie sa nepodarilo. Skús to znova.',
+    loginCancelled: 'Prihlásenie bolo zrušené.',
+    discordId: 'Discord ID',
+    logout: 'Odhlásiť',
+    delete: 'Zmazať účet',
+    confirmDelete: 'Naozaj zmazať?',
+    confirmText: 'Zmažeme tvoj účet na webe. Discord účet ostane.',
+    cancel: 'Zrušiť',
+    deleted: 'Účet bol zmazaný.',
+    actionError: 'Nepodarilo sa to. Skús to znova.',
+    staff: 'Účet vedenia sa maže v admine.',
   },
   footer: {
     fanSite: 'Neoficiálna fanúšikovská stránka. Rise of Kingdoms je ochranná známka Lilith Games.',
