@@ -22,29 +22,42 @@ class DiscordError(Exception):
     pass
 
 
-def post(notification: EventNotification) -> None:
-    url = settings.DISCORD_WEBHOOK_URL
-    if not url:
-        raise DiscordError('DISCORD_WEBHOOK_URL nie je nastavená v .env')
+def mention_role_id(notification: EventNotification) -> str:
+    """The role to ping: the row's own ID → its event's ID → DISCORD_EVENT_ROLE_ID; '' = no ping."""
+    if not notification.mention_role:
+        return ''
+    event = notification.event
+    return notification.mention_role_id or (event.mention_role_id if event else '') or settings.DISCORD_EVENT_ROLE_ID
 
-    role = settings.DISCORD_EVENT_ROLE_ID if notification.mention_role else ''
+
+def build_payload(notification: EventNotification) -> dict:
+    role = mention_role_id(notification)
+    embed = {
+        'title': notification.title[:256],
+        'description': notification.message[:4096],
+        'color': GOLD,
+        'timestamp': notification.send_at.isoformat(),
+        'footer': {'text': 'KD 1035 · CZ/SK'},
+    }
+    if notification.event_start:
+        # Discord renders <t:…> in every reader's own time zone; R = "in 2 hours"
+        unix = int(notification.event_start.timestamp())
+        embed['fields'] = [{'name': 'Začiatok', 'value': f'<t:{unix}:F> · <t:{unix}:R>'}]
+    guide = notification.event.guide if notification.event else None
+    if guide and guide.is_published and settings.SITE_URL:
+        embed['url'] = f'{settings.SITE_URL}{guide.get_absolute_url()}'
     payload = {
         'username': 'Kingdom 1035',
         'content': f'<@&{role}>' if role else '',
         'allowed_mentions': {'parse': [], 'roles': [role] if role else []},
-        'embeds': [
-            {
-                'title': notification.title[:256],
-                'description': notification.message,
-                'color': GOLD,
-                'timestamp': notification.send_at.isoformat(),
-                'footer': {'text': 'KD 1035 · CZ/SK'},
-            }
-        ],
+        'embeds': [embed],
     }
     if settings.SITE_URL:
         payload['avatar_url'] = f'{settings.SITE_URL}/icons/icon-192.png'
+    return payload
 
+
+def send(payload: dict, url: str) -> None:
     request = urllib.request.Request(
         f'{url}?wait=true',
         data=json.dumps(payload).encode(),
@@ -63,6 +76,13 @@ def post(notification: EventNotification) -> None:
         raise DiscordError(f'Discord odpovedal {exc.code}: {body}') from exc
     except urllib.error.URLError as exc:
         raise DiscordError(f'Discord je nedostupný: {exc.reason}') from exc
+
+
+def post(notification: EventNotification) -> None:
+    url = settings.DISCORD_WEBHOOK_URL
+    if not url:
+        raise DiscordError('DISCORD_WEBHOOK_URL nie je nastavená v .env')
+    send(build_payload(notification), url)
 
 
 def deliver(notification: EventNotification) -> bool:
