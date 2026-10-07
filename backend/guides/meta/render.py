@@ -19,6 +19,8 @@ LABELS = {
         'why': 'Prečo to funguje', 'talents': 'Talenty', 'f2p': 'F2P', 'yes': 'áno', 'partly': 'čiastočne', 'no': 'nie',
         'slot': 'Slot', 'item': 'Predmet', 'stats': 'Hlavné staty', 'alt': 'Alternatíva', 'gear': 'Výbava',
         'tier': 'Tier', 'accessory': 'Doplnok', 'effect': 'Efekt', 'what': 'Čo', 'detail': 'Detail',
+        'stage': 'Fáza', 'points': 'Body', 'rank': 'Umiestnenie', 'reward': 'Odmena', 'cadence': 'Ako často',
+        'events': 'Eventy', 'objective': 'Cieľ', 'kind': 'Typ', 'lineup': 'Armády', 'kvk1': 'KvK1', 'kvk2': 'KvK2',
         'sources': 'Zdroje', 'state': 'Stav k',
     },
     'cs': {
@@ -26,6 +28,8 @@ LABELS = {
         'why': 'Proč to funguje', 'talents': 'Talenty', 'f2p': 'F2P', 'yes': 'ano', 'partly': 'částečně', 'no': 'ne',
         'slot': 'Slot', 'item': 'Předmět', 'stats': 'Hlavní staty', 'alt': 'Alternativa', 'gear': 'Výbava',
         'tier': 'Tier', 'accessory': 'Doplněk', 'effect': 'Efekt', 'what': 'Co', 'detail': 'Detail',
+        'stage': 'Fáze', 'points': 'Body', 'rank': 'Umístění', 'reward': 'Odměna', 'cadence': 'Jak často',
+        'events': 'Eventy', 'objective': 'Cíl', 'kind': 'Typ', 'lineup': 'Armády', 'kvk1': 'KvK1', 'kvk2': 'KvK2',
         'sources': 'Zdroje', 'state': 'Stav k',
     },
 }  # fmt: skip
@@ -117,7 +121,7 @@ def _table(columns, rows, lang):
         for c in columns:
             value = row.get(c, '')
             value = SLOTS[value][lang] if c == 'slot' else text(value, lang)
-            if c in ('item', 'what', 'tier'):
+            if c in ('item', 'what', 'tier', 'stage', 'rank', 'cadence', 'objective', 'kind'):
                 value = f'<strong>{value}</strong>'
             if c == 'item' and row.get('alt'):
                 value += f'<br><small>{labels["alt"]}: {text(row["alt"], lang)}</small>'
