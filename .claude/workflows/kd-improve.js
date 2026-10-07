@@ -61,8 +61,10 @@ const CRITIQUE = {
       },
     },
     build_order: { type: 'array', items: { type: 'string' } },
+    site_finished: { type: 'boolean', description: 'once this build order ships, is the site more or less finished for its purpose?' },
+    must_haves_left: { type: 'array', items: { type: 'string' }, description: 'real must-haves still missing after this round (not nice-to-haves)' },
   },
-  required: ['reviews', 'build_order'],
+  required: ['reviews', 'build_order', 'site_finished', 'must_haves_left'],
 }
 
 const BUILD = {
@@ -131,6 +133,7 @@ const critique = await run(
   'kd-critic',
   `Review these feature proposals for the KD 1035 website. Check the code where a claim needs verifying (does it already exist? is it feasible?).
 Give a verdict for every idea, then a build_order of at most ${MAX_FEATURES} approved/revised ids to build now, in dependency order, best value first.
+Finally judge the whole product honestly: once this build order ships, is the site more or less finished for its purpose (promo + everyday utility for kingdom 1035 members and leadership)? Set site_finished and list only the true must-haves still missing in must_haves_left – polish and nice-to-haves do not count.
 
 ${JSON.stringify(ideas, null, 2)}`,
   { label: 'critic:ideas', phase: 'Critique', schema: CRITIQUE },
@@ -232,4 +235,6 @@ return {
   not_shipped: outcomes.filter(o => o.outcome !== 'shipped'),
   needs_from_user: [...new Set(outcomes.flatMap(o => o.needs_from_user))],
   rejected: critique.reviews.filter(r => r.verdict === 'reject').map(r => `${r.id}: ${r.reasons}`),
+  site_finished: critique.site_finished,
+  must_haves_left: critique.must_haves_left,
 }
