@@ -34,7 +34,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Dbaj na pravopis a diakritiku (SK: ä, ô, ľ, ĺ, ŕ; CZ: ř, ů, ě).
 
 ## Obsah
-- Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4, prihlasovanie hráčov cez Governor ID.
+- Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4, registrácia Governor ID (nad prihlásením cez Discord).
 - **Rise of Kingdoms / Lilith nemá verejné API** (ani na hráčov, ani na kráľovstvá). Na webe preto **nezobrazujeme meniace sa čísla** (sila, počet členov, územie…), lebo by zastarali. Len stabilné údaje zadané v admine.
 - Kráľovstvo má **jednu hlavnú alianciu**: [CS35] CZ/SK Legends. Vedenie (model `Officer`): Methiu von CzF – Vodca, Gether – R4, Hefarion – R4 (Discord ID oboch v seed migrácii). Discord ID Methiua Gether doplní neskôr. Tlačidlo „Kontaktovať“ otvorí `discord.com/users/<ID>`, bez ID skopíruje Discord meno.
 - Odkazy (admin → Odkazy): Facebook skupina https://www.facebook.com/groups/550189483954751, Discord trvalá pozvánka https://discord.gg/NhwP6y9ssM (nikdy nevyprší, neobmedzené použitia; obe v seed migrácii 0002).
@@ -63,6 +63,15 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Ikony predmetov** (výbava): `backend/guides/static/guides/gear/<slug>.webp`, 96×96, z codexhelper.com. `render.py` ich pridá sám ku každému predmetu, ktorého názov je v stĺpci `item`, `alt` alebo `accessory` (veľká ikona pri predmete, malá pri alternatíve). Nový predmet v tabuľke výbavy → `manage.py fetch_gear_icons "Názov predmetu"` (stiahne a upraví ikonu); test zlyhá, ak niektorému predmetu ikona chýba. Servíruje ich Django na `/static/` (v dev cez proxy `ng serve`).
 - Fakty, ktoré Gether potvrdil z hry (v kóde komentár `confirmed in game by Gether`), majú prednosť pred webovými zdrojmi – mesačná aktualizácia ich neprepisuje. Napr. More Than Gems je po novom raz za mesiac (nie každé 2–3 mesiace).
 
+## Hráčske účty (prihlásenie cez Discord)
+- Hráči sa prihlasujú **cez Discord** (komunita žije na Discorde, žiadne nové heslo). OAuth2 authorization code, scope **iba `identify`** (ID, meno, avatar) – žiadny e-mail, žiadne servery. Kód: `backend/accounts/` (`discord_oauth.py` cez stdlib urllib, `views.py`).
+- Model `Player` (1:1 na `auth.User` s menom `discord_<id>`, nepoužiteľné heslo, nikdy automaticky staff; `first_name` = Discord meno). Pri každom prihlásení sa meno a avatar obnovia. Admin „Hráči“ vidí iba superuser, pridať sa nedá; zmazanie hráča zmaže aj jeho používateľa. Zablokovanie = v Users admin vypnúť „aktívny“.
+- API pod `/api/auth/`: `discord/login/?next=` (404 keď je login vypnutý; náhodný `state` + `next` do session) → Discord → `discord/callback/` (state jednorazový, overí sa skôr než ide čokoľvek na Discord, throttle ~20/h na IP, chyba → `next?login=error`, zrušenie → `?login=cancelled`), `me/` (`login_enabled` + `user`, nastaví `csrftoken`, `no-store`), `POST logout/`, `DELETE me/` (zmaže vlastný účet; staff/superuser 403). `next` je iba cesta na tomto webe, inak `/ucet`.
+- Session cookie musí ostať **SameSite=Lax** (návrat z discord.com). DRF používa iba `SessionAuthentication` (CSRF hlavička `X-CSRFToken`, Angular `withXsrfConfiguration`); Basic auth je zámerne vypnutá.
+- `DISCORD_CLIENT_ID` + `DISCORD_CLIENT_SECRET` iba v `.env`. Bez nich je login vypnutý: `login_enabled=false`, web neukáže tlačidlo, `/ucet` ukáže „Prihlásenie zatiaľ nie je zapnuté“. **Na produkčný server ich nedávaj, kým nie je nasadená stránka o ochrane súkromia** (zbierame osobné údaje).
+- Frontend: služba `Auth` (`core/auth.ts`, API iba v prehliadači), stránka `/ucet` + `/cz/ucet` (prerendrovaný shell, `noindex` cez `PageMeta.noindex`, nie je v sitemap). Hlavička: od 900 px pilulka „Prihlásiť“ / avatar + meno (900–1099 px iba ikona), pod 900 px iba v mobilnom menu. Slot má rezervovanú šírku už v prerendrovanom HTML → po načítaní nič neposkočí; kým je login vypnutý, slot sa po odpovedi API raz zbalí.
+- **Osobné údaje hráčov nikdy do gitu:** `export_snapshot` maže riadky všetkých tabuliek `accounts_*` a používateľov `discord_*` (aj ich skupiny, práva a záznamy admin logu; aj záznamy o hráčoch). Ďalšie osobné dáta hráčov (napr. Governor ID) patria do appky `accounts`.
+
 ## Notifikácie
 - **Discord** (nie e-mail, nie WhatsApp – WhatsApp Cloud API vyžaduje Meta Business účet a platí sa za správy). Webhook do kanála, voliteľne ping roly. Premenné `DISCORD_WEBHOOK_URL`, `DISCORD_EVENT_ROLE_ID`.
 - Model `EventNotification` – plánovať (dátum a čas) smie **iba superuser** v admine. Posiela ich kontajner `worker` (`manage.py run_worker`, kontrola každých 30 s). Notifikácia zmeškaná o viac ako 6 h sa už neposiela.
@@ -82,7 +91,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Migrácie nikdy needituj spätne po nasadení na server. Zatiaľ nič nie je nasadené.
 
 ## Synchronizácia databázy cez git (vývoj)
-- Celá dev databáza ide do gitu ako `backend/snapshot/db.sqlite3` (bez prihlasovacích session) a nahrané súbory ako `backend/media/` (v dev je to bind mount = živý MEDIA_ROOT). Repo je privátne, snapshot obsahuje aj hash hesla admina.
+- Celá dev databáza ide do gitu ako `backend/snapshot/db.sqlite3` (bez prihlasovacích session a bez hráčov z Discordu) a nahrané súbory ako `backend/media/` (v dev je to bind mount = živý MEDIA_ROOT). Repo je privátne, snapshot obsahuje aj hash hesla admina.
 - Hooky v `.githooks/` (zapnúť raz na každom PC: `git config core.hooksPath .githooks`):
   - `pre-commit` → `export_snapshot` + `git add` snapshotu a `backend/media`. Ak sa dáta nezmenili, súbor ostane bajtovo rovnaký (žiadny šum v commitoch). Bez Dockera commit zlyhá; obísť: `git commit --no-verify`.
   - `post-merge` / `post-rewrite` (pull) → ak pull priniesol nový snapshot, `import_snapshot`: záloha starej DB do `./backups`, import, `migrate`, `ensure_superuser`.
@@ -95,11 +104,11 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 
 ## Technológie
 - **Frontend:** Angular 22 (standalone, signals, zoneless, `@if/@for`, `httpResource`), SCSS, `frontend/`.
-- **Backend:** Django 6 + Django REST Framework, SQLite súbor, Django admin na správu obsahu, `backend/` (apps `kingdom`, `guides`).
+- **Backend:** Django 6 + Django REST Framework, SQLite súbor, Django admin na správu obsahu, `backend/` (apps `kingdom`, `guides`, `accounts`).
 - **Docker všade** – server aj lokálny vývoj. Nepredpokladaj lokálny Python ani Node, príkazy spúšťaj cez `docker compose`.
   - `docker-compose.yml` (produkcia): `backend` (gunicorn), `worker` (notifikácie + zálohy), `web` (nginx: prerendrované stránky + proxy `/api/`, `/admin/`, `/static/` na backend).
   - `docker-compose.dev.yml` (vývoj): `ng serve` s hot reloadom (port 4200, proxy `/api` → backend), Django `runserver` (port 8000), `worker`.
-- Dynamické dáta idú z API `/api/alliances/`, `/api/links/`, `/api/guides/` (+ `/api/guides/<slug>/`). Frontend musí fungovať aj keď API zlyhá (sekcia sa skryje, nič sa nerozbije).
+- Dynamické dáta idú z API `/api/alliances/`, `/api/links/`, `/api/guides/` (+ `/api/guides/<slug>/`), prihlásený hráč z `/api/auth/me/`. Frontend musí fungovať aj keď API zlyhá (sekcia sa skryje, nič sa nerozbije).
 - URL: `/static/` = Django statika (admin), `/uploads/` = nahraté súbory (MEDIA_URL), `/media/` patrí Angular buildu (fonty).
 - Ikony: SVG sprite `frontend/public/icons.svg` (Lucide + Simple Icons), použitie `<svg appIcon="swords" />`. Novú ikonu pridaj do `frontend/scripts/build-icons.mjs` a spusti `npm run icons`.
 - Angular konvencie: súbory bez prípony `.component` (`hero.ts`, trieda `Hero`), `inject()`, `input()`, signals, `OnPush`.
