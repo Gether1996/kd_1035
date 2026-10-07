@@ -14,10 +14,12 @@ export type IconName =
   | 'gift'
   | 'hand-helping'
   | 'languages'
+  | 'log-out'
   | 'map'
   | 'menu'
   | 'shield'
   | 'swords'
+  | 'trash-2'
   | 'users'
   | 'x';
 

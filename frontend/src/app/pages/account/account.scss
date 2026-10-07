@@ -1,0 +1,212 @@
+:host {
+  display: block;
+}
+
+.content {
+  max-width: 560px;
+  padding-bottom: clamp(80px, 12vw, 140px);
+}
+
+.notice {
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: rgba(245, 196, 81, 0.07);
+  color: var(--text);
+  text-align: center;
+}
+
+.notice--error {
+  border-color: color-mix(in srgb, var(--red-500) 70%, transparent);
+  background: color-mix(in srgb, var(--red-500) 12%, transparent);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(28px, 6vw, 44px) clamp(20px, 5vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(20, 42, 80, 0.55), rgba(9, 19, 40, 0.6));
+  text-align: center;
+
+  .btn {
+    margin-top: 28px;
+    max-width: 100%;
+  }
+}
+
+.card__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 3px var(--gold-400);
+}
+
+.card__badge {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #5865f2; // Discord blurple
+  color: #fff;
+
+  .icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.card__title {
+  max-width: 100%;
+  margin-top: 18px;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 1.875rem);
+}
+
+.card__meta {
+  margin-top: 8px;
+  font-size: 0.9375rem;
+  color: var(--text-mute);
+}
+
+.card__id {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.card__text {
+  max-width: 40ch;
+  margin-top: 12px;
+  color: var(--text-dim);
+  text-wrap: pretty;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+// ---------------------------------------------------------------- delete account
+
+.danger-zone {
+  align-self: stretch;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.danger-zone__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.danger,
+.cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  font: 600 0.8125rem/1 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.25s,
+    border-color 0.25s,
+    color 0.25s;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.danger {
+  border-color: color-mix(in srgb, var(--red-500) 55%, transparent);
+  color: var(--red-300);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    border-color: var(--red-500);
+    background-color: color-mix(in srgb, var(--red-500) 14%, transparent);
+  }
+
+  &.is-armed {
+    border-color: var(--red-500);
+    background-color: var(--red-700);
+    color: #fff;
+  }
+}
+
+.cancel {
+  color: var(--text-dim);
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
+  }
+}
+
+.hint {
+  margin-top: 12px;
+  font-size: 0.9375rem;
+  color: var(--text-dim);
+}
+
+// ---------------------------------------------------------------- states
+
+.state {
+  padding: 48px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.skeleton {
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04)) 0 0 /
+    200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+.skeleton--avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+
+.skeleton--name {
+  width: min(240px, 80%);
+  height: 30px;
+  margin-top: 18px;
+}
+
+.skeleton--line {
+  width: min(320px, 90%);
+  height: 16px;
+  margin-top: 14px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

@@ -1,4 +1,4 @@
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withXsrfConfiguration } from '@angular/common/http';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import {
@@ -16,7 +16,8 @@ const leaf = (s: ActivatedRouteSnapshot): ActivatedRouteSnapshot => (s.firstChil
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch()),
+    // Django's CSRF cookie → header on POST/DELETE (logout, deleting the account)
+    provideHttpClient(withFetch(), withXsrfConfiguration({ cookieName: 'csrftoken', headerName: 'X-CSRFToken' })),
     provideClientHydration(withEventReplay()),
     provideRouter(
       routes,

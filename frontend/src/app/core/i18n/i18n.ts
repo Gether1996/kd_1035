@@ -7,7 +7,7 @@ import { cs } from './cs';
 import { sk } from './sk';
 
 export type Lang = 'sk' | 'cs';
-export type Page = 'home' | 'about' | 'guides' | 'guide';
+export type Page = 'home' | 'about' | 'account' | 'guides' | 'guide';
 export type GuideCategory = 'commanderi' | 'vybava' | 'eventy';
 
 export const GUIDE_CATEGORIES: GuideCategory[] = ['commanderi', 'vybava', 'eventy'];
@@ -17,6 +17,7 @@ const LOCALES: Record<Lang, string> = { sk: 'sk-SK', cs: 'cs-CZ' };
 /** Slovak lives at the root, Czech under /cz – each language has its own indexable URLs, same slugs. */
 const PREFIX: Record<Lang, string> = { sk: '', cs: '/cz' };
 const STORAGE_KEY = 'kd1035.lang';
+const FIXED_PATHS = { home: '', about: '/o-nas', account: '/ucet' };
 
 export interface ParsedUrl {
   lang: Lang;
@@ -32,11 +33,13 @@ export function parseUrl(url: string): ParsedUrl {
   const page: Page =
     rest === '/o-nas'
       ? 'about'
-      : /^\/navody\/[^/]+$/.test(rest)
-        ? 'guides'
-        : /^\/navody\/[^/]+\/[^/]+$/.test(rest)
-          ? 'guide'
-          : 'home';
+      : rest === '/ucet'
+        ? 'account'
+        : /^\/navody\/[^/]+$/.test(rest)
+          ? 'guides'
+          : /^\/navody\/[^/]+\/[^/]+$/.test(rest)
+            ? 'guide'
+            : 'home';
   return { lang, page, rest };
 }
 
@@ -68,8 +71,8 @@ export class I18n {
   }
 
   /** URL of a fixed page in `lang` (current language by default). */
-  path(page: 'home' | 'about', lang: Lang = this.lang()): string {
-    return PREFIX[lang] + (page === 'about' ? '/o-nas' : '') || '/';
+  path(page: 'home' | 'about' | 'account', lang: Lang = this.lang()): string {
+    return PREFIX[lang] + FIXED_PATHS[page] || '/';
   }
 
   /** URL of a guide category list, or of one guide when `slug` is given. */

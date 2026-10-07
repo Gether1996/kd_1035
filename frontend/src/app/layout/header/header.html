@@ -1,3 +1,5 @@
+@let t = i18n.t().nav;
+
 <div class="bar">
   <div class="container bar__inner">
     <a class="brand" [routerLink]="i18n.path('home')" fragment="top" (click)="close()" aria-label="Kingdom 1035">
@@ -8,7 +10,7 @@
       </span>
     </a>
 
-    <nav class="nav" [attr.aria-label]="i18n.t().nav.label">
+    <nav class="nav" [attr.aria-label]="t.label">
       @for (item of items(); track item.label) {
         <a
           class="nav__link"
@@ -24,12 +26,37 @@
 
     <app-lang-switch />
 
+    <!-- desktop: the slot keeps its width while /api/auth/me/ loads, so the bar does not jump -->
+    @if (!auth.ready() || auth.enabled()) {
+      <div class="account">
+        @if (auth.enabled()) {
+          @if (auth.user(); as user) {
+            <a
+              class="account__link"
+              [routerLink]="i18n.path('account')"
+              routerLinkActive="is-active"
+              ariaCurrentWhenActive="page"
+              [title]="user.name"
+            >
+              <img class="account__avatar" [src]="user.avatar_url" alt="" width="28" height="28" />
+              <span class="account__label">{{ user.name }}</span>
+            </a>
+          } @else {
+            <a class="account__link" [href]="auth.loginUrl()">
+              <svg appIcon="discord"></svg>
+              <span class="account__label">{{ t.login }}</span>
+            </a>
+          }
+        }
+      </div>
+    }
+
     <button
       class="burger"
       type="button"
       aria-controls="mobile-menu"
       [attr.aria-expanded]="menuOpen()"
-      [attr.aria-label]="menuOpen() ? i18n.t().nav.close : i18n.t().nav.menu"
+      [attr.aria-label]="menuOpen() ? t.close : t.menu"
       (click)="toggle()"
     >
       <span></span><span></span>
@@ -38,11 +65,30 @@
 </div>
 
 <div id="mobile-menu" class="drawer" [class.is-open]="menuOpen()" [attr.inert]="menuOpen() ? null : ''">
-  <nav class="drawer__nav" [attr.aria-label]="i18n.t().nav.label">
+  <nav class="drawer__nav" [attr.aria-label]="t.label">
     @for (item of items(); track item.label; let i = $index) {
       <a class="drawer__link" [routerLink]="item.link" [fragment]="item.fragment" [style.--i]="i" (click)="close()">
         {{ item.label }}
       </a>
     }
   </nav>
+
+  @if (auth.enabled()) {
+    <div class="drawer__account" [style.--i]="items().length">
+      @if (auth.user(); as user) {
+        <a class="drawer__user" [routerLink]="i18n.path('account')" (click)="close()">
+          <img [src]="user.avatar_url" alt="" width="44" height="44" />
+          <span>
+            <strong>{{ user.name }}</strong>
+            <small>{{ t.account }}</small>
+          </span>
+          <svg appIcon="chevron-right"></svg>
+        </a>
+      } @else {
+        <a class="btn btn--gold drawer__login" [href]="auth.loginUrl()">
+          <svg appIcon="discord"></svg> {{ t.login }}
+        </a>
+      }
+    </div>
+  }
 </div>

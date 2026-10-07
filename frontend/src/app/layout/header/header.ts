@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { Scroll } from '../../core/scroll';
+import { Icon } from '../../shared/icon';
 import { Logo } from '../../shared/logo';
 import { LangSwitch } from '../lang-switch/lang-switch';
 
@@ -13,7 +15,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive, Logo, LangSwitch],
+  imports: [RouterLink, RouterLinkActive, Icon, Logo, LangSwitch],
   templateUrl: './header.html',
   styleUrl: './header.scss',
   host: {
@@ -25,6 +27,7 @@ interface NavItem {
 export class Header {
   protected readonly i18n = inject(I18n);
   protected readonly scroll = inject(Scroll);
+  protected readonly auth = inject(Auth);
   protected readonly menuOpen = signal(false);
 
   protected readonly items = computed<NavItem[]>(() => {
