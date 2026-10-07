@@ -2,6 +2,7 @@ import type { Dict } from './sk';
 
 export const cs: Dict = {
   seo: {
+    guides: 'návody pro Rise of Kingdoms | KD 1035',
     home: {
       title: 'KD 1035 · České a slovenské království v Rise of Kingdoms',
       description:
@@ -14,6 +15,8 @@ export const cs: Dict = {
     },
   },
   nav: {
+    home: 'Domů',
+    breadcrumb: 'Drobečková navigace',
     label: 'Hlavní navigace',
     about: 'O nás',
     alliance: 'Aliance',
@@ -51,11 +54,29 @@ export const cs: Dict = {
     eyebrow: 'Návody',
     title: 'Hraj chytřeji',
     soon: 'Brzy',
-    items: [
-      { title: 'Commandeři', text: 'Nejlepší kombinace a talenty.' },
-      { title: 'Výbava', text: 'Co kovat a komu to dát.' },
-      { title: 'Eventy', text: 'Jak z eventů vytěžit maximum.' },
-    ],
+    count: { one: 'návod', few: 'návody', other: 'návodů' },
+    categories: {
+      commanderi: {
+        title: 'Commandeři',
+        text: 'Nejlepší kombinace a talenty.',
+        description: 'Nejlepší páry commanderů a talenty v Rise of Kingdoms – návody od hráčů česko-slovenského KD 1035.',
+      },
+      vybava: {
+        title: 'Výbava',
+        text: 'Co kovat a komu to dát.',
+        description: 'Jaká výbava se vyplatí a komu ji dát – návody na equipment v Rise of Kingdoms od hráčů KD 1035.',
+      },
+      eventy: {
+        title: 'Eventy',
+        text: 'Jak z eventů vytěžit maximum.',
+        description: 'Jak hrát eventy v Rise of Kingdoms naplno – tipy a návody od česko-slovenského království KD 1035.',
+      },
+    },
+    empty: 'Návody se připravují. Podívej se sem brzy.',
+    updated: 'Aktualizováno',
+    back: 'Zpět na seznam',
+    notFound: 'Tento návod neexistuje nebo už není zveřejněný.',
+    error: 'Návody se nepodařilo načíst. Zkus to znovu za chvíli.',
   },
   community: {
     eyebrow: 'Komunita',
@@ -107,29 +128,6 @@ export const cs: Dict = {
         'Po schválení se domluvíme na termínu migrace.',
       ],
     },
-    faqTitle: 'Časté otázky',
-    faq: [
-      {
-        q: 'Existuje české království v Rise of Kingdoms?',
-        a: 'Ano. KD 1035 je jediné království v Rise of Kingdoms složené výhradně z českých a slovenských hráčů.',
-      },
-      {
-        q: 'Je v Rise of Kingdoms i slovenské KD?',
-        a: 'Ano, KD 1035 je společné česko-slovenské království. Češi a Slováci tu hrají spolu a rozumí si bez překladače.',
-      },
-      {
-        q: 'Jak se můžu přidat?',
-        a: 'Migrace je možná pouze po předchozí domluvě s vedením. Nejrychleji se s námi spojíš přes Discord.',
-      },
-      {
-        q: 'Musím umět anglicky?',
-        a: 'Ne. V království komunikujeme česky a slovensky.',
-      },
-      {
-        q: 'Pomůžete i začátečníkům?',
-        a: 'Ano. Rádi poradíme s commandery, výbavou i eventy a postupně přidáváme na tento web i návody.',
-      },
-    ],
     cta: 'Přidej se k nám',
   },
   footer: {

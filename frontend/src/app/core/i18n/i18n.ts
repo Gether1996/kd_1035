@@ -7,20 +7,37 @@ import { cs } from './cs';
 import { sk } from './sk';
 
 export type Lang = 'sk' | 'cs';
-export type Page = 'home' | 'about';
+export type Page = 'home' | 'about' | 'guides' | 'guide';
+export type GuideCategory = 'commanderi' | 'vybava' | 'eventy';
+
+export const GUIDE_CATEGORIES: GuideCategory[] = ['commanderi', 'vybava', 'eventy'];
 
 const DICTS = { sk, cs };
 const LOCALES: Record<Lang, string> = { sk: 'sk-SK', cs: 'cs-CZ' };
-/** Slovak lives at the root, Czech under /cz – each language has its own indexable URLs. */
+/** Slovak lives at the root, Czech under /cz – each language has its own indexable URLs, same slugs. */
 const PREFIX: Record<Lang, string> = { sk: '', cs: '/cz' };
-const SLUG: Record<Page, string> = { home: '', about: '/o-nas' };
 const STORAGE_KEY = 'kd1035.lang';
 
-export function parseUrl(url: string): { lang: Lang; page: Page } {
+export interface ParsedUrl {
+  lang: Lang;
+  page: Page;
+  /** path without the language prefix, e.g. "/navody/vybava" ("" for home) */
+  rest: string;
+}
+
+export function parseUrl(url: string): ParsedUrl {
   const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
   const lang: Lang = path === '/cz' || path.startsWith('/cz/') ? 'cs' : 'sk';
   const rest = path.slice(PREFIX[lang].length);
-  return { lang, page: rest === SLUG.about ? 'about' : 'home' };
+  const page: Page =
+    rest === '/o-nas'
+      ? 'about'
+      : /^\/navody\/[^/]+$/.test(rest)
+        ? 'guides'
+        : /^\/navody\/[^/]+\/[^/]+$/.test(rest)
+          ? 'guide'
+          : 'home';
+  return { lang, page, rest };
 }
 
 /** Language comes from the URL. Templates read `i18n.t().section.key`. */
@@ -50,9 +67,19 @@ export class I18n {
     });
   }
 
-  /** URL of `page` in `lang` (current language by default). */
-  path(page: Page, lang: Lang = this.lang()): string {
-    return PREFIX[lang] + SLUG[page] || '/';
+  /** URL of a fixed page in `lang` (current language by default). */
+  path(page: 'home' | 'about', lang: Lang = this.lang()): string {
+    return PREFIX[lang] + (page === 'about' ? '/o-nas' : '') || '/';
+  }
+
+  /** URL of a guide category list, or of one guide when `slug` is given. */
+  guidePath(category: string, slug?: string, lang: Lang = this.lang()): string {
+    return `${PREFIX[lang]}/navody/${category}${slug ? `/${slug}` : ''}`;
+  }
+
+  /** The page currently shown, in `lang` – used by the language switch and hreflang links. */
+  switchPath(lang: Lang): string {
+    return PREFIX[lang] + this.route().rest || '/';
   }
 
   /** Stores an explicit choice made with the language switch. */

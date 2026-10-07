@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { I18n } from '../../../core/i18n/i18n';
+import { RouterLink } from '@angular/router';
+import { GuidesApi } from '../../../core/guides-api';
+import { GUIDE_CATEGORIES, GuideCategory, I18n } from '../../../core/i18n/i18n';
 import { Icon, IconName } from '../../../shared/icon';
 import { Reveal } from '../../../shared/reveal';
 
 @Component({
   selector: 'app-guides',
-  imports: [Icon, Reveal],
+  imports: [RouterLink, Icon, Reveal],
   template: `
     <section class="section" id="guides">
       <div class="container">
@@ -15,17 +17,24 @@ import { Reveal } from '../../../shared/reveal';
         </header>
 
         <div class="grid">
-          @for (guide of t().guides.items; track $index) {
-            <article class="guide" [appReveal]="$index * 120">
-              <svg class="guide__watermark" [appIcon]="icons[$index]"></svg>
+          @for (key of categories; track key; let i = $index) {
+            @let info = t().guides.categories[key];
+            @let count = guides.byCategory(key).length;
+            <a class="guide" [routerLink]="i18n.guidePath(key)" [appReveal]="i * 120">
+              <svg class="guide__watermark" [appIcon]="icons[key]"></svg>
               <div class="guide__top">
-                <span class="guide__index">0{{ $index + 1 }}</span>
-                <span class="tag">{{ t().guides.soon }}</span>
+                <span class="guide__index">0{{ i + 1 }}</span>
+                @if (count) {
+                  <span class="tag">{{ guides.count(count) }}</span>
+                } @else if (guides.ready()) {
+                  <span class="tag tag--muted">{{ t().guides.soon }}</span>
+                }
               </div>
-              <span class="guide__icon"><svg [appIcon]="icons[$index]"></svg></span>
-              <h3>{{ guide.title }}</h3>
-              <p>{{ guide.text }}</p>
-            </article>
+              <span class="guide__icon"><svg [appIcon]="icons[key]"></svg></span>
+              <h3>{{ info.title }}</h3>
+              <p>{{ info.text }}</p>
+              <svg class="guide__arrow" appIcon="arrow-right"></svg>
+            </a>
           }
         </div>
       </div>
@@ -35,6 +44,13 @@ import { Reveal } from '../../../shared/reveal';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Guides {
-  protected readonly t = inject(I18n).t;
-  protected readonly icons: IconName[] = ['swords', 'shield', 'calendar-days'];
+  protected readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
+  protected readonly guides = inject(GuidesApi);
+  protected readonly categories = GUIDE_CATEGORIES;
+  protected readonly icons: Record<GuideCategory, IconName> = {
+    commanderi: 'swords',
+    vybava: 'shield',
+    eventy: 'calendar-days',
+  };
 }

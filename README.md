@@ -38,6 +38,17 @@ docker compose exec -u app worker python manage.py restore_db kd1035_2026-10-07_
 
 Zálohy z `./backups` si občas skopíruj aj mimo servera.
 
+## Návody (commanderi, výbava, eventy)
+
+Iba superuser, v admine → **Návody → Pridať návod**:
+
+1. Vyber kategóriu, napíš nadpis (SK, voliteľne CZ). Adresa sa vyplní sama.
+2. Do **obsah HTML (SK)** vlož HTML. CZ je nepovinné, bez neho sa zobrazí slovenský obsah.
+3. Obrázky: dole v časti **Obrázky** nahraj súbor a ulož. Pri obrázku sa zobrazí kód `<img src="...">`, skopíruj ho do HTML na miesto, kde má byť.
+4. Ulož. Hore je náhľad a tlačidlo „Zobraziť na stránke“.
+
+Skripty, `<style>` bloky a nebezpečné atribúty sa pri uložení odstránia. Vzhľad (nadpisy, tabuľky, zoznamy) dodá web sám.
+
 ## Discord notifikácie o eventoch
 
 1. Discord: **Server Settings → Integrations → Webhooks → New Webhook** → vyber kanál → **Copy Webhook URL** → `DISCORD_WEBHOOK_URL` v `.env`.

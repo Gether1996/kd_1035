@@ -11,7 +11,7 @@ import { I18n, Lang } from '../../core/i18n/i18n';
       <span class="lang__thumb" aria-hidden="true"></span>
       @for (option of options; track option.lang) {
         <a
-          [routerLink]="i18n.path(i18n.page(), option.lang)"
+          [routerLink]="i18n.switchPath(option.lang)"
           [preserveFragment]="true"
           [attr.hreflang]="option.lang"
           [attr.lang]="option.lang"

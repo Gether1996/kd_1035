@@ -84,3 +84,30 @@
     height: 24px;
   }
 }
+
+.guide {
+  &:hover .guide__arrow {
+    color: var(--gold-300);
+    transform: translateX(4px);
+  }
+
+  p {
+    padding-right: 32px;
+  }
+}
+
+.guide__arrow {
+  position: absolute;
+  right: clamp(24px, 3vw, 32px);
+  bottom: clamp(24px, 3vw, 32px);
+  color: var(--text-dim);
+  transition:
+    transform 0.35s var(--ease-out),
+    color 0.25s;
+}
+
+.tag--muted {
+  border-color: var(--line);
+  color: var(--text-mute);
+  background: none;
+}

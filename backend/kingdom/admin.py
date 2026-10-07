@@ -2,6 +2,7 @@ from django.contrib import admin, messages
 
 from .discord import deliver
 from .models import Alliance, EventNotification, Officer, SocialLink
+from .permissions import SuperuserOnlyAdmin
 
 
 class OfficerInline(admin.TabularInline):
@@ -23,27 +24,8 @@ class SocialLinkAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
 
 
-class SuperuserOnly:
-    """Mass notifications can only be planned by superusers."""
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-    def has_view_permission(self, request, obj=None):
-        return request.user.is_superuser
-
-    def has_add_permission(self, request):
-        return request.user.is_superuser
-
-    def has_change_permission(self, request, obj=None):
-        return request.user.is_superuser
-
-    def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
-
-
 @admin.register(EventNotification)
-class EventNotificationAdmin(SuperuserOnly, admin.ModelAdmin):
+class EventNotificationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     list_display = ['title', 'send_at', 'status', 'sent_at']
     list_filter = ['status']
     search_fields = ['title', 'message']

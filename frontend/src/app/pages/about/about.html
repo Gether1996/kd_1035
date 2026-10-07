@@ -1,17 +1,6 @@
 @let page = t().aboutPage;
 
-<header class="masthead" appScrollFx="exit">
-  <div class="masthead__art" aria-hidden="true">
-    <img src="img/hero/sky.svg" alt="" style="--speed: 0.5" />
-    <img src="img/hero/far.svg" alt="" style="--speed: 0.32" />
-    <img src="img/hero/mid.svg" alt="" style="--speed: 0.16" />
-  </div>
-  <div class="container masthead__content">
-    <p class="eyebrow">{{ page.eyebrow }}</p>
-    <h1 class="masthead__title">{{ page.title }}</h1>
-    <p class="masthead__intro">{{ page.intro }}</p>
-  </div>
-</header>
+<app-page-header [crumbs]="crumbs()" [eyebrow]="page.eyebrow" [title]="page.title" [intro]="page.intro" />
 
 <article class="container article">
   @for (section of page.sections; track $index) {
@@ -38,21 +27,6 @@
         <li>{{ step }}</li>
       }
     </ol>
-  </section>
-
-  <section class="block" appReveal>
-    <h2>{{ page.faqTitle }}</h2>
-    <div class="faq">
-      @for (item of page.faq; track $index) {
-        <details class="faq__item" [open]="$first">
-          <summary>
-            {{ item.q }}
-            <svg appIcon="chevron-down"></svg>
-          </summary>
-          <p>{{ item.a }}</p>
-        </details>
-      }
-    </div>
   </section>
 
   <div class="cta" appReveal>

@@ -4,6 +4,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import {
   ActivatedRouteSnapshot,
   provideRouter,
+  withComponentInputBinding,
   withInMemoryScrolling,
   withRouterConfig,
   withViewTransitions,
@@ -19,6 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideRouter(
       routes,
+      withComponentInputBinding(),
       // scroll-to-top for page changes is handled in App, so switching language keeps the position
       withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'disabled' }),
       // clicking the same section link twice scrolls again

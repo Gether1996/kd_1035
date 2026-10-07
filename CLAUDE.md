@@ -13,17 +13,17 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Iba tmavý štýl.** Žiadny light/dark prepínač, žiadne `prefers-color-scheme` varianty.
 - Farby, fonty, rozostupy a easing sú CSS premenné v `frontend/src/styles.scss` (`:root`). Nové farby nepridávaj natvrdo do komponentov (výnimka: farby značiek Discord/Facebook).
 - Hero pozadie = vrstvené SVG (`frontend/public/img/hero/*.svg`) generované skriptom `tools/background/generate.py`. Pri úprave grafiky meň skript, nie SVG ručne (príkaz nižšie). Kompozícia: nadpis hore na oblohe, hrad v strede, CTA dole.
-- **Žiadny balast textu.** Krátke nadpisy, max. 1–2 vety na blok. Radšej vynechať ako nafúknuť. Výnimka: stránka **O nás** je SEO stránka s dlhším, ale štruktúrovaným textom (nadpisy, zoznamy, FAQ).
+- **Žiadny balast textu.** Krátke nadpisy, max. 1–2 vety na blok. Radšej vynechať ako nafúknuť. Výnimka: stránka **O nás** je SEO stránka s dlhším, ale štruktúrovaným textom (nadpisy, zoznamy). FAQ sekciu používateľ nechce.
 - **Nesmie to vyzerať ako AI slop:** žiadne generické gradientové fľaky, emoji namiesto ikon, prázdne marketingové frázy ani glow efekty všade. Grafika je ručne navrhnutá (SVG) a drží jednu paletu a jeden štýl.
 - **Plynulé pohyby:** parallax pozadia (`appScrollFx` → CSS `--progress`), posúvaný text pri scrollovaní, scroll reveal (`appReveal`), jemné hover stavy. Animuj len `transform`/`translate` a `opacity`. Vždy rešpektuj `prefers-reduced-motion`.
 - **100 % responzívne** – mobil od 320 px, landscape mobil, tablet, notebook, desktop, ultrawide. Každú vizuálnu zmenu over screenshotmi (`tools/screenshots/shoot.mjs`) minimálne na 360, 768, 1280, 1920 a 2560.
 - Prístupnosť: dostatočný kontrast, viditeľný focus, `alt`/`aria-label`, ovládanie klávesnicou.
 
 ## Jazyky SK / CZ a SEO
-- Každý jazyk má vlastné URL: SK v koreni (`/`, `/o-nas`), CZ pod `/cz` (`/cz`, `/cz/o-nas`). Jazyk sa určuje z URL (`I18n.path(page, lang)`), prepínač SK/CZ sú odkazy na tú istú stránku v druhom jazyku. Nové stránky pridávaj do `app.routes.ts` (funkcia `pages()`), typu `Page` v `i18n.ts`, do `seo` v slovníkoch a do `public/sitemap.xml`.
+- Každý jazyk má vlastné URL s rovnakými slugmi: SK v koreni (`/`, `/o-nas`, `/navody/vybava`, `/navody/vybava/<slug>`), CZ pod `/cz` (`/cz/...`). Jazyk sa určuje z URL; odkazy skladaj cez `I18n.path()`, `I18n.guidePath()`, prepínač jazyka cez `I18n.switchPath()`. Nové stránky pridávaj do `app.routes.ts` (funkcia `pages()`), `parseUrl`/`Page` v `i18n.ts`, `app.routes.server.ts` a do `STATIC_PAGES` v `backend/guides/views.py` (sitemap).
 - Každý text v oboch jazykoch: `frontend/src/app/core/i18n/sk.ts` a `cs.ts` (typ `Dict` + test stráži rovnakú štruktúru). Žiadne natvrdo písané texty v šablónach (okrem vlastných mien: Kingdom 1035, Rise of Kingdoms, Discord…).
-- Stránky sú **prerendrované** (Angular SSG, `outputMode: static`) → statické HTML pre Google. Kód musí byť SSR-safe: `window`, `localStorage`, `matchMedia` len v prehliadači (`isPlatformBrowser`, `afterNextRender`). API sa volá iba v prehliadači.
-- `Seo` služba nastavuje title, description, canonical, hreflang (sk, cs, x-default), Open Graph a JSON-LD (WebSite, Organization, FAQPage). Prerendrované HTML má placeholder `__SITE_ORIGIN__`, ktorý nginx nahradí `SITE_URL` z `.env`.
+- Stránky sú **prerendrované** (Angular SSG, `outputMode: static`) → statické HTML pre Google. Výnimka: detail návodu (`navody/:category/:slug`) sa renderuje v prehliadači (`RenderMode.Client`, nginx vráti `index.csr.html`). Kód musí byť SSR-safe: `window`, `localStorage`, `matchMedia` len v prehliadači (`isPlatformBrowser`, `afterNextRender`). API sa volá iba v prehliadači.
+- `Seo` služba nastavuje title, description, canonical, hreflang (sk, cs, x-default), Open Graph a JSON-LD (WebSite, Organization, BreadcrumbList). Stránky s obsahom z DB volajú `seo.set({title, description, breadcrumbs})`. `sitemap.xml` generuje Django (`/sitemap.xml`) vrátane všetkých zverejnených návodov. Prerendrované HTML má placeholder `__SITE_ORIGIN__`, ktorý nginx nahradí `SITE_URL` z `.env`.
 - Kľúčové slová prirodzene v texte (bez spamovania): ROK KD CZ SK, slovenské KD, české KD, slovenské/české kráľovstvo v Rise of Kingdoms, KD 1035.
 - Obsah z databázy (návody a pod.) bude mať polia pre SK aj CZ.
 - Dbaj na pravopis a diakritiku (SK: ä, ô, ľ, ĺ, ŕ; CZ: ř, ů, ě).
@@ -38,6 +38,14 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Nepoužívaj oficiálne assety Lilith Games (logá, artworky) bez súhlasu používateľa.
 - Pätička: malý watermark „Vytvoril Gether · 2026“ + krátka poznámka, že ide o neoficiálnu fanúšikovskú stránku.
 
+## Návody (CMS)
+- Spravuje ich **iba superuser** v Django admine (Návody): kategória (Commanderi / Výbava / Eventy), nadpis SK + CZ (CZ nepovinný → použije sa SK), slug, HTML obsah SK + CZ, poradie, zverejnený.
+- HTML sa pri uložení čistí knižnicou **nh3** (`backend/guides/sanitize.py`): odstráni `<script>`, `<style>`, on* atribúty a `javascript:` odkazy; povolené sú bežné tagy, tabuľky, obrázky a video embedy (YouTube, Twitch). Frontend preto obsah vkladá cez `bypassSecurityTrustHtml`. Vzhľad obsahu určuje globálna trieda `.prose` v `frontend/src/styles.scss`.
+- Obrázky: inline „Obrázky“ pri návode → po uložení admin ukáže kód `<img src="/uploads/guides/...">` na skopírovanie do HTML. Súbor sa zmaže spolu s obrázkom/návodom.
+- Web: `/navody/<kategória>` = zoznam (záložky kategórií), `/navody/<kategória>/<slug>` = článok. Všade **breadcrumbs** (Domov › Kategória › Článok), aj ako JSON-LD.
+- Úvod (excerpt) pre zoznam a meta description = prvý odsek `<p>` obsahu.
+- Obsah (návody, obrázky) žije v databáze a volume `uploads`, nie v gite. Testovací článok „Najlepší set pre kone“ je zatiaľ len v lokálnej dev databáze.
+
 ## Notifikácie
 - **Discord** (nie e-mail, nie WhatsApp – WhatsApp Cloud API vyžaduje Meta Business účet a platí sa za správy). Webhook do kanála, voliteľne ping roly. Premenné `DISCORD_WEBHOOK_URL`, `DISCORD_EVENT_ROLE_ID`.
 - Model `EventNotification` – plánovať (dátum a čas) smie **iba superuser** v admine. Posiela ich kontajner `worker` (`manage.py run_worker`, kontrola každých 30 s). Notifikácia zmeškaná o viac ako 6 h sa už neposiela.
@@ -51,11 +59,11 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 
 ## Technológie
 - **Frontend:** Angular 22 (standalone, signals, zoneless, `@if/@for`, `httpResource`), SCSS, `frontend/`.
-- **Backend:** Django 6 + Django REST Framework, SQLite súbor, Django admin na správu obsahu, `backend/` (app `kingdom`).
+- **Backend:** Django 6 + Django REST Framework, SQLite súbor, Django admin na správu obsahu, `backend/` (apps `kingdom`, `guides`).
 - **Docker všade** – server aj lokálny vývoj. Nepredpokladaj lokálny Python ani Node, príkazy spúšťaj cez `docker compose`.
   - `docker-compose.yml` (produkcia): `backend` (gunicorn), `worker` (notifikácie + zálohy), `web` (nginx: prerendrované stránky + proxy `/api/`, `/admin/`, `/static/` na backend).
   - `docker-compose.dev.yml` (vývoj): `ng serve` s hot reloadom (port 4200, proxy `/api` → backend), Django `runserver` (port 8000), `worker`.
-- Dynamické dáta idú z API `/api/alliances/` a `/api/links/`. Frontend musí fungovať aj keď API zlyhá (sekcia sa skryje, nič sa nerozbije).
+- Dynamické dáta idú z API `/api/alliances/`, `/api/links/`, `/api/guides/` (+ `/api/guides/<slug>/`). Frontend musí fungovať aj keď API zlyhá (sekcia sa skryje, nič sa nerozbije).
 - URL: `/static/` = Django statika (admin), `/uploads/` = nahraté súbory (MEDIA_URL), `/media/` patrí Angular buildu (fonty).
 - Ikony: SVG sprite `frontend/public/icons.svg` (Lucide + Simple Icons), použitie `<svg appIcon="swords" />`. Novú ikonu pridaj do `frontend/scripts/build-icons.mjs` a spusti `npm run icons`.
 - Angular konvencie: súbory bez prípony `.component` (`hero.ts`, trieda `Hero`), `inject()`, `input()`, signals, `OnPush`.

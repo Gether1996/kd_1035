@@ -1,0 +1,50 @@
+@let t = i18n.t();
+
+<app-page-header
+  [crumbs]="crumbs()"
+  [eyebrow]="t.guides.eyebrow"
+  [title]="info()?.title ?? t.guides.title"
+  [intro]="info()?.text ?? ''"
+/>
+
+<div class="container content">
+  <nav class="tabs" [attr.aria-label]="t.guides.eyebrow">
+    @for (key of categories; track key) {
+      <a class="tab" [routerLink]="i18n.guidePath(key)" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        {{ t.guides.categories[key].title }}
+      </a>
+    }
+  </nav>
+
+  @if (!info()) {
+    <p class="state">{{ t.guides.notFound }}</p>
+  } @else if (guides.failed()) {
+    <p class="state">{{ t.guides.error }}</p>
+  } @else if (items().length) {
+    <ol class="list">
+      @for (g of items(); track g.slug; let i = $index) {
+        <li [appReveal]="i * 60">
+          <a class="row" [routerLink]="i18n.guidePath(g.category, g.slug)">
+            <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
+            <span class="row__body">
+              <strong>{{ guides.title(g) }}</strong>
+              @if (guides.excerpt(g)) {
+                <small>{{ guides.excerpt(g) }}</small>
+              }
+            </span>
+            <time class="row__date" [attr.datetime]="g.updated_at">{{ guides.date(g.updated_at) }}</time>
+            <svg class="row__arrow" appIcon="arrow-right"></svg>
+          </a>
+        </li>
+      }
+    </ol>
+  } @else if (!guides.ready()) {
+    <div class="list list--loading" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <span class="row row--skeleton"></span>
+      }
+    </div>
+  } @else {
+    <p class="state">{{ t.guides.empty }}</p>
+  }
+</div>

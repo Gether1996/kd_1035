@@ -1,0 +1,47 @@
+@let t = i18n.t();
+
+<article class="guide-page">
+  <header class="container guide-head">
+    <app-breadcrumbs [crumbs]="crumbs()" />
+
+    @if (guide(); as g) {
+      @if (categoryKey(); as key) {
+        <p class="eyebrow guide-head__eyebrow">{{ t.guides.categories[key].title }}</p>
+      }
+      <h1 class="guide-head__title">{{ title() }}</h1>
+      <p class="guide-head__meta">
+        {{ t.guides.updated }} <time [attr.datetime]="g.updated_at">{{ guides.date(g.updated_at) }}</time>
+      </p>
+    } @else if (notFound()) {
+      <p class="state">{{ t.guides.notFound }}</p>
+    } @else if (failed()) {
+      <p class="state">{{ t.guides.error }}</p>
+    } @else {
+      <div aria-hidden="true">
+        <span class="skeleton skeleton--eyebrow"></span>
+        <span class="skeleton skeleton--title"></span>
+        <span class="skeleton skeleton--meta"></span>
+      </div>
+    }
+  </header>
+
+  @if (guide()) {
+    <div class="container">
+      <div class="prose" [innerHTML]="content()" (click)="zoom($event)"></div>
+    </div>
+  }
+
+  @if (lightbox(); as src) {
+    <button type="button" class="lightbox" [attr.aria-label]="t.nav.close" (click)="lightbox.set(null)">
+      <img [src]="src" alt="" />
+    </button>
+  }
+
+  @if (categoryKey(); as key) {
+    <footer class="container guide-foot">
+      <a class="back" [routerLink]="i18n.guidePath(key)">
+        <svg appIcon="arrow-left"></svg> {{ t.guides.back }}
+      </a>
+    </footer>
+  }
+</article>

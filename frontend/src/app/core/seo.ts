@@ -1,19 +1,32 @@
 import { isPlatformBrowser } from '@angular/common';
-import { DOCUMENT, Injectable, PLATFORM_ID, effect, inject } from '@angular/core';
+import { DOCUMENT, Injectable, PLATFORM_ID, effect, inject, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { KingdomApi } from './api';
 import { I18n, Lang } from './i18n/i18n';
 
 const OG_LOCALE: Record<Lang, string> = { sk: 'sk_SK', cs: 'cs_CZ' };
 
+export interface Crumb {
+  label: string;
+  link: string;
+}
+
+export interface PageMeta {
+  title: string;
+  description: string;
+  breadcrumbs?: Crumb[];
+}
+
 /**
  * Title, description, canonical + hreflang alternates, Open Graph and JSON-LD for the current page.
+ * Fixed pages take their texts from the dictionaries, pages with database content call `set()`.
  * Prerendered HTML contains the `__SITE_ORIGIN__` placeholder, which nginx swaps for the real origin.
  */
 @Injectable({ providedIn: 'root' })
 export class Seo {
   private readonly doc = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly override = signal<PageMeta | null>(null);
 
   constructor() {
     const i18n = inject(I18n);
@@ -25,23 +38,24 @@ export class Seo {
       const lang = i18n.lang();
       const page = i18n.page();
       const t = i18n.t();
-      const { title: pageTitle, description } = t.seo[page];
+      const fixed = page === 'home' || page === 'about' ? t.seo[page] : null;
+      const current = this.override() ?? fixed ?? t.seo.home;
       const origin = this.origin();
-      const url = (p = page, l: Lang = lang) => origin + i18n.path(p, l);
+      const url = (l: Lang = lang) => origin + i18n.switchPath(l);
 
-      title.setTitle(pageTitle);
-      meta.updateTag({ name: 'description', content: description });
-      meta.updateTag({ property: 'og:title', content: pageTitle });
-      meta.updateTag({ property: 'og:description', content: description });
+      title.setTitle(current.title);
+      meta.updateTag({ name: 'description', content: current.description });
+      meta.updateTag({ property: 'og:title', content: current.title });
+      meta.updateTag({ property: 'og:description', content: current.description });
       meta.updateTag({ property: 'og:url', content: url() });
       meta.updateTag({ property: 'og:locale', content: OG_LOCALE[lang] });
       meta.updateTag({ property: 'og:locale:alternate', content: OG_LOCALE[lang === 'sk' ? 'cs' : 'sk'] });
       meta.updateTag({ property: 'og:image', content: `${origin}/og-image.jpg` });
 
       this.link('canonical', url());
-      this.link('alternate', url(page, 'sk'), 'sk');
-      this.link('alternate', url(page, 'cs'), 'cs');
-      this.link('alternate', url(page, 'sk'), 'x-default');
+      this.link('alternate', url('sk'), 'sk');
+      this.link('alternate', url('cs'), 'cs');
+      this.link('alternate', url('sk'), 'x-default');
 
       const links = Object.values(api.links()).filter(Boolean);
       const graph: object[] = [
@@ -63,19 +77,25 @@ export class Seo {
           ...(links.length ? { sameAs: links } : {}),
         },
       ];
-      if (page === 'about') {
+      const crumbs = this.override()?.breadcrumbs;
+      if (crumbs?.length) {
         graph.push({
-          '@type': 'FAQPage',
-          inLanguage: lang,
-          mainEntity: t.aboutPage.faq.map((item) => ({
-            '@type': 'Question',
-            name: item.q,
-            acceptedAnswer: { '@type': 'Answer', text: item.a },
+          '@type': 'BreadcrumbList',
+          itemListElement: crumbs.map((c, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: c.label,
+            item: origin + c.link,
           })),
         });
       }
       this.jsonLd({ '@context': 'https://schema.org', '@graph': graph });
     });
+  }
+
+  /** Meta for a page with database content; pass null when the page is left. */
+  set(meta: PageMeta | null): void {
+    this.override.set(meta);
   }
 
   private origin(): string {

@@ -3,14 +3,16 @@ import { parseUrl } from './i18n';
 import { sk } from './sk';
 
 describe('parseUrl', () => {
-  it('maps addresses to language and page', () => {
-    expect(parseUrl('/')).toEqual({ lang: 'sk', page: 'home' });
-    expect(parseUrl('/#guides')).toEqual({ lang: 'sk', page: 'home' });
-    expect(parseUrl('/o-nas')).toEqual({ lang: 'sk', page: 'about' });
-    expect(parseUrl('/cz')).toEqual({ lang: 'cs', page: 'home' });
-    expect(parseUrl('/cz/')).toEqual({ lang: 'cs', page: 'home' });
-    expect(parseUrl('/cz/o-nas?ref=fb')).toEqual({ lang: 'cs', page: 'about' });
-    expect(parseUrl('/czech')).toEqual({ lang: 'sk', page: 'home' });
+  it('maps addresses to language, page and language-free path', () => {
+    expect(parseUrl('/')).toEqual({ lang: 'sk', page: 'home', rest: '' });
+    expect(parseUrl('/#guides')).toEqual({ lang: 'sk', page: 'home', rest: '' });
+    expect(parseUrl('/o-nas')).toEqual({ lang: 'sk', page: 'about', rest: '/o-nas' });
+    expect(parseUrl('/cz')).toEqual({ lang: 'cs', page: 'home', rest: '' });
+    expect(parseUrl('/cz/')).toEqual({ lang: 'cs', page: 'home', rest: '' });
+    expect(parseUrl('/cz/o-nas?ref=fb')).toEqual({ lang: 'cs', page: 'about', rest: '/o-nas' });
+    expect(parseUrl('/navody/vybava')).toEqual({ lang: 'sk', page: 'guides', rest: '/navody/vybava' });
+    expect(parseUrl('/cz/navody/eventy/mge')).toEqual({ lang: 'cs', page: 'guide', rest: '/navody/eventy/mge' });
+    expect(parseUrl('/czech')).toEqual({ lang: 'sk', page: 'home', rest: '/czech' });
   });
 });
 

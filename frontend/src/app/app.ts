@@ -34,18 +34,18 @@ export class App {
     scroller.setOffset(() => [0, doc.querySelector('app-header')?.clientHeight ?? 0]);
 
     // new page → top; same page in the other language → keep the scroll position
-    let previous = parseUrl(router.url).page;
+    let previous = parseUrl(router.url).rest;
     router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe((e) => {
-      const page = parseUrl(e.urlAfterRedirects).page;
-      if (page !== previous && !e.urlAfterRedirects.includes('#')) scroller.scrollToPosition([0, 0]);
-      previous = page;
+      const rest = parseUrl(e.urlAfterRedirects).rest;
+      if (rest !== previous && !e.urlAfterRedirects.includes('#')) scroller.scrollToPosition([0, 0]);
+      previous = rest;
     });
 
     afterNextRender(() => {
       // returning visitors get the language they chose last time (Czech browsers default to CZ)
       const preferred = this.i18n.preferred();
       if (preferred && preferred !== this.i18n.lang()) {
-        router.navigateByUrl(this.i18n.path(this.i18n.page(), preferred) + location.hash, { replaceUrl: true });
+        router.navigateByUrl(this.i18n.switchPath(preferred) + location.hash, { replaceUrl: true });
       }
     });
   }

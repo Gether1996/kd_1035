@@ -199,6 +199,192 @@ p {
   background: rgba(245, 196, 81, 0.06);
 }
 
+// ---------------------------------------------------------------- guide content (HTML from the admin)
+
+.prose {
+  color: var(--text-dim);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  overflow-wrap: break-word;
+
+  > * + * {
+    margin-top: 1.1em;
+  }
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 1.9em;
+    color: var(--text);
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.25rem);
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 1.2rem + 1.2vw, 1.875rem);
+  }
+
+  h3 {
+    font-size: 1.375rem;
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-size: 1.125rem;
+  }
+
+  strong,
+  b {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  a {
+    color: var(--gold-300);
+    text-decoration: underline;
+    text-decoration-color: rgba(245, 196, 81, 0.4);
+    text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  ul,
+  ol {
+    padding-left: 1.4em;
+  }
+
+  li + li {
+    margin-top: 0.4em;
+  }
+
+  li::marker {
+    color: var(--gold-400);
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  figure {
+    margin: 1.8em 0;
+  }
+
+  figcaption {
+    margin-top: 0.6em;
+    font-size: 0.875rem;
+    color: var(--text-mute);
+    text-align: center;
+  }
+
+  blockquote {
+    margin: 1.6em 0;
+    padding: 0.9em 1.2em;
+    border-left: 3px solid var(--gold-400);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: rgba(245, 196, 81, 0.06);
+    color: var(--text);
+  }
+
+  hr {
+    height: 1px;
+    margin: 2.4em 0;
+    border: 0;
+    background: var(--line);
+  }
+
+  code {
+    padding: 0.15em 0.4em;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.07);
+    font: 0.9em ui-monospace, Consolas, monospace;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1em 1.2em;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.35);
+
+    code {
+      padding: 0;
+      background: none;
+    }
+  }
+
+  // wide tables scroll sideways on phones instead of breaking the layout
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  th,
+  td {
+    padding: 0.7em 0.9em;
+    border: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: rgba(245, 196, 81, 0.08);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  iframe {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: var(--radius-sm);
+  }
+
+  details {
+    padding: 0.9em 1.1em;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+  }
+
+  summary {
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  mark {
+    padding: 0 0.2em;
+    border-radius: 3px;
+    background: rgba(245, 196, 81, 0.25);
+    color: var(--text);
+  }
+}
+
 // ---------------------------------------------------------------- buttons
 // Pointed "banner" shape drawn by pseudo-elements, so the focus outline stays visible.
 
