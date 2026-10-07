@@ -23,6 +23,7 @@ git config core.hooksPath .githooks
 ```
 
 - **commit** – databáza a obrázky sa pridajú do commitu samé (musí bežať Docker)
+- **zmenil si len obsah** (v admine, bez zmeny kódu) – `sh .githooks/dbsync.sh push "Add guide"` (export + commit + push; obyčajný `git commit` bez inej zmeny skončí „nothing to commit“)
 - **pull** – ak prišla nová databáza, načíta sa sama (stará sa predtým zálohuje do `./backups`)
 - ručne: `sh .githooks/dbsync.sh export` / `sh .githooks/dbsync.sh import`
 

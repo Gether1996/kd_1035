@@ -2,6 +2,7 @@
 # Database + uploaded files travel with git (local development only).
 #   sh .githooks/dbsync.sh export [--force]  → backend/snapshot/db.sqlite3 + backend/media, staged for commit
 #   sh .githooks/dbsync.sh import            → snapshot into the local dev database (old one is backed up)
+#   sh .githooks/dbsync.sh push ["message"]  → export + commit + git push (when only content changed)
 # Enable the hooks once per clone: git config core.hooksPath .githooks
 set -e
 cd "$(git rev-parse --show-toplevel)"
@@ -30,8 +31,19 @@ case "$1" in
   import)
     manage import_snapshot
     ;;
+  push)
+    # content-only changes: git refuses an otherwise empty commit before the pre-commit hook adds files
+    manage export_snapshot
+    git add -A -- backend/snapshot/db.sqlite3 backend/media
+    if git diff --cached --quiet; then
+      echo "dbsync: databáza ani obrázky sa nezmenili."
+    else
+      git commit -m "${2:-Update database snapshot}"
+    fi
+    git push
+    ;;
   *)
-    echo "usage: sh .githooks/dbsync.sh export [--force] | import" >&2
+    echo "usage: sh .githooks/dbsync.sh export [--force] | import | push [\"commit message\"]" >&2
     exit 2
     ;;
 esac
