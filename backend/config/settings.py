@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'kingdom',
     'guides',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,8 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer']
     + (['rest_framework.renderers.BrowsableAPIRenderer'] if DEBUG else []),
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+    # the site's own session (Discord sign-in) with CSRF checks; no Basic auth
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication'],
 }
 
 # Public address of the site, e.g. https://kd1035.sk (used in Discord messages)
@@ -111,6 +114,10 @@ SITE_URL = env('SITE_URL', default='').rstrip('/')
 # --- Discord event notifications (sent by the worker container) ---
 DISCORD_WEBHOOK_URL = env('DISCORD_WEBHOOK_URL', default='')
 DISCORD_EVENT_ROLE_ID = env('DISCORD_EVENT_ROLE_ID', default='')
+
+# --- Sign in with Discord (accounts app); both empty = login is switched off ---
+DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID', default='')
+DISCORD_CLIENT_SECRET = env('DISCORD_CLIENT_SECRET', default='')
 
 # --- Database backups (worker container, folder is bind-mounted to the host) ---
 BACKUP_DIR = Path(env('BACKUP_DIR', default=str(BASE_DIR / 'backups')))
@@ -121,6 +128,8 @@ BACKUP_KEEP = env.int('BACKUP_KEEP', default=8)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = env.bool('DJANGO_SECURE_COOKIES', default=not DEBUG)
 CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+# the redirect back from discord.com must carry the session cookie – never tighten to 'Strict'
+SESSION_COOKIE_SAMESITE = 'Lax'
 X_FRAME_OPTIONS = 'DENY'
 
 LOGGING = {

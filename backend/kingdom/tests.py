@@ -449,6 +449,8 @@ class KingdomEventAdminTests(TestCase):
 
 class BackupTests(TransactionTestCase):
     def test_backup_prune_and_restore(self):
+        # an earlier TransactionTestCase may have flushed the alliance seeded by the data migration
+        Alliance.objects.get_or_create(tag='CS35', defaults={'name': 'CZ/SK Legends'})
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             with override_settings(MEDIA_ROOT=folder / 'media'):
