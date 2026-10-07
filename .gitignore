@@ -1,0 +1,31 @@
+# Secrets – never commit
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Django runtime data
+backend/data/
+backend/media/
+backend/staticfiles/
+*.sqlite3
+*.sqlite3-*
+
+# Tooling caches
+tools/**/.cache/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+tools/screenshots/out/
+tools/screenshots/node_modules/
+
+# Database backups (worker)
+backups/

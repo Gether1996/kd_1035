@@ -1,0 +1,48 @@
+<div class="bar">
+  <div class="container bar__inner">
+    <a class="brand" [routerLink]="i18n.path('home')" fragment="top" (click)="close()" aria-label="Kingdom 1035">
+      <svg appLogo class="brand__logo"></svg>
+      <span class="brand__text" aria-hidden="true">
+        <span class="brand__small">Kingdom</span>
+        <span class="brand__big">1035</span>
+      </span>
+    </a>
+
+    <nav class="nav" [attr.aria-label]="i18n.t().nav.label">
+      @for (item of items(); track item.label) {
+        <a
+          class="nav__link"
+          [routerLink]="item.link"
+          [fragment]="item.fragment"
+          [routerLinkActive]="item.fragment ? [] : 'is-active'"
+          [routerLinkActiveOptions]="{ exact: true }"
+          [ariaCurrentWhenActive]="item.fragment ? false : 'page'"
+          >{{ item.label }}</a
+        >
+      }
+    </nav>
+
+    <app-lang-switch />
+
+    <button
+      class="burger"
+      type="button"
+      aria-controls="mobile-menu"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-label]="menuOpen() ? i18n.t().nav.close : i18n.t().nav.menu"
+      (click)="toggle()"
+    >
+      <span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<div id="mobile-menu" class="drawer" [class.is-open]="menuOpen()" [attr.inert]="menuOpen() ? null : ''">
+  <nav class="drawer__nav" [attr.aria-label]="i18n.t().nav.label">
+    @for (item of items(); track item.label; let i = $index) {
+      <a class="drawer__link" [routerLink]="item.link" [fragment]="item.fragment" [style.--i]="i" (click)="close()">
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+</div>

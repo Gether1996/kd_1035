@@ -1,0 +1,81 @@
+# Rendered by the nginx image at start-up (envsubst): ${SITE_URL} comes from the compose environment.
+
+map $http_x_forwarded_proto $kd_proto {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
+
+# Public origin for canonical/hreflang/og tags, sitemap and robots.txt
+map "${SITE_URL}" $kd_origin {
+    ""      $kd_proto://$http_host;
+    default "${SITE_URL}";
+}
+
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    server_tokens off;
+    absolute_redirect off;
+    client_max_body_size 20m;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/css text/plain text/xml application/javascript application/json application/xml
+               application/manifest+json image/svg+xml;
+
+    # prerendered pages, sitemap.xml and robots.txt carry the __SITE_ORIGIN__ placeholder
+    sub_filter_types text/xml application/xml text/plain;
+    sub_filter '__SITE_ORIGIN__' $kd_origin;
+    sub_filter_once off;
+
+    include /etc/nginx/snippets/security-headers.conf;
+
+    # Django: API, admin and its static files
+    location ~ ^/(api|admin|static)/ {
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $kd_proto;
+        proxy_read_timeout 60s;
+    }
+
+    location = /admin {
+        return 301 /admin/;
+    }
+
+    # files uploaded through the admin (shared volume)
+    location /uploads/ {
+        alias /srv/uploads/;
+        expires 7d;
+    }
+
+    # Angular build output with hashed names – cache forever
+    location ~* ^/(?:main|polyfills|styles|chunk)-[A-Z0-9]+\.(?:js|css)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
+    location /media/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
+    location ~* \.(?:svg|png|jpe?g|webp|avif|ico|webmanifest)$ {
+        expires 7d;
+    }
+
+    # prerendered pages: /, /o-nas, /cz, /cz/o-nas …
+    location / {
+        try_files $uri $uri/index.html =404;
+        add_header Cache-Control "no-cache";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
+    # unknown address → app shell (the router sends visitors home) with a real 404 status
+    error_page 404 /index.csr.html;
+}

@@ -1,0 +1,56 @@
+:host {
+  display: block;
+  // excluded from the page cross-fade so the thumb slide stays visible
+  view-transition-name: lang-switch;
+}
+
+.lang {
+  --w: 42px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, var(--w));
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(7, 15, 31, 0.55);
+
+  a {
+    display: grid;
+    place-items: center;
+    position: relative;
+    z-index: 1;
+    height: 32px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    font: 700 0.75rem/1 var(--font-body);
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &[aria-current='true'] {
+      color: #1d1405;
+    }
+  }
+}
+
+.lang__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: var(--w);
+  height: 32px;
+  border-radius: 999px;
+  background: var(--gold-gradient);
+  box-shadow: 0 2px 12px rgba(245, 196, 81, 0.3);
+  transition: transform 0.45s var(--ease-out);
+
+  .is-cs & {
+    transform: translateX(var(--w));
+  }
+}

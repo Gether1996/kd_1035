@@ -1,0 +1,99 @@
+@if (!api.alliancesFailed()) {
+  <section class="section" id="alliance" appScrollFx>
+    <div class="container">
+      @for (a of api.alliances(); track a.id) {
+        <article class="card" appReveal>
+          <div class="banner" aria-hidden="true">
+            <svg viewBox="0 0 200 300">
+              <defs>
+                <linearGradient [attr.id]="'cloth-' + a.id" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stop-color="#7d1d17" />
+                  <stop offset=".22" stop-color="#c7392d" />
+                  <stop offset=".5" stop-color="#a52c23" />
+                  <stop offset=".78" stop-color="#cf4134" />
+                  <stop offset="1" stop-color="#7d1d17" />
+                </linearGradient>
+                <linearGradient [attr.id]="'trim-' + a.id" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#ffe7a3" />
+                  <stop offset="1" stop-color="#c8902a" />
+                </linearGradient>
+              </defs>
+              <path d="M26 20 H174 V252 L100 292 L26 252 Z" [attr.fill]="'url(#cloth-' + a.id + ')'" />
+              <path d="M36 20 H164 V246 L100 280 L36 246 Z" fill="none" [attr.stroke]="'url(#trim-' + a.id + ')'" stroke-width="2" opacity=".75" />
+              <rect x="8" y="10" width="184" height="12" rx="6" [attr.fill]="'url(#trim-' + a.id + ')'" />
+              <circle cx="10" cy="16" r="9" [attr.fill]="'url(#trim-' + a.id + ')'" />
+              <circle cx="190" cy="16" r="9" [attr.fill]="'url(#trim-' + a.id + ')'" />
+              <path
+                d="M100 62 L140 76 V112 C140 138 124 154 100 164 C76 154 60 138 60 112 V76 Z"
+                fill="#0c1f3d"
+                [attr.stroke]="'url(#trim-' + a.id + ')'"
+                stroke-width="4"
+              />
+              <text x="100" y="122" text-anchor="middle" class="banner__tag">{{ a.tag }}</text>
+              @for (x of [64, 88, 112, 136]; track x) {
+                <path
+                  [attr.transform]="'translate(' + x + ' 206)'"
+                  d="M0 -9 L2.6 -2.8 L9.4 -2.8 L4 1.4 L6 8 L0 4.2 L-6 8 L-4 1.4 L-9.4 -2.8 L-2.6 -2.8 Z"
+                  [attr.fill]="'url(#trim-' + a.id + ')'"
+                />
+              }
+            </svg>
+          </div>
+
+          <div class="card__body">
+            <p class="card__eyebrow">{{ i18n.t().alliance.eyebrow }}</p>
+            <h2 class="card__name"><span>[{{ a.tag }}]</span> {{ a.name }}</h2>
+            <p class="card__text">{{ i18n.t().alliance.text }}</p>
+
+            @if (a.officers.length) {
+              <ul class="officers">
+                @for (o of a.officers; track o.name; let first = $first) {
+                  <li class="officer">
+                    <span class="officer__icon"><svg [appIcon]="first ? 'crown' : 'shield'"></svg></span>
+                    <span class="officer__who">
+                      <small>{{ title(o) }}</small>
+                      <strong>{{ o.name }}</strong>
+                    </span>
+                    @if (o.discord_id) {
+                      <a
+                        class="officer__contact"
+                        [href]="'https://discord.com/users/' + o.discord_id"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <svg appIcon="discord"></svg>{{ i18n.t().alliance.contact }}
+                      </a>
+                    } @else if (o.discord_username) {
+                      <button
+                        type="button"
+                        class="officer__contact"
+                        [attr.title]="i18n.t().alliance.copyHint + ' ' + o.discord_username"
+                        (click)="copy(o.discord_username)"
+                      >
+                        <svg appIcon="discord"></svg>
+                        <span aria-live="polite">{{
+                          copied() === o.discord_username
+                            ? i18n.t().alliance.copied + ' ' + o.discord_username
+                            : i18n.t().alliance.contact
+                        }}</span>
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </article>
+      } @empty {
+        <div class="card card--skeleton" aria-hidden="true">
+          <div class="banner"></div>
+          <div class="card__body">
+            <span class="skeleton skeleton--short"></span>
+            <span class="skeleton skeleton--title"></span>
+            <span class="skeleton"></span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+}

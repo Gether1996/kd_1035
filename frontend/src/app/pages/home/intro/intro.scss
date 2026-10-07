@@ -1,0 +1,116 @@
+:host {
+  display: block;
+}
+
+.section {
+  background: radial-gradient(60% 50% at 50% 0%, rgba(47, 92, 170, 0.14), transparent 70%);
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: clamp(14px, 2.4vw, 28px);
+}
+
+.pillar {
+  position: relative;
+  padding: clamp(28px, 4vw, 40px) clamp(22px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(25, 51, 94, 0.42), rgba(11, 23, 48, 0.3));
+  text-align: center;
+  transition:
+    border-color 0.4s,
+    background-color 0.4s;
+
+  // gold hairline on the top edge
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 25%;
+    right: 25%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-400), transparent);
+  }
+
+  &:hover {
+    border-color: var(--line-strong);
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  p {
+    margin-top: 10px;
+    color: var(--text-dim);
+  }
+}
+
+.pillar__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 22px;
+  color: var(--gold-300);
+
+  // diamond frame
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: rgba(245, 196, 81, 0.07);
+    transform: rotate(45deg);
+    transition: transform 0.6s var(--ease-out);
+  }
+
+  .pillar:hover &::before {
+    transform: rotate(135deg);
+  }
+
+  .icon {
+    position: relative;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.more {
+  margin-top: clamp(32px, 5vw, 48px);
+  text-align: center;
+}
+
+.more__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  font: 600 0.875rem/1 var(--font-body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+  border-bottom: 1px solid var(--line-strong);
+  transition:
+    color 0.25s,
+    border-color 0.25s;
+
+  .icon {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.35s var(--ease-out);
+  }
+
+  &:hover {
+    color: var(--gold-100);
+    border-color: var(--gold-400);
+
+    .icon {
+      transform: translateX(4px);
+    }
+  }
+}

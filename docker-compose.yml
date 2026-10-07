@@ -1,0 +1,47 @@
+# Production: `docker compose up -d --build` → website on http://<server>:${WEB_PORT:-8080}
+#
+# Data lives in named volumes (db_data, uploads) and survives rebuilds and `docker compose down`.
+# NEVER run `docker compose down -v` – that deletes the volumes (the database!).
+name: kd1035
+
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    volumes:
+      - db_data:/app/data
+      - uploads:/app/media
+    restart: unless-stopped
+
+  # Discord notifications + database backup every BACKUP_INTERVAL_DAYS into ${BACKUP_PATH}
+  worker:
+    build: ./backend
+    env_file: .env
+    environment:
+      BACKUP_DIR: /backups
+    user: root
+    entrypoint: ["sh", "/app/worker.sh"]
+    command: []
+    volumes:
+      - db_data:/app/data
+      - uploads:/app/media:ro
+      - ${BACKUP_PATH:-./backups}:/backups
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    environment:
+      SITE_URL: ${SITE_URL:-}
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - uploads:/srv/uploads:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads:

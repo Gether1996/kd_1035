@@ -1,0 +1,46 @@
+<section #hero class="hero" id="top" appScrollFx="exit">
+  <div class="hero__art" aria-hidden="true">
+    @for (layer of back; track layer.src) {
+      <img
+        class="layer"
+        [class]="layer.cls"
+        [src]="layer.src"
+        alt=""
+        decoding="async"
+        [style.--speed]="layer.speed"
+        [style.--depth]="layer.depth"
+      />
+    }
+    <div class="fog fog--back"></div>
+    <img
+      class="layer"
+      [src]="castle.src"
+      alt=""
+      fetchpriority="high"
+      [style.--speed]="castle.speed"
+      [style.--depth]="castle.depth"
+    />
+    <div class="fog fog--front"></div>
+    <img class="layer" [src]="near.src" alt="" [style.--speed]="near.speed" [style.--depth]="near.depth" />
+  </div>
+
+  <div class="hero__content container">
+    <div class="hero__top">
+      <p class="hero__eyebrow">Rise of Kingdoms</p>
+      <h1 class="hero__title">
+        <span class="hero__kingdom">Kingdom</span>
+        <span class="hero__number">1035</span>
+      </h1>
+    </div>
+
+    <div class="hero__bottom">
+      <p class="hero__tagline">{{ i18n.t().hero.tagline }}</p>
+      <div class="hero__actions">
+        <a class="btn btn--gold" [routerLink]="i18n.path('home')" fragment="community">
+          {{ i18n.t().hero.cta }} <svg appIcon="arrow-right"></svg>
+        </a>
+        <a class="btn btn--ghost" [routerLink]="i18n.path('home')" fragment="guides">{{ i18n.t().hero.ctaSecondary }}</a>
+      </div>
+    </div>
+  </div>
+</section>

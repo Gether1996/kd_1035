@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+
+.marquee {
+  overflow: hidden;
+  padding-block: clamp(20px, 4vw, 48px);
+  border-block: 1px solid var(--line);
+  background: linear-gradient(90deg, rgba(245, 196, 81, 0.035), rgba(47, 92, 170, 0.06), rgba(245, 196, 81, 0.035));
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  width: max-content;
+  font: 700 clamp(2.5rem, 1.4rem + 5.5vw, 6.5rem) / 1.08 var(--font-display);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245, 196, 81, 0.38);
+  transform: translate3d(calc(var(--progress, 0.5) * -30%), 0, 0);
+  will-change: transform;
+
+  i {
+    width: 0.16em;
+    height: 0.16em;
+    flex-shrink: 0;
+    background: var(--gold-600);
+    transform: rotate(45deg);
+    opacity: 0.6;
+  }
+}
+
+.row--alt {
+  margin-top: 0.05em;
+  color: rgba(234, 240, 250, 0.07);
+  -webkit-text-stroke: 0;
+  transform: translate3d(calc(-30% + var(--progress, 0.5) * 30%), 0, 0);
+}

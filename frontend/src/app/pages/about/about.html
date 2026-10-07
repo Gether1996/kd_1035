@@ -1,0 +1,63 @@
+@let page = t().aboutPage;
+
+<header class="masthead" appScrollFx="exit">
+  <div class="masthead__art" aria-hidden="true">
+    <img src="img/hero/sky.svg" alt="" style="--speed: 0.5" />
+    <img src="img/hero/far.svg" alt="" style="--speed: 0.32" />
+    <img src="img/hero/mid.svg" alt="" style="--speed: 0.16" />
+  </div>
+  <div class="container masthead__content">
+    <p class="eyebrow">{{ page.eyebrow }}</p>
+    <h1 class="masthead__title">{{ page.title }}</h1>
+    <p class="masthead__intro">{{ page.intro }}</p>
+  </div>
+</header>
+
+<article class="container article">
+  @for (section of page.sections; track $index) {
+    <section class="block" appReveal>
+      <h2><span class="block__num">0{{ $index + 1 }}</span>{{ section.title }}</h2>
+      @for (p of section.paragraphs; track $index) {
+        <p>{{ p }}</p>
+      }
+      @if (section.list.length) {
+        <ul class="checks">
+          @for (item of section.list; track $index) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <section class="block block--migration" appReveal>
+    <h2><span class="block__num">0{{ page.sections.length + 1 }}</span>{{ page.migration.title }}</h2>
+    <p>{{ page.migration.text }}</p>
+    <ol class="steps">
+      @for (step of page.migration.steps; track $index) {
+        <li>{{ step }}</li>
+      }
+    </ol>
+  </section>
+
+  <section class="block" appReveal>
+    <h2>{{ page.faqTitle }}</h2>
+    <div class="faq">
+      @for (item of page.faq; track $index) {
+        <details class="faq__item" [open]="$first">
+          <summary>
+            {{ item.q }}
+            <svg appIcon="chevron-down"></svg>
+          </summary>
+          <p>{{ item.a }}</p>
+        </details>
+      }
+    </div>
+  </section>
+
+  <div class="cta" appReveal>
+    <a class="btn btn--gold" [routerLink]="i18n.path('home')" fragment="community">
+      {{ page.cta }} <svg appIcon="arrow-right"></svg>
+    </a>
+  </div>
+</article>

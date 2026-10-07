@@ -1,0 +1,139 @@
+export const sk = {
+  seo: {
+    home: {
+      title: 'KD 1035 · Slovenské a české kráľovstvo v Rise of Kingdoms',
+      description:
+        'Kingdom 1035 je jediné čisto CZ/SK kráľovstvo v Rise of Kingdoms. Hráme po slovensky a po česky – spoločné KvK, Discord a pomoc nováčikom.',
+    },
+    about: {
+      title: 'O nás · Jediné CZ/SK kráľovstvo v Rise of Kingdoms | KD 1035',
+      description:
+        'Hľadáš slovenské alebo české KD v Rise of Kingdoms? KD 1035 je jediný kingdom v hre zložený výhradne zo Slovákov a Čechov. Zisti, ako sa k nám pridať.',
+    },
+  },
+  nav: {
+    label: 'Hlavná navigácia',
+    about: 'O nás',
+    alliance: 'Aliancia',
+    guides: 'Návody',
+    community: 'Komunita',
+    menu: 'Otvoriť menu',
+    close: 'Zavrieť menu',
+    language: 'Jazyk',
+    skip: 'Preskočiť na obsah',
+  },
+  hero: {
+    tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',
+    cta: 'Pridaj sa k nám',
+    ctaSecondary: 'Návody',
+  },
+  intro: {
+    eyebrow: 'O kráľovstve',
+    title: 'Jedno kráľovstvo. Dva národy.',
+    lead: 'KD 1035 je jediné kráľovstvo v Rise of Kingdoms, kde hrajú výhradne Slováci a Česi.',
+    more: 'Viac o nás',
+    pillars: [
+      { title: 'Bez prekladača', text: 'Na mape aj na Discorde si rozumieme.' },
+      { title: 'Spoločná stratégia', text: 'Koordinované KvK, rally aj obrana.' },
+      { title: 'Pomoc nováčikom', text: 'Poradíme s commandermi, výbavou aj eventmi.' },
+    ],
+  },
+  alliance: {
+    eyebrow: 'Hlavná aliancia',
+    text: 'Jedna hlavná aliancia, jedno velenie. S otázkami sa pokojne obráť na vedenie.',
+    contact: 'Kontaktovať',
+    copied: 'Skopírované:',
+    copyHint: 'Skopíruje Discord meno',
+  },
+  guides: {
+    eyebrow: 'Návody',
+    title: 'Hraj múdrejšie',
+    soon: 'Čoskoro',
+    items: [
+      { title: 'Commanderi', text: 'Najlepšie kombinácie a talenty.' },
+      { title: 'Výbava', text: 'Čo kovať a komu to dať.' },
+      { title: 'Eventy', text: 'Ako z eventov vyťažiť maximum.' },
+    ],
+  },
+  community: {
+    eyebrow: 'Komunita',
+    title: 'Pridaj sa k nám',
+    text: 'Migrácia iba po predchádzajúcej dohode s vedením.',
+    discord: 'Hlavný kanál kráľovstva',
+    facebook: 'Novinky a fotky',
+    soon: 'Čoskoro',
+  },
+  aboutPage: {
+    eyebrow: 'O nás · KD 1035',
+    title: 'Slovenské a české kráľovstvo v Rise of Kingdoms',
+    intro:
+      'Kingdom 1035 je jediné kráľovstvo v Rise of Kingdoms, ktoré tvoria výhradne slovenskí a českí hráči. Ak hľadáš ROK KD pre Slovákov a Čechov, kde sa na mape, v aliančnom chate aj počas KvK hovorí po slovensky a po česky, si na správnom mieste.',
+    sections: [
+      {
+        title: 'Jediný čisto CZ/SK kingdom v hre',
+        paragraphs: [
+          'V Rise of Kingdoms sú stovky kráľovstiev a väčšina z nich je medzinárodná. Hráči zo Slovenska a Česka sa v nich zvyčajne rozptýlia medzi cudzie aliancie a dorozumievajú sa cez prekladač. KD 1035 je iné – celé kráľovstvo je česko-slovenské. Spoločný jazyk, spoločný humor a spoločný cieľ.',
+          'Či už hľadáš slovenské KD, české KD alebo jednoducho CZ/SK kingdom, kde budeš rozumieť každej správe, KD 1035 je jediná voľba.',
+        ],
+        list: [],
+      },
+      {
+        title: 'Prečo hrať v CZ/SK kráľovstve',
+        paragraphs: [],
+        list: [
+          'Žiadna jazyková bariéra – stratégiu, rally aj obranu riešime v rodnom jazyku.',
+          'Rýchla koordinácia v KvK – keď ide o sekundy, rozumie každý.',
+          'Rovnaké časové pásmo – hráme v rovnakých hodinách.',
+          'Komunita na Discorde – rady, oznamy a pokec mimo hry.',
+          'Pomoc pre nových hráčov – kombinácie commanderov, výbava aj eventy.',
+        ],
+      },
+      {
+        title: 'Ako to u nás funguje',
+        paragraphs: [
+          'Kráľovstvo má jednu hlavnú alianciu – [CS35] CZ/SK Legends. Vedie ju kráľ spolu so svojimi R4. Dôležité informácie, plány na KvK a eventy zdieľame na Discorde, aby mal každý prehľad aj vtedy, keď práve nie je v hre.',
+        ],
+        list: [],
+      },
+    ],
+    migration: {
+      title: 'Migrácia do KD 1035',
+      text: 'Chceš sa presunúť k nám? Migrácia je možná iba po predchádzajúcej dohode s vedením kráľovstva. Ozvi sa nám na Discorde, povedz nám niečo o svojom účte a spoločne nájdeme alianciu, ktorá ti sadne.',
+      steps: [
+        'Pridaj sa na náš Discord.',
+        'Napíš R4 alebo vedeniu kráľovstva.',
+        'Po schválení sa dohodneme na termíne migrácie.',
+      ],
+    },
+    faqTitle: 'Časté otázky',
+    faq: [
+      {
+        q: 'Existuje slovenské kráľovstvo v Rise of Kingdoms?',
+        a: 'Áno. KD 1035 je jediné kráľovstvo v Rise of Kingdoms zložené výhradne zo slovenských a českých hráčov.',
+      },
+      {
+        q: 'Je v Rise of Kingdoms aj české KD?',
+        a: 'Áno, KD 1035 je spoločné česko-slovenské kráľovstvo. Česi a Slováci tu hrajú spolu a rozumejú si bez prekladača.',
+      },
+      {
+        q: 'Ako sa môžem pridať?',
+        a: 'Migrácia je možná iba po predchádzajúcej dohode s vedením. Najrýchlejšie sa s nami spojíš cez Discord.',
+      },
+      {
+        q: 'Musím vedieť po anglicky?',
+        a: 'Nie. V kráľovstve komunikujeme po slovensky a po česky.',
+      },
+      {
+        q: 'Pomôžete aj začiatočníkom?',
+        a: 'Áno. Radi poradíme s commandermi, výbavou aj eventmi a postupne pridávame na tento web aj návody.',
+      },
+    ],
+    cta: 'Pridaj sa k nám',
+  },
+  footer: {
+    fanSite: 'Neoficiálna fanúšikovská stránka. Rise of Kingdoms je ochranná známka Lilith Games.',
+    madeBy: 'Vytvoril',
+  },
+};
+
+export type Dict = typeof sk;
