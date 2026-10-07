@@ -19,6 +19,8 @@
   inset: auto 0 0;
   height: clamp(260px, 38vw, 520px);
   pointer-events: none;
+  // the home page ends with its own ridges – hide the site-wide night landscape (app.scss) behind them
+  background: linear-gradient(transparent, var(--bg) 35%);
 
   &::before {
     content: '';

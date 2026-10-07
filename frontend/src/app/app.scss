@@ -20,3 +20,38 @@ main {
   display: block;
   outline: none;
 }
+
+// content and footer stay above the night landscape
+main,
+app-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.backdrop {
+  --backdrop-h: clamp(170px, 36vh, 460px);
+  position: sticky;
+  bottom: 0;
+  z-index: 0;
+  height: var(--backdrop-h);
+  // overlaps the end of the content instead of adding empty space before the footer
+  margin-top: calc(-1 * var(--backdrop-h));
+  overflow: clip;
+  pointer-events: none;
+  opacity: 0.85;
+  // dissolves into the page towards the top, so text above it stays calm
+  mask-image: linear-gradient(transparent, #000 60%);
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    // the watchtower sits at 84 % of the artwork – keep it in the crop on narrow screens
+    object-position: 90% 100%;
+    transform: translate3d(0, calc((1 - var(--progress, 1)) * var(--drift)), 0);
+    will-change: transform;
+  }
+}

@@ -7,10 +7,11 @@ const clamp = (v: number) => Math.min(1, Math.max(0, v));
  * Exposes scroll progress as the CSS variable `--progress` (0 → 1) for parallax effects.
  *  - `appScrollFx="through"` (default): 0 when the element enters at the bottom, 1 when it leaves at the top.
  *  - `appScrollFx="exit"`: 0 while the element's top is at the viewport top, 1 once it has scrolled fully away.
+ *  - `appScrollFx="page"`: scroll position of the whole page, 0 at the top, 1 at the bottom (1 when it cannot scroll).
  */
 @Directive({ selector: '[appScrollFx]' })
 export class ScrollFx {
-  readonly appScrollFx = input<'through' | 'exit' | ''>('');
+  readonly appScrollFx = input<'through' | 'exit' | 'page' | ''>('');
 
   constructor() {
     const el = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
@@ -21,11 +22,17 @@ export class ScrollFx {
       if (scroll.reducedMotion) return;
       let last = -1;
       const stop = scroll.onFrame(() => {
+        const mode = this.appScrollFx();
         const r = el.getBoundingClientRect();
+        const max = document.documentElement.scrollHeight - innerHeight;
         const p =
-          this.appScrollFx() === 'exit'
-            ? clamp(-r.top / r.height)
-            : clamp((innerHeight - r.top) / (innerHeight + r.height));
+          mode === 'page'
+            ? max > 0
+              ? clamp(scrollY / max)
+              : 1
+            : mode === 'exit'
+              ? clamp(-r.top / r.height)
+              : clamp((innerHeight - r.top) / (innerHeight + r.height));
         const value = Math.round(p * 1000) / 1000;
         if (value !== last) {
           last = value;

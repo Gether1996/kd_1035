@@ -2,6 +2,7 @@
 
 Outputs (into frontend/public):
   img/hero/{sky,clouds,far,mid,castle,near}.svg   parallax layers, 2560x1440 viewBox
+  img/scenery/{far,near}.svg                         night landscape behind every page, 2560x720 viewBox
   favicon.svg                                       logo mark
   og-image.jpg, icons/icon-{180,192,512}.png         raster versions (--raster, needs cairosvg)
 
@@ -357,6 +358,105 @@ def layer_near(rng):
 # ---------------------------------------------------------------- logo / raster
 
 
+# ---------------------------------------------------------------- night scenery
+# The hero shows dusk; the rest of the site sits at night. A very dark, low-contrast landscape fixed to the
+# bottom of the viewport behind the content: distant moonlit ridges, a watchtower with a few lit windows
+# and pines at the edges. It must stay calm – contrast against PAGE_BG is kept deliberately tiny.
+
+NW, NH = 2560, 720
+MOON = '#8fa6d6'
+TOWER_X = 2150  # outside the content column on desktop; phones crop at object-position 90% (see app.scss)
+
+
+def nsvg(body, defs=''):
+    return svg(body, defs, view=f'0 0 {NW} {NH}')
+
+
+def close_night(d, x0=-60, x1=NW + 60):
+    return f'{d} L{f(x1)},{NH + 2} L{f(x0)},{NH + 2} Z'
+
+
+def moon_rim(d, opacity):
+    return (
+        f'<path d="{d}" fill="none" stroke="{MOON}" stroke-opacity="{opacity * 0.35:.3f}" stroke-width="6" stroke-linejoin="round"/>'
+        f'<path d="{d}" fill="none" stroke="{MOON}" stroke-opacity="{opacity}" stroke-width="1.6" stroke-linejoin="round"/>'
+    )
+
+
+def layer_night_far(rng):
+    far_line = poly(ridge(rng, 400, 70, 0.52, x1=NW + 60))
+
+    def hill(x):
+        t = (x - TOWER_X) / 280
+        bump = math.exp(-(t**4))
+        return 560 - 90 * bump + rng.uniform(-8, 8) * (1 - bump)
+
+    hill_line = smooth([(x, hill(x)) for x in range(-60, NW + 121, 110)])
+    # small and low: a distant watchtower that survives the crop of wide screens (top of the flag ≈ y 312)
+    g = 470
+
+    tower = rect(TOWER_X - 18, g - 112, 36, 116) + rect(TOWER_X - 23, g - 122, 46, 11) + merlons(TOWER_X - 23, g - 122, 46, mw=9, gap=6, mh=10)
+    wall = rect(TOWER_X - 110, g - 30, 94, 34) + merlons(TOWER_X - 110, g - 30, 94, mw=9, gap=7, mh=8)
+    turret = rect(TOWER_X - 128, g - 60, 26, 64) + cone(TOWER_X - 128, g - 60, 26, 30, over=4)
+    flag = (
+        f'<path d="M{f(TOWER_X)},{g - 132} V{g - 158}" stroke="#0c1830" stroke-width="2.5"/>'
+        f'<path d="M{f(TOWER_X)},{g - 158} Q{f(TOWER_X + 11)},{g - 156} {f(TOWER_X + 22)},{g - 152} '
+        f'Q{f(TOWER_X + 11)},{g - 149} {f(TOWER_X)},{g - 146} Z" fill="{BANNER}" fill-opacity="0.55"/>'
+    )
+    lit = [(TOWER_X - 3, g - 92), (TOWER_X - 3, g - 60), (TOWER_X - 118, g - 42)]
+    windows = ''.join(window(x, y, w=6, h=11) for x, y in lit)
+    glows = ''.join(f'<circle cx="{f(x + 3)}" cy="{f(y + 6)}" r="15" fill="url(#nglow)"/>' for x, y in lit)
+
+    defs = vgrad('nfar', 320, NH, [(0, '#101f3d'), (1, '#0c1830')])
+    defs += vgrad('nhill', 450, NH, [(0, '#0d1934'), (1, '#0a152b')])
+    defs += f'<radialGradient id="nglow"><stop offset="0" stop-color="{GOLD}" stop-opacity="0.32"/><stop offset="1" stop-color="{GOLD}" stop-opacity="0"/></radialGradient>'
+    defs += rgrad('nhaze', TOWER_X, 480, 900, [(0, MOON, 0.05), (1, MOON, 0)], sy=0.18)
+
+    body = (
+        f'<path d="{close_night(far_line)}" fill="url(#nfar)"/>{moon_rim(far_line, 0.16)}'
+        f'<ellipse cx="{TOWER_X}" cy="480" rx="900" ry="162" fill="url(#nhaze)"/>'
+        f'<path d="{tower}{wall}{turret}" fill="#0b162d"/>{flag}'
+        f'<path d="{close_night(hill_line)}" fill="url(#nhill)"/>{moon_rim(hill_line, 0.07)}'
+        f'<path d="{windows}" fill="{GOLD}" fill-opacity="0.8"/>{glows}'
+    )
+    return nsvg(body, defs)
+
+
+def layer_night_near(rng):
+    pts = [(x, 628 - 34 * math.sin(x / 410) + rng.uniform(-8, 8)) for x in range(-60, NW + 121, 110)]
+    line = smooth(pts)
+
+    def ground(x):
+        return 628 - 34 * math.sin(x / 410)
+
+    trees = []
+    for lo, hi, n, edge in ((-20, 640, 10, 0), (2290, NW + 20, 6, NW)):
+        for _ in range(n):
+            x = rng.uniform(lo, hi)
+            near_edge = 1 - min(1.0, abs(x - edge) / (hi - lo))
+            trees.append(pine(rng, x, ground(x) + 10, 70 + 130 * near_edge * rng.uniform(0.75, 1.0)))
+
+    defs = vgrad('nnear', 560, NH, [(0, '#091327'), (1, '#0b1730')])  # bottom = --bg-raised, the footer starts with it
+    body = f'<path d="{"".join(trees)}" fill="#08112a"/><path d="{close_night(line)}" fill="url(#nnear)"/>{moon_rim(line, 0.05)}'
+    return nsvg(body, defs)
+
+
+def write_night_previews(layers):
+    """Composite on the page background for checking (git-ignored)."""
+    import io
+
+    import cairosvg
+    from PIL import Image
+
+    merged = ''.join(doc[doc.index('>') + 1 : doc.rindex('</svg>')] for doc in layers)
+    CACHE.mkdir(exist_ok=True)
+    for name, w, h in (('night-desktop.png', 1600, 420), ('night-mobile.png', 390, 220)):
+        doc = nsvg(f'<rect x="-2000" width="{NW + 4000}" height="{NH}" fill="{PAGE_BG}"/>' + merged)
+        doc = doc.replace('<svg ', f'<svg width="{w}" height="{h}" ', 1)
+        png = cairosvg.svg2png(bytestring=doc.encode(), output_width=w, output_height=h)
+        Image.open(io.BytesIO(png)).convert('RGB').save(CACHE / name)
+
+
 def logo_mark(size=64, bg=None):
     """Shield + crown mark on a 64x64 grid."""
     defs = (
@@ -458,6 +558,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=1035)
     parser.add_argument('--raster', action='store_true', help='also render og-image.jpg and PNG icons')
+    parser.add_argument('--preview', action='store_true', help='render PNG previews of the night scenery into .cache')
     args = parser.parse_args()
 
     out = PUBLIC / 'img' / 'hero'
@@ -470,7 +571,18 @@ def main():
         layers.append(doc)
         print(f'{name}.svg  {len(doc) / 1024:.1f} kB')
 
+    night_out = PUBLIC / 'img' / 'scenery'
+    night_out.mkdir(parents=True, exist_ok=True)
+    night = []
+    for i, (name, build) in enumerate([('far', layer_night_far), ('near', layer_night_near)]):
+        doc = build(random.Random(args.seed * 31 + 100 + i))
+        (night_out / f'{name}.svg').write_text(doc, encoding='utf-8')
+        night.append(doc)
+        print(f'scenery/{name}.svg  {len(doc) / 1024:.1f} kB')
+
     (PUBLIC / 'favicon.svg').write_text(logo_mark(), encoding='utf-8')
+    if args.preview:
+        write_night_previews(night)
     if args.raster:
         write_raster(layers)
         print('og-image.jpg + icons written')

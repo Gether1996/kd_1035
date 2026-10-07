@@ -6,16 +6,25 @@ import { I18n, parseUrl } from './core/i18n/i18n';
 import { Seo } from './core/seo';
 import { Footer } from './layout/footer/footer';
 import { Header } from './layout/header/header';
+import { ScrollFx } from './shared/scroll-fx';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Footer],
+  imports: [RouterOutlet, Header, Footer, ScrollFx],
   template: `
     <a class="skip-link" href="#main">{{ i18n.t().nav.skip }}</a>
     <app-header />
-    <main id="main" tabindex="-1">
-      <router-outlet />
-    </main>
+    <div class="page">
+      <main id="main" tabindex="-1">
+        <router-outlet />
+      </main>
+      <!-- night landscape: sticks to the bottom of the viewport behind the content and comes to rest
+           on the footer at the end of the page, rising a little on the way -->
+      <div class="backdrop" appScrollFx="page" aria-hidden="true">
+        <img src="img/scenery/far.svg" alt="" decoding="async" style="--drift: 8%" />
+        <img src="img/scenery/near.svg" alt="" decoding="async" style="--drift: 16%" />
+      </div>
+    </div>
     <app-footer />
   `,
   styleUrl: './app.scss',
