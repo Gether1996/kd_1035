@@ -24,7 +24,18 @@
     <p>{{ page.migration.text }}</p>
     <ol class="steps">
       @for (step of page.migration.steps; track $index) {
-        <li>{{ step }}</li>
+        <li>
+          <span>{{ step }}</span>
+          @if ($index === 0 && discord()) {
+            <a class="step-action step-action--discord" [href]="discord()" target="_blank" rel="noopener noreferrer">
+              <svg appIcon="discord"></svg>{{ page.migration.joinDiscord }}
+            </a>
+          } @else if ($index === 1) {
+            <a class="step-action" [routerLink]="i18n.path('home')" fragment="alliance">
+              {{ page.migration.leaders }} <svg appIcon="arrow-right"></svg>
+            </a>
+          }
+        </li>
       }
     </ol>
   </section>

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { KingdomApi } from '../../core/api';
 import { I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
@@ -20,4 +21,7 @@ export class About {
     { label: this.t().nav.home, link: this.i18n.path('home') },
     { label: this.t().nav.about, link: this.i18n.path('about') },
   ]);
+  private readonly api = inject(KingdomApi);
+  // invite from admin → Odkazy; loads in the browser only, the button stays hidden without it
+  protected readonly discord = computed(() => this.api.links().discord);
 }

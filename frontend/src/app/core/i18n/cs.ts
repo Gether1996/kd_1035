@@ -134,6 +134,8 @@ export const cs: Dict = {
         'Napiš R4 nebo vedení království.',
         'Po schválení se domluvíme na termínu migrace.',
       ],
+      joinDiscord: 'Připojit se',
+      leaders: 'Kontakty na vedení',
     },
     cta: 'Přidej se k nám',
   },

@@ -132,6 +132,8 @@ export const sk = {
         'Napíš R4 alebo vedeniu kráľovstva.',
         'Po schválení sa dohodneme na termíne migrácie.',
       ],
+      joinDiscord: 'Pripojiť sa',
+      leaders: 'Kontakty na vedenie',
     },
     cta: 'Pridaj sa k nám',
   },
