@@ -1,10 +1,13 @@
+import re
 from datetime import date
 from xml.sax.saxutils import escape
 
 from django.conf import settings
 from django.db.models import Max
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.utils import timezone
+from django.utils.cache import patch_vary_headers
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +18,22 @@ from .serializers import GuideDetailSerializer, GuideListSerializer
 
 # Pages of the Angular app (Slovak paths; the Czech version lives under /cz)
 STATIC_PAGES = ['', '/o-nas', '/kalendar', '/podmienky', '/ochrana-udajov'] + [f'/navody/{c}' for c in Guide.Category.values]
+
+# Guide address as nginx passes it to link_preview(): [cz/]navody/<category>/<slug>
+GUIDE_PATH = re.compile(r'^(cz/)?navody/([a-z]+)/([-\w]+)/?$')
+# Home page title and description of the app (seo.home in frontend/src/app/core/i18n/sk.ts and cs.ts)
+SITE_META = {
+    'sk': (
+        'KD 1035 · Slovenské a české kráľovstvo v Rise of Kingdoms',
+        'Kingdom 1035 je jediné čisto CZ/SK kráľovstvo v Rise of Kingdoms. Hráme po slovensky a po česky – spoločné '
+        'KvK, Discord a pomoc nováčikom.',
+    ),
+    'cs': (
+        'KD 1035 · České a slovenské království v Rise of Kingdoms',
+        'Kingdom 1035 je jediné čistě CZ/SK království v Rise of Kingdoms. Hrajeme česky a slovensky – společné KvK, '
+        'Discord a pomoc nováčkům.',
+    ),
+}
 
 
 class GuideList(ListAPIView):
@@ -65,3 +84,45 @@ def sitemap(request):
         + '</urlset>\n'
     )
     return HttpResponse(xml, content_type='application/xml')
+
+
+def link_preview(request, path):
+    """
+    Open Graph page of a guide for link-preview bots (Discord, Facebook…), which do not run JavaScript.
+
+    Guide pages are rendered in the browser, so their app shell has only the generic site meta. nginx sends known
+    preview bots here (frontend/nginx/default.conf.template); the page carries the same title and intro as the guide.
+    """
+    match = GUIDE_PATH.match(path)
+    lang = 'cs' if path.startswith('cz/') else 'sk'
+    prefix = '/cz' if lang == 'cs' else ''
+    origin = settings.SITE_URL or f'{request.scheme}://{request.get_host()}'
+    guide = Guide.objects.filter(is_published=True, slug=match[3]).first() if match else None
+
+    site_title, site_description = SITE_META[lang]
+    if guide:
+        title = guide.title_cs if lang == 'cs' and guide.title_cs else guide.title_sk
+        description = guide.excerpt(lang) or site_description
+        url = origin + prefix + guide.get_absolute_url()
+    else:
+        # unknown, unpublished or malformed address: nothing about the guide, only the site itself
+        title, description, url = site_title, site_description, origin + (prefix or '/')
+
+    context = {
+        'lang': lang,
+        'guide': guide,
+        'title': title,
+        'page_title': f'{title} | KD 1035' if guide else title,
+        'description': description,
+        'url': url,
+        'image': f'{origin}/og-image.jpg',
+        'locale': 'cs_CZ' if lang == 'cs' else 'sk_SK',
+        'locale_alternate': 'sk_SK' if lang == 'cs' else 'cs_CZ',
+    }
+    response = render(request, 'guides/link_preview.html', context, status=200 if guide else 404)
+    response['Cache-Control'] = 'public, max-age=300'
+    # bot-only HTML must never compete with the real page in search results
+    response['X-Robots-Tag'] = 'noindex'
+    # served under the public guide address to bots only (shared caches must not hand it to browsers)
+    patch_vary_headers(response, ['User-Agent'])
+    return response

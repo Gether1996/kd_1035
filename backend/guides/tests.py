@@ -307,3 +307,106 @@ class GuideApiTests(TestCase):
         self.assertIn('<loc>https://kd1035.test/ochrana-udajov</loc>', xml)
         self.assertIn('<loc>https://kd1035.test/cz/ochrana-udajov</loc>', xml)
         self.assertNotIn('skryty', xml)
+
+
+class LinkPreviewTests(TestCase):
+    """Guide pages for link-preview bots (nginx rewrites /[cz/]navody/<category>/<slug> to /api/link-preview/…)."""
+
+    def setUp(self):
+        Guide.objects.all().delete()  # drop the seeded guides
+        self.guide = Guide.objects.create(
+            category='commanderi',
+            title_sk='Páry pre jazdu',
+            title_cs='Páry pro jízdu',
+            slug='pary-pre-jazdu',
+            html_sk='<h2>Úvod</h2><p>Najlepšie páry <b>pre jazdu</b>.</p>',
+            html_cs='<p>Nejlepší páry pro jízdu.</p>',
+        )
+
+    def preview(self, path):
+        response = self.client.get(f'/api/link-preview/{path}')
+        return response, response.content.decode()
+
+    def test_slovak_guide(self):
+        response, html = self.preview('navody/commanderi/pary-pre-jazdu')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('<html lang="sk">', html)
+        self.assertIn('<title>Páry pre jazdu | KD 1035</title>', html)
+        self.assertIn('<meta property="og:title" content="Páry pre jazdu">', html)
+        self.assertIn('<meta property="og:description" content="Najlepšie páry pre jazdu.">', html)
+        self.assertIn('<meta name="description" content="Najlepšie páry pre jazdu.">', html)
+        self.assertIn('<meta property="og:url" content="http://testserver/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<meta property="og:image" content="http://testserver/og-image.jpg">', html)
+        self.assertIn('<meta property="og:type" content="article">', html)
+        self.assertIn('<meta property="og:locale" content="sk_SK">', html)
+        self.assertIn('<meta name="theme-color" content="#f5c451">', html)
+        self.assertIn('<meta property="article:modified_time" content="', html)
+        self.assertEqual(response['Cache-Control'], 'public, max-age=300')
+        self.assertEqual(response['X-Robots-Tag'], 'noindex')
+        self.assertIn('User-Agent', response['Vary'])
+
+    def test_czech_guide(self):
+        response, html = self.preview('cz/navody/commanderi/pary-pre-jazdu/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('<html lang="cs">', html)
+        self.assertIn('<meta property="og:title" content="Páry pro jízdu">', html)
+        self.assertIn('<meta property="og:description" content="Nejlepší páry pro jízdu.">', html)
+        self.assertIn('<meta property="og:locale" content="cs_CZ">', html)
+        self.assertIn('<link rel="canonical" href="http://testserver/cz/navody/commanderi/pary-pre-jazdu">', html)
+
+    def test_czech_falls_back_to_slovak_title_and_excerpt(self):
+        Guide.objects.filter(pk=self.guide.pk).update(title_cs='', html_cs='')
+        response, html = self.preview('cz/navody/commanderi/pary-pre-jazdu')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('<meta property="og:title" content="Páry pre jazdu">', html)
+        self.assertIn('<meta property="og:description" content="Najlepšie páry pre jazdu.">', html)
+        self.assertIn('<meta property="og:locale" content="cs_CZ">', html)
+
+    def test_moved_guide_points_to_its_current_category(self):
+        _, html = self.preview('navody/vybava/pary-pre-jazdu')
+        self.assertIn('<link rel="canonical" href="http://testserver/navody/commanderi/pary-pre-jazdu">', html)
+
+    def test_title_and_excerpt_are_escaped(self):
+        Guide.objects.filter(pk=self.guide.pk).update(
+            title_sk='<script>alert(1)</script> "páry"', html_sk='<p>A &lt;b&gt; &amp; "B"</p>'
+        )
+        _, html = self.preview('navody/commanderi/pary-pre-jazdu')
+        self.assertNotIn('<script>', html)
+        self.assertNotIn('<b>', html)
+        self.assertIn('content="&lt;script&gt;alert(1)&lt;/script&gt; &quot;páry&quot;"', html)
+        self.assertIn('<h1>&lt;script&gt;alert(1)&lt;/script&gt; &quot;páry&quot;</h1>', html)
+        self.assertIn('<meta property="og:description" content="A &lt;b&gt; &amp; &quot;B&quot;">', html)
+
+    def test_unpublished_or_unknown_guide_is_a_generic_404(self):
+        Guide.objects.filter(pk=self.guide.pk).update(is_published=False)
+        for path in ('navody/commanderi/pary-pre-jazdu', 'navody/commanderi/neexistuje'):
+            with self.subTest(path):
+                response, html = self.preview(path)
+                self.assertEqual(response.status_code, 404)
+                self.assertIn('<title>KD 1035 · Slovenské a české kráľovstvo v Rise of Kingdoms</title>', html)
+                self.assertIn('<meta property="og:type" content="website">', html)
+                self.assertIn('<meta property="og:url" content="http://testserver/">', html)
+                self.assertEqual(response['X-Robots-Tag'], 'noindex')
+                # nothing about the hidden guide leaks out
+                for leak in ('Páry', 'jazdu', 'canonical', 'modified_time'):
+                    self.assertNotIn(leak, html)
+
+    def test_unparsable_path_is_a_generic_404_in_the_language_of_the_prefix(self):
+        response, html = self.preview('cz/navody/commanderi')
+        self.assertEqual(response.status_code, 404)
+        self.assertIn('<html lang="cs">', html)
+        self.assertIn('<title>KD 1035 · České a slovenské království v Rise of Kingdoms</title>', html)
+        self.assertIn('<meta property="og:url" content="http://testserver/cz">', html)
+        self.assertIn('<meta property="og:locale" content="cs_CZ">', html)
+
+        response, html = self.preview('o-nas')
+        self.assertEqual(response.status_code, 404)
+        self.assertIn('<html lang="sk">', html)
+        self.assertIn('<title>KD 1035 · Slovenské a české kráľovstvo v Rise of Kingdoms</title>', html)
+
+    @override_settings(SITE_URL='https://kd1035.test')
+    def test_urls_use_site_url(self):
+        _, html = self.preview('cz/navody/commanderi/pary-pre-jazdu')
+        self.assertIn('<link rel="canonical" href="https://kd1035.test/cz/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<meta property="og:url" content="https://kd1035.test/cz/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<meta property="og:image" content="https://kd1035.test/og-image.jpg">', html)
