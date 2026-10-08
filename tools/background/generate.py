@@ -5,6 +5,7 @@ Outputs (into frontend/public):
   img/scenery/{far,near}.svg                         night landscape behind every page, 2560x720 viewBox
   favicon.svg                                       logo mark
   og-image.jpg, icons/icon-{180,192,512}.png         raster versions (--raster, needs cairosvg)
+  tools/background/discord/{banner,avatar}.png       Discord bot / app profile (--discord, needs cairosvg)
 
 Run from the repo root (Docker, no local Python needed):
   docker run --rm -v "$PWD:/work" -w /work python:3.13-slim sh -c \
@@ -481,20 +482,31 @@ def font_file(name, url):
 
 
 def text_path(text, font_path, size, x, y, tracking=0.0):
+    """Centred outline of the text; font_path may be a list – fontsource splits latin and latin-ext (č, ľ…) into files."""
     from fontTools.pens.svgPathPen import SVGPathPen
     from fontTools.pens.transformPen import TransformPen
     from fontTools.ttLib import TTFont
 
-    font = TTFont(font_path)
-    glyphs, cmap = font.getGlyphSet(), font.getBestCmap()
-    scale = size / font['head'].unitsPerEm
-    names = [cmap[ord(c)] for c in text]
-    width = sum(glyphs[n].width for n in names) * scale + tracking * (len(text) - 1)
-    pen, cursor = SVGPathPen(glyphs), x - width / 2
-    for n in names:
-        glyphs[n].draw(TransformPen(pen, (scale, 0, 0, -scale, cursor, y)))
-        cursor += glyphs[n].width * scale + tracking
-    return pen.getCommands()
+    fonts = [TTFont(p) for p in (font_path if isinstance(font_path, list) else [font_path])]
+    scale = size / fonts[0]['head'].unitsPerEm
+
+    def glyph(c):
+        for font in fonts:
+            name = font.getBestCmap().get(ord(c))
+            if name:
+                glyph_set = font.getGlyphSet()
+                return glyph_set, glyph_set[name]  # composite glyphs (č = c + ˇ) need their own set
+        raise KeyError(f'no glyph for {c!r}')
+
+    glyphs = [glyph(c) for c in text]
+    width = sum(g.width for _, g in glyphs) * scale + tracking * (len(text) - 1)
+    commands, cursor = [], x - width / 2
+    for glyph_set, g in glyphs:
+        pen = SVGPathPen(glyph_set)
+        g.draw(TransformPen(pen, (scale, 0, 0, -scale, cursor, y)))
+        commands.append(pen.getCommands())
+        cursor += g.width * scale + tracking
+    return ' '.join(commands)
 
 
 def write_raster(layers):
@@ -554,11 +566,63 @@ def write_raster(layers):
         cairosvg.svg2png(bytestring=mark.encode(), write_to=str(icons / f'icon-{size}.png'), output_width=size, output_height=size)
 
 
+def write_discord(layers):
+    """Discord app / bot profile: banner 1500x600 (5:2) and avatar 1024x1024 → tools/background/discord/."""
+    import io
+
+    import cairosvg
+    from PIL import Image
+
+    out = Path(__file__).resolve().parent / 'discord'
+    out.mkdir(exist_ok=True)
+
+    def inner(doc):
+        return doc[doc.index('>') + 1 : doc.rindex('</svg>')]
+
+    merged = ''.join(inner(doc).replace('id="', f'id="L{i}').replace('url(#', f'url(#L{i}') for i, doc in enumerate(layers))
+
+    # banner: a 5:2 window with the castle (x 1280) right of centre and the wordmark in the sky on the left – Discord
+    # puts the avatar over the bottom-left corner, so the text stays in the upper part
+    vw, vh = 1800, 720
+    x0, y0 = 56, 330
+    cinzel = font_file('cinzel-700.woff2', 'https://cdn.jsdelivr.net/fontsource/fonts/cinzel@latest/latin-700-normal.woff2')
+    barlow = [
+        font_file('barlow-600.woff2', 'https://cdn.jsdelivr.net/fontsource/fonts/barlow@latest/latin-600-normal.woff2'),
+        font_file('barlow-600-ext.woff2', 'https://cdn.jsdelivr.net/fontsource/fonts/barlow@latest/latin-ext-600-normal.woff2'),
+    ]
+    tx = x0 + 0.3 * vw  # centre of the wordmark
+    title = (
+        f'<path d="{text_path("KINGDOM", cinzel, 52, tx, y0 + 150, tracking=20)}" fill="#ffe7ad"/>'
+        f'<path d="{text_path("1035", cinzel, 190, tx, y0 + 322, tracking=8)}" fill="url(#dc-gold)"/>'
+        f'<path d="{text_path("SLOVENSKÉ A ČESKÉ KRÁĽOVSTVO", barlow, 34, tx, y0 + 392, tracking=5)}" fill="#e9eefb" fill-opacity="0.92"/>'
+    )
+    defs = (
+        f'<linearGradient id="dc-gold" x1="0" y1="{y0 + 185}" x2="0" y2="{y0 + 322}" gradientUnits="userSpaceOnUse">'
+        '<stop offset="0" stop-color="#fff0c4"/><stop offset=".5" stop-color="#f5c451"/><stop offset="1" stop-color="#c8902a"/></linearGradient>'
+        f'<linearGradient id="dc-shade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="{PAGE_BG}" stop-opacity=".55"/>'
+        f'<stop offset=".5" stop-color="{PAGE_BG}" stop-opacity=".15"/><stop offset=".7" stop-color="{PAGE_BG}" stop-opacity="0"/></linearGradient>'
+    )
+    doc = svg(
+        merged + f'<rect x="{x0}" y="{y0}" width="{vw}" height="{vh}" fill="url(#dc-shade)"/>' + title,
+        defs,
+        view=f'{x0} {y0} {vw} {vh}',
+        aspect='xMidYMid slice',
+    )
+    png = cairosvg.svg2png(bytestring=doc.encode(), output_width=1500, output_height=600)
+    Image.open(io.BytesIO(png)).convert('RGB').save(out / 'banner.png', optimize=True)
+
+    # avatar: the logo mark, padded so Discord's round crop keeps the whole shield
+    mark = logo_mark(64, bg=PAGE_BG).replace('viewBox="0 0 64 64"', 'viewBox="-14 -14 92 92"')
+    mark = mark.replace('<rect width="64" height="64"', '<rect x="-14" y="-14" width="92" height="92"')
+    cairosvg.svg2png(bytestring=mark.encode(), write_to=str(out / 'avatar.png'), output_width=1024, output_height=1024)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=1035)
     parser.add_argument('--raster', action='store_true', help='also render og-image.jpg and PNG icons')
     parser.add_argument('--preview', action='store_true', help='render PNG previews of the night scenery into .cache')
+    parser.add_argument('--discord', action='store_true', help='render the Discord banner and avatar into tools/background/discord')
     args = parser.parse_args()
 
     out = PUBLIC / 'img' / 'hero'
@@ -586,6 +650,9 @@ def main():
     if args.raster:
         write_raster(layers)
         print('og-image.jpg + icons written')
+    if args.discord:
+        write_discord(layers)
+        print('discord/banner.png + discord/avatar.png written')
 
 
 if __name__ == '__main__':

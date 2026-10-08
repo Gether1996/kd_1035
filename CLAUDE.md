@@ -160,4 +160,6 @@ tar -c --exclude=node_modules --exclude=.angular --exclude=dist -C frontend . | 
 # pregenerovanie hero grafiky + og-image + ikon aplikácie
 docker build -t kd1035-artgen tools/background
 docker run --rm -v "$PWD:/work" kd1035-artgen --raster
+# banner (1500×600) a avatar (1024×1024) pre Discord bota / aplikáciu → tools/background/discord/
+docker run --rm -v "$PWD:/work" kd1035-artgen --discord
 ```
