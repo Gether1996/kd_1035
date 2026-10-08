@@ -89,6 +89,19 @@ class DiscordTests(TestCase):
         with self.assertRaises(discord.DiscordError):
             discord.post(self.make())
 
+    def test_reminder_cancelled_after_the_query_is_not_sent(self):
+        first, second = self.make(minutes_ago=2), self.make()
+
+        def cancel_second(notification):
+            # the admin cancels the second one while the worker is posting the first
+            EventNotification.objects.filter(pk=second.pk).update(status=Status.CANCELLED)
+
+        with mock.patch.object(discord, 'post', side_effect=cancel_second) as post:
+            self.assertEqual(discord.send_due(), 1)
+        post.assert_called_once_with(first)
+        second.refresh_from_db()
+        self.assertEqual((second.status, second.sent_at), (Status.CANCELLED, None))
+
 
 class OccurrenceTests(SimpleTestCase):
     def event(self, **kwargs):

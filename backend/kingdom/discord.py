@@ -102,11 +102,17 @@ def deliver(notification: EventNotification) -> bool:
 
 
 def send_due(now=None) -> int:
-    """Sends every pending notification whose time has come. Returns how many were processed."""
+    """Sends every pending notification whose time has come. Returns how many were processed.
+
+    A row cancelled while the loop runs is skipped; one cancelled during its own HTTP call still goes out.
+    """
     now = now or timezone.now()
     due = EventNotification.objects.filter(status=EventNotification.Status.PENDING, send_at__lte=now)
     count = 0
     for notification in due.order_by('send_at'):
+        # the admin may have cancelled it since the query (every send before it is an HTTP call)
+        if not EventNotification.objects.filter(pk=notification.pk, status=EventNotification.Status.PENDING).exists():
+            continue
         if notification.send_at < now - MAX_DELAY:
             notification.status = EventNotification.Status.FAILED
             notification.error = 'Zmeškaná – worker v tom čase nebežal.'
