@@ -11,6 +11,11 @@ export const sk = {
       description:
         'Hľadáš slovenské alebo české KD v Rise of Kingdoms? KD 1035 je jediný kingdom v hre zložený výhradne zo Slovákov a Čechov. Zisti, ako sa k nám pridať.',
     },
+    calendar: {
+      title: 'Kalendár eventov · KD 1035 Rise of Kingdoms CZ/SK',
+      description:
+        'Všetky eventy slovensko-českého kráľovstva KD 1035 v Rise of Kingdoms na jednom mieste – v tvojom čase aj v hernom čase UTC.',
+    },
     terms: {
       title: 'Podmienky používania | KD 1035',
       description:
@@ -31,6 +36,7 @@ export const sk = {
     breadcrumb: 'Navigačná cesta',
     label: 'Hlavná navigácia',
     about: 'O nás',
+    calendar: 'Kalendár',
     terms: 'Podmienky používania',
     privacy: 'Ochrana údajov',
     alliance: 'Aliancia',
@@ -76,7 +82,8 @@ export const sk = {
       commanderi: {
         title: 'Commanderi',
         text: 'Najlepšie kombinácie a talenty.',
-        description: 'Najlepšie páry commanderov a talenty v Rise of Kingdoms – návody od hráčov slovensko-českého KD 1035.',
+        description:
+          'Najlepšie páry commanderov a talenty v Rise of Kingdoms – návody od hráčov slovensko-českého KD 1035.',
       },
       vybava: {
         title: 'Výbava',
@@ -86,7 +93,8 @@ export const sk = {
       eventy: {
         title: 'Eventy',
         text: 'Ako z eventov vyťažiť maximum.',
-        description: 'Ako hrať eventy v Rise of Kingdoms naplno – tipy a návody od slovensko-českého kráľovstva KD 1035.',
+        description:
+          'Ako hrať eventy v Rise of Kingdoms naplno – tipy a návody od slovensko-českého kráľovstva KD 1035.',
       },
     },
     empty: 'Návody sa pripravujú. Pozri sa sem čoskoro.',
@@ -148,6 +156,35 @@ export const sk = {
       leaders: 'Kontakty na vedenie',
     },
     cta: 'Pridaj sa k nám',
+  },
+  calendar: {
+    eyebrow: 'Eventy kráľovstva',
+    title: 'Kalendár eventov',
+    intro: 'Čo nás v KD 1035 čaká a kedy – v tvojom čase aj v hernom UTC.',
+    prev: 'Predchádzajúci mesiac',
+    next: 'Nasledujúci mesiac',
+    today: 'Dnes',
+    tomorrow: 'Zajtra',
+    zone: 'Časy sú v tvojom pásme ({zone}), herný čas je UTC.',
+    week: 'Týždeň {from} – {to}',
+    running: 'Prebieha',
+    daily: 'Každý deň',
+    irregular: 'Nepravidelné eventy',
+    irregularText: 'Ďalší termín oznámime.',
+    empty: 'Zatiaľ nie sú naplánované žiadne eventy.',
+    error: 'Kalendár sa nepodarilo načítať. Skús to znova o chvíľu.',
+    since: 'od {date}',
+    until: 'do {date}',
+    gameTime: 'herný čas',
+    guide: 'Návod',
+    close: 'Zavrieť',
+    remind: {
+      title: 'Pripomienky',
+      channels: 'Kam ti ich pošleme, si nastavíš na stránke',
+      noChannel: 'Zatiaľ ti nemajú kam prísť – zapni si Discord alebo notifikácie na stránke',
+      login: 'Prihlás sa a pripomenieme ti začiatok tohto eventu.',
+      ended: 'Tento event sa už nebude opakovať.',
+    },
   },
   termsPage: {
     eyebrow: 'Neoficiálny web',
@@ -277,7 +314,8 @@ export const sk = {
     eyebrow: 'Hráčsky účet',
     title: 'Môj účet',
     loginTitle: 'Prihlás sa cez Discord',
-    stored: 'Uložíme iba tvoje Discord ID, meno a avatar (a meno v hre či pripomienky eventov, ak si ich nastavíš). E-mail ani tvoje servery nevidíme.',
+    stored:
+      'Uložíme iba tvoje Discord ID, meno a avatar (a meno v hre či pripomienky eventov, ak si ich nastavíš). E-mail ani tvoje servery nevidíme.',
     privacy: 'Čo o tebe ukladáme',
     login: 'Prihlásiť cez Discord',
     disabled: 'Prihlásenie zatiaľ nie je zapnuté.',
@@ -312,7 +350,8 @@ export const sk = {
     pushHint: 'Prídu na mobil aj počítač, aj keď web nemáš otvorený.',
     pushOn: 'Zapnuté v tomto prehliadači.',
     pushDenied: 'Notifikácie sú pre tento web zablokované. Povoľ ich v nastaveniach prehliadača.',
-    pushUnsupported: 'Tento prehliadač ich nepodporuje. Na iPhone fungujú po pridaní webu na plochu (Zdieľať → Pridať na plochu).',
+    pushUnsupported:
+      'Tento prehliadač ich nepodporuje. Na iPhone fungujú po pridaní webu na plochu (Zdieľať → Pridať na plochu).',
     pushError: 'Notifikácie sa nepodarilo zapnúť. Skús to znova.',
     enable: 'Zapnúť',
     disable: 'Vypnúť',
@@ -323,12 +362,12 @@ export const sk = {
     notPlanned: 'Ďalší termín oznámime – pripomienka príde podľa tvojich časov.',
     remind: 'Pripomínať',
     times: 'Kedy pripomenúť',
-    placeholder: 'napr. 30',
-    custom: 'Vlastný čas (min)',
+    custom: 'Vlastný čas',
+    units: { days: 'dni', hours: 'h', minutes: 'min' },
     add: 'Pridať',
     remove: 'Odstrániť',
     max: 'Najviac 5 pripomienok na event.',
-    invalid: 'Zadaj celé číslo od 0 do 10080 (7 dní).',
+    invalid: 'Zadaj spolu 1 min až 7 dní (celé čísla).',
     saved: 'Uložené.',
     failed: 'Nepodarilo sa uložiť. Skús to znova.',
     atStart: 'pri začiatku',
@@ -340,6 +379,7 @@ export const sk = {
       daily: 'denne',
       weekly: 'každý týždeň',
       every: ['každý {n} deň', 'každé {n} dni', 'každých {n} dní'],
+      weeks: ['každý {n} týždeň', 'každé {n} týždne', 'každých {n} týždňov'],
     },
   },
   footer: {

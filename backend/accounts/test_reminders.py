@@ -339,10 +339,24 @@ class MessageTests(TestCase):
         self.event = make_event(name_cs='Ruiny CZ')
 
     def test_duration(self):
-        cases = {0: '0 min', 10: '10 min', 60: '1 h', 90: '1 h 30 min', 1440: '1 deň', 2880: '2 dni', 7200: '5 dní'}
+        cases = {
+            0: '0 min',
+            10: '10 min',
+            60: '1 h',
+            90: '1 h 30 min',
+            1440: '1 deň',
+            1500: '1 deň 1 h',
+            1800: '1 deň 6 h',
+            1505: '1 deň 1 h 5 min',
+            1441: '1 deň 1 min',
+            2880: '2 dni',
+            3075: '2 dni 3 h 15 min',
+            7200: '5 dní',
+        }
         for minutes, text in cases.items():
             self.assertEqual(reminders.duration(minutes, 'sk'), text)
         self.assertEqual(reminders.duration(1440, 'cs'), '1 den')
+        self.assertEqual(reminders.duration(1800, 'cs'), '1 den 6 h')
         self.assertEqual(reminders.duration(4320, 'cs'), '3 dny')
         self.assertEqual(reminders.duration(10080, 'cs'), '7 dní')
 

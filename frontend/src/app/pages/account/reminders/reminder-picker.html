@@ -1,0 +1,126 @@
+@let r = t();
+@let id = event().id;
+
+<div class="picker__head">
+  <ng-content />
+  <label class="toggle">
+    <span class="toggle__text">{{ r.remind }}</span>
+    <input
+      class="switch"
+      type="checkbox"
+      role="switch"
+      [checked]="on()"
+      [attr.aria-label]="r.remind + ': ' + name()"
+      [attr.aria-describedby]="describedBy() || null"
+      (change)="toggle()"
+    />
+  </label>
+</div>
+
+@if (on()) {
+  <div class="picker__body">
+    <fieldset class="chips">
+      <legend class="sr-only">{{ r.times }} – {{ name() }}</legend>
+      @for (minutes of offered(); track minutes) {
+        <label class="chip">
+          <input
+            type="checkbox"
+            [checked]="has(minutes)"
+            [disabled]="full() && !has(minutes)"
+            (change)="toggleTime(minutes)"
+          />
+          <span><svg [appIcon]="has(minutes) ? 'check' : 'plus'"></svg>{{ label(minutes) }}</span>
+        </label>
+      }
+      @for (minutes of own(); track minutes) {
+        <span class="chip chip--own">
+          <span>
+            <svg appIcon="check"></svg>{{ label(minutes) }}
+            <button
+              type="button"
+              class="chip__remove"
+              [attr.aria-label]="r.remove + ': ' + label(minutes)"
+              (click)="toggleTime(minutes)"
+            >
+              <svg appIcon="x"></svg>
+            </button>
+          </span>
+        </span>
+      }
+    </fieldset>
+
+    <!-- Enter in any of the three fields adds the time -->
+    <form class="own" novalidate (submit)="addTime($event, daysInput, hoursInput, minutesInput)">
+      <fieldset class="own__fields">
+        <legend class="field__label">{{ r.custom }}</legend>
+        <div class="own__row">
+          <label class="unit">
+            <input
+              #daysInput
+              class="input unit__input"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              max="7"
+              step="1"
+              placeholder="0"
+              [attr.aria-invalid]="invalid() || null"
+              [attr.aria-describedby]="'own-hint-' + id"
+              (input)="invalid.set(false)"
+            />
+            <span class="unit__name">{{ r.units.days }}</span>
+          </label>
+          <label class="unit">
+            <input
+              #hoursInput
+              class="input unit__input"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              max="23"
+              step="1"
+              placeholder="0"
+              [attr.aria-invalid]="invalid() || null"
+              [attr.aria-describedby]="'own-hint-' + id"
+              (input)="invalid.set(false)"
+            />
+            <span class="unit__name">{{ r.units.hours }}</span>
+          </label>
+          <label class="unit unit--wide">
+            <input
+              #minutesInput
+              class="input unit__input"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              max="59"
+              step="1"
+              placeholder="0"
+              [attr.aria-invalid]="invalid() || null"
+              [attr.aria-describedby]="'own-hint-' + id"
+              (input)="invalid.set(false)"
+            />
+            <span class="unit__name">{{ r.units.minutes }}</span>
+          </label>
+          <!-- aria-disabled, not disabled: a control disabled while focused would drop keyboard focus -->
+          <button type="submit" class="pill-btn own__add" [attr.aria-disabled]="full() || null">
+            <svg appIcon="plus"></svg><span class="own__add-text">{{ r.add }}</span>
+          </button>
+        </div>
+      </fieldset>
+      <p class="own__hint" [id]="'own-hint-' + id" [class.is-error]="invalid()">
+        @if (invalid()) {
+          {{ r.invalid }}
+        } @else if (full()) {
+          {{ r.max }}
+        }
+      </p>
+    </form>
+  </div>
+}
+
+<p class="picker__state" role="status" [class.is-error]="state() === 'failed'">
+  @if (state(); as s) {
+    {{ r[s] }}
+  }
+</p>

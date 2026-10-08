@@ -8,6 +8,7 @@ import { cs } from '../../../core/i18n/cs';
 import { sk } from '../../../core/i18n/sk';
 import { EventRow } from './event-row';
 import { reminderLabel, repeatLabel } from './format';
+import { ownMinutes } from './reminder-picker';
 
 const EVENT: ReminderEvent = {
   id: 7,
@@ -31,26 +32,54 @@ class Host {
 }
 
 describe('reminder labels', () => {
-  it('reads naturally in both languages', () => {
+  it('read naturally in both languages, days, hours and minutes combined', () => {
     const label = (minutes: number) => reminderLabel(minutes, sk.reminders);
-    expect([0, 10, 60, 90, 1440, 2880, 7200].map(label)).toEqual([
+    expect([0, 10, 60, 90, 1440, 1500, 1800, 2880, 3075, 7200].map(label)).toEqual([
       'pri začiatku',
       '10 min vopred',
       '1 h vopred',
       '1 h 30 min vopred',
       '1 deň vopred',
+      '1 deň 1 h vopred',
+      '1 deň 6 h vopred',
       '2 dni vopred',
+      '2 dni 3 h 15 min vopred',
       '5 dní vopred',
     ]);
     expect(reminderLabel(4320, cs.reminders)).toBe('3 dny předem');
-    expect([0, 1, 7, 3, 14].map((d) => repeatLabel(d, sk.reminders))).toEqual([
+    expect(reminderLabel(1800, cs.reminders)).toBe('1 den 6 h předem');
+    expect([0, 1, 7, 3, 10, 14, 56].map((d) => repeatLabel(d, sk.reminders))).toEqual([
       'jednorazovo',
       'denne',
       'každý týždeň',
       'každé 3 dni',
-      'každých 14 dní',
+      'každých 10 dní',
+      'každé 2 týždne',
+      'každých 8 týždňov',
     ]);
-    expect(repeatLabel(14, cs.reminders)).toBe('každých 14 dní');
+    expect(repeatLabel(14, cs.reminders)).toBe('každé 2 týdny');
+    expect(repeatLabel(56, cs.reminders)).toBe('každých 8 týdnů');
+  });
+
+  it('own time: days, hours and minutes add up, empty fields count as 0', () => {
+    const own = (days: string, hours: string, minutes: string) => ownMinutes({ days, hours, minutes });
+    expect(own('1', '', '')).toBe(1440);
+    expect(own('', '2', '')).toBe(120);
+    expect(own('1', '6', '')).toBe(1800);
+    expect(own('0', '2', '30')).toBe(150);
+    expect(own('', '', '90')).toBe(90);
+    expect(own('7', '', '')).toBe(10080);
+    // nothing, 0 (offered as "pri začiatku"), more than a week, negative or not whole
+    for (const bad of [
+      ['', '', ''],
+      ['0', '0', '0'],
+      ['7', '0', '1'],
+      ['8', '', ''],
+      ['', '-1', ''],
+      ['', '1.5', ''],
+    ]) {
+      expect(own(bad[0], bad[1], bad[2])).toBeNull();
+    }
   });
 });
 
@@ -75,6 +104,11 @@ describe('EventRow', () => {
     else req.flush(null, { status: 204, statusText: 'No Content' });
     return req.request;
   };
+  /** types into the days / hours / minutes fields and submits the form (Enter) */
+  const addOwn = (el: HTMLElement, ...values: string[]) => {
+    el.querySelectorAll<HTMLInputElement>('.unit__input').forEach((input, i) => (input.value = values[i] ?? ''));
+    el.querySelector('.own')!.dispatchEvent(new Event('submit'));
+  };
 
   afterEach(() => http.verify());
 
@@ -88,7 +122,8 @@ describe('EventRow', () => {
     await fixture.whenStable();
     expect(chips(el)).toEqual(['10 min vopred', '1 h vopred']);
     expect(el.querySelector<HTMLInputElement>('.chip input')!.checked).toBe(true);
-    expect(el.querySelector('.event__state')?.textContent).toContain('Uložené.');
+    expect(el.querySelector('.picker__state')?.textContent).toContain('Uložené.');
+    expect(el.querySelector('.switch')?.getAttribute('aria-describedby')).toBe('event-7');
   });
 
   it('changes made while saving are sent afterwards, in order', async () => {
@@ -104,26 +139,37 @@ describe('EventRow', () => {
     await fixture.whenStable();
   });
 
-  it('adds an own time and refuses an invalid one', async () => {
+  it('adds an own time from days, hours and minutes and refuses an invalid one', async () => {
     const { fixture, el } = await render({ offsets: [10] });
-    const input = el.querySelector<HTMLInputElement>('.own input')!;
-    const form = el.querySelector<HTMLFormElement>('.own')!;
-    input.value = '10081';
-    form.dispatchEvent(new Event('submit'));
-    await fixture.whenStable();
-    expect(input.getAttribute('aria-invalid')).toBe('true');
-    expect(el.querySelector('.own__hint')?.textContent).toContain('10080');
+    const fields = el.querySelectorAll<HTMLInputElement>('.unit__input');
+    expect([...fields].map((f) => f.closest('label')?.textContent?.trim())).toEqual(['dni', 'h', 'min']);
 
-    input.value = '25';
-    form.dispatchEvent(new Event('submit'));
-    expect(flush([25, 10]).body).toEqual({ offsets: [25, 10] });
+    addOwn(el, '8');
     await fixture.whenStable();
-    expect(chips(el)).toEqual(['10 min vopred', '1 h vopred', '25 min vopred']);
+    expect(fields[0].getAttribute('aria-invalid')).toBe('true');
+    expect(el.querySelector('.own__hint')?.textContent).toContain('1 min až 7 dní');
+    addOwn(el, '', '', '');
+    await fixture.whenStable();
+    expect(el.querySelector('.own__hint')?.textContent).toContain('1 min až 7 dní');
 
-    // removing the last times stops the reminders
-    el.querySelector<HTMLButtonElement>('.chip__remove')!.click();
-    flush([10]);
+    addOwn(el, '1');
+    expect(flush([1440, 10]).body).toEqual({ offsets: [1440, 10] });
     await fixture.whenStable();
+    expect([...fields].map((f) => f.value)).toEqual(['', '', '']); // cleared for the next one
+    addOwn(el, '', '2');
+    expect(flush([1440, 120, 10]).body).toEqual({ offsets: [1440, 120, 10] });
+    await fixture.whenStable();
+    addOwn(el, '1', '6', '');
+    expect(flush([1800, 1440, 120, 10]).body).toEqual({ offsets: [1800, 1440, 120, 10] });
+    await fixture.whenStable();
+    expect(chips(el)).toEqual(['10 min vopred', '1 h vopred', '2 h vopred', '1 deň vopred', '1 deň 6 h vopred']);
+
+    // own times are removed with their × (shortest first), removing the last times stops the reminders
+    for (const left of [[1800, 1440, 10], [1800, 10], [10]]) {
+      el.querySelector<HTMLButtonElement>('.chip__remove')!.click();
+      expect(flush(left).body).toEqual({ offsets: left });
+      await fixture.whenStable();
+    }
     el.querySelector<HTMLInputElement>('.chip input')!.click();
     expect(flush(null).method).toBe('DELETE');
     await fixture.whenStable();
@@ -134,13 +180,11 @@ describe('EventRow', () => {
     const { fixture, el } = await render({ offsets: [100, 90, 80, 70, 10] });
     const hour = el.querySelectorAll<HTMLInputElement>('.chip input')[1];
     expect(hour.disabled).toBe(true);
-    const input = el.querySelector<HTMLInputElement>('.own input')!;
-    input.value = '5';
-    el.querySelector('.own')!.dispatchEvent(new Event('submit'));
+    addOwn(el, '', '', '5');
     await fixture.whenStable();
     http.expectNone('/api/me/reminders/7/');
-    expect(input.disabled).toBe(false); // keeps keyboard focus
-    expect(el.querySelector('.own button')?.getAttribute('aria-disabled')).toBe('true');
+    expect(el.querySelector<HTMLInputElement>('.unit__input')!.disabled).toBe(false); // keeps keyboard focus
+    expect(el.querySelector('.own__add')?.getAttribute('aria-disabled')).toBe('true');
     expect(el.querySelector('.own__hint')?.textContent).toContain('Najviac 5');
   });
 
@@ -153,7 +197,8 @@ describe('EventRow', () => {
     el.querySelector<HTMLInputElement>('.switch')!.click();
     http.expectOne('/api/me/reminders/7/').flush('down', { status: 502, statusText: 'Bad Gateway' });
     await fixture.whenStable();
-    expect(el.querySelector('.event__state')?.textContent).toContain('Nepodařilo se uložit');
+    expect(el.querySelector('.picker__state')?.textContent).toContain('Nepodařilo se uložit');
+    expect([...el.querySelectorAll('.unit__name')].map((u) => u.textContent)).toEqual(['dny', 'h', 'min']);
   });
 
   it('an irregular event without a date says it will be announced', async () => {

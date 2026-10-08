@@ -62,15 +62,15 @@ def texts(lang: str) -> dict:
 
 
 def duration(minutes: int, lang: str) -> str:
-    """10 → '10 min', 90 → '1 h 30 min', 2880 → '2 dni' (SK) / '2 dny' (CZ)."""
+    """Days, hours and minutes without the zero parts: 10 → '10 min', 90 → '1 h 30 min', 1800 → '1 deň 6 h',
+    2880 → '2 dni' (SK) / '2 dny' (CZ). Same as reminderLabel() on the web."""
     days, rest = divmod(minutes, 24 * 60)
-    if days and not rest:
-        one, few, many = texts(lang)['days']
-        return f'{days} {one if days == 1 else few if days < 5 else many}'
-    hours, mins = divmod(minutes, 60)
-    if not hours:
-        return f'{mins} min'
-    return f'{hours} h {mins} min' if mins else f'{hours} h'
+    hours, mins = divmod(rest, 60)
+    one, few, many = texts(lang)['days']
+    parts = [f'{days} {one if days == 1 else few if days < 5 else many}'] if days else []
+    parts += [f'{hours} h'] if hours else []
+    parts += [f'{mins} min'] if mins or not parts else []
+    return ' '.join(parts)
 
 
 def event_name(event: KingdomEvent, lang: str) -> str:

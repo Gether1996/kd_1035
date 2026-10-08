@@ -13,6 +13,11 @@ export const cs: Dict = {
       description:
         'Hledáš české nebo slovenské KD v Rise of Kingdoms? KD 1035 je jediný kingdom ve hře složený výhradně z Čechů a Slováků. Zjisti, jak se k nám přidat.',
     },
+    calendar: {
+      title: 'Kalendář eventů · KD 1035 Rise of Kingdoms CZ/SK',
+      description:
+        'Všechny eventy česko-slovenského království KD 1035 v Rise of Kingdoms na jednom místě – ve tvém čase i v herním čase UTC.',
+    },
     terms: {
       title: 'Podmínky užívání | KD 1035',
       description:
@@ -33,6 +38,7 @@ export const cs: Dict = {
     breadcrumb: 'Drobečková navigace',
     label: 'Hlavní navigace',
     about: 'O nás',
+    calendar: 'Kalendář',
     terms: 'Podmínky užívání',
     privacy: 'Ochrana údajů',
     alliance: 'Aliance',
@@ -78,7 +84,8 @@ export const cs: Dict = {
       commanderi: {
         title: 'Commandeři',
         text: 'Nejlepší kombinace a talenty.',
-        description: 'Nejlepší páry commanderů a talenty v Rise of Kingdoms – návody od hráčů česko-slovenského KD 1035.',
+        description:
+          'Nejlepší páry commanderů a talenty v Rise of Kingdoms – návody od hráčů česko-slovenského KD 1035.',
       },
       vybava: {
         title: 'Výbava',
@@ -88,7 +95,8 @@ export const cs: Dict = {
       eventy: {
         title: 'Eventy',
         text: 'Jak z eventů vytěžit maximum.',
-        description: 'Jak hrát eventy v Rise of Kingdoms naplno – tipy a návody od česko-slovenského království KD 1035.',
+        description:
+          'Jak hrát eventy v Rise of Kingdoms naplno – tipy a návody od česko-slovenského království KD 1035.',
       },
     },
     empty: 'Návody se připravují. Podívej se sem brzy.',
@@ -150,6 +158,35 @@ export const cs: Dict = {
       leaders: 'Kontakty na vedení',
     },
     cta: 'Přidej se k nám',
+  },
+  calendar: {
+    eyebrow: 'Eventy království',
+    title: 'Kalendář eventů',
+    intro: 'Co nás v KD 1035 čeká a kdy – ve tvém čase i v herním UTC.',
+    prev: 'Předchozí měsíc',
+    next: 'Následující měsíc',
+    today: 'Dnes',
+    tomorrow: 'Zítra',
+    zone: 'Časy jsou ve tvém pásmu ({zone}), herní čas je UTC.',
+    week: 'Týden {from} – {to}',
+    running: 'Probíhá',
+    daily: 'Každý den',
+    irregular: 'Nepravidelné eventy',
+    irregularText: 'Další termín oznámíme.',
+    empty: 'Zatím nejsou naplánované žádné eventy.',
+    error: 'Kalendář se nepodařilo načíst. Zkus to znovu za chvíli.',
+    since: 'od {date}',
+    until: 'do {date}',
+    gameTime: 'herní čas',
+    guide: 'Návod',
+    close: 'Zavřít',
+    remind: {
+      title: 'Připomínky',
+      channels: 'Kam ti je pošleme, si nastavíš na stránce',
+      noChannel: 'Zatím ti nemají kam přijít – zapni si Discord nebo oznámení na stránce',
+      login: 'Přihlas se a připomeneme ti začátek tohoto eventu.',
+      ended: 'Tento event se už nebude opakovat.',
+    },
   },
   termsPage: {
     eyebrow: 'Neoficiální web',
@@ -278,7 +315,8 @@ export const cs: Dict = {
     eyebrow: 'Hráčský účet',
     title: 'Můj účet',
     loginTitle: 'Přihlas se přes Discord',
-    stored: 'Uložíme jen tvoje Discord ID, jméno a avatar (a jméno ve hře či připomínky eventů, pokud si je nastavíš). E-mail ani tvoje servery nevidíme.',
+    stored:
+      'Uložíme jen tvoje Discord ID, jméno a avatar (a jméno ve hře či připomínky eventů, pokud si je nastavíš). E-mail ani tvoje servery nevidíme.',
     privacy: 'Co o tobě ukládáme',
     login: 'Přihlásit přes Discord',
     disabled: 'Přihlášení zatím není zapnuté.',
@@ -313,7 +351,8 @@ export const cs: Dict = {
     pushHint: 'Přijdou na mobil i počítač, i když web nemáš otevřený.',
     pushOn: 'Zapnuto v tomto prohlížeči.',
     pushDenied: 'Oznámení jsou pro tento web zablokovaná. Povol je v nastavení prohlížeče.',
-    pushUnsupported: 'Tento prohlížeč je nepodporuje. Na iPhonu fungují po přidání webu na plochu (Sdílet → Přidat na plochu).',
+    pushUnsupported:
+      'Tento prohlížeč je nepodporuje. Na iPhonu fungují po přidání webu na plochu (Sdílet → Přidat na plochu).',
     pushError: 'Oznámení se nepodařilo zapnout. Zkus to znovu.',
     enable: 'Zapnout',
     disable: 'Vypnout',
@@ -324,12 +363,12 @@ export const cs: Dict = {
     notPlanned: 'Další termín oznámíme – připomínka přijde podle tvých časů.',
     remind: 'Připomínat',
     times: 'Kdy připomenout',
-    placeholder: 'např. 30',
-    custom: 'Vlastní čas (min)',
+    custom: 'Vlastní čas',
+    units: { days: 'dny', hours: 'h', minutes: 'min' },
     add: 'Přidat',
     remove: 'Odebrat',
     max: 'Nejvýš 5 připomínek na event.',
-    invalid: 'Zadej celé číslo od 0 do 10080 (7 dní).',
+    invalid: 'Zadej celkem 1 min až 7 dní (celá čísla).',
     saved: 'Uloženo.',
     failed: 'Nepodařilo se uložit. Zkus to znovu.',
     atStart: 'při začátku',
@@ -341,6 +380,7 @@ export const cs: Dict = {
       daily: 'denně',
       weekly: 'každý týden',
       every: ['každý {n} den', 'každé {n} dny', 'každých {n} dní'],
+      weeks: ['každý {n} týden', 'každé {n} týdny', 'každých {n} týdnů'],
     },
   },
   footer: {
