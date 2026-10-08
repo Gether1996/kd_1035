@@ -18,7 +18,21 @@ class Guide(models.Model):
         EQUIPMENT = 'vybava', 'Výbava'
         EVENTS = 'eventy', 'Eventy'
 
+    class Unit(models.TextChoices):
+        CAVALRY = 'cavalry', 'Jazda'
+        INFANTRY = 'infantry', 'Pechota'
+        ARCHER = 'archer', 'Lukostrelci'
+        LEADERSHIP = 'leadership', 'Leadership'
+
     category = models.CharField('kategória', max_length=16, choices=Category.choices)
+    unit = models.CharField(
+        'typ jednotiek',
+        max_length=16,
+        choices=Unit.choices,
+        blank=True,
+        help_text='Ikona pri návode v zozname, aby hráč rýchlo našiel svoje jednotky. Prázdne = bez ikony. '
+        'Automaticky aktualizovaným návodom ho nastavuje meta (backend/guides/meta).',
+    )
     title_sk = models.CharField('nadpis (SK)', max_length=160)
     title_cs = models.CharField(
         'nadpis (CZ)', max_length=160, blank=True, help_text='Prázdne = na českej verzii sa zobrazí slovenský nadpis.'

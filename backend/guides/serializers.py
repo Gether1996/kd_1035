@@ -9,7 +9,7 @@ class GuideListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Guide
-        fields = ['slug', 'category', 'title_sk', 'title_cs', 'excerpt_sk', 'excerpt_cs', 'updated_at']
+        fields = ['slug', 'category', 'unit', 'title_sk', 'title_cs', 'excerpt_sk', 'excerpt_cs', 'updated_at']
 
     def get_excerpt_sk(self, obj):
         return obj.excerpt('sk')

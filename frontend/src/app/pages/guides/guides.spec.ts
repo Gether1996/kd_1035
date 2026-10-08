@@ -6,7 +6,7 @@ import { provideRouter } from '@angular/router';
 import { GuideList } from './guide-list';
 import { GuidePage } from './guide-page';
 
-describe('Missing guides', () => {
+describe('Guide pages', () => {
   beforeEach(() => {
     // the page header parallax and the scroll reveal need browser APIs that jsdom does not have
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
@@ -80,5 +80,32 @@ describe('Missing guides', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('app-not-found-links')).toBeNull();
     expect(head().querySelector('meta[name="robots"]')).toBeNull();
     expect(head().querySelector('link[rel="canonical"]')).not.toBeNull();
+  });
+
+  it('marks a guide about one troop type with its icon', async () => {
+    const fixture = TestBed.createComponent(GuideList);
+    fixture.componentRef.setInput('category', 'commanderi');
+    fixture.detectChanges();
+    const guide = (slug: string, unit: string) => ({
+      slug,
+      unit,
+      category: 'commanderi',
+      title_sk: slug,
+      title_cs: '',
+      excerpt_sk: '',
+      excerpt_cs: '',
+      updated_at: '2026-10-08T12:00:00Z',
+    });
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/guides/')
+      .flush([guide('pary-pre-jazdu', 'cavalry'), guide('pary-pre-rally', ''), guide('nove', 'siege')]);
+    await settle(fixture);
+
+    const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('.row');
+    expect(Array.from(rows, (row) => row.querySelector('.row__unit use')?.getAttribute('href') ?? null)).toEqual([
+      '/icons.svg#chess-knight',
+      null,
+      null, // a type the site does not know yet gets no icon
+    ]);
   });
 });

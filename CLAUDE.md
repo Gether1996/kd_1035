@@ -50,10 +50,11 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
   - **Stránka musí sedieť s kódom:** každé nové pole s osobnými údajmi, nová cookie, tretia strana alebo zmena doby uchovania → uprav `privacyPage` v `sk.ts` aj `cs.ts` a posuň „Platné od“ v `privacy.ts`. Platí aj pre `BACKUP_KEEP` × `BACKUP_INTERVAL_DAYS` (na stránke „do 8 týždňov“) a limit logov (3 × 10 MB).
 
 ## Návody (CMS)
-- Spravuje ich **iba superuser** v Django admine (Návody): kategória (Commanderi / Výbava / Eventy), nadpis SK + CZ (CZ nepovinný → použije sa SK), slug, HTML obsah SK + CZ, poradie, zverejnený.
+- Spravuje ich **iba superuser** v Django admine (Návody): kategória (Commanderi / Výbava / Eventy), typ jednotiek (nepovinný), nadpis SK + CZ (CZ nepovinný → použije sa SK), slug, HTML obsah SK + CZ, poradie, zverejnený.
 - HTML sa pri uložení čistí knižnicou **nh3** (`backend/guides/sanitize.py`): odstráni `<script>`, `<style>`, on* atribúty a `javascript:` odkazy; povolené sú bežné tagy, tabuľky, obrázky a video embedy (YouTube, Twitch). YouTube embed sa prepíše na `www.youtube-nocookie.com/embed/` (spomína ho stránka Ochrana údajov; staršie návody prečistila migrácia `guides/0006`). Frontend preto obsah vkladá cez `bypassSecurityTrustHtml`. Vzhľad obsahu určuje globálna trieda `.prose` v `frontend/src/styles.scss`.
 - Obrázky: inline „Obrázky“ pri návode → po uložení admin ukáže kód `<img src="/uploads/guides/...">` na skopírovanie do HTML. Súbor sa zmaže spolu s obrázkom/návodom.
 - Web: `/navody/<kategória>` = zoznam (záložky kategórií), `/navody/<kategória>/<slug>` = článok. Všade **breadcrumbs** (Domov › Kategória › Článok), aj ako JSON-LD.
+- **Ikony typov jednotiek** v zozname návodov (pole `Guide.unit`, API `unit`): zlatá ikona pred nadpisom, aby hráč rýchlo našiel svoje jednotky – jazda `chess-knight`, pechota `shield`, lukostrelci `bow-arrow`, leadership `flag` (Lucide, mapa v `guide-list.ts`). Meta návodom ho dáva kľúč `'unit'` v `guides/meta` (sync ho zapisuje ako ostatné polia, migrácia `guides/0007` ho doplnila podľa slugu). Oficiálne herné ikony jednotiek nepoužívame – nie sú medzi výnimkami so súhlasom Gethera.
 - Úvod (excerpt) pre zoznam a meta description = prvý odsek `<p>` obsahu.
 - Obsah (návody, obrázky) žije v databáze. Medzi vývojovými PC sa prenáša cez git (sekcia **Synchronizácia databázy cez git**), na serveri je vo volumes `db_data` a `uploads`.
 

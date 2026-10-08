@@ -28,7 +28,12 @@
           <a class="row" [routerLink]="i18n.guidePath(g.category, g.slug)">
             <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
             <span class="row__body">
-              <strong>{{ guides.title(g) }}</strong>
+              <strong>
+                @if (unitIcons[g.unit]; as icon) {
+                  <svg class="row__unit" [appIcon]="icon"></svg>
+                }
+                {{ guides.title(g) }}
+              </strong>
               @if (guides.excerpt(g)) {
                 <small>{{ guides.excerpt(g) }}</small>
               }

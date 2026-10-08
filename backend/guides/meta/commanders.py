@@ -75,6 +75,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-jazdu',
+        'unit': 'cavalry',
         'title': t('Páry commanderov pre jazdu', 'Páry commanderů pro jízdu'),
         'blocks': [
             ('p', t(
@@ -118,6 +119,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-pechotu',
+        'unit': 'infantry',
         'title': t('Páry commanderov pre pechotu', 'Páry commanderů pro pěchotu'),
         'blocks': [
             ('p', t(
@@ -154,6 +156,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-lukostrelcov',
+        'unit': 'archer',
         'title': t('Páry commanderov pre lukostrelcov', 'Páry commanderů pro lučištníky'),
         'blocks': [
             ('p', t(
@@ -190,6 +193,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-leadership-a-mix',
+        'unit': 'leadership',
         'title': t('Páry commanderov pre leadership a mix', 'Páry commanderů pro leadership a mix'),
         'blocks': [
             ('p', t(

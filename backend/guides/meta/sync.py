@@ -12,6 +12,7 @@ def rendered_guides(modules=MODULES):
             yield {
                 'slug': guide['slug'],
                 'category': module.CATEGORY,
+                'unit': guide.get('unit', ''),
                 'title_sk': guide['title']['sk'],
                 'title_cs': guide['title']['cs'],
                 'html_sk': clean_html(render(guide['blocks'], 'sk', note)),

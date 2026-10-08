@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { GuidesApi } from '../../core/guides-api';
+import { GuideUnit, GuidesApi } from '../../core/guides-api';
 import { GUIDE_CATEGORIES, GuideCategory, I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
-import { Icon } from '../../shared/icon';
+import { Icon, IconName } from '../../shared/icon';
 import { NotFoundLinks, notFoundMeta } from '../../shared/not-found';
 import { PageHeader } from '../../shared/page-header';
 import { Reveal } from '../../shared/reveal';
@@ -23,6 +23,13 @@ export class GuideList {
   protected readonly i18n = inject(I18n);
   protected readonly guides = inject(GuidesApi);
   protected readonly categories = GUIDE_CATEGORIES;
+  /** players look for their troop type first */
+  protected readonly unitIcons: Partial<Record<string, IconName>> = {
+    cavalry: 'chess-knight',
+    infantry: 'shield',
+    archer: 'bow-arrow',
+    leadership: 'flag',
+  } satisfies Record<GuideUnit, IconName>;
 
   protected readonly key = computed(() =>
     GUIDE_CATEGORIES.includes(this.category() as GuideCategory) ? (this.category() as GuideCategory) : null,

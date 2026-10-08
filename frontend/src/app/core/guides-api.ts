@@ -3,9 +3,13 @@ import { httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, computed, inject } from '@angular/core';
 import { GuideCategory, I18n } from './i18n/i18n';
 
+/** Troop type a guide is about – shown as an icon in the list. */
+export type GuideUnit = 'cavalry' | 'infantry' | 'archer' | 'leadership';
+
 export interface GuideSummary {
   slug: string;
   category: GuideCategory;
+  unit: GuideUnit | '';
   title_sk: string;
   title_cs: string;
   excerpt_sk: string;

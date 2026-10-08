@@ -91,6 +91,8 @@
   min-width: 0;
 
   strong {
+    display: flex;
+    gap: 0.45em;
     font: 700 clamp(1.125rem, 1rem + 0.5vw, 1.375rem) / 1.25 var(--font-display);
     color: var(--text);
   }
@@ -103,6 +105,14 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+}
+
+// troop type, centred on the first line of the title
+.row__unit {
+  width: 1.1em;
+  height: 1.1em;
+  margin-top: 0.075em;
+  color: var(--gold-300);
 }
 
 .row__date {

@@ -104,6 +104,7 @@ GUIDES = [
     },
     {
         'slug': 'vybava-pre-jazdu',
+        'unit': 'cavalry',
         'title': t('Výbava pre jazdu', 'Výbava pro jízdu'),
         'blocks': [
             ('p', t(
@@ -146,6 +147,7 @@ GUIDES = [
     },
     {
         'slug': 'vybava-pre-pechotu',
+        'unit': 'infantry',
         'title': t('Výbava pre pechotu', 'Výbava pro pěchotu'),
         'blocks': [
             ('p', t(
@@ -190,6 +192,7 @@ GUIDES = [
     },
     {
         'slug': 'vybava-pre-lukostrelcov',
+        'unit': 'archer',
         'title': t('Výbava pre lukostrelcov', 'Výbava pro lučištníky'),
         'blocks': [
             ('p', t(
@@ -233,6 +236,7 @@ GUIDES = [
     },
     {
         'slug': 'vybava-pre-leadership',
+        'unit': 'leadership',
         'title': t('Výbava pre leadership a mix', 'Výbava pro leadership a mix'),
         'blocks': [
             ('p', t(

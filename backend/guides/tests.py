@@ -72,6 +72,7 @@ class MetaGuidesTests(TestCase):
         self.assertGreaterEqual(len([g for g in guides if g['category'] == 'eventy']), 10)
         for data in guides:
             self.assertIn(data['category'], Guide.Category.values)
+            self.assertIn(data['unit'], ['', *Guide.Unit.values], data['slug'])
             self.assertNotEqual(data['html_sk'], data['html_cs'], data['slug'])
             guide = Guide(**data)
             for lang in ('sk', 'cs'):
@@ -195,6 +196,30 @@ class MetaSyncTests(TestCase):
         self.assertNotEqual(Guide.objects.get(slug='pary-pre-jazdu').html_sk, '<p>stará meta</p>')
         self.assertEqual(Guide.objects.get(slug='pary-pre-pechotu').html_sk, '<p>môj text</p>')
 
+    def test_unit_types_come_from_the_meta(self):
+        sync_guides()
+        self.assertEqual(
+            dict(Guide.objects.exclude(unit='').values_list('slug', 'unit')),
+            {
+                'pary-pre-jazdu': 'cavalry', 'pary-pre-pechotu': 'infantry', 'pary-pre-lukostrelcov': 'archer',
+                'pary-leadership-a-mix': 'leadership', 'vybava-pre-jazdu': 'cavalry', 'vybava-pre-pechotu': 'infantry',
+                'vybava-pre-lukostrelcov': 'archer', 'vybava-pre-leadership': 'leadership',
+            },
+        )  # fmt: skip
+
+    def test_migration_sets_units_and_keeps_the_date(self):
+        migration = importlib.import_module('guides.migrations.0007_guide_unit')
+        sync_guides()
+        Guide.objects.update(unit='')  # as before the migration
+        Guide.objects.filter(slug='pary-pre-pechotu').update(unit='archer')  # already set by hand
+        before = dict(Guide.objects.values_list('slug', 'updated_at'))
+
+        migration.set_units(django_apps, None)
+        self.assertEqual(Guide.objects.get(slug='pary-pre-jazdu').unit, 'cavalry')
+        self.assertEqual(Guide.objects.get(slug='pary-pre-pechotu').unit, 'archer')
+        self.assertEqual(Guide.objects.get(slug='pary-pre-rally').unit, '')
+        self.assertEqual(dict(Guide.objects.values_list('slug', 'updated_at')), before)
+
     def test_hand_written_guide_with_the_same_slug_is_left_alone(self):
         Guide.objects.create(category='vybava', slug='vybava-pre-jazdu', title_sk='Môj set', html_sk='<p>môj</p>')
         sync_guides()
@@ -229,6 +254,10 @@ class AdminAutoUpdateTests(TestCase):
     def test_saving_without_content_change_keeps_auto_update(self):
         self.save(html_sk='<p>a</p>\r\n', order=3)  # browsers send CRLF
         self.assertTrue(self.guide.auto_update)
+
+    def test_setting_the_unit_type_keeps_auto_update(self):
+        self.save(unit='archer')
+        self.assertEqual((self.guide.unit, self.guide.auto_update), ('archer', True))
 
     def test_hand_edit_turns_auto_update_off(self):
         self.save(html_sk='<p>b</p>')
@@ -269,6 +298,7 @@ class GuideApiTests(TestCase):
         data = self.client.get('/api/guides/').json()
         self.assertEqual([g['slug'] for g in data], ['najlepsia-vybava'])
         self.assertNotIn('html_sk', data[0])
+        self.assertEqual(data[0]['unit'], '')
         self.assertEqual(data[0]['excerpt_sk'], 'Text SK')
         self.assertEqual(data[0]['excerpt_cs'], 'Text SK')  # falls back to Slovak
 
