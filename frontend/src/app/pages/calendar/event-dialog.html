@@ -1,0 +1,80 @@
+@let c = t().calendar;
+@let r = remind();
+
+<dialog #dialog class="dialog" aria-labelledby="event-dialog-title" (close)="closed.emit()" (click)="backdrop($event)">
+  <div class="panel">
+    <header class="panel__head">
+      <div class="panel__heading">
+        <h2 class="panel__title" id="event-dialog-title">{{ name() }}</h2>
+        <p class="panel__repeat">{{ repeat() }}</p>
+      </div>
+      <button type="button" class="panel__close" [attr.aria-label]="c.close" (click)="close()">
+        <svg appIcon="x"></svg>
+      </button>
+    </header>
+
+    @if (occurrence(); as o) {
+      <div class="when">
+        @if (running()) {
+          <span class="tag when__live">{{ c.running }}</span>
+        }
+        <p class="when__local">
+          <svg appIcon="calendar-days"></svg>
+          <time [attr.datetime]="o.start">{{ local() }}</time>
+        </p>
+        <p class="when__utc">UTC {{ utc() }} · {{ c.gameTime }}</p>
+      </div>
+    } @else {
+      <p class="when when__local">
+        <svg appIcon="calendar-days"></svg>
+        <span>{{ c.irregularText }}</span>
+      </p>
+    }
+
+    @if (item().guide; as guide) {
+      <a class="guide" [routerLink]="i18n.guidePath(guide.category, guide.slug)">
+        <span class="guide__label">{{ c.guide }}</span>
+        <span class="guide__title">{{ guideTitle(guide) }}</span>
+        <svg appIcon="arrow-right"></svg>
+      </a>
+    }
+
+    @if (r.kind !== 'none') {
+      <section class="remind" aria-labelledby="remind-title">
+        @if (r.kind === 'player' && r.event; as choice) {
+          <app-reminder-picker
+            [event]="choice"
+            describedBy="event-dialog-title"
+            (changed)="changed.emit({ id: choice.id, offsets: $event })"
+          >
+            <h3 class="remind__title" id="remind-title">{{ c.remind.title }}</h3>
+          </app-reminder-picker>
+          <p class="remind__note" [class.is-warning]="r.noChannel">
+            {{ r.noChannel ? c.remind.noChannel : c.remind.channels }}
+            <a [routerLink]="i18n.path('account')">{{ t().nav.account }}</a
+            >.
+          </p>
+        } @else {
+          <h3 class="remind__title" id="remind-title">{{ c.remind.title }}</h3>
+          @switch (r.kind) {
+            @case ('login') {
+              <p class="remind__text">{{ c.remind.login }}</p>
+              <a class="btn btn--gold remind__login" [href]="r.loginUrl">
+                <svg appIcon="discord"></svg> {{ t().account.login }}
+              </a>
+            }
+            @case ('loading') {
+              <span class="skeleton" aria-hidden="true"></span>
+            }
+            @case ('error') {
+              <p class="remind__text is-error">{{ t().reminders.error }}</p>
+            }
+            @default {
+              <p class="remind__text">{{ c.remind.ended }}</p>
+            }
+          }
+        }
+      </section>
+    }
+  </div>
+</dialog>

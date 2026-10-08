@@ -35,6 +35,7 @@ export class Header {
     const home = this.i18n.path('home');
     return [
       { label: t.about, link: this.i18n.path('about') },
+      { label: t.calendar, link: this.i18n.path('calendar') },
       { label: t.alliance, link: home, fragment: 'alliance' },
       { label: t.guides, link: home, fragment: 'guides' },
       { label: t.community, link: home, fragment: 'community' },

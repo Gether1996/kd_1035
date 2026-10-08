@@ -48,9 +48,10 @@ export class RemindersApi {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  /** Fresh settings for the component that asks (must run in an injection context, e.g. a field initializer). */
-  settings() {
-    return httpResource<ReminderSettings>(() => (this.isBrowser ? REMINDERS_URL : undefined));
+  /** Fresh settings for the component that asks (must run in an injection context, e.g. a field initializer);
+   * nothing is asked while `when` is false (a visitor who is not signed in). */
+  settings(when: () => boolean = () => true) {
+    return httpResource<ReminderSettings>(() => (this.isBrowser && when() ? REMINDERS_URL : undefined));
   }
 
   /** Remind of the event `offsets` minutes before each start; an empty list stops the reminders. */

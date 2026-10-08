@@ -41,7 +41,9 @@ export class Seo {
       const page = i18n.page();
       const t = i18n.t();
       const fixed =
-        page === 'home' || page === 'about' || page === 'terms' || page === 'privacy' ? t.seo[page] : null;
+        page === 'home' || page === 'about' || page === 'calendar' || page === 'terms' || page === 'privacy'
+          ? t.seo[page]
+          : null;
       const current: PageMeta = this.override() ?? fixed ?? t.seo.home;
       const origin = this.origin();
       const url = (l: Lang = lang) => origin + i18n.switchPath(l);

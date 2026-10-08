@@ -33,6 +33,12 @@ describe('Header account slot', () => {
     fixture.detectChanges(); // whenStable() would wait for the pending /api/auth/me/
   });
 
+  it('links the calendar in the bar and in the mobile menu', () => {
+    const links = [...el().querySelectorAll<HTMLAnchorElement>('a[href="/kalendar"]')];
+    expect(links.map((a) => a.className.split(' ')[0])).toEqual(['nav__link', 'drawer__link']);
+    expect(links[0].textContent?.trim()).toBe('Kalendár');
+  });
+
   it('keeps an empty slot while the API has not answered', () => {
     const slot = el().querySelector('.account');
     expect(slot).not.toBeNull();

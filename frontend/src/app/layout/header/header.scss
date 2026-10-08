@@ -237,7 +237,8 @@
     transform: none;
   }
 
-  &:active {
+  &:active,
+  &.is-active {
     color: var(--gold-300);
   }
 }

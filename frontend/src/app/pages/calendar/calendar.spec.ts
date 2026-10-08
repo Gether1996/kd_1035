@@ -1,0 +1,204 @@
+import { signal } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { Me } from '../../core/auth';
+import { EventCalendar } from '../../core/events-api';
+import { ReminderSettings } from '../../core/reminders-api';
+import { Scroll } from '../../core/scroll';
+import { Calendar } from './calendar';
+
+const MGE = {
+  id: 2,
+  name_sk: 'MGE – Jazda',
+  name_cs: 'MGE – Jízda',
+  offered: [60, 1440],
+  guide: { category: 'eventy' as const, slug: 'mge', title_sk: 'Mightiest Governor', title_cs: '' },
+  start: '2026-10-05T00:00:00Z',
+  end: '2026-10-11T00:00:00Z',
+  repeat_days: 56,
+  irregular: false,
+};
+const SILK_ROAD = {
+  id: 11,
+  name_sk: 'Silk Road',
+  name_cs: '',
+  offered: [15, 60],
+  guide: null,
+  start: '2026-10-13T18:00:00Z',
+  end: '2026-10-13T19:00:00Z',
+  repeat_days: 0,
+  irregular: true,
+};
+const DATA: EventCalendar = {
+  from: '2026-09-27',
+  to: '2026-11-02',
+  occurrences: [MGE, SILK_ROAD],
+  irregular_waiting: [{ id: 12, name_sk: 'Shadow Legion', name_cs: '', offered: [15, 60], guide: null }],
+};
+const PLAYER: Me = {
+  login_enabled: true,
+  user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', is_staff: false },
+};
+const SETTINGS: ReminderSettings = {
+  discord: true,
+  discord_available: false,
+  push_key: 'BPublicKey',
+  push_devices: 0,
+  lang: 'sk',
+  events: [
+    {
+      id: 11,
+      name_sk: 'Silk Road',
+      name_cs: '',
+      next_start: SILK_ROAD.start,
+      repeat_days: 0,
+      irregular: true,
+      offered: [15, 60],
+      offsets: null,
+    },
+  ],
+};
+
+describe('Calendar', () => {
+  let fixture: ComponentFixture<Calendar>;
+  let http: HttpTestingController;
+  const el = () => fixture.nativeElement as HTMLElement;
+  const dialog = () => el().querySelector('app-event-dialog');
+  const bar = (name: string) =>
+    [...el().querySelectorAll<HTMLButtonElement>('.bar')].find((b) => b.textContent?.includes(name))!;
+
+  beforeEach(() => {
+    // Thursday 8 October 2026 (only Date is faked – timers and promises run normally)
+    vi.useFakeTimers({ now: new Date('2026-10-08T12:00:00Z'), toFake: ['Date'] });
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        // no parallax in the page header
+        {
+          provide: Scroll,
+          useValue: { scrolled: signal(false), reducedMotion: true, onFrame: () => () => {} },
+        },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    http.verify();
+    vi.useRealTimers();
+  });
+
+  /** lets an answered request reach its resource (a microtask), then renders */
+  async function settle() {
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+  }
+
+  // whenStable() would wait for the open requests, so they are answered first
+  async function render(me: Me, data: EventCalendar | 'error' = DATA) {
+    fixture = TestBed.createComponent(Calendar);
+    fixture.detectChanges();
+    http.expectOne('/api/auth/me/').flush(me);
+    await settle(); // the month is set after the first render, in the browser
+    // a signed-in player's reminders are asked as soon as the player is known
+    if (me.user) http.expectOne('/api/me/reminders/').flush(SETTINGS);
+    const events = http.expectOne((req) => req.url === '/api/events/');
+    // the month grid in whole weeks and a day more on each side
+    expect(events.request.params.get('from')).toBe('2026-09-27');
+    expect(events.request.params.get('to')).toBe('2026-11-02');
+    if (data === 'error') events.flush('down', { status: 502, statusText: 'Bad Gateway' });
+    else events.flush(data);
+    await fixture.whenStable();
+  }
+
+  async function open(button: HTMLElement) {
+    button.click();
+    await fixture.whenStable();
+    expect(dialog()).not.toBeNull();
+  }
+
+  it('shows the month with today, running events and the irregular ones', async () => {
+    await render({ login_enabled: false, user: null });
+    expect(el().querySelector('.toolbar__title')?.textContent).toContain('október 2026');
+    expect(el().querySelector('.day.is-today .day__num')?.textContent?.trim()).toBe('8');
+    expect(el().querySelectorAll('.bar').length).toBe(2);
+    expect(bar('MGE').querySelector('.bar__live')).not.toBeNull(); // running now
+    expect(bar('Silk Road').querySelector('.bar__live')).toBeNull();
+    expect(bar('Silk Road').textContent).toContain('18:00'); // the test runs in UTC
+    expect(el().querySelector('.strip--irregular')?.textContent).toContain('Shadow Legion');
+    // phones: from today on, the running event under "Dnes"
+    const days = [...el().querySelectorAll('.agenda__day')];
+    expect(days.map((d) => d.querySelector('.agenda__rel')?.textContent ?? '')).toEqual(['Dnes', '']);
+    expect(days[0].textContent).toContain('Prebieha');
+  });
+
+  it('the dialog shows the details and, with login on, a Discord login back to the same event', async () => {
+    await render({ login_enabled: true, user: null });
+    await open(bar('MGE'));
+    const text = dialog()!.textContent ?? '';
+    expect(text).toContain('MGE – Jazda');
+    expect(text).toContain('každých 8 týždňov');
+    expect(text).toContain('Prebieha');
+    expect(text).toContain('UTC 5. 10. 00:00 – 11. 10. 00:00');
+    expect(dialog()!.querySelector('.guide')?.getAttribute('href')).toBe('/navody/eventy/mge');
+    const login = dialog()!.querySelector('.remind__login');
+    expect(login?.getAttribute('href')).toBe('/api/auth/discord/login/?next=%2Fkalendar%3Fevent%3D2');
+    expect(dialog()!.querySelector('.switch')).toBeNull();
+
+    dialog()!.querySelector<HTMLButtonElement>('.panel__close')!.click();
+    await fixture.whenStable();
+    expect(dialog()).toBeNull();
+  });
+
+  it('a signed-in player sets the reminders right in the dialog', async () => {
+    await render(PLAYER);
+    await open(bar('Silk Road'));
+    // no channel reaches the player yet → the warning with a link to the account page
+    const note = dialog()!.querySelector('.remind__note');
+    expect(note?.classList).toContain('is-warning');
+    expect(note?.querySelector('a')?.getAttribute('href')).toBe('/ucet');
+
+    dialog()!.querySelector<HTMLInputElement>('.switch')!.click();
+    const put = http.expectOne('/api/me/reminders/11/');
+    expect(put.request.body).toEqual({ offsets: [15] });
+    put.flush({ ...SETTINGS.events[0], offsets: [15] });
+    await fixture.whenStable();
+
+    // closed and opened again: the choice is still there
+    dialog()!.querySelector<HTMLButtonElement>('.panel__close')!.click();
+    await fixture.whenStable();
+    await open(bar('Silk Road'));
+    expect(dialog()!.querySelector<HTMLInputElement>('.switch')!.checked).toBe(true);
+
+    // an event that will not run again has nothing to pick
+    dialog()!.querySelector<HTMLButtonElement>('.panel__close')!.click();
+    await fixture.whenStable();
+    await open(bar('MGE'));
+    expect(dialog()!.querySelector('.switch')).toBeNull();
+    expect(dialog()!.textContent).toContain('nebude opakovať');
+  });
+
+  it('an irregular event without a date opens too; login off = no reminders part', async () => {
+    await render({ login_enabled: false, user: null });
+    await open(el().querySelector<HTMLButtonElement>('.strip--irregular .pill-event')!);
+    expect(dialog()!.textContent).toContain('Ďalší termín oznámime.');
+    expect(dialog()!.textContent).toContain('nepravidelne');
+    expect(dialog()!.querySelector('.remind')).toBeNull();
+  });
+
+  it('says when the month has no events', async () => {
+    await render({ login_enabled: false, user: null }, { ...DATA, occurrences: [], irregular_waiting: [] });
+    expect(el().querySelector('.state')?.textContent).toContain('Zatiaľ nie sú naplánované žiadne eventy.');
+    expect(el().querySelector('.strip')).toBeNull();
+  });
+
+  it('a failed API shows a short note instead of the grid', async () => {
+    await render({ login_enabled: false, user: null }, 'error');
+    expect(el().querySelector('.state')?.textContent).toContain('Kalendár sa nepodarilo načítať');
+    expect(el().querySelector('.month')).toBeNull();
+  });
+});

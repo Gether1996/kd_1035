@@ -1,0 +1,159 @@
+@let c = t().calendar;
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="c.eyebrow" [title]="c.title" [intro]="c.intro" />
+
+<div class="container content">
+  @if (month()) {
+    <div class="toolbar">
+      <h2 class="toolbar__title" aria-live="polite">{{ title() }}</h2>
+      <div class="toolbar__controls">
+        <button type="button" class="pill-btn" (click)="goToday()">{{ c.today }}</button>
+        <button type="button" class="round-btn" [attr.aria-label]="c.prev" (click)="shift(-1)">
+          <svg appIcon="arrow-left"></svg>
+        </button>
+        <button type="button" class="round-btn" [attr.aria-label]="c.next" (click)="shift(1)">
+          <svg appIcon="arrow-right"></svg>
+        </button>
+      </div>
+    </div>
+    <p class="zone">{{ zoneNote() }}</p>
+
+    @if (failed()) {
+      <p class="state">{{ c.error }}</p>
+    } @else {
+      @if (daily().length) {
+        <section class="strip" aria-labelledby="daily-title">
+          <h3 class="strip__title" id="daily-title">{{ c.daily }}</h3>
+          <ul class="strip__list">
+            @for (item of daily(); track item.id) {
+              <li>
+                <button type="button" class="pill-event" [attr.data-accent]="accent(item)" (click)="open(item, $event)">
+                  <span class="pill-event__time">{{ clock(item.start) }}</span>
+                  {{ name(item) }}
+                  <span class="pill-event__utc">UTC {{ clock(item.start, 'UTC') }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (empty()) {
+        <p class="state state--inline">{{ c.empty }}</p>
+      }
+
+      <!-- tablets and larger: month grid -->
+      <div class="month" [class.is-loading]="!loaded()" [attr.aria-busy]="!loaded()">
+        <div class="month__head" aria-hidden="true">
+          @for (name of weekdays(); track $index) {
+            <span>{{ name }}</span>
+          }
+        </div>
+        @for (week of weeks(); track week.days[0]) {
+          <div class="week" role="group" [attr.aria-label]="weekLabel(week)" [style.grid-template-rows]="rows(week)">
+            @for (key of week.days; track key; let col = $index) {
+              <div
+                class="day"
+                [class.is-out]="!isIn(key)"
+                [class.is-today]="key === today()"
+                [style.grid-column]="col + 1"
+                aria-hidden="true"
+              >
+                <span class="day__num">{{ dayNumber(key) }}</span>
+              </div>
+            }
+            @for (bar of week.bars; track bar.item.id + bar.item.start) {
+              <button
+                type="button"
+                class="bar"
+                [class.is-cont]="!bar.starts"
+                [class.is-more]="!bar.ends"
+                [attr.data-accent]="accent(bar.item)"
+                [style.grid-column]="bar.from + 1 + ' / ' + (bar.to + 2)"
+                [style.grid-row]="bar.lane + 2"
+                (click)="open(bar.item, $event)"
+              >
+                @if (running(bar.item)) {
+                  <span class="bar__live" aria-hidden="true"></span>
+                }
+                @if (bar.starts) {
+                  <span class="bar__time" aria-hidden="true">{{ clock(bar.item.start) }}</span>
+                }
+                <span class="bar__name">{{ name(bar.item) }}</span>
+                <span class="sr-only">, {{ spoken(bar.item) }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- phones: the same month as a list -->
+      <div class="agenda" [attr.aria-busy]="!loaded()">
+        @if (!loaded()) {
+          <div class="agenda__loading" aria-hidden="true">
+            @for (i of [1, 2, 3]; track i) {
+              <span class="skeleton"></span>
+            }
+          </div>
+        } @else {
+          @for (day of agenda(); track day.key) {
+            <section class="agenda__day" [class.is-today]="day.key === today()">
+              <h3 class="agenda__date">
+                @if (relative(day.key); as rel) {
+                  <span class="agenda__rel">{{ rel }}</span>
+                }
+                {{ longDay(day.key) }}
+              </h3>
+              <ul class="agenda__list">
+                @for (item of day.items; track item.id + item.start) {
+                  <li>
+                    <button type="button" class="row" [attr.data-accent]="accent(item)" (click)="open(item, $event)">
+                      <span class="row__time">
+                        {{ clock(item.start) }}
+                        <small>UTC {{ clock(item.start, 'UTC') }}</small>
+                      </span>
+                      <span class="row__body">
+                        <strong>{{ name(item) }}</strong>
+                        <small>{{ details(item, day.key) }}</small>
+                        @if (running(item)) {
+                          <span class="tag tag--live">{{ c.running }}</span>
+                        }
+                      </span>
+                      <svg class="row__arrow" appIcon="chevron-right"></svg>
+                    </button>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        }
+      </div>
+
+      @if (waiting().length) {
+        <section class="strip strip--irregular" aria-labelledby="irregular-title">
+          <h3 class="strip__title" id="irregular-title">{{ c.irregular }}</h3>
+          <p class="strip__text">{{ c.irregularText }}</p>
+          <ul class="strip__list">
+            @for (item of waiting(); track item.id) {
+              <li>
+                <button type="button" class="pill-event" [attr.data-accent]="accent(item)" (click)="open(item, $event)">
+                  {{ name(item) }}
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  } @else {
+    <!-- prerendered page and the first moment in the browser: today is not known yet -->
+    <div class="placeholder" aria-hidden="true">
+      <span class="skeleton skeleton--bar"></span>
+      <span class="skeleton skeleton--grid"></span>
+    </div>
+  }
+</div>
+
+@if (selected(); as item) {
+  <app-event-dialog [item]="item" [now]="now()!" [remind]="remind()" (closed)="close()" (changed)="changed($event)" />
+}

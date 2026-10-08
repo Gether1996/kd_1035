@@ -1,5 +1,7 @@
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { cs } from './cs';
-import { parseUrl } from './i18n';
+import { I18n, parseUrl } from './i18n';
 import { sk } from './sk';
 
 describe('parseUrl', () => {
@@ -19,6 +21,20 @@ describe('parseUrl', () => {
     expect(parseUrl('/czech')).toEqual({ lang: 'sk', page: 'home', rest: '/czech' });
     expect(parseUrl('/ucet?login=error')).toEqual({ lang: 'sk', page: 'account', rest: '/ucet' });
     expect(parseUrl('/cz/ucet')).toEqual({ lang: 'cs', page: 'account', rest: '/ucet' });
+    expect(parseUrl('/kalendar')).toEqual({ lang: 'sk', page: 'calendar', rest: '/kalendar' });
+    expect(parseUrl('/cz/kalendar/?event=4')).toEqual({ lang: 'cs', page: 'calendar', rest: '/kalendar' });
+    expect(parseUrl('/kalendar/2026')).toEqual({ lang: 'sk', page: 'home', rest: '/kalendar/2026' });
+  });
+});
+
+describe('I18n.path', () => {
+  it('builds the address of a fixed page in either language', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const i18n = TestBed.inject(I18n);
+    expect(i18n.path('calendar')).toBe('/kalendar');
+    expect(i18n.path('calendar', 'cs')).toBe('/cz/kalendar');
+    expect(i18n.path('home', 'cs')).toBe('/cz');
+    expect(i18n.path('home')).toBe('/');
   });
 });
 

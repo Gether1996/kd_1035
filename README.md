@@ -164,12 +164,16 @@ Po úprave `.env`: `docker compose up -d` (backend aj worker načítajú nové h
 
 **Admin (iba superuser):**
 
-- **Eventy kráľovstva** → event → **Časy pre hráčov**: minúty pred začiatkom oddelené čiarkou, napr. `10, 60, 1440` (1440 = 1 deň), najviac 6. Hráč si môže zadať aj vlastný čas (max. 5 pripomienok na event, najviac 7 dní vopred).
+- **Eventy kráľovstva** → event → **Časy pre hráčov**: minúty pred začiatkom oddelené čiarkou, napr. `10, 60, 1440` (1440 = 1 deň), najviac 6. Hráč si môže zadať aj vlastný čas v dňoch, hodinách a minútach (napr. 1 deň 6 h; max. 5 pripomienok na event, najviac 7 dní vopred).
 - Hráči vidia iba eventy, ktoré sú **aktívne** a majú **zobraziť na webe**, a len ak majú ďalší termín.
 - **Hráči → Pripomienky hráčov**: kto si čo zapol (len na čítanie).
 - Worker pripomienku pošle v správnu minútu; ak nebežal viac ako 10 minút, zmeškanú už nepošle. Chyby doručenia sú v logu: `docker compose logs worker`.
 
 Kanálové pripomienky cez webhook (vyššie) fungujú ďalej nezávisle od týchto osobných.
+
+## Kalendár eventov (/kalendar)
+
+Záložka **Kalendár** v hornej lište ukazuje mesiac s eventmi – časy v pásme návštevníka aj v UTC. Zobrazí sa každý event, ktorý je v admine **aktívny** a má **zobraziť na webe**; nepravidelné bez termínu sú v bloku „Ďalší termín oznámime“. Klik na event otvorí detail s návodom a prihlásený hráč si tam rovno zapne pripomienky (rovnako ako v Môj účet). Nič ďalšie sa nenastavuje – stačí mať eventy v admine (napr. zapnúť koncepty zo šablóny).
 
 ## Testy
 

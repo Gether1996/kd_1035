@@ -1,0 +1,473 @@
+:host {
+  display: block;
+}
+
+.content {
+  --bar-h: 1.625rem;
+  padding-bottom: clamp(80px, 12vw, 140px);
+}
+
+// accent of an event (by its id), the same in the grid, the agenda and the lists
+[data-accent='gold'] {
+  --accent: var(--gold-400);
+  --tint: color-mix(in srgb, var(--gold-400) 11%, var(--bg-raised));
+  --tint-hover: color-mix(in srgb, var(--gold-400) 20%, var(--bg-raised));
+  --ink: var(--gold-100);
+}
+
+[data-accent='red'] {
+  --accent: var(--red-300);
+  --tint: color-mix(in srgb, var(--red-500) 24%, var(--bg-raised));
+  --tint-hover: color-mix(in srgb, var(--red-500) 38%, var(--bg-raised));
+  --ink: var(--text);
+}
+
+[data-accent='navy'] {
+  --accent: var(--text-dim);
+  --tint: color-mix(in srgb, var(--text-dim) 15%, var(--bg-raised));
+  --tint-hover: color-mix(in srgb, var(--text-dim) 26%, var(--bg-raised));
+  --ink: var(--text);
+}
+
+// ---------------------------------------------------------------- toolbar: month · today · previous / next
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.toolbar__title {
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.toolbar__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.round-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--gold-400) 6%, transparent);
+  color: var(--gold-100);
+  cursor: pointer;
+  transition:
+    border-color 0.25s,
+    background-color 0.25s;
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    border-color: var(--gold-400);
+    background-color: color-mix(in srgb, var(--gold-400) 14%, transparent);
+  }
+
+  &:focus-visible {
+    border-radius: 50%;
+  }
+}
+
+.zone {
+  margin-top: 10px;
+  font-size: 0.9375rem;
+  color: var(--text-mute);
+}
+
+.state {
+  margin-top: 20px;
+  padding: 40px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.state--inline {
+  padding: 18px 20px;
+}
+
+// ---------------------------------------------------------------- "Každý deň" and irregular events
+
+.strip {
+  margin-top: 20px;
+  padding: 16px clamp(16px, 3vw, 22px) 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.strip--irregular {
+  margin-top: 28px;
+}
+
+.strip__title {
+  font: 600 0.8125rem/1.2 var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.strip__text {
+  margin-top: 4px;
+  font-size: 0.9375rem;
+  color: var(--text-mute);
+}
+
+.strip__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pill-event {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-height: 44px;
+  padding: 10px 14px 10px 12px;
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background-color: var(--tint);
+  color: var(--ink);
+  font: 600 0.9375rem/1.3 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--tint-hover);
+  }
+}
+
+.pill-event__time {
+  font-variant-numeric: tabular-nums;
+}
+
+.pill-event__utc {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+}
+
+// ---------------------------------------------------------------- month grid (≥ 768 px)
+
+// opaque, so the night landscape behind the page never runs through the bars
+.month {
+  display: none;
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg), var(--bg);
+}
+
+.month__head {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line);
+
+  span {
+    padding: 12px 10px;
+    font: 600 0.75rem/1 var(--font-body);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+}
+
+// a week: the day cells fill every row behind, the bars lie in lanes over them (rows from rows())
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 4px;
+  min-height: 7.5rem;
+  padding-bottom: 6px;
+
+  & + & {
+    border-top: 1px solid var(--line);
+  }
+}
+
+.day {
+  grid-row: 1 / -1;
+  margin-bottom: -6px; // down to the week's bottom line
+  padding: 6px 8px;
+
+  & + .day {
+    border-left: 1px solid var(--line);
+  }
+
+  &.is-out {
+    background: color-mix(in srgb, var(--bg) 45%, transparent);
+  }
+
+  &.is-today {
+    background: color-mix(in srgb, var(--gold-400) 7%, transparent);
+  }
+}
+
+.day__num {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+
+  .is-out & {
+    color: var(--text-mute);
+  }
+
+  .is-today & {
+    background: var(--gold-gradient);
+    color: var(--bg);
+  }
+}
+
+// an event in the grid; a multi-day one spans its days, and joins the next / previous week with flat ends
+.bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  height: var(--bar-h);
+  margin: 0 5px;
+  padding: 0 8px 0 6px;
+  overflow: hidden;
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background-color: var(--tint);
+  color: var(--ink);
+  font: 600 0.8125rem/1 var(--font-body);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--tint-hover);
+  }
+
+  &:focus-visible {
+    z-index: 2;
+    outline-offset: 2px;
+  }
+
+  &.is-cont {
+    margin-left: 0;
+    padding-left: 9px;
+    border-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  &.is-more {
+    margin-right: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.bar__time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.bar__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// running now
+.bar__live {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red-300);
+}
+
+// loading another month: a calm pulse in the days instead of bars
+.month.is-loading .day:not(.is-out)::after {
+  content: '';
+  display: block;
+  height: var(--bar-h);
+  margin-top: 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  animation: pulse 1.2s ease-in-out infinite alternate;
+}
+
+// ---------------------------------------------------------------- agenda (phones)
+
+.agenda {
+  display: grid;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.agenda__date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 10px;
+  font: 600 0.8125rem/1.3 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.agenda__rel {
+  color: var(--gold-300);
+}
+
+.agenda__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 12px 14px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.25s;
+
+  &:hover {
+    border-color: var(--line-strong);
+    border-left-color: var(--accent);
+  }
+}
+
+.row__time {
+  display: grid;
+  gap: 4px;
+  align-self: start;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--text-mute);
+  }
+}
+
+.row__body {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  min-width: 0;
+
+  strong {
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--text-dim);
+  }
+}
+
+.tag--live {
+  height: 22px;
+  margin-top: 2px;
+  border-color: color-mix(in srgb, var(--red-300) 60%, transparent);
+  background: color-mix(in srgb, var(--red-500) 18%, transparent);
+  color: var(--red-300);
+}
+
+.row__arrow {
+  color: var(--text-mute);
+}
+
+// ---------------------------------------------------------------- loading
+
+.placeholder,
+.agenda__loading {
+  display: grid;
+  gap: 12px;
+}
+
+.skeleton {
+  display: block;
+  height: 76px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  animation: pulse 1.2s ease-in-out infinite alternate;
+}
+
+.skeleton--bar {
+  width: min(360px, 100%);
+  height: 44px;
+}
+
+.skeleton--grid {
+  height: clamp(420px, 52vw, 720px);
+  border-radius: var(--radius);
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.45;
+  }
+}
+
+@media (min-width: 768px) {
+  .month {
+    display: block;
+  }
+
+  .agenda {
+    display: none;
+  }
+}

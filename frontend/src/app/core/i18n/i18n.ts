@@ -7,7 +7,7 @@ import { cs } from './cs';
 import { sk } from './sk';
 
 export type Lang = 'sk' | 'cs';
-export type Page = 'home' | 'about' | 'terms' | 'privacy' | 'account' | 'guides' | 'guide';
+export type Page = 'home' | 'about' | 'calendar' | 'terms' | 'privacy' | 'account' | 'guides' | 'guide';
 export type GuideCategory = 'commanderi' | 'vybava' | 'eventy';
 
 export const GUIDE_CATEGORIES: GuideCategory[] = ['commanderi', 'vybava', 'eventy'];
@@ -17,7 +17,16 @@ const LOCALES: Record<Lang, string> = { sk: 'sk-SK', cs: 'cs-CZ' };
 /** Slovak lives at the root, Czech under /cz – each language has its own indexable URLs, same slugs. */
 const PREFIX: Record<Lang, string> = { sk: '', cs: '/cz' };
 const STORAGE_KEY = 'kd1035.lang';
-const FIXED_PATHS = { home: '', about: '/o-nas', terms: '/podmienky', privacy: '/ochrana-udajov', account: '/ucet' };
+/** Pages with one fixed address (without the language prefix) – parseUrl() and path() both read it. */
+const FIXED_PATHS = {
+  home: '',
+  about: '/o-nas',
+  calendar: '/kalendar',
+  terms: '/podmienky',
+  privacy: '/ochrana-udajov',
+  account: '/ucet',
+} satisfies Partial<Record<Page, string>>;
+type FixedPage = keyof typeof FIXED_PATHS;
 
 export interface ParsedUrl {
   lang: Lang;
@@ -30,20 +39,9 @@ export function parseUrl(url: string): ParsedUrl {
   const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
   const lang: Lang = path === '/cz' || path.startsWith('/cz/') ? 'cs' : 'sk';
   const rest = path.slice(PREFIX[lang].length);
+  const fixed = (Object.keys(FIXED_PATHS) as FixedPage[]).find((page) => FIXED_PATHS[page] === rest);
   const page: Page =
-    rest === '/o-nas'
-      ? 'about'
-      : rest === '/podmienky'
-        ? 'terms'
-        : rest === '/ochrana-udajov'
-          ? 'privacy'
-          : rest === '/ucet'
-            ? 'account'
-            : /^\/navody\/[^/]+$/.test(rest)
-              ? 'guides'
-              : /^\/navody\/[^/]+\/[^/]+$/.test(rest)
-                ? 'guide'
-                : 'home';
+    fixed ?? (/^\/navody\/[^/]+$/.test(rest) ? 'guides' : /^\/navody\/[^/]+\/[^/]+$/.test(rest) ? 'guide' : 'home');
   return { lang, page, rest };
 }
 
@@ -75,7 +73,7 @@ export class I18n {
   }
 
   /** URL of a fixed page in `lang` (current language by default). */
-  path(page: keyof typeof FIXED_PATHS, lang: Lang = this.lang()): string {
+  path(page: FixedPage, lang: Lang = this.lang()): string {
     return PREFIX[lang] + FIXED_PATHS[page] || '/';
   }
 
