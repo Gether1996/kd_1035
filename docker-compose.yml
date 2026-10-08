@@ -4,9 +4,17 @@
 # NEVER run `docker compose down -v` – that deletes the volumes (the database!).
 name: kd1035
 
+# Every container keeps at most 3 × 10 MB of logs, older lines are overwritten (the privacy page says so).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   backend:
     build: ./backend
+    logging: *logging
     env_file: .env
     volumes:
       - db_data:/app/data
@@ -16,6 +24,7 @@ services:
   # Discord notifications + database backup every BACKUP_INTERVAL_DAYS into ${BACKUP_PATH}
   worker:
     build: ./backend
+    logging: *logging
     env_file: .env
     environment:
       BACKUP_DIR: /backups
@@ -32,6 +41,7 @@ services:
 
   web:
     build: ./frontend
+    logging: *logging
     environment:
       SITE_URL: ${SITE_URL:-}
     ports:

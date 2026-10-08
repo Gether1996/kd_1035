@@ -3,9 +3,17 @@
 #   frontend → http://localhost:4200   admin → http://localhost:8000/admin/
 name: kd1035-dev
 
+# same log limits as production: at most 3 × 10 MB per container
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   backend:
     build: ./backend
+    logging: *logging
     env_file: .env
     environment:
       DJANGO_DEBUG: "1"
@@ -19,6 +27,7 @@ services:
 
   worker:
     build: ./backend
+    logging: *logging
     env_file: .env
     environment:
       DJANGO_DEBUG: "1"
@@ -35,6 +44,7 @@ services:
 
   frontend:
     image: node:24-alpine
+    logging: *logging
     working_dir: /app
     environment:
       API_TARGET: http://backend:8000
