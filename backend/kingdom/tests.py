@@ -34,7 +34,7 @@ class ApiTests(TestCase):
         data = self.client.get('/api/alliances/').json()
         self.assertEqual([a['tag'] for a in data], ['CS35'])  # seeded by migration
         self.assertEqual(set(data[0]), {'id', 'tag', 'name', 'officers'})
-        self.assertEqual([o['name'] for o in data[0]['officers']], ['Methiu von CzF', 'Gether'])
+        self.assertEqual([o['name'] for o in data[0]['officers']], ['Methiu von CzF', 'Gether', 'Hefarion'])
 
     def test_links_hide_inactive(self):
         # both links are seeded by migration

@@ -10,8 +10,11 @@ def seed(apps, schema_editor):
     if created:
         Officer.objects.create(alliance=alliance, order=0, name='Methiu von CzF', title_sk='Vodca', title_cs='Vůdce')
         Officer.objects.create(
-            alliance=alliance, order=1, name='Gether', title_sk='Kancelár', title_cs='Kancléř',
+            alliance=alliance, order=1, name='Gether', title_sk='R4', title_cs='R4',
             discord_id='245662824171438090', discord_username='gether_',
+        )
+        Officer.objects.create(
+            alliance=alliance, order=2, name='Hefarion', title_sk='R4', title_cs='R4', discord_id='787663147811995680'
         )
     SocialLink.objects.get_or_create(
         platform='facebook', defaults={'url': 'https://www.facebook.com/groups/550189483954751'}
