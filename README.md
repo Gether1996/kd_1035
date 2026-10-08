@@ -32,7 +32,7 @@ Obsah meň vždy len na jednom PC naraz a pred prácou daj `git pull`. Binárnu 
 ## Nasadenie na server
 
 1. `git clone https://github.com/Gether1996/kd_1035.git && cd kd_1035`
-2. Vytvor `.env` podľa [.env.example](.env.example) (`DJANGO_DEBUG=0`, vlastný `DJANGO_SECRET_KEY`, doména v `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` a `SITE_URL`).
+2. Vytvor `.env` podľa [.env.example](.env.example) (`DJANGO_DEBUG=0`, vlastný `DJANGO_SECRET_KEY`, doména v `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` a `SITE_URL`; `DJANGO_NUM_PROXIES=2`, ak je pred webom HTTPS proxy, inak `1`).
 3. `docker compose up -d --build`
 4. Web beží na porte `WEB_PORT` (predvolene 8080). HTTPS rieši reverse proxy pred ním (napr. Caddy, Nginx Proxy Manager, Traefik).
 
@@ -56,7 +56,7 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
 
 - Databáza (`db_data`) a nahrané súbory (`uploads`) sú v Docker volumes. Prežijú rebuild aj `docker compose down`.
 - **Nikdy nespúšťaj `docker compose down -v`.** Zmaže volumes aj s databázou.
-- Kontajner `worker` robí každých `BACKUP_INTERVAL_DAYS` (7) dní zálohu do `BACKUP_PATH` (`./backups`) a nechá posledných `BACKUP_KEEP` (8).
+- Kontajner `worker` robí každých `BACKUP_INTERVAL_DAYS` (7) dní zálohu do `BACKUP_PATH` (`./backups`) a nechá posledných `BACKUP_KEEP` (8). Raz denne zmaže expirované prihlásenia (session).
 
 ```bash
 # záloha hneď
