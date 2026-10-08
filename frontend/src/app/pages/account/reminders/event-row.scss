@@ -1,29 +1,37 @@
 :host {
   display: block;
-  padding: 18px clamp(16px, 4vw, 22px);
+  padding: 14px clamp(14px, 4vw, 20px);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: var(--card-bg);
   transition: border-color 0.3s;
 }
 
-// reminders switched on (ReminderPicker)
-:host:has(.is-on) {
+// reminders switched on, or the times are open
+:host(.is-on),
+:host(.is-open) {
   border-color: var(--line-strong);
+}
+
+.event__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
 }
 
 // the heading comes first for screen readers, the repeat label is shown above it
 .event__info {
   display: flex;
   flex-direction: column;
-  flex: 1 1 200px;
+  flex: 1 1 220px;
   min-width: 0;
 }
 
 .event__repeat {
   order: -1;
-  margin-bottom: 6px;
-  font: 600 0.75rem/1.2 var(--font-body);
+  margin-bottom: 4px;
+  font: 600 0.6875rem/1.2 var(--font-body);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold-400);
@@ -31,7 +39,7 @@
 
 .event__name {
   overflow-wrap: anywhere;
-  font-size: 1.1875rem;
+  font-size: 1.0625rem;
   line-height: 1.25;
 }
 
@@ -40,8 +48,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 2px 0;
-  margin-top: 6px;
-  font-size: 0.9375rem;
+  margin-top: 4px;
+  font-size: 0.875rem;
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 
@@ -54,5 +62,94 @@
     content: '·';
     margin: 0 0.5em;
     color: var(--text-mute);
+  }
+}
+
+.event__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+
+  .pill-btn {
+    min-height: 40px;
+    padding: 0 14px;
+  }
+}
+
+.event__stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-dim);
+  font: 600 0.75rem/1 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    color: var(--red-500);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+// the chosen times while the row is closed
+.event__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 4px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--gold-400) 8%, transparent);
+    color: var(--gold-100);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+}
+
+.event__error {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: var(--red-500);
+}
+
+.event__times {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .event__times {
+    animation: open 0.25s var(--ease-out);
+  }
+
+  @keyframes open {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
   }
 }

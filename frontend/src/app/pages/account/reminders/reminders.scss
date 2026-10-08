@@ -123,10 +123,130 @@
 
 .events {
   display: grid;
-  gap: 12px;
-  margin: 20px 0 0;
+  gap: 8px;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
+}
+
+// "Moje pripomienky" and "Všetky eventy"
+.group {
+  margin-top: 32px;
+}
+
+.group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.group__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+}
+
+.group__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--gold-300);
+  font: 600 0.8125rem/1 var(--font-body);
+}
+
+.group__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold-300);
+  font-size: 0.9375rem;
+  font-weight: 500;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--gold-100);
+  }
+}
+
+.group__empty {
+  margin-top: 12px;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  text-align: center;
+}
+
+// search + Všetky / Pravidelné / Nepravidelné
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.tools__search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.segmented {
+  display: inline-flex;
+  flex: 0 1 auto;
+  padding: 4px;
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  background: var(--field-bg);
+
+  button {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--text-dim);
+    font: 600 0.8125rem/1 var(--font-body);
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &[aria-pressed='true'] {
+      background: color-mix(in srgb, var(--gold-400) 16%, transparent);
+      color: var(--gold-100);
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .segmented {
+    flex: 1 1 100%;
+
+    button {
+      flex: 1;
+      padding: 0 8px;
+    }
+  }
+}
+
+.more {
+  display: flex;
+  margin: 14px auto 0;
 }
 
 .state {

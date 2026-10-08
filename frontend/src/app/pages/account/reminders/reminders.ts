@@ -8,22 +8,33 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { I18n } from '../../../core/i18n/i18n';
-import { RemindersApi } from '../../../core/reminders-api';
+import { ReminderEvent, RemindersApi } from '../../../core/reminders-api';
 import { Icon } from '../../../shared/icon';
 import { EventRow } from './event-row';
 import { WebPush } from './web-push';
 
 /** This browser: checking / no Push API / blocked by the player / off / on */
 type PushState = 'checking' | 'unsupported' | 'denied' | 'off' | 'on';
+type Filter = 'all' | 'regular' | 'irregular';
+
+/** events shown in "Všetky eventy" before "Zobraziť ďalšie" */
+const PAGE = 8;
+
+/** lower case without diacritics: "Pěchota" and "pechota" find the same event */
+export function plain(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
 
 /**
  * "Pripomienky eventov" on /ucet (signed-in players only, so it only ever renders in the browser): where the
- * reminders go (Discord DM, notifications in this browser) and which events to be reminded of.
+ * reminders go (Discord DM, notifications in this browser), an overview of the events the player is reminded of and
+ * all events – compact rows with search and a filter, so a long list stays easy to use.
  */
 @Component({
   selector: 'app-reminders',
-  imports: [EventRow, Icon],
+  imports: [EventRow, Icon, RouterLink],
   templateUrl: './reminders.html',
   styleUrl: './reminders.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,7 +42,7 @@ type PushState = 'checking' | 'unsupported' | 'denied' | 'off' | 'on';
 export class Reminders {
   private readonly api = inject(RemindersApi);
   private readonly webPush = inject(WebPush);
-  private readonly i18n = inject(I18n);
+  protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().reminders);
 
   protected readonly data = this.api.settings();
@@ -42,6 +53,33 @@ export class Reminders {
   protected readonly pushBusy = signal(false);
   protected readonly pushFailed = signal(false);
   protected readonly discordState = signal<'saved' | 'failed' | null>(null);
+  /** the player's times per event, kept current from the rows (one change shows in both lists) */
+  private readonly chosen = linkedSignal(
+    () => new Map((this.settings()?.events ?? []).map((event) => [event.id, event.offsets])),
+  );
+  protected readonly events = computed<ReminderEvent[]>(() =>
+    (this.settings()?.events ?? []).map((event) => ({ ...event, offsets: this.chosen().get(event.id) ?? null })),
+  );
+  /** "Moje pripomienky": the events the player is reminded of */
+  protected readonly mine = computed(() => this.events().filter((event) => event.offsets?.length));
+  protected readonly query = signal('');
+  protected readonly filter = signal<Filter>('all');
+  protected readonly filters: Filter[] = ['all', 'regular', 'irregular'];
+  protected readonly matching = computed(() => {
+    const query = plain(this.query());
+    const filter = this.filter();
+    return this.events().filter(
+      (event) =>
+        (filter === 'all' || (filter === 'irregular') === event.irregular) &&
+        (!query || plain(`${event.name_sk} ${event.name_cs}`).includes(query)),
+    );
+  });
+  /** a new search or filter starts at the first page again */
+  protected readonly limit = linkedSignal({ source: () => [this.query(), this.filter()], computation: () => PAGE });
+  protected readonly shown = computed(() => this.matching().slice(0, this.limit()));
+  /** the one open row: 'mine-7' or 'all-7' */
+  protected readonly open = signal<string | null>(null);
+
   /** language the messages are written in – follows the site's language */
   private readonly savedLang = linkedSignal(() => this.settings()?.lang ?? null);
 
@@ -79,6 +117,18 @@ export class Reminders {
       const key = this.settings()?.push_key;
       if (key !== undefined) untracked(() => void this.checkPush(key));
     });
+  }
+
+  protected toggle(key: string): void {
+    this.open.update((open) => (open === key ? null : key));
+  }
+
+  protected changed(id: number, offsets: number[] | null): void {
+    this.chosen.update((chosen) => new Map(chosen).set(id, offsets));
+  }
+
+  protected more(): void {
+    this.limit.update((limit) => limit + PAGE);
   }
 
   protected async setDiscord(on: boolean): Promise<void> {

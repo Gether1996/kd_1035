@@ -1,7 +1,7 @@
 @let r = t();
 @let id = event().id;
 
-<app-reminder-picker [event]="event()" [describedBy]="'event-' + id">
+<div class="event__row">
   <div class="event__info">
     <h3 class="event__name" [id]="'event-' + id">{{ name() }}</h3>
     @if (event().next_start) {
@@ -14,4 +14,47 @@
     }
     <p class="event__repeat">{{ repeat() }}</p>
   </div>
-</app-reminder-picker>
+
+  <div class="event__actions">
+    @if (on()) {
+      <button
+        type="button"
+        class="event__stop"
+        [disabled]="stopping()"
+        [attr.aria-label]="r.stop + ': ' + name()"
+        (click)="stop()"
+      >
+        <svg appIcon="x"></svg><span>{{ r.stop }}</span>
+      </button>
+    }
+    <button
+      type="button"
+      class="pill-btn"
+      [attr.aria-expanded]="open()"
+      [attr.aria-controls]="'times-' + id"
+      [attr.aria-describedby]="'event-' + id"
+      (click)="toggled.emit()"
+    >
+      <svg [appIcon]="open() ? 'chevron-down' : on() ? 'bell' : 'plus'"></svg>
+      {{ open() ? r.close : on() ? r.edit : r.set }}
+    </button>
+  </div>
+</div>
+
+@if (on() && !open()) {
+  <ul class="event__summary" [attr.aria-label]="r.times + ' – ' + name()">
+    @for (label of summary(); track label) {
+      <li>{{ label }}</li>
+    }
+  </ul>
+}
+
+@if (stopFailed()) {
+  <p class="event__error" role="alert">{{ r.failed }}</p>
+}
+
+@if (open()) {
+  <div class="event__times" [id]="'times-' + id">
+    <app-reminder-picker [event]="current()" [describedBy]="'event-' + id" (changed)="picked($event)" />
+  </div>
+}

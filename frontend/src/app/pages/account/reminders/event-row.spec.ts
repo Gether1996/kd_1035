@@ -8,6 +8,7 @@ import { cs } from '../../../core/i18n/cs';
 import { sk } from '../../../core/i18n/sk';
 import { EventRow } from './event-row';
 import { reminderLabel, repeatLabel } from './format';
+import { plain } from './reminders';
 import { ownMinutes } from './reminder-picker';
 
 const EVENT: ReminderEvent = {
@@ -24,11 +25,20 @@ const EVENT: ReminderEvent = {
 @Component({
   imports: [EventRow],
   template: `<ul>
-    <li appEventRow [event]="event()"></li>
+    <li
+      appEventRow
+      [event]="event()"
+      [open]="open()"
+      (toggled)="open.set(!open())"
+      (changed)="changes.push($event)"
+    ></li>
   </ul>`,
 })
 class Host {
   readonly event = signal(EVENT);
+  /** most tests work with the times – the row starts open */
+  readonly open = signal(true);
+  readonly changes: (number[] | null)[] = [];
 }
 
 describe('reminder labels', () => {
@@ -86,13 +96,14 @@ describe('reminder labels', () => {
 describe('EventRow', () => {
   let http: HttpTestingController;
 
-  async function render(event: Partial<ReminderEvent> = {}) {
+  async function render(event: Partial<ReminderEvent> = {}, open = true) {
     TestBed.configureTestingModule({
       providers: [provideRouter([{ path: '**', children: [] }]), provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.event.set({ ...EVENT, ...event });
+    fixture.componentInstance.open.set(open);
     await fixture.whenStable();
     return { fixture, el: fixture.nativeElement as HTMLElement };
   }
@@ -199,6 +210,40 @@ describe('EventRow', () => {
     await fixture.whenStable();
     expect(el.querySelector('.picker__state')?.textContent).toContain('Nepodařilo se uložit');
     expect([...el.querySelectorAll('.unit__name')].map((u) => u.textContent)).toEqual(['dny', 'h', 'min']);
+  });
+
+  it('a closed row is compact: the times as a summary and a button to open them', async () => {
+    const { fixture, el } = await render({ offsets: [1800, 60] }, false);
+    expect(el.querySelector('.chips')).toBeNull();
+    expect([...el.querySelectorAll('.event__summary li')].map((li) => li.textContent)).toEqual([
+      '1 deň 6 h vopred',
+      '1 h vopred',
+    ]);
+    const open = el.querySelector<HTMLButtonElement>('.pill-btn')!;
+    expect(open.textContent).toContain('Upraviť');
+    expect(open.getAttribute('aria-expanded')).toBe('false');
+    open.click();
+    await fixture.whenStable();
+    expect(el.querySelector('.chips')).not.toBeNull();
+    expect(el.querySelector('.event__summary')).toBeNull();
+    expect(open.getAttribute('aria-expanded')).toBe('true');
+    expect(open.textContent).toContain('Zavrieť');
+  });
+
+  it('Zrušiť stops the reminders of the event', async () => {
+    const { fixture, el } = await render({ offsets: [60] }, false);
+    el.querySelector<HTMLButtonElement>('.event__stop')!.click();
+    expect(flush(null).method).toBe('DELETE');
+    await fixture.whenStable();
+    expect(el.querySelector('.event__summary')).toBeNull();
+    expect(el.querySelector('.event__stop')).toBeNull();
+    expect(el.querySelector('.pill-btn')?.textContent).toContain('Nastaviť');
+    expect(fixture.componentInstance.changes).toEqual([null]);
+  });
+
+  it('search ignores case and diacritics', () => {
+    expect(plain('  MGE – Pěchota ')).toBe('mge – pechota');
+    expect(plain('Lukostrelci')).toBe(plain('LUKOSTRELCI'));
   });
 
   it('an irregular event without a date says it will be announced', async () => {

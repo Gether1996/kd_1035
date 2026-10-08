@@ -63,14 +63,80 @@
       </p>
     </div>
 
-    @if (s.events.length) {
-      <ul class="events">
-        @for (event of s.events; track event.id) {
-          <li appEventRow [event]="event"></li>
-        }
-      </ul>
-    } @else {
+    @if (!s.events.length) {
       <p class="state">{{ r.empty }}</p>
+    } @else {
+      <section class="group" aria-labelledby="mine-title">
+        <div class="group__head">
+          <h3 class="group__title" id="mine-title">
+            {{ r.mine }} <span class="group__count">{{ mine().length }}</span>
+          </h3>
+          <a class="group__link" [routerLink]="i18n.path('calendar')">
+            <svg appIcon="calendar-days"></svg>{{ r.calendarLink }}
+          </a>
+        </div>
+        @if (mine().length) {
+          <ul class="events">
+            @for (event of mine(); track event.id) {
+              <li
+                appEventRow
+                [event]="event"
+                [open]="open() === 'mine-' + event.id"
+                (toggled)="toggle('mine-' + event.id)"
+                (changed)="changed(event.id, $event)"
+              ></li>
+            }
+          </ul>
+        } @else {
+          <p class="group__empty">{{ r.mineEmpty }}</p>
+        }
+      </section>
+
+      <section class="group" aria-labelledby="all-title">
+        <div class="group__head">
+          <h3 class="group__title" id="all-title">
+            {{ r.all }} <span class="group__count">{{ s.events.length }}</span>
+          </h3>
+        </div>
+        <div class="tools">
+          <input
+            #search
+            type="search"
+            class="input tools__search"
+            [placeholder]="r.search"
+            [attr.aria-label]="r.search"
+            [value]="query()"
+            (input)="query.set(search.value)"
+          />
+          <div class="segmented" role="group" [attr.aria-label]="r.filter">
+            @for (f of filters; track f) {
+              <button type="button" [attr.aria-pressed]="filter() === f" (click)="filter.set(f)">
+                {{ r.filters[f] }}
+              </button>
+            }
+          </div>
+        </div>
+        @if (matching().length) {
+          <ul class="events">
+            @for (event of shown(); track event.id) {
+              <li
+                appEventRow
+                [event]="event"
+                [open]="open() === 'all-' + event.id"
+                (toggled)="toggle('all-' + event.id)"
+                (changed)="changed(event.id, $event)"
+              ></li>
+            }
+          </ul>
+          @if (matching().length > shown().length) {
+            <button type="button" class="pill-btn more" (click)="more()">
+              <svg appIcon="chevron-down"></svg>{{ r.more }} ({{ matching().length - shown().length }})
+            </button>
+          }
+        } @else {
+          <p class="group__empty">{{ r.noMatch }}</p>
+        }
+      </section>
     }
   } @else {
     <div class="skeleton-list" aria-hidden="true">
