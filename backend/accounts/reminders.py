@@ -164,14 +164,17 @@ def deliver(player: Player, event: KingdomEvent, start, offset: int, channel: st
             )
     except IntegrityError:
         return False
-    if channel == Channel.DISCORD:
-        try:
+    try:
+        if channel == Channel.DISCORD:
             discord_bot.send_dm(player.discord_id, discord_message(event, start, player.lang))
             row.ok = True
-        except discord_bot.BotError as exc:
-            row.error = str(exc)
-    else:
-        row.ok, row.error = send_push(devices, push_payload(event, start, offset, player.lang, now), start, now)
+        else:
+            row.ok, row.error = send_push(devices, push_payload(event, start, offset, player.lang, now), start, now)
+    except discord_bot.BotError as exc:
+        row.error = str(exc)
+    except Exception:  # one broken reminder must not stop the round for the other players
+        log.exception('Reminder %s/%s for player %s via %s failed', event.pk, offset, player.pk, channel)
+        row.error = 'Neočakávaná chyba, pozri log workera.'
     row.error = row.error[:300]
     if row.error:
         # player and event IDs only – no tokens, no endpoints
@@ -188,6 +191,8 @@ def send_push(devices: list, payload: dict, start, now) -> tuple[bool, str]:
     ttl = int(max(start - now, MIN_TTL).total_seconds())
     delivered, errors = False, []
     for subscription in list(devices):
+        # queryset updates: the player may have switched the browser off meanwhile (row already gone)
+        row = PushSubscription.objects.filter(pk=subscription.pk)
         try:
             push.send(subscription, payload, ttl)
         except push.PushError as exc:
@@ -195,13 +200,13 @@ def send_push(devices: list, payload: dict, start, now) -> tuple[bool, str]:
             subscription.failures += 1
             if exc.gone or subscription.failures >= push.MAX_FAILURES:
                 devices.remove(subscription)
-                subscription.delete()
+                row.delete()
             else:
-                subscription.save(update_fields=['failures'])
+                row.update(failures=subscription.failures)
         else:
             delivered = True
-            subscription.failures, subscription.last_used_at = 0, now
-            subscription.save(update_fields=['failures', 'last_used_at'])
+            subscription.failures = 0
+            row.update(failures=0, last_used_at=now)
     return delivered, '; '.join(errors)
 
 

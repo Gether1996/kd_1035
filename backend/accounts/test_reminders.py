@@ -464,6 +464,26 @@ class SendRemindersTests(TestCase):
             self.run_at(2026, 10, 10, 17, 50)
         self.assertFalse(PushSubscription.objects.exists())
 
+    def test_unexpected_error_does_not_stop_the_round(self):
+        other = make_player('90351110224678912')
+        EventReminder.objects.create(player=other, event=self.event, offsets=[60])
+        self.dm.side_effect = [RuntimeError('bug'), None]
+        PushSubscription.objects.all().delete()
+        with self.assertLogs('accounts.reminders', 'ERROR'):
+            self.assertEqual(self.run_at(2026, 10, 10, 17, 0), 2)
+        self.assertEqual(sorted(SentReminder.objects.values_list('ok', flat=True)), [False, True])
+
+    def test_browser_switched_off_meanwhile(self):
+        def switch_off(subscription, payload, ttl):
+            PushSubscription.objects.filter(pk=subscription.pk).delete()  # DELETE /api/me/push/ at the same moment
+            raise push.PushError('Push služba odpovedala 500')
+
+        self.push.side_effect = switch_off
+        with self.assertLogs('accounts.reminders', 'WARNING'):
+            self.run_at(2026, 10, 10, 17, 0)
+        self.assertFalse(PushSubscription.objects.exists())
+        self.assertEqual(SentReminder.objects.get(channel=Channel.PUSH).error, 'Push služba odpovedala 500')
+
     def test_one_working_device_is_enough(self):
         PushSubscription.objects.create(player=self.player, endpoint=ENDPOINT + '2', **KEYS)
         self.push.side_effect = [push.PushError('Push služba odpovedala 500'), None]
