@@ -27,6 +27,8 @@ TEMPLATES = [
     ('Esmeralda', 'Esmeralda', utc(2026, 10, 19), 14, 2, ''),
     ('Hunt for History (vajce)', 'Hunt for History (vejce)', utc(2026, 10, 16), 14, 2, ''),
     ('More Than Gems', 'More Than Gems', utc(2026, 10, 10), 28, 2, 'more-than-gems'),
+    # every second Friday 00:00 UTC for 48 h, confirmed by Gether (8. 10. 2026)
+    ('20 GH', '20 GH', utc(2026, 10, 16), 14, 2, ''),
     # no published date: placeholder start, Gether sets the real one
     ('Alliance Mobilization', 'Alliance Mobilization', utc(2026, 10, 12), 28, 7, 'alliance-mobilization'),
 ]
