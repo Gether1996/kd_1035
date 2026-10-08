@@ -328,6 +328,24 @@ PLAIN_STATIC = {
 }
 
 
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class AllianceAdminTests(TestCase):
+    """One main alliance, always (seeded by migration)."""
+
+    def setUp(self):
+        self.client.force_login(User.objects.create_superuser('boss', password='x'))
+        self.alliance = Alliance.objects.get()
+
+    def test_list_opens_the_alliance(self):
+        response = self.client.get('/admin/kingdom/alliance/')
+        self.assertRedirects(response, f'/admin/kingdom/alliance/{self.alliance.pk}/change/')
+
+    def test_cannot_add_another_or_delete_it(self):
+        self.assertEqual(self.client.get('/admin/kingdom/alliance/add/').status_code, 403)
+        self.assertEqual(self.client.get(f'/admin/kingdom/alliance/{self.alliance.pk}/delete/').status_code, 403)
+        self.assertNotContains(self.client.get(f'/admin/kingdom/alliance/{self.alliance.pk}/change/'), 'deletelink')
+
 @override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', STORAGES=PLAIN_STATIC)
 class KingdomEventAdminTests(TestCase):
     url = '/admin/kingdom/kingdomevent/'

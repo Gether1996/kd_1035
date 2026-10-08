@@ -3,6 +3,7 @@ from datetime import UTC, timedelta
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
+from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
@@ -52,9 +53,22 @@ class OfficerInline(admin.TabularInline):
 
 @admin.register(Alliance)
 class AllianceAdmin(admin.ModelAdmin):
-    list_display = ['__str__', 'order', 'is_active', 'updated_at']
-    list_editable = ['order', 'is_active']
+    """The kingdom has exactly one main alliance (Gether): it cannot be added twice or deleted, the list opens it."""
+
+    fields = ['tag', 'name', 'is_active']
     inlines = [OfficerInline]
+
+    def changelist_view(self, request, extra_context=None):
+        alliance = Alliance.objects.first()
+        if alliance and self.has_change_permission(request, alliance):
+            return redirect('admin:kingdom_alliance_change', alliance.pk)
+        return super().changelist_view(request, extra_context)
+
+    def has_add_permission(self, request):
+        return super().has_add_permission(request) and not Alliance.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(SocialLink)

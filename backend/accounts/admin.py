@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 from django.utils.html import format_html
 
 from kingdom.permissions import SuperuserOnlyAdmin
@@ -53,3 +55,19 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         for player in queryset.select_related('user'):
             player.user.delete()
 
+
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class PlayerUserAdmin(UserAdmin):
+    """Django's users with the in-game name the player typed on /ucet (Discord accounts are discord_<id>)."""
+
+    list_display = ['username', 'first_name', 'ingame_name', 'email', 'is_staff']
+    list_select_related = ['player']
+    search_fields = [*UserAdmin.search_fields, 'player__ingame_name']
+
+    @admin.display(description='meno v hre', ordering='player__ingame_name')
+    def ingame_name(self, obj):
+        player = getattr(obj, 'player', None)
+        return (player and player.ingame_name) or '—'

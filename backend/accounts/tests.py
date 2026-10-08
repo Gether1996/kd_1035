@@ -450,6 +450,13 @@ class PlayerAdminTests(TestCase):
         self.assertEqual(list(User.objects.values_list('username', flat=True)), ['boss'])
 
 
+    def test_users_list_shows_and_finds_the_in_game_name(self):
+        Player.objects.filter(pk=self.player.pk).update(ingame_name='GetheR')
+        self.client.force_login(self.admin)
+        response = self.client.get('/admin/auth/user/')
+        self.assertContains(response, 'GetheR')
+        self.assertContains(self.client.get('/admin/auth/user/', {'q': 'gether'}), 'discord_80351110224678912')
+
 class SnapshotPrivacyTests(TransactionTestCase):
     serialized_rollback = True  # starts with the content seeded by migrations, like a real database
 
