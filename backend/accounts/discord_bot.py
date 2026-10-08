@@ -17,7 +17,14 @@ CANNOT_MESSAGE_USER = 50007
 
 
 class BotError(Exception):
-    """Discord refused or did not answer. The message never contains the token."""
+    """Discord refused or did not answer. The message never contains the token.
+
+    temporary: rate limit, server error or no answer – worth trying again in a moment (the worker does, next tick).
+    """
+
+    def __init__(self, message: str, temporary: bool = False):
+        super().__init__(message)
+        self.temporary = temporary
 
 
 def enabled() -> bool:
@@ -41,7 +48,7 @@ def _post(path: str, payload: dict) -> dict:
     except urllib.error.HTTPError as exc:
         raise _error(exc) from exc
     except OSError as exc:  # URLError, timeout, connection reset
-        raise BotError(f'Discord je nedostupný: {exc}') from exc
+        raise BotError(f'Discord je nedostupný: {exc}', temporary=True) from exc
     except ValueError as exc:
         raise BotError('Discord vrátil neplatnú odpoveď') from exc
     if not isinstance(data, dict):
@@ -58,11 +65,11 @@ def _error(exc: urllib.error.HTTPError) -> BotError:
     if not isinstance(body, dict):
         body = {}
     if exc.code == 429:
-        # the worker never waits: this reminder is recorded as failed and the next one goes out normally
-        return BotError(f'Discord limit (429), skúsiť o {body.get("retry_after", "?")} s')
+        # the worker never waits here: it pauses Discord for the rest of the round and retries on the next tick
+        return BotError(f'Discord limit (429), skúsiť o {body.get("retry_after", "?")} s', temporary=True)
     if body.get('code') == CANNOT_MESSAGE_USER:
         return BotError('Hráč nemá povolené súkromné správy alebo nie je na Discord serveri s botom.')
-    return BotError(f'Discord odpovedal {exc.code}: {raw.decode(errors="replace")}')
+    return BotError(f'Discord odpovedal {exc.code}: {raw.decode(errors="replace")}', temporary=exc.code >= 500)
 
 
 def send_dm(discord_id: str, message: dict) -> None:

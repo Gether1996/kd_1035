@@ -17,6 +17,7 @@
       type="checkbox"
       role="switch"
       [checked]="on()"
+      [attr.aria-label]="r.remind + ': ' + name()"
       [attr.aria-describedby]="'event-' + id"
       (change)="toggle()"
     />

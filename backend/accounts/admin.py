@@ -5,7 +5,7 @@ from django.utils.html import format_html
 
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import EventReminder, Player
+from .models import EventReminder, Player, SentReminder
 from .reminders import duration
 
 
@@ -58,6 +58,27 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         for player in queryset.select_related('user'):
             player.user.delete()
 
+
+
+@admin.register(SentReminder)
+class SentReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """What the worker sent in the last 30 days and why a delivery failed (DMs closed, browser switched off…)."""
+
+    list_display = ['sent_at', 'player_name', 'event', 'occurrence', 'offset', 'channel', 'ok', 'error']
+    list_filter = ['ok', 'channel', 'event']
+    list_select_related = ['player', 'event']
+    search_fields = ['player__username', 'player__global_name', 'player__ingame_name', 'event__name_sk']
+    date_hierarchy = 'sent_at'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='hráč', ordering='player__global_name')
+    def player_name(self, obj):
+        return obj.player.ingame_name or obj.player.name
 
 admin.site.unregister(User)
 

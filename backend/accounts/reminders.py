@@ -7,6 +7,7 @@ storms) or with a second worker running.
 """
 
 import logging
+import math
 from collections import defaultdict
 from datetime import timedelta
 
@@ -50,6 +51,10 @@ TEXTS = {
         'days': ('den', 'dny', 'dní'),
     },
 }
+
+
+class DiscordPaused(Exception):
+    """Discord rate limits or is down: the reminder was released for the next tick, Discord waits until then."""
 
 
 def texts(lang: str) -> dict:
@@ -97,14 +102,19 @@ def discord_message(event: KingdomEvent, start, lang: str) -> dict:
     return {'embeds': [embed]}
 
 
-def push_payload(event: KingdomEvent, start, offset: int, lang: str, now) -> dict:
-    """{title, body, url} for push-sw.js. All players are CZ/SK, so the clock is Bratislava time."""
+def push_payload(event: KingdomEvent, start, lang: str, now) -> dict:
+    """{title, body, url} for push-sw.js. All players are CZ/SK, so the clock is Bratislava time.
+
+    The time left is counted from now, not from the chosen offset: a reminder sent a few minutes late (worker tick,
+    subscribed after the send time) must not promise more time than there is.
+    """
     t = texts(lang)
     local = start.astimezone(LOCAL_TZ)
     clock = f'{local:%H:%M}'
     if local.date() != now.astimezone(LOCAL_TZ).date():
         clock = f'{local.day}. {local.month}. {clock}'
-    body = t['soon'].format(time=duration(offset, lang), clock=clock) if offset else t['now'].format(clock=clock)
+    left = math.ceil((start - now).total_seconds() / 60)
+    body = t['soon'].format(time=duration(left, lang), clock=clock) if left > 0 else t['now'].format(clock=clock)
     return {'title': event_name(event, lang), 'body': body, 'url': page_path(event, lang)}
 
 
@@ -142,21 +152,31 @@ def send_personal_reminders(now=None) -> int:
     attempted = 0
     for reminder in reminders:
         player, event = reminder.player, reminder.event
-        channels = [Channel.DISCORD] if bot_on and player.remind_discord else []
-        if devices[player.pk]:
-            channels.append(Channel.PUSH)
+        # push first: a slow or rate-limited Discord must not hold up the browser notifications
+        channels = [Channel.PUSH] if devices[player.pk] else []
+        if player.remind_discord:
+            channels.append(Channel.DISCORD)
         for offset in reminder.offsets:
             if (event.pk, offset) not in starts:
                 starts[event.pk, offset] = due_starts(event, offset, now)
             for start in starts[event.pk, offset]:
                 for channel in channels:
+                    if channel == Channel.DISCORD and not bot_on:
+                        continue
                     if (player.pk, event.pk, start, offset, channel) not in done:
-                        attempted += deliver(player, event, start, offset, channel, devices[player.pk], now)
+                        try:
+                            attempted += deliver(player, event, start, offset, channel, devices[player.pk], now)
+                        except DiscordPaused:
+                            bot_on = False
     return attempted
 
 
 def deliver(player: Player, event: KingdomEvent, start, offset: int, channel: str, devices: list, now) -> bool:
-    """Claims the log row first (unique), then sends. Returns False when another worker already claimed it."""
+    """Claims the log row first (unique), then sends. Returns False when another worker already claimed it.
+
+    Raises DiscordPaused when Discord is rate limiting or down: the row is released, so the next tick (still inside
+    WINDOW) sends the reminder a little later instead of never.
+    """
     try:
         with transaction.atomic():
             row = SentReminder.objects.create(
@@ -169,8 +189,12 @@ def deliver(player: Player, event: KingdomEvent, start, offset: int, channel: st
             discord_bot.send_dm(player.discord_id, discord_message(event, start, player.lang))
             row.ok = True
         else:
-            row.ok, row.error = send_push(devices, push_payload(event, start, offset, player.lang, now), start, now)
+            row.ok, row.error = send_push(devices, push_payload(event, start, player.lang, now), start, now)
     except discord_bot.BotError as exc:
+        if exc.temporary:
+            row.delete()
+            log.warning('Discord unavailable, reminders wait for the next tick: %s', exc)
+            raise DiscordPaused from exc
         row.error = str(exc)
     except Exception:  # one broken reminder must not stop the round for the other players
         log.exception('Reminder %s/%s for player %s via %s failed', event.pk, offset, player.pk, channel)
@@ -211,7 +235,15 @@ def send_push(devices: list, payload: dict, start, now) -> tuple[bool, str]:
 
 
 def prune_sent(now=None) -> int:
-    """The log is only needed around the send time; older rows are personal data without a purpose."""
+    """Personal data without a purpose (daily): the send log older than KEEP_SENT and the players' choices for events
+    that will not take place again (a one-off that is over, a series past its end date)."""
     now = now or timezone.now()
     deleted, _ = SentReminder.objects.filter(sent_at__lt=now - KEEP_SENT).delete()
+    finished = [
+        event.pk
+        for event in KingdomEvent.objects.filter(subscriptions__isnull=False).distinct()
+        if next(occurrences(event, now), None) is None
+    ]
+    if finished:
+        deleted += EventReminder.objects.filter(event__in=finished).delete()[0]
     return deleted

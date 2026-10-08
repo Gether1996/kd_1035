@@ -353,21 +353,24 @@ class MessageTests(TestCase):
         start = utc(2026, 10, 10, 18)  # 20:00 in Bratislava (summer time)
         same_day = utc(2026, 10, 10, 17, 50)
         self.assertEqual(
-            reminders.push_payload(self.event, start, 10, 'sk', same_day),
+            reminders.push_payload(self.event, start, 'sk', same_day),
             {'title': 'Ruiny', 'body': 'Začína o 10 min · 20:00', 'url': '/ucet'},
         )
         self.assertEqual(
-            reminders.push_payload(self.event, start, 1440, 'cs', utc(2026, 10, 9, 18)),
+            reminders.push_payload(self.event, start, 'cs', utc(2026, 10, 9, 18)),
             {'title': 'Ruiny CZ', 'body': 'Začíná za 1 den · 10. 10. 20:00', 'url': '/cz/ucet'},
         )
-        self.assertEqual(reminders.push_payload(self.event, start, 0, 'sk', start)['body'], 'Začína teraz · 20:00')
+        self.assertEqual(reminders.push_payload(self.event, start, 'sk', start)['body'], 'Začína teraz · 20:00')
+        # sent late: the time actually left, rounded up to whole minutes
+        late = utc(2026, 10, 10, 17, 54, 30)
+        self.assertEqual(reminders.push_payload(self.event, start, 'sk', late)['body'], 'Začína o 6 min · 20:00')
         self.event.guide = Guide.objects.create(
             category='eventy', title_sk='Ruiny', slug='ruiny-y', html_sk='<p>x</p>', is_published=False
         )
-        self.assertEqual(reminders.push_payload(self.event, start, 10, 'sk', same_day)['url'], '/ucet')
+        self.assertEqual(reminders.push_payload(self.event, start, 'sk', same_day)['url'], '/ucet')
         self.event.guide.is_published = True
         self.assertEqual(
-            reminders.push_payload(self.event, start, 10, 'sk', same_day)['url'], '/navody/eventy/ruiny-y'
+            reminders.push_payload(self.event, start, 'sk', same_day)['url'], '/navody/eventy/ruiny-y'
         )
 
 
@@ -443,6 +446,21 @@ class SendRemindersTests(TestCase):
         self.run_at(2026, 10, 10, 17, 1)
         self.assertEqual(self.dm.call_count, 1)
         self.assertTrue(SentReminder.objects.get(channel=Channel.PUSH).ok)
+
+    def test_discord_rate_limit_retries_on_the_next_tick(self):
+        self.dm.side_effect = discord_bot.BotError('Discord limit (429), skúsiť o 1.5 s', temporary=True)
+        other = make_player('90351110224678912')
+        EventReminder.objects.create(player=other, event=self.event, offsets=[60])
+        with self.assertLogs('accounts.reminders', 'WARNING'):
+            self.run_at(2026, 10, 10, 17, 0)
+        # Discord paused after the first refusal; push went out first and is logged
+        self.assertEqual(self.dm.call_count, 1)
+        self.assertEqual(self.sent(), [(60, Channel.PUSH, True)])
+
+        self.dm.side_effect = None
+        self.run_at(2026, 10, 10, 17, 0, 30)
+        self.assertEqual(self.dm.call_count, 3)  # both players, half a minute later
+        self.assertEqual(SentReminder.objects.filter(channel=Channel.DISCORD, ok=True).count(), 2)
 
     def test_withdrawn_push_subscription_is_deleted(self):
         self.push.side_effect = push.PushError('Push služba odpovedala 410', gone=True)
@@ -537,6 +555,15 @@ class SendRemindersTests(TestCase):
         self.assertEqual(reminders.prune_sent(), 1)
         self.assertEqual(list(SentReminder.objects.values_list('channel', flat=True)), [Channel.PUSH])
 
+    def test_prune_drops_choices_for_events_that_are_over(self):
+        # a one-off event (no repeat) that already took place: the choice has no purpose any more
+        self.event.repeat_days = 0
+        self.event.save()
+        reminders.prune_sent(now=utc(2026, 10, 10, 17))
+        self.assertTrue(EventReminder.objects.exists())  # still ahead
+        reminders.prune_sent(now=utc(2026, 10, 10, 19))
+        self.assertFalse(EventReminder.objects.exists())
+
 
 @override_settings(**BOT)
 class DiscordBotTests(SimpleTestCase):
@@ -563,13 +590,16 @@ class DiscordBotTests(SimpleTestCase):
             (self.refused(403, {'message': 'Cannot send messages to this user', 'code': 50007}), 'súkromné správy'),
             (self.refused(429, {'message': 'You are being rate limited.', 'retry_after': 1.5}), 'o 1.5 s'),
             (self.refused(401, {'message': '401: Unauthorized'}), 'Discord odpovedal 401'),
+            (self.refused(502, {}), 'Discord odpovedal 502'),
             (urllib.error.URLError('down'), 'nedostupný'),
         ]
+        temporary = {'o 1.5 s', 'Discord odpovedal 502', 'nedostupný'}
         for side_effect, text in cases:
             with self.subTest(text), mock.patch('urllib.request.urlopen', side_effect=side_effect):
                 with self.assertRaises(discord_bot.BotError) as ctx:
                     discord_bot.send_dm('80351110224678912', {'content': 'x'})
                 self.assertIn(text, str(ctx.exception))
+                self.assertEqual(ctx.exception.temporary, text in temporary)
                 self.assertNotIn('bot-secret-token', str(ctx.exception))
 
     @override_settings(DISCORD_BOT_TOKEN='')
@@ -660,6 +690,16 @@ class ReminderAdminTests(TestCase):
         # push subscriptions are not in the admin at all
         self.assertEqual(self.client.get('/admin/accounts/pushsubscription/').status_code, 404)
         self.assertNotContains(self.client.get('/admin/accounts/player/'), KEYS['auth'])
+
+    def test_superuser_sees_failed_deliveries(self):
+        self.client.force_login(self.admin)
+        SentReminder.objects.create(
+            player=self.player, event=self.event, occurrence=utc(2026, 10, 10, 18), offset=10,
+            channel=SentReminder.Channel.DISCORD, error='Hráč nemá povolené súkromné správy.',
+        )  # fmt: skip
+        response = self.client.get('/admin/accounts/sentreminder/', {'ok__exact': '0'})
+        self.assertContains(response, 'Hráč nemá povolené súkromné správy.')
+        self.assertEqual(self.client.get('/admin/accounts/sentreminder/add/').status_code, 403)
 
     def test_deleting_a_subscribed_player_or_event_still_works(self):
         self.client.force_login(self.admin)

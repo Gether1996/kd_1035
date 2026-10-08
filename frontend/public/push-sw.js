@@ -28,12 +28,9 @@ self.addEventListener('notificationclick', (event) => {
   if (url.origin !== self.location.origin) return;
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
-      const open = windows.find((client) => client.url === url.href) || windows[0];
-      if (!open) return self.clients.openWindow(url.href);
-      return open
-        .focus()
-        .then((client) => (client.url === url.href ? client : client.navigate(url.href)))
-        .catch(() => self.clients.openWindow(url.href)); // a window this worker does not control
+      // a tab already on that page is focused; any other tab (e.g. the admin with unsaved changes) stays as it is
+      const open = windows.find((client) => client.url === url.href);
+      return open ? open.focus() : self.clients.openWindow(url.href);
     }),
   );
 });
