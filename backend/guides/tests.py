@@ -1,7 +1,10 @@
+import importlib
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
+from xml.sax.saxutils import escape
 
+from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
@@ -26,8 +29,30 @@ class SanitizeTests(TestCase):
             '<iframe src="https://www.youtube.com/embed/abc"></iframe><iframe src="https://evil.test/"></iframe>'
         )
         self.assertIn('<td colspan="2">Sun Tzu + Joan</td>', html)
-        self.assertIn('<iframe src="https://www.youtube.com/embed/abc"></iframe>', html)
+        self.assertIn('<iframe src="https://www.youtube-nocookie.com/embed/abc"></iframe>', html)
         self.assertIn('<iframe></iframe>', html)
+
+    def test_youtube_embeds_use_the_privacy_enhanced_mode(self):
+        self.assertEqual(
+            clean_html('<iframe src="https://www.youtube.com/embed/x?start=60"></iframe>'),
+            '<iframe src="https://www.youtube-nocookie.com/embed/x?start=60"></iframe>',
+        )
+        for kept in ('https://www.youtube-nocookie.com/embed/x', 'https://player.twitch.tv/?video=1&parent=kd1035.eu'):
+            with self.subTest(kept):
+                self.assertIn(f'src="{escape(kept)}"', clean_html(f'<iframe src="{escape(kept)}"></iframe>'))
+
+    def test_migration_cleans_guides_saved_before_and_keeps_their_date(self):
+        migration = importlib.import_module('guides.migrations.0006_youtube_nocookie')
+        guide = Guide.objects.create(category='eventy', title_sk='Video', slug='video', html_sk='<p>x</p>')
+        old = '<p>MGE</p><iframe src="https://www.youtube.com/embed/x"></iframe>'
+        Guide.objects.filter(pk=guide.pk).update(html_sk=old, html_cs=old)  # as saved before the rewrite
+        updated_at = Guide.objects.get(pk=guide.pk).updated_at
+
+        migration.clean_saved_html(django_apps, None)
+        guide.refresh_from_db()
+        new = '<p>MGE</p><iframe src="https://www.youtube-nocookie.com/embed/x"></iframe>'
+        self.assertEqual((guide.html_sk, guide.html_cs), (new, new))
+        self.assertEqual(guide.updated_at, updated_at)
 
 
 class MetaGuidesTests(TestCase):

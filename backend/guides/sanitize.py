@@ -30,11 +30,17 @@ EMBEDS = (
     'https://player.twitch.tv/',
     'https://clips.twitch.tv/embed',
 )
+# YouTube players are switched to the privacy-enhanced mode (named on the privacy page)
+YOUTUBE = 'https://www.youtube.com/embed/'
+YOUTUBE_NOCOOKIE = 'https://www.youtube-nocookie.com/embed/'
 
 
 def _filter(tag: str, attr: str, value: str) -> str | None:
-    if tag == 'iframe' and attr == 'src' and not value.startswith(EMBEDS):
-        return None
+    if tag == 'iframe' and attr == 'src':
+        if not value.startswith(EMBEDS):
+            return None
+        if value.startswith(YOUTUBE):
+            return YOUTUBE_NOCOOKIE + value.removeprefix(YOUTUBE)
     return value
 
 
