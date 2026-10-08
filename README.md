@@ -123,7 +123,7 @@ Pred zapnutím na serveri skontroluj:
    - `https://kd1035.eu/api/auth/discord/callback/` (server)
 
    Web posiela `SITE_URL` + `/api/auth/discord/callback/`, takže `SITE_URL` v `.env` musí sedieť s jednou z nich. Lokálne môže `SITE_URL` ostať prázdne – použije sa adresa z prehliadača (`http://localhost:4200`).
-4. Nič iné nezaškrtávaj (žiadny bot). `docker compose up -d` (načíta nový `.env`).
+4. Pre prihlásenie nič iné nezaškrtávaj. Bot pre pripomienky eventov je samostatný, nepovinný krok (nižšie). `docker compose up -d` (načíta nový `.env`).
 
 Hráč sa prihlási tlačidlom **Prihlásiť** v hlavičke, svoj účet vidí na `/ucet` (meno v hre, odhlásenie, zmazanie účtu). Admin (iba superuser) → **Hráči**: zoznam prihlásených, zmazanie hráča zmaže aj jeho účet. Zablokovanie: **Používatelia** → `discord_<id>` → vypni „Aktívny“. Hráči sa neprenášajú cez git (snapshot ich vynechá).
 
@@ -132,6 +132,35 @@ Hráč sa prihlási tlačidlom **Prihlásiť** v hlavičke, svoj účet vidí na
 Prihlásený hráč si na `/ucet` vyplní **meno v hre**, aby ho vedenie spoznalo. Superadmin ho vidí v admine → **Hráči** (dá sa podľa neho aj hľadať a opraviť).
 
 Superadmin sa do adminu prihlasuje cez Discord: jeho Discord ID patrí do `DISCORD_ADMIN_IDS` v `.env` (Gether: `245662824171438090`). Po prihlásení na webe má na `/ucet` odkaz **Administrácia**. Ďalšie práva (napr. pre R4) sa dávajú ručne v admine → **Používatelia** → `discord_<id>` → správcovský prístup.
+
+## Pripomienky eventov pre hráčov (Discord správa, notifikácie)
+
+Prihlásený hráč si na `/ucet` → **Pripomienky eventov** vyberie eventy a kedy mu ich pripomenúť. Príde mu **súkromná správa od Discord bota**, **notifikácia v prehliadači / na mobile**, alebo oboje. Bez nastavenia je daný spôsob vypnutý (na webe „Zatiaľ nie je zapnuté“), nič sa nepokazí.
+
+**Discord bot** (tá istá aplikácia ako prihlásenie):
+
+1. https://discord.com/developers/applications → aplikácia KD 1035 → **Bot** → **Reset Token** → skopíruj do `DISCORD_BOT_TOKEN` v `.env` (iba tam, nikdy do gitu). Žiadne „Privileged Gateway Intents“ netreba.
+2. Pozvi bota na Discord server kráľovstva (nepotrebuje žiadne práva):
+   `https://discord.com/oauth2/authorize?client_id=1557662862179311636&scope=bot&permissions=0`
+   (číslo za `client_id=` je `DISCORD_CLIENT_ID`).
+3. Správu dostane iba hráč, ktorý je na tom serveri a má povolené súkromné správy od jeho členov (v Discorde: názov servera → Nastavenia súkromia → Priame správy). Inak sa doručenie nepodarí – web mu to vysvetľuje.
+
+**Notifikácie v prehliadači** (web push, na serveri potrebuje HTTPS):
+
+1. Raz vygeneruj kľúče: `docker compose exec -u app backend python manage.py generate_vapid_keys` a tri riadky (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) vlož do `.env`.
+2. Kľúče už nemeň – s novými by si hráči museli notifikácie zapnúť znova.
+3. iPhone/iPad: notifikácie fungujú len po pridaní webu na plochu (Safari → Zdieľať → Pridať na plochu) a otvorení odtiaľ.
+
+Po úprave `.env`: `docker compose up -d` (backend aj worker načítajú nové hodnoty).
+
+**Admin (iba superuser):**
+
+- **Eventy kráľovstva** → event → **Časy pre hráčov**: minúty pred začiatkom oddelené čiarkou, napr. `10, 60, 1440` (1440 = 1 deň), najviac 6. Hráč si môže zadať aj vlastný čas (max. 5 pripomienok na event, najviac 7 dní vopred).
+- Hráči vidia iba eventy, ktoré sú **aktívne** a majú **zobraziť na webe**, a len ak majú ďalší termín.
+- **Hráči → Pripomienky hráčov**: kto si čo zapol (len na čítanie).
+- Worker pripomienku pošle v správnu minútu; ak nebežal viac ako 10 minút, zmeškanú už nepošle. Chyby doručenia sú v logu: `docker compose logs worker`.
+
+Kanálové pripomienky cez webhook (vyššie) fungujú ďalej nezávisle od týchto osobných.
 
 ## Testy
 
