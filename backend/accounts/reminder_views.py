@@ -15,6 +15,7 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
+from kingdom.event_icons import icon_url
 from kingdom.events import upcoming
 from kingdom.models import KingdomEvent
 
@@ -58,6 +59,7 @@ def event_data(event: KingdomEvent, offsets: list | None, start) -> dict:
         'id': event.pk,
         'name_sk': event.name_sk,
         'name_cs': event.name_cs,
+        'icon': icon_url(event.icon),
         'next_start': start.astimezone(UTC).isoformat().replace('+00:00', 'Z') if start else None,
         'repeat_days': event.repeat_days,
         # no fixed cycle: next_start is null until leadership sets the next date

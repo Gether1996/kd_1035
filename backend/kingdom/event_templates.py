@@ -29,21 +29,25 @@ TEMPLATES = [
     ('More Than Gems', 'More Than Gems', utc(2026, 10, 10), 28, 2, 'more-than-gems'),
     # every second Friday 00:00 UTC for 48 h, confirmed by Gether (8. 10. 2026)
     ('20 GH', '20 GH', utc(2026, 10, 16), 14, 2, ''),
-    # no published date: placeholder start, Gether sets the real one
-    ('Alliance Mobilization', 'Alliance Mobilization', utc(2026, 10, 12), 28, 7, 'alliance-mobilization'),
 ]
 
 MESSAGE = '**{name}** začína {start} ({relative}).'
 
-# Irregular events without a fixed cycle, usually in the evening (named by Gether). Active right away without a date:
-# players see "ďalší termín oznámime" and pick their reminders in advance; Gether sets the start in the admin before
-# each one. Placeholder start in the past = nothing planned yet.
-IRREGULAR_TEMPLATES = [
-    ('Silk Road', 'Silk Road'),
-    ('Shadow Legion', 'Shadow Legion'),
-    ('Karuak Boss', 'Karuak Boss'),
-]
 NOT_PLANNED = datetime(2026, 10, 1, 18, tzinfo=UTC)  # 20:00 in Bratislava – the usual evening hour
+
+# Irregular events without a fixed cycle (named by Gether). Active right away without a date: players see "ďalší
+# termín oznámime" and pick their reminders in advance; Gether sets the start (admin or the calendar) before each one.
+# A start in the past = nothing planned yet.
+# name SK, name CZ, start, duration in minutes, time basis, guide slug
+IRREGULAR_TEMPLATES = [
+    # the kingdom runs them at 20:00 our time, all year (Gether, 8. 10. 2026)
+    ('Silk Road', 'Silk Road', NOT_PLANNED, 60, KingdomEvent.TimeBasis.LOCAL, ''),
+    ('Shadow Legion', 'Shadow Legion', NOT_PLANNED, 60, KingdomEvent.TimeBasis.LOCAL, ''),
+    ('Karuak Boss', 'Karuak Boss', NOT_PLANNED, 60, KingdomEvent.TimeBasis.LOCAL, ''),
+    # the competition runs a week from Monday 00:00 UTC; 5.–12. 10. 2026 from Gether's screenshot of the game
+    ('Alliance Mobilization', 'Alliance Mobilization', utc(2026, 10, 5), 7 * DAY, KingdomEvent.TimeBasis.UTC,
+     'alliance-mobilization'),
+]
 
 
 def create_templates() -> list[str]:
@@ -70,19 +74,22 @@ def create_templates() -> list[str]:
             is_active=False,
         )
         created.append(name_sk)
-    for name_sk, name_cs in IRREGULAR_TEMPLATES:
+    for name_sk, name_cs, start, minutes, basis, guide in IRREGULAR_TEMPLATES:
         if KingdomEvent.objects.filter(name_sk=name_sk).exists():
             continue
+        evening = basis == KingdomEvent.TimeBasis.LOCAL
         KingdomEvent.objects.create(
             name_sk=name_sk,
             name_cs=name_cs if name_cs != name_sk else '',
             message=MESSAGE,
-            starts_at=NOT_PLANNED,
-            duration_minutes=60,
+            starts_at=start,
+            duration_minutes=minutes,
             irregular=True,
-            time_basis=KingdomEvent.TimeBasis.LOCAL,
-            reminders=[60, 15],
-            player_reminders=[15, 60],
+            time_basis=basis,
+            # 00:00 UTC is at night here: the day before instead of an hour before
+            reminders=[60, 15] if evening else [DAY],
+            player_reminders=[15, 60] if evening else [60, DAY],
+            guide=guides.get(guide),
             is_active=True,
         )
         created.append(name_sk)

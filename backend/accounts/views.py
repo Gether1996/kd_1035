@@ -182,6 +182,8 @@ def signed_in(request) -> dict | None:
         'avatar_url': player.avatar_url,
         'ingame_name': player.ingame_name,
         'is_staff': request.user.is_staff,
+        # manages events (admin, irregular dates in the calendar)
+        'is_superuser': request.user.is_superuser,
     }
 
 

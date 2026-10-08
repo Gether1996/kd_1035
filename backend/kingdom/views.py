@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import events
+from .event_icons import icon_url
 from .models import Alliance, KingdomEvent, SocialLink
 from .serializers import AllianceSerializer, SocialLinkSerializer
 
@@ -69,6 +70,7 @@ def event_data(event: KingdomEvent) -> dict:
         'id': event.pk,
         'name_sk': event.name_sk,
         'name_cs': event.name_cs,
+        'icon': icon_url(event.icon),
         'offered': event.player_reminders or [],
         'guide': guide_data(event.guide),
     }
@@ -111,3 +113,4 @@ class EventCalendar(APIView):
         )
         response['Cache-Control'] = 'public, max-age=300'
         return response
+

@@ -15,7 +15,7 @@ from django.utils import timezone
 from accounts.models import EventReminder, Player
 from guides.models import Guide
 
-from . import backups, discord, events
+from . import backups, discord, event_icons, events
 from .admin import local_time, repeat_text
 from .models import TWIN_EVENT_ERROR, Alliance, EventNotification, KingdomEvent, SocialLink
 
@@ -875,6 +875,15 @@ class EventTemplateTests(TestCase):
         self.assertEqual(mtg.guide.slug, 'more-than-gems')
         self.assertEqual(events.upcoming(mtg, 2, now=utc(2026, 10, 8)), [utc(2026, 10, 10), utc(2026, 11, 7)])
         self.assertEqual(KingdomEvent.objects.get(name_sk='MGE – Jazda').name_cs, 'MGE – Jízda')
+        # Alliance Mobilization: a week from Monday 00:00 UTC, reminded the day before (00:00 UTC is at night here)
+        am = KingdomEvent.objects.get(name_sk='Alliance Mobilization')
+        self.assertEqual((am.irregular, am.time_basis, am.duration_minutes), (True, 'utc', 7 * 24 * 60))
+        self.assertEqual((am.reminders, am.player_reminders), ([24 * 60], [60, 24 * 60]))
+        # every template with game art gets its icon, and the icon file exists
+        self.assertEqual(KingdomEvent.objects.get(name_sk='Karuak Boss').icon, 'ceroli')
+        self.assertEqual(KingdomEvent.objects.get(name_sk='20 GH').icon, 'gold-head')
+        for event in KingdomEvent.objects.exclude(icon=''):
+            self.assertIsNotNone(event_icons.icon_url(event.icon), event.icon)
 
         # an edited or renamed draft is never overwritten, a deleted one comes back
         KingdomEvent.objects.filter(name_sk='Esmeralda').delete()

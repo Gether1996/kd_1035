@@ -97,7 +97,7 @@ class EventCalendarTests(TestCase):
         data = self.get().json()
         self.assertEqual(
             data['irregular_waiting'],
-            [{'id': waiting.pk, 'name_sk': 'Silk Road', 'name_cs': '', 'offered': [10, 60], 'guide': None}],
+            [{'id': waiting.pk, 'name_sk': 'Silk Road', 'name_cs': '', 'icon': None, 'offered': [10, 60], 'guide': None}],
         )
         # the past start of a waiting event is only a placeholder → not in the calendar
         self.assertEqual([(o['id'], o['irregular']) for o in data['occurrences']], [(planned.pk, True)])
@@ -127,9 +127,9 @@ class EventCalendarTests(TestCase):
         self.assertEqual(set(data), {'from', 'to', 'occurrences', 'irregular_waiting'})
         self.assertEqual(
             set(data['occurrences'][0]),
-            {'id', 'name_sk', 'name_cs', 'start', 'end', 'repeat_days', 'irregular', 'offered', 'guide'},
+            {'id', 'name_sk', 'name_cs', 'icon', 'start', 'end', 'repeat_days', 'irregular', 'offered', 'guide'},
         )
-        self.assertEqual(set(data['irregular_waiting'][0]), {'id', 'name_sk', 'name_cs', 'offered', 'guide'})
+        self.assertEqual(set(data['irregular_waiting'][0]), {'id', 'name_sk', 'name_cs', 'icon', 'offered', 'guide'})
         self.assertNotIn('Tajný', str(data))
         self.assertNotIn('123456', str(data))
 

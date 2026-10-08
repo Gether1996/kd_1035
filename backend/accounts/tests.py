@@ -333,6 +333,7 @@ class MeTests(TestCase):
                     'avatar_url': 'https://cdn.discordapp.com/embed/avatars/5.png',
                     'ingame_name': '',
                     'is_staff': False,
+                    'is_superuser': False,
                 },
             },
         )

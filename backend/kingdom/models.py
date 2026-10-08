@@ -130,6 +130,13 @@ class KingdomEvent(models.Model):
     name_cs = models.CharField(
         'název (CZ)', max_length=80, blank=True, help_text='Prázdne = použije sa slovenský názov.'
     )
+    icon = models.CharField(
+        'ikona',
+        max_length=32,
+        blank=True,
+        help_text='Ikona v kalendári a v pripomienkach. Nový event ju dostane podľa názvu; bez ikony web ukáže '
+        'monogram (prvé písmená názvu).',
+    )
     message = models.TextField(
         'text na Discord',
         blank=True,
@@ -208,6 +215,13 @@ class KingdomEvent(models.Model):
 
     def __str__(self):
         return self.name_sk
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.icon:
+            from .event_icons import guess
+
+            self.icon = guess(self.name_sk)
+        super().save(*args, **kwargs)
 
     def active_twins(self):
         """Other active events with the same name and first start – each would send every reminder again."""

@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
+from . import event_icons
 from .discord import MAX_DELAY, deliver
 from .events import HORIZON, LOCAL_TZ, replan, upcoming
 from .models import (
@@ -124,6 +125,13 @@ class MinutesField(forms.CharField):
 
 
 class KingdomEventForm(forms.ModelForm):
+    icon = forms.ChoiceField(
+        label='Ikona',
+        choices=event_icons.choices,
+        required=False,
+        help_text='Ikona v kalendári a v pripomienkach na webe. Nový event ju dostane podľa názvu; bez ikony web ukáže '
+        'monogram. Ďalšie ikony: manage.py fetch_event_icons.',
+    )
     reminders = forms.TypedMultipleChoiceField(
         label='Pripomienky',
         choices=REMINDER_CHOICES,
@@ -173,6 +181,7 @@ class KingdomEventListFormSet(forms.BaseModelFormSet):
 class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     form = KingdomEventForm
     list_display = [
+        'icon_tag',
         'name_sk',
         'next_occurrence',
         'repeat_label',
@@ -186,12 +195,12 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     list_editable = ['show_on_web', 'is_active']
     list_filter = ['is_active', 'notify_discord', 'time_basis']
     search_fields = ['name_sk', 'name_cs', 'message']
-    readonly_fields = ['schedule']
+    readonly_fields = ['schedule', 'icon_preview']
     save_on_top = True
     # "Uložiť ako nový" = a copy with its own reminders (save_model plans it as a new event)
     save_as = True
     fieldsets = [
-        ('Event', {'fields': ['name_sk', 'name_cs', 'message', 'guide']}),
+        ('Event', {'fields': ['name_sk', 'name_cs', ('icon', 'icon_preview'), 'message', 'guide']}),
         (
             'Opakovanie',
             {'fields': ['irregular', 'starts_at', 'duration_minutes', 'repeat_days', 'until', 'time_basis', 'schedule']},
@@ -221,6 +230,20 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
     def get_changelist_formset(self, request, **kwargs):
         return super().get_changelist_formset(request, formset=KingdomEventListFormSet, **kwargs)
+
+    @admin.display(description='')
+    def icon_tag(self, obj):
+        url = event_icons.icon_url(obj.icon)
+        return format_html('<img src="{}" alt="" width="28" height="28">', url) if url else ''
+
+    @admin.display(description='náhľad')
+    def icon_preview(self, obj):
+        url = event_icons.icon_url(obj.icon) if obj else None
+        if not url:
+            return '—'
+        return format_html(
+            '<img src="{}" alt="" width="48" height="48" style="background:#0e1628;border-radius:8px;padding:4px">', url
+        )
 
     # short headers and the date over the time keep the editable checkboxes in view at 1280 px (with both sidebars)
     @admin.display(description='najbližší termín')
