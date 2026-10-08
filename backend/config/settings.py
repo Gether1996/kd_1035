@@ -109,6 +109,8 @@ REST_FRAMEWORK = {
     # proxies in front of Django (nginx + the HTTPS proxy on the server): throttles take the client IP from that
     # position in X-Forwarded-For, so a header sent by the client itself cannot pick a fresh throttle key
     'NUM_PROXIES': env.int('DJANGO_NUM_PROXIES', default=1),
+    # ScopedRateThrottle scopes; counts live in the default per-process LocMemCache (soft limits)
+    'DEFAULT_THROTTLE_RATES': {'governors': '10/hour'},  # new Governor registrations per player
 }
 
 # Public address of the site, e.g. https://kd1035.sk (used in Discord messages)

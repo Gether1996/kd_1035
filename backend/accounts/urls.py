@@ -7,4 +7,6 @@ urlpatterns = [
     path('auth/discord/callback/', views.discord_callback),
     path('auth/me/', views.me),
     path('auth/logout/', views.sign_out),
+    path('me/governors/', views.GovernorList.as_view()),
+    path('me/governors/<int:pk>/', views.GovernorDetail.as_view()),
 ]
