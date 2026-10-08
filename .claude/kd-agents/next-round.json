@@ -1,5 +1,5 @@
 {
-  "_doc": "Args for the next kd-improve round (see docs/agenti.md). Ideas and critic verdicts from round 1 (2026-10-07); recurring-kingdom-events is shipped and removed. discord-login is built but not reviewed yet (branch wip/discord-login).",
+  "_doc": "Args for the next kd-improve round (see docs/agenti.md). Ideas and critic verdicts from round 1 (2026-10-07); recurring-kingdom-events (round 1), discord-login and governor-registration (round 2, 2026-10-08) are shipped and removed. Round 2 was stopped by Gether right after privacy-page started (nothing left half-done). Since then a terms page (/podmienky, footer link) exists – the privacy page goes next to it in the footer; the domain is kd1035.eu.",
   "features": 4,
   "date": "YYYY-MM-DD",
   "ideas": [
@@ -51,63 +51,6 @@
       "risks": "An empty calendar looks dead until leadership fills it, so the empty state must look intentional. The server must always send UTC ISO and the browser converts it. A 6th nav item may crowd the header at mid widths; check the screenshots."
     },
     {
-      "id": "discord-login",
-      "title": "Sign in with Discord (player accounts)",
-      "title_sk": "Prihlásenie cez Discord (hráčske účty)",
-      "audience": "All members (prerequisite for Governor ID registration); leadership",
-      "user_value": "The community lives on Discord, so signing in with Discord means no new password. It gives leadership a verified Discord identity behind every registration, and it is the base for Governor ID registration and R4 admin access.",
-      "spec": "BACKEND: new Django app backend/accounts (INSTALLED_APPS; config/urls.py path('api/', include('accounts.urls'))).\n1) Model Player: user (OneToOne auth.User, CASCADE, related_name='player'), discord_id (CharField 24, unique), username (40), global_name (64, blank), avatar (64, blank: Discord avatar hash), created_at. avatar_url property: https://cdn.discordapp.com/avatars/{id}/{hash}.png?size=64, else the default https://cdn.discordapp.com/embed/avatars/{(int(id) >> 22) % 6}.png.\n2) accounts/discord_oauth.py (stdlib urllib, same User-Agent pattern as kingdom/discord.py): authorize_url(state, redirect_uri) → https://discord.com/oauth2/authorize?response_type=code&client_id=…&scope=identify&state=…&redirect_uri=…&prompt=none. exchange_code(code, redirect_uri) → POST https://discord.com/api/v10/oauth2/token (form-encoded, client credentials). fetch_user(token) → GET https://discord.com/api/v10/users/@me. Errors raise OAuthError. Scope is identify only: no e-mail, no guilds.\n3) Settings/env: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET (.env.example with step-by-step Developer Portal instructions and both redirect URIs). redirect_uri = SITE_URL + '/api/auth/discord/callback/' (dev SITE_URL=http://localhost:4200 goes through the ng proxy). LOGIN_ENABLED = both set. REST_FRAMEWORK DEFAULT_AUTHENTICATION_CLASSES = ['rest_framework.authentication.SessionAuthentication'], which drops unused Basic auth.\n4) Views (accounts/views.py, urls under /api/auth/):\n   - GET discord/login/?next=… : 404 when disabled. Store state = secrets.token_urlsafe(24) and next (validated with url_has_allowed_host_and_scheme, must start with '/', default '/ucet') in the session, then 302 to Discord.\n   - GET discord/callback/ : pop state, compare with secrets.compare_digest; mismatch or missing → redirect next?login=error. error=access_denied → next?login=cancelled. On success: get_or_create User username 'discord_<id>' (set_unusable_password, never staff) and update/create Player fields, django.contrib.auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend'), redirect to next. OAuthError → ?login=error, logged with log.warning and without tokens.\n   - GET me/ : @ensure_csrf_cookie, Cache-Control: no-store. Returns {login_enabled, user: null | {discord_id, name (global_name or username), avatar_url, is_staff}}.\n   - POST logout/ : logout(), 204 (CSRF enforced by SessionAuthentication).\n   - DELETE me/ : delete the User (cascades Player), logout, 204. Returns 403 for is_staff or is_superuser so admins cannot delete themselves by accident.\n5) Admin: PlayerAdmin(SuperuserOnlyAdmin): name, discord_id, avatar thumbnail, created_at, user.last_login; search by username/discord_id; read-only Discord fields.\n6) Snapshot privacy: kingdom/snapshot.py export removes player data from the git snapshot. Delete rows from accounts_* tables, and Discord users (username LIKE 'discord\\_%') with their auth_user_groups, auth_user_user_permissions and django_admin_log rows (FKs are not enforced in the raw sqlite connection, so delete explicitly). Personal Discord data must never land in git.\nFRONTEND\n7) app.config.ts: provideHttpClient(withFetch(), withXsrfConfiguration({cookieName: 'csrftoken', headerName: 'X-CSRFToken'})).\n8) core/auth.ts Auth service: httpResource<Me>('/api/auth/me/') only in the browser; enabled(), user(), loginUrl(next = current path) → '/api/auth/discord/login/?next=' + encodeURIComponent(next); logout() and deleteAccount() via HttpClient, then reload the resource.\n9) Header: when auth.enabled(), anonymous users get an <a href> (full navigation, not routerLink) 'Prihlásiť' with the discord icon; logged-in users get an avatar (28 px, alt '') + truncated name linking to /ucet. The same appears in the mobile drawer. Before the API answers, render nothing (no layout jump in the prerendered HTML).\n10) pages/account/account.ts|html|scss: route 'ucet' in pages(), Page 'account' in parseUrl, I18n.path('account'). Prerendered shell, not in STATIC_PAGES/sitemap. Seo: extend PageMeta with noindex?: boolean → <meta name='robots' content='noindex'> (removed when leaving) and use it here. States: loading skeleton; disabled ('Prihlásenie zatiaľ nie je zapnuté.'); anonymous (card with 'Prihlásiť cez Discord' button + one sentence on what is stored); logged in (avatar, name, Discord ID, 'Odhlásiť', 'Zmazať účet' with a two-step confirm button); ?login=error|cancelled shows a short message.\n11) i18n: 'account' section + nav.login/nav.account in sk.ts and cs.ts.\n12) Docs: CLAUDE.md (Discord login decision, accounts app, snapshot excludes player data) and README (Discord application setup).\nTESTS (Discord mocked): state mismatch, access_denied, success creates user+player and logs in, second login updates and does not duplicate, open-redirect protection, CSRF on logout, delete forbidden for staff, me/ without config → login_enabled false, snapshot export contains no player rows.",
-      "acceptance_criteria": [
-        "Without DISCORD_CLIENT_ID/SECRET, /api/auth/me/ returns login_enabled=false, no login button is rendered anywhere, /ucet shows 'Prihlásenie zatiaľ nie je zapnuté', and the rest of the site is unchanged.",
-        "/api/auth/discord/login/ answers 302 to discord.com/oauth2/authorize with client_id, scope=identify, a random state and redirect_uri = SITE_URL + /api/auth/discord/callback/.",
-        "A callback with a missing or wrong state never logs anyone in and redirects with ?login=error; error=access_denied redirects with ?login=cancelled.",
-        "A successful callback (mocked) creates a non-staff User with an unusable password plus a Player, logs the user in and redirects to next; a second login updates the name and avatar without creating a new user.",
-        "next values like 'https://evil.example' or '//evil.example' fall back to /ucet (test).",
-        "GET /api/auth/me/ sets the csrftoken cookie with Cache-Control no-store; POST /api/auth/logout/ without X-CSRFToken → 403, with it → 204 and the session ends.",
-        "DELETE /api/auth/me/ removes a normal player's User and Player and returns 403 for staff or superusers.",
-        "The header shows 'Prihlásiť' for anonymous visitors and avatar + name for signed-in players, on desktop and in the mobile drawer, keyboard accessible and responsive at 320 px.",
-        "/ucet and /cz/ucet prerender without the API, carry meta robots noindex and are absent from sitemap.xml.",
-        "export_snapshot produces a file without accounts_* rows and without discord_* users (test).",
-        "All texts are in SK and CZ; backend tests, ng test and ng build pass."
-      ],
-      "effort": "M",
-      "depends_on": [],
-      "needs_from_user": [
-        "A Discord application in the Developer Portal: Client ID and Client Secret into .env",
-        "Redirect URIs registered in the Discord app: http://localhost:4200/api/auth/discord/callback/ and https://<production domain>/api/auth/discord/callback/",
-        "Confirmation that anyone with a Discord account may sign in (registration approval is the gate)"
-      ],
-      "risks": "The client secret must stay in .env only. The OAuth redirect needs the session cookie to be SameSite=Lax (Django default), so this must not be tightened to Strict. If SITE_URL does not match the registered redirect URI, Discord rejects the login. This collects personal data, so privacy-page must ship before login is enabled in production. Dropping DRF BasicAuthentication is intentional, as nothing uses it.",
-      "resume_branch": "wip/discord-login"
-    },
-    {
-      "id": "governor-registration",
-      "title": "Governor ID registration with R4/admin approval",
-      "title_sk": "Registrácia Governor ID so schválením R4/adminom",
-      "audience": "Members (register their main and farm accounts); R4/R5 (approve, keep a roster)",
-      "user_value": "Leadership gets a verified roster that maps a Discord identity to Governor ID and in-game name, which is essential for KvK coordination, migration checks and reaching inactive players. Players get a clear status (pending, approved, rejected with a reason) instead of chasing an R4 on Discord. RoK has no API, so a human approval is the only trustworthy check.",
-      "spec": "BACKEND (accounts app)\n1) Model Governor: player (FK Player, CASCADE, related_name='governors'), governor_id (CharField 12, RegexValidator ^\\d{6,12}$), name (CharField 32, in-game name, stripped), kind (choices 'main' = 'Hlavný účet', 'farm' = 'Farma'; default main), alliance (FK kingdom.Alliance, SET_NULL, null/blank = other/none), status ('pending' = 'Čaká na schválenie', 'approved' = 'Schválený', 'rejected' = 'Zamietnutý'; default pending), review_note (CharField 200, blank; shown to the player), reviewed_by (FK User, SET_NULL, null), reviewed_at (null), created_at, updated_at. UniqueConstraint(fields=['governor_id'], condition=~Q(status='rejected'), name='governor_id_taken') so one ID cannot be claimed twice, while a rejected ID can be resubmitted. Ordering: pending first, then -created_at.\n2) Data migration: Group 'R4' get_or_create plus permissions view/change governor and view player. Default permissions are created for the migration via emit_post_migrate_signal or create_permissions inside RunPython.\n3) API (authenticated only, IsAuthenticated + session/CSRF), accounts/urls.py:\n   - GET /api/me/governors/ → the player's own governors {id, governor_id, name, kind, alliance: {id, tag} | null, status, review_note, created_at}.\n   - POST /api/me/governors/ → creates a pending entry. Validation returns stable error codes for i18n: {code: 'invalid_id' | 'taken' | 'limit' | 'invalid_name'}. Limit is 5 governors per player. ScopedRateThrottle scope 'governors' 10/hour (DEFAULT_THROTTLE_RATES in settings).\n   - DELETE /api/me/governors/<id>/ → only own entries, any status (the player leaves or fixes a typo); 404 for someone else's entry.\n4) Admin GovernorAdmin uses normal model permissions, not SuperuserOnlyAdmin, so group R4 works. list_display: name, governor_id, kind, alliance tag, Discord name (link https://discord.com/users/<id>), colored status, created_at. list_filter: status, kind, alliance. search_fields: name, governor_id, player__username, player__global_name. Actions 'Schváliť' and 'Zamietnuť' (bulk). status and review_note are editable on the change form. save_model and the actions stamp reviewed_by/reviewed_at whenever status changes. player and created_at are read-only. add_permission is False (entries come only from players).\nFRONTEND (/ucet page from discord-login)\n5) New section 'Moje governory' for signed-in users: list rows with name, Governor ID, kind, alliance tag and a status badge (gold = approved, muted = pending, red accent = rejected + review_note), plus a delete button with a two-step confirm. Form: Governor ID (inputmode=numeric, pattern), in-game name, kind (Hlavný účet/Farma), alliance select from KingdomApi.alliances() + 'Iná / žiadna', submit. API error codes map to i18n messages ('Tento Governor ID už je zaregistrovaný – ozvi sa R4.', etc.). Hint: Governor ID is in the governor profile in game. Disabled when the limit is reached.\n6) Shared form styles (.field, .input, .select, error text) as tokens in styles.scss, dark, with a visible focus ring.\n7) i18n 'account.governors' section in sk.ts and cs.ts. Docs: CLAUDE.md (registration model, R4 group) and README (how R4 approves).\nTESTS: create / list / delete own; cannot see or delete another player's entries; anonymous 403; invalid ID; duplicate of a pending/approved ID → 'taken', but resubmitting a rejected ID works; limit 5; throttle; approve action stamps reviewed_by/at; an R4 group user (staff) can open the changelist and approve.",
-      "acceptance_criteria": [
-        "A signed-in player can submit Governor ID + name + kind + alliance on /ucet and immediately sees it as 'Čaká na schválenie'.",
-        "A second registration of a Governor ID that is pending or approved fails with a localized 'already registered' message; a previously rejected ID can be submitted again (tests).",
-        "IDs that are not 6–12 digits are rejected client-side and server-side; more than 5 governors per player is refused.",
-        "Anonymous requests to /api/me/governors/ return 403; a player can never list or delete another player's governors (tests).",
-        "In admin, a superuser or a staff user in group R4 can filter pending registrations and approve or reject them in bulk; reviewed_by and reviewed_at are filled.",
-        "A rejected entry shows its review_note to the player on /ucet; an approved one shows the gold badge.",
-        "The form works by keyboard, shows errors next to fields, and is usable at 320 px; all texts are in SK and CZ.",
-        "Migrations are additive; backend tests, ng test and ng build pass."
-      ],
-      "effort": "M",
-      "depends_on": [
-        "discord-login"
-      ],
-      "needs_from_user": [
-        "Decision: maximum governors per player (proposed 5) and whether farms may be registered",
-        "Which leaders will approve (they become R4 staff users)"
-      ],
-      "risks": "Governor IDs cannot be verified automatically, so R4 must check in game (by name / in the alliance member list); the admin help text says so. Abuse is limited by login, throttling and the uniqueness rule. Governor IDs and names are personal-ish data and are covered by privacy-page and excluded from the git snapshot (accounts_* tables, already handled by discord-login)."
-    },
-    {
       "id": "privacy-page",
       "title": "Privacy page and data minimisation for player accounts",
       "title_sk": "Stránka Ochrana údajov a minimalizácia uložených dát",
@@ -123,7 +66,8 @@
       ],
       "effort": "S",
       "depends_on": [
-        "discord-login"
+        "discord-login",
+        "governor-registration"
       ],
       "needs_from_user": [
         "Name/contact of the data controller (Gether or the kingdom leadership) and a contact channel",
@@ -287,32 +231,6 @@
         ]
       },
       {
-        "id": "discord-login",
-        "verdict": "revise",
-        "reasons": "On its own it gives almost nothing, but it is the right base for the Governor ID registration that CLAUDE.md lists as planned. Discord identity is how R4 actually reaches players. The spec is technically sound: the state lives in the session, SameSite=Lax works for the top-level Discord redirect, the nginx /api/ proxy and ng proxy '/api' cover the callback, CSRF goes through SessionAuthentication, and the scope is identify only. I checked these gaps in the code. (1) Privacy: this starts collecting personal data, but privacy-page depends on this feature and also needs governor fields, so nothing enforces that the page exists before production login is enabled. (2) In kingdom/snapshot.py the raw-sqlite cleanup needs `LIKE 'discord\\_%' ESCAPE '\\'`, otherwise `_` is a wildcard and the backslash is literal. (3) Users get username 'discord_<id>' only, so Gether cannot find a person in the Django Users admin when granting R4 rights. (4) The prerendered header has no login control, so adding one after hydration shifts the bar. At 320 px, brand + lang switch + burger + avatar may not fit. (5) The Django test client skips CSRF checks by default, so the 'logout without X-CSRFToken → 403' test needs Client(enforce_csrf_checks=True). (6) The callback is a public endpoint that triggers an outbound call to Discord's token endpoint and can be scripted after obtaining a state. Discord rate limits would then hit real logins.",
-        "required_changes": [
-          "README/CLAUDE.md: DISCORD_CLIENT_ID/SECRET must not be set on the production server until privacy-page is deployed; build order keeps privacy-page in the same batch.",
-          "Snapshot cleanup uses an explicit ESCAPE clause, also nulls/deletes django_admin_log rows of removed users; test that a user named 'discordX' (no underscore) is kept and 'discord_1' is removed.",
-          "On login also set User.first_name = global_name or username (truncated to 150) so the Users admin is readable.",
-          "Header: reserve the login slot's width (fixed min-width placeholder) to avoid layout shift; below the desktop breakpoint show login/account only inside the drawer; verify at 320 px.",
-          "Throttle the callback (e.g. AnonRateThrottle or a simple per-IP scope, ~20/hour) and verify the state before any Discord request.",
-          "Tests for CSRF use Client(enforce_csrf_checks=True)."
-        ]
-      },
-      {
-        "id": "governor-registration",
-        "verdict": "revise",
-        "reasons": "Highest-value item on the roadmap: CLAUDE.md names Governor ID registration with R4/admin approval as planned, RoK has no API, and human approval is the only check. The design is sound: a partial UniqueConstraint lets a rejected ID be resubmitted, there are stable error codes for i18n, and the limit is 5. Effort M is honest, and the moderation load on R4 is a real ongoing cost. Concrete defects I found. (1) The ScopedRateThrottle 'governors' 10/hour is applied to the view, so it also counts GET (the list loads on every /ucet visit) and DELETE. A player who reloads /ucet 10 times gets 429 and an empty list. (2) The R4 group gets 'view player', but discord-login defines PlayerAdmin(SuperuserOnlyAdmin), which overrides model permissions, so the permission does nothing. r4-admin-access then promises R4 'read-only players', which contradicts it. (3) DRF throttling uses the default LocMemCache, which is per gunicorn worker (3 workers), so the real limit is about 3x. (4) An R4 with an unusable password who opens /admin/ directly lands on the password form and is stuck unless they signed in on the website first.",
-        "required_changes": [
-          "Apply the throttle to POST only (override get_throttles() or a custom throttle with allow_request returning True for safe methods); test that 11 GETs still work.",
-          "Remove 'view player' from the R4 group (GovernorAdmin shows Discord name/link through player__ lookups, search via player__username works without it) – keep PlayerAdmin superuser-only.",
-          "Note the per-process cache in a comment or configure a FileBasedCache/DB cache for throttling; either is acceptable, but document which.",
-          "README: how Gether makes an R4 (Users admin → staff + group R4) and that R4 must sign in via Discord on /ucet before opening /admin/ (until r4-admin-access adds the button on the admin login page).",
-          "Permissions in the data migration via create_permissions(apps.get_app_config('accounts'), apps=apps) before assigning them, with a test on a fresh DB.",
-          "Update the privacy page content (Governor fields) in the same change if privacy-page already exists; otherwise privacy-page must include them."
-        ]
-      },
-      {
         "id": "privacy-page",
         "verdict": "revise",
         "reasons": "Mandatory before login goes live, and a factual, short legal page is an acceptable exception to the no-ballast rule. Its declared dependency is wrong, though: it lists Governor fields and a worker purge of rejected Governor rows, which need governor-registration, not just discord-login. Several statements would also be inaccurate as specified. 'Cookies: only session + csrftoken' leaves out the localStorage key 'kd1035.lang' (i18n.ts remember()). Every visitor gets csrftoken, because the header Auth service calls me/ with @ensure_csrf_cookie on every page. 'What we store' ignores server access logs: gunicorn runs with --access-logfile -, nginx logs client IPs, and Docker json-file logs have no rotation configured in either compose file. Discord is a third party in the login flow. Fonts are self-hosted via @fontsource (angular.json), so no Google Fonts transfer needs to be disclosed. The controller can be stated factually from existing data (Gether, the operator per the footer watermark, contact through his Discord via the Officer contact), but Gether must confirm it. Nothing may be invented.",
@@ -380,10 +298,10 @@
       }
     ],
     "build_order": [
-      "discord-login",
-      "governor-registration",
       "privacy-page",
-      "not-found-page"
+      "not-found-page",
+      "r4-admin-access",
+      "leadership-discord-alerts"
     ],
     "site_finished": false,
     "must_haves_left": []

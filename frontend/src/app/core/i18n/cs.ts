@@ -167,7 +167,7 @@ export const cs: Dict = {
       },
       {
         title: 'Návody bez záruky',
-        text: 'Návody vycházejí ze zkušeností a názorů hráčů. Hra se mění (patche, meta), proto nemůžeme zaručit, že jsou vždy přesné – používáš je na vlastní riziko.',
+        text: 'Návody vycházejí ze zkušeností hráčů a z veřejných zdrojů. Hra se mění (patche, meta), proto nemůžeme zaručit, že jsou vždy přesné – používáš je na vlastní riziko.',
         list: [],
       },
       {

@@ -1,30 +1,28 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 7. 10. 2026 – kolo 1 zastavené na pokyn Gethera. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 2 zastavené na pokyn Gethera. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json).
 
 ## Hotové
 
+- **8. 10. 2026 – Prihlásenie cez Discord (hráčske účty)** (kolo 2, schválené kritikom). Tlačidlo v hlavičke, stránka `/ucet`. Na serveri ho nezapínaj pred stránkou Ochrana údajov.
+- **8. 10. 2026 – Registrácia Governor ID so schválením R4** (kolo 2, schválené kritikom). Sekcia „Moji governori“ na `/ucet`, admin → Governori, skupina R4.
+- **8. 10. 2026 – mimo kôl:** doména kd1035.eu (README → Doména kd1035.eu), trvalá Discord pozvánka, vedenie (Methiu – Vodca, Gether a Hefarion – R4, všetci s Discord ID), ikony predmetov a portréty commanderov v návodoch, top jazda Arthur + Ivan IV a Attila + Achilles, zberači s bonusom surovín po zbere, MTG raz za mesiac, „garrison“ bez prekladu, odkazy v krokoch migrácie, stránka Podmienky používania a rozšírená pätička, oprava `/uploads/` v produkčnom nginx.
 - **7. 10. 2026 – Opakované eventy kráľovstva s automatickými Discord pripomienkami** (kolo 1, schválené kritikom). Admin → Eventy kráľovstva, pripomienky posiela worker.
 - **7. 10. 2026 – mimo kôl:** návody commanderi (10), výbava (7) a eventy (13) v SK/CZ so zdrojmi, ich mesačná automatická aktualizácia, dátum poslednej aktualizácie v pätičke, nočná krajina na pozadí webu, synchronizácia dev databázy cez git.
 
-## Rozpracované
-
-- **Prihlásenie cez Discord (hráčske účty)** – postavené na vetve `wip/discord-login`, ešte neprešlo review kritika. Ďalšie kolo ho dokončí ako prvé.
-
 ## Ďalšie v poradí
 
-1. Registrácia Governor ID so schválením R4/adminom
-2. Stránka Ochrana údajov a minimalizácia uložených dát
-3. Skutočná stránka 404 (SK/CZ) namiesto tichého presmerovania domov – kritik schválil
-4. Najbližšie eventy na úvodnej stránke – kritik schválil
+1. Stránka Ochrana údajov a minimalizácia uložených dát – **musí byť nasadená skôr, ako sa na serveri zapne Discord prihlásenie**
+2. Skutočná stránka 404 (SK/CZ) namiesto tichého presmerovania domov – kritik schválil
+3. Prístup R4 do adminu cez Discord a export zoznamu governorov
+4. Upozornenia pre vedenie na Discorde (nové registrácie, zlyhané pripomienky)
 
 ## Odložené (kritik: upraviť podľa poznámok v next-round.json)
 
 - Verejný kalendár eventov (SK/CZ)
 - Náhľad Discord správy a testovacie odoslanie v admine
 - Prehľad v admine: stav workera, najbližšie a zlyhané notifikácie
-- Prístup R4 do adminu cez Discord a export zoznamu governorov
-- Upozornenia pre vedenie na Discorde (nové registrácie, zlyhané pripomienky)
+- Najbližšie eventy na úvodnej stránke (spolu s kalendárom, keď budú skutočné eventy)
 - Odber kalendára eventov (iCal) do mobilu
 
 ## Čaká na Gethera
@@ -33,7 +31,8 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 7. 10. 2026 – kolo 
 - **Webhook** `DISCORD_WEBHOOK_URL` (voliteľne `DISCORD_EVENT_ROLE_ID`) – na dev PC testovací kanál, ostrý iba na serveri (dev databáza sa cez git dostane na každé PC).
 - **Zoznam opakovaných eventov kráľovstva** (SK/CZ názov, prvý začiatok, opakovanie, čas) a predstih pripomienok – nič nie je vymyslené ani naseedované.
 - **Rozhodnutia k registrácii:** max. počet governorov na hráča (návrh 5), či sa smú registrovať farmy, kto schvaľuje (R4).
-- **Ochrana údajov:** kto je prevádzkovateľ a kontakt, potvrdenie 90-dňovej lehoty pre zamietnuté registrácie.
+- **Ochrana údajov:** kto je prevádzkovateľ a kontakt (návrh: Gether, kontakt cez Discord), potvrdenie 90-dňovej lehoty pre zamietnuté registrácie.
+- **Server:** DNS pre kd1035.eu a www, HTTPS proxy (Caddy), `.env` – postup v README → Doména kd1035.eu.
 - Pre odložené funkcie: webhook testovacieho kanála (`DISCORD_TEST_WEBHOOK_URL`) a súkromného kanála vedenia (`DISCORD_STAFF_WEBHOOK_URL`).
 
 ## Drobnosti z review (neblokujúce)

@@ -33,7 +33,14 @@
       "unreviewed_branches": { "discord-login": "wip/discord-login" },
       "not_started": ["governor-registration", "privacy-page"],
       "note": "Kolo zastavené na pokyn Gethera počas review discord-login. Nápady a verdikty kritika sú v next-round.json."
+    },
+    {
+      "round": 2,
+      "date": "2026-10-08",
+      "shipped": ["discord-login", "governor-registration"],
+      "not_started": ["privacy-page", "not-found-page"],
+      "note": "Kolo zastavené na pokyn Gethera hneď po štarte privacy-page (nič nerozrobené). Mimo kola: doména kd1035.eu, ikony predmetov a portréty commanderov, podmienky používania, úpravy návodov."
     }
   ],
-  "next": "Spusti workflow kd-improve s args z .claude/kd-agents/next-round.json (doplň date). Ako prvé sa dokončí a zrevidovaná vetva wip/discord-login."
+  "next": "Spusti workflow kd-improve (scriptPath .claude/workflows/kd-improve.js) s args z .claude/kd-agents/next-round.json (doplň date). Prvá je privacy-page – musí byť hotová pred zapnutím Discord prihlásenia na serveri."
 }

@@ -165,7 +165,7 @@ export const sk = {
       },
       {
         title: 'Návody bez záruky',
-        text: 'Návody vychádzajú zo skúseností a názorov hráčov. Hra sa mení (patche, meta), preto nemôžeme zaručiť, že sú vždy presné – používaš ich na vlastné riziko.',
+        text: 'Návody vychádzajú zo skúseností hráčov a z verejných zdrojov. Hra sa mení (patche, meta), preto nemôžeme zaručiť, že sú vždy presné – používaš ich na vlastné riziko.',
         list: [],
       },
       {
