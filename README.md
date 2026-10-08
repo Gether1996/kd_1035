@@ -117,7 +117,7 @@ Hráči sa prihlásia svojím Discord účtom (web dostane iba Discord ID, meno 
    - `http://localhost:4200/api/auth/discord/callback/` (vývoj)
    - `https://<tvoja doména>/api/auth/discord/callback/` (server)
 
-   Web posiela `SITE_URL` + `/api/auth/discord/callback/`, takže `SITE_URL` v `.env` musí sedieť s jednou z nich.
+   Web posiela `SITE_URL` + `/api/auth/discord/callback/`, takže `SITE_URL` v `.env` musí sedieť s jednou z nich. Lokálne môže `SITE_URL` ostať prázdne – použije sa adresa z prehliadača (`http://localhost:4200`).
 4. Nič iné nezaškrtávaj (žiadny bot). `docker compose up -d` (načíta nový `.env`).
 
 Hráč sa prihlási tlačidlom **Prihlásiť** v hlavičke, svoj účet vidí na `/ucet` (odhlásenie, zmazanie účtu). Admin (iba superuser) → **Hráči**: zoznam prihlásených, zmazanie hráča zmaže aj jeho účet. Zablokovanie: **Používatelia** → `discord_<id>` → vypni „Aktívny“. Hráči sa neprenášajú cez git (snapshot ich vynechá).
