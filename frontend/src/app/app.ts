@@ -1,7 +1,6 @@
 import { ViewportScroller } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DOCUMENT, afterNextRender, inject } from '@angular/core';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { filter } from 'rxjs';
+import { NavigationEnd, NavigationStart, Router, RouterOutlet, Scroll } from '@angular/router';
 import { I18n, parseUrl } from './core/i18n/i18n';
 import { Seo } from './core/seo';
 import { Footer } from './layout/footer/footer';
@@ -42,12 +41,29 @@ export class App {
     // section links land below the fixed header
     scroller.setOffset(() => [0, doc.querySelector('app-header')?.clientHeight ?? 0]);
 
-    // new page → top; same page in the other language → keep the scroll position
+    // new page → top; same page in the other language → keep the scroll position;
+    // back/forward → where the visitor left that page. The browser's own restoration would run while the previous
+    // page is still rendered and stop at its height (forward from /o-nas to /#alliance landed above the section).
+    scroller.setHistoryScrollRestoration('manual');
     let previous = parseUrl(router.url).rest;
-    router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe((e) => {
-      const rest = parseUrl(e.urlAfterRedirects).rest;
-      if (rest !== previous && !e.urlAfterRedirects.includes('#')) scroller.scrollToPosition([0, 0]);
-      previous = rest;
+    let changed = false;
+    let popstate = false;
+    let restoring: AbortController | undefined;
+    router.events.subscribe((e) => {
+      if (e instanceof NavigationStart) {
+        popstate = e.navigationTrigger === 'popstate';
+        restoring?.abort();
+      } else if (e instanceof NavigationEnd) {
+        const rest = parseUrl(e.urlAfterRedirects).rest;
+        changed = rest !== previous;
+        previous = rest;
+        const anchor = e.urlAfterRedirects.includes('#');
+        if (changed && !popstate && !anchor) scroller.scrollToPosition([0, 0]);
+      } else if (e instanceof Scroll && popstate) {
+        // the router saved the position when the visitor left the page; after a reload it has none
+        if (e.position) restoring = restore(scroller, e.position);
+        else if (changed && !e.anchor) scroller.scrollToPosition([0, 0], { behavior: 'instant' });
+      }
     });
 
     afterNextRender(() => {
@@ -58,4 +74,24 @@ export class App {
       }
     });
   }
+}
+
+/**
+ * Scrolls to `position` once the page is tall enough for it – a guide's content arrives from the API a moment after
+ * the page is shown. Gives up after 2 s, or as soon as the visitor scrolls or clicks.
+ */
+function restore(scroller: ViewportScroller, [x, y]: [number, number]): AbortController {
+  const restoring = new AbortController();
+  const until = performance.now() + 2000;
+  for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+    addEventListener(type, () => restoring.abort(), { passive: true, signal: restoring.signal });
+  }
+  const step = () => {
+    if (restoring.signal.aborted) return;
+    scroller.scrollToPosition([x, y], { behavior: 'instant' });
+    if (Math.abs(scrollY - y) < 1 || performance.now() > until) restoring.abort();
+    else requestAnimationFrame(step);
+  };
+  step();
+  return restoring;
 }
