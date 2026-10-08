@@ -395,6 +395,8 @@ class PlayerAdminTests(TestCase):
 
 
 class SnapshotPrivacyTests(TransactionTestCase):
+    serialized_rollback = True  # starts with the content seeded by migrations, like a real database
+
     def test_export_contains_no_players(self):
         admin = User.objects.create_superuser('boss', password='x')
         kept = User.objects.create_user('discordX')  # no underscore → not a Discord account

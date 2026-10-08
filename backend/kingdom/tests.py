@@ -473,9 +473,10 @@ class WorkerTests(TestCase):
 
 
 class BackupTests(TransactionTestCase):
+    # reloads the alliance seeded by migration 0002 – every TransactionTestCase flushes the database after itself
+    serialized_rollback = True
+
     def test_backup_prune_and_restore(self):
-        # an earlier TransactionTestCase may have flushed the alliance seeded by the data migration
-        Alliance.objects.get_or_create(tag='CS35', defaults={'name': 'CZ/SK Legends'})
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             with override_settings(MEDIA_ROOT=folder / 'media'):
@@ -500,6 +501,8 @@ class BackupTests(TransactionTestCase):
 
 
 class SnapshotTests(TransactionTestCase):
+    serialized_rollback = True  # see BackupTests
+
     def test_export_import_and_outdated_guard(self):
         from django.contrib.sessions.backends.db import SessionStore
 
@@ -510,7 +513,6 @@ class SnapshotTests(TransactionTestCase):
             with override_settings(
                 SNAPSHOT_PATH=folder / 'snapshot' / 'db.sqlite3', SNAPSHOT_BASE_PATH=folder / 'snapshot_base'
             ):
-                Alliance.objects.get_or_create(tag='CS35', defaults={'name': 'CZ/SK Legends'})
                 SessionStore().create()
                 self.assertTrue(snapshot.export_snapshot())
                 path = folder / 'snapshot' / 'db.sqlite3'
