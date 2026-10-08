@@ -4,6 +4,16 @@ Blocks: ('p', text) · ('h2', text) · ('ul', [text, …]) · ('note',) · ('pai
 · ('table', columns, rows) · ('sources', [(label, url), …]). A text is t(sk, cs) or a plain string.
 """
 
+import re
+from pathlib import Path
+
+# Item icons (game art from codexhelper.com, used with Gether's consent): one 96×96 webp per item, named by
+# slug(item name). Every item named in an 'item', 'alt' or 'accessory' cell gets its icon automatically.
+GEAR_DIR = Path(__file__).resolve().parent.parent / 'static' / 'guides' / 'gear'
+GEAR_URL = '/static/guides/gear/'
+# longest first, so 'pendant-of-eternal-night' wins over 'eternal-night'
+GEAR_ICONS = sorted((path.stem for path in GEAR_DIR.glob('*.webp')), key=len, reverse=True)
+
 
 def t(sk, cs):
     return {'sk': sk, 'cs': cs}
@@ -71,6 +81,30 @@ def st(*parts):
     return {lang: ', '.join(one(lang, *part) for part in parts) for lang in ('sk', 'cs')}
 
 
+def slug(value):
+    """"Navar's Control (KvK)" → 'navars-control-kvk'"""
+    value = re.sub("['’]", '', value.lower())
+    return re.sub('[^a-z0-9]+', '-', value).strip('-')
+
+
+def gear_icons(value):
+    """Icons of the items named in a table cell, in the order they are mentioned (item names are English in both languages)."""
+    haystack = f'-{slug(text(value, "sk"))}-'
+    found = []
+    for icon in GEAR_ICONS:
+        at = haystack.find(f'-{icon}-')
+        if at >= 0:
+            found.append((at, icon))
+            # blank the match out so a shorter name inside it cannot match again
+            haystack = haystack[: at + 1] + '#' * len(icon) + haystack[at + 1 + len(icon) :]
+    return [icon for _, icon in sorted(found)]
+
+
+def _icon(name, small=False):
+    size, kind = (20, ' gear__icon--small') if small else (44, '')
+    return f'<img class="gear__icon{kind}" src="{GEAR_URL}{name}.webp" alt="" width="{size}" height="{size}" loading="lazy">'
+
+
 def verified_note(verified, note):
     """('2026-10', t('Meta sa mení…', …)) → t('Stav k októbru 2026. Meta sa mení…', …)"""
     year, month = (int(part) for part in verified.split('-'))
@@ -124,7 +158,11 @@ def _table(columns, rows, lang):
             if c in ('item', 'what', 'tier', 'stage', 'rank', 'cadence', 'objective', 'kind'):
                 value = f'<strong>{value}</strong>'
             if c == 'item' and row.get('alt'):
-                value += f'<br><small>{labels["alt"]}: {text(row["alt"], lang)}</small>'
+                # small icons only for alternatives that are not the item itself
+                extra = ''.join(_icon(i, small=True) for i in gear_icons(row['alt']) if i not in gear_icons(row['item']))
+                value += f'<br><small>{labels["alt"]}: {extra}{text(row["alt"], lang)}</small>'
+            if c in ('item', 'accessory') and (icons := gear_icons(row[c])):
+                value = f'<span class="gear"><span class="gear__icons">{"".join(map(_icon, icons))}</span><span>{value}</span></span>'
             cells += f'<td>{value}</td>'
         body += f'<tr>{cells}</tr>'
     return f'<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'

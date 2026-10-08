@@ -40,7 +40,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Odkazy (admin → Odkazy): Facebook skupina https://www.facebook.com/groups/550189483954751, Discord trvalá pozvánka https://discord.gg/NhwP6y9ssM (nikdy nevyprší, neobmedzené použitia; obe v seed migrácii 0002).
 - Prihlásenie cez Governor ID sa nedá overiť automaticky → registráciu bude schvaľovať R4/admin.
 - Fotky a texty dodá používateľ. Dovtedy len krátke placeholdery – **žiadne vymyslené fakty** o kráľovstve.
-- Nepoužívaj oficiálne assety Lilith Games (logá, artworky) bez súhlasu používateľa.
+- Nepoužívaj oficiálne assety Lilith Games (logá, artworky) bez súhlasu používateľa. Výnimka so súhlasom Gethera (8. 10. 2026): ikony predmetov v návodoch o výbave (sekcia Automaticky aktualizované návody).
 - Pätička: malý watermark „Vytvoril Gether · 2026“ + krátka poznámka, že ide o neoficiálnu fanúšikovskú stránku.
 
 ## Návody (CMS)
@@ -59,6 +59,8 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Mesačná aktualizácia:** workflow `.claude/workflows/kd-meta-update.js` (research agent na každý modul → kd-builder upraví moduly a zvýši `VERIFIED` → kd-critic overí každé tvrdenie oproti zdroju → push). Spúšťa ho naplánovaná úloha Claude desktop appky `kd1035-meta-update` (7. deň v mesiaci 18:00, prvý beh 7. 11. 2026; beží len keď je appka otvorená, inak pri ďalšom spustení) s args `{date: 'RRRR-MM-DD'}`. Ručne: „spusti kd-meta-update“.
 - Pätička webu ukazuje „Informácie aktualizované <dátum>“ z `/api/status/` = neskorší z `LAST_UPDATE` (`guides/meta/__init__.py`, mesačná aktualizácia ho posunie aj bez zmien) a poslednej zmeny zverejneného návodu. Načítava sa len v prehliadači, pri chybe API sa riadok skryje.
 - Nový obsah generovaný Claudom patrí do `guides/meta`, nie do migrácií ani len do DB.
+- **Ikony predmetov** (výbava): `backend/guides/static/guides/gear/<slug>.webp`, 96×96, z codexhelper.com. `render.py` ich sám pridá ku každému predmetu, ktorého názov je v stĺpci `item`, `alt` alebo `accessory` (veľká ikona pri predmete, malá pri alternatíve). Nový predmet v tabuľke výbavy → `manage.py fetch_gear_icons "Názov predmetu"` (stiahne a upraví ikonu); test zlyhá, ak niektorému predmetu ikona chýba. Servíruje ich Django na `/static/` (v dev cez proxy `ng serve`).
+- **Ikony predmetov** (výbava): `backend/guides/static/guides/gear/<slug>.webp`, 96×96, z codexhelper.com. `render.py` ich pridá sám ku každému predmetu, ktorého názov je v stĺpci `item`, `alt` alebo `accessory` (veľká ikona pri predmete, malá pri alternatíve). Nový predmet v tabuľke výbavy → `manage.py fetch_gear_icons "Názov predmetu"` (stiahne a upraví ikonu); test zlyhá, ak niektorému predmetu ikona chýba. Servíruje ich Django na `/static/` (v dev cez proxy `ng serve`).
 - Fakty, ktoré Gether potvrdil z hry (v kóde komentár `confirmed in game by Gether`), majú prednosť pred webovými zdrojmi – mesačná aktualizácia ich neprepisuje. Napr. More Than Gems je po novom raz za mesiac (nie každé 2–3 mesiace).
 
 ## Notifikácie

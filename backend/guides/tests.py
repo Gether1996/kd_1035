@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 from .meta import LAST_UPDATE, MODULES
-from .meta.render import render, verified_note
+from .meta.render import GEAR_DIR, gear_icons, render, verified_note
 from .meta.sync import rendered_guides, sync_guides
 from .models import Guide
 from .sanitize import clean_html
@@ -51,6 +51,55 @@ class MetaGuidesTests(TestCase):
             guide = Guide(**data)
             for lang in ('sk', 'cs'):
                 self.assertTrue(0 < len(guide.excerpt(lang)) <= 160, data['slug'])
+
+    def test_every_item_in_equipment_tables_has_an_icon(self):
+        # a new item from the monthly meta update needs its icon in guides/static/guides/gear (see CLAUDE.md)
+        from .meta import equipment
+
+        for guide in equipment.GUIDES:
+            for block in guide['blocks']:
+                if block[0] != 'table':
+                    continue
+                for row in block[2]:
+                    for column in ('item', 'accessory'):
+                        if column in row:
+                            self.assertTrue(gear_icons(row[column]), f'{guide["slug"]}: no icon for {row[column]}')
+        for path in GEAR_DIR.glob('*'):
+            self.assertEqual(path.suffix, '.webp', path.name)
+            self.assertLess(path.stat().st_size, 30_000, path.name)
+
+    def test_fetch_gear_icons_saves_a_square_webp(self):
+        from io import BytesIO, StringIO
+        from unittest import mock
+
+        from django.core.management import CommandError, call_command
+        from PIL import Image
+
+        from .management.commands import fetch_gear_icons
+
+        png = BytesIO()
+        Image.new('RGBA', (200, 120), (200, 150, 40, 255)).save(png, 'PNG')
+        page = b'<img src="/_astro/navars_control.Ab1_x.webp"><img src="/_astro/navars_control.Ab1_x_Q9z.webp">'
+        urls = []
+
+        def fetch(url):
+            urls.append(url)
+            return page if url == fetch_gear_icons.PAGE else png.getvalue()
+
+        with tempfile.TemporaryDirectory() as folder, mock.patch.object(fetch_gear_icons, 'fetch', fetch), \
+                mock.patch.object(fetch_gear_icons, 'GEAR_DIR', Path(folder)):  # fmt: skip
+            call_command('fetch_gear_icons', 'Navar’s Control', stdout=StringIO())
+            with Image.open(Path(folder) / 'navars-control.webp') as icon:
+                self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)))
+            self.assertEqual(urls[-1], 'https://codexhelper.com/_astro/navars_control.Ab1_x.webp')
+            with self.assertRaises(CommandError):
+                call_command('fetch_gear_icons', 'Unknown Blade', stdout=StringIO())
+
+    def test_gear_icons_follow_the_text(self):
+        self.assertEqual(gear_icons('Horn of Fury + Ring of Doom'), ['horn-of-fury', 'ring-of-doom'])
+        self.assertEqual(gear_icons('Pendant of Eternal Night pre Qin Shi Huanga'), ['pendant-of-eternal-night'])
+        self.assertEqual(gear_icons({'sk': 'Navar’s Control (KvK)', 'cs': '-'}), ['navars-control'])
+        self.assertEqual(gear_icons('epická výbava'), [])
 
     def test_verified_note(self):
         note = verified_note('2026-07', {'sk': 'A.', 'cs': 'B.'})
