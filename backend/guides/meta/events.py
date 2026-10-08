@@ -35,10 +35,10 @@ GUIDES = [
                 {'cadence': t('Niekoľkokrát za mesiac', 'Několikrát za měsíc'),
                  'events': t('Golden Kingdom, Wheel of Fortune (zdroje uvádzajú každé 2 až 6 týždňov)',
                              'Golden Kingdom, Wheel of Fortune (zdroje uvádějí každé 2 až 6 týdnů)')},
+                # MTG cadence confirmed in game by Gether (10/2026) – keep it even if older sources say 2–3 months
                 {'cadence': t('Raz za mesiac', 'Jednou za měsíc'),
-                 'events': t('Alliance Mobilization (7 dní) a sviatočná séria eventov',
-                             'Alliance Mobilization (7 dní) a sváteční série eventů')},
-                {'cadence': t('Každé 2–3 mesiace', 'Každé 2–3 měsíce'), 'events': 'More Than Gems'},
+                 'events': t('Alliance Mobilization (7 dní), More Than Gems (2 dni) a sviatočná séria eventov',
+                             'Alliance Mobilization (7 dní), More Than Gems (2 dny) a sváteční série eventů')},
                 {'cadence': t('Každé 3–4 mesiace', 'Každé 3–4 měsíce'), 'events': 'Zenith of Power'},
                 {'cadence': t('Asi každých 70 dní', 'Asi každých 70 dní'),
                  'events': t('noví commanderi na Wheel of Fortune a v MGE', 'noví commandeři na Wheel of Fortune a v MGE')},
@@ -239,8 +239,9 @@ GUIDES = [
             ('note',),
             ('h2', t('Základy', 'Základy')),
             ('ul', [
-                t('Prichádza každé 2–3 mesiace a trvá 2 dni. Každý deň má vlastné stupne odmien.',
-                  'Přichází každé 2–3 měsíce a trvá 2 dny. Každý den má vlastní stupně odměn.'),
+                # cadence confirmed in game by Gether (10/2026) – keep it even if older sources say 2–3 months
+                t('Prichádza raz za mesiac, občas s dlhším odstupom, keď sa prekrýva s inými eventami. Trvá 2 dni a každý deň má vlastné stupne odmien.',
+                  'Přichází jednou za měsíc, občas s delším odstupem, když se překrývá s jinými eventy. Trvá 2 dny a každý den má vlastní stupně odměn.'),
                 t('Zlaté hlavy dávajú stupne 7 000 a 25 000 gemov za deň. 25 000 za deň dalo asi 13 zlatých hláv, 50 000 za oba dni približne 26 plus speedupy a suroviny.',
                   'Zlaté hlavy dávají stupně 7 000 a 25 000 gemů za den. 25 000 za den dalo asi 13 zlatých hlav, 50 000 za oba dny přibližně 26 plus speedupy a suroviny.'),
                 t('Rozhodni sa vopred: 25k + 25k, 25k + 7k alebo 7k + 7k. Nikdy neskonči tesne pod stupňom.',

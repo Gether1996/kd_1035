@@ -59,6 +59,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Mesačná aktualizácia:** workflow `.claude/workflows/kd-meta-update.js` (research agent na každý modul → kd-builder upraví moduly a zvýši `VERIFIED` → kd-critic overí každé tvrdenie oproti zdroju → push). Spúšťa ho naplánovaná úloha Claude desktop appky `kd1035-meta-update` (7. deň v mesiaci 18:00, prvý beh 7. 11. 2026; beží len keď je appka otvorená, inak pri ďalšom spustení) s args `{date: 'RRRR-MM-DD'}`. Ručne: „spusti kd-meta-update“.
 - Pätička webu ukazuje „Informácie aktualizované <dátum>“ z `/api/status/` = neskorší z `LAST_UPDATE` (`guides/meta/__init__.py`, mesačná aktualizácia ho posunie aj bez zmien) a poslednej zmeny zverejneného návodu. Načítava sa len v prehliadači, pri chybe API sa riadok skryje.
 - Nový obsah generovaný Claudom patrí do `guides/meta`, nie do migrácií ani len do DB.
+- Fakty, ktoré Gether potvrdil z hry (v kóde komentár `confirmed in game by Gether`), majú prednosť pred webovými zdrojmi – mesačná aktualizácia ich neprepisuje. Napr. More Than Gems je po novom raz za mesiac (nie každé 2–3 mesiace).
 
 ## Notifikácie
 - **Discord** (nie e-mail, nie WhatsApp – WhatsApp Cloud API vyžaduje Meta Business účet a platí sa za správy). Webhook do kanála, voliteľne ping roly. Premenné `DISCORD_WEBHOOK_URL`, `DISCORD_EVENT_ROLE_ID`.
