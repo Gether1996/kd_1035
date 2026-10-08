@@ -11,6 +11,14 @@ map "${SITE_URL}" $kd_origin {
     default "${SITE_URL}";
 }
 
+# Link-preview bots do not run JavaScript, so a guide page (rendered in the browser) would show them only the generic
+# site meta; they get the guide's own title and intro from Django instead. Search crawlers (Googlebot, Bingbot,
+# Applebot) are left out on purpose: they render the app themselves.
+map $http_user_agent $kd_link_bot {
+    default 0;
+    ~*(discordbot|facebookexternalhit|facebot|twitterbot|slackbot|telegrambot|whatsapp|linkedinbot|skypeuripreview|redditbot|mastodon|embedly|pinterest) 1;
+}
+
 # Access log without the visitor's IP address (the privacy page promises it). Both servers below use it; the
 # image's default `main` format is replaced, not doubled, because access_log is set on the server level.
 log_format kd_noip '[$time_local] "$request" $status $body_bytes_sent "$http_user_agent" $request_time';
@@ -83,10 +91,15 @@ server {
         include /etc/nginx/snippets/security-headers.conf;
     }
 
-    # single guides are rendered in the browser from the app shell
+    # single guides are rendered in the browser from the app shell; link-preview bots get Django's
+    # /api/link-preview/ page with the guide's Open Graph tags (same address, so robots.txt applies as usual)
     location ~ ^/(cz/)?navody/[^/]+/[^/]+/?$ {
+        if ($kd_link_bot) {
+            rewrite ^/(.*)$ /api/link-preview/$1 last;
+        }
         try_files /index.csr.html =404;
         add_header Cache-Control "no-cache";
+        add_header Vary "User-Agent";
         include /etc/nginx/snippets/security-headers.conf;
     }
 

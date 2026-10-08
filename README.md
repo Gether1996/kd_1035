@@ -51,7 +51,10 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
    `www` presmeruje na `kd1035.eu` už nginx v kontajneri `web`. Proxy musí posielať hlavičku `X-Forwarded-Proto` (Caddy, Nginx Proxy Manager aj Traefik to robia samé).
 
    **Prístupové logy v proxy nezapínaj** (v Caddy žiadna direktíva `log`, v Nginx Proxy Manager / Traefik vypnutý access log). Stránka Ochrana údajov sľubuje, že IP adresy návštevníkov neukladáme – logy kontajnerov sú bez IP a majú najviac 3 × 10 MB na službu.
-4. **Kontrola:** https://kd1035.eu, https://www.kd1035.eu (presmeruje), https://kd1035.eu/sitemap.xml (adresy začínajú `https://kd1035.eu`), https://kd1035.eu/admin/.
+4. **Kontrola:** https://kd1035.eu, https://www.kd1035.eu (presmeruje), https://kd1035.eu/sitemap.xml (adresy začínajú `https://kd1035.eu`), https://kd1035.eu/admin/. Náhľad odkazu na návod (tak ho vidí Discord):
+   ```bash
+   curl -s -A 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)' https://kd1035.eu/navody/commanderi/pary-pre-jazdu | grep og:
+   ```
 5. **Google:** [Search Console](https://search.google.com/search-console) → pridaj doménu `kd1035.eu` (overenie TXT záznamom v DNS) → Sitemaps → `https://kd1035.eu/sitemap.xml`.
 
 ## Dáta a zálohy
@@ -79,6 +82,8 @@ Iba superuser, v admine → **Návody → Pridať návod**:
 4. Ulož. Hore je náhľad a tlačidlo „Zobraziť na stránke“.
 
 Skripty, `<style>` bloky a nebezpečné atribúty sa pri uložení odstránia. Vzhľad (nadpisy, tabuľky, zoznamy) dodá web sám.
+
+Odkaz na návod zdieľaný na Discorde alebo Facebooku ukáže nadpis, úvod (prvý odsek) a obrázok kráľovstva. Discord si náhľad nejaký čas pamätá – zmena nadpisu sa v už poslaných odkazoch prejaví až neskôr.
 
 ### Automaticky aktualizované návody
 

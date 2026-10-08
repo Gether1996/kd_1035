@@ -3,6 +3,7 @@ import type { Dict } from './sk';
 export const cs: Dict = {
   seo: {
     guides: 'návody pro Rise of Kingdoms | KD 1035',
+    // also in backend/guides/views.py SITE_META (link previews of missing guides)
     home: {
       title: 'KD 1035 · České a slovenské království v Rise of Kingdoms',
       description:

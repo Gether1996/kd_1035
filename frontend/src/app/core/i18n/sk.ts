@@ -1,6 +1,7 @@
 export const sk = {
   seo: {
     guides: 'návody pre Rise of Kingdoms | KD 1035',
+    // also in backend/guides/views.py SITE_META (link previews of missing guides)
     home: {
       title: 'KD 1035 · Slovenské a české kráľovstvo v Rise of Kingdoms',
       description:
