@@ -1,0 +1,107 @@
+// Same article layout as the About page: numbered blocks in one narrow column.
+:host {
+  display: block;
+}
+
+.article {
+  max-width: 800px;
+  padding-bottom: clamp(80px, 12vw, 140px);
+}
+
+.block {
+  padding-block: clamp(28px, 5vw, 44px);
+  border-bottom: 1px solid var(--line);
+
+  h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    font-size: clamp(1.5rem, 1.15rem + 1.4vw, 2.125rem);
+    text-wrap: balance;
+  }
+
+  p {
+    margin-top: 16px;
+    color: var(--text-dim);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+}
+
+.block__num {
+  font-size: 0.55em;
+  letter-spacing: 0.12em;
+  color: var(--gold-400);
+}
+
+.checks {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding-left: 34px;
+    color: var(--text);
+    line-height: 1.6;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 0.55em;
+      width: 9px;
+      height: 9px;
+      border: 1px solid var(--gold-400);
+      background: rgba(245, 196, 81, 0.2);
+      transform: rotate(45deg);
+    }
+  }
+}
+
+// leadership contacts on the home page (same pill as the migration steps on About)
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin-top: 20px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--gold-300);
+  font: 600 0.875rem/1 var(--font-body);
+  letter-spacing: 0.04em;
+  transition:
+    border-color 0.25s,
+    color 0.25s,
+    transform 0.3s var(--ease-out);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.35s var(--ease-out);
+  }
+
+  &:hover {
+    border-color: var(--gold-400);
+    color: var(--gold-100);
+    transform: translateY(-1px);
+
+    .icon {
+      transform: translateX(3px);
+    }
+  }
+}
+
+.valid {
+  margin-top: clamp(28px, 4vw, 40px);
+  font-size: 0.875rem;
+  color: var(--text-mute);
+
+  time {
+    color: var(--text-dim);
+  }
+}

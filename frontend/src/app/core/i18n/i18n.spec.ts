@@ -10,6 +10,8 @@ describe('parseUrl', () => {
     expect(parseUrl('/cz')).toEqual({ lang: 'cs', page: 'home', rest: '' });
     expect(parseUrl('/cz/')).toEqual({ lang: 'cs', page: 'home', rest: '' });
     expect(parseUrl('/cz/o-nas?ref=fb')).toEqual({ lang: 'cs', page: 'about', rest: '/o-nas' });
+    expect(parseUrl('/podmienky')).toEqual({ lang: 'sk', page: 'terms', rest: '/podmienky' });
+    expect(parseUrl('/cz/podmienky/')).toEqual({ lang: 'cs', page: 'terms', rest: '/podmienky' });
     expect(parseUrl('/navody/vybava')).toEqual({ lang: 'sk', page: 'guides', rest: '/navody/vybava' });
     expect(parseUrl('/cz/navody/eventy/mge')).toEqual({ lang: 'cs', page: 'guide', rest: '/navody/eventy/mge' });
     expect(parseUrl('/czech')).toEqual({ lang: 'sk', page: 'home', rest: '/czech' });

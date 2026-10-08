@@ -40,7 +40,7 @@ export class Seo {
       const lang = i18n.lang();
       const page = i18n.page();
       const t = i18n.t();
-      const fixed = page === 'home' || page === 'about' ? t.seo[page] : null;
+      const fixed = page === 'home' || page === 'about' || page === 'terms' ? t.seo[page] : null;
       const current: PageMeta = this.override() ?? fixed ?? t.seo.home;
       const origin = this.origin();
       const url = (l: Lang = lang) => origin + i18n.switchPath(l);

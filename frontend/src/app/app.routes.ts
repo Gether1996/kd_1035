@@ -4,11 +4,13 @@ import { Account } from './pages/account/account';
 import { GuideList } from './pages/guides/guide-list';
 import { GuidePage } from './pages/guides/guide-page';
 import { Home } from './pages/home/home';
+import { Terms } from './pages/terms/terms';
 
 // Same pages in both languages: Slovak at the root, Czech under /cz (see I18n).
 const pages = (): Routes => [
   { path: '', component: Home },
   { path: 'o-nas', component: About },
+  { path: 'podmienky', component: Terms },
   { path: 'ucet', component: Account },
   { path: 'navody/:category', component: GuideList },
   { path: 'navody/:category/:slug', component: GuidePage },

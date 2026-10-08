@@ -24,7 +24,12 @@ import { Logo } from '../../shared/logo';
       </div>
     </div>
     <div class="container footer__bottom">
-      <p class="footer__note">{{ i18n.t().footer.fanSite }}</p>
+      <div class="footer__legal">
+        <p class="footer__note">{{ i18n.t().footer.fanSite }}</p>
+        <ul class="footer__links">
+          <li><a [routerLink]="i18n.path('terms')">{{ i18n.t().nav.terms }}</a></li>
+        </ul>
+      </div>
       @if (updated(); as updated) {
         <p class="footer__updated">
           {{ i18n.t().footer.updated }} <time [attr.datetime]="updated.iso">{{ updated.text }}</time>

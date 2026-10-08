@@ -11,6 +11,11 @@ export const sk = {
       description:
         'Hľadáš slovenské alebo české KD v Rise of Kingdoms? KD 1035 je jediný kingdom v hre zložený výhradne zo Slovákov a Čechov. Zisti, ako sa k nám pridať.',
     },
+    terms: {
+      title: 'Podmienky používania | KD 1035',
+      description:
+        'Podmienky používania neoficiálnej fanúšikovskej stránky slovensko-českého kráľovstva KD 1035 v Rise of Kingdoms. Web nie je prepojený so spoločnosťou Lilith Games.',
+    },
     account: {
       title: 'Môj účet | KD 1035',
       description: 'Prihlásenie hráčov kráľovstva KD 1035 cez Discord.',
@@ -21,6 +26,7 @@ export const sk = {
     breadcrumb: 'Navigačná cesta',
     label: 'Hlavná navigácia',
     about: 'O nás',
+    terms: 'Podmienky používania',
     alliance: 'Aliancia',
     guides: 'Návody',
     community: 'Komunita',
@@ -137,6 +143,44 @@ export const sk = {
     },
     cta: 'Pridaj sa k nám',
   },
+  termsPage: {
+    eyebrow: 'Neoficiálny web',
+    title: 'Podmienky používania',
+    intro: 'Krátko o tom, čo tento web je a čo nie je.',
+    sections: [
+      {
+        title: 'Neoficiálna fanúšikovská stránka',
+        text: 'Web vytvorili a spravujú hráči kráľovstva 1035 v hre Rise of Kingdoms. Je bezplatný a nekomerčný – nič nepredávame, neprijímame platby a nezobrazujeme reklamy.',
+        list: [],
+      },
+      {
+        title: 'Žiadne prepojenie s Lilith Games',
+        text: 'Spoločnosť Lilith Games ani jej partneri tento web neprevádzkujú, nesponzorujú, nepodporujú ani neschválili. Oficiálne informácie hľadaj priamo v hre a na oficiálnych kanáloch Lilith Games.',
+        list: [],
+      },
+      {
+        title: 'Ochranné známky a grafika',
+        text: 'Názov Rise of Kingdoms, logá a herné grafiky (ikony predmetov, portréty commanderov a podobne) sú ochranné známky alebo autorské diela spoločnosti Lilith Games.',
+        list: ['Používame ich iba nekomerčne, aby sme informovali hráčov.', 'Na žiadosť majiteľa práv ich odstránime.'],
+      },
+      {
+        title: 'Návody bez záruky',
+        text: 'Návody vychádzajú zo skúseností a názorov hráčov. Hra sa mení (patche, meta), preto nemôžeme zaručiť, že sú vždy presné – používaš ich na vlastné riziko.',
+        list: [],
+      },
+      {
+        title: 'Externé odkazy',
+        text: 'Discord, Facebook a zdroje pod návodmi vedú na stránky tretích strán. Za ich obsah nezodpovedáme.',
+        list: [],
+      },
+    ],
+    contact: {
+      title: 'Kontakt',
+      text: 'S otázkou alebo žiadosťou o odstránenie obsahu sa obráť na vedenie kráľovstva na Discorde.',
+      link: 'Kontakty na vedenie',
+    },
+    validFrom: 'Platné od',
+  },
   account: {
     eyebrow: 'Hráčsky účet',
     title: 'Môj účet',
@@ -190,7 +234,8 @@ export const sk = {
     },
   },
   footer: {
-    fanSite: 'Neoficiálna fanúšikovská stránka. Rise of Kingdoms je ochranná známka Lilith Games.',
+    fanSite:
+      'Neoficiálna fanúšikovská stránka hráčov kráľovstva 1035, bez prepojenia so spoločnosťou Lilith Games. Rise of Kingdoms a herné grafiky sú majetkom Lilith Games.',
     madeBy: 'Vytvoril',
     updated: 'Informácie aktualizované',
   },

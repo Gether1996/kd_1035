@@ -42,7 +42,8 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Governor ID sa nedá overiť automaticky → registráciu schvaľuje R4/admin (sekcia **Registrácia Governor ID**).
 - Fotky a texty dodá používateľ. Dovtedy len krátke placeholdery – **žiadne vymyslené fakty** o kráľovstve.
 - Nepoužívaj oficiálne assety Lilith Games (logá, artworky) bez súhlasu používateľa. Výnimka so súhlasom Gethera (8. 10. 2026): ikony predmetov v návodoch o výbave (sekcia Automaticky aktualizované návody).
-- Pätička: malý watermark „Vytvoril Gether · 2026“ + krátka poznámka, že ide o neoficiálnu fanúšikovskú stránku.
+- Pätička: malý watermark „Vytvoril Gether · 2026“ + 1–2 vety, že ide o neoficiálnu fanúšikovskú stránku hráčov KD 1035 bez prepojenia s Lilith Games (Rise of Kingdoms a herné grafiky sú ich majetok), pod nimi malý odkaz na Podmienky používania (zoznam `.footer__links`).
+- **Podmienky používania** (`/podmienky`, `/cz/podmienky`, `pages/terms/`, texty `termsPage` v i18n): neoficiálna nekomerčná stránka, žiadne prepojenie s Lilith Games, ochranné známky a grafika (odstránime na žiadosť majiteľa práv), návody bez záruky, externé odkazy, kontakt cez vedenie na Discorde, „Platné od“ (dátum v `terms.ts`). Krátke vecné bloky, žiadne právne tvrdenia, ktoré nevieme doložiť. Pri zmene textu posuň dátum platnosti.
 
 ## Návody (CMS)
 - Spravuje ich **iba superuser** v Django admine (Návody): kategória (Commanderi / Výbava / Eventy), nadpis SK + CZ (CZ nepovinný → použije sa SK), slug, HTML obsah SK + CZ, poradie, zverejnený.

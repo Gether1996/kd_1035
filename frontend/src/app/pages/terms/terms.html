@@ -1,0 +1,31 @@
+@let page = t().termsPage;
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="page.eyebrow" [title]="page.title" [intro]="page.intro" />
+
+<article class="container article">
+  @for (section of page.sections; track $index) {
+    <section class="block" appReveal>
+      <h2><span class="block__num">0{{ $index + 1 }}</span>{{ section.title }}</h2>
+      <p>{{ section.text }}</p>
+      @if (section.list.length) {
+        <ul class="checks">
+          @for (item of section.list; track $index) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <section class="block" appReveal>
+    <h2><span class="block__num">0{{ page.sections.length + 1 }}</span>{{ page.contact.title }}</h2>
+    <p>{{ page.contact.text }}</p>
+    <a class="contact-link" [routerLink]="i18n.path('home')" fragment="alliance">
+      {{ page.contact.link }} <svg appIcon="arrow-right"></svg>
+    </a>
+  </section>
+
+  <p class="valid">
+    {{ page.validFrom }} <time [attr.datetime]="validFrom.iso">{{ validFrom.text }}</time>
+  </p>
+</article>
