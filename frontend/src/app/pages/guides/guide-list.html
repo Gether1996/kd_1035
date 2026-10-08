@@ -18,6 +18,7 @@
 
   @if (!info()) {
     <p class="state">{{ t.guides.notFound }}</p>
+    <app-not-found-links />
   } @else if (guides.failed()) {
     <p class="state">{{ t.guides.error }}</p>
   } @else if (items().length) {

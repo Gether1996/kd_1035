@@ -14,6 +14,7 @@
       </p>
     } @else if (notFound()) {
       <p class="state">{{ t.guides.notFound }}</p>
+      <app-not-found-links />
     } @else if (failed()) {
       <p class="state">{{ t.guides.error }}</p>
     } @else {

@@ -18,11 +18,12 @@ import { GUIDE_CATEGORIES, GuideCategory, I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Breadcrumbs } from '../../shared/breadcrumbs';
 import { Icon } from '../../shared/icon';
+import { NotFoundLinks, notFoundMeta } from '../../shared/not-found';
 
 /** /navody/:category/:slug – one guide; its HTML comes from the admin. */
 @Component({
   selector: 'app-guide-page',
-  imports: [RouterLink, Breadcrumbs, Icon],
+  imports: [RouterLink, Breadcrumbs, Icon, NotFoundLinks],
   templateUrl: './guide-page.html',
   styleUrl: './guides.scss',
   host: { '(document:keydown.escape)': 'lightbox.set(null)' },
@@ -86,6 +87,11 @@ export class GuidePage {
     const router = inject(Router);
 
     effect(() => {
+      // unknown or unpublished slug: the app shell answers 200 here, so keep the page out of search results
+      if (this.notFound()) {
+        seo.set(notFoundMeta(this.i18n.t()));
+        return;
+      }
       const g = this.guide();
       if (!g) return;
       // a guide moved to another category in the admin → correct address
