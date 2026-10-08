@@ -119,7 +119,7 @@ def discord_callback(request):
     error = request.GET.get('error')
     if error:
         if error != 'access_denied':
-            log.warning('Discord login refused: %s', error[:100])
+            log.warning('Discord login refused: %r', error[:100])  # %r: no forged log lines from the URL
         return back_to(next_url, 'cancelled' if error == 'access_denied' else 'error')
 
     # the state proves this browser started the sign-in (no login CSRF); checked before anything goes to Discord

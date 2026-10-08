@@ -106,6 +106,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
     # the site's own session (Discord sign-in) with CSRF checks; no Basic auth
     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication'],
+    # proxies in front of Django (nginx + the HTTPS proxy on the server): throttles take the client IP from that
+    # position in X-Forwarded-For, so a header sent by the client itself cannot pick a fresh throttle key
+    'NUM_PROXIES': env.int('DJANGO_NUM_PROXIES', default=1),
 }
 
 # Public address of the site, e.g. https://kd1035.sk (used in Discord messages)

@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
 
+from django.conf import settings
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
@@ -262,6 +263,30 @@ class LoginFlowTests(TestCase):
         self.assertRedirects(response, '/ucet?login=error', fetch_redirect_response=False)
         self.assertEqual(self.exchange.call_count, 20)
         self.assertFalse(self.logged_in())
+
+    @override_settings(REST_FRAMEWORK={**settings.REST_FRAMEWORK, 'NUM_PROXIES': 2})
+    def test_throttle_ignores_forwarded_for_sent_by_the_client(self):
+        # server: HTTPS proxy appends the visitor, nginx appends the HTTPS proxy; anything the visitor put
+        # in front of that must not give them a fresh limit
+        def callback(forwarded_for):
+            self.client.get(
+                '/api/auth/discord/callback/',
+                {'state': self.start(), 'code': 'abc'},
+                headers={'X-Forwarded-For': forwarded_for},
+            )
+            self.client.logout()
+
+        for i in range(21):
+            callback(f'10.0.0.{i}, 203.0.113.7, 172.18.0.1')
+        self.assertEqual(self.exchange.call_count, 20)
+        callback('203.0.113.8, 172.18.0.1')  # another visitor has their own limit
+        self.assertEqual(self.exchange.call_count, 21)
+
+    def test_error_from_the_url_cannot_forge_log_lines(self):
+        self.start()
+        with self.assertLogs('accounts.views', 'WARNING') as logs:
+            self.callback(error='server_error\nCRITICAL fake entry')
+        self.assertNotIn('\n', ''.join(logs.output))
 
 
 class MeTests(TestCase):
