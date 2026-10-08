@@ -37,7 +37,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 ## Obsah
 - Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4.
 - **Rise of Kingdoms / Lilith nemá verejné API** (ani na hráčov, ani na kráľovstvá). Na webe preto **nezobrazujeme meniace sa čísla** (sila, počet členov, územie…), lebo by zastarali. Len stabilné údaje zadané v admine.
-- Kráľovstvo má **jednu hlavnú alianciu**: [CS35] CZ/SK Legends. Vedenie (model `Officer`): Methiu von CzF – Vodca, Gether – R4, Hefarion – R4 (Discord ID všetkých troch v seed migrácii). Tlačidlo „Kontaktovať“ otvorí `discord.com/users/<ID>`, bez ID skopíruje Discord meno.
+- Kráľovstvo má **vždy len jednu alianciu**: [CS35] CZ/SK Legends (admin ďalšiu pridať ani túto zmazať nedovolí, zoznam rovno otvorí jej úpravu). Vedenie (model `Officer`): Methiu von CzF – Vodca, Gether – R4, Hefarion – R4 (Discord ID všetkých troch v seed migrácii). Tlačidlo „Kontaktovať“ otvorí `discord.com/users/<ID>`, bez ID skopíruje Discord meno.
 - Odkazy (admin → Odkazy): Facebook skupina https://www.facebook.com/groups/550189483954751, Discord trvalá pozvánka https://discord.gg/NhwP6y9ssM (nikdy nevyprší, neobmedzené použitia; obe v seed migrácii 0002).
 - Fotky a texty dodá používateľ. Dovtedy len krátke placeholdery – **žiadne vymyslené fakty** o kráľovstve.
 - Nepoužívaj oficiálne assety Lilith Games (logá, artworky) bez súhlasu používateľa. Výnimka so súhlasom Gethera (8. 10. 2026): ikony predmetov v návodoch o výbave (sekcia Automaticky aktualizované návody).
