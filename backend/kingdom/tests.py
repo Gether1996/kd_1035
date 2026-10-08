@@ -447,6 +447,31 @@ class KingdomEventAdminTests(TestCase):
         self.assertEqual(set(rows.values_list('status', flat=True)), {Status.CANCELLED})
 
 
+class WorkerTests(TestCase):
+    def test_first_round_deletes_expired_sessions(self):
+        from django.contrib.sessions.models import Session
+        from django.core.management import call_command
+
+        now = timezone.now()
+        Session.objects.create(session_key='a' * 32, session_data='', expire_date=now - timedelta(days=1))
+        Session.objects.create(session_key='b' * 32, session_data='', expire_date=now + timedelta(days=1))
+
+        class Stop(Exception):
+            pass
+
+        worker = 'kingdom.management.commands.run_worker'
+        with (
+            mock.patch(f'{worker}.close_old_connections'),  # would drop the test transaction
+            mock.patch(f'{worker}.plan_reminders', return_value=0),
+            mock.patch(f'{worker}.send_due'),
+            mock.patch(f'{worker}.backup_due', return_value=False),
+            mock.patch('time.sleep', side_effect=Stop),
+            self.assertRaises(Stop),
+        ):
+            call_command('run_worker')
+        self.assertEqual(list(Session.objects.values_list('session_key', flat=True)), ['b' * 32])
+
+
 class BackupTests(TransactionTestCase):
     def test_backup_prune_and_restore(self):
         # an earlier TransactionTestCase may have flushed the alliance seeded by the data migration
