@@ -111,6 +111,11 @@ Hráči sa prihlásia svojím Discord účtom (web dostane iba Discord ID, meno 
 
 > **Na produkčnom serveri ho nezapínaj, kým nie je nasadená stránka o ochrane súkromia.** Ukladáme osobné údaje.
 
+Pred zapnutím na serveri skontroluj:
+- stránka o ochrane súkromia je nasadená,
+- `DJANGO_NUM_PROXIES=2`, ak je pred webom HTTPS proxy (inak by všetci hráči zdieľali jeden limit 20 prihlásení za hodinu),
+- `SITE_URL` je presne doména zaregistrovaná v Discord aplikácii (krok 3).
+
 1. https://discord.com/developers/applications → **New Application** (napr. „KD 1035“).
 2. **OAuth2** → skopíruj **Client ID** do `DISCORD_CLIENT_ID`, **Reset Secret** → skopíruj do `DISCORD_CLIENT_SECRET` (iba do `.env`, nikdy do gitu).
 3. **OAuth2 → Redirects** → pridaj presne (aj s lomkou na konci):
