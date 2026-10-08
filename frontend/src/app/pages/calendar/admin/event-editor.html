@@ -1,0 +1,419 @@
+@let a = t();
+@let k = kind();
+
+<dialog #dialog class="modal modal--wide" aria-labelledby="editor-title" (close)="closed.emit()">
+  <form class="modal__body" novalidate (submit)="save($event)">
+    <header class="modal__head">
+      <app-event-icon class="editor__pic" [src]="iconUrl()" [name]="title()" />
+      <div class="modal__heading">
+        <h2 class="modal__title" id="editor-title">{{ title() }}</h2>
+        <p class="modal__eyebrow">{{ event() ? a.editTitle : a.newTitle }}</p>
+      </div>
+      <button type="button" class="modal__close" [attr.aria-label]="a.close" (click)="close()">
+        <svg appIcon="x"></svg>
+      </button>
+    </header>
+
+    <div class="grid">
+      <div class="field">
+        <label class="field__label" for="ev-name-sk">{{ a.nameSk }}</label>
+        <input
+          id="ev-name-sk"
+          class="input"
+          maxlength="80"
+          required
+          [value]="nameSk()"
+          [attr.aria-invalid]="!!error('name_sk') || null"
+          [attr.aria-describedby]="error('name_sk') ? 'ev-name-sk-error' : null"
+          (input)="nameSk.set($any($event.target).value)"
+        />
+        @if (error('name_sk'); as e) {
+          <p class="field__error" id="ev-name-sk-error">{{ e }}</p>
+        }
+      </div>
+      <div class="field">
+        <label class="field__label" for="ev-name-cs">{{ a.nameCs }}</label>
+        <input
+          id="ev-name-cs"
+          class="input"
+          maxlength="80"
+          [placeholder]="nameSk()"
+          [value]="nameCs()"
+          aria-describedby="ev-name-cs-hint"
+          (input)="nameCs.set($any($event.target).value)"
+        />
+        <p class="field__hint" id="ev-name-cs-hint">{{ a.nameCsHint }}</p>
+      </div>
+    </div>
+
+    <fieldset class="field">
+      <legend class="field__label">{{ a.icon }}</legend>
+      <div class="icons">
+        <label class="icons__item" [title]="a.noIcon">
+          <input type="radio" name="ev-icon" value="" [checked]="!icon()" (change)="icon.set('')" />
+          <app-event-icon [name]="title()" />
+          <span class="sr-only">{{ a.noIcon }}</span>
+        </label>
+        @for (item of data().icons; track item.slug) {
+          <label class="icons__item" [title]="item.label">
+            <input
+              type="radio"
+              name="ev-icon"
+              [value]="item.slug"
+              [checked]="icon() === item.slug"
+              (change)="icon.set(item.slug)"
+            />
+            <app-event-icon [src]="item.url" [name]="item.label" />
+            <span class="sr-only">{{ item.label }}</span>
+          </label>
+        }
+      </div>
+      @if (error('icon'); as e) {
+        <p class="field__error">{{ e }}</p>
+      }
+    </fieldset>
+
+    <div class="field">
+      <span class="field__label" id="ev-kind">{{ a.kind }}</span>
+      <div class="segmented" role="group" aria-labelledby="ev-kind">
+        @for (option of kinds; track option) {
+          <button type="button" [attr.aria-pressed]="k === option" (click)="kind.set(option)">
+            {{ a.kinds[option] }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (k === 'repeat') {
+      <div class="grid">
+        <div class="field">
+          <label class="field__label" for="ev-every">{{ a.every }}</label>
+          <div class="every">
+            <input
+              id="ev-every"
+              class="input every__input"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              [value]="every()"
+              [attr.aria-invalid]="!!error('repeat_days') || null"
+              (input)="every.set($any($event.target).value)"
+            />
+            @for (days of repeatPresets; track days) {
+              <button
+                type="button"
+                class="mini"
+                [attr.aria-pressed]="every() === '' + days"
+                (click)="every.set('' + days)"
+              >
+                {{ days }}
+              </button>
+            }
+          </div>
+          @if (error('repeat_days'); as e) {
+            <p class="field__error">{{ e }}</p>
+          }
+        </div>
+        <div class="field">
+          <label class="field__label" for="ev-until">{{ a.until }}</label>
+          <input
+            id="ev-until"
+            class="input"
+            type="date"
+            [value]="until()"
+            aria-describedby="ev-until-hint"
+            [attr.aria-invalid]="!!error('until') || null"
+            (input)="until.set($any($event.target).value)"
+          />
+          @if (error('until'); as e) {
+            <p class="field__error">{{ e }}</p>
+          } @else {
+            <p class="field__hint" id="ev-until-hint">{{ a.untilHint }}</p>
+          }
+        </div>
+      </div>
+    }
+
+    <fieldset class="field">
+      <legend class="field__label">{{ k === 'repeat' ? a.firstStart : a.start }}</legend>
+      <div class="start">
+        <input
+          class="input start__date"
+          type="date"
+          [attr.aria-label]="a.day"
+          [required]="k !== 'irregular'"
+          [value]="date()"
+          [attr.aria-invalid]="!!error('starts_at') || null"
+          (input)="date.set($any($event.target).value)"
+        />
+        <input
+          class="input start__time"
+          type="time"
+          [attr.aria-label]="a.time"
+          required
+          [value]="time()"
+          [attr.aria-invalid]="!!error('starts_at') || null"
+          (input)="time.set($any($event.target).value)"
+        />
+        <div class="segmented" role="group" [attr.aria-label]="a.basis">
+          @for (option of bases; track option) {
+            <button
+              type="button"
+              [attr.aria-pressed]="basis() === option"
+              (click)="basis.set(option)"
+            >
+              {{ a.bases[option] }}
+            </button>
+          }
+        </div>
+      </div>
+      @if (error('starts_at'); as e) {
+        <p class="field__error">{{ e }}</p>
+      } @else if (other()) {
+        <p class="field__hint start__other">{{ other() }}</p>
+      }
+      <p class="field__hint">{{ k === 'irregular' ? a.irregularHint : a.basisHint }}</p>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="field__label">{{ a.duration }}</legend>
+      <div class="units">
+        <label class="unit">
+          <input
+            class="input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="0"
+            [value]="durDays()"
+            [attr.aria-invalid]="!!error('duration_minutes') || null"
+            (input)="durDays.set($any($event.target).value)"
+          />
+          <span>{{ i18n.t().reminders.units.days }}</span>
+        </label>
+        <label class="unit">
+          <input
+            class="input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="0"
+            [value]="durHours()"
+            [attr.aria-invalid]="!!error('duration_minutes') || null"
+            (input)="durHours.set($any($event.target).value)"
+          />
+          <span>{{ i18n.t().reminders.units.hours }}</span>
+        </label>
+        <label class="unit">
+          <input
+            class="input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="0"
+            [value]="durMinutes()"
+            [attr.aria-invalid]="!!error('duration_minutes') || null"
+            (input)="durMinutes.set($any($event.target).value)"
+          />
+          <span>{{ i18n.t().reminders.units.minutes }}</span>
+        </label>
+      </div>
+      @if (error('duration_minutes'); as e) {
+        <p class="field__error">{{ e }}</p>
+      } @else {
+        <p class="field__hint">{{ a.durationHint }}</p>
+      }
+    </fieldset>
+
+    <div class="field box">
+      <div class="box__head">
+        <span class="field__label" id="ev-discord">{{ a.discord }}</span>
+        <input
+          class="switch"
+          type="checkbox"
+          role="switch"
+          aria-labelledby="ev-discord"
+          [checked]="notify()"
+          (change)="notify.set(!notify())"
+        />
+      </div>
+      @if (notify()) {
+        <div class="chips" role="group" aria-labelledby="ev-discord">
+          @for (minutes of reminderChoices(); track minutes) {
+            <label class="chip">
+              <input
+                type="checkbox"
+                [checked]="reminders().includes(minutes)"
+                (change)="toggleIn('reminders', minutes)"
+              />
+              <span
+                ><svg [appIcon]="reminders().includes(minutes) ? 'check' : 'plus'"></svg
+                >{{ label(minutes) }}</span
+              >
+            </label>
+          }
+        </div>
+        <label class="inline-switch">
+          <input
+            class="switch"
+            type="checkbox"
+            role="switch"
+            [checked]="mention()"
+            (change)="mention.set(!mention())"
+          />
+          {{ a.mention }}
+        </label>
+        @if (!data().webhook) {
+          <p class="field__hint is-warning">{{ a.noWebhook }}</p>
+        }
+      }
+      @if (error('reminders'); as e) {
+        <p class="field__error">{{ e }}</p>
+      }
+    </div>
+
+    <fieldset class="field">
+      <legend class="field__label">{{ a.playerTimes }}</legend>
+      <div class="chips">
+        @for (minutes of playerChoices(); track minutes) {
+          <label class="chip">
+            <input
+              type="checkbox"
+              [checked]="offered().includes(minutes)"
+              [disabled]="offeredFull() && !offered().includes(minutes)"
+              (change)="toggleIn('offered', minutes)"
+            />
+            <span
+              ><svg [appIcon]="offered().includes(minutes) ? 'check' : 'plus'"></svg
+              >{{ label(minutes) }}</span
+            >
+          </label>
+        }
+      </div>
+      @if (error('player_reminders'); as e) {
+        <p class="field__error">{{ e }}</p>
+      } @else {
+        <p class="field__hint">{{ a.playerTimesHint }}</p>
+      }
+    </fieldset>
+
+    <div class="grid">
+      <div class="field">
+        <label class="field__label" for="ev-guide">{{ a.guide }}</label>
+        <select id="ev-guide" class="select" (change)="setGuide($any($event.target).value)">
+          <option value="" [selected]="guide() === null">{{ a.noGuide }}</option>
+          @for (item of data().guides; track item.id) {
+            <option [value]="item.id" [selected]="guide() === item.id">
+              {{ guideTitle(item) }}
+            </option>
+          }
+        </select>
+      </div>
+      <div class="field switches">
+        <label class="inline-switch">
+          <input
+            class="switch"
+            type="checkbox"
+            role="switch"
+            [checked]="web()"
+            (change)="web.set(!web())"
+          />
+          {{ a.web }}
+        </label>
+        <label class="inline-switch">
+          <input
+            class="switch"
+            type="checkbox"
+            role="switch"
+            [checked]="active()"
+            aria-describedby="ev-active-hint"
+            (change)="active.set(!active())"
+          />
+          {{ a.active }}
+        </label>
+        <p class="field__hint" id="ev-active-hint">{{ a.activeHint }}</p>
+      </div>
+    </div>
+
+    <details class="more" [open]="!!error('message') || !!error('mention_role_id')">
+      <summary>{{ a.more }}</summary>
+      <div class="more__body">
+        <div class="field">
+          <label class="field__label" for="ev-message">{{ a.message }}</label>
+          <textarea
+            id="ev-message"
+            class="input textarea"
+            rows="4"
+            maxlength="3000"
+            aria-describedby="ev-message-hint"
+            [attr.aria-invalid]="!!error('message') || null"
+            [value]="message()"
+            (input)="message.set($any($event.target).value)"
+          ></textarea>
+          @if (error('message'); as e) {
+            <p class="field__error">{{ e }}</p>
+          } @else {
+            <p class="field__hint" id="ev-message-hint">{{ a.messageHint }}</p>
+          }
+        </div>
+        <div class="field">
+          <label class="field__label" for="ev-role">{{ a.role }}</label>
+          <input
+            id="ev-role"
+            class="input"
+            inputmode="numeric"
+            maxlength="24"
+            aria-describedby="ev-role-hint"
+            [attr.aria-invalid]="!!error('mention_role_id') || null"
+            [value]="roleId()"
+            (input)="roleId.set($any($event.target).value)"
+          />
+          @if (error('mention_role_id'); as e) {
+            <p class="field__error">{{ e }}</p>
+          } @else {
+            <p class="field__hint" id="ev-role-hint">{{ a.roleHint }}</p>
+          }
+        </div>
+      </div>
+    </details>
+
+    <p class="state" role="status" [class.is-error]="!!state()">
+      @if (state() === 'failed') {
+        {{ error('non_field_errors') || a.failed }}
+      } @else if (state() === 'error') {
+        {{ a.error }}
+      }
+    </p>
+
+    <footer class="actions">
+      @if (event(); as current) {
+        <div class="actions__delete">
+          <button
+            type="button"
+            class="danger"
+            [class.is-armed]="confirming()"
+            [disabled]="busy()"
+            (click)="remove()"
+          >
+            <svg appIcon="trash-2"></svg> {{ confirming() ? a.confirmDelete : a.delete }}
+          </button>
+          @if (confirming()) {
+            <p class="field__hint">{{ a.deleteHint.replace('{players}', players()) }}</p>
+          }
+        </div>
+      }
+      <div class="actions__main">
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="close()">
+          {{ a.cancel }}
+        </button>
+        <button type="submit" class="btn btn--gold" [disabled]="busy()">
+          {{ event() ? a.save : a.create }}
+        </button>
+      </div>
+    </footer>
+  </form>
+</dialog>

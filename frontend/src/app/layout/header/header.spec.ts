@@ -79,6 +79,7 @@ describe('Header account slot', () => {
         avatar_url: 'https://cdn.discordapp.com/a.png',
         ingame_name: '',
         is_staff: false,
+        is_superuser: false,
       },
     });
     expect(loginLinks().length).toBe(0);

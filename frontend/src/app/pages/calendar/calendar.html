@@ -27,7 +27,15 @@
           <ul class="strip__list">
             @for (item of daily(); track item.id) {
               <li>
-                <button type="button" class="pill-event" [attr.data-accent]="accent(item)" (click)="open(item, $event)">
+                <button
+                  type="button"
+                  class="pill-event"
+                  [attr.data-accent]="accent(item)"
+                  (click)="open(item, $event)"
+                >
+                  @if (item.icon) {
+                    <app-event-icon class="pill-event__icon" bare [src]="item.icon" />
+                  }
                   <span class="pill-event__time">{{ clock(item.start) }}</span>
                   {{ name(item) }}
                   <span class="pill-event__utc">UTC {{ clock(item.start, 'UTC') }}</span>
@@ -50,7 +58,12 @@
           }
         </div>
         @for (week of weeks(); track week.days[0]) {
-          <div class="week" role="group" [attr.aria-label]="weekLabel(week)" [style.grid-template-rows]="rows(week)">
+          <div
+            class="week"
+            role="group"
+            [attr.aria-label]="weekLabel(week)"
+            [style.grid-template-rows]="rows(week)"
+          >
             @for (key of week.days; track key; let col = $index) {
               <div
                 class="day"
@@ -61,6 +74,23 @@
               >
                 <span class="day__num">{{ dayNumber(key) }}</span>
               </div>
+            }
+            @if (admin()) {
+              <!-- superuser: a date for an irregular event, or a new event, straight on the day -->
+              @for (key of week.days; track key; let col = $index) {
+                @if (canAdd(key)) {
+                  <button
+                    type="button"
+                    class="day__add"
+                    [style.grid-column]="col + 1"
+                    [attr.aria-label]="addLabel(key)"
+                    [title]="addLabel(key)"
+                    (click)="addOn(key)"
+                  >
+                    <svg appIcon="plus"></svg>
+                  </button>
+                }
+              }
             }
             @for (bar of week.bars; track bar.item.id + bar.item.start) {
               <button
@@ -75,6 +105,9 @@
               >
                 @if (running(bar.item)) {
                   <span class="bar__live" aria-hidden="true"></span>
+                }
+                @if (bar.starts && bar.item.icon) {
+                  <app-event-icon class="bar__icon" bare [src]="bar.item.icon" />
                 }
                 @if (bar.starts) {
                   <span class="bar__time" aria-hidden="true">{{ clock(bar.item.start) }}</span>
@@ -107,11 +140,17 @@
               <ul class="agenda__list">
                 @for (item of day.items; track item.id + item.start) {
                   <li>
-                    <button type="button" class="row" [attr.data-accent]="accent(item)" (click)="open(item, $event)">
+                    <button
+                      type="button"
+                      class="row"
+                      [attr.data-accent]="accent(item)"
+                      (click)="open(item, $event)"
+                    >
                       <span class="row__time">
                         {{ clock(item.start) }}
                         <small>UTC {{ clock(item.start, 'UTC') }}</small>
                       </span>
+                      <app-event-icon class="row__icon" [src]="item.icon" [name]="name(item)" />
                       <span class="row__body">
                         <strong>{{ name(item) }}</strong>
                         <small>{{ details(item, day.key) }}</small>
@@ -136,13 +175,32 @@
           <ul class="strip__list">
             @for (item of waiting(); track item.id) {
               <li>
-                <button type="button" class="pill-event" [attr.data-accent]="accent(item)" (click)="open(item, $event)">
+                <button
+                  type="button"
+                  class="pill-event"
+                  [attr.data-accent]="accent(item)"
+                  (click)="open(item, $event)"
+                >
+                  <app-event-icon class="pill-event__icon" [src]="item.icon" [name]="name(item)" />
                   {{ name(item) }}
                 </button>
               </li>
             }
           </ul>
         </section>
+      }
+    }
+
+    @if (admin()) {
+      <!-- superusers only: loaded on demand, so visitors do not download it -->
+      @defer {
+        <app-events-panel
+          [data]="manageData()"
+          [failed]="!!manage.error()"
+          (edit)="editEvent($event)"
+          (schedule)="scheduleEvent($event)"
+          (changed)="refresh()"
+        />
       }
     }
   } @else {
@@ -155,5 +213,38 @@
 </div>
 
 @if (selected(); as item) {
-  <app-event-dialog [item]="item" [now]="now()!" [remind]="remind()" (closed)="close()" (changed)="changed($event)" />
+  <app-event-dialog
+    [item]="item"
+    [now]="now()!"
+    [remind]="remind()"
+    [admin]="admin()"
+    (closed)="close()"
+    (changed)="changed($event)"
+    (edit)="editEvent($event)"
+    (schedule)="scheduleEvent($event)"
+  />
+}
+
+@if (manageData(); as data) {
+  @defer {
+    @if (editing(); as e) {
+      <app-event-editor
+        [data]="data"
+        [event]="e.event"
+        [day]="e.day"
+        (closed)="editing.set(null)"
+        (changed)="refresh()"
+      />
+    }
+    @if (dating(); as d) {
+      <app-date-dialog
+        [data]="data"
+        [day]="d.day"
+        [eventId]="d.id"
+        (closed)="dating.set(null)"
+        (changed)="refresh()"
+        (create)="createOn($event)"
+      />
+    }
+  }
 }

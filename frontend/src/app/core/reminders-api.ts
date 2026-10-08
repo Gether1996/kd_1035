@@ -9,6 +9,8 @@ export interface ReminderEvent {
   name_sk: string;
   /** '' = the Slovak name is shown */
   name_cs: string;
+  /** game art (/static/kingdom/events/…), null = a monogram is shown */
+  icon: string | null;
   /** next start, ISO 8601 in UTC; null = an irregular event without a next date yet */
   next_start: string | null;
   /** 0 = one-off */
@@ -51,7 +53,9 @@ export class RemindersApi {
   /** Fresh settings for the component that asks (must run in an injection context, e.g. a field initializer);
    * nothing is asked while `when` is false (a visitor who is not signed in). */
   settings(when: () => boolean = () => true) {
-    return httpResource<ReminderSettings>(() => (this.isBrowser && when() ? REMINDERS_URL : undefined));
+    return httpResource<ReminderSettings>(() =>
+      this.isBrowser && when() ? REMINDERS_URL : undefined,
+    );
   }
 
   /** Remind of the event `offsets` minutes before each start; an empty list stops the reminders. */
@@ -71,7 +75,8 @@ export class RemindersApi {
 
   /** Stores this browser's push subscription; resolves with the player's number of browsers. */
   async addDevice(subscription: PushSubscriptionJSON): Promise<number> {
-    return (await firstValueFrom(this.http.post<{ push_devices: number }>(PUSH_URL, subscription))).push_devices;
+    return (await firstValueFrom(this.http.post<{ push_devices: number }>(PUSH_URL, subscription)))
+      .push_devices;
   }
 
   async removeDevice(endpoint: string): Promise<number> {

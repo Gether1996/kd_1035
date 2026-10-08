@@ -2,7 +2,7 @@
 
 <app-page-header [crumbs]="crumbs()" [eyebrow]="a.eyebrow" [title]="a.title" />
 
-<div class="container content">
+<div class="container content" [class.is-wide]="!!auth.user()">
   <div role="status">
     @if (notice(); as n) {
       <p class="notice" [class.notice--error]="n.error">{{ n.text }}</p>
@@ -20,80 +20,96 @@
   } @else if (!auth.enabled()) {
     <p class="state">{{ a.disabled }}</p>
   } @else if (auth.user(); as user) {
-    <section class="card" aria-labelledby="account-name">
-      <img class="card__avatar" [src]="user.avatar_url" alt="" width="64" height="64" />
-      <h2 class="card__title" id="account-name">{{ user.name }}</h2>
-      <p class="card__meta">
-        {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
-      </p>
-
-      <form class="ingame" novalidate (submit)="saveName($event, nameInput)">
-        <label class="field__label" for="ingame-name">{{ a.ingame.label }}</label>
-        <div class="ingame__row">
-          <input
-            #nameInput
-            id="ingame-name"
-            class="input"
-            type="text"
-            maxlength="32"
-            autocomplete="nickname"
-            [value]="user.ingame_name"
-            aria-describedby="ingame-hint ingame-state"
-            (input)="nameState.set(null)"
-          />
-          <button type="submit" class="btn btn--gold" [disabled]="saving()">{{ a.ingame.save }}</button>
-        </div>
-        <p class="field__hint" id="ingame-hint">{{ a.ingame.hint }}</p>
-        <p class="ingame__state" id="ingame-state" role="status" [class.is-error]="nameState() === 'failed'">
-          @if (nameState(); as state) {
-            {{ a.ingame[state] }}
-          }
+    <div class="layout">
+      <section class="card profile" aria-labelledby="account-name">
+        <img class="card__avatar" [src]="user.avatar_url" alt="" width="64" height="64" />
+        <h2 class="card__title" id="account-name">{{ user.name }}</h2>
+        <p class="card__meta">
+          {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
         </p>
-      </form>
 
-      <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="logout()">
-        <svg appIcon="log-out"></svg> {{ a.logout }}
-      </button>
-      <a class="card__privacy" [routerLink]="i18n.path('privacy')">{{ a.privacy }}</a>
-
-      <div class="danger-zone">
-        @if (user.is_staff) {
-          <!-- full navigation: the Django admin is not part of the Angular app -->
-          <a class="btn btn--ghost" href="/admin/"><svg appIcon="shield"></svg> {{ a.admin }}</a>
-          <p class="hint">{{ a.staff }}</p>
-        } @else {
-          <div class="danger-zone__actions">
-            <button
-              type="button"
-              class="danger"
-              [class.is-armed]="confirming()"
-              [disabled]="busy()"
-              [attr.aria-describedby]="confirming() ? 'delete-hint' : null"
-              (click)="remove()"
-            >
-              <svg appIcon="trash-2"></svg> {{ confirming() ? a.confirmDelete : a.delete }}
+        <form class="ingame" novalidate (submit)="saveName($event, nameInput)">
+          <label class="field__label" for="ingame-name">{{ a.ingame.label }}</label>
+          <div class="ingame__row">
+            <input
+              #nameInput
+              id="ingame-name"
+              class="input"
+              type="text"
+              maxlength="32"
+              autocomplete="nickname"
+              [value]="user.ingame_name"
+              aria-describedby="ingame-hint ingame-state"
+              (input)="nameState.set(null)"
+            />
+            <button type="submit" class="btn btn--gold" [disabled]="saving()">
+              {{ a.ingame.save }}
             </button>
-            @if (confirming()) {
-              <button type="button" class="cancel" [disabled]="busy()" (click)="confirming.set(false)">
-                {{ a.cancel }}
-              </button>
-            }
           </div>
-          @if (confirming()) {
-            <p class="hint" id="delete-hint">{{ a.confirmText }}</p>
-          }
-        }
-      </div>
-    </section>
+          <p class="field__hint" id="ingame-hint">{{ a.ingame.hint }}</p>
+          <p
+            class="ingame__state"
+            id="ingame-state"
+            role="status"
+            [class.is-error]="nameState() === 'failed'"
+          >
+            @if (nameState(); as state) {
+              {{ a.ingame[state] }}
+            }
+          </p>
+        </form>
 
-    <app-reminders />
+        <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="logout()">
+          <svg appIcon="log-out"></svg> {{ a.logout }}
+        </button>
+        <a class="card__privacy" [routerLink]="i18n.path('privacy')">{{ a.privacy }}</a>
+
+        <div class="danger-zone">
+          @if (user.is_staff) {
+            <!-- full navigation: the Django admin is not part of the Angular app -->
+            <a class="btn btn--ghost" href="/admin/"><svg appIcon="shield"></svg> {{ a.admin }}</a>
+            <p class="hint">{{ a.staff }}</p>
+          } @else {
+            <div class="danger-zone__actions">
+              <button
+                type="button"
+                class="danger"
+                [class.is-armed]="confirming()"
+                [disabled]="busy()"
+                [attr.aria-describedby]="confirming() ? 'delete-hint' : null"
+                (click)="remove()"
+              >
+                <svg appIcon="trash-2"></svg> {{ confirming() ? a.confirmDelete : a.delete }}
+              </button>
+              @if (confirming()) {
+                <button
+                  type="button"
+                  class="cancel"
+                  [disabled]="busy()"
+                  (click)="confirming.set(false)"
+                >
+                  {{ a.cancel }}
+                </button>
+              }
+            </div>
+            @if (confirming()) {
+              <p class="hint" id="delete-hint">{{ a.confirmText }}</p>
+            }
+          }
+        </div>
+      </section>
+
+      <app-reminders class="layout__main" />
+    </div>
   } @else {
     <section class="card" aria-labelledby="account-login">
       <span class="card__badge"><svg appIcon="discord"></svg></span>
       <h2 class="card__title" id="account-login">{{ a.loginTitle }}</h2>
       <p class="card__text">{{ a.stored }}</p>
       <a class="card__privacy" [routerLink]="i18n.path('privacy')">{{ a.privacy }}</a>
-      <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ a.login }}</a>
+      <a class="btn btn--gold" [href]="auth.loginUrl()"
+        ><svg appIcon="discord"></svg> {{ a.login }}</a
+      >
     </section>
   }
 </div>

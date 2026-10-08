@@ -20,6 +20,7 @@ function occurrence(id: number, start: string, end: string | null, extra: Partia
     id,
     name_sk: `Event ${id}`,
     name_cs: '',
+    icon: null,
     offered: [],
     guide: null,
     start,

@@ -5,6 +5,35 @@
 .content {
   max-width: 560px;
   padding-bottom: clamp(80px, 12vw, 140px);
+
+  // signed in: the profile and the reminders; two columns on large screens
+  &.is-wide {
+    max-width: 760px;
+
+    @media (min-width: 1024px) {
+      max-width: var(--container);
+    }
+  }
+}
+
+.layout {
+  display: grid;
+  gap: clamp(40px, 6vw, 56px);
+
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+    align-items: start;
+    gap: 40px;
+  }
+}
+
+// large screens: the profile stays in view next to a long list of events
+.profile {
+  @media (min-width: 1024px) {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+    padding: 32px 24px;
+  }
 }
 
 .notice {
@@ -164,7 +193,7 @@
   gap: 10px;
 }
 
-.danger,
+// .danger is global (styles.scss)
 .cancel {
   display: inline-flex;
   align-items: center;
@@ -179,39 +208,14 @@
   text-transform: uppercase;
   cursor: pointer;
   transition:
-    background-color 0.25s,
     border-color 0.25s,
     color 0.25s;
+  color: var(--text-dim);
 
   &:disabled {
     opacity: 0.6;
     cursor: progress;
   }
-}
-
-.danger {
-  border-color: color-mix(in srgb, var(--red-500) 55%, transparent);
-  color: var(--red-300);
-
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    border-color: var(--red-500);
-    background-color: color-mix(in srgb, var(--red-500) 14%, transparent);
-  }
-
-  &.is-armed {
-    border-color: var(--red-500);
-    background-color: var(--red-700);
-    color: var(--text);
-  }
-}
-
-.cancel {
-  color: var(--text-dim);
 
   &:hover {
     color: var(--text);
@@ -238,8 +242,13 @@
 .skeleton {
   display: block;
   border-radius: 6px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04)) 0 0 /
-    200% 100%;
+  background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.09),
+      rgba(255, 255, 255, 0.04)
+    )
+    0 0 / 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
 

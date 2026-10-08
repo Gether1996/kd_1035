@@ -12,12 +12,17 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
+import { EventsAdminApi, ManagedEvent } from '../../core/events-admin-api';
 import { EventsApi, Occurrence, PublicEvent, eventName } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { RemindersApi } from '../../core/reminders-api';
+import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { repeatLabel } from '../account/reminders/format';
+import { DateDialog } from './admin/date-dialog';
+import { EventEditor } from './admin/event-editor';
+import { EventsPanel } from './admin/events-panel';
 import { EventDialog, RemindState } from './event-dialog';
 import {
   Month,
@@ -48,7 +53,7 @@ const ACCENTS = ['gold', 'red', 'navy'] as const;
  */
 @Component({
   selector: 'app-calendar',
-  imports: [Icon, PageHeader, EventDialog],
+  imports: [Icon, EventIcon, PageHeader, EventDialog, EventsPanel, EventEditor, DateDialog],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,18 +81,29 @@ export class Calendar {
     const month = this.month();
     return month ? monthWeeks(month) : [];
   });
+  /** a superuser changed an event – the calendar asks again, past the browser cache */
+  private readonly version = signal(0);
   /** the grid and a day more on each side – the server counts days in Bratislava, the visitor may be elsewhere */
-  private readonly data = inject(EventsApi).calendar(() => {
-    const rows = this.weekRows();
-    return rows.length ? { from: addDays(rows[0][0], -1), to: addDays(rows.at(-1)![6], 1) } : null;
-  });
+  private readonly data = inject(EventsApi).calendar(
+    () => {
+      const rows = this.weekRows();
+      return rows.length
+        ? { from: addDays(rows[0][0], -1), to: addDays(rows.at(-1)![6], 1) }
+        : null;
+    },
+    () => this.version(),
+  );
   protected readonly loaded = computed(() => this.data.hasValue() && !this.data.isLoading());
   protected readonly failed = computed(() => !!this.data.error());
-  private readonly all = computed(() => (this.data.hasValue() ? this.data.value().occurrences : []));
+  private readonly all = computed(() =>
+    this.data.hasValue() ? this.data.value().occurrences : [],
+  );
   /** the same daily event on every day says little – listed once above the grid */
   protected readonly daily = computed(() => {
     const seen = new Set<number>();
-    return this.inMonth(this.all().filter(isDaily)).filter((o) => !seen.has(o.id) && seen.add(o.id));
+    return this.inMonth(this.all().filter(isDaily)).filter(
+      (o) => !seen.has(o.id) && seen.add(o.id),
+    );
   });
   private readonly dated = computed(() => this.all().filter((o) => !isDaily(o)));
   protected readonly weeks = computed<Week[]>(() => layoutWeeks(this.weekRows(), this.dated()));
@@ -95,7 +111,9 @@ export class Calendar {
     const month = this.month();
     return month ? agenda(this.dated(), month, this.today() ?? undefined) : [];
   });
-  protected readonly waiting = computed(() => (this.data.hasValue() ? this.data.value().irregular_waiting : []));
+  protected readonly waiting = computed(() =>
+    this.data.hasValue() ? this.data.value().irregular_waiting : [],
+  );
   protected readonly empty = computed(() => this.loaded() && !this.inMonth(this.all()).length);
 
   protected readonly title = computed(() => {
@@ -116,7 +134,8 @@ export class Calendar {
   protected readonly remind = computed<RemindState>(() => {
     const item = this.selected();
     if (!item || !this.auth.enabled()) return { kind: 'none' };
-    if (!this.auth.user()) return { kind: 'login', loginUrl: this.auth.loginUrl(this.returnPath(item)) };
+    if (!this.auth.user())
+      return { kind: 'login', loginUrl: this.auth.loginUrl(this.returnPath(item)) };
     if (this.reminders.error()) return { kind: 'error' };
     if (!this.reminders.hasValue()) return { kind: 'loading' };
     const s = this.reminders.value();
@@ -131,6 +150,20 @@ export class Calendar {
   });
   /** the event that opened the dialog gets the focus back */
   private trigger: HTMLElement | null = null;
+
+  // ---------------------------------------------------------------- superuser: event management
+
+  protected readonly admin = computed(() => !!this.auth.user()?.is_superuser);
+  protected readonly manage = inject(EventsAdminApi).data(() => this.admin());
+  protected readonly manageData = computed(() =>
+    this.manage.hasValue() ? this.manage.value() : null,
+  );
+  /** the editor: the event as it was when opened (a reload does not reset the form), null = a new one */
+  protected readonly editing = signal<{ event: ManagedEvent | null; day: string | null } | null>(
+    null,
+  );
+  /** the date of an irregular event: which one (null = choose) and the day clicked */
+  protected readonly dating = signal<{ id: number | null; day: string | null } | null>(null);
 
   constructor() {
     afterNextRender(() => {
@@ -182,6 +215,47 @@ export class Calendar {
     this.selected.set(null);
     this.trigger?.focus();
     this.trigger = null;
+  }
+
+  /** "+" on a day: a date for an irregular event (the common case), or straight a new event when there is none */
+  protected addOn(day: string): void {
+    const irregular = this.manageData()?.events.some((e) => e.irregular && e.is_active);
+    if (irregular) this.dating.set({ id: null, day });
+    else this.editing.set({ event: null, day });
+  }
+
+  protected editEvent(id: number | null): void {
+    const event = id === null ? null : (this.manageData()?.events.find((e) => e.id === id) ?? null);
+    if (id !== null && !event) return; // not loaded yet
+    this.selected.set(null);
+    this.editing.set({ event, day: null });
+  }
+
+  protected scheduleEvent(id: number | null): void {
+    this.selected.set(null);
+    this.dating.set({ id, day: null });
+  }
+
+  /** "Iný event v tento deň" in the date dialog */
+  protected createOn(day: string | null): void {
+    this.dating.set(null);
+    this.editing.set({ event: null, day });
+  }
+
+  /** after a change: the calendar, the list and the player's own reminders load again */
+  protected refresh(): void {
+    this.version.update((v) => v + 1);
+    this.manage.reload();
+    this.reminders.reload();
+  }
+
+  protected canAdd(day: string): boolean {
+    const today = this.today();
+    return !!today && day >= today;
+  }
+
+  protected addLabel(day: string): string {
+    return this.t().eventAdmin.addOn.replace('{date}', longDay(day, this.i18n.locale()));
   }
 
   /** keeps the copy of the player's reminders current, so the dialog shows the choice when opened again */
@@ -250,7 +324,9 @@ export class Calendar {
     const first = dayKey(new Date(item.start));
     const last = item.end ? dayKey(new Date(item.end)) : first;
     const start = `${longDay(first, locale)} ${this.clock(item.start)}`;
-    const end = item.end ? ` – ${first === last ? '' : longDay(last, locale) + ' '}${this.clock(item.end)}` : '';
+    const end = item.end
+      ? ` – ${first === last ? '' : longDay(last, locale) + ' '}${this.clock(item.end)}`
+      : '';
     return `${start}${end}${this.running(item) ? `, ${this.t().calendar.running}` : ''}`;
   }
 
@@ -265,7 +341,10 @@ export class Calendar {
       const end = new Date(item.end);
       const last = dayKey(end);
       parts.push(
-        c.until.replace('{date}', `${first === last ? '' : shortDay(last, locale) + ' '}${this.clock(item.end)}`),
+        c.until.replace(
+          '{date}',
+          `${first === last ? '' : shortDay(last, locale) + ' '}${this.clock(item.end)}`,
+        ),
       );
     }
     const texts = this.t().reminders;

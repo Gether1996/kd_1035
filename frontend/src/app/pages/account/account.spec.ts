@@ -50,7 +50,7 @@ describe('Account', () => {
   it('links the signed-in card to the privacy page', async () => {
     const el = await render({
       login_enabled: true,
-      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', is_staff: false },
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', is_staff: false, is_superuser: false },
     });
     expect(el.querySelector('#account-name')?.textContent).toContain('Nelly');
     expect(privacyLink(el)?.getAttribute('href')).toBe('/ochrana-udajov');

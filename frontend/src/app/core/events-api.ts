@@ -16,6 +16,8 @@ export interface PublicEvent {
   name_sk: string;
   /** '' = the Slovak name is shown */
   name_cs: string;
+  /** game art (/static/kingdom/events/…), null = a monogram is shown */
+  icon: string | null;
   /** minutes before the start that leadership offers for personal reminders */
   offered: number[];
   /** published guide only */
@@ -57,11 +59,14 @@ export function eventName(item: PublicEvent, lang: Lang): string {
 export class EventsApi {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  /** Occurrences in the days `range()` returns, again whenever it changes (call in an injection context). */
-  calendar(range: () => { from: string; to: string } | null) {
+  /** Occurrences in the days `range()` returns, again whenever it changes (call in an injection context). A new
+   * `version` asks past the browser cache (the answer is cached for 5 minutes) – after a superuser's change. */
+  calendar(range: () => { from: string; to: string } | null, version: () => number = () => 0) {
     return httpResource<EventCalendar>(() => {
       const days = range();
-      return this.isBrowser && days ? { url: '/api/events/', params: { from: days.from, to: days.to } } : undefined;
+      if (!this.isBrowser || !days) return undefined;
+      const v = version();
+      return { url: '/api/events/', params: v ? { ...days, v } : { ...days } };
     });
   }
 }

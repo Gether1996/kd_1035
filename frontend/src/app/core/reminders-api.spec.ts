@@ -15,6 +15,7 @@ const SETTINGS: ReminderSettings = {
       id: 1,
       name_sk: 'Ruiny',
       name_cs: '',
+      icon: null,
       next_start: '2026-10-10T18:00:00Z',
       repeat_days: 7,
       irregular: false,

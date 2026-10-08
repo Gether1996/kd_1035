@@ -12,49 +12,57 @@
     <div class="channels" role="group" aria-labelledby="channels-title">
       <h3 class="channels__title" id="channels-title">{{ r.channels }}</h3>
 
-      <div class="channel">
-        <span class="channel__icon channel__icon--discord"><svg appIcon="discord"></svg></span>
-        <div class="channel__body">
-          <label class="channel__name" for="remind-discord">{{ r.discord }}</label>
-          <p class="channel__hint" id="remind-discord-hint">{{ s.discord_available ? r.discordHint : r.off }}</p>
-        </div>
-        <div class="channel__action">
-          <input
-            #discordSwitch
-            id="remind-discord"
-            class="switch"
-            type="checkbox"
-            role="switch"
-            aria-describedby="remind-discord-hint"
-            [checked]="s.discord_available && discord()"
-            [disabled]="!s.discord_available"
-            (change)="setDiscord(discordSwitch.checked)"
-          />
-        </div>
-      </div>
-
-      <div class="channel">
-        <span class="channel__icon"><svg appIcon="bell"></svg></span>
-        <div class="channel__body">
-          <p class="channel__name" id="push-name">{{ r.push }}</p>
-          <p class="channel__hint" [class.is-error]="pushFailed()">{{ pushNote() }}</p>
-        </div>
-        @if (s.push_key && (push() === 'on' || push() === 'off')) {
-          <div class="channel__action">
-            <button
-              type="button"
-              class="pill-btn"
-              aria-describedby="push-name"
-              [disabled]="pushBusy()"
-              (click)="push() === 'on' ? disablePush() : enablePush()"
-            >
-              {{ push() === 'on' ? r.disable : r.enable }}
-            </button>
+      <div class="channels__list">
+        <div class="channel">
+          <span class="channel__icon channel__icon--discord"><svg appIcon="discord"></svg></span>
+          <div class="channel__body">
+            <label class="channel__name" for="remind-discord">{{ r.discord }}</label>
+            <p class="channel__hint" id="remind-discord-hint">
+              {{ s.discord_available ? r.discordHint : r.off }}
+            </p>
           </div>
-        }
+          <div class="channel__action">
+            <input
+              #discordSwitch
+              id="remind-discord"
+              class="switch"
+              type="checkbox"
+              role="switch"
+              aria-describedby="remind-discord-hint"
+              [checked]="s.discord_available && discord()"
+              [disabled]="!s.discord_available"
+              (change)="setDiscord(discordSwitch.checked)"
+            />
+          </div>
+        </div>
+
+        <div class="channel">
+          <span class="channel__icon"><svg appIcon="bell"></svg></span>
+          <div class="channel__body">
+            <p class="channel__name" id="push-name">{{ r.push }}</p>
+            <p class="channel__hint" [class.is-error]="pushFailed()">{{ pushNote() }}</p>
+          </div>
+          @if (s.push_key && (push() === 'on' || push() === 'off')) {
+            <div class="channel__action">
+              <button
+                type="button"
+                class="pill-btn"
+                aria-describedby="push-name"
+                [disabled]="pushBusy()"
+                (click)="push() === 'on' ? disablePush() : enablePush()"
+              >
+                {{ push() === 'on' ? r.disable : r.enable }}
+              </button>
+            </div>
+          }
+        </div>
       </div>
 
-      <p class="channels__state" role="status" [class.is-error]="noChannel() || discordState() === 'failed'">
+      <p
+        class="channels__state"
+        role="status"
+        [class.is-error]="noChannel() || discordState() === 'failed'"
+      >
         @if (noChannel()) {
           {{ r.noChannel }}
         } @else if (discordState(); as state) {
@@ -76,19 +84,45 @@
           </a>
         </div>
         @if (mine().length) {
-          <ul class="events">
+          <!-- one short line per event: what, when, how long before; edit or stop right there -->
+          <ul class="mine">
             @for (event of mine(); track event.id) {
-              <li
-                appEventRow
-                [event]="event"
-                [open]="open() === 'mine-' + event.id"
-                (toggled)="toggle('mine-' + event.id)"
-                (changed)="changed(event.id, $event)"
-              ></li>
+              <li class="mine__row">
+                <app-event-icon [src]="event.icon" [name]="name(event)" />
+                <span class="mine__name" [id]="'mine-' + event.id">{{ name(event) }}</span>
+                <span class="mine__when" [class.is-none]="!event.next_start">{{
+                  when(event)
+                }}</span>
+                <span class="mine__times"><svg appIcon="bell"></svg>{{ times(event) }}</span>
+                <span class="mine__actions">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    [attr.aria-label]="r.edit + ': ' + name(event)"
+                    [title]="r.edit"
+                    (click)="openEvent(event, $event)"
+                  >
+                    <svg appIcon="pencil"></svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-btn icon-btn--stop"
+                    [attr.aria-label]="r.stop + ': ' + name(event)"
+                    [title]="r.stop"
+                    [disabled]="stopping().has(event.id)"
+                    (click)="stop(event)"
+                  >
+                    <svg appIcon="x"></svg>
+                  </button>
+                </span>
+              </li>
             }
           </ul>
         } @else {
           <p class="group__empty">{{ r.mineEmpty }}</p>
+        }
+        @if (stopFailed()) {
+          <p class="group__error" role="alert">{{ r.failed }}</p>
         }
       </section>
 
@@ -99,15 +133,18 @@
           </h3>
         </div>
         <div class="tools">
-          <input
-            #search
-            type="search"
-            class="input tools__search"
-            [placeholder]="r.search"
-            [attr.aria-label]="r.search"
-            [value]="query()"
-            (input)="query.set(search.value)"
-          />
+          <label class="tools__search">
+            <svg appIcon="search"></svg>
+            <input
+              #search
+              type="search"
+              class="input"
+              [placeholder]="r.search"
+              [attr.aria-label]="r.search"
+              [value]="query()"
+              (input)="query.set(search.value)"
+            />
+          </label>
           <div class="segmented" role="group" [attr.aria-label]="r.filter">
             @for (f of filters; track f) {
               <button type="button" [attr.aria-pressed]="filter() === f" (click)="filter.set(f)">
@@ -117,20 +154,39 @@
           </div>
         </div>
         @if (matching().length) {
-          <ul class="events">
+          <ul class="tiles">
             @for (event of shown(); track event.id) {
-              <li
-                appEventRow
-                [event]="event"
-                [open]="open() === 'all-' + event.id"
-                (toggled)="toggle('all-' + event.id)"
-                (changed)="changed(event.id, $event)"
-              ></li>
+              <li>
+                <button
+                  type="button"
+                  class="tile"
+                  [class.is-on]="!!event.offsets?.length"
+                  (click)="openEvent(event, $event)"
+                >
+                  <app-event-icon [src]="event.icon" [name]="name(event)" />
+                  <span class="tile__body">
+                    <span class="tile__name">{{ name(event) }}</span>
+                    <span class="tile__repeat">{{ repeat(event) }}</span>
+                    <span class="tile__when" [class.is-none]="!event.next_start">{{
+                      when(event)
+                    }}</span>
+                  </span>
+                  <span class="tile__action">
+                    @if (event.offsets?.length) {
+                      <svg appIcon="bell"></svg>{{ count(event) }}
+                    } @else {
+                      <svg appIcon="plus"></svg>{{ r.set }}
+                    }
+                  </span>
+                </button>
+              </li>
             }
           </ul>
           @if (matching().length > shown().length) {
             <button type="button" class="pill-btn more" (click)="more()">
-              <svg appIcon="chevron-down"></svg>{{ r.more }} ({{ matching().length - shown().length }})
+              <svg appIcon="chevron-down"></svg>{{ r.more }} ({{
+                matching().length - shown().length
+              }})
             </button>
           }
         } @else {
@@ -146,3 +202,14 @@
     </div>
   }
 </section>
+
+@if (dialogItem(); as item) {
+  <app-event-dialog
+    [item]="item"
+    [now]="now()"
+    [remind]="remind()"
+    [onAccount]="true"
+    (closed)="closeEvent()"
+    (changed)="changed($event.id, $event.offsets)"
+  />
+}

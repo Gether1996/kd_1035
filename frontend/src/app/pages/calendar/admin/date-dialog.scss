@@ -1,0 +1,169 @@
+// The dialog frame (.modal…), fields and buttons are global (styles.scss).
+
+.date__pic {
+  --size: 52px;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// a radio button as a tile with the event's icon
+.option {
+  position: relative;
+  display: block;
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+.option__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 12px;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
+  app-event-icon {
+    --size: 38px;
+  }
+}
+
+.option__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+
+  strong {
+    overflow: hidden;
+    color: var(--text);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--text-mute);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.option input:hover + .option__body {
+  border-color: var(--field-line-hover);
+}
+
+.option input:checked + .option__body {
+  border-color: var(--gold-400);
+  background-color: color-mix(in srgb, var(--gold-400) 10%, var(--field-bg));
+}
+
+.option input:focus-visible + .option__body {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
+.when {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 12px;
+}
+
+.other {
+  margin-top: -10px;
+  color: var(--gold-300);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.9375rem;
+}
+
+.empty {
+  color: var(--text-dim);
+}
+
+.error {
+  color: var(--red-300);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.actions__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-300);
+  font: 600 0.9375rem/1.2 var(--font-body);
+  cursor: pointer;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--gold-100);
+  }
+}
+
+@media (max-width: 479px) {
+  .actions__main {
+    width: 100%;
+
+    .btn {
+      flex: 1;
+    }
+  }
+}

@@ -1,0 +1,248 @@
+// The dialog frame (.modal…), fields, chips, switches and .segmented are global (styles.scss).
+
+.editor__pic {
+  --size: 52px;
+}
+
+.grid {
+  display: grid;
+  gap: 18px 20px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// ---------------------------------------------------------------- icon picker: radio buttons with the pictures
+
+.icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.icons__item {
+  position: relative;
+  display: inline-grid;
+  border-radius: 50%;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  app-event-icon {
+    --size: 48px;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s;
+  }
+
+  input:hover + app-event-icon {
+    border-color: var(--field-line-hover);
+  }
+
+  input:checked + app-event-icon {
+    border: 2px solid var(--gold-400);
+    background-color: color-mix(in srgb, var(--gold-400) 14%, var(--field-bg));
+  }
+
+  input:focus-visible + app-event-icon {
+    outline: 2px solid var(--gold-300);
+    outline-offset: 3px;
+  }
+}
+
+// ---------------------------------------------------------------- repeat, start, duration
+
+.every {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.every__input {
+  flex: 0 0 96px;
+}
+
+.mini {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+  color: var(--text-dim);
+  font: 600 0.9375rem/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+
+  &:hover {
+    border-color: var(--field-line-hover);
+    color: var(--text);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--gold-400);
+    color: var(--gold-100);
+  }
+}
+
+.start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.start__date {
+  flex: 1 1 170px;
+}
+
+.start__time {
+  flex: 0 1 130px;
+}
+
+.start__other {
+  color: var(--gold-300);
+  font-variant-numeric: tabular-nums;
+}
+
+.units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-weight: 600;
+
+  .input {
+    width: 84px;
+  }
+}
+
+// ---------------------------------------------------------------- Discord box, switches
+
+.box {
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.box__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inline-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  justify-self: start;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.switches {
+  gap: 14px;
+}
+
+.is-warning {
+  color: var(--red-300);
+}
+
+.more {
+  summary {
+    width: fit-content;
+    padding: 6px 0;
+    font: 600 0.8125rem/1.2 var(--font-body);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+    }
+  }
+}
+
+.more__body {
+  display: grid;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.textarea {
+  min-height: 110px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+// ---------------------------------------------------------------- footer
+
+.state {
+  margin-top: -8px;
+  color: var(--text-dim);
+
+  &:empty {
+    display: none;
+  }
+
+  &.is-error {
+    color: var(--red-300);
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px 16px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.actions__delete {
+  display: grid;
+  gap: 8px;
+  max-width: 320px;
+}
+
+.actions__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+@media (max-width: 479px) {
+  .actions__main {
+    width: 100%;
+
+    .btn {
+      flex: 1;
+    }
+  }
+}

@@ -13,6 +13,7 @@ const MGE = {
   id: 2,
   name_sk: 'MGE – Jazda',
   name_cs: 'MGE – Jízda',
+  icon: '/static/kingdom/events/mge.webp',
   offered: [60, 1440],
   guide: { category: 'eventy' as const, slug: 'mge', title_sk: 'Mightiest Governor', title_cs: '' },
   start: '2026-10-05T00:00:00Z',
@@ -24,6 +25,7 @@ const SILK_ROAD = {
   id: 11,
   name_sk: 'Silk Road',
   name_cs: '',
+  icon: null,
   offered: [15, 60],
   guide: null,
   start: '2026-10-13T18:00:00Z',
@@ -35,11 +37,20 @@ const DATA: EventCalendar = {
   from: '2026-09-27',
   to: '2026-11-02',
   occurrences: [MGE, SILK_ROAD],
-  irregular_waiting: [{ id: 12, name_sk: 'Shadow Legion', name_cs: '', offered: [15, 60], guide: null }],
+  irregular_waiting: [
+    { id: 12, name_sk: 'Shadow Legion', name_cs: '', icon: null, offered: [15, 60], guide: null },
+  ],
 };
 const PLAYER: Me = {
   login_enabled: true,
-  user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', is_staff: false },
+  user: {
+    discord_id: '1',
+    name: 'Nelly',
+    avatar_url: '',
+    ingame_name: '',
+    is_staff: false,
+    is_superuser: false,
+  },
 };
 const SETTINGS: ReminderSettings = {
   discord: true,
@@ -52,6 +63,7 @@ const SETTINGS: ReminderSettings = {
       id: 11,
       name_sk: 'Silk Road',
       name_cs: '',
+      icon: null,
       next_start: SILK_ROAD.start,
       repeat_days: 0,
       irregular: true,
@@ -67,7 +79,9 @@ describe('Calendar', () => {
   const el = () => fixture.nativeElement as HTMLElement;
   const dialog = () => el().querySelector('app-event-dialog');
   const bar = (name: string) =>
-    [...el().querySelectorAll<HTMLButtonElement>('.bar')].find((b) => b.textContent?.includes(name))!;
+    [...el().querySelectorAll<HTMLButtonElement>('.bar')].find((b) =>
+      b.textContent?.includes(name),
+    )!;
 
   beforeEach(() => {
     // Thursday 8 October 2026 (only Date is faked – timers and promises run normally)
@@ -132,7 +146,10 @@ describe('Calendar', () => {
     expect(el().querySelector('.strip--irregular')?.textContent).toContain('Shadow Legion');
     // phones: from today on, the running event under "Dnes"
     const days = [...el().querySelectorAll('.agenda__day')];
-    expect(days.map((d) => d.querySelector('.agenda__rel')?.textContent ?? '')).toEqual(['Dnes', '']);
+    expect(days.map((d) => d.querySelector('.agenda__rel')?.textContent ?? '')).toEqual([
+      'Dnes',
+      '',
+    ]);
     expect(days[0].textContent).toContain('Prebieha');
   });
 
@@ -146,10 +163,12 @@ describe('Calendar', () => {
     expect(text).toContain('UTC 5. 10. 00:00 – 11. 10. 00:00');
     expect(dialog()!.querySelector('.guide')?.getAttribute('href')).toBe('/navody/eventy/mge');
     const login = dialog()!.querySelector('.remind__login');
-    expect(login?.getAttribute('href')).toBe('/api/auth/discord/login/?next=%2Fkalendar%3Fevent%3D2');
+    expect(login?.getAttribute('href')).toBe(
+      '/api/auth/discord/login/?next=%2Fkalendar%3Fevent%3D2',
+    );
     expect(dialog()!.querySelector('.switch')).toBeNull();
 
-    dialog()!.querySelector<HTMLButtonElement>('.panel__close')!.click();
+    dialog()!.querySelector<HTMLButtonElement>('.modal__close')!.click();
     await fixture.whenStable();
     expect(dialog()).toBeNull();
   });
@@ -169,13 +188,13 @@ describe('Calendar', () => {
     await fixture.whenStable();
 
     // closed and opened again: the choice is still there
-    dialog()!.querySelector<HTMLButtonElement>('.panel__close')!.click();
+    dialog()!.querySelector<HTMLButtonElement>('.modal__close')!.click();
     await fixture.whenStable();
     await open(bar('Silk Road'));
     expect(dialog()!.querySelector<HTMLInputElement>('.switch')!.checked).toBe(true);
 
     // an event that will not run again has nothing to pick
-    dialog()!.querySelector<HTMLButtonElement>('.panel__close')!.click();
+    dialog()!.querySelector<HTMLButtonElement>('.modal__close')!.click();
     await fixture.whenStable();
     await open(bar('MGE'));
     expect(dialog()!.querySelector('.switch')).toBeNull();
@@ -191,8 +210,13 @@ describe('Calendar', () => {
   });
 
   it('says when the month has no events', async () => {
-    await render({ login_enabled: false, user: null }, { ...DATA, occurrences: [], irregular_waiting: [] });
-    expect(el().querySelector('.state')?.textContent).toContain('Zatiaľ nie sú naplánované žiadne eventy.');
+    await render(
+      { login_enabled: false, user: null },
+      { ...DATA, occurrences: [], irregular_waiting: [] },
+    );
+    expect(el().querySelector('.state')?.textContent).toContain(
+      'Zatiaľ nie sú naplánované žiadne eventy.',
+    );
     expect(el().querySelector('.strip')).toBeNull();
   });
 
@@ -200,5 +224,30 @@ describe('Calendar', () => {
     await render({ login_enabled: false, user: null }, 'error');
     expect(el().querySelector('.state')?.textContent).toContain('Kalendár sa nepodarilo načítať');
     expect(el().querySelector('.month')).toBeNull();
+  });
+
+  it('a superuser gets "+" on today and the days after it, players do not', async () => {
+    fixture = TestBed.createComponent(Calendar);
+    fixture.detectChanges();
+    http
+      .expectOne('/api/auth/me/')
+      .flush({ ...PLAYER, user: { ...PLAYER.user!, is_superuser: true } });
+    await settle();
+    http.expectOne('/api/me/reminders/').flush(SETTINGS);
+    http
+      .expectOne('/api/events/manage/')
+      .flush({ events: [], icons: [], guides: [], reminder_choices: [60], webhook: false });
+    http.expectOne((req) => req.url === '/api/events/').flush(DATA);
+    await fixture.whenStable();
+    const adds = [...el().querySelectorAll<HTMLButtonElement>('.day__add')];
+    // 8 – 31 October and Sunday 1 November
+    expect(adds.length).toBe(25);
+    expect(adds[0].getAttribute('aria-label')).toBe('Pridať event – štvrtok 8. októbra');
+  });
+
+  it('a player sees no "+" and the event management is not asked for', async () => {
+    await render(PLAYER);
+    expect(el().querySelector('.day__add')).toBeNull();
+    expect(el().querySelector('app-events-panel')).toBeNull();
   });
 });

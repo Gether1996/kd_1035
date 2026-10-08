@@ -1,0 +1,90 @@
+@let a = t();
+
+<section class="panel" aria-labelledby="manage-title">
+  <header class="panel__head">
+    <div class="panel__heading">
+      <h2 class="panel__title" id="manage-title">{{ a.title }}</h2>
+      <p class="panel__lead">{{ a.lead }}</p>
+    </div>
+    <div class="panel__actions">
+      @if (hasIrregular()) {
+        <button type="button" class="pill-btn" (click)="schedule.emit(null)">
+          <svg appIcon="calendar-plus"></svg>{{ a.dateOf }}
+        </button>
+      }
+      <button type="button" class="pill-btn" (click)="edit.emit(null)">
+        <svg appIcon="plus"></svg>{{ a.add }}
+      </button>
+    </div>
+  </header>
+
+  @if (failed()) {
+    <p class="panel__state">{{ a.loadError }}</p>
+  } @else if (data()) {
+    <ul class="rows">
+      @for (event of events(); track event.id) {
+        <li class="row" [class.is-off]="!event.is_active">
+          <app-event-icon [src]="event.icon_url" [name]="name(event)" />
+          <div class="row__main">
+            <strong class="row__name" [id]="'manage-' + event.id">{{ name(event) }}</strong>
+            <span class="row__meta">
+              {{ kind(event) }}
+              @if (event.players) {
+                · {{ players(event) }}
+              }
+              @if (!event.show_on_web) {
+                · <span class="row__flag"><svg appIcon="eye-off"></svg>{{ a.hidden }}</span>
+              }
+            </span>
+          </div>
+          <span class="row__when" [class.is-none]="!event.next_start">{{ when(event) }}</span>
+          <div class="row__actions">
+            <input
+              #activeSwitch
+              class="switch"
+              type="checkbox"
+              role="switch"
+              [checked]="event.is_active"
+              [disabled]="saving().has(event.id)"
+              [attr.aria-label]="a.activeToggle.replace('{name}', name(event))"
+              [title]="event.is_active ? a.active : a.inactive"
+              (change)="toggle(event, activeSwitch.checked, activeSwitch)"
+            />
+            @if (event.irregular && event.is_active) {
+              <button
+                type="button"
+                class="icon-btn"
+                [attr.aria-label]="a.date + ': ' + name(event)"
+                [title]="a.date"
+                (click)="schedule.emit(event.id)"
+              >
+                <svg appIcon="calendar-plus"></svg>
+              </button>
+            }
+            <button
+              type="button"
+              class="icon-btn"
+              [attr.aria-label]="a.edit + ': ' + name(event)"
+              [title]="a.edit"
+              (click)="edit.emit(event.id)"
+            >
+              <svg appIcon="pencil"></svg>
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+    @if (error()) {
+      <p class="panel__state is-error" role="alert">{{ a.error }}</p>
+    }
+    <!-- full navigation: the Django admin is not part of the Angular app -->
+    <a class="panel__admin" href="/admin/kingdom/kingdomevent/">
+      {{ a.adminLink }} <svg appIcon="arrow-up-right"></svg>
+    </a>
+  } @else {
+    <div class="panel__loading" aria-hidden="true">
+      <span class="skeleton"></span>
+      <span class="skeleton"></span>
+    </div>
+  }
+</section>

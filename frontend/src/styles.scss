@@ -476,6 +476,322 @@ p {
   }
 }
 
+// a secondary action that should not draw the eye (Zrušiť next to Uložiť)
+.pill-btn--quiet {
+  border-color: var(--field-line);
+  background: none;
+  color: var(--text-dim);
+
+  &:hover {
+    border-color: var(--field-line-hover);
+    background: none;
+    color: var(--text);
+  }
+}
+
+// a destructive action; `.is-armed` = the second click deletes
+.danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--red-500) 55%, transparent);
+  border-radius: 999px;
+  background: none;
+  color: var(--red-300);
+  font: 600 0.8125rem/1 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.25s,
+    border-color 0.25s,
+    color 0.25s;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    border-color: var(--red-500);
+    background-color: color-mix(in srgb, var(--red-500) 14%, transparent);
+  }
+
+  &.is-armed {
+    border-color: var(--red-500);
+    background-color: var(--red-700);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    border-radius: 999px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+// a checkbox styled as a chip: <fieldset class="chips"><label class="chip"><input type="checkbox" /><span>…</span>
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 0 16px 0 12px;
+    border: 1px solid var(--field-line);
+    border-radius: 999px;
+    background-color: var(--field-bg);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  input:hover + span {
+    border-color: var(--field-line-hover);
+    color: var(--text);
+  }
+
+  input:checked + span,
+  &.chip--own > span {
+    border-color: var(--gold-400);
+    background-color: color-mix(in srgb, var(--gold-400) 12%, var(--field-bg));
+    color: var(--gold-100);
+  }
+
+  input:focus-visible + span {
+    outline: 2px solid var(--gold-300);
+    outline-offset: 2px;
+  }
+
+  input:disabled {
+    cursor: not-allowed;
+
+    + span {
+      opacity: 0.45;
+    }
+  }
+}
+
+// one of a few options: <div class="segmented" role="group"><button aria-pressed="true">…</button>…</div>
+.segmented {
+  display: inline-flex;
+  flex: 0 1 auto;
+  padding: 4px;
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  background: var(--field-bg);
+
+  button {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--text-dim);
+    font: 600 0.8125rem/1 var(--font-body);
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &[aria-pressed='true'] {
+      background: color-mix(in srgb, var(--gold-400) 16%, transparent);
+      color: var(--gold-100);
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .segmented {
+    flex: 1 1 100%;
+
+    button {
+      flex: 1;
+      padding: 0 8px;
+    }
+  }
+}
+
+// ---------------------------------------------------------------- modal dialog
+// <dialog class="modal"><div class="modal__body"><header class="modal__head">…</header>…</div></dialog>
+// A centred card on larger screens, a bottom sheet on phones. Only transform/opacity animate.
+
+.modal {
+  width: min(560px, 100% - 32px);
+  max-width: none;
+  max-height: min(88dvh, 860px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  box-shadow: 0 30px 80px color-mix(in srgb, var(--bg) 80%, transparent);
+
+  &[open] {
+    animation: modal-in 0.4s var(--ease-out);
+  }
+
+  // the dialog itself takes the focus when it opens; the content shows where it is
+  &:focus-visible {
+    outline: none;
+  }
+
+  &::backdrop {
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    backdrop-filter: blur(3px);
+    animation: backdrop-in 0.3s ease-out;
+  }
+}
+
+.modal--wide {
+  width: min(720px, 100% - 32px);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.modal__body {
+  display: grid;
+  gap: 20px;
+  padding: clamp(20px, 4vw, 28px);
+  padding-bottom: calc(clamp(20px, 4vw, 28px) + env(safe-area-inset-bottom));
+}
+
+.modal__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+// the title comes first for screen readers, the eyebrow (repeat label…) is shown above it
+.modal__heading {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.modal__eyebrow {
+  order: -1;
+  margin-bottom: 8px;
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-400);
+}
+
+.modal__title {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  line-height: 1.2;
+}
+
+.modal__close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  margin: -6px -8px 0 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+
+  &:hover {
+    border-color: var(--line-strong);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 599px) {
+  .modal,
+  .modal--wide {
+    width: 100%;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-width: 1px 0 0;
+    border-radius: 20px 20px 0 0;
+
+    &[open] {
+      animation-name: sheet-in;
+    }
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
 // ---------------------------------------------------------------- guide content (HTML from the admin)
 
 .prose {
@@ -590,7 +906,10 @@ p {
     padding: 0.15em 0.4em;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.07);
-    font: 0.9em ui-monospace, Consolas, monospace;
+    font:
+      0.9em ui-monospace,
+      Consolas,
+      monospace;
   }
 
   pre {
@@ -788,8 +1107,8 @@ p {
 
   &::after {
     background:
-      linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%) -150% 0 / 250% 100%
-        no-repeat,
+      linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%) -150%
+        0 / 250% 100% no-repeat,
       var(--gold-gradient);
     transition: background-position 0.8s var(--ease-out);
   }

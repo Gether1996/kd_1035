@@ -11,6 +11,8 @@ export interface Player {
   /** typed by the player on /ucet, '' until then */
   ingame_name: string;
   is_staff: boolean;
+  /** manages events (the admin, and in the calendar) */
+  is_superuser: boolean;
 }
 
 export interface Me {

@@ -6,15 +6,14 @@ import { Router, provideRouter } from '@angular/router';
 import { ReminderEvent } from '../../../core/reminders-api';
 import { cs } from '../../../core/i18n/cs';
 import { sk } from '../../../core/i18n/sk';
-import { EventRow } from './event-row';
 import { reminderLabel, repeatLabel } from './format';
-import { plain } from './reminders';
-import { ownMinutes } from './reminder-picker';
+import { ReminderPicker, ownMinutes } from './reminder-picker';
 
 const EVENT: ReminderEvent = {
   id: 7,
   name_sk: 'Ruiny',
   name_cs: '',
+  icon: null,
   next_start: '2026-10-10T18:00:00Z',
   repeat_days: 7,
   irregular: false,
@@ -23,21 +22,16 @@ const EVENT: ReminderEvent = {
 };
 
 @Component({
-  imports: [EventRow],
-  template: `<ul>
-    <li
-      appEventRow
+  imports: [ReminderPicker],
+  template: `<p id="event-7">Ruiny</p>
+    <app-reminder-picker
       [event]="event()"
-      [open]="open()"
-      (toggled)="open.set(!open())"
+      describedBy="event-7"
       (changed)="changes.push($event)"
-    ></li>
-  </ul>`,
+    />`,
 })
 class Host {
   readonly event = signal(EVENT);
-  /** most tests work with the times – the row starts open */
-  readonly open = signal(true);
   readonly changes: (number[] | null)[] = [];
 }
 
@@ -72,7 +66,8 @@ describe('reminder labels', () => {
   });
 
   it('own time: days, hours and minutes add up, empty fields count as 0', () => {
-    const own = (days: string, hours: string, minutes: string) => ownMinutes({ days, hours, minutes });
+    const own = (days: string, hours: string, minutes: string) =>
+      ownMinutes({ days, hours, minutes });
     expect(own('1', '', '')).toBe(1440);
     expect(own('', '2', '')).toBe(120);
     expect(own('1', '6', '')).toBe(1800);
@@ -93,22 +88,26 @@ describe('reminder labels', () => {
   });
 });
 
-describe('EventRow', () => {
+describe('ReminderPicker', () => {
   let http: HttpTestingController;
 
-  async function render(event: Partial<ReminderEvent> = {}, open = true) {
+  async function render(event: Partial<ReminderEvent> = {}) {
     TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: '**', children: [] }]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([{ path: '**', children: [] }]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
     http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.event.set({ ...EVENT, ...event });
-    fixture.componentInstance.open.set(open);
     await fixture.whenStable();
     return { fixture, el: fixture.nativeElement as HTMLElement };
   }
 
-  const chips = (el: HTMLElement) => [...el.querySelectorAll('.chip')].map((c) => c.textContent?.trim());
+  const chips = (el: HTMLElement) =>
+    [...el.querySelectorAll('.chip')].map((c) => c.textContent?.trim());
   const flush = (offsets: number[] | null) => {
     const req = http.expectOne('/api/me/reminders/7/');
     if (offsets) req.flush({ ...EVENT, offsets });
@@ -117,7 +116,9 @@ describe('EventRow', () => {
   };
   /** types into the days / hours / minutes fields and submits the form (Enter) */
   const addOwn = (el: HTMLElement, ...values: string[]) => {
-    el.querySelectorAll<HTMLInputElement>('.unit__input').forEach((input, i) => (input.value = values[i] ?? ''));
+    el.querySelectorAll<HTMLInputElement>('.unit__input').forEach(
+      (input, i) => (input.value = values[i] ?? ''),
+    );
     el.querySelector('.own')!.dispatchEvent(new Event('submit'));
   };
 
@@ -153,7 +154,11 @@ describe('EventRow', () => {
   it('adds an own time from days, hours and minutes and refuses an invalid one', async () => {
     const { fixture, el } = await render({ offsets: [10] });
     const fields = el.querySelectorAll<HTMLInputElement>('.unit__input');
-    expect([...fields].map((f) => f.closest('label')?.textContent?.trim())).toEqual(['dni', 'h', 'min']);
+    expect([...fields].map((f) => f.closest('label')?.textContent?.trim())).toEqual([
+      'dni',
+      'h',
+      'min',
+    ]);
 
     addOwn(el, '8');
     await fixture.whenStable();
@@ -173,7 +178,13 @@ describe('EventRow', () => {
     addOwn(el, '1', '6', '');
     expect(flush([1800, 1440, 120, 10]).body).toEqual({ offsets: [1800, 1440, 120, 10] });
     await fixture.whenStable();
-    expect(chips(el)).toEqual(['10 min vopred', '1 h vopred', '2 h vopred', '1 deň vopred', '1 deň 6 h vopred']);
+    expect(chips(el)).toEqual([
+      '10 min vopred',
+      '1 h vopred',
+      '2 h vopred',
+      '1 deň vopred',
+      '1 deň 6 h vopred',
+    ]);
 
     // own times are removed with their × (shortest first), removing the last times stops the reminders
     for (const left of [[1800, 1440, 10], [1800, 10], [10]]) {
@@ -199,57 +210,21 @@ describe('EventRow', () => {
     expect(el.querySelector('.own__hint')?.textContent).toContain('Najviac 5');
   });
 
-  it('shows a failed save and the Czech name', async () => {
+  it('shows a failed save in Czech, with the Czech name read by the switch', async () => {
     const { fixture, el } = await render({ name_cs: 'Ruiny CZ' });
     await TestBed.inject(Router).navigateByUrl('/cz/ucet');
     await fixture.whenStable();
-    expect(el.querySelector('.event__name')?.textContent).toContain('Ruiny CZ');
-    expect(el.querySelector('.event__repeat')?.textContent).toContain('každý týden');
+    expect(el.querySelector('.switch')?.getAttribute('aria-label')).toBe('Připomínat: Ruiny CZ');
     el.querySelector<HTMLInputElement>('.switch')!.click();
-    http.expectOne('/api/me/reminders/7/').flush('down', { status: 502, statusText: 'Bad Gateway' });
+    http
+      .expectOne('/api/me/reminders/7/')
+      .flush('down', { status: 502, statusText: 'Bad Gateway' });
     await fixture.whenStable();
     expect(el.querySelector('.picker__state')?.textContent).toContain('Nepodařilo se uložit');
-    expect([...el.querySelectorAll('.unit__name')].map((u) => u.textContent)).toEqual(['dny', 'h', 'min']);
-  });
-
-  it('a closed row is compact: the times as a summary and a button to open them', async () => {
-    const { fixture, el } = await render({ offsets: [1800, 60] }, false);
-    expect(el.querySelector('.chips')).toBeNull();
-    expect([...el.querySelectorAll('.event__summary li')].map((li) => li.textContent)).toEqual([
-      '1 deň 6 h vopred',
-      '1 h vopred',
+    expect([...el.querySelectorAll('.unit__name')].map((u) => u.textContent)).toEqual([
+      'dny',
+      'h',
+      'min',
     ]);
-    const open = el.querySelector<HTMLButtonElement>('.pill-btn')!;
-    expect(open.textContent).toContain('Upraviť');
-    expect(open.getAttribute('aria-expanded')).toBe('false');
-    open.click();
-    await fixture.whenStable();
-    expect(el.querySelector('.chips')).not.toBeNull();
-    expect(el.querySelector('.event__summary')).toBeNull();
-    expect(open.getAttribute('aria-expanded')).toBe('true');
-    expect(open.textContent).toContain('Zavrieť');
-  });
-
-  it('Zrušiť stops the reminders of the event', async () => {
-    const { fixture, el } = await render({ offsets: [60] }, false);
-    el.querySelector<HTMLButtonElement>('.event__stop')!.click();
-    expect(flush(null).method).toBe('DELETE');
-    await fixture.whenStable();
-    expect(el.querySelector('.event__summary')).toBeNull();
-    expect(el.querySelector('.event__stop')).toBeNull();
-    expect(el.querySelector('.pill-btn')?.textContent).toContain('Nastaviť');
-    expect(fixture.componentInstance.changes).toEqual([null]);
-  });
-
-  it('search ignores case and diacritics', () => {
-    expect(plain('  MGE – Pěchota ')).toBe('mge – pechota');
-    expect(plain('Lukostrelci')).toBe(plain('LUKOSTRELCI'));
-  });
-
-  it('an irregular event without a date says it will be announced', async () => {
-    const { el } = await render({ next_start: null, repeat_days: 0, irregular: true });
-    expect(el.querySelector('time')).toBeNull();
-    expect(el.querySelector('.event__when')?.textContent).toContain('Ďalší termín oznámime');
-    expect(el.querySelector('.event__repeat')?.textContent).toContain('nepravidelne');
   });
 });

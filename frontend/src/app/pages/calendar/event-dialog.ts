@@ -15,6 +15,7 @@ import { RouterLink } from '@angular/router';
 import { EventGuide, PublicEvent, eventName, isOccurrence } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { ReminderEvent } from '../../core/reminders-api';
+import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { repeatLabel } from '../account/reminders/format';
 import { ReminderPicker } from '../account/reminders/reminder-picker';
@@ -37,7 +38,7 @@ export interface RemindState {
  */
 @Component({
   selector: 'app-event-dialog',
-  imports: [RouterLink, Icon, ReminderPicker],
+  imports: [RouterLink, Icon, EventIcon, ReminderPicker],
   templateUrl: './event-dialog.html',
   styleUrl: './event-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,9 +48,16 @@ export class EventDialog {
   readonly item = input.required<PublicEvent>();
   readonly now = input.required<Date>();
   readonly remind = input.required<RemindState>();
+  /** opened on /ucet: the note pointing to the account page is left out */
+  readonly onAccount = input(false);
+  /** a superuser: buttons to edit the event and to set the date of an irregular one */
+  readonly admin = input(false);
   readonly closed = output<void>();
   /** the player changed the reminders of this event (already being saved) */
   readonly changed = output<{ id: number; offsets: number[] | null }>();
+  /** superuser: open the event editor / the date of an irregular event */
+  readonly edit = output<number>();
+  readonly schedule = output<number>();
 
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
@@ -65,6 +73,11 @@ export class EventDialog {
     const texts = this.t().reminders;
     return !o || o.irregular ? texts.repeat.irregular : repeatLabel(o.repeat_days, texts);
   });
+  /** no fixed cycle: a waiting event (no date yet) or an irregular occurrence */
+  protected readonly irregular = computed(() => {
+    const o = this.occurrence();
+    return !o || o.irregular;
+  });
   protected readonly running = computed(() => {
     const o = this.occurrence();
     const now = this.now().getTime();
@@ -79,7 +92,9 @@ export class EventDialog {
     const start = new Date(o.start);
     if (!o.end) return day(start);
     const end = new Date(o.end);
-    return dayKey(end) === dayKey(start) ? `${day(start)} – ${clock(end, locale)}` : `${day(start)} – ${day(end)}`;
+    return dayKey(end) === dayKey(start)
+      ? `${day(start)} – ${clock(end, locale)}`
+      : `${day(start)} – ${day(end)}`;
   });
   /** "5. 10. 00:00 – 11. 10. 00:00" – game time */
   protected readonly utc = computed(() => {

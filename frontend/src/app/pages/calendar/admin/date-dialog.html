@@ -1,0 +1,107 @@
+@let a = t();
+@let event = chosen();
+
+<dialog
+  #dialog
+  class="modal"
+  aria-labelledby="date-title"
+  (close)="closed.emit()"
+  (click)="backdrop($event)"
+>
+  <form class="modal__body" novalidate (submit)="save($event)">
+    <header class="modal__head">
+      <app-event-icon
+        class="date__pic"
+        [src]="event?.icon_url ?? null"
+        [name]="event ? name(event) : ''"
+      />
+      <div class="modal__heading">
+        <h2 class="modal__title" id="date-title">{{ event ? name(event) : a.dateTitle }}</h2>
+        <p class="modal__eyebrow">{{ a.dateOf }}</p>
+      </div>
+      <button type="button" class="modal__close" [attr.aria-label]="a.close" (click)="close()">
+        <svg appIcon="x"></svg>
+      </button>
+    </header>
+
+    @if (events().length) {
+      <fieldset class="field">
+        <legend class="field__label">{{ a.event }}</legend>
+        <div class="options">
+          @for (item of events(); track item.id) {
+            <label class="option">
+              <input
+                type="radio"
+                name="date-event"
+                [checked]="item.id === chosenId()"
+                (change)="chosenId.set(item.id)"
+              />
+              <span class="option__body">
+                <app-event-icon [src]="item.icon_url" [name]="name(item)" />
+                <span class="option__text">
+                  <strong>{{ name(item) }}</strong>
+                  <small>{{ item.next_start ? when(item.next_start) : a.noDate }}</small>
+                </span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="when">
+        <div class="field">
+          <label class="field__label" for="date-day">{{ a.day }}</label>
+          <input
+            id="date-day"
+            class="input"
+            type="date"
+            required
+            [value]="date()"
+            (input)="date.set($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label class="field__label" for="date-time">{{ a.time }} ({{ zoneLabel() }})</label>
+          <input
+            id="date-time"
+            class="input"
+            type="time"
+            required
+            [value]="time()"
+            (input)="time.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+      @if (other()) {
+        <p class="other">{{ other() }}</p>
+      }
+
+      @if (replaces()) {
+        <div class="current">
+          <p>{{ replaces() }}</p>
+          <button type="button" class="danger" [disabled]="busy()" (click)="clear()">
+            <svg appIcon="x"></svg> {{ a.clearDate }}
+          </button>
+        </div>
+      }
+    } @else {
+      <p class="empty">{{ a.noIrregular }}</p>
+    }
+
+    <p class="error" role="status">{{ error() }}</p>
+
+    <footer class="actions">
+      <button type="button" class="link" (click)="newEvent()">
+        <svg appIcon="plus"></svg>{{ a.otherEvent }}
+      </button>
+      <div class="actions__main">
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="close()">
+          {{ a.cancel }}
+        </button>
+        @if (events().length) {
+          <button type="submit" class="btn btn--gold" [disabled]="busy()">{{ a.saveDate }}</button>
+        }
+      </div>
+    </footer>
+  </form>
+</dialog>

@@ -1,14 +1,21 @@
 @let c = t().calendar;
 @let r = remind();
 
-<dialog #dialog class="dialog" aria-labelledby="event-dialog-title" (close)="closed.emit()" (click)="backdrop($event)">
-  <div class="panel">
-    <header class="panel__head">
-      <div class="panel__heading">
-        <h2 class="panel__title" id="event-dialog-title">{{ name() }}</h2>
-        <p class="panel__repeat">{{ repeat() }}</p>
+<dialog
+  #dialog
+  class="modal"
+  aria-labelledby="event-dialog-title"
+  (close)="closed.emit()"
+  (click)="backdrop($event)"
+>
+  <div class="modal__body">
+    <header class="modal__head">
+      <app-event-icon class="event-pic" [src]="item().icon" [name]="name()" />
+      <div class="modal__heading">
+        <h2 class="modal__title" id="event-dialog-title">{{ name() }}</h2>
+        <p class="modal__eyebrow">{{ repeat() }}</p>
       </div>
-      <button type="button" class="panel__close" [attr.aria-label]="c.close" (click)="close()">
+      <button type="button" class="modal__close" [attr.aria-label]="c.close" (click)="close()">
         <svg appIcon="x"></svg>
       </button>
     </header>
@@ -49,11 +56,15 @@
           >
             <h3 class="remind__title" id="remind-title">{{ c.remind.title }}</h3>
           </app-reminder-picker>
-          <p class="remind__note" [class.is-warning]="r.noChannel">
-            {{ r.noChannel ? c.remind.noChannel : c.remind.channels }}
-            <a [routerLink]="i18n.path('account')">{{ t().nav.account }}</a
-            >.
-          </p>
+          @if (!onAccount()) {
+            <p class="remind__note" [class.is-warning]="r.noChannel">
+              {{ r.noChannel ? c.remind.noChannel : c.remind.channels }}
+              <a [routerLink]="i18n.path('account')">{{ t().nav.account }}</a
+              >.
+            </p>
+          } @else if (r.noChannel) {
+            <p class="remind__note is-warning">{{ t().reminders.noChannel }}</p>
+          }
         } @else {
           <h3 class="remind__title" id="remind-title">{{ c.remind.title }}</h3>
           @switch (r.kind) {
@@ -75,6 +86,22 @@
           }
         }
       </section>
+    }
+
+    @if (admin()) {
+      <div class="manage">
+        <p class="manage__label"><svg appIcon="shield"></svg>{{ t().eventAdmin.leadership }}</p>
+        <div class="manage__actions">
+          @if (irregular()) {
+            <button type="button" class="pill-btn" (click)="schedule.emit(item().id)">
+              <svg appIcon="calendar-plus"></svg>{{ t().eventAdmin.date }}
+            </button>
+          }
+          <button type="button" class="pill-btn" (click)="edit.emit(item().id)">
+            <svg appIcon="pencil"></svg>{{ t().eventAdmin.edit }}
+          </button>
+        </div>
+      </div>
     }
   </div>
 </dialog>

@@ -1,109 +1,7 @@
-// Modal <dialog>: centred card on larger screens, a bottom sheet on phones. Only transform/opacity animate.
+// The dialog frame (.modal, .modal__head…) is global in styles.scss; here only the event details.
 
-.dialog {
-  width: min(560px, 100% - 32px);
-  max-width: none;
-  max-height: min(88dvh, 860px);
-  margin: auto;
-  padding: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--bg-raised);
-  color: var(--text);
-  box-shadow: 0 30px 80px color-mix(in srgb, var(--bg) 80%, transparent);
-
-  &[open] {
-    animation: dialog-in 0.4s var(--ease-out);
-  }
-
-  // the dialog itself takes the focus when it opens; the content shows where it is
-  &:focus-visible {
-    outline: none;
-  }
-
-  &::backdrop {
-    background: color-mix(in srgb, var(--bg) 78%, transparent);
-    backdrop-filter: blur(3px);
-    animation: backdrop-in 0.3s ease-out;
-  }
-}
-
-@keyframes dialog-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.98);
-  }
-}
-
-@keyframes backdrop-in {
-  from {
-    opacity: 0;
-  }
-}
-
-.panel {
-  display: grid;
-  gap: 20px;
-  padding: clamp(20px, 4vw, 28px);
-  padding-bottom: calc(clamp(20px, 4vw, 28px) + env(safe-area-inset-bottom));
-}
-
-.panel__head {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-// the name comes first for screen readers, the repeat label is shown above it
-.panel__heading {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.panel__repeat {
-  order: -1;
-  margin-bottom: 8px;
-  font: 600 0.75rem/1.2 var(--font-body);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gold-400);
-}
-
-.panel__title {
-  overflow-wrap: anywhere;
-  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
-  line-height: 1.2;
-}
-
-.panel__close {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  margin: -6px -8px 0 0;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    color 0.2s;
-
-  &:hover {
-    border-color: var(--line-strong);
-    color: var(--text);
-  }
-
-  &:focus-visible {
-    border-radius: 50%;
-  }
+.event-pic {
+  --size: 52px;
 }
 
 // ---------------------------------------------------------------- when
@@ -267,29 +165,44 @@
   }
 }
 
-// ---------------------------------------------------------------- phones: bottom sheet
+// ---------------------------------------------------------------- phones
 
 @media (max-width: 599px) {
-  .dialog {
-    width: 100%;
-    max-height: 92dvh;
-    margin: auto 0 0;
-    border-width: 1px 0 0;
-    border-radius: 20px 20px 0 0;
-
-    &[open] {
-      animation-name: sheet-in;
-    }
-  }
-
   .remind__login {
     justify-self: stretch;
   }
 }
 
-@keyframes sheet-in {
-  from {
-    transform: translateY(40px);
-    opacity: 0;
+// ---------------------------------------------------------------- superuser
+
+.manage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.manage__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    color: var(--gold-400);
   }
+}
+
+.manage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }

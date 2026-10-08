@@ -362,7 +362,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   width: 100%;
@@ -469,5 +469,71 @@
 
   .agenda {
     display: none;
+  }
+}
+
+// ---------------------------------------------------------------- event icons
+
+.pill-event__icon {
+  --size: 22px;
+  align-self: center;
+}
+
+.strip--irregular .pill-event__icon {
+  --size: 26px;
+}
+
+.bar__icon {
+  --size: 18px;
+}
+
+.row__icon {
+  --size: 36px;
+}
+
+// ---------------------------------------------------------------- superuser: "+" on a day
+
+.day__add {
+  z-index: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 6px 6px 0 0;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--bg-raised);
+  color: var(--gold-300);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
+
+  .icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  .week:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--gold-400) 18%, var(--bg-raised));
+  }
+
+  &:focus-visible {
+    border-radius: 50%;
+  }
+
+  // touch screens have no hover: always visible, a little quieter
+  @media (hover: none) {
+    opacity: 0.75;
   }
 }
