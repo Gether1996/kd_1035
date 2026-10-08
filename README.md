@@ -38,6 +38,20 @@ Obsah meň vždy len na jednom PC naraz a pred prácou daj `git pull`. Binárnu 
 
 Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
 
+### Doména kd1035.eu
+
+1. **DNS** u registrátora: záznam `A` (a `AAAA`, ak má server IPv6) pre `kd1035.eu` aj `www.kd1035.eu` → IP servera.
+2. **`.env`**: doména je v [.env.example](.env.example) už vyplnená (`DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, `SITE_URL=https://kd1035.eu`).
+3. **HTTPS** – reverse proxy pred portom `WEB_PORT`. Najjednoduchšie [Caddy](https://caddyserver.com/), certifikát Let's Encrypt si vybaví sám (`/etc/caddy/Caddyfile`):
+   ```
+   kd1035.eu, www.kd1035.eu {
+       reverse_proxy 127.0.0.1:8080
+   }
+   ```
+   `www` presmeruje na `kd1035.eu` už nginx v kontajneri `web`. Proxy musí posielať hlavičku `X-Forwarded-Proto` (Caddy, Nginx Proxy Manager aj Traefik to robia samé).
+4. **Kontrola:** https://kd1035.eu, https://www.kd1035.eu (presmeruje), https://kd1035.eu/sitemap.xml (adresy začínajú `https://kd1035.eu`), https://kd1035.eu/admin/.
+5. **Google:** [Search Console](https://search.google.com/search-console) → pridaj doménu `kd1035.eu` (overenie TXT záznamom v DNS) → Sitemaps → `https://kd1035.eu/sitemap.xml`.
+
 ## Dáta a zálohy
 
 - Databáza (`db_data`) a nahrané súbory (`uploads`) sú v Docker volumes. Prežijú rebuild aj `docker compose down`.

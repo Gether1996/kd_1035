@@ -108,6 +108,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Citlivé údaje (kľúče, heslá, tokeny, webhooky) **iba v `.env`**. Ten je v `.gitignore` a nikdy sa necommituje. Kontajner `web` dostane z `.env` len `SITE_URL`.
 - Každú novú premennú pridaj aj do `.env.example` (s popisom, bez skutočnej hodnoty).
 - `.env` na server nahráva používateľ ručne. Lokálny `.env` je len pre vývoj (`DJANGO_DEBUG=1`).
+- Produkčná doména **kd1035.eu** (`SITE_URL=https://kd1035.eu`), kanonická adresa bez `www` – `www.kd1035.eu` presmeruje nginx v kontajneri `web` (301). HTTPS rieši reverse proxy na serveri (napr. Caddy) a musí posielať `X-Forwarded-Proto`. Server, DNS a proxy nastavuje Gether sám (README → Doména kd1035.eu).
 
 ## Git
 - Po každej dokončenej a overenej zmene rovno **commit + push** do `main` (github.com/Gether1996/kd_1035).

@@ -46,8 +46,8 @@ server {
         return 301 /admin/;
     }
 
-    # files uploaded through the admin (shared volume)
-    location /uploads/ {
+    # files uploaded through the admin (shared volume); ^~ so the image rule below does not take them over
+    location ^~ /uploads/ {
         alias /srv/uploads/;
         expires 7d;
     }
@@ -85,4 +85,12 @@ server {
 
     # unknown address → app shell (the router sends visitors home) with a real 404 status
     error_page 404 /index.csr.html;
+}
+
+# www.kd1035.eu → kd1035.eu: one canonical address for visitors and Google
+server {
+    listen 80;
+    server_name ~^www\.(?<apex>.+)$;
+    server_tokens off;
+    return 301 $kd_proto://$apex$request_uri;
 }
