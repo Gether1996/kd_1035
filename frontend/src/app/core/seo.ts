@@ -15,7 +15,7 @@ export interface PageMeta {
   title: string;
   description: string;
   breadcrumbs?: Crumb[];
-  /** private pages (the player's account) – <meta name="robots" content="noindex"> */
+  /** private and missing pages (account, 404) – <meta name="robots" content="noindex">, no canonical/hreflang */
   noindex?: boolean;
 }
 
@@ -56,13 +56,19 @@ export class Seo {
       meta.updateTag({ property: 'og:locale', content: OG_LOCALE[lang] });
       meta.updateTag({ property: 'og:locale:alternate', content: OG_LOCALE[lang === 'sk' ? 'cs' : 'sk'] });
       meta.updateTag({ property: 'og:image', content: `${origin}/og-image.jpg` });
-      if (current.noindex) meta.updateTag({ name: 'robots', content: 'noindex' });
-      else meta.removeTag('name="robots"');
-
-      this.link('canonical', url());
-      this.link('alternate', url('sk'), 'sk');
-      this.link('alternate', url('cs'), 'cs');
-      this.link('alternate', url('sk'), 'x-default');
+      if (current.noindex) {
+        // nothing to point search engines to: the next indexable page creates the links again
+        meta.updateTag({ name: 'robots', content: 'noindex' });
+        this.doc.head
+          .querySelectorAll('link[rel="canonical"], link[rel="alternate"][hreflang]')
+          .forEach((el) => el.remove());
+      } else {
+        meta.removeTag('name="robots"');
+        this.link('canonical', url());
+        this.link('alternate', url('sk'), 'sk');
+        this.link('alternate', url('cs'), 'cs');
+        this.link('alternate', url('sk'), 'x-default');
+      }
 
       const links = Object.values(api.links()).filter(Boolean);
       const graph: object[] = [
