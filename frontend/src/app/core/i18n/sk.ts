@@ -43,7 +43,7 @@ export const sk = {
   },
   alliance: {
     eyebrow: 'Hlavná aliancia',
-    text: 'Jedna hlavná aliancia, jedno velenie. S otázkami sa pokojne obráť na vedenie.',
+    text: 'Jedna hlavná aliancia, jedno vedenie. S otázkami sa pokojne ozvi.',
     contact: 'Kontaktovať',
     copied: 'Skopírované:',
     copyHint: 'Skopíruje Discord meno',

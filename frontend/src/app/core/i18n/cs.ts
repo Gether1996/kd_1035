@@ -45,7 +45,7 @@ export const cs: Dict = {
   },
   alliance: {
     eyebrow: 'Hlavní aliance',
-    text: 'Jedna hlavní aliance, jedno velení. S dotazy se klidně obrať na vedení.',
+    text: 'Jedna hlavní aliance, jedno vedení. S dotazy se klidně ozvi.',
     contact: 'Kontaktovat',
     copied: 'Zkopírováno:',
     copyHint: 'Zkopíruje Discord jméno',
