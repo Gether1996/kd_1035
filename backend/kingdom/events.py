@@ -59,6 +59,31 @@ def upcoming(event: KingdomEvent, count: int = 5, now=None) -> list[datetime]:
     return list(islice(occurrences(event, now or timezone.now()), count))
 
 
+def overlapping(event: KingdomEvent, start: datetime, end: datetime | None = None):
+    """Like occurrences(), but an occurrence that started before `start` and still runs then counts too."""
+    length = timedelta(minutes=event.duration_minutes)
+    for begin in occurrences(event, start - length, end):
+        if not length or begin + length > start:
+            yield begin
+
+
+def calendar(events, start: datetime, end: datetime, limit: int, now=None) -> list[tuple[datetime, KingdomEvent]]:
+    """(start, event) of every occurrence that overlaps [start, end), soonest first, at most `limit`.
+
+    Irregular events count only from `now`: until leadership sets the next date their start is a placeholder in the
+    past (event_templates.NOT_PLANNED). No event can have more than `limit` occurrences among the soonest `limit`, so
+    each one stops there (a daily event with a very long duration would otherwise yield thousands).
+    """
+    now = now or timezone.now()
+    found = [
+        (begin, event)
+        for event in events
+        for begin in islice(overlapping(event, max(start, now) if event.irregular else start, end), limit)
+    ]
+    found.sort(key=lambda pair: (pair[0], pair[1].pk))
+    return found[:limit]
+
+
 def render(event: KingdomEvent, occurrence: datetime) -> str:
     """Expands {name}, {start}, {relative} and {end} into Discord timestamps; other braces stay as they are."""
     unix = int(occurrence.timestamp())
