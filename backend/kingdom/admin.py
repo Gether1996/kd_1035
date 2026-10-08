@@ -4,11 +4,13 @@ from datetime import UTC, timedelta
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
+from django.db.models import Count
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
-from .discord import deliver
+from .discord import MAX_DELAY, deliver
 from .events import HORIZON, LOCAL_TZ, replan, upcoming
 from .models import (
     MAX_OFFERED_REMINDERS,
@@ -46,14 +48,27 @@ REPLAN_NOTE = (
 )
 
 
+def local_parts(dt) -> tuple[str, str, str]:
+    """('Po 26. 10. 2026', '20:00 · 19:00 UTC', '') – Bratislava date, its time + UTC, and the UTC date when that
+    differs ('(Ne 25. 10.)')."""
+    local, utc = dt.astimezone(LOCAL_TZ), dt.astimezone(UTC)
+    day = f'{WEEKDAYS[local.weekday()]} {local.day}. {local.month}. {local.year}'
+    utc_day = f'({WEEKDAYS[utc.weekday()]} {utc.day}. {utc.month}.)' if utc.date() != local.date() else ''
+    return day, f'{local:%H:%M} · {utc:%H:%M} UTC', utc_day
+
+
 def local_time(dt) -> str:
     """'Po 26. 10. 2026 20:00 · 19:00 UTC' – Bratislava time + UTC (with its own date when that differs)."""
-    local, utc = dt.astimezone(LOCAL_TZ), dt.astimezone(UTC)
-    text = f'{WEEKDAYS[local.weekday()]} {local.day}. {local.month}. {local.year} {local:%H:%M}'
-    utc_text = f'{utc:%H:%M} UTC'
-    if utc.date() != local.date():
-        utc_text += f' ({WEEKDAYS[utc.weekday()]} {utc.day}. {utc.month}.)'
-    return f'{text} · {utc_text}'
+    return ' '.join(part for part in local_parts(dt) if part)
+
+
+def repeat_text(days: int) -> str:
+    """'denne', 'každé 3 dni', 'každých 5 dní', 'týždenne', 'každé 2 týždne', 'každých 8 týždňov'…"""
+    if days in (0, 1, 7):
+        return {0: 'jednorazovo', 1: 'denne', 7: 'týždenne'}[days]
+    count, few, many = (days // 7, 'týždne', 'týždňov') if days % 7 == 0 else (days, 'dni', 'dní')
+    # Slovak plural: 2–4 'každé … dni / týždne', 5 and more 'každých … dní / týždňov'
+    return f'každé {count} {few}' if count <= 4 else f'každých {count} {many}'
 
 
 class OfficerInline(admin.TabularInline):
@@ -134,19 +149,38 @@ class KingdomEventForm(forms.ModelForm):
         data = super().clean()
         if data.get('notify_discord') and not data.get('reminders'):
             self.add_error('reminders', 'Vyber aspoň jednu pripomienku alebo vypni posielanie na Discord.')
+        # e.g. "Uložiť ako nový" without changes: two active copies would send every reminder twice
+        name, start = data.get('name_sk'), data.get('starts_at')
+        if data.get('is_active') and name and start:
+            twins = KingdomEvent.objects.filter(is_active=True, name_sk=name, starts_at=start)
+            if twins.exclude(pk=self.instance.pk).exists():
+                self.add_error(
+                    None, 'Aktívny event s rovnakým názvom a prvým začiatkom už existuje – zmeň názov alebo čas.'
+                )
         return data
 
 
 @admin.register(KingdomEvent)
 class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     form = KingdomEventForm
-    list_display = ['name_sk', 'next_occurrence', 'repeat_label', 'notify_discord', 'show_on_web', 'is_active']
+    list_display = [
+        'name_sk',
+        'next_occurrence',
+        'repeat_label',
+        'players',
+        'sends_discord',
+        'show_on_web',
+        'is_active',
+    ]
     list_display_links = ['name_sk']
-    list_editable = ['notify_discord', 'show_on_web', 'is_active']
+    # "posielať na Discord" is only shown: switching it on needs the reminders, which the list cannot check
+    list_editable = ['show_on_web', 'is_active']
     list_filter = ['is_active', 'notify_discord', 'time_basis']
     search_fields = ['name_sk', 'name_cs', 'message']
     readonly_fields = ['schedule']
     save_on_top = True
+    # "Uložiť ako nový" = a copy with its own reminders (save_model plans it as a new event)
+    save_as = True
     fieldsets = [
         ('Event', {'fields': ['name_sk', 'name_cs', 'message', 'guide']}),
         (
@@ -172,14 +206,37 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         ),
     ]
 
-    @admin.display(description='najbližší termín (Bratislava · UTC)')
+    def get_queryset(self, request):
+        # players who picked the event on the website (accounts.EventReminder)
+        return super().get_queryset(request).annotate(players_count=Count('subscriptions', distinct=True))
+
+    # short headers and the date over the time keep the editable checkboxes in view at 1280 px (with both sidebars)
+    @admin.display(description='najbližší termín')
     def next_occurrence(self, obj):
         dates = upcoming(obj, count=1)
-        return local_time(dates[0]) if dates else '—'
+        if not dates:
+            return '—'
+        return format_html(
+            '<span style="white-space:nowrap">{}</span><br><span style="white-space:nowrap">{}</span> {}',
+            *local_parts(dates[0]),
+        )
+
+    @admin.display(description='Discord', boolean=True, ordering='notify_discord')
+    def sends_discord(self, obj):
+        return obj.notify_discord
 
     @admin.display(description='opakovanie')
     def repeat_label(self, obj):
-        return {0: 'jednorazovo', 1: 'denne', 7: 'týždenne'}.get(obj.repeat_days, f'každých {obj.repeat_days} dní')
+        return repeat_text(obj.repeat_days)
+
+    @admin.display(description='hráči', ordering='players_count')
+    def players(self, obj):
+        if not obj.players_count:
+            return 0
+        url = reverse('admin:accounts_eventreminder_changelist')
+        return format_html(
+            '<a href="{}?event__id__exact={}" title="Pripomienky hráčov">{}</a>', url, obj.pk, obj.players_count
+        )
 
     @admin.display(description='Najbližšie termíny')
     def schedule(self, obj):
@@ -238,14 +295,36 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
             self.message_user(request, f'{obj}: naplánované pripomienky na Discord: {planned}', messages.SUCCESS)
 
 
+class EventNotificationForm(forms.ModelForm):
+    class Meta:
+        model = EventNotification
+        fields = '__all__'
+
+    def clean(self):
+        data = super().clean()
+        # a new, pending or failed row goes out (sent and cancelled ones can be edited freely)
+        sendable = self.instance.status in (EventNotification.Status.PENDING, EventNotification.Status.FAILED)
+        title, send_at = data.get('title'), data.get('send_at')
+        if sendable and title and send_at:
+            twins = EventNotification.objects.filter(
+                status=EventNotification.Status.PENDING, title=title, send_at=send_at
+            ).exclude(pk=self.instance.pk)
+            if twins.exists():
+                self.add_error('send_at', 'Rovnaká pripomienka je už naplánovaná na tento čas – zmeň čas.')
+        return data
+
+
 @admin.register(EventNotification)
 class EventNotificationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    form = EventNotificationForm
     list_display = ['title', 'send_at', 'status', 'event', 'sent_at']
     list_filter = ['status', 'event']
     search_fields = ['title', 'message']
     date_hierarchy = 'send_at'
     readonly_fields = ['status', 'sent_at', 'error', 'event', 'occurrence_start', 'offset_minutes']
     actions = ['send_now', 'reschedule', 'cancel']
+    # "Uložiť ako nový" = a new pending notification; readonly fields (state, event link) are not copied
+    save_as = True
 
     def get_fieldsets(self, request, obj=None):
         fields = ['title', 'message', 'send_at', 'event_start', 'mention_role', 'mention_role_id']
@@ -263,16 +342,43 @@ class EventNotificationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
     @admin.action(description='Odoslať na Discord hneď')
     def send_now(self, request, queryset):
-        sent = sum(deliver(n) for n in queryset)
-        failed = queryset.count() - sent
+        # a bulk selection never sends a sent or cancelled notification again
+        rows = list(queryset.filter(status__in=[EventNotification.Status.PENDING, EventNotification.Status.FAILED]))
+        skipped = queryset.count() - len(rows)
+        sent = sum(deliver(n) for n in rows)
+        failed = len(rows) - sent
         if sent:
             self.message_user(request, f'Odoslané: {sent}', messages.SUCCESS)
         if failed:
-            self.message_user(request, f'Neodoslané: {failed} – pozri stĺpec Chyba.', messages.ERROR)
+            # the list has no error column, the reason is on the notification's page
+            self.message_user(request, f'Neodoslané: {failed} – dôvod je v detaile (pole Chyba).', messages.ERROR)
+        if skipped:
+            self.message_user(request, f'Preskočené (odoslané alebo zrušené): {skipped}', messages.WARNING)
 
     @admin.action(description='Znova naplánovať (stav Naplánovaná)')
     def reschedule(self, request, queryset):
-        queryset.update(status=EventNotification.Status.PENDING, error='')
+        # only failed and cancelled ones: a sent notification is never planned again
+        rows = queryset.filter(status__in=[EventNotification.Status.FAILED, EventNotification.Status.CANCELLED])
+        stale = rows.filter(send_at__lt=timezone.now() - MAX_DELAY).count()  # before the update empties `rows`
+        planned = rows.update(status=EventNotification.Status.PENDING, error='')
+        skipped = queryset.count() - planned
+        if planned:
+            self.message_user(request, f'Znova naplánované: {planned}', messages.SUCCESS)
+        if skipped:
+            self.message_user(request, f'Preskočené (odoslané alebo už naplánované): {skipped}', messages.WARNING)
+        if stale == 1:
+            self.message_user(
+                request,
+                'Čas odoslania je starší ako 6 h – uprav ho, inak ju worker označí ako zmeškanú.',
+                messages.WARNING,
+            )
+        elif stale:
+            self.message_user(
+                request,
+                f'Pri {stale} notifikáciách je čas odoslania starší ako 6 h – uprav ho, inak ich worker označí '
+                'ako zmeškané.',
+                messages.WARNING,
+            )
 
     @admin.action(description='Zrušiť (neposielať)')
     def cancel(self, request, queryset):

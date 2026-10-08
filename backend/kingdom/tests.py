@@ -12,10 +12,11 @@ from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 
+from accounts.models import EventReminder, Player
 from guides.models import Guide
 
 from . import backups, discord, events
-from .admin import local_time
+from .admin import local_time, repeat_text
 from .models import Alliance, EventNotification, KingdomEvent, SocialLink
 
 Status = EventNotification.Status
@@ -155,6 +156,24 @@ class OccurrenceTests(SimpleTestCase):
             events.render(event, utc(2026, 10, 20, 18)),
             f'Ruiny: <t:{unix}:F> (<t:{unix}:R>) – <t:{unix + 5400}:t> {{foo}} {{0}} {{',
         )
+
+
+class RepeatTextTests(SimpleTestCase):
+    def test_slovak_plurals(self):
+        expected = {
+            0: 'jednorazovo',
+            1: 'denne',
+            2: 'každé 2 dni',
+            3: 'každé 3 dni',
+            4: 'každé 4 dni',
+            5: 'každých 5 dní',
+            7: 'týždenne',
+            10: 'každých 10 dní',
+            14: 'každé 2 týždne',
+            28: 'každé 4 týždne',
+            56: 'každých 8 týždňov',
+        }
+        self.assertEqual({days: repeat_text(days) for days in expected}, expected)
 
 
 @override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', DISCORD_EVENT_ROLE_ID='42')
@@ -445,7 +464,6 @@ class KingdomEventAdminTests(TestCase):
                 'form-TOTAL_FORMS': '1',
                 'form-INITIAL_FORMS': '1',
                 'form-0-id': str(event.pk),
-                'form-0-notify_discord': 'on',
                 'form-0-show_on_web': 'on',
                 '_save': 'Uložiť',
             },
@@ -453,6 +471,7 @@ class KingdomEventAdminTests(TestCase):
         self.assertEqual(response.status_code, 302)
         event.refresh_from_db()
         self.assertFalse(event.is_active)
+        self.assertTrue(event.notify_discord)  # only shown in the list, not editable there
         self.assertFalse(event.notifications.exists())
 
     def test_preview_lists_next_five_occurrences(self):
@@ -510,6 +529,160 @@ class KingdomEventAdminTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(set(rows.values_list('status', flat=True)), {Status.CANCELLED})
+
+    def test_changelist_repeat_labels_and_players(self):
+        def player(discord_id):
+            user = User.objects.create_user(f'discord_{discord_id}')
+            return Player.objects.create(user=user, discord_id=discord_id, username=f'p{discord_id}')
+
+        labels = {2: 'každé 2 dni', 3: 'každé 3 dni', 5: 'každých 5 dní', 14: 'každé 2 týždne'}
+        rows = {
+            days: KingdomEvent.objects.create(name_sk=f'E{days}', starts_at=self.soon(), repeat_days=days)
+            for days in labels
+        }
+        players = [player(str(10**17 + i)) for i in range(3)]
+        for p in players:
+            EventReminder.objects.create(player=p, event=rows[2], offsets=[60])
+        EventReminder.objects.create(player=players[0], event=rows[3], offsets=[10])
+
+        response = self.client.get(self.url)
+        for label in labels.values():
+            self.assertContains(response, f'<td class="field-repeat_label">{label}</td>', html=True)
+        counts = {e.pk: e.players_count for e in response.context['cl'].result_list}
+        self.assertEqual(counts, {rows[2].pk: 3, rows[3].pk: 1, rows[5].pk: 0, rows[14].pk: 0})
+        link = f'/admin/accounts/eventreminder/?event__id__exact={rows[2].pk}'
+        self.assertContains(response, f'<a href="{link}" title="Pripomienky hráčov">3</a>', html=True)
+        self.assertEqual(self.client.get(link).context['cl'].result_count, 3)
+        # one line for the next date, "posielať na Discord" only shown (switching it on needs the reminders)
+        self.assertContains(response, '<span style="white-space:nowrap">')
+        self.assertNotContains(response, 'name="form-0-notify_discord"')
+        self.assertContains(response, 'name="form-0-is_active"')
+
+    def test_save_as_new_plans_the_copy_and_refuses_a_duplicate(self):
+        start = self.soon()
+        self.client.post(f'{self.url}add/', self.form_data(start))
+        original = KingdomEvent.objects.get()
+        change = f'{self.url}{original.pk}/change/'
+        self.assertContains(self.client.get(change), 'name="_saveasnew"')
+
+        # an unchanged active copy would send every reminder twice – through "Uložiť ako nový" and through Add
+        error = 'Aktívny event s rovnakým názvom a prvým začiatkom už existuje – zmeň názov alebo čas.'
+        self.assertContains(self.client.post(change, self.form_data(start, _saveasnew='Uložiť ako nový')), error)
+        self.assertContains(self.client.post(f'{self.url}add/', self.form_data(start)), error)
+        self.assertEqual(KingdomEvent.objects.count(), 1)
+
+        later = start + timedelta(hours=1)
+        response = self.client.post(change, self.form_data(later, _saveasnew='Uložiť ako nový'))
+        self.assertEqual(response.status_code, 302)
+        copy = KingdomEvent.objects.exclude(pk=original.pk).get()
+        self.assertEqual(
+            sorted(copy.notifications.values_list('send_at', flat=True)), [later - timedelta(hours=1), later]
+        )
+        self.assertEqual(original.notifications.count(), 2)
+
+        # an inactive draft with the same name and start sends nothing, the original itself still saves
+        draft = self.form_data(start, _saveasnew='Uložiť ako nový')
+        del draft['is_active']
+        self.assertEqual(self.client.post(change, draft).status_code, 302)
+        self.assertEqual(self.client.post(change, self.form_data(start)).status_code, 302)
+        self.assertEqual(KingdomEvent.objects.count(), 3)
+
+
+@override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', STORAGES=PLAIN_STATIC)
+class EventNotificationAdminTests(TestCase):
+    url = '/admin/kingdom/eventnotification/'
+
+    def setUp(self):
+        self.client.force_login(User.objects.create_superuser('boss', password='x'))
+
+    def make(self, status, minutes_ago=1, **kwargs):
+        send_at = timezone.now() - timedelta(minutes=minutes_ago)
+        return EventNotification.objects.create(title=f'MGE {status}', send_at=send_at, status=status, **kwargs)
+
+    def act(self, action, rows):
+        return self.client.post(
+            self.url, {'action': action, '_selected_action': [str(n.pk) for n in rows]}, follow=True
+        )
+
+    def form_data(self, send_at, **kwargs):
+        local = timezone.localtime(send_at)
+        return {
+            'title': 'Ruiny',
+            'message': '',
+            'send_at_0': local.strftime('%Y-%m-%d'),
+            'send_at_1': local.strftime('%H:%M:%S'),
+            'event_start_0': '',
+            'event_start_1': '',
+            'mention_role': 'on',
+            'mention_role_id': '',
+            **kwargs,
+        }
+
+    def test_send_now_skips_sent_and_cancelled(self):
+        yesterday = timezone.now() - timedelta(days=1)
+        rows = {status: self.make(status) for status in Status}
+        rows[Status.SENT].sent_at = yesterday
+        rows[Status.SENT].save()
+        with mock.patch.object(discord, 'post') as post:
+            response = self.act('send_now', rows.values())
+        self.assertEqual({c.args[0].pk for c in post.call_args_list}, {rows[Status.PENDING].pk, rows[Status.FAILED].pk})
+        self.assertContains(response, 'Odoslané: 2')
+        self.assertContains(response, 'Preskočené (odoslané alebo zrušené): 2')
+        statuses = dict(EventNotification.objects.values_list('pk', 'status'))
+        self.assertEqual(
+            [statuses[rows[s].pk] for s in Status], [Status.SENT, Status.SENT, Status.SENT, Status.CANCELLED]
+        )
+        rows[Status.SENT].refresh_from_db()
+        self.assertEqual(rows[Status.SENT].sent_at, yesterday)
+
+    def test_reschedule_leaves_sent_alone_and_warns_about_old_times(self):
+        yesterday = timezone.now() - timedelta(days=1)
+        sent = self.make(Status.SENT, sent_at=yesterday)
+        failed = self.make(Status.FAILED, error='boom')
+        cancelled = self.make(Status.CANCELLED, minutes_ago=7 * 60)  # the worker would call it missed
+        pending = self.make(Status.PENDING)
+        response = self.act('reschedule', [sent, failed, cancelled, pending])
+        self.assertContains(response, 'Znova naplánované: 2')
+        self.assertContains(response, 'Preskočené (odoslané alebo už naplánované): 2')
+        self.assertContains(response, 'Čas odoslania je starší ako 6 h – uprav ho, inak ju worker označí ako zmeškanú.')
+        for n in (sent, failed, cancelled, pending):
+            n.refresh_from_db()
+        self.assertEqual((sent.status, sent.sent_at), (Status.SENT, yesterday))
+        self.assertEqual((failed.status, failed.error), (Status.PENDING, ''))
+        self.assertEqual((cancelled.status, pending.status), (Status.PENDING, Status.PENDING))
+
+        failed.status = Status.FAILED
+        failed.save()
+        self.assertNotContains(self.act('reschedule', [failed]), 'starší ako 6 h')
+
+    def test_save_as_new_and_duplicate_guard(self):
+        start = (timezone.now() + timedelta(hours=3)).replace(second=0, microsecond=0)
+        event = KingdomEvent.objects.create(name_sk='Ruiny', starts_at=start, reminders=[60])
+        events.plan_reminders()
+        generated = event.notifications.get()
+        change = f'{self.url}{generated.pk}/change/'
+        self.assertContains(self.client.get(change), 'name="_saveasnew"')
+
+        # the same title at the same time would go out twice – through "Uložiť ako nový" and through Add
+        error = 'Rovnaká pripomienka je už naplánovaná na tento čas – zmeň čas.'
+        self.assertContains(self.client.post(change, self.form_data(generated.send_at, _saveasnew='x')), error)
+        self.assertContains(self.client.post(f'{self.url}add/', self.form_data(generated.send_at)), error)
+        self.assertEqual(EventNotification.objects.count(), 1)
+        self.assertEqual(self.client.post(change, self.form_data(generated.send_at)).status_code, 302)  # itself
+
+        later = generated.send_at + timedelta(minutes=30)
+        response = self.client.post(change, self.form_data(later, _saveasnew='Uložiť ako nový'))
+        self.assertEqual(response.status_code, 302)
+        copy = EventNotification.objects.exclude(pk=generated.pk).get()
+        # a plain notification: no event link, so a later edit of the event does not replan it
+        self.assertEqual(
+            (copy.status, copy.send_at, copy.event, copy.occurrence_start, copy.offset_minutes),
+            (Status.PENDING, later, None, None, None),
+        )
+
+        # a sent or cancelled one with the same title and time does not block a new one
+        EventNotification.objects.filter(pk__in=[generated.pk, copy.pk]).update(status=Status.CANCELLED)
+        self.assertEqual(self.client.post(f'{self.url}add/', self.form_data(later)).status_code, 302)
 
 
 class WorkerTests(TestCase):
