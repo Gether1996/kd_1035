@@ -371,13 +371,27 @@ class EventNotificationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     def reschedule(self, request, queryset):
         # only failed and cancelled ones: a sent notification is never planned again
         rows = queryset.filter(status__in=[EventNotification.Status.FAILED, EventNotification.Status.CANCELLED])
-        stale = rows.filter(send_at__lt=timezone.now() - MAX_DELAY).count()  # before the update empties `rows`
-        planned = rows.update(status=EventNotification.Status.PENDING, error='')
-        skipped = queryset.count() - planned
+        pending = EventNotification.objects.filter(status=EventNotification.Status.PENDING)
+        planned = twins = stale = 0
+        for n in rows.order_by('send_at', 'pk'):
+            # a copy with the same title and time is already planned ("Uložiť ako nový" or an earlier row of this
+            # selection): both would go out
+            if pending.filter(title=n.title, send_at=n.send_at).exists():
+                twins += 1
+                continue
+            n.status, n.error = EventNotification.Status.PENDING, ''
+            n.save(update_fields=['status', 'error'])
+            planned += 1
+            stale += n.send_at < timezone.now() - MAX_DELAY
+        skipped = queryset.count() - planned - twins
         if planned:
             self.message_user(request, f'Znova naplánované: {planned}', messages.SUCCESS)
         if skipped:
             self.message_user(request, f'Preskočené (odoslané alebo už naplánované): {skipped}', messages.WARNING)
+        if twins:
+            self.message_user(
+                request, f'Preskočené – rovnaká pripomienka je už naplánovaná na ten istý čas: {twins}', messages.WARNING
+            )
         if stale == 1:
             self.message_user(
                 request,

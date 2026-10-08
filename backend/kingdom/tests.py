@@ -708,6 +708,23 @@ class EventNotificationAdminTests(TestCase):
         failed.save()
         self.assertNotContains(self.act('reschedule', [failed]), 'starší ako 6 h')
 
+    def test_reschedule_skips_a_copy_that_is_already_planned(self):
+        # cancelled, then saved as a new one with the same title and time
+        cancelled = self.make(Status.CANCELLED)
+        copy = EventNotification.objects.create(title=cancelled.title, send_at=cancelled.send_at)
+        twin = 'Preskočené – rovnaká pripomienka je už naplánovaná na ten istý čas: 1'
+        self.assertContains(self.act('reschedule', [cancelled]), twin)
+        cancelled.refresh_from_db()
+        self.assertEqual(cancelled.status, Status.CANCELLED)
+
+        # two cancelled copies selected together: only the first one goes back
+        copy.status = Status.CANCELLED
+        copy.save()
+        response = self.act('reschedule', [cancelled, copy])
+        self.assertContains(response, 'Znova naplánované: 1')
+        self.assertContains(response, twin)
+        self.assertEqual(EventNotification.objects.filter(status=Status.PENDING).count(), 1)
+
     def test_save_as_new_and_duplicate_guard(self):
         start = (timezone.now() + timedelta(hours=3)).replace(second=0, microsecond=0)
         event = KingdomEvent.objects.create(name_sk='Ruiny', starts_at=start, reminders=[60])
