@@ -135,7 +135,7 @@ def _pairs(columns, rows, lang):
         if 'troops' in columns:
             pair += f'<br><small>{text(row["troops"], lang)}</small>'
         why = text(row['why'], lang)
-        if 'talents' in columns:
+        if 'talents' in columns and row.get('talents'):
             why += f'<br><small>{labels["talents"]}: {row["talents"]}</small>'
         cells = f'<td>{pair}</td><td>{why}</td>'
         if 'f2p' in columns:

@@ -149,8 +149,8 @@ GUIDES = [
         'title': t('Výbava pre pechotu', 'Výbava pro pěchotu'),
         'blocks': [
             ('p', t(
-                'Výbava pre pechotu na pole aj do garnizóny: obrana a zdravie, Hope Cloak a KvK kusy. Pre Sun Tzu Prime, Bai Qiho aj Tokugawu.',
-                'Výbava pro pěchotu na pole i do garnizony: obrana a zdraví, Hope Cloak a KvK kusy. Pro Sun Tzu Prime, Bai Qiho i Tokugawu.',
+                'Výbava pre pechotu na pole aj na garrison: obrana a zdravie, Hope Cloak a KvK kusy. Pre Sun Tzu Prime, Bai Qiho aj Tokugawu.',
+                'Výbava pro pěchotu na pole i na garrison: obrana a zdraví, Hope Cloak a KvK kusy. Pro Sun Tzu Prime, Bai Qiho i Tokugawu.',
             )),
             ('note',),
             ('table', GEAR, [
@@ -182,8 +182,8 @@ GUIDES = [
                   'Celý 6kusový Eternal Empire je dobrý mezikrok, dokud nemáš KvK helmu a zbraň.'),
                 t('Na nohavice sa zdroje delia medzi Eternal Night a epický Karuak’s Humility, ktorý má zdravie na úrovni legendárnych kusov.',
                   'Na kalhoty se zdroje dělí mezi Eternal Night a epický Karuak’s Humility, který má zdraví na úrovni legendárních kusů.'),
-                t('<strong>Garnizóna</strong> používa rovnakú výbavu, len doplnky vymeň za Vengeance (+8 % poškodenie protiútoku) a Scolas’ Lucky Coin (šanca na štít pri zásahu).',
-                  '<strong>Garnizona</strong> používá stejnou výbavu, jen doplňky vyměň za Vengeance (+8 % poškození protiútoku) a Scolas’ Lucky Coin (šance na štít při zásahu).'),
+                t('<strong>Garrison</strong> používa rovnakú výbavu, len doplnky vymeň za Vengeance (+8 % poškodenie protiútoku) a Scolas’ Lucky Coin (šanca na štít pri zásahu).',
+                  '<strong>Garrison</strong> používá stejnou výbavu, jen doplňky vyměň za Vengeance (+8 % poškození protiútoku) a Scolas’ Lucky Coin (šance na štít při zásahu).'),
             ]),
             ('sources', [ROKSTATS, ('AllClash: Scipio Prime Builds', 'https://www.allclash.com/best-scipio-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), ('AllClash: Gorgo Builds', 'https://www.allclash.com/best-gorgo-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), RKG_EQUIP]),
         ],
@@ -275,8 +275,8 @@ GUIDES = [
         'title': t('Najlepšie doplnky (accessories)', 'Nejlepší doplňky (accessories)'),
         'blocks': [
             ('p', t(
-                'Doplnky rozhodujú o rage a dávkach poškodenia. Prehľad podľa tierov a osvedčené kombinácie na pole, rally aj garnizónu.',
-                'Doplňky rozhodují o rage a dávkách poškození. Přehled podle tierů a osvědčené kombinace na pole, rally i garnizonu.',
+                'Doplnky rozhodujú o rage a dávkach poškodenia. Prehľad podľa tierov a osvedčené kombinácie na pole, rally aj garrison.',
+                'Doplňky rozhodují o rage a dávkách poškození. Přehled podle tierů a osvědčené kombinace na pole, rally i garrison.',
             )),
             ('note',),
             ('table', ['tier', 'accessory', 'effect'], [
@@ -300,7 +300,7 @@ GUIDES = [
                 t('<strong>Otvorené pole:</strong> Horn of Fury + Ring of Doom', '<strong>Otevřené pole:</strong> Horn of Fury + Ring of Doom'),
                 t('<strong>Rally – vodca:</strong> Ring of Doom + Hero’s Hilt', '<strong>Rally – vůdce:</strong> Ring of Doom + Hero’s Hilt'),
                 t('<strong>Rally – pripojení:</strong> Concealed Dagger + Mora’s Web', '<strong>Rally – připojení:</strong> Concealed Dagger + Mora’s Web'),
-                t('<strong>Garnizóna:</strong> Vengeance + Scolas’ Lucky Coin', '<strong>Garnizona:</strong> Vengeance + Scolas’ Lucky Coin'),
+                t('<strong>Garrison:</strong> Vengeance + Scolas’ Lucky Coin', '<strong>Garrison:</strong> Vengeance + Scolas’ Lucky Coin'),
                 t('<strong>Lacno:</strong> epické Silent Trial (bežné útoky berú cieľu 10 rage) + Delane’s Amulet (−5 % prijaté poškodenie protiútoku)',
                   '<strong>Levně:</strong> epické Silent Trial (běžné útoky berou cíli 10 rage) + Delane’s Amulet (−5 % přijaté poškození protiútoku)'),
             ]),

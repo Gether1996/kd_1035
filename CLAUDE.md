@@ -32,6 +32,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Kľúčové slová prirodzene v texte (bez spamovania): ROK KD CZ SK, slovenské KD, české KD, slovenské/české kráľovstvo v Rise of Kingdoms, KD 1035.
 - Obsah z databázy (návody a pod.) bude mať polia pre SK aj CZ.
 - Dbaj na pravopis a diakritiku (SK: ä, ô, ľ, ĺ, ŕ; CZ: ř, ů, ě).
+- Herné pojmy neprekladáme, píšeme ich tak, ako ich hráči používajú: **rally, garrison** (nikdy „garnizóna“), combo, skill, rage… (pokyn Gethera 8. 10. 2026).
 
 ## Obsah
 - Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4, registrácia Governor ID (nad prihlásením cez Discord).
