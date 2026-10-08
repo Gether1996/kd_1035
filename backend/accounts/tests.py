@@ -191,6 +191,15 @@ class LoginFlowTests(TestCase):
         self.assertTrue(player.user.is_staff)
         self.assertTrue(self.logged_in())
 
+    def test_user_renamed_in_the_admin_keeps_the_account(self):
+        player = make_player()
+        User.objects.filter(pk=player.user_id).update(username='Nelly (R4)')
+        response = self.callback(state=self.start(), code='abc')
+        self.assertRedirects(response, '/ucet', fetch_redirect_response=False)
+        self.assertEqual(list(User.objects.values_list('pk', 'username')), [(player.user_id, 'Nelly (R4)')])
+        self.assertEqual(Player.objects.get().avatar, PROFILE['avatar'])
+        self.assertEqual(self.client.session['_auth_user_id'], str(player.user_id))
+
     def test_missing_or_wrong_state_never_logs_in(self):
         # no login/ before → no state in the session
         response = self.callback(state='x', code='abc')

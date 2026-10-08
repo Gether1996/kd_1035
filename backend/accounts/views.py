@@ -82,16 +82,20 @@ def save_player(profile: dict) -> User:
     if not isinstance(avatar, str) or not AVATAR_HASH.fullmatch(avatar):
         avatar = ''
 
-    # never staff and no password; leadership may grant staff later in the admin – that is never touched here
-    user, created = User.objects.get_or_create(username=f'discord_{discord_id}')
-    if created:
-        user.set_unusable_password()
+    # matched by the Discord ID, so a user renamed in the admin keeps their account
+    player = Player.objects.select_related('user').filter(discord_id=discord_id).first()
+    if player:
+        user = player.user
+    else:
+        # never staff and no password; leadership may grant staff later in the admin – that is never touched here
+        user, created = User.objects.get_or_create(username=f'discord_{discord_id}')
+        if created:
+            user.set_unusable_password()
+        player = Player(user=user, discord_id=discord_id)
     user.first_name = (global_name or username)[:150]  # readable in the Users admin
     user.save()
-    Player.objects.update_or_create(
-        user=user,
-        defaults={'discord_id': discord_id, 'username': username, 'global_name': global_name, 'avatar': avatar},
-    )
+    player.username, player.global_name, player.avatar = username, global_name, avatar
+    player.save()
     return user
 
 
