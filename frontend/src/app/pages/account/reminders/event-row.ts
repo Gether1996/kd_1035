@@ -42,18 +42,28 @@ export class EventRow {
   protected readonly invalid = signal(false);
 
   protected readonly name = computed(() => (this.i18n.lang() === 'cs' && this.event().name_cs) || this.event().name_sk);
-  protected readonly repeat = computed(() => repeatLabel(this.event().repeat_days, this.t()));
-  private readonly start = computed(() => new Date(this.event().next_start));
+  protected readonly repeat = computed(() =>
+    this.event().irregular ? this.t().repeat.irregular : repeatLabel(this.event().repeat_days, this.t()),
+  );
+  /** null: an irregular event without a next date yet */
+  private readonly start = computed(() => {
+    const start = this.event().next_start;
+    return start ? new Date(start) : null;
+  });
   /** "so 10. 10. 20:00" in the player's own time zone (year only when it is not this year) */
   protected readonly when = computed(() => {
     const start = this.start();
+    if (!start) return '';
     const locale = this.i18n.locale();
     const weekday = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(start);
     const year = start.getFullYear() === new Date().getFullYear() ? '' : ` ${start.getFullYear()}`;
     return `${weekday} ${start.getDate()}. ${start.getMonth() + 1}.${year} ${this.clock(start)}`;
   });
   /** game time */
-  protected readonly utc = computed(() => this.clock(this.start(), 'UTC'));
+  protected readonly utc = computed(() => {
+    const start = this.start();
+    return start ? this.clock(start, 'UTC') : '';
+  });
 
   /** the last choice comes back when the switch goes on again */
   private previous: number[] = [];

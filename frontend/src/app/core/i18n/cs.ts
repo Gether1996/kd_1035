@@ -321,6 +321,7 @@ export const cs: Dict = {
     noChannel: 'Zapni aspoň jeden způsob, jinak ti připomínky nepřijdou.',
     empty: 'Zatím nejsou naplánované žádné eventy.',
     error: 'Připomínky se nepodařilo načíst. Zkus to znovu za chvíli.',
+    notPlanned: 'Další termín oznámíme – připomínka přijde podle tvých časů.',
     remind: 'Připomínat',
     times: 'Kdy připomenout',
     placeholder: 'např. 30',
@@ -336,6 +337,7 @@ export const cs: Dict = {
     days: ['{n} den', '{n} dny', '{n} dní'],
     repeat: {
       once: 'jednorázově',
+      irregular: 'nepravidelně',
       daily: 'denně',
       weekly: 'každý týden',
       every: ['každý {n} den', 'každé {n} dny', 'každých {n} dní'],

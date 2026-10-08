@@ -60,6 +60,8 @@ def event_data(event: KingdomEvent, offsets: list | None, start) -> dict:
         'name_cs': event.name_cs,
         'next_start': start.astimezone(UTC).isoformat().replace('+00:00', 'Z') if start else None,
         'repeat_days': event.repeat_days,
+        # no fixed cycle: next_start is null until leadership sets the next date
+        'irregular': event.irregular,
         'offered': event.player_reminders or [],
         'offsets': offsets,
     }
@@ -80,10 +82,11 @@ def reminders(request):
 
     now = timezone.now()
     chosen = dict(player.event_reminders.values_list('event_id', 'offsets'))
-    # soonest first; events without another start are left out
+    # soonest first; events without another start are left out, except irregular ones (players pick them in advance)
     starts = [(next_start(event, now), event) for event in visible_events()]
-    starts = sorted((pair for pair in starts if pair[0]), key=lambda pair: pair[0])
-    events = [event_data(event, chosen.get(event.pk), start) for start, event in starts]
+    planned = sorted((pair for pair in starts if pair[0]), key=lambda pair: pair[0])
+    waiting = sorted((pair for pair in starts if not pair[0] and pair[1].irregular), key=lambda pair: pair[1].name_sk)
+    events = [event_data(event, chosen.get(event.pk), start) for start, event in planned + waiting]
     return Response(
         {
             'discord': player.remind_discord,

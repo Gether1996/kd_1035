@@ -15,6 +15,7 @@ const EVENT: ReminderEvent = {
   name_cs: '',
   next_start: '2026-10-10T18:00:00Z',
   repeat_days: 7,
+  irregular: false,
   offered: [60, 10],
   offsets: null,
 };
@@ -153,5 +154,12 @@ describe('EventRow', () => {
     http.expectOne('/api/me/reminders/7/').flush('down', { status: 502, statusText: 'Bad Gateway' });
     await fixture.whenStable();
     expect(el.querySelector('.event__state')?.textContent).toContain('Nepodařilo se uložit');
+  });
+
+  it('an irregular event without a date says it will be announced', async () => {
+    const { el } = await render({ next_start: null, repeat_days: 0, irregular: true });
+    expect(el.querySelector('time')).toBeNull();
+    expect(el.querySelector('.event__when')?.textContent).toContain('Ďalší termín oznámime');
+    expect(el.querySelector('.event__repeat')?.textContent).toContain('nepravidelne');
   });
 });

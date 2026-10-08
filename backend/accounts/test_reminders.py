@@ -113,6 +113,7 @@ class RemindersApiTests(ApiTestCase):
                         'name_cs': 'KvK CZ',
                         'next_start': '2026-10-09T19:00:00Z',
                         'repeat_days': 0,
+                        'irregular': False,
                         'offered': [10, 60],
                         'offsets': None,
                     },
@@ -122,6 +123,7 @@ class RemindersApiTests(ApiTestCase):
                         'name_cs': '',
                         'next_start': '2026-10-10T18:00:00Z',
                         'repeat_days': 7,
+                        'irregular': False,
                         'offered': [10, 60],
                         'offsets': None,
                     },
@@ -147,6 +149,21 @@ class RemindersApiTests(ApiTestCase):
         make_event(name_sk='Prešiel', starts_at=utc(2026, 10, 1, 18), repeat_days=0)
         make_event(name_sk='Skončil', starts_at=utc(2026, 9, 1, 18), until=datetime(2026, 10, 1).date())
         self.assertEqual([e['id'] for e in self.client.get(self.url).json()['events']], [visible.pk])
+
+    def test_irregular_events_are_listed_before_they_are_planned(self, _now):
+        planned = make_event()
+        waiting = make_event(name_sk='Silk Road', starts_at=utc(2026, 10, 1, 18), repeat_days=0, irregular=True)
+        events = self.client.get(self.url).json()['events']
+        self.assertEqual([e['id'] for e in events], [planned.pk, waiting.pk])  # planned first
+        self.assertEqual((events[1]['next_start'], events[1]['irregular']), (None, True))
+        # players pick it in advance
+        self.assertEqual(self.send('put', f'{self.url}{waiting.pk}/', {'offsets': [15]}).status_code, 200)
+        # leadership sets the next date: it moves up like any other event
+        KingdomEvent.objects.filter(pk=waiting.pk).update(starts_at=utc(2026, 10, 9, 18))
+        first = self.client.get(self.url).json()['events'][0]
+        self.assertEqual(
+            (first['id'], first['next_start'], first['offsets']), (waiting.pk, '2026-10-09T18:00:00Z', [15])
+        )
 
     def test_subscribe_change_and_unsubscribe(self, _now):
         event = make_event()
@@ -554,6 +571,23 @@ class SendRemindersTests(TestCase):
         SentReminder.objects.filter(channel=Channel.DISCORD).update(sent_at=timezone.now() - timedelta(days=31))
         self.assertEqual(reminders.prune_sent(), 1)
         self.assertEqual(list(SentReminder.objects.values_list('channel', flat=True)), [Channel.PUSH])
+
+    def test_irregular_event_reminds_again_after_each_new_date(self):
+        self.event.repeat_days = 0
+        self.event.irregular = True
+        self.event.save()
+        self.reminder.offsets = [60]
+        self.reminder.save()
+        self.run_at(2026, 10, 10, 17, 0)  # first date, 20:00 in Bratislava
+        reminders.prune_sent(now=utc(2026, 10, 11))  # over, but the choice stays for the next date
+        self.assertTrue(EventReminder.objects.exists())
+        self.event.starts_at = utc(2026, 10, 15, 18)  # leadership sets the next date
+        self.event.save()
+        self.run_at(2026, 10, 15, 17, 0)
+        self.assertEqual(
+            sorted(SentReminder.objects.filter(channel=Channel.DISCORD).values_list('occurrence', flat=True)),
+            [utc(2026, 10, 10, 18), utc(2026, 10, 15, 18)],
+        )
 
     def test_prune_drops_choices_for_events_that_are_over(self):
         # a one-off event (no repeat) that already took place: the choice has no purpose any more

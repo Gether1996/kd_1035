@@ -17,6 +17,7 @@ const SETTINGS: ReminderSettings = {
       name_cs: '',
       next_start: '2026-10-10T18:00:00Z',
       repeat_days: 7,
+      irregular: false,
       offered: [10, 60],
       offsets: [60, 10],
     },

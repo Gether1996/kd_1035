@@ -857,14 +857,18 @@ class EventTemplateTests(TestCase):
 
         from django.core.management import call_command
 
-        from .event_templates import TEMPLATES
+        from .event_templates import IRREGULAR_TEMPLATES, TEMPLATES
 
         Guide.objects.create(
             category='eventy', slug='more-than-gems', title_sk='MTG', html_sk='<p>x</p>', is_published=True
         )
         call_command('seed_event_templates', stdout=StringIO())
-        self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES))
-        self.assertFalse(KingdomEvent.objects.filter(is_active=True).exists())  # nothing goes out before Gether checks
+        self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES) + len(IRREGULAR_TEMPLATES))
+        # rotation drafts go out only after Gether checks the dates; irregular events wait for a date (nothing planned)
+        self.assertFalse(KingdomEvent.objects.filter(is_active=True, irregular=False).exists())
+        for event in KingdomEvent.objects.filter(irregular=True):
+            self.assertTrue(event.is_active)
+            self.assertEqual(events.upcoming(event, 1, now=utc(2026, 10, 8)), [])
         for event in KingdomEvent.objects.all():
             event.full_clean()
         mtg = KingdomEvent.objects.get(name_sk='More Than Gems')
@@ -876,5 +880,11 @@ class EventTemplateTests(TestCase):
         KingdomEvent.objects.filter(name_sk='Esmeralda').delete()
         KingdomEvent.objects.filter(name_sk='Wheel of Fortune').update(repeat_days=21)
         call_command('seed_event_templates', stdout=StringIO())
-        self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES))
+        self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES) + len(IRREGULAR_TEMPLATES))
         self.assertEqual(KingdomEvent.objects.get(name_sk='Wheel of Fortune').repeat_days, 21)
+
+    def test_irregular_event_has_no_cycle(self):
+        event = KingdomEvent(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=7, irregular=True)
+        with self.assertRaises(ValidationError) as ctx:
+            event.full_clean()
+        self.assertIn('repeat_days', ctx.exception.message_dict)

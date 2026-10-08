@@ -33,6 +33,15 @@ TEMPLATES = [
 
 MESSAGE = '**{name}** začína {start} ({relative}).'
 
+# Irregular events without a fixed cycle, usually in the evening (named by Gether). Active right away without a date:
+# players see "ďalší termín oznámime" and pick their reminders in advance; Gether sets the start in the admin before
+# each one. Placeholder start in the past = nothing planned yet.
+IRREGULAR_TEMPLATES = [
+    ('Silk Road', 'Silk Road'),
+    ('Shadow Legion', 'Shadow Legion'),
+]
+NOT_PLANNED = datetime(2026, 10, 1, 18, tzinfo=UTC)  # 20:00 in Bratislava – the usual evening hour
+
 
 def create_templates() -> list[str]:
     """Creates the drafts that do not exist yet (matched by the Slovak name). Returns the names it created."""
@@ -56,6 +65,22 @@ def create_templates() -> list[str]:
             player_reminders=[60, DAY],
             guide=guides.get(guide),
             is_active=False,
+        )
+        created.append(name_sk)
+    for name_sk, name_cs in IRREGULAR_TEMPLATES:
+        if KingdomEvent.objects.filter(name_sk=name_sk).exists():
+            continue
+        KingdomEvent.objects.create(
+            name_sk=name_sk,
+            name_cs=name_cs if name_cs != name_sk else '',
+            message=MESSAGE,
+            starts_at=NOT_PLANNED,
+            duration_minutes=60,
+            irregular=True,
+            time_basis=KingdomEvent.TimeBasis.LOCAL,
+            reminders=[60, 15],
+            player_reminders=[15, 60],
+            is_active=True,
         )
         created.append(name_sk)
     return created

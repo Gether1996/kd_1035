@@ -145,6 +145,13 @@ class KingdomEvent(models.Model):
         'opakovať každých (dní)', default=0, help_text='0 = jednorazovo, 1 = denne, 7 = týždenne, 14 = každé 2 týždne.'
     )
     until = models.DateField('opakovať do (vrátane)', null=True, blank=True, help_text='Prázdne = bez konca.')
+    irregular = models.BooleanField(
+        'nepravidelný',
+        default=False,
+        help_text='Event bez pevného cyklu (napr. Silk Road, Shadow Legion). Pred každým konaním nastav „prvý '
+        'začiatok“ na nový termín – hráčom, ktorí si ho vybrali, prídu pripomienky. Kým ďalší termín nie je, hráči ho '
+        'vidia ako „ďalší termín oznámime“ a môžu si ho vybrať vopred.',
+    )
     time_basis = models.CharField(
         'čas sa drží v',
         max_length=8,
@@ -213,6 +220,8 @@ class KingdomEvent(models.Model):
         errors = {}
         if self.until and self.starts_at and self.until < timezone.localdate(self.starts_at):
             errors['until'] = 'Dátum je pred prvým začiatkom.'
+        if self.irregular and self.repeat_days:
+            errors['repeat_days'] = 'Nepravidelný event nemá cyklus – nechaj 0 a pred každým konaním zmeň termín.'
         if '{end}' in self.message and not self.duration_minutes:
             errors['message'] = 'Pri trvaní 0 nemá event koniec – odstráň {end} z textu.'
         elif self.starts_at:

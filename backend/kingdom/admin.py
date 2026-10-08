@@ -194,7 +194,7 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         ('Event', {'fields': ['name_sk', 'name_cs', 'message', 'guide']}),
         (
             'Opakovanie',
-            {'fields': ['starts_at', 'duration_minutes', 'repeat_days', 'until', 'time_basis', 'schedule']},
+            {'fields': ['irregular', 'starts_at', 'duration_minutes', 'repeat_days', 'until', 'time_basis', 'schedule']},
         ),
         (
             'Discord',

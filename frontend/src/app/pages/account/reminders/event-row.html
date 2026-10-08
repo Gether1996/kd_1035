@@ -4,10 +4,14 @@
 <div class="event__head">
   <div class="event__info">
     <h3 class="event__name" [id]="'event-' + id">{{ name() }}</h3>
-    <p class="event__when">
-      <time [attr.datetime]="event().next_start">{{ when() }}</time>
-      <span>UTC {{ utc() }}</span>
-    </p>
+    @if (event().next_start) {
+      <p class="event__when">
+        <time [attr.datetime]="event().next_start">{{ when() }}</time>
+        <span>UTC {{ utc() }}</span>
+      </p>
+    } @else {
+      <p class="event__when">{{ r.notPlanned }}</p>
+    }
     <p class="event__repeat">{{ repeat() }}</p>
   </div>
   <label class="toggle">

@@ -320,6 +320,7 @@ export const sk = {
     noChannel: 'Zapni aspoň jeden spôsob, inak ti pripomienky neprídu.',
     empty: 'Zatiaľ nie sú naplánované žiadne eventy.',
     error: 'Pripomienky sa nepodarilo načítať. Skús to znova o chvíľu.',
+    notPlanned: 'Ďalší termín oznámime – pripomienka príde podľa tvojich časov.',
     remind: 'Pripomínať',
     times: 'Kedy pripomenúť',
     placeholder: 'napr. 30',
@@ -335,6 +336,7 @@ export const sk = {
     days: ['{n} deň', '{n} dni', '{n} dní'],
     repeat: {
       once: 'jednorazovo',
+      irregular: 'nepravidelne',
       daily: 'denne',
       weekly: 'každý týždeň',
       every: ['každý {n} deň', 'každé {n} dni', 'každých {n} dní'],

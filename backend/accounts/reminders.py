@@ -236,12 +236,13 @@ def send_push(devices: list, payload: dict, start, now) -> tuple[bool, str]:
 
 def prune_sent(now=None) -> int:
     """Personal data without a purpose (daily): the send log older than KEEP_SENT and the players' choices for events
-    that will not take place again (a one-off that is over, a series past its end date)."""
+    that will not take place again (a one-off that is over, a series past its end date). Irregular events keep them –
+    the next date reminds the same players."""
     now = now or timezone.now()
     deleted, _ = SentReminder.objects.filter(sent_at__lt=now - KEEP_SENT).delete()
     finished = [
         event.pk
-        for event in KingdomEvent.objects.filter(subscriptions__isnull=False).distinct()
+        for event in KingdomEvent.objects.filter(subscriptions__isnull=False, irregular=False).distinct()
         if next(occurrences(event, now), None) is None
     ]
     if finished:

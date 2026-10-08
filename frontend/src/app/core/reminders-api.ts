@@ -9,10 +9,12 @@ export interface ReminderEvent {
   name_sk: string;
   /** '' = the Slovak name is shown */
   name_cs: string;
-  /** next start, ISO 8601 in UTC */
-  next_start: string;
+  /** next start, ISO 8601 in UTC; null = an irregular event without a next date yet */
+  next_start: string | null;
   /** 0 = one-off */
   repeat_days: number;
+  /** no fixed cycle – leadership sets each date, players pick it in advance */
+  irregular: boolean;
   /** minutes before the start that leadership offers */
   offered: number[];
   /** the player's choice (largest first), null = not reminded */
