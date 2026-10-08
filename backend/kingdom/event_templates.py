@@ -41,6 +41,7 @@ MESSAGE = '**{name}** začína {start} ({relative}).'
 IRREGULAR_TEMPLATES = [
     ('Silk Road', 'Silk Road'),
     ('Shadow Legion', 'Shadow Legion'),
+    ('Karuak Boss', 'Karuak Boss'),
 ]
 NOT_PLANNED = datetime(2026, 10, 1, 18, tzinfo=UTC)  # 20:00 in Bratislava – the usual evening hour
 
