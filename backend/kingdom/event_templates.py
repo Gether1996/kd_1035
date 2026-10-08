@@ -5,9 +5,16 @@ More Than Gems runs about once a month (confirmed in game by Gether). They are e
 inactive and Gether checks the dates in the admin before switching it on. Game events start at 00:00 UTC.
 """
 
-from datetime import UTC, datetime
+import json
+from datetime import UTC, date, datetime
+from pathlib import Path
 
 from .models import KingdomEvent
+
+# The kingdom's events as Gether set them up in the dev database (8. 10. 2026: the rotation above switched on,
+# Esmeralda removed). A brand-new production database starts with them once (entrypoint.sh), later they are
+# managed only in the production admin / calendar.
+INITIAL_EVENTS = Path(__file__).with_name('initial_events.json')
 
 DAY = 24 * 60
 
@@ -93,4 +100,28 @@ def create_templates() -> list[str]:
             is_active=True,
         )
         created.append(name_sk)
+    return created
+
+
+def create_initial_events() -> list[str]:
+    """Creates the events from INITIAL_EVENTS that do not exist yet (matched by the Slovak name).
+
+    Guides are linked by slug, so this runs after sync_meta_guides. Returns the names it created.
+    """
+    from guides.models import Guide
+
+    guides = {g.slug: g for g in Guide.objects.filter(category='eventy', is_published=True)}
+    created = []
+    for row in json.loads(INITIAL_EVENTS.read_text(encoding='utf-8')):
+        if KingdomEvent.objects.filter(name_sk=row['name_sk']).exists():
+            continue
+        KingdomEvent.objects.create(
+            **{
+                **row,
+                'starts_at': datetime.fromisoformat(row['starts_at']),
+                'until': date.fromisoformat(row['until']) if row['until'] else None,
+                'guide': guides.get(row['guide']),
+            }
+        )
+        created.append(row['name_sk'])
     return created

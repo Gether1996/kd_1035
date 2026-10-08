@@ -1,0 +1,330 @@
+[
+  {
+    "name_sk": "MGE – Leadership",
+    "name_cs": "",
+    "icon": "mge",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-11-16T00:00:00+00:00",
+    "duration_minutes": 8640,
+    "repeat_days": 56,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "mightiest-governor-mge",
+    "is_active": true
+  },
+  {
+    "name_sk": "MGE – Jazda",
+    "name_cs": "MGE – Jízda",
+    "icon": "mge",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-05T00:00:00+00:00",
+    "duration_minutes": 8640,
+    "repeat_days": 56,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "mightiest-governor-mge",
+    "is_active": true
+  },
+  {
+    "name_sk": "MGE – Pechota",
+    "name_cs": "MGE – Pěchota",
+    "icon": "mge",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-19T00:00:00+00:00",
+    "duration_minutes": 8640,
+    "repeat_days": 56,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "mightiest-governor-mge",
+    "is_active": true
+  },
+  {
+    "name_sk": "MGE – Lukostrelci",
+    "name_cs": "MGE – Lučištníci",
+    "icon": "mge",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-11-02T00:00:00+00:00",
+    "duration_minutes": 8640,
+    "repeat_days": 56,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "mightiest-governor-mge",
+    "is_active": true
+  },
+  {
+    "name_sk": "Ark of Osiris",
+    "name_cs": "",
+    "icon": "ark",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-14T00:00:00+00:00",
+    "duration_minutes": 7200,
+    "repeat_days": 14,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "ark-of-osiris",
+    "is_active": true
+  },
+  {
+    "name_sk": "Wheel of Fortune",
+    "name_cs": "",
+    "icon": "wheel",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-06T00:00:00+00:00",
+    "duration_minutes": 4320,
+    "repeat_days": 14,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "wheel-of-fortune",
+    "is_active": true
+  },
+  {
+    "name_sk": "Hunt for History (vajce)",
+    "name_cs": "Hunt for History (vejce)",
+    "icon": "egg",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-16T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 14,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": true
+  },
+  {
+    "name_sk": "More Than Gems",
+    "name_cs": "",
+    "icon": "mtg",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-10T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 28,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "more-than-gems",
+    "is_active": true
+  },
+  {
+    "name_sk": "Alliance Mobilization",
+    "name_cs": "",
+    "icon": "alliance-mobilization",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-05T00:00:00+00:00",
+    "duration_minutes": 10080,
+    "repeat_days": 0,
+    "until": null,
+    "irregular": true,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "alliance-mobilization",
+    "is_active": true
+  },
+  {
+    "name_sk": "20 GH",
+    "name_cs": "",
+    "icon": "gold-head",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-16T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 14,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": true
+  },
+  {
+    "name_sk": "Silk Road",
+    "name_cs": "",
+    "icon": "silk-road",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-01T18:00:00+00:00",
+    "duration_minutes": 60,
+    "repeat_days": 0,
+    "until": null,
+    "irregular": true,
+    "time_basis": "local",
+    "reminders": [
+      60,
+      15
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      15,
+      60
+    ],
+    "guide": null,
+    "is_active": true
+  },
+  {
+    "name_sk": "Shadow Legion",
+    "name_cs": "",
+    "icon": "shadow-legion",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-01T18:00:00+00:00",
+    "duration_minutes": 60,
+    "repeat_days": 0,
+    "until": null,
+    "irregular": true,
+    "time_basis": "local",
+    "reminders": [
+      60,
+      15
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      15,
+      60
+    ],
+    "guide": null,
+    "is_active": true
+  },
+  {
+    "name_sk": "Karuak Boss",
+    "name_cs": "",
+    "icon": "ceroli",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-01T18:00:00+00:00",
+    "duration_minutes": 60,
+    "repeat_days": 0,
+    "until": null,
+    "irregular": true,
+    "time_basis": "local",
+    "reminders": [
+      60,
+      15
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      15,
+      60
+    ],
+    "guide": null,
+    "is_active": true
+  }
+]

@@ -1,4 +1,4 @@
-# Production: `docker compose up -d --build` → website on http://<server>:${WEB_PORT:-8080}
+# Production: `docker compose up -d --build` → website on http://<server>:${WEB_PORT:-9005}
 #
 # Data lives in named volumes (db_data, uploads) and survives rebuilds and `docker compose down`.
 # NEVER run `docker compose down -v` – that deletes the volumes (the database!).
@@ -45,7 +45,7 @@ services:
     environment:
       SITE_URL: ${SITE_URL:-}
     ports:
-      - "${WEB_PORT:-8080}:80"
+      - "${WEB_PORT:-9005}:80"
     volumes:
       - uploads:/srv/uploads:ro
     depends_on:

@@ -157,6 +157,9 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Každú novú premennú pridaj aj do `.env.example` (s popisom, bez skutočnej hodnoty).
 - `.env` na server nahráva používateľ ručne. Lokálny `.env` je len pre vývoj (`DJANGO_DEBUG=1`).
 - Produkčná doména **kd1035.eu** (`SITE_URL=https://kd1035.eu`), kanonická adresa bez `www` – `www.kd1035.eu` presmeruje nginx v kontajneri `web` (301). HTTPS rieši reverse proxy na serveri (napr. Caddy) a musí posielať `X-Forwarded-Proto`. Server, DNS a proxy nastavuje Gether sám (README → Doména kd1035.eu).
+- Web na serveri počúva na porte **9005** (`WEB_PORT`, predvolený aj v `docker-compose.yml`; Gether 8. 10. 2026).
+- Hotový produkčný `.env` je na Getherovom PC ako `.env.production` (git-ignored, vlastný `DJANGO_SECRET_KEY`, heslo admina a VAPID kľúče, Discord aplikácia rovnaká ako vo vývoji); na server ho nahráva ručne ako `.env`. Dev `.env` ostáva vývojový.
+- Nasadenie = `git pull && docker compose up -d --build`. **Prvý štart s novou databázou** (`entrypoint.sh`: súbor DB ešte neexistoval) po migráciách a `sync_meta_guides` spustí `seed_initial_events` → eventy z `backend/kingdom/initial_events.json` (stav dev DB k 8. 10. 2026, návody prepojené podľa slugu, existujúci názov neprepíše). Neskôr sa už nespúšťa – eventy na serveri žijú v produkčnom admine.
 
 ## Git
 - Po každej dokončenej a overenej zmene rovno **commit + push** do `main` (github.com/Gether1996/kd_1035).
@@ -168,7 +171,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 # vývoj (frontend http://localhost:4200, backend/admin http://localhost:8000/admin/)
 docker compose -f docker-compose.dev.yml up --build
 
-# produkcia (web na http://localhost:${WEB_PORT:-8080})
+# produkcia (web na http://localhost:${WEB_PORT:-9005})
 docker compose up -d --build
 
 # npm / manage.py vo vývojovom kontajneri

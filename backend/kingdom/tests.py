@@ -892,6 +892,31 @@ class EventTemplateTests(TestCase):
         self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES) + len(IRREGULAR_TEMPLATES))
         self.assertEqual(KingdomEvent.objects.get(name_sk='Wheel of Fortune').repeat_days, 21)
 
+    def test_initial_events_are_valid_and_created_once(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        from .event_templates import INITIAL_EVENTS
+
+        rows = json.loads(INITIAL_EVENTS.read_text(encoding='utf-8'))
+        Guide.objects.create(
+            category='eventy', slug='more-than-gems', title_sk='MTG', html_sk='<p>x</p>', is_published=True
+        )
+        KingdomEvent.objects.create(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=0, is_active=False)
+        call_command('seed_initial_events', stdout=StringIO())
+        self.assertEqual(KingdomEvent.objects.count(), len(rows))
+        for event in KingdomEvent.objects.all():
+            event.full_clean()
+            if event.icon:
+                self.assertIsNotNone(event_icons.icon_url(event.icon), event.icon)
+        # guides are linked by slug, a missing one is left empty; an existing event is never overwritten
+        self.assertEqual(KingdomEvent.objects.get(name_sk='More Than Gems').guide.slug, 'more-than-gems')
+        self.assertIsNone(KingdomEvent.objects.get(name_sk='Ark of Osiris').guide)
+        self.assertFalse(KingdomEvent.objects.get(name_sk='Silk Road').is_active)
+        call_command('seed_initial_events', stdout=StringIO())
+        self.assertEqual(KingdomEvent.objects.count(), len(rows))
+
     def test_irregular_event_has_no_cycle(self):
         event = KingdomEvent(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=7, irregular=True)
         with self.assertRaises(ValidationError) as ctx:

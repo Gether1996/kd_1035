@@ -32,9 +32,11 @@ Obsah meň vždy len na jednom PC naraz a pred prácou daj `git pull`. Binárnu 
 ## Nasadenie na server
 
 1. `git clone https://github.com/Gether1996/kd_1035.git && cd kd_1035`
-2. Vytvor `.env` podľa [.env.example](.env.example) (`DJANGO_DEBUG=0`, vlastný `DJANGO_SECRET_KEY`, doména v `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` a `SITE_URL`; `DJANGO_NUM_PROXIES=2`, ak je pred webom HTTPS proxy, inak `1`).
+2. Nahraj `.env` vedľa `docker-compose.yml`. Hotový produkčný súbor pre kd1035.eu je na vývojovom PC ako `.env.production` (nie je v gite) – na server ho nahraj pod menom `.env`. Inak ho vytvor podľa [.env.example](.env.example) (`DJANGO_DEBUG=0`, vlastný `DJANGO_SECRET_KEY`, doména v `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` a `SITE_URL`; `DJANGO_NUM_PROXIES=2`, ak je pred webom HTTPS proxy, inak `1`).
 3. `docker compose up -d --build`
-4. Web beží na porte `WEB_PORT` (predvolene 8080). HTTPS rieši reverse proxy pred ním (napr. Caddy, Nginx Proxy Manager, Traefik).
+4. Web beží na porte `WEB_PORT` (predvolene 9005). HTTPS rieši reverse proxy pred ním (napr. Caddy, Nginx Proxy Manager, Traefik).
+
+Pri prvom štarte s prázdnou databázou sa založí aliancia s vedením, odkazy, všetky návody, admin účet z `.env` a eventy kráľovstva tak, ako boli nastavené vo vývoji 8. 10. 2026 ([backend/kingdom/initial_events.json](backend/kingdom/initial_events.json)). Ďalej sa eventy spravujú už iba v produkčnom admine / kalendári – vývojová databáza sa na server nedostane.
 
 Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
 
@@ -45,7 +47,7 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
 3. **HTTPS** – reverse proxy pred portom `WEB_PORT`. Najjednoduchšie [Caddy](https://caddyserver.com/), certifikát Let's Encrypt si vybaví sám (`/etc/caddy/Caddyfile`):
    ```
    kd1035.eu, www.kd1035.eu {
-       reverse_proxy 127.0.0.1:8080
+       reverse_proxy 127.0.0.1:9005
    }
    ```
    `www` presmeruje na `kd1035.eu` už nginx v kontajneri `web`. Proxy musí posielať hlavičku `X-Forwarded-Proto` (Caddy, Nginx Proxy Manager aj Traefik to robia samé).
