@@ -109,8 +109,6 @@ REST_FRAMEWORK = {
     # proxies in front of Django (nginx + the HTTPS proxy on the server): throttles take the client IP from that
     # position in X-Forwarded-For, so a header sent by the client itself cannot pick a fresh throttle key
     'NUM_PROXIES': env.int('DJANGO_NUM_PROXIES', default=1),
-    # ScopedRateThrottle scopes; counts live in the default per-process LocMemCache (soft limits)
-    'DEFAULT_THROTTLE_RATES': {'governors': '10/hour'},  # new Governor registrations per player
 }
 
 # Public address of the site, e.g. https://kd1035.sk (used in Discord messages)
@@ -123,6 +121,8 @@ DISCORD_EVENT_ROLE_ID = env('DISCORD_EVENT_ROLE_ID', default='')
 # --- Sign in with Discord (accounts app); both empty = login is switched off ---
 DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID', default='')
 DISCORD_CLIENT_SECRET = env('DISCORD_CLIENT_SECRET', default='')
+# Discord IDs that become superusers when they sign in with Discord (Gether); removing an ID does not revoke it
+DISCORD_ADMIN_IDS = env.list('DISCORD_ADMIN_IDS', default=[])
 
 # --- Database backups (worker container, folder is bind-mounted to the host) ---
 BACKUP_DIR = Path(env('BACKUP_DIR', default=str(BASE_DIR / 'backups')))

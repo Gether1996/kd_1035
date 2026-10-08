@@ -125,27 +125,13 @@ Pred zapnutím na serveri skontroluj:
    Web posiela `SITE_URL` + `/api/auth/discord/callback/`, takže `SITE_URL` v `.env` musí sedieť s jednou z nich. Lokálne môže `SITE_URL` ostať prázdne – použije sa adresa z prehliadača (`http://localhost:4200`).
 4. Nič iné nezaškrtávaj (žiadny bot). `docker compose up -d` (načíta nový `.env`).
 
-Hráč sa prihlási tlačidlom **Prihlásiť** v hlavičke, svoj účet vidí na `/ucet` (odhlásenie, zmazanie účtu). Admin (iba superuser) → **Hráči**: zoznam prihlásených, zmazanie hráča zmaže aj jeho účet. Zablokovanie: **Používatelia** → `discord_<id>` → vypni „Aktívny“. Hráči sa neprenášajú cez git (snapshot ich vynechá).
+Hráč sa prihlási tlačidlom **Prihlásiť** v hlavičke, svoj účet vidí na `/ucet` (meno v hre, odhlásenie, zmazanie účtu). Admin (iba superuser) → **Hráči**: zoznam prihlásených, zmazanie hráča zmaže aj jeho účet. Zablokovanie: **Používatelia** → `discord_<id>` → vypni „Aktívny“. Hráči sa neprenášajú cez git (snapshot ich vynechá).
 
-## Registrácia governorov (R4)
+## Meno v hre a superadmin
 
-Hráč sa na webe prihlási cez Discord a na `/ucet` pridá svoj Governor ID, meno v hre, typ (hlavný účet / farma) a alianciu. Záznam čaká, kým ho R4 neschváli – stav aj prípadnú poznámku R4 hráč vidí na `/ucet`. Max. 5 governorov na hráča. Jeden Governor ID môže mať iba jeden záznam, ktorý čaká alebo je schválený; zamietnutý sa dá poslať znova.
+Prihlásený hráč si na `/ucet` vyplní **meno v hre**, aby ho vedenie spoznalo. Superadmin ho vidí v admine → **Hráči** (dá sa podľa neho aj hľadať a opraviť).
 
-### Ako urobiť z niekoho R4 (iba superuser)
-
-1. Dotyčný sa aspoň raz prihlási na webe cez Discord (vznikne používateľ `discord_<id>`, meno je v stĺpci „krstné meno“).
-2. Admin → **Používatelia** → vyhľadaj jeho Discord meno → otvor.
-3. Zaškrtni **správcovský prístup** a v **Skupiny** pridaj **R4** → Uložiť.
-
-Odobratie: odškrtni správcovský prístup a odober skupinu. R4 v admine vidí iba **Governori**, hráčov ani nič iné nie.
-
-### Ako R4 schvaľuje
-
-1. R4 nemá heslo do adminu. **Najprv sa prihlási na webe cez Discord** (napr. na `/ucet`), až potom otvorí `/admin/` – admin použije to isté prihlásenie. (Kým nebude tlačidlo Discord priamo na prihlasovacej stránke adminu, priamo `/admin/` ukáže iba formulár s heslom.)
-2. **Hráči → Governori** → vpravo filter **Podľa stav → Čaká na schválenie**.
-3. Over v hre meno a Governor ID (profil governora, zoznam členov aliancie). Discord meno v stĺpci Discord otvorí profil hráča.
-4. Označ riadky → akcia **Schváliť** alebo **Zamietnuť** → **Vykonať**.
-5. Dôvod zamietnutia: otvor záznam, nastav stav, napíš **Poznámku pre hráča** a ulož. Hráč ju uvidí na webe. Hromadné schválenie starú poznámku vymaže.
+Superadmin sa do adminu prihlasuje cez Discord: jeho Discord ID patrí do `DISCORD_ADMIN_IDS` v `.env` (Gether: `245662824171438090`). Po prihlásení na webe má na `/ucet` odkaz **Administrácia**. Ďalšie práva (napr. pre R4) sa dávajú ručne v admine → **Používatelia** → `discord_<id>` → správcovský prístup.
 
 ## Testy
 

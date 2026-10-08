@@ -67,7 +67,13 @@ describe('Header account slot', () => {
   it('shows the signed-in player linking to the account page', async () => {
     await answer({
       login_enabled: true,
-      user: { discord_id: '1', name: 'Nelly', avatar_url: 'https://cdn.discordapp.com/a.png', is_staff: false },
+      user: {
+        discord_id: '1',
+        name: 'Nelly',
+        avatar_url: 'https://cdn.discordapp.com/a.png',
+        ingame_name: '',
+        is_staff: false,
+      },
     });
     expect(loginLinks().length).toBe(0);
     const link = el().querySelector<HTMLAnchorElement>('.account__link');

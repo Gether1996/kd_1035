@@ -11,6 +11,7 @@ const PLAYER: Me = {
     discord_id: '80351110224678912',
     name: 'Nelly',
     avatar_url: 'https://cdn.discordapp.com/x.png',
+    ingame_name: '',
     is_staff: false,
   },
 };
@@ -85,6 +86,17 @@ describe('Auth', () => {
     await remove;
     TestBed.tick();
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
+  });
+
+  it('saves the in-game name without another request', async () => {
+    await answer(PLAYER);
+    const save = auth.saveIngameName('GetheR');
+    const patch = http.expectOne('/api/auth/me/');
+    expect(patch.request.method).toBe('PATCH');
+    expect(patch.request.body).toEqual({ ingame_name: 'GetheR' });
+    patch.flush({ ...PLAYER, user: { ...PLAYER.user!, ingame_name: 'GetheR' } });
+    await save;
+    expect(auth.user()?.ingame_name).toBe('GetheR');
   });
 
   it('a refused action rejects', async () => {

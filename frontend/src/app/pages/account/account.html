@@ -27,12 +27,38 @@
         {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
       </p>
 
+      <form class="ingame" novalidate (submit)="saveName($event, nameInput)">
+        <label class="field__label" for="ingame-name">{{ a.ingame.label }}</label>
+        <div class="ingame__row">
+          <input
+            #nameInput
+            id="ingame-name"
+            class="input"
+            type="text"
+            maxlength="32"
+            autocomplete="nickname"
+            [value]="user.ingame_name"
+            aria-describedby="ingame-hint ingame-state"
+            (input)="nameState.set(null)"
+          />
+          <button type="submit" class="btn btn--gold" [disabled]="saving()">{{ a.ingame.save }}</button>
+        </div>
+        <p class="field__hint" id="ingame-hint">{{ a.ingame.hint }}</p>
+        <p class="ingame__state" id="ingame-state" role="status" [class.is-error]="nameState() === 'failed'">
+          @if (nameState(); as state) {
+            {{ a.ingame[state] }}
+          }
+        </p>
+      </form>
+
       <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="logout()">
         <svg appIcon="log-out"></svg> {{ a.logout }}
       </button>
 
       <div class="danger-zone">
         @if (user.is_staff) {
+          <!-- full navigation: the Django admin is not part of the Angular app -->
+          <a class="btn btn--ghost" href="/admin/"><svg appIcon="shield"></svg> {{ a.admin }}</a>
           <p class="hint">{{ a.staff }}</p>
         } @else {
           <div class="danger-zone__actions">
@@ -58,8 +84,6 @@
         }
       </div>
     </section>
-
-    <app-governors />
   } @else {
     <section class="card" aria-labelledby="account-login">
       <span class="card__badge"><svg appIcon="discord"></svg></span>

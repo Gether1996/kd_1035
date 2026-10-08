@@ -1,5 +1,5 @@
 {
-  "_doc": "Args for the next kd-improve round (see docs/agenti.md). Ideas and critic verdicts from round 1 (2026-10-07); recurring-kingdom-events (round 1), discord-login and governor-registration (round 2, 2026-10-08) are shipped and removed. Round 2 was stopped by Gether right after privacy-page started (nothing left half-done). Since then a terms page (/podmienky, footer link) exists – the privacy page goes next to it in the footer; the domain is kd1035.eu.",
+  "_doc": "Args for the next kd-improve round (see docs/agenti.md). Ideas and critic verdicts from round 1 (2026-10-07); recurring-kingdom-events (round 1), discord-login and governor-registration (round 2, 2026-10-08) are shipped and removed. Round 2 was stopped by Gether right after privacy-page started (nothing left half-done). Since then a terms page (/podmienky, footer link) exists – the privacy page goes next to it in the footer; the domain is kd1035.eu. Gether dropped Governor registration on 2026-10-08 (model and R4 group removed, accounts/0004); players only add their in-game name (Player.ingame_name) on /ucet. r4-admin-access and leadership-discord-alerts are rejected for that reason. Next big item from Gether: players choose events and their own reminder times (see backlog).",
   "features": 4,
   "date": "YYYY-MM-DD",
   "ideas": [
@@ -235,7 +235,7 @@
         "verdict": "revise",
         "reasons": "Mandatory before login goes live, and a factual, short legal page is an acceptable exception to the no-ballast rule. Its declared dependency is wrong, though: it lists Governor fields and a worker purge of rejected Governor rows, which need governor-registration, not just discord-login. Several statements would also be inaccurate as specified. 'Cookies: only session + csrftoken' leaves out the localStorage key 'kd1035.lang' (i18n.ts remember()). Every visitor gets csrftoken, because the header Auth service calls me/ with @ensure_csrf_cookie on every page. 'What we store' ignores server access logs: gunicorn runs with --access-logfile -, nginx logs client IPs, and Docker json-file logs have no rotation configured in either compose file. Discord is a third party in the login flow. Fonts are self-hosted via @fontsource (angular.json), so no Google Fonts transfer needs to be disclosed. The controller can be stated factually from existing data (Gether, the operator per the footer watermark, contact through his Discord via the Officer contact), but Gether must confirm it. Nothing may be invented.",
         "required_changes": [
-          "depends_on: discord-login AND governor-registration; build it right after governor-registration and before Discord credentials are set in production.",
+          "Governor registration was dropped (2026-10-08): no Governor fields and no purge job. Stored data = Discord ID, name, avatar hash and the in-game name (Player.ingame_name), seen only by the superadmin.",
           "Content must list: localStorage language preference, csrftoken for every visitor (security), session cookie only for signed-in users, server access logs (IP, time, URL) with their retention, Discord as the OAuth provider (link to its policy).",
           "Add log rotation to both compose files (logging: driver json-file, options max-size/max-file) so the stated log retention is true; mention the effective retention on the page.",
           "Controller/contact: use Gether + the existing Discord contact unless Gether supplies something else; no invented addresses or legal claims ('GDPR-compliant' wording out).",
@@ -255,25 +255,13 @@
       },
       {
         "id": "r4-admin-access",
-        "verdict": "revise",
-        "reasons": "Most of this is glue. R4s can already get admin access once Gether sets is_staff + group R4 in the Users admin, because the Discord login session also works on /admin/ (same origin). The 'Pridať do R4' action and the Discord button on the admin login page are real conveniences, and the CSV roster export has value for KvK planning. Two defects. (1) The CSV contains user-controlled strings (in-game name, Discord global_name). Opened in Excel, values starting with = + - @ are executed as formulas (CSV injection). (2) Acceptance criterion 1 promises R4 'read-only players', but PlayerAdmin is SuperuserOnlyAdmin. Keep R4 minimal, as governor-registration's revision requires. It depends on two unfinished features, so it goes in a later batch.",
-        "required_changes": [
-          "Neutralise formula injection: prefix cells starting with =, +, -, @, tab or CR with a single quote; test with a name '=HYPERLINK(...)'.",
-          "Drop 'read-only players' from the acceptance criteria; R4 sees only Governor registrations.",
-          "Admin login template: show the Discord button via a context processor/template tag reading settings, only when both client ID and secret are set; next=/admin/ goes through the same url_has_allowed_host_and_scheme check.",
-          "README: recommend Discord 2FA for every R4 as proposed."
-        ]
+        "verdict": "reject",
+        "reasons": "Gether dropped Governor registration (2026-10-08); this built on it."
       },
       {
         "id": "leadership-discord-alerts",
-        "verdict": "revise",
-        "reasons": "Fast approval of registrations and visible failures add real operational value, and it reuses the webhook infrastructure at no cost. Problems. (1) Retry on every tick: send() has a 15 s timeout, so with the staff webhook down and up to 5 pending governors the 30 s loop can stall for about 75 s per tick, delaying member reminders in send_due(). (2) Failed-notification alerts have no per-tick cap the way registrations do. A Discord outage marks many reminders FAILED at once and floods the staff channel when Discord comes back. (3) Posting Governor IDs and Discord IDs into a Discord channel is a further transfer of personal data, which the privacy page must state. Later batch, after governor-registration.",
-        "required_changes": [
-          "After a staff-webhook failure, back off (monotonic gate, e.g. retry no sooner than 5 min) instead of retrying every tick.",
-          "Cap failed-notification alerts the same way as registrations: >5 in one tick → one summary with a link to ?status__exact=failed.",
-          "Update the privacy page: registration alerts go to a private leadership Discord channel.",
-          "Keep allowed_mentions {'parse': []} and the data migration marking existing rows, with tests as proposed."
-        ]
+        "verdict": "reject",
+        "reasons": "Gether dropped Governor registration (2026-10-08); this built on it."
       },
       {
         "id": "home-upcoming-events",
@@ -299,9 +287,7 @@
     ],
     "build_order": [
       "privacy-page",
-      "not-found-page",
-      "r4-admin-access",
-      "leadership-discord-alerts"
+      "not-found-page"
     ],
     "site_finished": false,
     "must_haves_left": []

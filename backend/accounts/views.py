@@ -1,4 +1,4 @@
-"""Sign in with Discord, the player's own account (/api/auth/…) and their Governor registrations (/api/me/…).
+"""Sign in with Discord and the player's own account (/api/auth/…).
 
 The browser leaves the site for discord.com and comes back to the callback, which logs the player into a normal
 Django session (SameSite=Lax cookie). The Angular app reads the result from /api/auth/me/.
@@ -13,22 +13,18 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, login, logout
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
-from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied
-from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle, SimpleRateThrottle
-from rest_framework.views import APIView
+from rest_framework.throttling import SimpleRateThrottle
 
 from . import discord_oauth
-from .models import MAX_GOVERNORS, Governor, Player
-from .serializers import GovernorInputSerializer, GovernorSerializer
+from .models import Player
+from .serializers import ProfileSerializer
 
 log = logging.getLogger(__name__)
 User = get_user_model()
@@ -92,11 +88,15 @@ def save_player(profile: dict) -> User:
     if player:
         user = player.user
     else:
-        # never staff and no password; leadership may grant staff later in the admin – that is never touched here
+        # no password and not staff; rights granted later in the admin are never taken away here
         user, created = User.objects.get_or_create(username=f'discord_{discord_id}')
         if created:
             user.set_unusable_password()
         player = Player(user=user, discord_id=discord_id)
+    if discord_id in settings.DISCORD_ADMIN_IDS:
+        # the superadmin signs in with Discord too (.env DISCORD_ADMIN_IDS) – on any database, also after a snapshot
+        # import that leaves Discord accounts out
+        user.is_staff = user.is_superuser = True
     user.first_name = (global_name or username)[:150]  # readable in the Users admin
     user.save()
     player.username, player.global_name, player.avatar = username, global_name, avatar
@@ -161,21 +161,38 @@ def player_of(user) -> Player | None:
 
 @never_cache
 @ensure_csrf_cookie
-@api_view(['GET', 'DELETE'])
+@api_view(['GET', 'PATCH', 'DELETE'])
 def me(request):
-    """GET: is login switched on and who is signed in. DELETE: the player deletes their own account."""
+    """GET: is login switched on and who is signed in. PATCH: the player's in-game name. DELETE: the player deletes
+    their own account."""
     if request.method == 'DELETE':
         return delete_account(request)
+    if request.method == 'PATCH':
+        update_profile(request)
+    return Response({'login_enabled': discord_oauth.login_enabled(), 'user': signed_in(request)})
+
+
+def signed_in(request) -> dict | None:
     player = player_of(request.user)
-    user = None
-    if player:
-        user = {
-            'discord_id': player.discord_id,
-            'name': player.name,
-            'avatar_url': player.avatar_url,
-            'is_staff': request.user.is_staff,
-        }
-    return Response({'login_enabled': discord_oauth.login_enabled(), 'user': user})
+    if not player:
+        return None
+    return {
+        'discord_id': player.discord_id,
+        'name': player.name,
+        'avatar_url': player.avatar_url,
+        'ingame_name': player.ingame_name,
+        'is_staff': request.user.is_staff,
+    }
+
+
+def update_profile(request):
+    player = player_of(request.user)
+    if not player:
+        # anonymous, or an admin signed in with a password (no Discord profile)
+        raise PermissionDenied() if request.user.is_authenticated else NotAuthenticated()
+    profile = ProfileSerializer(player, data=request.data, partial=True)
+    profile.is_valid(raise_exception=True)
+    profile.save()
 
 
 def delete_account(request):
@@ -196,62 +213,3 @@ def sign_out(request):
     logout(request)
     return Response(status=204)
 
-
-class IsPlayer(BasePermission):
-    """Signed in with Discord – admins signed in with a password have no player profile."""
-
-    def has_permission(self, request, view):
-        return player_of(request.user) is not None
-
-
-def registration_error(code: str) -> Response:
-    """Stable codes, the website shows its own SK/CZ text for each."""
-    return Response({'code': code}, status=400)
-
-
-@method_decorator(never_cache, name='dispatch')
-class GovernorList(APIView):
-    """GET: the player's own Governor registrations. POST: a new one, waiting for R4 approval."""
-
-    permission_classes = [IsAuthenticated, IsPlayer]
-    throttle_classes = [ScopedRateThrottle]
-    # 10/hour per player (settings). Like the login throttle, the counts live in the per-process LocMemCache
-    # (3 gunicorn workers), so it is a soft limit; the hard ones are MAX_GOVERNORS and the unique Governor ID.
-    throttle_scope = 'governors'
-
-    def get_throttles(self):
-        # only new registrations count – the list loads on every visit of /ucet
-        return super().get_throttles() if self.request.method == 'POST' else []
-
-    def get(self, request):
-        governors = request.user.player.governors.select_related('alliance')
-        return Response(GovernorSerializer(governors, many=True).data)
-
-    def post(self, request):
-        data = GovernorInputSerializer(data=request.data)
-        if not data.is_valid():
-            errors = data.errors
-            return registration_error(
-                'invalid_id' if 'governor_id' in errors else 'invalid_name' if 'name' in errors else 'invalid'
-            )
-        player = request.user.player
-        # one write transaction (SQLite BEGIN IMMEDIATE, settings): two requests cannot both pass the checks
-        with transaction.atomic():
-            if player.governors.count() >= MAX_GOVERNORS:
-                return registration_error('limit')
-            if Governor.is_taken(data.validated_data['governor_id']):
-                return registration_error('taken')
-            governor = Governor.objects.create(player=player, **data.validated_data)
-        return Response(GovernorSerializer(governor).data, status=201)
-
-
-@method_decorator(never_cache, name='dispatch')
-class GovernorDetail(APIView):
-    """DELETE: the player removes their own registration in any state (left the kingdom, typo…)."""
-
-    permission_classes = [IsAuthenticated, IsPlayer]
-
-    def delete(self, request, pk):
-        # someone else's entry is 404, not 403: the answer does not reveal that it exists
-        get_object_or_404(Governor, pk=pk, player=request.user.player).delete()
-        return Response(status=204)

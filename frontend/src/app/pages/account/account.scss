@@ -87,8 +87,41 @@
   text-wrap: pretty;
 }
 
-app-governors {
-  margin-top: 24px;
+// in-game name: label, input + save button in one row (stacked on phones), hint and the save state
+.ingame {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin: 24px 0 8px;
+  text-align: left;
+}
+
+.ingame__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  .input {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  // .card .btn adds a top margin for the buttons below the form
+  .btn {
+    flex: 0 0 auto;
+    min-height: 48px;
+    margin-top: 0;
+  }
+}
+
+.ingame__state {
+  min-height: 1.4em;
+  font-size: 0.9375rem;
+  color: var(--gold-300);
+
+  &.is-error {
+    color: var(--red-500);
+  }
 }
 
 .btn:disabled {

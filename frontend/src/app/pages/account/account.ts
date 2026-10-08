@@ -4,15 +4,14 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
-import { Governors } from './governors/governors';
 
 /**
- * /ucet – the player's own account (sign in with Discord, sign out, delete) and their Governor IDs.
+ * /ucet – the player's own account: sign in with Discord, in-game name, sign out, delete.
  * Not indexed, not in the sitemap.
  */
 @Component({
   selector: 'app-account',
-  imports: [Governors, Icon, PageHeader],
+  imports: [Icon, PageHeader],
   templateUrl: './account.html',
   styleUrl: './account.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +28,8 @@ export class Account {
   protected readonly confirming = signal(false);
   protected readonly busy = signal(false);
   protected readonly result = signal<'deleted' | 'failed' | null>(null);
+  protected readonly saving = signal(false);
+  protected readonly nameState = signal<'saved' | 'failed' | null>(null);
 
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
@@ -49,6 +50,22 @@ export class Account {
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.account, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
+  }
+
+  protected async saveName(event: Event, input: HTMLInputElement): Promise<void> {
+    event.preventDefault();
+    this.saving.set(true);
+    this.nameState.set(null);
+    try {
+      // the field shows what was saved, also when only spaces around the name changed
+      input.value = input.value.trim();
+      await this.auth.saveIngameName(input.value);
+      this.nameState.set('saved');
+    } catch {
+      this.nameState.set('failed');
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   protected logout(): Promise<void> {

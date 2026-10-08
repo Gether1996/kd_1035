@@ -5,7 +5,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 ## Hotové
 
 - **8. 10. 2026 – Prihlásenie cez Discord (hráčske účty)** (kolo 2, schválené kritikom). Tlačidlo v hlavičke, stránka `/ucet`. Na serveri ho nezapínaj pred stránkou Ochrana údajov.
-- **8. 10. 2026 – Registrácia Governor ID so schválením R4** (kolo 2, schválené kritikom). Sekcia „Moji governori“ na `/ucet`, admin → Governori, skupina R4.
+- **8. 10. 2026 – Meno v hre a superadmin cez Discord** (mimo kola). Registráciu Governor ID (kolo 2) Gether zrušil – hráč si na `/ucet` vyplní len meno v hre; Discord ID v `DISCORD_ADMIN_IDS` sú superadmini.
 - **8. 10. 2026 – mimo kôl:** doména kd1035.eu (README → Doména kd1035.eu), trvalá Discord pozvánka, vedenie (Methiu – Vodca, Gether a Hefarion – R4, všetci s Discord ID), ikony predmetov a portréty commanderov v návodoch, top jazda Arthur + Ivan IV a Attila + Achilles, zberači s bonusom surovín po zbere, MTG raz za mesiac, „garrison“ bez prekladu, odkazy v krokoch migrácie, stránka Podmienky používania a rozšírená pätička, oprava `/uploads/` v produkčnom nginx.
 - **7. 10. 2026 – Opakované eventy kráľovstva s automatickými Discord pripomienkami** (kolo 1, schválené kritikom). Admin → Eventy kráľovstva, pripomienky posiela worker.
 - **7. 10. 2026 – mimo kôl:** návody commanderi (10), výbava (7) a eventy (13) v SK/CZ so zdrojmi, ich mesačná automatická aktualizácia, dátum poslednej aktualizácie v pätičke, nočná krajina na pozadí webu, synchronizácia dev databázy cez git.
@@ -14,8 +14,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 
 1. Stránka Ochrana údajov a minimalizácia uložených dát – **musí byť nasadená skôr, ako sa na serveri zapne Discord prihlásenie**
 2. Skutočná stránka 404 (SK/CZ) namiesto tichého presmerovania domov – kritik schválil
-3. Prístup R4 do adminu cez Discord a export zoznamu governorov
-4. Upozornenia pre vedenie na Discorde (nové registrácie, zlyhané pripomienky)
+3. **Výber eventov a vlastné pripomienky pre hráčov** (zadanie Gethera 8. 10.): superadmin zakladá eventy a ponúkané časy pripomienok, prihlásený hráč si vyberie eventy a kedy ho upozorniť (napr. 10 / 60 / vlastných X minút vopred)
 
 ## Odložené (kritik: upraviť podľa poznámok v next-round.json)
 
@@ -25,13 +24,16 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 - Najbližšie eventy na úvodnej stránke (spolu s kalendárom, keď budú skutočné eventy)
 - Odber kalendára eventov (iCal) do mobilu
 
+## Zamietnuté
+
+- Registrácia Governor ID so schválením R4, prístup R4 do adminu s exportom governorov, upozornenia vedenia na nové registrácie – Gether registráciu governorov zrušil (8. 10. 2026).
+
 ## Čaká na Gethera
 
-- **Discord aplikácia** (Developer Portal): Client ID a Client Secret do `.env`, redirect URI `http://localhost:4200/api/auth/discord/callback/` a `https://kd1035.eu/api/auth/discord/callback/`.
+- **Discord aplikácia:** lokálne zapnutá (Client ID a Secret v dev `.env`, redirect URI pre localhost aj kd1035.eu sú zaregistrované). Pred serverom **Reset Secret** (starý je v histórii chatu) a nový do `.env` na serveri aj lokálne; na serveri aj `DISCORD_ADMIN_IDS`.
 - **Webhook** `DISCORD_WEBHOOK_URL` (voliteľne `DISCORD_EVENT_ROLE_ID`) – na dev PC testovací kanál, ostrý iba na serveri (dev databáza sa cez git dostane na každé PC).
 - **Zoznam opakovaných eventov kráľovstva** (SK/CZ názov, prvý začiatok, opakovanie, čas) a predstih pripomienok – nič nie je vymyslené ani naseedované.
-- **Rozhodnutia k registrácii:** max. počet governorov na hráča (návrh 5), či sa smú registrovať farmy, kto schvaľuje (R4).
-- **Ochrana údajov:** kto je prevádzkovateľ a kontakt (návrh: Gether, kontakt cez Discord), potvrdenie 90-dňovej lehoty pre zamietnuté registrácie.
+- **Ochrana údajov:** kto je prevádzkovateľ a kontakt (návrh: Gether, kontakt cez Discord), čo presne ukladáme (Discord ID, meno, avatar, meno v hre).
 - **Server:** DNS pre kd1035.eu a www, HTTPS proxy (Caddy), `.env` – postup v README → Doména kd1035.eu.
 - Pre odložené funkcie: webhook testovacieho kanála (`DISCORD_TEST_WEBHOOK_URL`) a súkromného kanála vedenia (`DISCORD_STAFF_WEBHOOK_URL`).
 

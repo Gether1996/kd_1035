@@ -8,6 +8,8 @@ export interface Player {
   discord_id: string;
   name: string;
   avatar_url: string;
+  /** typed by the player on /ucet, '' until then */
+  ingame_name: string;
   is_staff: boolean;
 }
 
@@ -43,6 +45,11 @@ export class Auth {
   async logout(): Promise<void> {
     await firstValueFrom(this.http.post('/api/auth/logout/', null));
     this.me.reload();
+  }
+
+  /** The player's name in Rise of Kingdoms, so leadership recognises them ('' clears it). */
+  async saveIngameName(name: string): Promise<void> {
+    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { ingame_name: name })));
   }
 
   /** Deletes the player's account on the website (their Discord account is not touched). */
