@@ -150,13 +150,38 @@
     "is_active": true
   },
   {
-    "name_sk": "Hunt for History (vajce)",
-    "name_cs": "Hunt for History (vejce)",
+    "name_sk": "Hunt for History (kladivo)",
+    "name_cs": "",
     "icon": "egg",
     "message": "**{name}** začína {start} ({relative}).",
     "starts_at": "2026-10-16T00:00:00+00:00",
     "duration_minutes": 2880,
-    "repeat_days": 14,
+    "repeat_days": 28,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": true
+  },
+  {
+    "name_sk": "Hunt for History (vajce)",
+    "name_cs": "Hunt for History (vejce)",
+    "icon": "egg",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-30T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 28,
     "until": null,
     "irregular": false,
     "time_basis": "utc",

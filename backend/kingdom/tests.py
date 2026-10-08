@@ -917,6 +917,26 @@ class EventTemplateTests(TestCase):
         call_command('seed_initial_events', stdout=StringIO())
         self.assertEqual(KingdomEvent.objects.count(), len(rows))
 
+    def test_hunt_for_history_is_split_into_hammer_and_egg(self):
+        from importlib import import_module
+
+        from django.apps import apps
+
+        split = import_module('kingdom.migrations.0008_hunt_for_history_hammer_and_egg').split
+        event = KingdomEvent.objects.create(
+            name_sk='Hunt for History (vajce)', name_cs='Hunt for History (vejce)', icon='egg',
+            starts_at=utc(2026, 10, 16), duration_minutes=2880, repeat_days=14,
+        )
+        EventNotification.objects.create(title='x', send_at=utc(2026, 10, 29), event=event)
+        split(apps, None)
+        split(apps, None)  # once only
+        hammer = KingdomEvent.objects.get(pk=event.pk)
+        egg = KingdomEvent.objects.get(name_sk='Hunt for History (vajce)')
+        self.assertEqual((hammer.name_sk, hammer.repeat_days, hammer.starts_at), ('Hunt for History (kladivo)', 28, utc(2026, 10, 16)))
+        self.assertEqual((egg.name_cs, egg.icon, egg.repeat_days, egg.starts_at), ('Hunt for History (vejce)', 'egg', 28, utc(2026, 10, 30)))
+        self.assertEqual(KingdomEvent.objects.count(), 2)
+        self.assertFalse(EventNotification.objects.exists())
+
     def test_irregular_event_has_no_cycle(self):
         event = KingdomEvent(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=7, irregular=True)
         with self.assertRaises(ValidationError) as ctx:
