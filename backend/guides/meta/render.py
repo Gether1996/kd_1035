@@ -7,12 +7,20 @@ Blocks: ('p', text) · ('h2', text) · ('ul', [text, …]) · ('note',) · ('pai
 import re
 from pathlib import Path
 
-# Item icons (game art from codexhelper.com, used with Gether's consent): one 96×96 webp per item, named by
-# slug(item name). Every item named in an 'item', 'alt' or 'accessory' cell gets its icon automatically.
-GEAR_DIR = Path(__file__).resolve().parent.parent / 'static' / 'guides' / 'gear'
-GEAR_URL = '/static/guides/gear/'
-# longest first, so 'pendant-of-eternal-night' wins over 'eternal-night'
-GEAR_ICONS = sorted((path.stem for path in GEAR_DIR.glob('*.webp')), key=len, reverse=True)
+# Icons (game art used with Gether's consent): one 96×96 webp per item or commander in guides/static/guides/<kind>/,
+# named slug(name). Items come from codexhelper.com, commander portraits from rokstats.online. Every item named in an
+# 'item', 'alt' or 'accessory' cell and every commander in a pair table gets its icon automatically.
+ICON_ROOT = Path(__file__).resolve().parent.parent / 'static' / 'guides'
+GEAR_DIR = ICON_ROOT / 'gear'
+COMMANDER_DIR = ICON_ROOT / 'commanders'
+
+
+def _known(folder):
+    # longest first, so 'pendant-of-eternal-night' wins over 'eternal-night' and 'sun-tzu-prime' over 'sun-tzu'
+    return sorted((path.stem for path in folder.glob('*.webp')), key=len, reverse=True)
+
+
+ICONS = {'gear': _known(GEAR_DIR), 'commanders': _known(COMMANDER_DIR)}
 
 
 def t(sk, cs):
@@ -87,11 +95,12 @@ def slug(value):
     return re.sub('[^a-z0-9]+', '-', value).strip('-')
 
 
-def gear_icons(value):
-    """Icons of the items named in a table cell, in the order they are mentioned (item names are English in both languages)."""
+def find_icons(value, kind):
+    """Icons of the items or commanders named in a table cell, in the order they are mentioned (names are English in
+    both languages)."""
     haystack = f'-{slug(text(value, "sk"))}-'
     found = []
-    for icon in GEAR_ICONS:
+    for icon in ICONS[kind]:
         at = haystack.find(f'-{icon}-')
         if at >= 0:
             found.append((at, icon))
@@ -100,9 +109,26 @@ def gear_icons(value):
     return [icon for _, icon in sorted(found)]
 
 
-def _icon(name, small=False):
-    size, kind = (20, ' gear__icon--small') if small else (44, '')
-    return f'<img class="gear__icon{kind}" src="{GEAR_URL}{name}.webp" alt="" width="{size}" height="{size}" loading="lazy">'
+def gear_icons(value):
+    return find_icons(value, 'gear')
+
+
+def commander_icons(value):
+    return find_icons(value, 'commanders')
+
+
+def _icon(kind, name, small=False):
+    size, extra = (20, ' pic__icon--small') if small else (44, '')
+    src = f'/static/guides/{kind}/{name}.webp'
+    return f'<img class="pic__icon{extra}" src="{src}" alt="" width="{size}" height="{size}" loading="lazy">'
+
+
+def _with_icons(kind, icons, html):
+    """Icons in front of the name(s); on phones they sit above it (styles.scss → .prose .pic)."""
+    if not icons:
+        return html
+    images = ''.join(_icon(kind, name) for name in icons)
+    return f'<span class="pic"><span class="pic__icons">{images}</span><span>{html}</span></span>'
 
 
 def verified_note(verified, note):
@@ -118,10 +144,12 @@ def _pairs(columns, rows, lang):
         head = ''.join(f'<th scope="col">{labels[c]}</th>' for c in columns)
         body = ''
         for row in rows:
-            cells = ''.join(
-                f'<td><strong>{text(row[c], lang)}</strong></td>' if c == 'primary' else f'<td>{text(row[c], lang)}</td>'
-                for c in columns
-            )
+            cells = ''
+            for c in columns:
+                value = f'<strong>{text(row[c], lang)}</strong>' if c == 'primary' else text(row[c], lang)
+                if c in ('primary', 'secondary'):
+                    value = _with_icons('commanders', commander_icons(row[c]), value)
+                cells += f'<td>{value}</td>'
             body += f'<tr>{cells}</tr>'
         return f'<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'
 
@@ -134,6 +162,8 @@ def _pairs(columns, rows, lang):
         pair = f'<strong>{row["primary"]}</strong> + {text(row["secondary"], lang)}'
         if 'troops' in columns:
             pair += f'<br><small>{text(row["troops"], lang)}</small>'
+        primary = commander_icons(row['primary'])
+        pair = _with_icons('commanders', primary + [i for i in commander_icons(row['secondary']) if i not in primary], pair)
         why = text(row['why'], lang)
         if 'talents' in columns and row.get('talents'):
             why += f'<br><small>{labels["talents"]}: {row["talents"]}</small>'
@@ -159,10 +189,12 @@ def _table(columns, rows, lang):
                 value = f'<strong>{value}</strong>'
             if c == 'item' and row.get('alt'):
                 # small icons only for alternatives that are not the item itself
-                extra = ''.join(_icon(i, small=True) for i in gear_icons(row['alt']) if i not in gear_icons(row['item']))
+                extra = ''.join(
+                    _icon('gear', i, small=True) for i in gear_icons(row['alt']) if i not in gear_icons(row['item'])
+                )
                 value += f'<br><small>{labels["alt"]}: {extra}{text(row["alt"], lang)}</small>'
-            if c in ('item', 'accessory') and (icons := gear_icons(row[c])):
-                value = f'<span class="gear"><span class="gear__icons">{"".join(map(_icon, icons))}</span><span>{value}</span></span>'
+            if c in ('item', 'accessory'):
+                value = _with_icons('gear', gear_icons(row[c]), value)
             cells += f'<td>{value}</td>'
         body += f'<tr>{cells}</tr>'
     return f'<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'

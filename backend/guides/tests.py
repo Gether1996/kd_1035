@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 from .meta import LAST_UPDATE, MODULES
-from .meta.render import GEAR_DIR, gear_icons, render, verified_note
+from .meta.render import COMMANDER_DIR, GEAR_DIR, commander_icons, gear_icons, render, slug, verified_note
 from .meta.sync import rendered_guides, sync_guides
 from .models import Guide
 from .sanitize import clean_html
@@ -95,7 +95,51 @@ class MetaGuidesTests(TestCase):
             with self.assertRaises(CommandError):
                 call_command('fetch_gear_icons', 'Unknown Blade', stdout=StringIO())
 
+    def test_every_commander_in_pair_tables_has_a_portrait(self):
+        # a new commander from the monthly meta update needs a portrait: manage.py fetch_commander_icons "Name"
+        from .meta import commanders
+
+        for guide in commanders.GUIDES:
+            for block in guide['blocks']:
+                if block[0] != 'pairs':
+                    continue
+                for row in block[2]:
+                    for column in ('primary', 'secondary'):
+                        if isinstance(row[column], str):  # t('ktokoľvek', …) is not a commander
+                            for name in row[column].split(' / '):
+                                self.assertEqual(commander_icons(name), [slug(name)], f'{guide["slug"]}: {name}')
+        for path in COMMANDER_DIR.glob('*'):
+            self.assertEqual(path.suffix, '.webp', path.name)
+            self.assertLess(path.stat().st_size, 30_000, path.name)
+
+    def test_fetch_commander_icons_uses_the_rokstats_hero_id(self):
+        from io import BytesIO, StringIO
+        from unittest import mock
+
+        from django.core.management import CommandError, call_command
+        from PIL import Image
+
+        from .management.commands import fetch_commander_icons
+
+        png = BytesIO()
+        Image.new('RGBA', (260, 260), (200, 150, 40, 255)).save(png, 'PNG')
+        page = b'{"heroId":9,"slug":"minamoto-no-yoshitsune","url":"/commanders/minamoto-no-yoshitsune"}'
+        urls = []
+
+        def fetch(url):
+            urls.append(url)
+            return page if url == fetch_commander_icons.PAGE else png.getvalue()
+
+        with tempfile.TemporaryDirectory() as folder, mock.patch.object(fetch_commander_icons, 'fetch', fetch), \
+                mock.patch.object(fetch_commander_icons, 'COMMANDER_DIR', Path(folder)):  # fmt: skip
+            call_command('fetch_commander_icons', 'Minamoto', stdout=StringIO())
+            self.assertTrue((Path(folder) / 'minamoto.webp').exists())
+            self.assertEqual(urls[-1], 'https://app.rokstats.online/img/commanders/9/portrait')
+            with self.assertRaises(CommandError):
+                call_command('fetch_commander_icons', 'Nobody', stdout=StringIO())
+
     def test_gear_icons_follow_the_text(self):
+        self.assertEqual(commander_icons('Sun Tzu Prime + Sun Tzu'), ['sun-tzu-prime', 'sun-tzu'])
         self.assertEqual(gear_icons('Horn of Fury + Ring of Doom'), ['horn-of-fury', 'ring-of-doom'])
         self.assertEqual(gear_icons('Pendant of Eternal Night pre Qin Shi Huanga'), ['pendant-of-eternal-night'])
         self.assertEqual(gear_icons({'sk': 'Navar’s Control (KvK)', 'cs': '-'}), ['navars-control'])

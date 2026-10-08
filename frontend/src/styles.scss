@@ -536,20 +536,20 @@ p {
     background: rgba(255, 255, 255, 0.02);
   }
 
-  // equipment tables: item icons next to the name (backend/guides/meta/render.py)
-  .gear {
+  // guide tables: item and commander icons next to the name (backend/guides/meta/render.py)
+  .pic {
     display: flex;
     align-items: center;
     gap: 12px;
   }
 
-  .gear__icons {
+  .pic__icons {
     display: flex;
     flex-shrink: 0;
     gap: 6px;
   }
 
-  img.gear__icon {
+  img.pic__icon {
     width: 44px;
     height: 44px;
     padding: 3px;
@@ -558,7 +558,7 @@ p {
     background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
   }
 
-  img.gear__icon--small {
+  img.pic__icon--small {
     display: inline-block;
     width: 20px;
     height: 20px;
@@ -571,13 +571,13 @@ p {
 
   // phones: icon above the name, so the narrow item column keeps its full width for text
   @media (max-width: 599px) {
-    .gear {
+    .pic {
       flex-direction: column;
       align-items: flex-start;
       gap: 8px;
     }
 
-    img.gear__icon:not(.gear__icon--small) {
+    img.pic__icon:not(.pic__icon--small) {
       width: 36px;
       height: 36px;
       padding: 2px;
