@@ -1,4 +1,4 @@
-<section #hero class="hero" id="top" appScrollFx="exit">
+<section class="hero" id="top" appScrollFx="exit">
   <div class="hero__art" aria-hidden="true">
     @for (layer of back; track layer.src) {
       <img
@@ -8,7 +8,6 @@
         alt=""
         decoding="async"
         [style.--speed]="layer.speed"
-        [style.--depth]="layer.depth"
       />
     }
     <div class="fog fog--back"></div>
@@ -18,10 +17,9 @@
       alt=""
       fetchpriority="high"
       [style.--speed]="castle.speed"
-      [style.--depth]="castle.depth"
     />
     <div class="fog fog--front"></div>
-    <img class="layer" [src]="near.src" alt="" [style.--speed]="near.speed" [style.--depth]="near.depth" />
+    <img class="layer" [src]="near.src" alt="" [style.--speed]="near.speed" />
   </div>
 
   <div class="hero__content container">

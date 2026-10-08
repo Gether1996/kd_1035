@@ -21,6 +21,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Žiadny balast textu.** Krátke nadpisy, max. 1–2 vety na blok. Radšej vynechať ako nafúknuť. Výnimka: stránka **O nás** je SEO stránka s dlhším, ale štruktúrovaným textom (nadpisy, zoznamy). FAQ sekciu používateľ nechce.
 - **Nesmie to vyzerať ako AI slop:** žiadne generické gradientové fľaky, emoji namiesto ikon, prázdne marketingové frázy ani glow efekty všade. Grafika je ručne navrhnutá (SVG) a drží jednu paletu a jeden štýl.
 - **Plynulé pohyby:** parallax pozadia (`appScrollFx` → CSS `--progress`), posúvaný text pri scrollovaní, scroll reveal (`appReveal`), jemné hover stavy. Animuj len `transform`/`translate` a `opacity`. Vždy rešpektuj `prefers-reduced-motion`.
+- **Výkon animácií** (Gether 8. 10. 2026: „sekajú, lagujú“): žiadny `backdrop-filter` (hlavička, karty), žiadne nekonečné animácie, ktoré prekresľujú (`background-position`, `filter`, `letter-spacing` – napr. lesk na „1035“), žiadny parallax podľa myši. Callback `Scroll.onFrame` iba číta layout a vráti funkciu, ktorá zapisuje štýly – všetky čítania snímky idú pred zápismi.
 - **100 % responzívne** – mobil od 320 px, landscape mobil, tablet, notebook, desktop, ultrawide. Každú vizuálnu zmenu over screenshotmi (`tools/screenshots/shoot.mjs`) minimálne na 360, 768, 1280, 1920 a 2560.
 - Prístupnosť: dostatočný kontrast, viditeľný focus, `alt`/`aria-label`, ovládanie klávesnicou.
 

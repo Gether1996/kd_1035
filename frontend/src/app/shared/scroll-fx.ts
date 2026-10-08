@@ -34,10 +34,9 @@ export class ScrollFx {
               ? clamp(-r.top / r.height)
               : clamp((innerHeight - r.top) / (innerHeight + r.height));
         const value = Math.round(p * 1000) / 1000;
-        if (value !== last) {
-          last = value;
-          el.style.setProperty('--progress', String(value));
-        }
+        if (value === last) return;
+        last = value;
+        return () => el.style.setProperty('--progress', String(value));
       });
       destroyRef.onDestroy(stop);
     });

@@ -53,8 +53,6 @@
   pointer-events: none;
   will-change: transform;
   transform: translate3d(0, calc(var(--progress, 0) * var(--speed, 0) * 100%), 0);
-  translate: calc(var(--mx, 0) * var(--depth, 0) * -1.4%) calc(var(--my, 0) * var(--depth, 0) * -0.8%);
-  transition: translate 1.4s var(--ease-out);
 }
 
 .layer--clouds {
@@ -79,7 +77,6 @@
   pointer-events: none;
   background: radial-gradient(closest-side, rgba(168, 188, 228, 0.16), transparent);
   transform: translate3d(0, calc(var(--progress, 0) * var(--speed) * 100%), 0);
-  animation: drift 40s ease-in-out infinite alternate;
 }
 
 .fog--back {
@@ -91,18 +88,6 @@
   --speed: 0.4;
   bottom: 6%;
   opacity: 0.75;
-  animation-duration: 56s;
-  animation-direction: alternate-reverse;
-}
-
-@keyframes drift {
-  from {
-    translate: -8% 0;
-  }
-
-  to {
-    translate: 8% 0;
-  }
 }
 
 // ---------------------------------------------------------------- content
@@ -118,6 +103,7 @@
   text-align: center;
   transform: translate3d(0, calc(var(--progress, 0) * 22svh), 0);
   opacity: calc(1 - var(--progress, 0) * 1.7);
+  will-change: transform, opacity;
 }
 
 .hero__eyebrow {
@@ -143,7 +129,7 @@
   font-weight: 600;
   letter-spacing: 0.55em;
   color: #ffe7ad;
-  animation: track-in 1.8s var(--ease-out) 0.1s both;
+  animation: fade-up 1.2s var(--ease-out) 0.1s both;
 }
 
 .hero__number {
@@ -152,16 +138,11 @@
   line-height: 0.95;
   letter-spacing: 0.03em;
   color: transparent;
-  background:
-    linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.75) 50%, transparent 58%) 110% 0 / 250% 100%
-      no-repeat,
-    linear-gradient(180deg, #fff3cf 8%, #ffd97a 40%, #f0b23a 66%, #a86f1f 100%);
+  background: linear-gradient(180deg, #fff3cf 8%, #ffd97a 40%, #f0b23a 66%, #a86f1f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   filter: drop-shadow(0 8px 28px rgba(0, 0, 0, 0.55));
-  animation:
-    rise 1.4s var(--ease-out) 0.25s both,
-    sheen 8s ease-in-out 2.5s infinite;
+  animation: rise 1.4s var(--ease-out) 0.25s both;
 }
 
 .hero__tagline {
@@ -193,28 +174,6 @@
   from {
     opacity: 0;
     transform: translateY(28px) scale(0.96);
-  }
-}
-
-@keyframes track-in {
-  from {
-    opacity: 0;
-    letter-spacing: 1.1em;
-  }
-}
-
-@keyframes sheen {
-  0%,
-  70% {
-    background-position:
-      110% 0,
-      0 0;
-  }
-
-  100% {
-    background-position:
-      -10% 0,
-      0 0;
   }
 }
 

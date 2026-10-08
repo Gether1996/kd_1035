@@ -10,13 +10,12 @@
   border-bottom: 1px solid transparent;
   transition:
     background-color 0.4s,
-    border-color 0.4s,
-    backdrop-filter 0.4s;
+    border-color 0.4s;
 
+  // no backdrop blur: it is recomputed on every scrolled frame and makes scrolling stutter
   :host(.is-solid) & {
-    background-color: rgba(7, 15, 31, 0.8);
+    background-color: rgba(7, 15, 31, 0.95);
     border-bottom-color: var(--line);
-    backdrop-filter: blur(14px) saturate(140%);
   }
 }
 

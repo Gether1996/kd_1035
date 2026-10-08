@@ -1,10 +1,13 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 
+/** Reads the layout; the returned function (if any) writes styles after every effect has read. */
+export type FrameFn = () => (() => void) | void;
+
 /** One rAF-throttled scroll/resize loop shared by every scroll effect on the page. */
 @Injectable({ providedIn: 'root' })
 export class Scroll {
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = new Set<FrameFn>();
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private frame = 0;
 
@@ -21,17 +24,22 @@ export class Scroll {
     schedule();
   }
 
-  /** Runs `fn` on every animation frame in which the page scrolled or resized (browser only). */
-  onFrame(fn: () => void): () => void {
+  /**
+   * Runs `measure` on every animation frame in which the page scrolled or resized (browser only). `measure` only
+   * reads the layout and may return a function that writes styles: all reads of the frame run before all writes,
+   * so the browser lays the page out once per frame instead of once per effect.
+   */
+  onFrame(measure: FrameFn): () => void {
     if (!this.isBrowser) return () => {};
-    this.listeners.add(fn);
-    fn();
-    return () => this.listeners.delete(fn);
+    this.listeners.add(measure);
+    measure()?.();
+    return () => this.listeners.delete(measure);
   }
 
   private readonly flush = () => {
     this.frame = 0;
     this.scrolled.set(scrollY > 16);
-    this.listeners.forEach((fn) => fn());
+    const writes = [...this.listeners].map((measure) => measure());
+    for (const write of writes) write?.();
   };
 }
