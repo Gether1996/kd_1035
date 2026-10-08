@@ -16,6 +16,8 @@ def seed(apps, schema_editor):
     SocialLink.objects.get_or_create(
         platform='facebook', defaults={'url': 'https://www.facebook.com/groups/550189483954751'}
     )
+    # permanent invite (never expires, unlimited uses)
+    SocialLink.objects.get_or_create(platform='discord', defaults={'url': 'https://discord.gg/NhwP6y9ssM'})
 
 
 class Migration(migrations.Migration):
