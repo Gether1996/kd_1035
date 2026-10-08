@@ -107,7 +107,9 @@ Admin → **Eventy kráľovstva → Pridať** (zakladaj ich priamo v produkčnom
 4. **Pripomienky:** zaškrtni, kedy pred začiatkom poslať správu (1 deň … pri začiatku). Voliteľne vlastné **ID roly** na ping.
 5. Ulož. Tabuľka **Najbližšie termíny** ukáže 5 ďalších termínov a časy pripomienok (Bratislava aj UTC).
 
-Worker vytvára pripomienky 48 h vopred, nájdeš ich v **Discord notifikácie** (filter podľa eventu). Jednu pripomienku zrušíš akciou **Zrušiť (neposielať)**. Po úprave eventu sa jeho budúce naplánované pripomienky vytvoria nanovo (ručné úpravy v nich sa stratia, odoslané a zrušené ostanú). Bez `DISCORD_WEBHOOK_URL` sa pripomienky neplánujú.
+Worker vytvára pripomienky 48 h vopred, nájdeš ich v **Discord notifikácie** (filter podľa eventu). Jednu pripomienku zrušíš akciou **Zrušiť (neposielať)**, späť ju vrátiš akciou **Znova naplánovať** (funguje pre zrušené a chybné, odoslané nikdy nepošle znova). Po úprave eventu sa jeho budúce naplánované pripomienky vytvoria nanovo (ručné úpravy v nich sa stratia, odoslané a zrušené ostanú). Bez `DISCORD_WEBHOOK_URL` sa pripomienky neplánujú.
+
+Podobný event (napr. ďalšie MGE): otvor existujúci, zmeň názov alebo prvý začiatok a klikni **Uložiť ako nový** – kópia si naplánuje vlastné pripomienky. Rovnaký aktívny event (názov aj začiatok) admin druhýkrát neuloží. Stĺpec **hráči** v zozname ukazuje, koľko hráčov si na webe zaplo pripomienky tohto eventu; klik otvorí ich zoznam.
 
 ## Prihlásenie cez Discord (hráčske účty)
 
