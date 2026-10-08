@@ -35,9 +35,10 @@ export const sk = {
     title: 'Jedno kráľovstvo. Dva národy.',
     lead: 'KD 1035 je jediné kráľovstvo v Rise of Kingdoms, kde hrajú výhradne Slováci a Česi.',
     more: 'Viac o nás',
+    guides: 'Otvoriť návody',
     pillars: [
       { title: 'Bez prekladača', text: 'Na mape aj na Discorde si rozumieme.' },
-      { title: 'Spoločná stratégia', text: 'Koordinované KvK, rally aj obrana.' },
+      { title: 'Jedno časové pásmo', text: 'Rally aj eventy v čase, keď sú hore všetci.' },
       { title: 'Pomoc nováčikom', text: 'Poradíme s commandermi, výbavou aj eventmi.' },
     ],
   },

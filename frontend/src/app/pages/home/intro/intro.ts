@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18n } from '../../../core/i18n/i18n';
@@ -6,7 +7,7 @@ import { Reveal } from '../../../shared/reveal';
 
 @Component({
   selector: 'app-intro',
-  imports: [RouterLink, Icon, Reveal],
+  imports: [NgTemplateOutlet, RouterLink, Icon, Reveal],
   template: `
     <section class="section" id="kingdom">
       <div class="container">
@@ -18,11 +19,22 @@ import { Reveal } from '../../../shared/reveal';
 
         <div class="pillars">
           @for (pillar of t().intro.pillars; track $index) {
-            <article class="pillar" [appReveal]="$index * 120">
+            <ng-template #body>
               <span class="pillar__icon"><svg [appIcon]="icons[$index]"></svg></span>
               <h3>{{ pillar.title }}</h3>
               <p>{{ pillar.text }}</p>
-            </article>
+            </ng-template>
+            <!-- the last pillar (help with commanders, gear, events) leads to the guides -->
+            @if ($last) {
+              <a class="pillar pillar--link" [routerLink]="i18n.guidePath('commanderi')" [appReveal]="$index * 120">
+                <ng-container [ngTemplateOutlet]="body" />
+                <span class="pillar__cta">{{ t().intro.guides }} <svg appIcon="arrow-right"></svg></span>
+              </a>
+            } @else {
+              <article class="pillar" [appReveal]="$index * 120">
+                <ng-container [ngTemplateOutlet]="body" />
+              </article>
+            }
           }
         </div>
 
@@ -40,5 +52,5 @@ import { Reveal } from '../../../shared/reveal';
 export class Intro {
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
-  protected readonly icons: IconName[] = ['languages', 'map', 'hand-helping'];
+  protected readonly icons: IconName[] = ['languages', 'calendar-days', 'hand-helping'];
 }
