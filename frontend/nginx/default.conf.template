@@ -97,7 +97,8 @@ server {
         include /etc/nginx/snippets/security-headers.conf;
     }
 
-    # unknown address → app shell (the router sends visitors home) with a real 404 status
+    # unknown address → app shell with a real 404 status; the router keeps the address and shows the 404 page
+    # in the language of the URL (/cz/… Czech)
     error_page 404 /index.csr.html;
 }
 

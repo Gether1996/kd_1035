@@ -1,0 +1,5 @@
+@let page = t().notFound;
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="page.eyebrow" [title]="page.title" [intro]="page.text">
+  <app-not-found-links class="links" />
+</app-page-header>

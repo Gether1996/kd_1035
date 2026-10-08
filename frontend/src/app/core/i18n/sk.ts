@@ -382,6 +382,13 @@ export const sk = {
       weeks: ['každý {n} týždeň', 'každé {n} týždne', 'každých {n} týždňov'],
     },
   },
+  notFound: {
+    eyebrow: 'Chyba 404',
+    title: 'Táto stránka neexistuje',
+    text: 'Odkaz je zrejme zastaraný alebo s preklepom – pokračuj na úvod alebo do návodov.',
+    home: 'Domov',
+    guides: 'Návody',
+  },
   footer: {
     fanSite:
       'Neoficiálna fanúšikovská stránka hráčov kráľovstva 1035, bez prepojenia so spoločnosťou Lilith Games. Rise of Kingdoms a herné grafiky sú majetkom Lilith Games.',

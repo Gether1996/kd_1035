@@ -5,6 +5,7 @@ import { Calendar } from './pages/calendar/calendar';
 import { GuideList } from './pages/guides/guide-list';
 import { GuidePage } from './pages/guides/guide-page';
 import { Home } from './pages/home/home';
+import { NotFound } from './pages/not-found/not-found';
 import { Privacy } from './pages/privacy/privacy';
 import { Terms } from './pages/terms/terms';
 
@@ -20,8 +21,9 @@ const pages = (): Routes => [
   { path: 'navody/:category/:slug', component: GuidePage },
 ];
 
+// Unknown addresses keep their URL and show the 404 page; each wildcard must stay the last route of its level.
 export const routes: Routes = [
-  { path: 'cz', children: pages() },
+  { path: 'cz', children: [...pages(), { path: '**', component: NotFound }] },
   ...pages(),
-  { path: '**', redirectTo: '' },
+  { path: '**', component: NotFound },
 ];
