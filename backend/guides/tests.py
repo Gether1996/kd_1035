@@ -304,4 +304,6 @@ class GuideApiTests(TestCase):
         self.assertIn('<loc>https://kd1035.test/cz/navody/vybava/najlepsia-vybava</loc>', xml)
         self.assertIn('hreflang="cs" href="https://kd1035.test/cz/o-nas"', xml)
         self.assertIn('<loc>https://kd1035.test/cz/podmienky</loc>', xml)
+        self.assertIn('<loc>https://kd1035.test/ochrana-udajov</loc>', xml)
+        self.assertIn('<loc>https://kd1035.test/cz/ochrana-udajov</loc>', xml)
         self.assertNotIn('skryty', xml)

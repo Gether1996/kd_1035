@@ -87,6 +87,25 @@
   text-wrap: pretty;
 }
 
+// "what we store about you" → privacy page; quiet text link like the footer links
+.card__privacy {
+  margin-top: 12px;
+  padding-block: 4px;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  transition:
+    color 0.25s,
+    text-decoration-color 0.25s;
+
+  &:hover {
+    color: var(--gold-300);
+    text-decoration-color: currentColor;
+  }
+}
+
 // in-game name: label, input + save button in one row (stacked on phones), hint and the save state
 .ingame {
   display: grid;

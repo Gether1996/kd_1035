@@ -7,7 +7,7 @@ import { cs } from './cs';
 import { sk } from './sk';
 
 export type Lang = 'sk' | 'cs';
-export type Page = 'home' | 'about' | 'terms' | 'account' | 'guides' | 'guide';
+export type Page = 'home' | 'about' | 'terms' | 'privacy' | 'account' | 'guides' | 'guide';
 export type GuideCategory = 'commanderi' | 'vybava' | 'eventy';
 
 export const GUIDE_CATEGORIES: GuideCategory[] = ['commanderi', 'vybava', 'eventy'];
@@ -17,7 +17,7 @@ const LOCALES: Record<Lang, string> = { sk: 'sk-SK', cs: 'cs-CZ' };
 /** Slovak lives at the root, Czech under /cz – each language has its own indexable URLs, same slugs. */
 const PREFIX: Record<Lang, string> = { sk: '', cs: '/cz' };
 const STORAGE_KEY = 'kd1035.lang';
-const FIXED_PATHS = { home: '', about: '/o-nas', terms: '/podmienky', account: '/ucet' };
+const FIXED_PATHS = { home: '', about: '/o-nas', terms: '/podmienky', privacy: '/ochrana-udajov', account: '/ucet' };
 
 export interface ParsedUrl {
   lang: Lang;
@@ -35,13 +35,15 @@ export function parseUrl(url: string): ParsedUrl {
       ? 'about'
       : rest === '/podmienky'
         ? 'terms'
-        : rest === '/ucet'
-          ? 'account'
-          : /^\/navody\/[^/]+$/.test(rest)
-            ? 'guides'
-            : /^\/navody\/[^/]+\/[^/]+$/.test(rest)
-              ? 'guide'
-              : 'home';
+        : rest === '/ochrana-udajov'
+          ? 'privacy'
+          : rest === '/ucet'
+            ? 'account'
+            : /^\/navody\/[^/]+$/.test(rest)
+              ? 'guides'
+              : /^\/navody\/[^/]+\/[^/]+$/.test(rest)
+                ? 'guide'
+                : 'home';
   return { lang, page, rest };
 }
 

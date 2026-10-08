@@ -1,0 +1,41 @@
+@let page = t().privacyPage;
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="page.eyebrow" [title]="page.title" [intro]="page.intro" />
+
+<article class="container article">
+  @for (section of page.sections; track $index) {
+    <section class="block" appReveal>
+      <h2><span class="block__num">0{{ $index + 1 }}</span>{{ section.title }}</h2>
+      <p>{{ section.text }}</p>
+      @if (section.list.length) {
+        <ul class="checks">
+          @for (item of section.list; track $index) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      }
+      @if (section.link; as link) {
+        <a class="contact-link" [href]="link.href" target="_blank" rel="noopener noreferrer">
+          {{ link.label }} <svg appIcon="arrow-up-right"></svg>
+        </a>
+      }
+    </section>
+  }
+
+  <section class="block" appReveal>
+    <h2><span class="block__num">0{{ page.sections.length + 1 }}</span>{{ page.contact.title }}</h2>
+    <p>{{ page.contact.text }}</p>
+    <div class="links">
+      <a class="contact-link" [routerLink]="i18n.path('account')">
+        {{ page.contact.account }} <svg appIcon="arrow-right"></svg>
+      </a>
+      <a class="contact-link" [routerLink]="i18n.path('home')" fragment="alliance">
+        {{ page.contact.link }} <svg appIcon="arrow-right"></svg>
+      </a>
+    </div>
+  </section>
+
+  <p class="valid">
+    {{ page.validFrom }} <time [attr.datetime]="validFrom.iso">{{ validFrom.text }}</time>
+  </p>
+</article>

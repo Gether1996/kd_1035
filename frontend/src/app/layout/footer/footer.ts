@@ -28,6 +28,7 @@ import { Logo } from '../../shared/logo';
         <p class="footer__note">{{ i18n.t().footer.fanSite }}</p>
         <ul class="footer__links">
           <li><a [routerLink]="i18n.path('terms')">{{ i18n.t().nav.terms }}</a></li>
+          <li><a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a></li>
         </ul>
       </div>
       @if (updated(); as updated) {

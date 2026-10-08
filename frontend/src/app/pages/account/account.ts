@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
@@ -12,7 +13,7 @@ import { Reminders } from './reminders/reminders';
  */
 @Component({
   selector: 'app-account',
-  imports: [Icon, PageHeader, Reminders],
+  imports: [RouterLink, Icon, PageHeader, Reminders],
   templateUrl: './account.html',
   styleUrl: './account.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -29,14 +29,19 @@ describe('Footer', () => {
     expect(time?.textContent).toContain('2026');
   });
 
-  it('says the site is unofficial and links to the terms of use', async () => {
+  it('says the site is unofficial and links to the terms of use and the privacy page', async () => {
     const el = await render((http) =>
       http.expectOne('/api/status/').flush('down', { status: 500, statusText: 'Server Error' }),
     );
     expect(el.querySelector('.footer__note')?.textContent).toContain('Lilith Games');
-    const link = el.querySelector('.footer__links a');
-    expect(link?.getAttribute('href')).toBe('/podmienky');
-    expect(link?.textContent).toContain('Podmienky používania');
+    const links = Array.from(el.querySelectorAll('.footer__links a'), (a) => [
+      a.getAttribute('href'),
+      a.textContent?.trim(),
+    ]);
+    expect(links).toEqual([
+      ['/podmienky', 'Podmienky používania'],
+      ['/ochrana-udajov', 'Ochrana údajov'],
+    ]);
   });
 
   it('hides the line when the API fails', async () => {

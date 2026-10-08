@@ -54,6 +54,7 @@
       <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="logout()">
         <svg appIcon="log-out"></svg> {{ a.logout }}
       </button>
+      <a class="card__privacy" [routerLink]="i18n.path('privacy')">{{ a.privacy }}</a>
 
       <div class="danger-zone">
         @if (user.is_staff) {
@@ -91,6 +92,7 @@
       <span class="card__badge"><svg appIcon="discord"></svg></span>
       <h2 class="card__title" id="account-login">{{ a.loginTitle }}</h2>
       <p class="card__text">{{ a.stored }}</p>
+      <a class="card__privacy" [routerLink]="i18n.path('privacy')">{{ a.privacy }}</a>
       <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ a.login }}</a>
     </section>
   }

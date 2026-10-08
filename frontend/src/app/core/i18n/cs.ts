@@ -18,6 +18,11 @@ export const cs: Dict = {
       description:
         'Podmínky užívání neoficiální fanouškovské stránky česko-slovenského království KD 1035 v Rise of Kingdoms. Web není propojen se společností Lilith Games.',
     },
+    privacy: {
+      title: 'Ochrana údajů | KD 1035',
+      description:
+        'Jaké údaje ukládá fanouškovská stránka česko-slovenského království KD 1035 v Rise of Kingdoms po přihlášení přes Discord, kdo je vidí a jak je smažeš.',
+    },
     account: {
       title: 'Můj účet | KD 1035',
       description: 'Přihlášení hráčů království KD 1035 přes Discord.',
@@ -29,6 +34,7 @@ export const cs: Dict = {
     label: 'Hlavní navigace',
     about: 'O nás',
     terms: 'Podmínky užívání',
+    privacy: 'Ochrana údajů',
     alliance: 'Aliance',
     guides: 'Návody',
     community: 'Komunita',
@@ -183,11 +189,97 @@ export const cs: Dict = {
     },
     validFrom: 'Platí od',
   },
+  privacyPage: {
+    eyebrow: 'Tvoje údaje',
+    title: 'Ochrana údajů',
+    intro: 'Co o tobě web ukládá, kdo to vidí a jak to smažeš.',
+    sections: [
+      {
+        title: 'Kdo web provozuje',
+        text: 'Web provozuje Gether, R4 království 1035, jako soukromou nekomerční fanouškovskou stránku. Ozvi se mu na Discordu.',
+        list: [],
+      },
+      {
+        title: 'Bez přihlášení',
+        text: 'Nepoužíváme analytiku, reklamy ani sledovací cookies.',
+        list: [
+          'Cookie csrftoken – chrání formuláře před podvrženými požadavky, platí přibližně 1 rok.',
+          'Zvolený jazyk v úložišti prohlížeče (kd1035.lang) – jen když použiješ přepínač jazyka.',
+          'Písma, obrázky a skripty webu jdou z našeho serveru, ne z cizích služeb.',
+        ],
+      },
+      {
+        title: 'Po přihlášení přes Discord',
+        text: 'Z Discordu si uložíme jen tvoje ID, jméno a avatar. E-mail ani seznam tvých serverů nám Discord nedá.',
+        list: [
+          'Discord ID, uživatelské a zobrazované jméno.',
+          'Avatar – uložíme jen jeho kód, obrázek se načte přímo z Discordu.',
+          'Jméno ve hře, pokud ho vyplníš.',
+          'Čas registrace a posledního přihlášení.',
+          'Cookie sessionid – udrží tě přihlášeného 2 týdny, nastaví se už na začátku přihlášení.',
+        ],
+      },
+      {
+        title: 'Připomínky eventů',
+        text: 'Pro připomínky ukládáme:',
+        list: [
+          'Vybrané eventy, časy připomínek, jazyk zpráv a jestli je chceš dostávat na Discordu.',
+          'Prohlížeče se zapnutými oznámeními: adresu push služby, šifrovací klíče a čas posledního odeslání.',
+          'Záznam odeslaných připomínek na 30 dní, aby žádná nepřišla dvakrát.',
+        ],
+      },
+      {
+        title: 'Proč a kdo to vidí',
+        text: 'Aby tě vedení poznalo a přišly ti připomínky, které sis zapnul.',
+        list: [
+          'Údaje vidí jen správce webu (Gether) v administraci.',
+          'Nic nezveřejňujeme, neprodáváme ani nepředáváme dál – kromě služeb v následujícím bodě.',
+        ],
+      },
+      {
+        title: 'Třetí strany',
+        text: 'U těchto věcí se tvůj prohlížeč nebo náš server spojuje s cizí službou:',
+        list: [
+          'Discord – přihlášení, soukromé zprávy od bota a obrázky avatarů.',
+          'Push služby prohlížečů (Google, Mozilla, Apple, Microsoft) – doručí zašifrované oznámení.',
+          'YouTube v režimu youtube-nocookie nebo Twitch – jen pokud je v návodu video.',
+        ],
+        link: { label: 'Ochrana soukromí na Discordu', href: 'https://discord.com/privacy' },
+      },
+      {
+        title: 'Jak dlouho',
+        text: 'Údaje o účtu zůstanou, dokud ho nesmažeš.',
+        list: [
+          'Záznam odeslaných připomínek mažeme po 30 dnech a výběr eventu, který se už nebude opakovat, nejpozději druhý den.',
+          'Zálohy databáze na serveru vznikají jednou týdně a ponechává se posledních 8, takže smazané údaje zmizí i ze záloh do 8 týdnů.',
+          'Pro limit pokusů o přihlášení používáme IP adresu jen v paměti serveru – do databáze ani do záznamů ji přitom neukládáme.',
+          'Záznamy serveru o návštěvách jsou bez IP adres. Technické chybové záznamy ji výjimečně obsahovat mohou; všechny záznamy mají pevně omezenou velikost (3 × 10 MB na službu) a starší se přepisují.',
+        ],
+      },
+      {
+        title: 'Tvoje možnosti',
+        text: 'Jméno ve hře a připomínky změníš na stránce Můj účet.',
+        list: [
+          'Tlačítko Smazat účet hned smaže všechny údaje o tobě uvedené výše, ze záloh zmizí do 8 týdnů. Účty vedení maže správce.',
+          'O kopii nebo opravu svých údajů požádej vedení na Discordu.',
+          'Stížnost můžeš podat Úřadu pro ochranu osobních údajů, na Slovensku Úradu na ochranu osobných údajov SR.',
+        ],
+      },
+    ],
+    contact: {
+      title: 'Kontakt',
+      text: 'S dotazem ke svým údajům se obrať na vedení království na Discordu.',
+      account: 'Můj účet',
+      link: 'Kontakty na vedení',
+    },
+    validFrom: 'Platí od',
+  },
   account: {
     eyebrow: 'Hráčský účet',
     title: 'Můj účet',
     loginTitle: 'Přihlas se přes Discord',
     stored: 'Uložíme jen tvoje Discord ID, jméno a avatar (a jméno ve hře či připomínky eventů, pokud si je nastavíš). E-mail ani tvoje servery nevidíme.',
+    privacy: 'Co o tobě ukládáme',
     login: 'Přihlásit přes Discord',
     disabled: 'Přihlášení zatím není zapnuté.',
     error: 'Účet se nepodařilo načíst. Zkus to znovu za chvíli.',

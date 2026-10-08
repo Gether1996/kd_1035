@@ -1,4 +1,4 @@
-// Same article layout as the About page: numbered blocks in one narrow column.
+// Terms of use and privacy: the article layout of the About page, numbered blocks in one narrow column.
 :host {
   display: block;
 }
@@ -94,6 +94,18 @@
       transform: translateX(3px);
     }
   }
+
+  // external site (arrow up-right) moves along its diagonal
+  &[target='_blank']:hover .icon {
+    transform: translate(2px, -2px);
+  }
+}
+
+// several pills in one block wrap onto new rows; their own top margin spaces the rows
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 12px;
 }
 
 .valid {
