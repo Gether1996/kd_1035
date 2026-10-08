@@ -95,6 +95,8 @@ Produkčný webhook patrí **iba do `.env` na serveri**. Do vývojového `.env` 
 
 ### Opakovaný event (napr. každý týždeň)
 
+**Šablóna:** `docker compose exec -u app backend python manage.py seed_event_templates` založí neaktívne koncepty bežnej rotácie (MGE, Ark of Osiris, Wheel, Esmeralda, Hunt for History, More Than Gems, Alliance Mobilization). Dátumy sú odhad podľa rokcentral.com – v admine ich over (najmä Alliance Mobilization nemá zdroj), uprav časy pripomienok a zaškrtni **aktívny**.
+
 Admin → **Eventy kráľovstva → Pridať** (zakladaj ich priamo v produkčnom admine):
 
 1. **Názov** (SK, voliteľne CZ) a **text na Discord**. V texte môžeš použiť `{name}`, `{start}` (dátum a čas), `{relative}` („o 2 hodiny“), `{end}` (koniec). Discord ukáže časy každému v jeho časovom pásme.

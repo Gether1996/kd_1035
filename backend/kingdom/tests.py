@@ -593,3 +593,32 @@ class SnapshotTests(TransactionTestCase):
                 self.assertTrue(Alliance.objects.filter(tag='CS35').exists())
                 self.assertEqual(snapshot.read_base(), snapshot.file_hash(path))
                 self.assertFalse(snapshot.export_snapshot())
+
+
+class EventTemplateTests(TestCase):
+    def test_creates_valid_inactive_drafts_once(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        from .event_templates import TEMPLATES
+
+        Guide.objects.create(
+            category='eventy', slug='more-than-gems', title_sk='MTG', html_sk='<p>x</p>', is_published=True
+        )
+        call_command('seed_event_templates', stdout=StringIO())
+        self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES))
+        self.assertFalse(KingdomEvent.objects.filter(is_active=True).exists())  # nothing goes out before Gether checks
+        for event in KingdomEvent.objects.all():
+            event.full_clean()
+        mtg = KingdomEvent.objects.get(name_sk='More Than Gems')
+        self.assertEqual(mtg.guide.slug, 'more-than-gems')
+        self.assertEqual(events.upcoming(mtg, 2, now=utc(2026, 10, 8)), [utc(2026, 10, 10), utc(2026, 11, 7)])
+        self.assertEqual(KingdomEvent.objects.get(name_sk='MGE – Jazda').name_cs, 'MGE – Jízda')
+
+        # an edited or renamed draft is never overwritten, a deleted one comes back
+        KingdomEvent.objects.filter(name_sk='Esmeralda').delete()
+        KingdomEvent.objects.filter(name_sk='Wheel of Fortune').update(repeat_days=21)
+        call_command('seed_event_templates', stdout=StringIO())
+        self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES))
+        self.assertEqual(KingdomEvent.objects.get(name_sk='Wheel of Fortune').repeat_days, 21)
