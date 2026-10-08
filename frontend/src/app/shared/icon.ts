@@ -17,6 +17,7 @@ export type IconName =
   | 'log-out'
   | 'map'
   | 'menu'
+  | 'plus'
   | 'shield'
   | 'swords'
   | 'trash-2'

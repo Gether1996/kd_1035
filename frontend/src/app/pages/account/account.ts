@@ -4,11 +4,15 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
+import { Governors } from './governors/governors';
 
-/** /ucet – the player's own account (sign in with Discord, sign out, delete). Not indexed, not in the sitemap. */
+/**
+ * /ucet – the player's own account (sign in with Discord, sign out, delete) and their Governor IDs.
+ * Not indexed, not in the sitemap.
+ */
 @Component({
   selector: 'app-account',
-  imports: [Icon, PageHeader],
+  imports: [Governors, Icon, PageHeader],
   templateUrl: './account.html',
   styleUrl: './account.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

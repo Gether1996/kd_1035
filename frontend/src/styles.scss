@@ -22,6 +22,11 @@
   --red-500: #c9372c;
   --red-700: #8f231c;
 
+  --card-bg: linear-gradient(180deg, rgba(20, 42, 80, 0.55), rgba(9, 19, 40, 0.6));
+  --field-bg: rgba(4, 10, 23, 0.6);
+  --field-line: rgba(163, 179, 204, 0.28);
+  --field-line-hover: rgba(163, 179, 204, 0.5);
+
   --font-display: 'Cinzel Variable', 'Cinzel', Georgia, serif;
   --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
@@ -198,6 +203,180 @@ p {
   text-transform: uppercase;
   color: var(--gold-300);
   background: rgba(245, 196, 81, 0.06);
+}
+
+// ---------------------------------------------------------------- forms
+// Dark fields, gold focus ring. Errors: aria-invalid on the control + .field__error text below it.
+
+.field {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.field__label {
+  padding: 0;
+  font: 600 0.8125rem/1.2 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.field__hint {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-mute);
+}
+
+.field__error {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--red-300);
+}
+
+.input,
+.select {
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background-color: var(--field-bg);
+  color: var(--text);
+  font: 400 1rem/1.4 var(--font-body); // 16px: no zoom on focus in iOS Safari
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
+  &:hover {
+    border-color: var(--field-line-hover);
+  }
+
+  &:focus {
+    border-color: var(--gold-400);
+  }
+
+  &:focus-visible {
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--red-500);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.input::placeholder {
+  color: var(--text-mute);
+}
+
+.select {
+  appearance: none;
+  padding-right: 42px;
+  // chevron from two triangles, so it follows the colour tokens
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+    linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 50%,
+    calc(100% - 17px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+
+  option {
+    background: var(--bg-raised);
+    color: var(--text);
+  }
+}
+
+// radio buttons as large tiles: <label class="choice"><input type="radio" /><span>…</span></label>
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice {
+  position: relative;
+  flex: 1 1 140px;
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 6px 14px;
+    border: 1px solid var(--field-line);
+    border-radius: var(--radius-sm);
+    background-color: var(--field-bg);
+    color: var(--text-dim);
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s,
+      color 0.2s;
+
+    // radio dot – the choice is visible without relying on colour
+    &::before {
+      content: '';
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid currentColor;
+      border-radius: 50%;
+    }
+  }
+
+  input:hover + span {
+    border-color: var(--field-line-hover);
+  }
+
+  input:checked + span {
+    border-color: var(--gold-400);
+    background-color: color-mix(in srgb, var(--gold-400) 10%, var(--field-bg));
+    color: var(--gold-100);
+
+    &::before {
+      background: radial-gradient(circle, currentColor 0 3px, transparent 3.5px);
+    }
+  }
+
+  input:focus-visible + span {
+    outline: 2px solid var(--gold-300);
+    outline-offset: 2px;
+  }
+
+  input:disabled {
+    cursor: not-allowed;
+
+    + span {
+      opacity: 0.55;
+    }
+  }
 }
 
 // ---------------------------------------------------------------- guide content (HTML from the admin)

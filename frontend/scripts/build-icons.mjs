@@ -8,7 +8,7 @@ const simpleDir = new URL('simple-icons/icons/', modules);
 
 const LUCIDE = [
   'arrow-left', 'arrow-right', 'calendar-days', 'chevron-down', 'chevron-right', 'crown', 'flag', 'flame', 'gift', 'hand-helping',
-  'languages', 'log-out', 'map', 'menu', 'shield', 'swords', 'trash-2', 'users', 'x',
+  'languages', 'log-out', 'map', 'menu', 'plus', 'shield', 'swords', 'trash-2', 'users', 'x',
 ];
 const BRANDS = ['discord', 'facebook'];
 
