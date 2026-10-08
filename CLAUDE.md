@@ -36,7 +36,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 ## Obsah
 - Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4, registrácia Governor ID (nad prihlásením cez Discord).
 - **Rise of Kingdoms / Lilith nemá verejné API** (ani na hráčov, ani na kráľovstvá). Na webe preto **nezobrazujeme meniace sa čísla** (sila, počet členov, územie…), lebo by zastarali. Len stabilné údaje zadané v admine.
-- Kráľovstvo má **jednu hlavnú alianciu**: [CS35] CZ/SK Legends. Vedenie (model `Officer`): Methiu von CzF – Vodca, Gether – R4, Hefarion – R4 (Discord ID oboch v seed migrácii). Discord ID Methiua Gether doplní neskôr. Tlačidlo „Kontaktovať“ otvorí `discord.com/users/<ID>`, bez ID skopíruje Discord meno.
+- Kráľovstvo má **jednu hlavnú alianciu**: [CS35] CZ/SK Legends. Vedenie (model `Officer`): Methiu von CzF – Vodca, Gether – R4, Hefarion – R4 (Discord ID všetkých troch v seed migrácii). Tlačidlo „Kontaktovať“ otvorí `discord.com/users/<ID>`, bez ID skopíruje Discord meno.
 - Odkazy (admin → Odkazy): Facebook skupina https://www.facebook.com/groups/550189483954751, Discord trvalá pozvánka https://discord.gg/NhwP6y9ssM (nikdy nevyprší, neobmedzené použitia; obe v seed migrácii 0002).
 - Prihlásenie cez Governor ID sa nedá overiť automaticky → registráciu bude schvaľovať R4/admin.
 - Fotky a texty dodá používateľ. Dovtedy len krátke placeholdery – **žiadne vymyslené fakty** o kráľovstve.

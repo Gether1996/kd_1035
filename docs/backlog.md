@@ -29,7 +29,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 7. 10. 2026 – kolo 
 
 ## Čaká na Gethera
 
-- **Discord aplikácia** (Developer Portal): Client ID a Client Secret do `.env`, redirect URI `http://localhost:4200/api/auth/discord/callback/` a `https://<doména>/api/auth/discord/callback/`.
+- **Discord aplikácia** (Developer Portal): Client ID a Client Secret do `.env`, redirect URI `http://localhost:4200/api/auth/discord/callback/` a `https://kd1035.eu/api/auth/discord/callback/`.
 - **Webhook** `DISCORD_WEBHOOK_URL` (voliteľne `DISCORD_EVENT_ROLE_ID`) – na dev PC testovací kanál, ostrý iba na serveri (dev databáza sa cez git dostane na každé PC).
 - **Zoznam opakovaných eventov kráľovstva** (SK/CZ názov, prvý začiatok, opakovanie, čas) a predstih pripomienok – nič nie je vymyslené ani naseedované.
 - **Rozhodnutia k registrácii:** max. počet governorov na hráča (návrh 5), či sa smú registrovať farmy, kto schvaľuje (R4).

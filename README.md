@@ -120,7 +120,7 @@ Pred zapnutím na serveri skontroluj:
 2. **OAuth2** → skopíruj **Client ID** do `DISCORD_CLIENT_ID`, **Reset Secret** → skopíruj do `DISCORD_CLIENT_SECRET` (iba do `.env`, nikdy do gitu).
 3. **OAuth2 → Redirects** → pridaj presne (aj s lomkou na konci):
    - `http://localhost:4200/api/auth/discord/callback/` (vývoj)
-   - `https://<tvoja doména>/api/auth/discord/callback/` (server)
+   - `https://kd1035.eu/api/auth/discord/callback/` (server)
 
    Web posiela `SITE_URL` + `/api/auth/discord/callback/`, takže `SITE_URL` v `.env` musí sedieť s jednou z nich. Lokálne môže `SITE_URL` ostať prázdne – použije sa adresa z prehliadača (`http://localhost:4200`).
 4. Nič iné nezaškrtávaj (žiadny bot). `docker compose up -d` (načíta nový `.env`).

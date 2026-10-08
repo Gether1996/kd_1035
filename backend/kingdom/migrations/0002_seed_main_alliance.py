@@ -8,7 +8,10 @@ def seed(apps, schema_editor):
 
     alliance, created = Alliance.objects.get_or_create(tag='CS35', defaults={'name': 'CZ/SK Legends'})
     if created:
-        Officer.objects.create(alliance=alliance, order=0, name='Methiu von CzF', title_sk='Vodca', title_cs='Vůdce')
+        Officer.objects.create(
+            alliance=alliance, order=0, name='Methiu von CzF', title_sk='Vodca', title_cs='Vůdce',
+            discord_id='560151608378523658',
+        )
         Officer.objects.create(
             alliance=alliance, order=1, name='Gether', title_sk='R4', title_cs='R4',
             discord_id='245662824171438090', discord_username='gether_',
