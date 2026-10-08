@@ -10,6 +10,8 @@ export interface GuideSummary {
   slug: string;
   category: GuideCategory;
   unit: GuideUnit | '';
+  /** the game's specialty tag of the troop type (/static/guides/units/<unit>.webp), null without a type */
+  unit_icon: string | null;
   title_sk: string;
   title_cs: string;
   excerpt_sk: string;

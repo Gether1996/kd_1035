@@ -89,6 +89,7 @@ describe('Guide pages', () => {
     const guide = (slug: string, unit: string) => ({
       slug,
       unit,
+      unit_icon: unit ? `/static/guides/units/${unit}.webp` : null,
       category: 'commanderi',
       title_sk: slug,
       title_cs: '',
@@ -98,14 +99,15 @@ describe('Guide pages', () => {
     });
     TestBed.inject(HttpTestingController)
       .expectOne('/api/guides/')
-      .flush([guide('pary-pre-jazdu', 'cavalry'), guide('pary-pre-rally', ''), guide('nove', 'siege')]);
+      .flush([guide('pary-pre-jazdu', 'cavalry'), guide('pary-pre-rally', '')]);
     await settle(fixture);
 
     const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('.row');
-    expect(Array.from(rows, (row) => row.querySelector('.row__unit use')?.getAttribute('href') ?? null)).toEqual([
-      '/icons.svg#chess-knight',
+    expect(Array.from(rows, (row) => row.querySelector('img.row__unit')?.getAttribute('src') ?? null)).toEqual([
+      '/static/guides/units/cavalry.webp',
       null,
-      null, // a type the site does not know yet gets no icon
     ]);
+    // decorative: the title already names the troop type
+    expect(rows[0].querySelector('img.row__unit')?.getAttribute('alt')).toBe('');
   });
 });

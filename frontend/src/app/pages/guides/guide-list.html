@@ -29,8 +29,8 @@
             <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
             <span class="row__body">
               <strong>
-                @if (unitIcons[g.unit]; as icon) {
-                  <svg class="row__unit" [appIcon]="icon"></svg>
+                @if (g.unit_icon) {
+                  <img class="row__unit" [src]="g.unit_icon" alt="" width="96" height="96" decoding="async" />
                 }
                 {{ guides.title(g) }}
               </strong>

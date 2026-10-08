@@ -9,7 +9,9 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 from .meta import LAST_UPDATE, MODULES
-from .meta.render import COMMANDER_DIR, GEAR_DIR, commander_icons, gear_icons, render, slug, verified_note
+from .meta.render import (
+    COMMANDER_DIR, GEAR_DIR, UNIT_DIR, commander_icons, gear_icons, render, slug, unit_icon, verified_note,
+)  # fmt: skip
 from .meta.sync import rendered_guides, sync_guides
 from .models import Guide
 from .sanitize import clean_html
@@ -164,6 +166,55 @@ class MetaGuidesTests(TestCase):
             with self.assertRaises(CommandError):
                 call_command('fetch_commander_icons', 'Nobody', stdout=StringIO())
 
+    def test_every_unit_type_has_an_icon(self):
+        # a new Guide.Unit needs its in-game specialty tag: manage.py fetch_unit_icons
+        from PIL import Image
+
+        for unit in Guide.Unit.values:
+            with Image.open(UNIT_DIR / f'{unit}.webp') as icon:
+                self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)), unit)
+            self.assertEqual(unit_icon(unit), f'/static/guides/units/{unit}.webp')
+        self.assertIsNone(unit_icon(''))
+        self.assertIsNone(unit_icon('siege'))
+        self.assertEqual(sorted(path.stem for path in UNIT_DIR.glob('*')), sorted(Guide.Unit.values))
+
+    def test_fetch_unit_icons_reads_the_rokstats_tags(self):
+        import json
+        from io import BytesIO, StringIO
+        from unittest import mock
+
+        from django.core.management import CommandError, call_command
+        from PIL import Image
+
+        from .management.commands import fetch_unit_icons
+
+        png = BytesIO()
+        Image.new('RGBA', (99, 99), (200, 60, 50, 255)).save(png, 'PNG')
+        tags = {
+            str(number): {'slug': unit, 'icon': f'/icons/type{number}.png'}
+            for number, unit in enumerate(Guide.Unit.values, start=1)
+        }
+        page = '<script type="application/json" id="commander-catalog-data">{}</script>'
+        urls = []
+
+        def fetch(url, tags=tags):
+            urls.append(url)
+            if url == fetch_unit_icons.PAGE:
+                return page.format(json.dumps({'tags': tags})).encode()
+            return png.getvalue()
+
+        with tempfile.TemporaryDirectory() as folder, mock.patch.object(fetch_unit_icons, 'fetch', fetch), \
+                mock.patch.object(fetch_unit_icons, 'UNIT_DIR', Path(folder)):  # fmt: skip
+            call_command('fetch_unit_icons', stdout=StringIO())
+            with Image.open(Path(folder) / 'cavalry.webp') as icon:
+                self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)))
+            self.assertEqual(sorted(path.stem for path in Path(folder).glob('*.webp')), sorted(Guide.Unit.values))
+            self.assertIn('https://app.rokstats.online/icons/type1.png', urls)
+
+            del tags['4']  # a tag the catalog does not have any more
+            with self.assertRaises(CommandError):
+                call_command('fetch_unit_icons', stdout=StringIO())
+
     def test_gear_icons_follow_the_text(self):
         self.assertEqual(commander_icons('Sun Tzu Prime + Sun Tzu'), ['sun-tzu-prime', 'sun-tzu'])
         self.assertEqual(gear_icons('Horn of Fury + Ring of Doom'), ['horn-of-fury', 'ring-of-doom'])
@@ -298,8 +349,13 @@ class GuideApiTests(TestCase):
         data = self.client.get('/api/guides/').json()
         self.assertEqual([g['slug'] for g in data], ['najlepsia-vybava'])
         self.assertNotIn('html_sk', data[0])
-        self.assertEqual(data[0]['unit'], '')
+        self.assertEqual((data[0]['unit'], data[0]['unit_icon']), ('', None))
         self.assertEqual(data[0]['excerpt_sk'], 'Text SK')
+
+    def test_list_has_the_icon_of_the_troop_type(self):
+        Guide.objects.filter(pk=self.guide.pk).update(unit='archer')
+        data = self.client.get('/api/guides/').json()
+        self.assertEqual((data[0]['unit'], data[0]['unit_icon']), ('archer', '/static/guides/units/archer.webp'))
         self.assertEqual(data[0]['excerpt_cs'], 'Text SK')  # falls back to Slovak
 
     def test_detail(self):
