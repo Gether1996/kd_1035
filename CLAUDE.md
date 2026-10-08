@@ -35,11 +35,11 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Herné pojmy neprekladáme, píšeme ich tak, ako ich hráči používajú: **rally, garrison** (nikdy „garnizóna“), combo, skill, rage… (pokyn Gethera 8. 10. 2026).
 
 ## Obsah
-- Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4, registrácia Governor ID (nad prihlásením cez Discord).
+- Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4.
 - **Rise of Kingdoms / Lilith nemá verejné API** (ani na hráčov, ani na kráľovstvá). Na webe preto **nezobrazujeme meniace sa čísla** (sila, počet členov, územie…), lebo by zastarali. Len stabilné údaje zadané v admine.
 - Kráľovstvo má **jednu hlavnú alianciu**: [CS35] CZ/SK Legends. Vedenie (model `Officer`): Methiu von CzF – Vodca, Gether – R4, Hefarion – R4 (Discord ID všetkých troch v seed migrácii). Tlačidlo „Kontaktovať“ otvorí `discord.com/users/<ID>`, bez ID skopíruje Discord meno.
 - Odkazy (admin → Odkazy): Facebook skupina https://www.facebook.com/groups/550189483954751, Discord trvalá pozvánka https://discord.gg/NhwP6y9ssM (nikdy nevyprší, neobmedzené použitia; obe v seed migrácii 0002).
-- Prihlásenie cez Governor ID sa nedá overiť automaticky → registráciu bude schvaľovať R4/admin.
+- Governor ID sa nedá overiť automaticky → registráciu schvaľuje R4/admin (sekcia **Registrácia Governor ID**).
 - Fotky a texty dodá používateľ. Dovtedy len krátke placeholdery – **žiadne vymyslené fakty** o kráľovstve.
 - Nepoužívaj oficiálne assety Lilith Games (logá, artworky) bez súhlasu používateľa. Výnimka so súhlasom Gethera (8. 10. 2026): ikony predmetov v návodoch o výbave (sekcia Automaticky aktualizované návody).
 - Pätička: malý watermark „Vytvoril Gether · 2026“ + krátka poznámka, že ide o neoficiálnu fanúšikovskú stránku.
@@ -71,6 +71,15 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - `DISCORD_CLIENT_ID` + `DISCORD_CLIENT_SECRET` iba v `.env`. Bez nich je login vypnutý: `login_enabled=false`, web neukáže tlačidlo, `/ucet` ukáže „Prihlásenie zatiaľ nie je zapnuté“. **Na produkčný server ich nedávaj, kým nie je nasadená stránka o ochrane súkromia** (zbierame osobné údaje).
 - Frontend: služba `Auth` (`core/auth.ts`, API iba v prehliadači), stránka `/ucet` + `/cz/ucet` (prerendrovaný shell, `noindex` cez `PageMeta.noindex`, nie je v sitemap). Hlavička: od 900 px pilulka „Prihlásiť“ / avatar + meno (900–1099 px iba ikona), pod 900 px iba v mobilnom menu. Slot `.account` má **pevnú šírku vo všetkých stavoch** (40 px, od 1100 px 132 px) a je v HTML vždy – počas načítania, pri vypnutom logine aj pri chybe API ostane prázdny, dlhé meno sa oreže („…“, celé v `title`). Hlavička sa po odpovedi `/api/auth/me/` nikdy nepohne (overené meraním pozície `.nav`).
 - **Osobné údaje hráčov nikdy do gitu:** `export_snapshot` maže riadky všetkých tabuliek `accounts_*` a používateľov `discord_*` (aj ich skupiny, práva a záznamy admin logu; aj záznamy o hráčoch). Ďalšie osobné dáta hráčov (napr. Governor ID) patria do appky `accounts`.
+
+### Registrácia Governor ID
+- Model `Governor` (`accounts`): hráč, Governor ID (6–12 číslic 0–9), meno v hre (max. 32), typ (hlavný účet / farma), aliancia (prázdna = iná / žiadna), stav (čaká / schválený / zamietnutý), poznámka pre hráča, kto a kedy posúdil. Jeden Governor ID môže mať naraz iba **jeden záznam, ktorý čaká alebo je schválený** (podmienený `UniqueConstraint` `governor_id_taken`), zamietnutý sa dá poslať znova. Zmazanie hráča (aj „Zmazať účet“) zmaže aj jeho governorov.
+- **Max. 5 governorov na hráča** (`MAX_GOVERNORS` v `accounts/models.py` aj `core/governors-api.ts`), rátajú sa aj zamietnuté – hráč ich sám odstráni. Farmy sa registrovať smú. Oboje je návrh, kým to Gether nepotvrdí.
+- API (iba hráč prihlásený cez Discord, admin s heslom dostane 403): `GET/POST /api/me/governors/`, `DELETE /api/me/governors/<id>/` (iba vlastný záznam v akomkoľvek stave, cudzí = 404). Chyby POST sú stabilné kódy `invalid_id | invalid_name | taken | limit | invalid`, text k nim má web v `account.governors.errors`. Throttle scope `governors` 10/h **iba na POST** (zoznam sa načíta pri každej návšteve `/ucet`). Počítadlá sú v predvolenej LocMemCache, teda v každom gunicorn procese zvlášť (3 workery) – mäkký limit; tvrdé limity sú 5 na hráča a unikátne ID.
+- **R4 v admine:** skupina `R4` (dátová migrácia `accounts/0003`, práva vytvára sama cez `create_permissions`) má iba `view/change governor`, hráčov ani nič iné nevidí (`PlayerAdmin` ostáva iba pre superusera). R4 = používateľ `discord_<id>` so správcovským prístupom (staff) + skupina R4; do adminu sa dostane cez prihlásenie na webe (tá istá session), heslo nemá. `GovernorAdmin` používa bežné modelové práva (nie `SuperuserOnlyAdmin`), pridávať nedá nikto. R4 mení iba stav a poznámku, údaje od hráča sú len na čítanie (bez odkazov na stránky, kam R4 nesmie).
+- Akcie Schváliť / Zamietnuť; každá zmena stavu (akcia aj formulár) doplní „posúdil“ + čas. Hromadné schválenie vymaže starú poznámku. Záznam s ID, ktoré medzitým čaká alebo je schválené inde, sa späť zapnúť nedá (akcia ho preskočí, formulár ukáže chybu – `Governor.clean`).
+- Web: sekcia **Moji governori** na `/ucet` (`pages/account/governors`, služba `GovernorsApi`). Spoločné štýly formulárov (`.field`, `.input`, `.select`, `.choice`, tokeny `--field-*`) sú v `styles.scss` – nové formuláre ich používajú.
+- **Stránka o ochrane súkromia** (zatiaľ neexistuje) musí uviesť aj tieto údaje: Governor ID, meno v hre, typ, aliancia, stav, poznámka R4 a kto ju posúdil; vidí ich iba vedenie (R4 a admin).
 
 ## Notifikácie
 - **Discord** (nie e-mail, nie WhatsApp – WhatsApp Cloud API vyžaduje Meta Business účet a platí sa za správy). Webhook do kanála, voliteľne ping roly. Premenné `DISCORD_WEBHOOK_URL`, `DISCORD_EVENT_ROLE_ID`.
@@ -109,7 +118,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Docker všade** – server aj lokálny vývoj. Nepredpokladaj lokálny Python ani Node, príkazy spúšťaj cez `docker compose`.
   - `docker-compose.yml` (produkcia): `backend` (gunicorn), `worker` (notifikácie + zálohy), `web` (nginx: prerendrované stránky + proxy `/api/`, `/admin/`, `/static/` na backend).
   - `docker-compose.dev.yml` (vývoj): `ng serve` s hot reloadom (port 4200, proxy `/api` → backend), Django `runserver` (port 8000), `worker`.
-- Dynamické dáta idú z API `/api/alliances/`, `/api/links/`, `/api/guides/` (+ `/api/guides/<slug>/`), prihlásený hráč z `/api/auth/me/`. Frontend musí fungovať aj keď API zlyhá (sekcia sa skryje, nič sa nerozbije).
+- Dynamické dáta idú z API `/api/alliances/`, `/api/links/`, `/api/guides/` (+ `/api/guides/<slug>/`), prihlásený hráč z `/api/auth/me/`, jeho governori z `/api/me/governors/`. Frontend musí fungovať aj keď API zlyhá (sekcia sa skryje, nič sa nerozbije).
 - URL: `/static/` = Django statika (admin), `/uploads/` = nahraté súbory (MEDIA_URL), `/media/` patrí Angular buildu (fonty).
 - Ikony: SVG sprite `frontend/public/icons.svg` (Lucide + Simple Icons), použitie `<svg appIcon="swords" />`. Novú ikonu pridaj do `frontend/scripts/build-icons.mjs` a spusti `npm run icons`.
 - Angular konvencie: súbory bez prípony `.component` (`hero.ts`, trieda `Hero`), `inject()`, `input()`, signals, `OnPush`.
