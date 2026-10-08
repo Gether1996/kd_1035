@@ -5,7 +5,8 @@ from django.utils.html import format_html
 
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import Player
+from .models import EventReminder, Player
+from .reminders import duration
 
 
 @admin.register(Player)
@@ -24,6 +25,8 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'ingame_name',
         'discord_id',
         'avatar',
+        'remind_discord',
+        'lang',
         'user',
         'created_at',
         'last_login',
@@ -71,3 +74,35 @@ class PlayerUserAdmin(UserAdmin):
     def ingame_name(self, obj):
         player = getattr(obj, 'player', None)
         return (player and player.ingame_name) or '—'
+
+
+@admin.register(EventReminder)
+class EventReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """Who picked which event on the website – read only, players change it themselves on /ucet."""
+
+    list_display = ['player_name', 'ingame_name', 'event', 'times', 'updated_at']
+    list_filter = ['event']
+    list_select_related = ['player', 'event']
+    search_fields = ['player__username', 'player__global_name', 'player__ingame_name', 'event__name_sk']
+    fields = ['player', 'event', 'times', 'created_at', 'updated_at']
+    readonly_fields = fields
+
+    def has_add_permission(self, request):
+        return False
+
+    # delete stays allowed (superuser): deleting a player or an event in the admin cascades to these rows, and the
+    # admin refuses a delete that would remove objects the user may not delete
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='hráč', ordering='player__global_name')
+    def player_name(self, obj):
+        return obj.player.name
+
+    @admin.display(description='meno v hre', ordering='player__ingame_name')
+    def ingame_name(self, obj):
+        return obj.player.ingame_name or '—'
+
+    @admin.display(description='pripomenúť pred začiatkom')
+    def times(self, obj):
+        return ', '.join(duration(minutes, 'sk') if minutes else 'pri začiatku' for minutes in obj.offsets)

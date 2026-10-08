@@ -124,6 +124,15 @@ DISCORD_CLIENT_SECRET = env('DISCORD_CLIENT_SECRET', default='')
 # Discord IDs that become superusers when they sign in with Discord (Gether); removing an ID does not revoke it
 DISCORD_ADMIN_IDS = env.list('DISCORD_ADMIN_IDS', default=[])
 
+# --- Personal event reminders (accounts app, sent by the worker); each channel is off while its keys are empty ---
+# bot user of the same Discord application → private messages
+DISCORD_BOT_TOKEN = env('DISCORD_BOT_TOKEN', default='')
+# web push (browser and phone notifications), keys from `manage.py generate_vapid_keys`
+VAPID_PUBLIC_KEY = env('VAPID_PUBLIC_KEY', default='')
+VAPID_PRIVATE_KEY = env('VAPID_PRIVATE_KEY', default='')
+# contact for the push services (mailto: or https:); Apple refuses localhost
+VAPID_SUBJECT = env('VAPID_SUBJECT', default='') or 'https://kd1035.eu'
+
 # --- Database backups (worker container, folder is bind-mounted to the host) ---
 BACKUP_DIR = Path(env('BACKUP_DIR', default=str(BASE_DIR / 'backups')))
 BACKUP_INTERVAL_DAYS = env.int('BACKUP_INTERVAL_DAYS', default=7)

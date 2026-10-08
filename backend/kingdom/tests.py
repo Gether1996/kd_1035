@@ -373,6 +373,7 @@ class KingdomEventAdminTests(TestCase):
             'mention_role_id': '',
             'show_on_web': 'on',
             'is_active': 'on',
+            'player_reminders': '10, 60',
             **kwargs,
         }
 
@@ -454,6 +455,39 @@ class KingdomEventAdminTests(TestCase):
             self.assertContains(response, local_time(start - timedelta(hours=1)))
         self.assertContains(response, ' UTC')
 
+    def test_player_times_typed_as_text(self):
+        start = self.soon()
+        response = self.client.post(f'{self.url}add/', self.form_data(start, player_reminders='1440, 10 60,10'))
+        self.assertEqual(response.status_code, 302)
+        event = KingdomEvent.objects.get()
+        self.assertEqual(event.player_reminders, [10, 60, 1440])  # sorted, duplicates dropped
+        self.assertContains(self.client.get(f'{self.url}{event.pk}/change/'), 'value="10, 60, 1440"')
+
+        bad = {
+            'abc': 'celé minúty',
+            '-5': 'celé minúty',
+            '10.5': 'celé minúty',
+            '10081': '10080',
+            '1, 2, 3, 4, 5, 6, 7': 'Najviac 6',
+        }
+        for text, error in bad.items():
+            with self.subTest(text):
+                data = self.form_data(start, player_reminders=text)
+                response = self.client.post(f'{self.url}{event.pk}/change/', data)
+                self.assertContains(response, error)
+        event.refresh_from_db()
+        self.assertEqual(event.player_reminders, [10, 60, 1440])
+
+        # empty = players only type their own times
+        self.client.post(f'{self.url}{event.pk}/change/', self.form_data(start, player_reminders=''))
+        event.refresh_from_db()
+        self.assertEqual(event.player_reminders, [])
+
+    def test_new_event_offers_ten_and_sixty_minutes(self):
+        response = self.client.get(f'{self.url}add/')
+        self.assertContains(response, 'value="10, 60"')
+        self.assertEqual(KingdomEvent(name_sk='x', starts_at=self.soon()).player_reminders, [10, 60])
+
     def test_cancel_action(self):
         self.client.post(f'{self.url}add/', self.form_data(self.soon()))
         rows = EventNotification.objects.all()
@@ -482,12 +516,16 @@ class WorkerTests(TestCase):
             mock.patch(f'{worker}.close_old_connections'),  # would drop the test transaction
             mock.patch(f'{worker}.plan_reminders', return_value=0),
             mock.patch(f'{worker}.send_due'),
+            mock.patch(f'{worker}.send_personal_reminders') as personal,
+            mock.patch(f'{worker}.prune_sent') as prune,
             mock.patch(f'{worker}.backup_due', return_value=False),
             mock.patch('time.sleep', side_effect=Stop),
             self.assertRaises(Stop),
         ):
             call_command('run_worker')
         self.assertEqual(list(Session.objects.values_list('session_key', flat=True)), ['b' * 32])
+        personal.assert_called_once_with()
+        prune.assert_called_once_with()
 
 
 class BackupTests(TransactionTestCase):

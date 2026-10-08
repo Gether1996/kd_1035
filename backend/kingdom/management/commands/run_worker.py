@@ -7,6 +7,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
+from accounts.reminders import prune_sent, send_personal_reminders
 from kingdom.backups import backup_due, create_backup
 from kingdom.discord import send_due
 from kingdom.events import plan_reminders
@@ -21,8 +22,9 @@ SESSION_CLEANUP_SECONDS = 24 * 3600
 
 class Command(BaseCommand):
     help = (
-        'Background loop: plans reminders of recurring kingdom events, sends due Discord notifications '
-        'backs up the database every BACKUP_INTERVAL_DAYS and deletes expired sessions once a day.'
+        'Background loop: plans reminders of recurring kingdom events, sends due Discord notifications and the '
+        "players' personal reminders, backs up the database every BACKUP_INTERVAL_DAYS and deletes expired "
+        'sessions and old reminder logs once a day.'
     )
 
     def handle(self, *args, **options):
@@ -44,6 +46,11 @@ class Command(BaseCommand):
             except Exception:  # keep the loop alive – e.g. tables not migrated yet on first start
                 log.exception('Sending notifications failed')
 
+            try:
+                send_personal_reminders()
+            except Exception:
+                log.exception('Sending personal reminders failed')
+
             if time.monotonic() >= next_backup_check:
                 next_backup_check = time.monotonic() + BACKUP_CHECK_SECONDS
                 try:
@@ -59,5 +66,9 @@ class Command(BaseCommand):
                     call_command('clearsessions')
                 except Exception:
                     log.exception('Clearing expired sessions failed')
+                try:
+                    prune_sent()
+                except Exception:
+                    log.exception('Pruning sent reminders failed')
 
             time.sleep(TICK_SECONDS)
