@@ -49,6 +49,8 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
    }
    ```
    `www` presmeruje na `kd1035.eu` už nginx v kontajneri `web`. Proxy musí posielať hlavičku `X-Forwarded-Proto` (Caddy, Nginx Proxy Manager aj Traefik to robia samé).
+
+   **Prístupové logy v proxy nezapínaj** (v Caddy žiadna direktíva `log`, v Nginx Proxy Manager / Traefik vypnutý access log). Stránka Ochrana údajov sľubuje, že IP adresy návštevníkov neukladáme – logy kontajnerov sú bez IP a majú najviac 3 × 10 MB na službu.
 4. **Kontrola:** https://kd1035.eu, https://www.kd1035.eu (presmeruje), https://kd1035.eu/sitemap.xml (adresy začínajú `https://kd1035.eu`), https://kd1035.eu/admin/.
 5. **Google:** [Search Console](https://search.google.com/search-console) → pridaj doménu `kd1035.eu` (overenie TXT záznamom v DNS) → Sitemaps → `https://kd1035.eu/sitemap.xml`.
 
@@ -65,7 +67,7 @@ docker compose exec -u app worker python manage.py backup_db
 docker compose exec -u app worker python manage.py restore_db kd1035_2026-10-07_120000.sqlite3.gz
 ```
 
-Zálohy z `./backups` si občas skopíruj aj mimo servera.
+Zálohy z `./backups` si občas skopíruj aj mimo servera. Kópie staršie ako 8 týždňov maž (aj mimo servera) – stránka Ochrana údajov hovorí, že zmazané údaje zmiznú zo záloh do 8 týždňov. Ak zmeníš `BACKUP_INTERVAL_DAYS` alebo `BACKUP_KEEP`, uprav aj túto stránku.
 
 ## Návody (commanderi, výbava, eventy)
 
@@ -111,10 +113,11 @@ Worker vytvára pripomienky 48 h vopred, nájdeš ich v **Discord notifikácie**
 
 Hráči sa prihlásia svojím Discord účtom (web dostane iba Discord ID, meno a avatar, žiadny e-mail). Bez nastavenia je prihlásenie vypnuté a na webe sa neukáže.
 
-> **Na produkčnom serveri ho nezapínaj, kým nie je nasadená stránka o ochrane súkromia.** Ukladáme osobné údaje.
+> **Na produkčnom serveri ho zapni až po nasadení stránky [Ochrana údajov](https://kd1035.eu/ochrana-udajov)** (`/ochrana-udajov`, odkaz je v pätičke). Ukladáme osobné údaje a stránka presne popisuje, ktoré.
 
 Pred zapnutím na serveri skontroluj:
-- stránka o ochrane súkromia je nasadená,
+- stránka Ochrana údajov je nasadená (https://kd1035.eu/ochrana-udajov sa otvorí),
+- HTTPS proxy nemá zapnutý prístupový log (pozri Doména kd1035.eu, krok 3),
 - `DJANGO_NUM_PROXIES=2`, ak je pred webom HTTPS proxy (inak by všetci hráči zdieľali jeden limit 20 prihlásení za hodinu),
 - `SITE_URL` je presne doména zaregistrovaná v Discord aplikácii (krok 3).
 

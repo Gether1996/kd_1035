@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 
 ## Hotové
 
+- **8. 10. 2026 – Stránka Ochrana údajov, logy servera bez IP a rotácia logov** (kd-improve, builder): `/ochrana-udajov` + `/cz/ochrana-udajov` (presne čo ukladáme, tretie strany, ako dlho, zmazanie účtu), odkaz v pätičke a na `/ucet`; nginx loguje bez IP, logy kontajnerov max. 3 × 10 MB, YouTube embedy cez youtube-nocookie, zmazanie účtu zmaže aj admin históriu o hráčovi. Discord prihlásenie sa po nasadení môže zapnúť aj na serveri.
 - **8. 10. 2026 – Pripomienky eventov pre hráčov** (builder + kritik, mimo kola): superadmin pri evente nastaví „Časy pre hráčov“, hráč si na `/ucet` vyberie eventy a časy (aj vlastné X minút) a dostane súkromnú správu od bota na Discorde a/alebo notifikáciu v prehliadači. Admin → Pripomienky hráčov a Odoslané pripomienky.
 - **8. 10. 2026 – mimo kôl:** stĺpec „meno v hre“ v admine Používatelia, vždy len jedna aliancia, banner a avatar pre Discord bota (`generate.py --discord`).
 - **8. 10. 2026 – Prihlásenie cez Discord (hráčske účty)** (kolo 2, schválené kritikom). Tlačidlo v hlavičke, stránka `/ucet`. Na serveri ho nezapínaj pred stránkou Ochrana údajov.
@@ -14,8 +15,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 
 ## Ďalšie v poradí
 
-1. Stránka Ochrana údajov a minimalizácia uložených dát – **musí byť nasadená skôr, ako sa na serveri zapne Discord prihlásenie**
-2. Skutočná stránka 404 (SK/CZ) namiesto tichého presmerovania domov – kritik schválil
+1. Skutočná stránka 404 (SK/CZ) namiesto tichého presmerovania domov – kritik schválil
 
 ## Odložené (kritik: upraviť podľa poznámok v next-round.json)
 
@@ -34,7 +34,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 - **Discord aplikácia:** lokálne zapnutá (Client ID a Secret v dev `.env`, redirect URI pre localhost aj kd1035.eu sú zaregistrované). Pred serverom **Reset Secret** (starý je v histórii chatu) a nový do `.env` na serveri aj lokálne; na serveri aj `DISCORD_ADMIN_IDS`.
 - **Webhook** `DISCORD_WEBHOOK_URL` (voliteľne `DISCORD_EVENT_ROLE_ID`) – na dev PC testovací kanál, ostrý iba na serveri (dev databáza sa cez git dostane na každé PC).
 - **Zoznam opakovaných eventov kráľovstva** (SK/CZ názov, prvý začiatok, opakovanie, čas) a predstih pripomienok – nič nie je vymyslené ani naseedované.
-- **Ochrana údajov:** kto je prevádzkovateľ a kontakt (návrh: Gether, kontakt cez Discord), čo presne ukladáme (Discord ID, meno, avatar, meno v hre).
+- **Ochrana údajov:** potvrdiť text prevádzkovateľa („Gether, R4 kráľovstva 1035, kontakt cez Discord“ – použité, kým nepovie inak). Na serveri v HTTPS proxy (Caddy) **nezapínať prístupový log** a kópie záloh mimo servera mazať po 8 týždňoch (stránka to sľubuje).
 - **Server:** DNS pre kd1035.eu a www, HTTPS proxy (Caddy), `.env` – postup v README → Doména kd1035.eu. Na serveri vlastné VAPID kľúče (`manage.py generate_vapid_keys`), nový bot token (Reset Token) a `DISCORD_ADMIN_IDS`.
 - **Bot na Discord serveri:** pozvať ho odkazom z README (inak hráčom nepríde súkromná správa).
 - **Eventy:** založiť ich v admine a pri každom nastaviť „Časy pre hráčov“.
