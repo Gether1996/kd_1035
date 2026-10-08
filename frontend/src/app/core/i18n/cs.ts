@@ -52,7 +52,7 @@ export const cs: Dict = {
   },
   guides: {
     eyebrow: 'Návody',
-    title: 'Hraj chytřeji',
+    title: 'Hraj s rozumem',
     soon: 'Brzy',
     count: { one: 'návod', few: 'návody', other: 'návodů' },
     categories: {

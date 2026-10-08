@@ -50,7 +50,7 @@ export const sk = {
   },
   guides: {
     eyebrow: 'Návody',
-    title: 'Hraj múdrejšie',
+    title: 'Hraj s rozumom',
     soon: 'Čoskoro',
     count: { one: 'návod', few: 'návody', other: 'návodov' },
     categories: {
