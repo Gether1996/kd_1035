@@ -3,7 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 export type IconName =
   | 'arrow-left'
   | 'arrow-right'
+  | 'bell'
   | 'calendar-days'
+  | 'check'
   | 'chevron-down'
   | 'chevron-right'
   | 'crown'

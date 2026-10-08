@@ -379,6 +379,103 @@ p {
   }
 }
 
+// on/off switch: <input type="checkbox" role="switch" class="switch" /> – the knob position shows the state
+.switch {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  background-color: var(--field-bg);
+  cursor: pointer;
+  transition:
+    border-color 0.25s,
+    background-color 0.25s;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: var(--text-dim);
+    transition:
+      transform 0.35s var(--ease-out),
+      background-color 0.25s;
+  }
+
+  &:hover {
+    border-color: var(--field-line-hover);
+  }
+
+  &:checked {
+    border-color: var(--gold-400);
+    background-color: color-mix(in srgb, var(--gold-400) 24%, var(--field-bg));
+
+    &::before {
+      transform: translateX(20px);
+      background-color: var(--gold-300);
+    }
+  }
+
+  &:focus-visible {
+    outline-offset: 3px;
+    border-radius: 999px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// small secondary action next to a field or a setting (the large banner .btn is for main actions)
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--gold-400) 6%, transparent);
+  color: var(--gold-100);
+  font: 600 0.8125rem/1 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.25s,
+    background-color 0.25s;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    border-color: var(--gold-400);
+    background-color: color-mix(in srgb, var(--gold-400) 14%, transparent);
+  }
+
+  &:focus-visible {
+    border-radius: 999px;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 // ---------------------------------------------------------------- guide content (HTML from the admin)
 
 .prose {

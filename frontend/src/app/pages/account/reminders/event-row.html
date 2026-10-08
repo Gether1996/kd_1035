@@ -1,0 +1,95 @@
+@let r = t();
+@let id = event().id;
+
+<div class="event__head">
+  <div class="event__info">
+    <h3 class="event__name" [id]="'event-' + id">{{ name() }}</h3>
+    <p class="event__when">
+      <time [attr.datetime]="event().next_start">{{ when() }}</time>
+      <span>UTC {{ utc() }}</span>
+    </p>
+    <p class="event__repeat">{{ repeat() }}</p>
+  </div>
+  <label class="toggle">
+    <span class="toggle__text">{{ r.remind }}</span>
+    <input
+      class="switch"
+      type="checkbox"
+      role="switch"
+      [checked]="on()"
+      [attr.aria-describedby]="'event-' + id"
+      (change)="toggle()"
+    />
+  </label>
+</div>
+
+@if (on()) {
+  <div class="event__body">
+    <fieldset class="chips">
+      <legend class="sr-only">{{ r.times }} – {{ name() }}</legend>
+      @for (minutes of offered(); track minutes) {
+        <label class="chip">
+          <input
+            type="checkbox"
+            [checked]="has(minutes)"
+            [disabled]="full() && !has(minutes)"
+            (change)="toggleTime(minutes)"
+          />
+          <span><svg [appIcon]="has(minutes) ? 'check' : 'plus'"></svg>{{ label(minutes) }}</span>
+        </label>
+      }
+      @for (minutes of own(); track minutes) {
+        <span class="chip chip--own">
+          <span>
+            <svg appIcon="check"></svg>{{ label(minutes) }}
+            <button
+              type="button"
+              class="chip__remove"
+              [attr.aria-label]="r.remove + ': ' + label(minutes)"
+              (click)="toggleTime(minutes)"
+            >
+              <svg appIcon="x"></svg>
+            </button>
+          </span>
+        </span>
+      }
+    </fieldset>
+
+    <form class="own" novalidate (submit)="addTime($event, minutesInput)">
+      <label class="field__label" [for]="'own-' + id">{{ r.custom }}</label>
+      <div class="own__row">
+        <input
+          #minutesInput
+          class="input"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          [max]="max"
+          step="1"
+          [placeholder]="r.placeholder"
+          [id]="'own-' + id"
+          [attr.aria-invalid]="invalid() || null"
+          [attr.aria-describedby]="'own-hint-' + id"
+          (input)="invalid.set(false)"
+        />
+        <!-- aria-disabled, not disabled: a control disabled while focused would drop keyboard focus -->
+        <button type="submit" class="pill-btn" [attr.aria-disabled]="full() || null">
+          <svg appIcon="plus"></svg>{{ r.add }}
+        </button>
+      </div>
+      <p class="own__hint" [id]="'own-hint-' + id" [class.is-error]="invalid()">
+        @if (invalid()) {
+          {{ r.invalid }}
+        } @else if (full()) {
+          {{ r.max }}
+        }
+      </p>
+    </form>
+  </div>
+}
+
+<p class="event__state" role="status" [class.is-error]="state() === 'failed'">
+  @if (state(); as s) {
+    {{ r[s] }}
+  }
+</p>

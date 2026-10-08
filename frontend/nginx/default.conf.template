@@ -69,6 +69,12 @@ server {
         expires 7d;
     }
 
+    # web push service worker (event reminders): browsers must always see its latest version
+    location = /push-sw.js {
+        add_header Cache-Control "no-cache";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
     # single guides are rendered in the browser from the app shell
     location ~ ^/(cz/)?navody/[^/]+/[^/]+/?$ {
         try_files /index.csr.html =404;
