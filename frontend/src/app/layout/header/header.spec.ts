@@ -40,10 +40,19 @@ describe('Header account slot', () => {
     expect(loginLinks().length).toBe(0);
   });
 
-  it('renders nothing when login is switched off', async () => {
+  it('keeps the empty slot when login is switched off, so the bar does not move', async () => {
     await answer({ login_enabled: false, user: null });
-    expect(el().querySelector('.account')).toBeNull();
+    const slot = el().querySelector('.account');
+    expect(slot).not.toBeNull();
+    expect(slot?.children.length).toBe(0);
     expect(el().querySelector('.drawer__account')).toBeNull();
+    expect(loginLinks().length).toBe(0);
+  });
+
+  it('keeps the empty slot when the API fails', async () => {
+    http.expectOne('/api/auth/me/').flush('down', { status: 502, statusText: 'Bad Gateway' });
+    await fixture.whenStable();
+    expect(el().querySelector('.account')?.children.length).toBe(0);
     expect(loginLinks().length).toBe(0);
   });
 
