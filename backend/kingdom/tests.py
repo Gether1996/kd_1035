@@ -37,9 +37,9 @@ class ApiTests(TestCase):
         self.assertEqual([o['name'] for o in data[0]['officers']], ['Methiu von CzF', 'Gether'])
 
     def test_links_hide_inactive(self):
-        SocialLink.objects.create(platform='discord', url='https://discord.gg/x')
+        # both links are seeded by migration
         SocialLink.objects.filter(platform='facebook').update(is_active=False)
-        self.assertEqual(self.client.get('/api/links/').json(), [{'platform': 'discord', 'url': 'https://discord.gg/x'}])
+        self.assertEqual(self.client.get('/api/links/').json(), [{'platform': 'discord', 'url': 'https://discord.gg/NhwP6y9ssM'}])
 
 
 @override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', DISCORD_EVENT_ROLE_ID='42')
