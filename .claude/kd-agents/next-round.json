@@ -1,5 +1,5 @@
 {
-  "_doc": "Args for the next kd-improve round (see docs/agenti.md). Ideas and critic verdicts from round 1 (2026-10-07); recurring-kingdom-events (round 1), discord-login and governor-registration (round 2, 2026-10-08) are shipped and removed. Round 2 was stopped by Gether right after privacy-page started (nothing left half-done). Since then a terms page (/podmienky, footer link) exists – the privacy page goes next to it in the footer; the domain is kd1035.eu. Gether dropped Governor registration on 2026-10-08 (model and R4 group removed, accounts/0004); players only add their in-game name (Player.ingame_name) on /ucet. r4-admin-access and leadership-discord-alerts are rejected for that reason. Next big item from Gether: players choose events and their own reminder times (see backlog).",
+  "_doc": "Args for the next kd-improve round (see docs/agenti.md). Ideas and critic verdicts from round 1 (2026-10-07). Shipped and removed: recurring-kingdom-events (round 1), discord-login and governor-registration (round 2), privacy-page and not-found-page (round 3, 2026-10-08), public-event-calendar (built outside the rounds on 2026-10-08: /kalendar with a navbar tab, reminders set from the calendar). Round 3 also shipped admin-event-polish and guide-link-previews; it was stopped by Gether with nothing half-done. Gether dropped Governor registration on 2026-10-08 (accounts/0004), so r4-admin-access and leadership-discord-alerts are rejected. Players pick events and their own reminder times on /ucet and in the calendar; irregular events (Silk Road, Shadow Legion, Karuak Boss) have no cycle and get a date from Gether before each one. home-upcoming-events can now reuse EventsApi from the calendar.",
   "features": 4,
   "date": "YYYY-MM-DD",
   "ideas": [
@@ -24,56 +24,6 @@
         "Webhook URL of a private test channel on the kingdom Discord (DISCORD_TEST_WEBHOOK_URL in .env)"
       ],
       "risks": "Discord markdown is only approximated, so the preview must be labelled as approximate. If the test webhook points to a public channel, tests leak to members; README must say 'private channel'. Low risk otherwise."
-    },
-    {
-      "id": "public-event-calendar",
-      "title": "Public SK/CZ event calendar page",
-      "title_sk": "Verejný kalendár eventov (SK/CZ)",
-      "audience": "Members and prospective migrants",
-      "user_value": "Members get one place that shows what happens in the kingdom and when, in their own local time with the game time (UTC) next to it, without scrolling Discord history. Migrants see an active, organized kingdom. Each event can link to its guide.",
-      "spec": "BACKEND\n1) GET /api/events/?days=N (default 31, clamp 1–62), kingdom/views.py + serializer. Returns occurrences of active KingdomEvents with show_on_web, from (now − duration) so running events appear, up to now + N days. Sorted by start, capped at 300 items. Item: {id, name_sk, name_cs, start (ISO, UTC), end (ISO or null when duration 0), repeat_days, guide: {category, slug, title_sk, title_cs} | null (only published guides)}. Reuses kingdom/events.occurrences. Never exposes message or role fields. Response header Cache-Control: public, max-age=300.\n2) guides/views.py STATIC_PAGES += ['/kalendar'].\nFRONTEND\n3) core/events-api.ts EventsApi (providedIn root, httpResource only in the browser, same pattern as GuidesApi): ready(), failed(), all(), name(e) with CS→SK fallback, a days() computed that groups by local calendar day.\n4) pages/calendar/calendar.ts|html|scss: route 'kalendar' in pages() (so /kalendar and /cz/kalendar both exist), Page 'calendar' in i18n.ts parseUrl plus I18n.path('calendar'). Prerendered shell (covered by the '**' Prerender server route); data loads in the browser. app-page-header with crumbs Domov › Kalendár.\n   Agenda list grouped by day; the heading is 'Dnes' / 'Zajtra' / weekday + date via Intl in i18n.locale(). Row: local time range 'HH:mm–HH:mm', secondary 'UTC 12:00', name, tag 'Prebieha' while now is between start and end, a small repeat label ('každý týždeň', 'každé 2 týždne', 'denne'), and a 'Návod' link (routerLink via i18n.guidePath) when a guide is set.\n   States: 3 skeleton rows while loading, empty state 'Zatiaľ nie sú naplánované žiadne eventy.', error text. One short note line: local times and UTC = game time.\n   'Prebieha' refreshes through a 60 s signal timer started in afterNextRender and cleared on destroy (SSR-safe).\n5) Header: new nav item 'Kalendár' (desktop + drawer) → i18n.path('calendar') with routerLinkActive. Verify the bar still fits at 900, 1024 and 1280 px.\n6) Seo: t.seo.calendar {title, description} in both dictionaries; Seo uses fixed texts for 'calendar' the way it does for home/about. Keywords stay natural (e.g. 'Kalendár eventov · KD 1035 Rise of Kingdoms CZ/SK').\n7) i18n: a 'calendar' section in sk.ts and cs.ts with identical structure; repeat labels use Intl.PluralRules like GuidesApi.count.\n8) Styles: only tokens from styles.scss, dark, visible focus, transform/opacity animations with prefers-reduced-motion, 320 px → 2560 px. Screenshots at 360/768/1280/1920/2560.\nTESTS: backend (inactive or hidden events excluded; running event included; days clamped; no message/role keys; unpublished guide → null); frontend: day grouping/labels unit test and parseUrl cases for /kalendar and /cz/kalendar.",
-      "acceptance_criteria": [
-        "/kalendar and /cz/kalendar are prerendered at build time without the API, have correct title/description/canonical/hreflang, and both appear in sitemap.xml.",
-        "With events in the DB, the page lists the next 31 days grouped by day with local times and UTC times; a running event shows 'Prebieha'.",
-        "Events with show_on_web=false or is_active=false never appear in /api/events/; the response contains no message or mention_role_id (test).",
-        "An event linked to a published guide shows a working 'Návod' link in the correct language.",
-        "With no events the page shows the empty state; with the API down it shows the error text; nothing breaks.",
-        "The header contains 'Kalendár' on desktop and in the mobile drawer, keyboard reachable, with no overflow at 900–1280 px.",
-        "Every text exists in SK and CZ; the i18n spec, ng build and backend tests pass."
-      ],
-      "effort": "M",
-      "depends_on": [
-        "recurring-kingdom-events"
-      ],
-      "needs_from_user": [
-        "Which events are public and their Czech names"
-      ],
-      "risks": "An empty calendar looks dead until leadership fills it, so the empty state must look intentional. The server must always send UTC ISO and the browser converts it. A 6th nav item may crowd the header at mid widths; check the screenshots."
-    },
-    {
-      "id": "privacy-page",
-      "title": "Privacy page and data minimisation for player accounts",
-      "title_sk": "Stránka Ochrana údajov a minimalizácia uložených dát",
-      "audience": "All visitors who sign in; Gether as the operator",
-      "user_value": "With Discord login and Governor registration the site starts storing personal data. A short, factual privacy page plus automatic clean-up of stale data keeps the site GDPR-compliant and builds trust in a small community where everyone knows each other.",
-      "spec": "1) Page /ochrana-udajov and /cz/ochrana-udajov: route in pages(), Page 'privacy' in parseUrl, I18n.path('privacy'), prerendered, STATIC_PAGES += ['/ochrana-udajov'], Seo fixed texts t.seo.privacy. Same layout as About (app-page-header + structured blocks), short.\n2) Content in the sk.ts / cs.ts 'privacyPage' section, as headings plus 1–2 sentences or short lists each: who runs the site (controller, from Gether); what we store (Discord ID, name, avatar hash; Governor ID, in-game name, kind, alliance, registration status); why (identity for R4 approval, kingdom roster); who sees it (R4 and admins only; nothing is public); how long (until account deletion; rejected registrations 90 days); cookies (only the technically necessary session + csrftoken, so no consent banner); how to delete ('Zmazať účet' on /ucet); contact. It must match the fields that actually exist; no promises about features that do not exist.\n3) Links: footer (small link next to the fan-site note), the login note on /ucet, and under the governor registration form.\n4) Worker data minimisation: once a day (monotonic gate) delete Governor rows with status 'rejected' and reviewed_at older than 90 days (function in accounts, called from run_worker, logged count).\n5) CLAUDE.md: rule that every new personal-data field must be added to the privacy page.\nTESTS: purge deletes only old rejected entries; parseUrl for the new path; dictionary shape test passes.",
-      "acceptance_criteria": [
-        "/ochrana-udajov and /cz/ochrana-udajov are prerendered with their own title/description, appear in sitemap.xml and are linked from the footer on every page.",
-        "The page lists exactly the data fields stored by the accounts app, retention, cookie use (session + csrftoken only) and how to delete the account.",
-        "/ucet links to the page from the login note and from the registration form.",
-        "The worker deletes rejected registrations older than 90 days and keeps everything else (unit test).",
-        "All texts are in SK and CZ with correct diacritics; the layout is readable at 320 px and 1920 px."
-      ],
-      "effort": "S",
-      "depends_on": [
-        "discord-login",
-        "governor-registration"
-      ],
-      "needs_from_user": [
-        "Name/contact of the data controller (Gether or the kingdom leadership) and a contact channel",
-        "Confirmation of the 90-day retention for rejected registrations"
-      ],
-      "risks": "This is not legal advice; keep it factual and in sync with the code. It is a legal page and an exception to the 'no text ballast' rule, but it should still be short and structured. Low technical risk."
     },
     {
       "id": "admin-dashboard",
@@ -184,25 +134,6 @@
       ],
       "needs_from_user": [],
       "risks": "Google Calendar refreshes subscribed feeds slowly (often several hours), so the button tooltip should not promise instant updates. robots.txt already disallows /api/, which is fine for a feed."
-    },
-    {
-      "id": "not-found-page",
-      "title": "Real 404 page in SK and CZ instead of a silent redirect home",
-      "title_sk": "Skutočná stránka 404 (SK/CZ) namiesto tichého presmerovania domov",
-      "audience": "Every visitor following an old or mistyped link; SEO",
-      "user_value": "Today any unknown URL silently redirects to the home page (`{ path: '**', redirectTo: '' }`), so visitors from an outdated Discord or Facebook link don't know the page is gone and Czech visitors land on the Slovak home page. A clear 404 with ways forward keeps them on the site, and the URL stays as typed.",
-      "spec": "1) app.routes.ts: replace `{ path: '**', redirectTo: '' }` with `{ path: '**', component: NotFound }` at the root and add the same wildcard inside the 'cz' children, so /cz/xyz renders in Czech. Verify ng build does not try to prerender the wildcard (server route '**' stays Prerender for real pages; unknown URLs are served by nginx's existing `error_page 404 /index.csr.html` with a real 404 status).\n2) pages/not-found/not-found.ts: app-page-header (crumbs Domov), title 'Táto stránka neexistuje', one sentence, buttons: Domov (btn--gold), Návody (i18n.guidePath('commanderi')), plus Kalendár when that page exists.\n3) Seo: PageMeta.noindex (add it if discord-login has not yet) → meta robots noindex. When noindex is set, also remove the canonical and hreflang link elements so no canonical points at a non-existent URL; restore them on the next page.\n4) Guide detail notFound state and invalid category on the list also call seo.set with noindex.\n5) i18n 'notFound' section in sk.ts and cs.ts.\nTESTS: frontend router test that /neexistuje resolves to NotFound and /cz/neexistuje too, with i18n.lang() = 'cs'; Seo test that noindex removes the canonical link; production check: `curl -I http://localhost:8080/neexistuje` → 404 (documented).",
-      "acceptance_criteria": [
-        "/neexistuje shows the Slovak 404 page and the address bar keeps /neexistuje; /cz/neexistuje shows the Czech version.",
-        "The page has meta robots noindex and no canonical/hreflang links; navigating to a normal page afterwards restores the canonical and hreflang links and removes noindex.",
-        "Production nginx answers unknown URLs with HTTP 404 and the 404 content renders (no redirect to /).",
-        "An unknown guide slug and an invalid guide category also set noindex.",
-        "The page is responsive, keyboard accessible and fully translated."
-      ],
-      "effort": "S",
-      "depends_on": [],
-      "needs_from_user": [],
-      "risks": "Low. Make sure the wildcard inside 'cz' does not shadow real Czech routes (order matters: the wildcard goes last). If noindex was already added by discord-login, reuse it rather than duplicating the logic."
     }
   ],
   "critique": {
@@ -216,30 +147,6 @@
           "Drop the HTML Discord preview, the 'kedy' column, the status pills and the custom <pk>/test/ admin URL/button.",
           "Reuse build_payload/send from recurring-kingdom-events (build after it); if KingdomEvent exists, offer the same test action rendering its next occurrence.",
           "Tests as proposed for the test action (mock urlopen, assert URL, no role, status unchanged; missing URL → no call)."
-        ]
-      },
-      {
-        "id": "public-event-calendar",
-        "verdict": "revise",
-        "reasons": "It has value once real events exist, and it is buildable: GuidesApi is the right pattern, the '**' Prerender server route covers the shell, and STATIC_PAGES/parseUrl/I18n.path/Seo need small extensions (I18n.path currently only accepts 'home' | 'about'; the Seo effect only has fixed texts for home/about). Three problems. (1) A 31-day agenda that expands a daily event (repeat_days=1) produces 31 identical rows, which bury the weekly events that matter. (2) Nothing is seeded, and Gether has not provided the event list. A header nav item that leads to 'Zatiaľ nie sú naplánované žiadne eventy' makes the kingdom look dead to migrants, which is the opposite of the stated value. (3) The header currently has 4 nav items (header.ts items()), not 5, but discord-login also adds a login control, so 'Kalendár' plus login plus lang switch must be checked together. Do not build this until recurring-kingdom-events is live and Gether has entered the regular public events.",
-        "required_changes": [
-          "Show daily events once in a compact 'Každý deň' block (local + UTC time) above the agenda instead of expanding them per day; the agenda expands only events with repeat_days != 1.",
-          "Build only after recurring-kingdom-events is deployed and real public events exist (process gate); acceptance screenshots must use realistic data, not invented schedules committed anywhere.",
-          "Verify header fit at 320/900/1024/1280 together with the discord-login control if that feature has landed; if it does not fit, move 'Kalendár' to the drawer + footer + home teaser instead of the desktop bar.",
-          "Widen I18n.path() type and Seo fixed-text branch for 'calendar' explicitly; add parseUrl spec cases.",
-          "Fix the risk text: it would be the 5th nav item, not the 6th."
-        ]
-      },
-      {
-        "id": "privacy-page",
-        "verdict": "revise",
-        "reasons": "Mandatory before login goes live, and a factual, short legal page is an acceptable exception to the no-ballast rule. Its declared dependency is wrong, though: it lists Governor fields and a worker purge of rejected Governor rows, which need governor-registration, not just discord-login. Several statements would also be inaccurate as specified. 'Cookies: only session + csrftoken' leaves out the localStorage key 'kd1035.lang' (i18n.ts remember()). Every visitor gets csrftoken, because the header Auth service calls me/ with @ensure_csrf_cookie on every page. 'What we store' ignores server access logs: gunicorn runs with --access-logfile -, nginx logs client IPs, and Docker json-file logs have no rotation configured in either compose file. Discord is a third party in the login flow. Fonts are self-hosted via @fontsource (angular.json), so no Google Fonts transfer needs to be disclosed. The controller can be stated factually from existing data (Gether, the operator per the footer watermark, contact through his Discord via the Officer contact), but Gether must confirm it. Nothing may be invented.",
-        "required_changes": [
-          "Governor registration was dropped (2026-10-08): no Governor fields and no purge job. Stored data = Discord ID, name, avatar hash and the in-game name (Player.ingame_name), seen only by the superadmin.",
-          "Content must list: localStorage language preference, csrftoken for every visitor (security), session cookie only for signed-in users, server access logs (IP, time, URL) with their retention, Discord as the OAuth provider (link to its policy).",
-          "Add log rotation to both compose files (logging: driver json-file, options max-size/max-file) so the stated log retention is true; mention the effective retention on the page.",
-          "Controller/contact: use Gether + the existing Discord contact unless Gether supplies something else; no invented addresses or legal claims ('GDPR-compliant' wording out).",
-          "CLAUDE.md rule as proposed (every new personal-data field → privacy page); purge test as proposed."
         ]
       },
       {
@@ -278,17 +185,9 @@
           "Consider excluding repeat_days=1 events from the feed or adding a feed flag on KingdomEvent; decide explicitly.",
           "RFC 5545 tests as proposed (CRLF, 75-octet UTF-8-safe folding, escaping)."
         ]
-      },
-      {
-        "id": "not-found-page",
-        "verdict": "approve",
-        "reasons": "I verified the bug. app.routes.ts ends with `{ path: '**', redirectTo: '' }` at the root, so /cz/anything redirects Czech visitors to the Slovak home '/', and the typed URL is lost. nginx already answers unknown paths with a real 404 status through `error_page 404 /index.csr.html` (frontend/nginx/default.conf.template), so the fix is purely client-side: a wildcard inside the 'cz' children (last) plus a root wildcard with a NotFound component. parseUrl('/neexistuje') returns page 'home' with rest '/neexistuje' (see i18n.spec), so NotFound must call seo.set({…, noindex: true}). Removing canonical/hreflang while noindex is set and restoring them afterwards is correct. Effort S is honest and it needs nothing from Gether. Notes for the builder: reuse PageMeta.noindex if discord-login added it; confirm ng build does not try to prerender the wildcard routes; the App's afterNextRender language redirect will move Czech browsers to /cz/<path>, which is the desired behaviour; add the 'Kalendár' button only if that page exists at build time. Not in this batch only because of the 4-item limit; it is the first candidate for the next one."
       }
     ],
-    "build_order": [
-      "privacy-page",
-      "not-found-page"
-    ],
+    "build_order": [],
     "site_finished": false,
     "must_haves_left": []
   }

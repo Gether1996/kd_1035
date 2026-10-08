@@ -13,12 +13,17 @@
     "features_per_round": 4,
     "fix_rounds_per_feature": 2,
     "next_round_args": ".claude/kd-agents/next-round.json",
-    "default_args": { "features": 4, "date": "YYYY-MM-DD" },
+    "default_args": {
+      "features": 4,
+      "date": "YYYY-MM-DD"
+    },
     "focus_hint": "Čo by členovia a vedenie kráľovstva 1035 naozaj používali: prihlásenie, registrácia Governor ID, Discord notifikácie, plánovanie eventov pre superadmina, quality of life."
   },
   "kd-meta-update": {
     "workflow": ".claude/workflows/kd-meta-update.js",
-    "args": { "date": "YYYY-MM-DD" },
+    "args": {
+      "date": "YYYY-MM-DD"
+    },
     "scheduled_task_id": "kd1035-meta-update",
     "cron": "0 18 7 * *",
     "first_run": "2026-11-07T18:00",
@@ -29,18 +34,42 @@
     {
       "round": 1,
       "date": "2026-10-07",
-      "shipped": ["recurring-kingdom-events"],
-      "unreviewed_branches": { "discord-login": "wip/discord-login" },
-      "not_started": ["governor-registration", "privacy-page"],
+      "shipped": [
+        "recurring-kingdom-events"
+      ],
+      "unreviewed_branches": {
+        "discord-login": "wip/discord-login"
+      },
+      "not_started": [
+        "governor-registration",
+        "privacy-page"
+      ],
       "note": "Kolo zastavené na pokyn Gethera počas review discord-login. Nápady a verdikty kritika sú v next-round.json."
     },
     {
       "round": 2,
       "date": "2026-10-08",
-      "shipped": ["discord-login", "governor-registration"],
-      "not_started": ["privacy-page", "not-found-page"],
+      "shipped": [
+        "discord-login",
+        "governor-registration"
+      ],
+      "not_started": [
+        "privacy-page",
+        "not-found-page"
+      ],
       "note": "Kolo zastavené na pokyn Gethera hneď po štarte privacy-page (nič nerozrobené). Mimo kola: doména kd1035.eu, ikony predmetov a portréty commanderov, podmienky používania, úpravy návodov."
+    },
+    {
+      "round": 3,
+      "date": "2026-10-08",
+      "shipped": [
+        "privacy-page",
+        "admin-event-polish",
+        "not-found-page",
+        "guide-link-previews"
+      ],
+      "note": "Kolo zastavené na pokyn Gethera (nápady a kritik). guide-link-previews kritik neprezrel – overené ručne (testy, build, nginx s user-agentom Discordbot). Mimo kola: šablóny eventov, nepravidelné eventy, 20 GH, kalendár eventov, vlastné časy v dňoch/h/min, prehľad pripomienok na /ucet."
     }
   ],
-  "next": "Spusti workflow kd-improve (scriptPath .claude/workflows/kd-improve.js) s args z .claude/kd-agents/next-round.json (doplň date). Prvá je privacy-page – musí byť hotová pred zapnutím Discord prihlásenia na serveri."
+  "next": "Spusti workflow kd-improve (scriptPath .claude/workflows/kd-improve.js) s args z .claude/kd-agents/next-round.json (doplň date). Nič nie je schválené na stavbu – kolo začne nápadmi (kandidáti: home-upcoming-events, discord-preview-and-test-send, admin-dashboard, ics-calendar-feed)."
 }
