@@ -26,6 +26,32 @@ def validate_reminders(value):
         raise ValidationError('Povolené sú len minúty %(allowed)s.', params={'allowed': sorted(allowed, reverse=True)})
 
 
+# personal reminders (accounts app): at most a week before the start
+MAX_REMINDER_MINUTES = 7 * 24 * 60
+MAX_OFFERED_REMINDERS = 6
+
+
+def default_player_reminders():
+    return [10, 60]
+
+
+def is_minutes_list(value) -> bool:
+    """A list of unique whole minutes 0–10080 (bool is an int in Python, so it is checked by type)."""
+    return (
+        isinstance(value, list)
+        and len(set(value)) == len(value)
+        and all(type(v) is int and 0 <= v <= MAX_REMINDER_MINUTES for v in value)
+    )
+
+
+def validate_player_reminders(value):
+    if not is_minutes_list(value) or len(value) > MAX_OFFERED_REMINDERS:
+        raise ValidationError(
+            'Najviac %(count)s rôznych čísel od 0 do %(max)s (minúty).',
+            params={'count': MAX_OFFERED_REMINDERS, 'max': MAX_REMINDER_MINUTES},
+        )
+
+
 class Alliance(models.Model):
     """Only stable facts – Rise of Kingdoms has no API, so live stats (power, members…) would go stale."""
 
@@ -90,7 +116,10 @@ class SocialLink(models.Model):
 
 
 class KingdomEvent(models.Model):
-    """A one-off or repeating kingdom event; the worker turns it into EventNotification reminders (events.py)."""
+    """A one-off or repeating kingdom event; the worker turns it into EventNotification reminders (events.py).
+
+    Active events shown on the web can also be picked by players for personal reminders (accounts.EventReminder).
+    """
 
     class TimeBasis(models.TextChoices):
         UTC = 'utc', 'UTC – herný čas (u nás sa v lete/zime posunie o hodinu)'
@@ -138,7 +167,18 @@ class KingdomEvent(models.Model):
     )
     mention_role = models.BooleanField('označiť rolu', default=True)
     notify_discord = models.BooleanField('posielať na Discord', default=True)
-    show_on_web = models.BooleanField('zobraziť na webe', default=True, help_text='Pre kalendár eventov na webe.')
+    show_on_web = models.BooleanField(
+        'zobraziť na webe',
+        default=True,
+        help_text='Hráči si ho môžu vybrať v pripomienkach na webe (Môj účet).',
+    )
+    player_reminders = models.JSONField(
+        'časy pre hráčov',
+        default=default_player_reminders,
+        blank=True,
+        validators=[validate_player_reminders],
+        help_text='Minúty pred začiatkom, ktoré hráčom ponúkneme na webe.',
+    )
     guide = models.ForeignKey(
         'guides.Guide',
         on_delete=models.SET_NULL,

@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, timedelta
 
 from django import forms
@@ -9,7 +10,17 @@ from django.utils.html import format_html, format_html_join
 
 from .discord import deliver
 from .events import HORIZON, LOCAL_TZ, replan, upcoming
-from .models import REMINDER_CHOICES, Alliance, EventNotification, KingdomEvent, Officer, SocialLink
+from .models import (
+    MAX_OFFERED_REMINDERS,
+    MAX_REMINDER_MINUTES,
+    REMINDER_CHOICES,
+    Alliance,
+    EventNotification,
+    KingdomEvent,
+    Officer,
+    SocialLink,
+    default_player_reminders,
+)
 from .permissions import SuperuserOnlyAdmin
 
 WEEKDAYS = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
@@ -77,6 +88,25 @@ class SocialLinkAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
 
 
+class MinutesField(forms.CharField):
+    """A JSON list of minutes typed as plain text: '10, 60, 1440' ↔ [10, 60, 1440] (sorted, duplicates dropped)."""
+
+    def prepare_value(self, value):
+        return ', '.join(map(str, value)) if isinstance(value, list) else value
+
+    def to_python(self, value):
+        text = super().to_python(value)
+        parts = [p for p in re.split(r'[\s,;]+', text) if p]
+        if not all(re.fullmatch(r'[0-9]{1,5}', p) for p in parts):
+            raise forms.ValidationError('Napíš celé minúty oddelené čiarkou, napr. 10, 60, 1440.')
+        minutes = sorted({int(p) for p in parts})
+        if minutes and minutes[-1] > MAX_REMINDER_MINUTES:
+            raise forms.ValidationError(f'Najviac {MAX_REMINDER_MINUTES} minút (7 dní).')
+        if len(minutes) > MAX_OFFERED_REMINDERS:
+            raise forms.ValidationError(f'Najviac {MAX_OFFERED_REMINDERS} časov.')
+        return minutes
+
+
 class KingdomEventForm(forms.ModelForm):
     reminders = forms.TypedMultipleChoiceField(
         label='Pripomienky',
@@ -85,6 +115,14 @@ class KingdomEventForm(forms.ModelForm):
         required=False,
         widget=forms.CheckboxSelectMultiple,
         help_text='Kedy pred začiatkom poslať správu na Discord.',
+    )
+    player_reminders = MinutesField(
+        label='Časy pre hráčov',
+        required=False,
+        initial=default_player_reminders,  # a declared field does not take the model default by itself
+        widget=forms.TextInput(attrs={'placeholder': '10, 60', 'inputmode': 'numeric'}),
+        help_text='Minúty pred začiatkom oddelené čiarkou, napr. 10, 60, 1440 (= 1 deň). Najviac 6, od 0 do 10080 '
+        '(7 dní). Hráč si ich vyberie na webe v časti Môj účet a môže si zadať aj vlastný čas.',
     )
 
     class Meta:
@@ -123,6 +161,15 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
             },
         ),
         ('Web', {'fields': ['show_on_web', 'is_active']}),
+        (
+            'Pripomienky pre hráčov',
+            {
+                'fields': ['player_reminders'],
+                'description': 'Prihlásení hráči si aktívny event zobrazený na webe vyberú a dostanú pripomienku '
+                'súkromnou správou na Discorde alebo notifikáciou v prehliadači. Kto si čo vybral: Hráči → '
+                'Pripomienky hráčov.',
+            },
+        ),
     ]
 
     @admin.display(description='najbližší termín (Bratislava · UTC)')
