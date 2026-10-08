@@ -3,15 +3,23 @@ import { httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, computed, inject } from '@angular/core';
 import { GuideCategory, I18n } from './i18n/i18n';
 
-/** Troop type a guide is about – shown as an icon in the list. */
-export type GuideUnit = 'cavalry' | 'infantry' | 'archer' | 'leadership';
+/** Commander specialty a guide is about (troop type or scenario) – shown as its in-game tag in the list. */
+export type GuideSpecialty =
+  | 'cavalry'
+  | 'infantry'
+  | 'archer'
+  | 'leadership'
+  | 'garrison'
+  | 'conquering'
+  | 'peacekeeping'
+  | 'gathering';
 
 export interface GuideSummary {
   slug: string;
   category: GuideCategory;
-  unit: GuideUnit | '';
-  /** the game's specialty tag of the troop type (/static/guides/units/<unit>.webp), null without a type */
-  unit_icon: string | null;
+  specialty: GuideSpecialty | '';
+  /** the game's tag of the specialty (/static/guides/specialties/<specialty>.webp), null without one */
+  specialty_icon: string | null;
   title_sk: string;
   title_cs: string;
   excerpt_sk: string;

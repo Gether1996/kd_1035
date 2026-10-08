@@ -75,7 +75,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-jazdu',
-        'unit': 'cavalry',
+        'specialty': 'cavalry',
         'title': t('Páry commanderov pre jazdu', 'Páry commanderů pro jízdu'),
         'blocks': [
             ('p', t(
@@ -119,7 +119,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-pechotu',
-        'unit': 'infantry',
+        'specialty': 'infantry',
         'title': t('Páry commanderov pre pechotu', 'Páry commanderů pro pěchotu'),
         'blocks': [
             ('p', t(
@@ -156,7 +156,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-lukostrelcov',
-        'unit': 'archer',
+        'specialty': 'archer',
         'title': t('Páry commanderov pre lukostrelcov', 'Páry commanderů pro lučištníky'),
         'blocks': [
             ('p', t(
@@ -193,7 +193,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-leadership-a-mix',
-        'unit': 'leadership',
+        'specialty': 'leadership',
         'title': t('Páry commanderov pre leadership a mix', 'Páry commanderů pro leadership a mix'),
         'blocks': [
             ('p', t(
@@ -227,6 +227,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-garrison',
+        'specialty': 'garrison',
         'title': t('Páry commanderov pre garrison', 'Páry commanderů pro garrison'),
         'blocks': [
             ('p', t(
@@ -265,6 +266,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-pre-rally',
+        'specialty': 'conquering',
         'title': t('Páry commanderov pre rally', 'Páry commanderů pro rally'),
         'blocks': [
             ('p', t(
@@ -301,6 +303,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-na-barbarov-a-pevnosti',
+        'specialty': 'peacekeeping',
         'title': t('Páry commanderov na barbarov a pevnosti', 'Páry commanderů na barbary a pevnosti'),
         'blocks': [
             ('p', t(
@@ -385,6 +388,7 @@ GUIDES = [
     },
     {
         'slug': 'pary-na-zber-surovin',
+        'specialty': 'gathering',
         'title': t('Páry commanderov na zber surovín', 'Páry commanderů na sběr surovin'),
         'blocks': [
             ('p', t(

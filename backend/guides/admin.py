@@ -50,17 +50,17 @@ class GuideImageInline(admin.TabularInline):
 
 @admin.register(Guide)
 class GuideAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
-    list_display = ['title_sk', 'category', 'unit', 'is_published', 'auto_update', 'order', 'updated_at']
+    list_display = ['title_sk', 'category', 'specialty', 'is_published', 'auto_update', 'order', 'updated_at']
     list_display_links = ['title_sk']
     list_editable = ['is_published', 'order']
-    list_filter = ['category', 'unit', 'is_published', 'auto_update']
+    list_filter = ['category', 'specialty', 'is_published', 'auto_update']
     search_fields = ['title_sk', 'title_cs', 'html_sk']
     prepopulated_fields = {'slug': ['title_sk']}
     readonly_fields = ['preview']
     inlines = [GuideImageInline]
     save_on_top = True
     fieldsets = [
-        (None, {'fields': ['category', 'unit', 'title_sk', 'title_cs', 'slug', 'is_published', 'auto_update', 'order']}),
+        (None, {'fields': ['category', 'specialty', 'title_sk', 'title_cs', 'slug', 'is_published', 'auto_update', 'order']}),
         ('Obsah – slovensky', {'fields': ['html_sk', 'preview']}),
         ('Obsah – česky (nepovinné)', {'fields': ['html_cs'], 'classes': ['collapse']}),
     ]

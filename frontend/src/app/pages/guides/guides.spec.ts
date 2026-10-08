@@ -82,14 +82,14 @@ describe('Guide pages', () => {
     expect(head().querySelector('link[rel="canonical"]')).not.toBeNull();
   });
 
-  it('marks a guide about one troop type with its icon', async () => {
+  it('marks a guide about one commander specialty with its in-game tag', async () => {
     const fixture = TestBed.createComponent(GuideList);
     fixture.componentRef.setInput('category', 'commanderi');
     fixture.detectChanges();
-    const guide = (slug: string, unit: string) => ({
+    const guide = (slug: string, specialty: string) => ({
       slug,
-      unit,
-      unit_icon: unit ? `/static/guides/units/${unit}.webp` : null,
+      specialty,
+      specialty_icon: specialty ? `/static/guides/specialties/${specialty}.webp` : null,
       category: 'commanderi',
       title_sk: slug,
       title_cs: '',
@@ -99,15 +99,17 @@ describe('Guide pages', () => {
     });
     TestBed.inject(HttpTestingController)
       .expectOne('/api/guides/')
-      .flush([guide('pary-pre-jazdu', 'cavalry'), guide('pary-pre-rally', '')]);
+      .flush([guide('pary-pre-jazdu', 'cavalry'), guide('pary-pre-rally', 'conquering'), guide('pary-pre-f2p', '')]);
     await settle(fixture);
 
     const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('.row');
-    expect(Array.from(rows, (row) => row.querySelector('img.row__unit')?.getAttribute('src') ?? null)).toEqual([
-      '/static/guides/units/cavalry.webp',
+    const icon = (row: Element) => row.querySelector('img.row__specialty')?.getAttribute('src') ?? null;
+    expect(Array.from(rows, icon)).toEqual([
+      '/static/guides/specialties/cavalry.webp',
+      '/static/guides/specialties/conquering.webp',
       null,
     ]);
-    // decorative: the title already names the troop type
-    expect(rows[0].querySelector('img.row__unit')?.getAttribute('alt')).toBe('');
+    // decorative: the title already names the specialty
+    expect(rows[0].querySelector('img.row__specialty')?.getAttribute('alt')).toBe('');
   });
 });

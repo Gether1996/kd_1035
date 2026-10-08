@@ -10,7 +10,7 @@ from django.test import TestCase, override_settings
 
 from .meta import LAST_UPDATE, MODULES
 from .meta.render import (
-    COMMANDER_DIR, GEAR_DIR, UNIT_DIR, commander_icons, gear_icons, render, slug, unit_icon, verified_note,
+    COMMANDER_DIR, GEAR_DIR, SPECIALTY_DIR, commander_icons, gear_icons, render, slug, specialty_icon, verified_note,
 )  # fmt: skip
 from .meta.sync import rendered_guides, sync_guides
 from .models import Guide
@@ -74,7 +74,7 @@ class MetaGuidesTests(TestCase):
         self.assertGreaterEqual(len([g for g in guides if g['category'] == 'eventy']), 10)
         for data in guides:
             self.assertIn(data['category'], Guide.Category.values)
-            self.assertIn(data['unit'], ['', *Guide.Unit.values], data['slug'])
+            self.assertIn(data['specialty'], ['', *Guide.Specialty.values], data['slug'])
             self.assertNotEqual(data['html_sk'], data['html_cs'], data['slug'])
             guide = Guide(**data)
             for lang in ('sk', 'cs'):
@@ -166,19 +166,19 @@ class MetaGuidesTests(TestCase):
             with self.assertRaises(CommandError):
                 call_command('fetch_commander_icons', 'Nobody', stdout=StringIO())
 
-    def test_every_unit_type_has_an_icon(self):
-        # a new Guide.Unit needs its in-game specialty tag: manage.py fetch_unit_icons
+    def test_every_specialty_has_an_icon(self):
+        # a new Guide.Specialty needs its in-game tag: manage.py fetch_specialty_icons
         from PIL import Image
 
-        for unit in Guide.Unit.values:
-            with Image.open(UNIT_DIR / f'{unit}.webp') as icon:
-                self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)), unit)
-            self.assertEqual(unit_icon(unit), f'/static/guides/units/{unit}.webp')
-        self.assertIsNone(unit_icon(''))
-        self.assertIsNone(unit_icon('siege'))
-        self.assertEqual(sorted(path.stem for path in UNIT_DIR.glob('*')), sorted(Guide.Unit.values))
+        for specialty in Guide.Specialty.values:
+            with Image.open(SPECIALTY_DIR / f'{specialty}.webp') as icon:
+                self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)), specialty)
+            self.assertEqual(specialty_icon(specialty), f'/static/guides/specialties/{specialty}.webp')
+        self.assertIsNone(specialty_icon(''))
+        self.assertIsNone(specialty_icon('siege'))
+        self.assertEqual(sorted(path.stem for path in SPECIALTY_DIR.glob('*')), sorted(Guide.Specialty.values))
 
-    def test_fetch_unit_icons_reads_the_rokstats_tags(self):
+    def test_fetch_specialty_icons_reads_the_rokstats_tags(self):
         import json
         from io import BytesIO, StringIO
         from unittest import mock
@@ -186,34 +186,36 @@ class MetaGuidesTests(TestCase):
         from django.core.management import CommandError, call_command
         from PIL import Image
 
-        from .management.commands import fetch_unit_icons
+        from .management.commands import fetch_specialty_icons
 
         png = BytesIO()
         Image.new('RGBA', (99, 99), (200, 60, 50, 255)).save(png, 'PNG')
         tags = {
-            str(number): {'slug': unit, 'icon': f'/icons/type{number}.png'}
-            for number, unit in enumerate(Guide.Unit.values, start=1)
+            str(number): {'slug': specialty, 'icon': f'/icons/type{number}.png'}
+            for number, specialty in enumerate(Guide.Specialty.values, start=1)
         }
         page = '<script type="application/json" id="commander-catalog-data">{}</script>'
         urls = []
 
         def fetch(url, tags=tags):
             urls.append(url)
-            if url == fetch_unit_icons.PAGE:
+            if url == fetch_specialty_icons.PAGE:
                 return page.format(json.dumps({'tags': tags})).encode()
             return png.getvalue()
 
-        with tempfile.TemporaryDirectory() as folder, mock.patch.object(fetch_unit_icons, 'fetch', fetch), \
-                mock.patch.object(fetch_unit_icons, 'UNIT_DIR', Path(folder)):  # fmt: skip
-            call_command('fetch_unit_icons', stdout=StringIO())
-            with Image.open(Path(folder) / 'cavalry.webp') as icon:
+        with tempfile.TemporaryDirectory() as folder, mock.patch.object(fetch_specialty_icons, 'fetch', fetch), \
+                mock.patch.object(fetch_specialty_icons, 'SPECIALTY_DIR', Path(folder)):  # fmt: skip
+            call_command('fetch_specialty_icons', stdout=StringIO())
+            with Image.open(Path(folder) / 'garrison.webp') as icon:
                 self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)))
-            self.assertEqual(sorted(path.stem for path in Path(folder).glob('*.webp')), sorted(Guide.Unit.values))
+            self.assertEqual(
+                sorted(path.stem for path in Path(folder).glob('*.webp')), sorted(Guide.Specialty.values)
+            )
             self.assertIn('https://app.rokstats.online/icons/type1.png', urls)
 
             del tags['4']  # a tag the catalog does not have any more
             with self.assertRaises(CommandError):
-                call_command('fetch_unit_icons', stdout=StringIO())
+                call_command('fetch_specialty_icons', stdout=StringIO())
 
     def test_gear_icons_follow_the_text(self):
         self.assertEqual(commander_icons('Sun Tzu Prime + Sun Tzu'), ['sun-tzu-prime', 'sun-tzu'])
@@ -247,28 +249,33 @@ class MetaSyncTests(TestCase):
         self.assertNotEqual(Guide.objects.get(slug='pary-pre-jazdu').html_sk, '<p>stará meta</p>')
         self.assertEqual(Guide.objects.get(slug='pary-pre-pechotu').html_sk, '<p>môj text</p>')
 
-    def test_unit_types_come_from_the_meta(self):
+    def test_specialties_come_from_the_meta(self):
         sync_guides()
         self.assertEqual(
-            dict(Guide.objects.exclude(unit='').values_list('slug', 'unit')),
+            dict(Guide.objects.exclude(specialty='').values_list('slug', 'specialty')),
             {
                 'pary-pre-jazdu': 'cavalry', 'pary-pre-pechotu': 'infantry', 'pary-pre-lukostrelcov': 'archer',
-                'pary-leadership-a-mix': 'leadership', 'vybava-pre-jazdu': 'cavalry', 'vybava-pre-pechotu': 'infantry',
+                'pary-leadership-a-mix': 'leadership', 'pary-pre-garrison': 'garrison',
+                'pary-pre-rally': 'conquering', 'pary-na-barbarov-a-pevnosti': 'peacekeeping',
+                'pary-na-zber-surovin': 'gathering', 'vybava-pre-jazdu': 'cavalry', 'vybava-pre-pechotu': 'infantry',
                 'vybava-pre-lukostrelcov': 'archer', 'vybava-pre-leadership': 'leadership',
             },
         )  # fmt: skip
 
-    def test_migration_sets_units_and_keeps_the_date(self):
-        migration = importlib.import_module('guides.migrations.0007_guide_unit')
+    def test_migration_sets_specialties_and_keeps_the_date(self):
+        migration = importlib.import_module('guides.migrations.0007_guide_specialty')
         sync_guides()
-        Guide.objects.update(unit='')  # as before the migration
-        Guide.objects.filter(slug='pary-pre-pechotu').update(unit='archer')  # already set by hand
+        # the migration knows the same specialties as the meta modules
+        meta = {g['slug']: g['specialty'] for g in rendered_guides() if g['specialty']}
+        self.assertEqual(migration.SPECIALTIES, meta)
+        Guide.objects.update(specialty='')  # as before the migration
+        Guide.objects.filter(slug='pary-pre-pechotu').update(specialty='archer')  # already set by hand
         before = dict(Guide.objects.values_list('slug', 'updated_at'))
 
-        migration.set_units(django_apps, None)
-        self.assertEqual(Guide.objects.get(slug='pary-pre-jazdu').unit, 'cavalry')
-        self.assertEqual(Guide.objects.get(slug='pary-pre-pechotu').unit, 'archer')
-        self.assertEqual(Guide.objects.get(slug='pary-pre-rally').unit, '')
+        migration.set_specialties(django_apps, None)
+        self.assertEqual(Guide.objects.get(slug='pary-pre-rally').specialty, 'conquering')
+        self.assertEqual(Guide.objects.get(slug='pary-pre-pechotu').specialty, 'archer')
+        self.assertEqual(Guide.objects.get(slug='pary-pre-f2p-a-zaciatok').specialty, '')
         self.assertEqual(dict(Guide.objects.values_list('slug', 'updated_at')), before)
 
     def test_hand_written_guide_with_the_same_slug_is_left_alone(self):
@@ -306,9 +313,9 @@ class AdminAutoUpdateTests(TestCase):
         self.save(html_sk='<p>a</p>\r\n', order=3)  # browsers send CRLF
         self.assertTrue(self.guide.auto_update)
 
-    def test_setting_the_unit_type_keeps_auto_update(self):
-        self.save(unit='archer')
-        self.assertEqual((self.guide.unit, self.guide.auto_update), ('archer', True))
+    def test_setting_the_specialty_keeps_auto_update(self):
+        self.save(specialty='archer')
+        self.assertEqual((self.guide.specialty, self.guide.auto_update), ('archer', True))
 
     def test_hand_edit_turns_auto_update_off(self):
         self.save(html_sk='<p>b</p>')
@@ -349,13 +356,15 @@ class GuideApiTests(TestCase):
         data = self.client.get('/api/guides/').json()
         self.assertEqual([g['slug'] for g in data], ['najlepsia-vybava'])
         self.assertNotIn('html_sk', data[0])
-        self.assertEqual((data[0]['unit'], data[0]['unit_icon']), ('', None))
+        self.assertEqual((data[0]['specialty'], data[0]['specialty_icon']), ('', None))
         self.assertEqual(data[0]['excerpt_sk'], 'Text SK')
 
-    def test_list_has_the_icon_of_the_troop_type(self):
-        Guide.objects.filter(pk=self.guide.pk).update(unit='archer')
+    def test_list_has_the_icon_of_the_specialty(self):
+        Guide.objects.filter(pk=self.guide.pk).update(specialty='garrison')
         data = self.client.get('/api/guides/').json()
-        self.assertEqual((data[0]['unit'], data[0]['unit_icon']), ('archer', '/static/guides/units/archer.webp'))
+        self.assertEqual(
+            (data[0]['specialty'], data[0]['specialty_icon']), ('garrison', '/static/guides/specialties/garrison.webp')
+        )
         self.assertEqual(data[0]['excerpt_cs'], 'Text SK')  # falls back to Slovak
 
     def test_detail(self):

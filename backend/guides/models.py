@@ -18,20 +18,26 @@ class Guide(models.Model):
         EQUIPMENT = 'vybava', 'Výbava'
         EVENTS = 'eventy', 'Eventy'
 
-    class Unit(models.TextChoices):
+    class Specialty(models.TextChoices):
+        """Commander specialties of the game – the values are the slugs of their in-game tags (icons)."""
+
         CAVALRY = 'cavalry', 'Jazda'
         INFANTRY = 'infantry', 'Pechota'
         ARCHER = 'archer', 'Lukostrelci'
         LEADERSHIP = 'leadership', 'Leadership'
+        GARRISON = 'garrison', 'Garrison'
+        CONQUERING = 'conquering', 'Conquering (rally)'
+        PEACEKEEPING = 'peacekeeping', 'Peacekeeping (barbari)'
+        GATHERING = 'gathering', 'Gathering (zber)'
 
     category = models.CharField('kategória', max_length=16, choices=Category.choices)
-    unit = models.CharField(
-        'typ jednotiek',
+    specialty = models.CharField(
+        'špecializácia',
         max_length=16,
-        choices=Unit.choices,
+        choices=Specialty.choices,
         blank=True,
-        help_text='Ikona pri návode v zozname, aby hráč rýchlo našiel svoje jednotky. Prázdne = bez ikony. '
-        'Automaticky aktualizovaným návodom ho nastavuje meta (backend/guides/meta).',
+        help_text='Herná ikona špecializácie commanderov pri návode v zozname, aby ho hráč rýchlo našiel. '
+        'Prázdne = bez ikony. Automaticky aktualizovaným návodom ju nastavuje meta (backend/guides/meta).',
     )
     title_sk = models.CharField('nadpis (SK)', max_length=160)
     title_cs = models.CharField(

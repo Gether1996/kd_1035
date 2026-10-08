@@ -107,8 +107,8 @@
   }
 }
 
-// troop type = the game's specialty tag, centred on the first line of the title without making it taller
-.row__unit {
+// the game's commander specialty tag, centred on the first line of the title without making it taller
+.row__specialty {
   flex-shrink: 0;
   width: 1.85em;
   height: 1.85em;

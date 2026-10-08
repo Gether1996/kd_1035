@@ -13,8 +13,8 @@ from pathlib import Path
 ICON_ROOT = Path(__file__).resolve().parent.parent / 'static' / 'guides'
 GEAR_DIR = ICON_ROOT / 'gear'
 COMMANDER_DIR = ICON_ROOT / 'commanders'
-# commander specialty tags of the game (Infantry, Archer, …) – the troop type of a guide in the guide list
-UNIT_DIR = ICON_ROOT / 'units'
+# commander specialty tags of the game (Infantry, Garrison, …) – shown next to a guide in the guide list
+SPECIALTY_DIR = ICON_ROOT / 'specialties'
 
 
 def _known(folder):
@@ -25,9 +25,11 @@ def _known(folder):
 ICONS = {'gear': _known(GEAR_DIR), 'commanders': _known(COMMANDER_DIR)}
 
 
-def unit_icon(unit: str) -> str | None:
-    """/static/guides/units/<unit>.webp, or None for a guide without a troop type (or when the file is missing)."""
-    return f'/static/guides/units/{unit}.webp' if unit and (UNIT_DIR / f'{unit}.webp').exists() else None
+def specialty_icon(specialty: str) -> str | None:
+    """/static/guides/specialties/<specialty>.webp, or None without a specialty (or when the file is missing)."""
+    if specialty and (SPECIALTY_DIR / f'{specialty}.webp').exists():
+        return f'/static/guides/specialties/{specialty}.webp'
+    return None
 
 
 def t(sk, cs):
