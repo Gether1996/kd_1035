@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
@@ -17,7 +17,7 @@ from guides.models import Guide
 
 from . import backups, discord, events
 from .admin import local_time, repeat_text
-from .models import Alliance, EventNotification, KingdomEvent, SocialLink
+from .models import TWIN_EVENT_ERROR, Alliance, EventNotification, KingdomEvent, SocialLink
 
 Status = EventNotification.Status
 
@@ -305,6 +305,21 @@ class EventValidationTests(TestCase):
             self.event(repeat_days=1, until=date(2026, 10, 1)).full_clean()
         self.assertIn('until', ctx.exception.error_dict)
 
+    def test_second_active_event_with_the_same_name_and_start(self):
+        original = self.event()
+        original.save()
+        original.full_clean()  # itself is no twin
+        with self.assertRaises(ValidationError) as ctx:
+            self.event().full_clean()
+        self.assertEqual(ctx.exception.message_dict, {NON_FIELD_ERRORS: [TWIN_EVENT_ERROR]})
+        # an inactive copy, another start or another name is fine; an inactive original does not block
+        self.event(is_active=False).full_clean()
+        self.event(starts_at=utc(2026, 10, 8, 19)).full_clean()
+        self.event(name_sk='Ruiny 2').full_clean()
+        original.is_active = False
+        original.save()
+        self.event().full_clean()
+
 
 @override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', DISCORD_EVENT_ROLE_ID='42', SITE_URL='')
 class EventPayloadTests(TestCase):
@@ -553,7 +568,8 @@ class KingdomEventAdminTests(TestCase):
         link = f'/admin/accounts/eventreminder/?event__id__exact={rows[2].pk}'
         self.assertContains(response, f'<a href="{link}" title="Pripomienky hráčov">3</a>', html=True)
         self.assertEqual(self.client.get(link).context['cl'].result_count, 3)
-        # one line for the next date, "posielať na Discord" only shown (switching it on needs the reminders)
+        # the date sits above the time (each unbroken), "posielať na Discord" only shown (switching it on needs
+        # the reminders)
         self.assertContains(response, '<span style="white-space:nowrap">')
         self.assertNotContains(response, 'name="form-0-notify_discord"')
         self.assertContains(response, 'name="form-0-is_active"')
@@ -586,6 +602,43 @@ class KingdomEventAdminTests(TestCase):
         self.assertEqual(self.client.post(change, draft).status_code, 302)
         self.assertEqual(self.client.post(change, self.form_data(start)).status_code, 302)
         self.assertEqual(KingdomEvent.objects.count(), 3)
+
+    def list_save(self, *rows):
+        """Saves the list's checkboxes: rows = (event, aktívny) pairs, "zobraziť na webe" stays ticked."""
+        data = {'form-TOTAL_FORMS': str(len(rows)), 'form-INITIAL_FORMS': str(len(rows)), '_save': 'Uložiť'}
+        for i, (event, active) in enumerate(rows):
+            data |= {f'form-{i}-id': str(event.pk), f'form-{i}-show_on_web': 'on'}
+            if active:
+                data[f'form-{i}-is_active'] = 'on'
+        return self.client.post(self.url, data)
+
+    def test_list_checkbox_does_not_switch_on_a_twin(self):
+        start = self.soon()
+        self.client.post(f'{self.url}add/', self.form_data(start))
+        original = KingdomEvent.objects.get()
+        draft = self.form_data(start, _saveasnew='Uložiť ako nový')  # an unchanged copy saved as inactive
+        del draft['is_active']
+        self.client.post(f'{self.url}{original.pk}/change/', draft)
+        copy = KingdomEvent.objects.exclude(pk=original.pk).get()
+
+        # ticking "aktívny" in the list goes through the list's own form, not KingdomEventForm
+        response = self.list_save((original, True), (copy, True))
+        self.assertContains(response, TWIN_EVENT_ERROR)
+        copy.refresh_from_db()
+        self.assertFalse(copy.is_active)
+        self.assertFalse(copy.notifications.exists())
+        self.assertEqual(original.notifications.count(), 2)
+
+        # two inactive twins switched on in one save pass the database check, so the list compares them
+        self.assertEqual(self.list_save((original, False), (copy, False)).status_code, 302)
+        response = self.list_save((original, True), (copy, True))
+        self.assertContains(response, TWIN_EVENT_ERROR)
+        self.assertFalse(KingdomEvent.objects.filter(is_active=True).exists())
+
+        # one of them is fine
+        self.assertEqual(self.list_save((original, False), (copy, True)).status_code, 302)
+        self.assertEqual(list(KingdomEvent.objects.filter(is_active=True)), [copy])
+        self.assertEqual(copy.notifications.count(), 2)
 
 
 @override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', STORAGES=PLAIN_STATIC)

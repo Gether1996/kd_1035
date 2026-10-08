@@ -16,6 +16,7 @@ from .models import (
     MAX_OFFERED_REMINDERS,
     MAX_REMINDER_MINUTES,
     REMINDER_CHOICES,
+    TWIN_EVENT_ERROR,
     Alliance,
     EventNotification,
     KingdomEvent,
@@ -149,15 +150,23 @@ class KingdomEventForm(forms.ModelForm):
         data = super().clean()
         if data.get('notify_discord') and not data.get('reminders'):
             self.add_error('reminders', 'Vyber aspoň jednu pripomienku alebo vypni posielanie na Discord.')
-        # e.g. "Uložiť ako nový" without changes: two active copies would send every reminder twice
-        name, start = data.get('name_sk'), data.get('starts_at')
-        if data.get('is_active') and name and start:
-            twins = KingdomEvent.objects.filter(is_active=True, name_sk=name, starts_at=start)
-            if twins.exclude(pk=self.instance.pk).exists():
-                self.add_error(
-                    None, 'Aktívny event s rovnakým názvom a prvým začiatkom už existuje – zmeň názov alebo čas.'
-                )
+        # a second active event with the same name and start is refused by KingdomEvent.clean() (also in the list)
         return data
+
+
+class KingdomEventListFormSet(forms.BaseModelFormSet):
+    """The list's checkboxes. Each row checks the database (KingdomEvent.clean), so two inactive copies switched
+    on in one save would both pass – this compares them with each other."""
+
+    def clean(self):
+        super().clean()
+        switched_on = [
+            (form.instance.name_sk, form.instance.starts_at)
+            for form in self.forms
+            if form.instance.is_active and 'is_active' in form.changed_data
+        ]
+        if len(switched_on) != len(set(switched_on)):
+            raise forms.ValidationError(TWIN_EVENT_ERROR)
 
 
 @admin.register(KingdomEvent)
@@ -209,6 +218,9 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     def get_queryset(self, request):
         # players who picked the event on the website (accounts.EventReminder)
         return super().get_queryset(request).annotate(players_count=Count('subscriptions', distinct=True))
+
+    def get_changelist_formset(self, request, **kwargs):
+        return super().get_changelist_formset(request, formset=KingdomEventListFormSet, **kwargs)
 
     # short headers and the date over the time keep the editable checkboxes in view at 1280 px (with both sidebars)
     @admin.display(description='najbližší termín')

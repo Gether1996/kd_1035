@@ -1,9 +1,10 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 
 discord_id_validator = RegexValidator(r'^[0-9]{5,24}$', 'Iba číslice (Developer Mode → pravý klik → Copy ID).')
+TWIN_EVENT_ERROR = 'Aktívny event s rovnakým názvom a prvým začiatkom už existuje – zmeň názov alebo čas.'
 
 # minutes before the start → label in the admin
 REMINDER_CHOICES = [
@@ -201,6 +202,11 @@ class KingdomEvent(models.Model):
     def __str__(self):
         return self.name_sk
 
+    def active_twins(self):
+        """Other active events with the same name and first start – each would send every reminder again."""
+        twins = KingdomEvent.objects.filter(is_active=True, name_sk=self.name_sk, starts_at=self.starts_at)
+        return twins.exclude(pk=self.pk)
+
     def clean(self):
         from .events import render  # events.py imports this module
 
@@ -214,6 +220,9 @@ class KingdomEvent(models.Model):
             limit = EventNotification._meta.get_field('message').max_length
             if len(render(self, self.starts_at)) > limit:
                 errors['message'] = f'Po doplnení časov je text dlhší ako {limit} znakov – skráť ho.'
+        # here and not in the admin form: the list's "aktívny" checkbox saves through another form
+        if self.is_active and self.name_sk and self.starts_at and self.active_twins().exists():
+            errors[NON_FIELD_ERRORS] = TWIN_EVENT_ERROR
         if errors:
             raise ValidationError(errors)
 
