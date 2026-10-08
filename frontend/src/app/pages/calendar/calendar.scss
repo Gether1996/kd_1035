@@ -383,6 +383,11 @@
   }
 }
 
+// recurring events: no start time column
+.row--untimed {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
 .row__time {
   display: grid;
   gap: 4px;

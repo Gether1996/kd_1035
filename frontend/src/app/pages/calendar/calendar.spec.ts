@@ -142,7 +142,9 @@ describe('Calendar', () => {
     expect(el().querySelectorAll('.bar').length).toBe(2);
     expect(bar('MGE').querySelector('.bar__live')).not.toBeNull(); // running now
     expect(bar('Silk Road').querySelector('.bar__live')).toBeNull();
-    expect(bar('Silk Road').textContent).toContain('18:00'); // the test runs in UTC
+    // the start time only for irregular events (recurring game events start at 00:00 UTC)
+    expect(bar('Silk Road').querySelector('.bar__time')?.textContent).toBe('18:00'); // the test runs in UTC
+    expect(bar('MGE').querySelector('.bar__time')).toBeNull();
     expect(el().querySelector('.strip--irregular')?.textContent).toContain('Shadow Legion');
     // phones: from today on, the running event under "Dnes"
     const days = [...el().querySelectorAll('.agenda__day')];
@@ -151,6 +153,9 @@ describe('Calendar', () => {
       '',
     ]);
     expect(days[0].textContent).toContain('Prebieha');
+    expect(days[0].querySelector('.row--untimed')).not.toBeNull(); // MGE
+    expect(days[0].querySelector('.row__time')).toBeNull();
+    expect(days[1].querySelector('.row__time')?.textContent).toContain('18:00');
   });
 
   it('the dialog shows the details and, with login on, a Discord login back to the same event', async () => {
