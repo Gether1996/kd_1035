@@ -228,7 +228,10 @@ class EventIconTests(TestCase):
             ('Hunt for History (vajce)', 'egg'),
             ('20 GH', 'gold-head'),
             ('Karuak Boss', 'ceroli'),
-            ('Silk Road', ''),
+            ('Silk Road', 'silk-road'),
+            ('Shadow Legion', 'shadow-legion'),
+            ('Alliance Mobilization', 'alliance-mobilization'),
+            ('Pevnosť', ''),
         ):
             with self.subTest(name):
                 event = KingdomEvent.objects.create(name_sk=name, starts_at=utc(2026, 10, 10, 18))

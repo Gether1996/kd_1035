@@ -72,14 +72,16 @@ export class Reminders {
   protected readonly query = signal('');
   protected readonly filter = signal<Filter>('all');
   protected readonly filters: Filter[] = ['all', 'regular', 'irregular'];
+  /** irregular events first (Gether: they are the ones to watch), each group in the server's order (soonest first) */
   protected readonly matching = computed(() => {
     const query = plain(this.query());
     const filter = this.filter();
-    return this.events().filter(
+    const found = this.events().filter(
       (event) =>
         (filter === 'all' || (filter === 'irregular') === event.irregular) &&
         (!query || plain(`${event.name_sk} ${event.name_cs}`).includes(query)),
     );
+    return [...found.filter((event) => event.irregular), ...found.filter((event) => !event.irregular)];
   });
   /** a new search or filter starts at the first page again */
   protected readonly limit = linkedSignal({

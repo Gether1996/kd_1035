@@ -97,7 +97,16 @@ class EventCalendarTests(TestCase):
         data = self.get().json()
         self.assertEqual(
             data['irregular_waiting'],
-            [{'id': waiting.pk, 'name_sk': 'Silk Road', 'name_cs': '', 'icon': None, 'offered': [10, 60], 'guide': None}],
+            [
+                {
+                    'id': waiting.pk,
+                    'name_sk': 'Silk Road',
+                    'name_cs': '',
+                    'icon': '/static/kingdom/events/silk-road.webp',
+                    'offered': [10, 60],
+                    'guide': None,
+                }
+            ],
         )
         # the past start of a waiting event is only a placeholder → not in the calendar
         self.assertEqual([(o['id'], o['irregular']) for o in data['occurrences']], [(planned.pk, True)])

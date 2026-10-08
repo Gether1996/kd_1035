@@ -28,7 +28,9 @@ class Command(BaseCommand):
     help = 'Downloads event icons for the calendar and reminders into kingdom/static/kingdom/events (96×96 webp).'
 
     def add_arguments(self, parser):
-        parser.add_argument('slugs', nargs='*', help=f'icons to fetch (default: all): {", ".join(ICONS)}')
+        parser.add_argument(
+            'slugs', nargs='*', help=f'icons to fetch (default: all from codexhelper): {", ".join(ICONS)}'
+        )
 
     def handle(self, *args, slugs, **options):
         unknown = set(slugs) - set(ICONS)
@@ -44,7 +46,8 @@ class Command(BaseCommand):
         files = {name: path for path, name in assets.items()}
         ICON_DIR.mkdir(parents=True, exist_ok=True)
         missing = []
-        for slug in slugs or ICONS:
+        # icons cut out of screenshots by hand (no codexhelper file) are left alone
+        for slug in slugs or [slug for slug, (name, _) in ICONS.items() if name]:
             source = files.get(ICONS[slug][0])
             if not source:
                 missing.append(slug)

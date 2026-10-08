@@ -1,8 +1,9 @@
 """Event icons: game art from the event calendar of codexhelper.com (used with Gether's consent, 8. 10. 2026).
 
-`manage.py fetch_event_icons` downloads them into kingdom/static/kingdom/events/<slug>.webp (96×96). A KingdomEvent
-keeps the slug in `icon`; a new event gets one guessed from its name. Events without game art (Silk Road, Shadow
-Legion, Alliance Mobilization) have none and the website shows a monogram instead.
+`manage.py fetch_event_icons` downloads them into kingdom/static/kingdom/events/<slug>.webp (96×96). Events the
+calendar there does not have (Alliance Mobilization, Shadow Legion, Silk Road) got their icons cut out of Gether's
+screenshots of the game. A KingdomEvent keeps the slug in `icon`; a new event gets one guessed from its name. An
+event without an icon shows a monogram on the website.
 """
 
 from pathlib import Path
@@ -11,8 +12,11 @@ from django.conf import settings
 
 ICON_DIR = Path(__file__).resolve().parent / 'static' / 'kingdom' / 'events'
 
-# our slug: (codexhelper file name, label in the admin)
+# our slug: (codexhelper file name, None = cut out of a screenshot by hand; label in the admin)
 ICONS = {
+    'alliance-mobilization': (None, 'Alliance Mobilization'),
+    'shadow-legion': (None, 'Shadow Legion'),
+    'silk-road': (None, 'Silk Road'),
     'mge': ('mge_icon', 'MGE'),
     'ark': ('ark', 'Ark of Osiris'),
     'wheel': ('wheel', 'Wheel of Fortune'),
@@ -50,6 +54,9 @@ GUESSES = [
     ('armament', 'armament'),
     ('dhalruk', 'dhalruk'),
     ('olympia', 'olympia'),
+    ('alliance mobilization', 'alliance-mobilization'),
+    ('shadow legion', 'shadow-legion'),
+    ('silk road', 'silk-road'),
 ]
 
 

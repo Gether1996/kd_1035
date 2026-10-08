@@ -88,16 +88,16 @@ describe('Reminders on /ucet', () => {
     expect(text(el.querySelector('#mine-title .group__count'))).toBe('2');
   });
 
-  it('all events are tiles that say what a click does', async () => {
+  it('all events are tiles that say what a click does, irregular ones first', async () => {
     const { el } = await render();
     expect(tiles(el).map((tile) => text(tile.querySelector('.tile__action')))).toEqual([
       '2 pripomienky',
-      'Nastaviť',
       '2 pripomienky',
+      'Nastaviť',
     ]);
-    expect(tiles(el).map((tile) => tile.classList.contains('is-on'))).toEqual([true, false, true]);
-    expect(text(tiles(el)[1].querySelector('.tile__repeat'))).toBe('každých 8 týždňov');
-    expect(text(tiles(el)[2].querySelector('.tile__repeat'))).toBe('nepravidelne');
+    expect(tiles(el).map((tile) => tile.classList.contains('is-on'))).toEqual([true, true, false]);
+    expect(text(tiles(el)[0].querySelector('.tile__repeat'))).toBe('nepravidelne');
+    expect(text(tiles(el)[2].querySelector('.tile__repeat'))).toBe('každých 8 týždňov');
   });
 
   it('Zrušiť in the overview stops the reminders of the event', async () => {
@@ -108,12 +108,12 @@ describe('Reminders on /ucet', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     await fixture.whenStable();
     expect(mine(el).map((row) => text(row.querySelector('.mine__name')))).toEqual(['Silk Road']);
-    expect(text(tiles(el)[0].querySelector('.tile__action'))).toBe('Nastaviť');
+    expect(text(tiles(el)[1].querySelector('.tile__action'))).toBe('Nastaviť');
   });
 
   it('a tile opens the times in a dialog; a change shows in the overview at once', async () => {
     const { fixture, el } = await render();
-    tiles(el)[1].click();
+    tiles(el)[2].click();
     await fixture.whenStable();
     const dialog = el.querySelector('dialog')!;
     expect(text(dialog.querySelector('.modal__title'))).toBe('MGE – Pěchota');
