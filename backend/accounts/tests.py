@@ -3,20 +3,23 @@ import json
 import sqlite3
 import tempfile
 import urllib.error
+from datetime import timedelta
 from pathlib import Path
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
 
 from django.conf import settings
-from django.contrib.admin.models import ADDITION, LogEntry
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from django.test import Client, TestCase, TransactionTestCase, override_settings
+from django.utils import timezone
 
 from kingdom import snapshot
+from kingdom.models import KingdomEvent
 
 from . import discord_oauth
-from .models import Player
+from .models import EventReminder, Player, PushSubscription, SentReminder
 
 DISCORD = {'DISCORD_CLIENT_ID': '1234567890', 'DISCORD_CLIENT_SECRET': 'shh', 'SITE_URL': 'https://kd1035.test'}
 CALLBACK = 'https://kd1035.test/api/auth/discord/callback/'
@@ -368,6 +371,24 @@ class SessionActionTests(TestCase):
         self.assertFalse(Player.objects.exists())
         self.assertNotIn('_auth_user_id', self.client.session)
 
+    def test_deleting_the_account_forgets_the_admin_history_about_the_player(self):
+        token = self.sign_in()
+        player = Player.objects.get()
+        admin = User.objects.create_superuser('boss', password='x')
+        event = KingdomEvent.objects.create(name_sk='MGE', starts_at=timezone.now() + timedelta(days=1))
+        reminder = EventReminder.objects.create(player=player, event=event, offsets=[60])
+        push = PushSubscription.objects.create(player=player, endpoint='https://fcm.googleapis.com/x', p256dh='k', auth='a')
+        sent = SentReminder.objects.create(player=player, event=event, occurrence=event.starts_at, offset=60, channel='push')
+        for obj in (player.user, player, reminder, push, sent, event):
+            LogEntry.objects.log_actions(admin.pk, [obj], CHANGE, change_message='edited')
+
+        self.assertEqual(self.client.delete('/api/auth/me/', HTTP_X_CSRFTOKEN=token).status_code, 204)
+        # only the entry about the event (no player data) stays
+        self.assertEqual(list(LogEntry.objects.values_list('object_repr', flat=True)), [str(event)])
+        self.assertEqual(list(User.objects.values_list('username', flat=True)), ['boss'])
+        self.assertFalse(EventReminder.objects.exists() or PushSubscription.objects.exists())
+        self.assertFalse(SentReminder.objects.exists())
+
     def test_staff_and_superusers_cannot_delete_themselves(self):
         for flags in ({'is_staff': True}, {'is_superuser': True}):
             with self.subTest(**flags):
@@ -448,6 +469,18 @@ class PlayerAdminTests(TestCase):
         response = self.client.post(f'{self.url}{self.player.pk}/delete/', {'post': 'yes'})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(list(User.objects.values_list('username', flat=True)), ['boss'])
+        # not even the deletion entry with the player's name stays in the admin history
+        self.assertFalse(LogEntry.objects.exists())
+
+    def test_bulk_delete_action_removes_the_users_and_their_history(self):
+        other = make_player(discord_id='245662824171438090')
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            self.url, {'action': 'delete_selected', '_selected_action': [self.player.pk, other.pk], 'post': 'yes'}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(list(User.objects.values_list('username', flat=True)), ['boss'])
+        self.assertFalse(LogEntry.objects.exists())
 
 
     def test_users_list_shows_and_finds_the_in_game_name(self):

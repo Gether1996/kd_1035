@@ -50,13 +50,14 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     def last_login(self, obj):
         return obj.user.last_login
 
-    # deleting a player removes the whole site account (the user), not just its Discord profile
+    # deleting a player removes the whole site account (the user), not just its Discord profile, and the admin
+    # history about it – including the deletion entry the admin has just logged with the player's name
     def delete_model(self, request, obj):
-        obj.user.delete()
+        obj.delete_account()
 
     def delete_queryset(self, request, queryset):
         for player in queryset.select_related('user'):
-            player.user.delete()
+            player.delete_account()
 
 
 

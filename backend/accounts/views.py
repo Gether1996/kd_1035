@@ -202,8 +202,9 @@ def delete_account(request):
     # leadership accounts are removed in the admin, never by a stray click on the website
     if user.is_staff or user.is_superuser or not player_of(user):
         raise PermissionDenied('Tento účet sa dá zmazať iba v admine.')
+    player = user.player
     logout(request)
-    user.delete()  # cascades to the player
+    player.delete_account()
     return Response(status=204)
 
 

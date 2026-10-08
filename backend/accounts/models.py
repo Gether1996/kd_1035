@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 from kingdom.models import MAX_REMINDER_MINUTES, is_minutes_list
@@ -64,6 +64,27 @@ class Player(models.Model):
             return f'{CDN}/avatars/{self.discord_id}/{self.avatar}.png?size=64'
         # Discord's default avatar for accounts with the new username system
         return f'{CDN}/embed/avatars/{(int(self.discord_id) >> 22) % 6}.png'
+
+    @transaction.atomic
+    def delete_account(self):
+        """Deletes the whole site account: the user cascades to this player, their reminders, browsers and sent
+        reminders. Admin history about them goes too – it names the player ("Nelly · MGE") and the privacy page
+        promises nothing is left. Entries the user made themselves go with the user's cascade."""
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        about = {
+            type(self.user): [self.user.pk],
+            Player: [self.pk],
+            EventReminder: self.event_reminders.values_list('pk', flat=True),
+            PushSubscription: self.push_subscriptions.values_list('pk', flat=True),
+            SentReminder: SentReminder.objects.filter(player=self).values_list('pk', flat=True),
+        }
+        for model, pks in about.items():
+            LogEntry.objects.filter(
+                content_type=ContentType.objects.get_for_model(model), object_id__in=[str(pk) for pk in pks]
+            ).delete()
+        self.user.delete()
 
 
 class EventReminder(models.Model):
