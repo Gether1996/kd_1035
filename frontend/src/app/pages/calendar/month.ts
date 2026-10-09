@@ -110,7 +110,7 @@ export function monthWeeks(month: Month): DayKey[][] {
 
 /** First and last day an occurrence runs on: an end at midnight belongs to the day before, and so does the night
  * tail of a multi-day event (NIGHT_ENDS_AT). */
-export function daysOf(item: Occurrence, timeZone?: string): { first: DayKey; last: DayKey } {
+export function daysOf(item: Pick<Occurrence, 'start' | 'end'>, timeZone?: string): { first: DayKey; last: DayKey } {
   const first = dayKey(new Date(item.start), timeZone);
   if (!item.end || Date.parse(item.end) <= Date.parse(item.start)) return { first, last: first };
   const end = new Date(Date.parse(item.end) - 1);

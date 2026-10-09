@@ -7,7 +7,7 @@ export const KINGDOM_ZONE = 'Europe/Bratislava';
 /** Query of a link that opens the calendar on an event's dialog: /kalendar?event=<id>&on=<YYYY-MM-DD>.
  * `on` is the day the run is shown for (its first day, or today while it runs), so the calendar opens that month –
  * a run in the next month is found as well. The home page's upcoming events link this way. */
-export function calendarQuery(item: Occurrence, now: Date): { event: number; on: DayKey } {
+export function calendarQuery(item: Pick<Occurrence, 'id' | 'start'>, now: Date): { event: number; on: DayKey } {
   const first = dayKey(new Date(item.start), KINGDOM_ZONE);
   const today = dayKey(now, KINGDOM_ZONE);
   return { event: item.id, on: first > today ? first : today };

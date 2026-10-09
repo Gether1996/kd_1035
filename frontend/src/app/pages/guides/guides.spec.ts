@@ -112,4 +112,94 @@ describe('Guide pages', () => {
     // decorative: the title already names the specialty
     expect(rows[0].querySelector('img.row__specialty')?.getAttribute('alt')).toBe('');
   });
+
+  describe('next runs of the linked events', () => {
+    const guide = (events?: unknown[]) => ({
+      slug: 'mge',
+      category: 'eventy',
+      specialty: '',
+      specialty_icon: null,
+      title_sk: 'Mightiest Governor (MGE)',
+      title_cs: '',
+      excerpt_sk: 'Úvod.',
+      excerpt_cs: '',
+      updated_at: '2026-10-08T12:00:00Z',
+      html_sk: '<p>Úvod.</p>',
+      html_cs: '',
+      ...(events ? { events } : {}),
+    });
+    const event = (id: number, name: string, start: string | null, end: string | null, irregular = false) => ({
+      id,
+      name_sk: name,
+      name_cs: '',
+      icon: null,
+      start,
+      end,
+      irregular,
+      repeat_days: irregular ? 0 : 56,
+    });
+
+    beforeEach(() => vi.useFakeTimers({ now: new Date('2026-10-30T12:00:00Z'), toFake: ['Date'] }));
+    afterEach(() => vi.useRealTimers());
+
+    async function open(body: object) {
+      const fixture = TestBed.createComponent(GuidePage);
+      fixture.componentRef.setInput('category', 'eventy');
+      fixture.componentRef.setInput('slug', 'mge');
+      fixture.detectChanges();
+      TestBed.inject(HttpTestingController).expectOne('/api/guides/mge/').flush(body);
+      await settle(fixture);
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('shows the running and next runs with a link to their dialog in the calendar', async () => {
+      const el = await open(
+        guide([
+          event(2, 'MGE – Jazda', '2026-10-26T00:00:00Z', '2026-11-01T00:00:00Z'),
+          event(9, 'MGE – Pechota', '2026-12-21T00:00:00Z', '2026-12-27T00:00:00Z'),
+          event(11, 'Silk Road', '2026-10-31T18:00:00Z', '2026-10-31T19:00:00Z', true),
+          event(12, 'Shadow Legion', null, null, true),
+        ]),
+      );
+      const card = el.querySelector('app-guide-events');
+      expect(card?.querySelector('h2')?.textContent).toContain('V kalendári');
+      // above the article
+      expect(card?.nextElementSibling?.classList).toContain('prose');
+
+      const rows = [...el.querySelectorAll('.event')];
+      const text = (row: Element, selector: string) =>
+        row.querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim();
+      expect(rows.map((row) => text(row, '.event__name'))).toEqual([
+        'MGE – Jazda',
+        'MGE – Pechota',
+        'Silk Road',
+        'Shadow Legion',
+      ]);
+      expect(text(rows[0], '.event__live')).toBe('Prebieha');
+      expect(rows[1].querySelector('.event__live')).toBeNull();
+      // a game event shows its days, a short irregular one its time in UTC as well
+      expect(text(rows[1], '.event__when')).not.toContain('UTC');
+      expect(text(rows[2], '.event__when')).toContain('UTC 18:00');
+      expect(text(rows[3], '.event__when')).toBe('Ďalší termín oznámime');
+
+      const hrefs = rows.map((row) => row.querySelector('a.event__remind')?.getAttribute('href'));
+      expect(hrefs).toEqual([
+        '/kalendar?event=2&on=2026-10-30',
+        '/kalendar?event=9&on=2026-12-21',
+        '/kalendar?event=11&on=2026-10-31',
+        '/kalendar?event=12',
+      ]);
+      expect(rows[0].querySelector('a.event__remind')?.getAttribute('aria-label')).toBe('Pripomenúť: MGE – Jazda');
+    });
+
+    it('shows no card without linked events', async () => {
+      expect((await open(guide([]))).querySelector('app-guide-events')).toBeNull();
+    });
+
+    it('shows no card when the API does not send events at all', async () => {
+      const el = await open(guide());
+      expect(el.querySelector('.prose')?.textContent).toContain('Úvod.');
+      expect(el.querySelector('app-guide-events')).toBeNull();
+    });
+  });
 });

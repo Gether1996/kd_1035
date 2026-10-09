@@ -132,6 +132,13 @@ export const sk = {
     back: 'Späť na zoznam',
     notFound: 'Tento návod neexistuje alebo už nie je zverejnený.',
     error: 'Návody sa nepodarilo načítať. Skús to znova o chvíľu.',
+    // the next runs of the events linked to a guide (guide-events.ts)
+    inCalendar: {
+      title: 'V kalendári',
+      remind: 'Pripomenúť',
+      running: 'Prebieha',
+      announceLater: 'Ďalší termín oznámime',
+    },
   },
   community: {
     eyebrow: 'Komunita',

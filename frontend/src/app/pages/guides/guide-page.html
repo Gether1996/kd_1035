@@ -28,6 +28,12 @@
 
   @if (guide()) {
     <div class="container">
+      @if (events().length) {
+        <!-- its own chunk: most guides link no event (bundle budget) -->
+        @defer (on immediate) {
+          <app-guide-events [events]="events()" />
+        }
+      }
       <div class="prose" [innerHTML]="content()" (click)="zoom($event)"></div>
     </div>
   }

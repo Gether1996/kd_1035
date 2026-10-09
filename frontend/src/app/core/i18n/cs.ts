@@ -133,6 +133,12 @@ export const cs: Dict = {
     back: 'Zpět na seznam',
     notFound: 'Tento návod neexistuje nebo už není zveřejněný.',
     error: 'Návody se nepodařilo načíst. Zkus to znovu za chvíli.',
+    inCalendar: {
+      title: 'V kalendáři',
+      remind: 'Připomenout',
+      running: 'Probíhá',
+      announceLater: 'Další termín oznámíme',
+    },
   },
   community: {
     eyebrow: 'Komunita',

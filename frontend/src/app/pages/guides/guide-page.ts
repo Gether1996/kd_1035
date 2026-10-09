@@ -19,11 +19,12 @@ import { Seo } from '../../core/seo';
 import { Breadcrumbs } from '../../shared/breadcrumbs';
 import { Icon } from '../../shared/icon';
 import { NotFoundLinks, notFoundMeta } from '../../shared/not-found';
+import { GuideEvents } from './guide-events';
 
 /** /navody/:category/:slug – one guide; its HTML comes from the admin. */
 @Component({
   selector: 'app-guide-page',
-  imports: [RouterLink, Breadcrumbs, Icon, NotFoundLinks],
+  imports: [RouterLink, Breadcrumbs, GuideEvents, Icon, NotFoundLinks],
   templateUrl: './guide-page.html',
   styleUrl: './guides.scss',
   host: { '(document:keydown.escape)': 'lightbox.set(null)' },
@@ -58,6 +59,8 @@ export class GuidePage {
     const g = this.guide();
     return g ? this.guides.title(g) : '';
   });
+  /** events linked to the guide with their next run – the "V kalendári" card (older API: none) */
+  protected readonly events = computed(() => this.guide()?.events ?? []);
   /** Already cleaned by the backend (nh3) when saved – trusted so embeds and inline styles survive. */
   protected readonly content = computed(() => {
     const g = this.guide();

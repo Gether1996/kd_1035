@@ -56,7 +56,7 @@ export function isOccurrence(item: PublicEvent): item is Occurrence {
   return 'start' in item;
 }
 
-export function eventName(item: PublicEvent, lang: Lang): string {
+export function eventName(item: Pick<PublicEvent, 'name_sk' | 'name_cs'>, lang: Lang): string {
   return (lang === 'cs' && item.name_cs) || item.name_sk;
 }
 

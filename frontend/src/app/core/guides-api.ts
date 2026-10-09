@@ -27,9 +27,26 @@ export interface GuideSummary {
   updated_at: string;
 }
 
+/** A kingdom event linked to the guide with its running or next run (the calendar's rule). */
+export interface GuideEvent {
+  id: number;
+  name_sk: string;
+  /** '' = the Slovak name is shown */
+  name_cs: string;
+  icon: string | null;
+  /** ISO 8601 in UTC; null = an irregular event whose next date is not announced yet */
+  start: string | null;
+  /** null = no end (duration 0) */
+  end: string | null;
+  irregular: boolean;
+  repeat_days: number;
+}
+
 export interface GuideDetail extends GuideSummary {
   html_sk: string;
   html_cs: string;
+  /** at most 4, soonest first; missing or empty = no "V kalendári" card */
+  events?: GuideEvent[];
 }
 
 /** Guides written by the superadmin in the Django admin. Czech fields fall back to Slovak. */
