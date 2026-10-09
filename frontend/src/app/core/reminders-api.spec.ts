@@ -8,6 +8,7 @@ const SETTINGS: ReminderSettings = {
   discord: true,
   discord_available: true,
   lang: 'sk',
+  last_delivery: null,
   events: [
     {
       id: 1,
@@ -79,6 +80,24 @@ describe('RemindersApi', () => {
     expect(patch.request.body).toEqual({ discord: false, lang: 'cs' });
     patch.flush({ discord: false, lang: 'cs' });
     await update;
+  });
+
+  it('a test message says whether the bot can reach the player', async () => {
+    setup();
+    const answers: [object, number, string][] = [
+      [{ ok: true }, 200, 'ok'],
+      [{ ok: false, reason: 'blocked' }, 200, 'blocked'],
+      [{ ok: false, reason: 'unavailable' }, 200, 'unavailable'],
+      [{ detail: 'Throttled' }, 429, 'throttled'],
+      [{ detail: 'Forbidden' }, 403, 'unavailable'],
+    ];
+    for (const [body, status, result] of answers) {
+      const test = api.testDm();
+      const post = http.expectOne('/api/me/reminders/test/');
+      expect(post.request.method).toBe('POST');
+      post.flush(body, { status, statusText: String(status) });
+      expect(await test).toBe(result);
+    }
   });
 
   it('a refused change rejects', async () => {

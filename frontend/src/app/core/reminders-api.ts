@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Lang } from './i18n/i18n';
@@ -33,7 +33,21 @@ export interface ReminderSettings {
   lang: Lang;
   /** active events with another start, soonest first */
   events: ReminderEvent[];
+  /** the player's newest reminder sent by the bot (any event, last 30 days); null = none yet */
+  last_delivery: LastDelivery | null;
 }
+
+export interface LastDelivery {
+  /** the DM reached the player */
+  ok: boolean;
+  /** Discord refused it: not on the server, or DMs from its members are off */
+  blocked: boolean;
+  /** when it was sent, ISO 8601 in UTC */
+  at: string;
+}
+
+/** "Poslať skúšobnú správu": sent, the bot cannot reach the player, Discord does not answer, too many tries */
+export type TestResult = 'ok' | 'blocked' | 'unavailable' | 'throttled';
 
 const REMINDERS_URL = '/api/me/reminders/';
 export const MAX_REMINDERS = 5;
@@ -68,5 +82,23 @@ export class RemindersApi {
   /** Discord messages on/off, language of the messages (the site's language). */
   async update(changes: { discord?: boolean; lang?: Lang }): Promise<void> {
     await firstValueFrom(this.http.patch(REMINDERS_URL, changes));
+  }
+
+  /** A test DM from the bot right now (3 per 10 minutes); never throws. Nothing is stored on the server. */
+  async testDm(): Promise<TestResult> {
+    if (!this.isBrowser) return 'unavailable';
+    try {
+      const answer = await firstValueFrom(
+        this.http.post<{ ok: boolean; reason?: 'blocked' | 'unavailable' }>(
+          `${REMINDERS_URL}test/`,
+          {},
+        ),
+      );
+      return answer.ok ? 'ok' : answer.reason === 'blocked' ? 'blocked' : 'unavailable';
+    } catch (error) {
+      return error instanceof HttpErrorResponse && error.status === 429
+        ? 'throttled'
+        : 'unavailable';
+    }
   }
 }

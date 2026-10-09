@@ -1,7 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { KingdomApi } from '../../core/api';
 import { ReminderEvent, ReminderSettings } from '../../core/reminders-api';
 import { monogram } from '../../shared/event-icon';
 import { Reminders, plain } from './reminders';
@@ -24,6 +26,7 @@ const SETTINGS: ReminderSettings = {
   discord: true,
   discord_available: true,
   lang: 'sk',
+  last_delivery: null,
   events: [
     event(1, {
       name_sk: '20 GH',
@@ -50,6 +53,11 @@ describe('Reminders on /pripomienky', () => {
         provideRouter([{ path: '**', children: [] }]),
         provideHttpClient(),
         provideHttpClientTesting(),
+        // the kingdom's Discord invite (/api/links/)
+        {
+          provide: KingdomApi,
+          useValue: { links: signal({ discord: 'https://discord.gg/kd1035' }) },
+        },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -170,6 +178,86 @@ describe('Reminders on /pripomienky', () => {
     await fixture.whenStable();
     expect(text(el.querySelector('.discord__state'))).toBe('Vypnuté – pripomienky ti neprídu.');
     expect(el.querySelector('.discord.is-off')).not.toBeNull();
+  });
+
+  it('a test message says at once whether the bot can reach the player', async () => {
+    const { fixture, el } = await render();
+    const button = el.querySelector<HTMLButtonElement>('.discord__test')!;
+    const result = el.querySelector('.discord__result')!;
+    expect(result.getAttribute('role')).toBe('status');
+    const answers: [object, number, string, boolean][] = [
+      [{ ok: true }, 200, 'Správa odoslaná – pozri súkromné správy na Discorde.', false],
+      [
+        { ok: false, reason: 'blocked' },
+        200,
+        'Bot ti nevie napísať. Musíš byť na našom Discord serveri a mať zapnuté súkromné správy od členov servera. Pripojiť sa na Discord',
+        true,
+      ],
+      [{ ok: false, reason: 'unavailable' }, 200, 'Discord teraz neodpovedá, skús neskôr.', false],
+      [{ detail: 'Throttled' }, 429, 'Skús to o pár minút.', false],
+    ];
+    for (const [body, status, said, join] of answers) {
+      expect(button.disabled).toBe(false);
+      button.click();
+      await fixture.whenStable();
+      expect(button.getAttribute('aria-disabled')).toBe('true'); // while sending, keeps the focus
+      button.click(); // a second click sends nothing
+      http.expectOne('/api/me/reminders/test/').flush(body, { status, statusText: String(status) });
+      await new Promise((done) => setTimeout(done)); // the answer passes through two awaits
+      await fixture.whenStable();
+      expect(text(result)).toBe(said);
+      expect(result.querySelector('a.join')?.getAttribute('href') ?? null).toBe(
+        join ? 'https://discord.gg/kd1035' : null,
+      );
+    }
+  });
+
+  it('the test button is off while the bot is not set up', async () => {
+    const { el } = await render({ ...SETTINGS, discord_available: false });
+    expect(el.querySelector<HTMLButtonElement>('.discord__test')!.disabled).toBe(true);
+  });
+
+  it('a reminder that did not arrive is explained until a test gets through', async () => {
+    const failed = { ok: false, blocked: true, at: '2026-10-07T18:00:00Z' };
+    const { fixture, el } = await render({ ...SETTINGS, last_delivery: failed });
+    const warning = () => el.querySelector('.delivery');
+    expect(text(warning()?.querySelector('.delivery__title') ?? null)).toMatch(
+      /^Posledná pripomienka ti neprišla \(7\. 10\. \d\d:00\)\.$/,
+    );
+    expect(text(warning()?.querySelector('.delivery__text') ?? null)).toContain(
+      'Bot ti nevie napísať.',
+    );
+    expect(warning()?.querySelector('a.join')?.getAttribute('href')).toBe(
+      'https://discord.gg/kd1035',
+    );
+
+    // a failed test changes nothing, a test that arrives hides the old failure for this visit
+    el.querySelector<HTMLButtonElement>('.discord__test')!.click();
+    http.expectOne('/api/me/reminders/test/').flush({ ok: false, reason: 'unavailable' });
+    await fixture.whenStable();
+    expect(warning()).not.toBeNull();
+    el.querySelector<HTMLButtonElement>('.discord__test')!.click();
+    http.expectOne('/api/me/reminders/test/').flush({ ok: true });
+    await fixture.whenStable();
+    expect(warning()).toBeNull();
+  });
+
+  it('no warning after a delivered reminder, for other errors a hint to test', async () => {
+    const at = '2026-10-07T18:00:00Z';
+    let { el } = await render({ ...SETTINGS, last_delivery: { ok: true, blocked: false, at } });
+    expect(el.querySelector('.delivery')).toBeNull();
+    TestBed.resetTestingModule();
+    ({ el } = await render({ ...SETTINGS, last_delivery: { ok: false, blocked: false, at } }));
+    expect(text(el.querySelector('.delivery__text'))).toBe(
+      'Discord ju neprijal. Pošli si skúšobnú správu a uvidíš, či to už funguje.',
+    );
+    expect(el.querySelector('.delivery a.join')).toBeNull();
+  });
+
+  it('no stale warning when the player switched the messages off', async () => {
+    const last_delivery = { ok: false, blocked: true, at: '2026-10-07T18:00:00Z' };
+    const { el } = await render({ ...SETTINGS, discord: false, last_delivery });
+    expect(el.querySelector('.delivery')).toBeNull();
   });
 
   it('without any reminder the player sees how it works', async () => {

@@ -10,7 +10,8 @@ import {
 import { RouterLink } from '@angular/router';
 import { Occurrence, PublicEvent } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
-import { ReminderEvent, RemindersApi } from '../../core/reminders-api';
+import { KingdomApi } from '../../core/api';
+import { LastDelivery, ReminderEvent, RemindersApi, TestResult } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { EventDialog, RemindState } from '../calendar/event-dialog';
@@ -40,6 +41,7 @@ export function plain(text: string): string {
 })
 export class Reminders {
   private readonly api = inject(RemindersApi);
+  private readonly kingdom = inject(KingdomApi);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().reminders);
 
@@ -125,6 +127,23 @@ export class Reminders {
   /** the bot is set up on the server, but the player switched its messages off – no reminder reaches them */
   protected readonly noChannel = computed(() => !!this.settings()?.discord_available && !this.discord());
 
+  // ---------------------------------------------------------------- can the bot reach the player?
+
+  /** "Pripojiť sa na Discord" next to "the bot cannot write to you" – the invite from the admin, hidden without it */
+  protected readonly invite = computed(() => this.kingdom.links().discord ?? null);
+  protected readonly testing = signal(false);
+  protected readonly testResult = signal<TestResult | null>(null);
+  /** a test message reached the player during this visit: the older failure is hidden here, although the server
+   *  reports it until the next real reminder arrives (nothing about the test is stored) */
+  private readonly reached = signal(false);
+  /** the newest reminder did not arrive – only while the player still wants the bot's messages */
+  protected readonly lastFailed = computed<LastDelivery | null>(() => {
+    const s = this.settings();
+    const last = s?.last_delivery;
+    if (!last || last.ok || !s.discord_available || !this.discord() || this.reached()) return null;
+    return last;
+  });
+
   constructor() {
     effect(() => {
       const saved = this.savedLang();
@@ -178,6 +197,19 @@ export class Reminders {
     return plural(event.offsets?.length ?? 0, this.t().count);
   }
 
+  /** "Posledná pripomienka ti neprišla (7. 10. 20:00)." – in the player's own time zone */
+  protected failedTitle(last: LastDelivery): string {
+    const at = new Date(last.at);
+    const clock = new Intl.DateTimeFormat(this.i18n.locale(), {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(at);
+    return this.t().lastFailed.title.replace(
+      '{date}',
+      `${at.getDate()}. ${at.getMonth() + 1}. ${clock}`, // never broken across lines
+    );
+  }
+
   // ---------------------------------------------------------------- actions
 
   protected openEvent(event: ReminderEvent, click: Event): void {
@@ -216,6 +248,18 @@ export class Reminders {
 
   protected more(): void {
     this.limit.update((limit) => limit + PAGE);
+  }
+
+  /** "Poslať skúšobnú správu": the answer is announced under the button */
+  protected async sendTest(): Promise<void> {
+    // aria-disabled while sending: the button keeps the keyboard focus
+    if (this.testing()) return;
+    this.testing.set(true);
+    this.testResult.set(null);
+    const result = await this.api.testDm();
+    if (result === 'ok') this.reached.set(true);
+    this.testResult.set(result);
+    this.testing.set(false);
   }
 
   protected async setDiscord(on: boolean): Promise<void> {

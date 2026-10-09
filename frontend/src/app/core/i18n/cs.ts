@@ -452,6 +452,19 @@ export const cs: Dict = {
     discordOn: 'Zapnuto',
     discordOff: 'Vypnuto – připomínky ti nepřijdou.',
     off: 'Bot zatím není zapnutý.',
+    test: {
+      send: 'Poslat zkušební zprávu',
+      ok: 'Zpráva odeslána – podívej se do soukromých zpráv na Discordu.',
+      blocked:
+        'Bot ti nemůže napsat. Musíš být na našem Discord serveru a mít zapnuté soukromé zprávy od členů serveru.',
+      join: 'Připojit se na Discord',
+      unavailable: 'Discord teď neodpovídá, zkus to později.',
+      throttled: 'Zkus to za pár minut.',
+    },
+    lastFailed: {
+      title: 'Poslední připomínka ti nepřišla ({date}).',
+      other: 'Discord ji nepřijal. Pošli si zkušební zprávu a uvidíš, jestli to už funguje.',
+    },
     empty: 'Zatím nejsou naplánované žádné eventy.',
     error: 'Připomínky se nepodařilo načíst. Zkus to znovu za chvíli.',
     mine: 'Moje připomínky',

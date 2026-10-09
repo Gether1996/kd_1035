@@ -33,10 +33,59 @@
           [disabled]="!s.discord_available"
           (change)="setDiscord(discordSwitch.checked)"
         />
-        @if (s.discord_available) {
-          <p class="discord__hint" id="remind-discord-hint">{{ r.discordHint }}</p>
-        }
+        <div class="discord__foot">
+          @if (s.discord_available) {
+            <p class="discord__hint" id="remind-discord-hint">{{ r.discordHint }}</p>
+          }
+          <!-- proves the bot can reach the player right now; nothing is stored -->
+          <button
+            type="button"
+            class="pill-btn pill-btn--quiet discord__test"
+            [disabled]="!s.discord_available"
+            [attr.aria-disabled]="testing() || null"
+            (click)="sendTest()"
+          >
+            <svg appIcon="send"></svg>{{ r.test.send }}
+          </button>
+          <p class="discord__result" role="status" [class.has-result]="!!testResult()">
+            @switch (testResult()) {
+              @case ('ok') {
+                <span class="is-on">{{ r.test.ok }}</span>
+              }
+              @case ('blocked') {
+                <span class="is-error">{{ r.test.blocked }}</span>
+                @if (invite(); as url) {
+                  <a class="join" [href]="url" target="_blank" rel="noopener">
+                    {{ r.test.join }}<svg appIcon="arrow-up-right"></svg>
+                  </a>
+                }
+              }
+              @case ('unavailable') {
+                <span class="is-error">{{ r.test.unavailable }}</span>
+              }
+              @case ('throttled') {
+                {{ r.test.throttled }}
+              }
+            }
+          </p>
+        </div>
       </div>
+
+      @if (lastFailed(); as last) {
+        <!-- the newest real reminder bounced: say why, until a later one (or a test now) gets through -->
+        <div class="delivery">
+          <svg appIcon="bell-off"></svg>
+          <div class="delivery__body">
+            <p class="delivery__title">{{ failedTitle(last) }}</p>
+            <p class="delivery__text">{{ last.blocked ? r.test.blocked : r.lastFailed.other }}</p>
+            @if (last.blocked && invite(); as url) {
+              <a class="join" [href]="url" target="_blank" rel="noopener">
+                {{ r.test.join }}<svg appIcon="arrow-up-right"></svg>
+              </a>
+            }
+          </div>
+        </div>
+      }
 
       <section class="mine" aria-labelledby="mine-title">
         <div class="group__head">

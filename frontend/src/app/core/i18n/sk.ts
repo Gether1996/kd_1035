@@ -454,6 +454,21 @@ export const sk = {
     discordOn: 'Zapnuté',
     discordOff: 'Vypnuté – pripomienky ti neprídu.',
     off: 'Bot zatiaľ nie je zapnutý.',
+    // "Poslať skúšobnú správu" under the switch: proves the bot can reach the player now
+    test: {
+      send: 'Poslať skúšobnú správu',
+      ok: 'Správa odoslaná – pozri súkromné správy na Discorde.',
+      blocked:
+        'Bot ti nevie napísať. Musíš byť na našom Discord serveri a mať zapnuté súkromné správy od členov servera.',
+      join: 'Pripojiť sa na Discord',
+      unavailable: 'Discord teraz neodpovedá, skús neskôr.',
+      throttled: 'Skús to o pár minút.',
+    },
+    // the newest reminder the bot sent did not arrive ({date} = when); the reason is test.blocked or `other`
+    lastFailed: {
+      title: 'Posledná pripomienka ti neprišla ({date}).',
+      other: 'Discord ju neprijal. Pošli si skúšobnú správu a uvidíš, či to už funguje.',
+    },
     empty: 'Zatiaľ nie sú naplánované žiadne eventy.',
     error: 'Pripomienky sa nepodarilo načítať. Skús to znova o chvíľu.',
     mine: 'Moje pripomienky',

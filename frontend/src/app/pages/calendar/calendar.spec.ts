@@ -67,6 +67,7 @@ const SETTINGS: ReminderSettings = {
   discord: false,
   discord_available: true,
   lang: 'sk',
+  last_delivery: null,
   events: [
     {
       id: 11,
