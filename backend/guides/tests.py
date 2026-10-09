@@ -2,11 +2,13 @@ import importlib
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
+from unittest import mock
 from xml.sax.saxutils import escape
 
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
+from kingdom.models import KingdomEvent
 
 from .meta import LAST_UPDATE, MODULES
 from .meta.render import (
@@ -15,6 +17,7 @@ from .meta.render import (
 from .meta.sync import rendered_guides, sync_guides
 from .models import Guide
 from .sanitize import clean_html
+from .serializers import GuideDetailSerializer
 
 
 class SanitizeTests(TestCase):
@@ -411,6 +414,86 @@ class GuideApiTests(TestCase):
         self.assertIn('<loc>https://kd1035.test/cz/ochrana-udajov</loc>', xml)
         self.assertNotIn('skryty', xml)
 
+
+
+
+class GuideEventsTests(TestCase):
+    """The detail of a guide lists the next dates of the events linked to it ("V kalendári" on the guide page)."""
+
+    NOW = datetime(2026, 10, 30, 12, tzinfo=UTC)
+
+    def setUp(self):
+        Guide.objects.all().delete()
+        self.guide = Guide.objects.create(category='eventy', title_sk='MGE', slug='mge', html_sk='<p>x</p>')
+
+    def event(self, name, starts_at, **kwargs):
+        return KingdomEvent.objects.create(
+            name_sk=name, starts_at=starts_at, guide=self.guide, **{'duration_minutes': 0, **kwargs}
+        )
+
+    def get(self, slug='mge'):
+        with mock.patch('django.utils.timezone.now', return_value=self.NOW):
+            return self.client.get(f'/api/guides/{slug}/')
+
+    def test_lists_running_and_next_runs_of_visible_events_only(self):
+        # MGE every 56 days, 6 days long: the run from 26 October is still on
+        mge = self.event('MGE', datetime(2026, 8, 31, tzinfo=UTC), repeat_days=56, duration_minutes=6 * 24 * 60)
+        ark = self.event('Ark of Osiris', datetime(2026, 11, 7, 12, tzinfo=UTC), repeat_days=14)
+        self.event('Vypnutý', datetime(2026, 11, 1, tzinfo=UTC), is_active=False)
+        self.event('Skrytý', datetime(2026, 11, 1, tzinfo=UTC), show_on_web=False)
+        self.event('Skončený', datetime(2026, 10, 1, tzinfo=UTC))  # one-off, over
+        KingdomEvent.objects.create(name_sk='Iný návod', starts_at=datetime(2026, 11, 1, tzinfo=UTC))
+
+        data = self.get().json()['events']
+        self.assertEqual([e['id'] for e in data], [mge.pk, ark.pk])
+        self.assertEqual(
+            data[0],
+            {
+                'id': mge.pk,
+                'name_sk': 'MGE',
+                'name_cs': '',
+                'icon': '/static/kingdom/events/mge.webp',  # guessed from the name
+                'start': '2026-10-26T00:00:00Z',
+                'end': '2026-11-01T00:00:00Z',
+                'irregular': False,
+                'repeat_days': 56,
+            },
+        )
+        self.assertEqual((data[1]['start'], data[1]['end']), ('2026-11-07T12:00:00Z', None))
+
+    def test_irregular_event_without_a_date_comes_last_with_no_start(self):
+        waiting = self.event('Silk Road', datetime(2026, 10, 1, 18, tzinfo=UTC), irregular=True, duration_minutes=60)
+        dated = self.event('Shadow Legion', datetime(2026, 11, 5, 19, tzinfo=UTC), irregular=True, duration_minutes=60)
+        data = self.get().json()['events']
+        self.assertEqual([(e['id'], e['start'], e['end']) for e in data], [
+            (dated.pk, '2026-11-05T19:00:00Z', '2026-11-05T20:00:00Z'),
+            (waiting.pk, None, None),
+        ])  # fmt: skip
+        self.assertTrue(data[1]['irregular'])
+
+    def test_at_most_four_events(self):
+        for day in range(1, 7):
+            self.event(f'Event {day}', datetime(2026, 11, day, tzinfo=UTC))
+        names = [e['name_sk'] for e in self.get().json()['events']]
+        self.assertEqual(names, ['Event 1', 'Event 2', 'Event 3', 'Event 4'])
+
+    def test_unpublished_guide_is_404_without_looking_for_events(self):
+        self.event('MGE', datetime(2026, 11, 1, tzinfo=UTC))
+        Guide.objects.filter(pk=self.guide.pk).update(is_published=False)
+        with mock.patch.object(GuideDetailSerializer, 'get_events') as get_events:
+            self.assertEqual(self.get().status_code, 404)
+        get_events.assert_not_called()
+
+    def test_list_payload_is_unchanged(self):
+        self.event('MGE', datetime(2026, 11, 1, tzinfo=UTC))
+        data = self.client.get('/api/guides/').json()
+        self.assertEqual(
+            set(data[0]),
+            {
+                'slug', 'category', 'specialty', 'specialty_icon', 'title_sk', 'title_cs', 'excerpt_sk', 'excerpt_cs',
+                'updated_at',
+            },
+        )  # fmt: skip
 
 class LinkPreviewTests(TestCase):
     """Guide pages for link-preview bots (nginx rewrites /[cz/]navody/<category>/<slug> to /api/link-preview/…)."""
