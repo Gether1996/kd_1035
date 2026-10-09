@@ -4,7 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 9. 10. 2026 – kolo 
 
 ## Hotové
 
-- **9. 10. 2026 – kolo 4:** skúšobná správa od bota na `/pripomienky` a varovanie pri nedoručenej pripomienke; prehľad na úvode adminu (worker, zálohy, najbližšie a zlyhané notifikácie); najbližšie eventy na úvodnej stránke; najbližší termín eventu priamo v jeho návode.
+- **9. 10. 2026 – v1.1.0, kolo 4:** skúšobná správa od bota na `/pripomienky` a varovanie pri nedoručenej pripomienke; prehľad na úvode adminu (worker, zálohy, najbližšie a zlyhané notifikácie); najbližšie eventy na úvodnej stránke; najbližší termín eventu priamo v jeho návode.
 - **9. 10. 2026 – v1.0.2:** blok Nepravidelné eventy v kalendári ukazuje všetky nepravidelné eventy aj s termínom (napr. Alliance Mobilization).
 - **9. 10. 2026 – Páry commanderov podľa WarDaddyChadského** (mimo kola, Gether): prepisy jeho videí cez `tools/youtube`, mesačná aktualizácia ho berie ako hlavný zdroj, leadership návod zrušený.
 - **9. 10. 2026 – v1.0.1:** pri pravidelných eventoch a Alliance Mobilization sa na `/pripomienky` ukazuje iba deň, čas len pri krátkych nepravidelných eventoch (ako v kalendári).
