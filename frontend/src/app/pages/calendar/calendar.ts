@@ -19,7 +19,7 @@ import { RemindersApi } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
-import { repeatLabel } from '../reminders/format';
+import { repeatLabel, showsClock } from '../reminders/format';
 import { DateDialog } from './admin/date-dialog';
 import { EventEditor } from './admin/event-editor';
 import { EventsPanel } from './admin/events-panel';
@@ -283,7 +283,8 @@ export class Calendar {
   /** the start time matters only for short irregular events (an evening Silk Road), not for game events that start
    *  at 00:00 UTC and run for days (Alliance Mobilization, MGE…) */
   protected timed(item: Occurrence): boolean {
-    return item.irregular && (!item.end || Date.parse(item.end) - Date.parse(item.start) < 864e5);
+    const minutes = item.end ? (Date.parse(item.end) - Date.parse(item.start)) / 60_000 : null;
+    return showsClock(item.irregular, minutes);
   }
 
   protected running(item: Occurrence): boolean {

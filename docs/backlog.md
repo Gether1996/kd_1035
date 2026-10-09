@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 
 ## Hotové
 
+- **9. 10. 2026 – v1.0.1:** pri pravidelných eventoch a Alliance Mobilization sa na `/pripomienky` ukazuje iba deň, čas len pri krátkych nepravidelných eventoch (ako v kalendári).
 - **9. 10. 2026 – v1.0.0: verzia webu v pätičke** (pravidlá v CLAUDE.md → Verzia webu). Prvá očíslovaná verzia = stav webu k tomuto dňu.
 - **9. 10. 2026 – Pripomienky iba cez Discord, vlastná stránka a zvonček** (mimo kola, Gether): web push úplne zrušený (jediný prepínač „Správy od bota“), stránka `/pripomienky` (vľavo prepínač a Moje pripomienky, vpravo Všetky eventy), zvonček v hlavičke, `/ucet` už len profil, sekcia „Nezmeškaj event“ s ukážkou správy na úvode. Holy Knight's Treasure (vajce) oddelený od Hunt for History (kladivo), tri sady výbavy; Alliance Mobilization bez času začiatku.
 - **8. 10. 2026 – Kalendár eventov a nepravidelné eventy** (mimo kola): stránka `/kalendar` so záložkou v hlavičke (lokálny čas aj UTC, pripomienky sa dajú nastaviť priamo z kalendára), nepravidelné eventy Silk Road, Shadow Legion a Karuak Boss (hráči si ich vyberú vopred, pripomienka príde, keď Gether nastaví termín), 20 GH každé 2 týždne, neaktívne šablóny bežnej rotácie (`seed_event_templates`), vlastné časy pripomienok v dňoch, hodinách a minútach, na `/ucet` prehľad „Moje pripomienky“ a zoznam všetkých eventov s vyhľadávaním a filtrom.

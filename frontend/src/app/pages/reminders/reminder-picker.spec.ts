@@ -16,6 +16,7 @@ const EVENT: ReminderEvent = {
   icon: null,
   next_start: '2026-10-10T18:00:00Z',
   repeat_days: 7,
+  duration_minutes: 60,
   irregular: false,
   offered: [60, 10],
   offsets: null,

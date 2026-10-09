@@ -13,6 +13,7 @@ const event = (id: number, changes: Partial<ReminderEvent>): ReminderEvent => ({
   icon: null,
   next_start: '2026-10-10T18:00:00Z',
   repeat_days: 7,
+  duration_minutes: 2880,
   irregular: false,
   offered: [10, 60],
   offsets: null,
@@ -73,9 +74,8 @@ describe('Reminders on /pripomienky', () => {
       'Silk Road',
     ]);
     expect(text(rows[0].querySelector('.mine__times'))).toBe('1 deň 6 h · 1 h vopred');
-    expect(text(rows[0].querySelector('.mine__when'))).toMatch(
-      /^so 10\. 10\. \d\d:00 · UTC 18:00$/,
-    );
+    // a game event: the day says enough, no clock
+    expect(text(rows[0].querySelector('.mine__when'))).toBe('so 10. 10.');
     expect(text(rows[1].querySelector('.mine__times'))).toBe('15 min vopred · pri začiatku');
     expect(text(rows[1].querySelector('.mine__when'))).toBe('termín oznámime');
     // game art where there is some, a monogram otherwise
@@ -84,6 +84,15 @@ describe('Reminders on /pripomienky', () => {
     );
     expect(text(rows[1].querySelector('app-event-icon'))).toBe('SR');
     expect(text(el.querySelector('#mine-title .group__count'))).toBe('2');
+  });
+
+  it('the clock only for a short irregular event, not for one running for days', async () => {
+    const dated = (id: number, duration_minutes: number) =>
+      event(id, { irregular: true, repeat_days: 0, duration_minutes, offsets: [15] });
+    const { el } = await render({ ...SETTINGS, events: [dated(1, 60), dated(2, 10080)] });
+    const when = mine(el).map((row) => text(row.querySelector('.mine__when')));
+    expect(when[0]).toMatch(/^so 10\. 10\. \d\d:00 · UTC 18:00$/); // Silk Road in the evening
+    expect(when[1]).toBe('so 10. 10.'); // Alliance Mobilization, a whole week
   });
 
   it('all events are tiles that say what a click does, irregular ones first', async () => {

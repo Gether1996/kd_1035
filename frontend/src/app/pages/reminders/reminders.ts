@@ -14,7 +14,7 @@ import { ReminderEvent, RemindersApi } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { EventDialog, RemindState } from '../calendar/event-dialog';
-import { duration, plural, repeatLabel } from './format';
+import { duration, plural, repeatLabel, showsClock } from './format';
 
 type Filter = 'all' | 'regular' | 'irregular';
 
@@ -147,7 +147,8 @@ export class Reminders {
     return event.irregular ? this.t().repeat.irregular : repeatLabel(event.repeat_days, this.t());
   }
 
-  /** "pi 16. 10. 02:00 · UTC 00:00" in the player's own time zone (the year only when it is not this one) */
+  /** "pi 16. 10." – with "20:00 · UTC 18:00" in the player's own time zone only for a short irregular event
+   *  (the year only when it is not this one) */
   protected when(event: ReminderEvent): string {
     if (!event.next_start) return this.t().noDate;
     const start = new Date(event.next_start);
@@ -158,7 +159,9 @@ export class Reminders {
       new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', timeZone }).format(
         start,
       );
-    return `${weekday} ${start.getDate()}. ${start.getMonth() + 1}.${year} ${clock()} · UTC ${clock('UTC')}`;
+    const day = `${weekday} ${start.getDate()}. ${start.getMonth() + 1}.${year}`;
+    if (!showsClock(event.irregular, event.duration_minutes)) return day;
+    return `${day} ${clock()} · UTC ${clock('UTC')}`;
   }
 
   /** "1 deň 6 h · 1 h vopred", "10 min vopred · pri začiatku" */

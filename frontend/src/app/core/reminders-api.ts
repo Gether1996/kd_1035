@@ -15,6 +15,8 @@ export interface ReminderEvent {
   next_start: string | null;
   /** 0 = one-off */
   repeat_days: number;
+  /** 0 = no end */
+  duration_minutes: number;
   /** no fixed cycle – leadership sets each date, players pick it in advance */
   irregular: boolean;
   /** minutes before the start that leadership offers */

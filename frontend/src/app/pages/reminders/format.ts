@@ -30,3 +30,9 @@ export function repeatLabel(days: number, t: Texts): string {
   if (days % 7 === 0) return plural(days / 7, t.repeat.weeks);
   return plural(days, t.repeat.every);
 }
+
+/** Only a short irregular event (Silk Road in the evening) needs its clock; game events start at 00:00 UTC and run
+ *  for days (MGE, Alliance Mobilization…), so their day says enough. `minutes` = duration, 0 or null = no end. */
+export function showsClock(irregular: boolean, minutes: number | null): boolean {
+  return irregular && (!minutes || minutes < 24 * 60);
+}

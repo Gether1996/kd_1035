@@ -64,6 +64,7 @@ const SETTINGS: ReminderSettings = {
       icon: null,
       next_start: SILK_ROAD.start,
       repeat_days: 0,
+      duration_minutes: 60,
       irregular: true,
       offered: [15, 60],
       offsets: null,

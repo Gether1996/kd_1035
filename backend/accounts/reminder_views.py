@@ -59,6 +59,8 @@ def event_data(event: KingdomEvent, offsets: list | None, start) -> dict:
         'icon': icon_url(event.icon),
         'next_start': start.astimezone(UTC).isoformat().replace('+00:00', 'Z') if start else None,
         'repeat_days': event.repeat_days,
+        # 0 = no end; the website shows the clock only for a short irregular event
+        'duration_minutes': event.duration_minutes,
         # no fixed cycle: next_start is null until leadership sets the next date
         'irregular': event.irregular,
         'offered': event.player_reminders or [],
