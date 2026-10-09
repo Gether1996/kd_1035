@@ -9,5 +9,4 @@ urlpatterns = [
     path('auth/logout/', views.sign_out),
     path('me/reminders/', reminder_views.reminders),
     path('me/reminders/<int:event_id>/', reminder_views.event_reminder),
-    path('me/push/', reminder_views.push_subscription),
 ]

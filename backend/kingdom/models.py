@@ -185,7 +185,7 @@ class KingdomEvent(models.Model):
     show_on_web = models.BooleanField(
         'zobraziť na webe',
         default=True,
-        help_text='Hráči si ho môžu vybrať v pripomienkach na webe (Môj účet).',
+        help_text='Hráči si ho môžu vybrať na webe v časti Pripomienky eventov.',
     )
     player_reminders = models.JSONField(
         'časy pre hráčov',

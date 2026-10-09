@@ -19,7 +19,7 @@ from kingdom import snapshot
 from kingdom.models import KingdomEvent
 
 from . import discord_oauth
-from .models import EventReminder, Player, PushSubscription, SentReminder
+from .models import EventReminder, Player, SentReminder
 
 DISCORD = {'DISCORD_CLIENT_ID': '1234567890', 'DISCORD_CLIENT_SECRET': 'shh', 'SITE_URL': 'https://kd1035.test'}
 CALLBACK = 'https://kd1035.test/api/auth/discord/callback/'
@@ -378,16 +378,17 @@ class SessionActionTests(TestCase):
         admin = User.objects.create_superuser('boss', password='x')
         event = KingdomEvent.objects.create(name_sk='MGE', starts_at=timezone.now() + timedelta(days=1))
         reminder = EventReminder.objects.create(player=player, event=event, offsets=[60])
-        push = PushSubscription.objects.create(player=player, endpoint='https://fcm.googleapis.com/x', p256dh='k', auth='a')
-        sent = SentReminder.objects.create(player=player, event=event, occurrence=event.starts_at, offset=60, channel='push')
-        for obj in (player.user, player, reminder, push, sent, event):
+        sent = SentReminder.objects.create(
+            player=player, event=event, occurrence=event.starts_at, offset=60, channel='discord'
+        )
+        for obj in (player.user, player, reminder, sent, event):
             LogEntry.objects.log_actions(admin.pk, [obj], CHANGE, change_message='edited')
 
         self.assertEqual(self.client.delete('/api/auth/me/', HTTP_X_CSRFTOKEN=token).status_code, 204)
         # only the entry about the event (no player data) stays
         self.assertEqual(list(LogEntry.objects.values_list('object_repr', flat=True)), [str(event)])
         self.assertEqual(list(User.objects.values_list('username', flat=True)), ['boss'])
-        self.assertFalse(EventReminder.objects.exists() or PushSubscription.objects.exists())
+        self.assertFalse(EventReminder.objects.exists())
         self.assertFalse(SentReminder.objects.exists())
 
     def test_staff_and_superusers_cannot_delete_themselves(self):

@@ -85,12 +85,6 @@ server {
         expires 7d;
     }
 
-    # web push service worker (event reminders): browsers must always see its latest version
-    location = /push-sw.js {
-        add_header Cache-Control "no-cache";
-        include /etc/nginx/snippets/security-headers.conf;
-    }
-
     # single guides are rendered in the browser from the app shell; link-preview bots get Django's
     # /api/link-preview/ page with the guide's Open Graph tags (same address, so robots.txt applies as usual)
     location ~ ^/(cz/)?navody/[^/]+/[^/]+/?$ {

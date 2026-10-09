@@ -146,7 +146,7 @@ class KingdomEventForm(forms.ModelForm):
         initial=default_player_reminders,  # a declared field does not take the model default by itself
         widget=forms.TextInput(attrs={'placeholder': '10, 60', 'inputmode': 'numeric'}),
         help_text='Minúty pred začiatkom oddelené čiarkou, napr. 10, 60, 1440 (= 1 deň). Najviac 6, od 0 do 10080 '
-        '(7 dní). Hráč si ich vyberie na webe v časti Môj účet a môže si zadať aj vlastný čas.',
+        '(7 dní). Hráč si ich vyberie na webe v časti Pripomienky eventov a môže si zadať aj vlastný čas.',
     )
 
     class Meta:
@@ -218,7 +218,7 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
             {
                 'fields': ['player_reminders'],
                 'description': 'Prihlásení hráči si aktívny event zobrazený na webe vyberú a dostanú pripomienku '
-                'súkromnou správou na Discorde alebo notifikáciou v prehliadači. Kto si čo vybral: Hráči → '
+                'súkromnou správou od bota na Discorde. Kto si čo vybral: Hráči → '
                 'Pripomienky hráčov.',
             },
         ),

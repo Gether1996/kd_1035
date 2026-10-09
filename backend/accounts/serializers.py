@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 from kingdom.models import MAX_REMINDER_MINUTES
 
-from . import push
 from .models import MAX_PLAYER_REMINDERS, Player
 
 
@@ -44,20 +43,3 @@ class ReminderSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
         fields = ['discord', 'lang']
-
-
-class PushKeysSerializer(serializers.Serializer):
-    p256dh = serializers.RegexField(r'^[A-Za-z0-9_-]+={0,2}$', max_length=200)
-    auth = serializers.RegexField(r'^[A-Za-z0-9_-]+={0,2}$', max_length=100)
-
-
-class PushSubscriptionSerializer(serializers.Serializer):
-    """PushSubscription.toJSON() from the browser: {endpoint, expirationTime, keys: {p256dh, auth}}."""
-
-    endpoint = serializers.URLField(max_length=500)
-    keys = PushKeysSerializer()
-
-    def validate_endpoint(self, value):
-        if not push.allowed_endpoint(value):
-            raise serializers.ValidationError('Tento prehliadač nepoužíva podporovanú push službu.')
-        return value

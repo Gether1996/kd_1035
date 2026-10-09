@@ -63,7 +63,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
 @admin.register(SentReminder)
 class SentReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
-    """What the worker sent in the last 30 days and why a delivery failed (DMs closed, browser switched off…)."""
+    """What the worker sent in the last 30 days and why a delivery failed (DMs closed, bot not on the server…)."""
 
     list_display = ['sent_at', 'player_name', 'event', 'occurrence', 'offset', 'channel', 'ok', 'error']
     list_filter = ['ok', 'channel', 'event']
@@ -100,7 +100,7 @@ class PlayerUserAdmin(UserAdmin):
 
 @admin.register(EventReminder)
 class EventReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
-    """Who picked which event on the website – read only, players change it themselves on /ucet."""
+    """Who picked which event on the website – read only, players change it themselves on /pripomienky."""
 
     list_display = ['player_name', 'ingame_name', 'event', 'times', 'updated_at']
     list_filter = ['event']

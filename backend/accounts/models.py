@@ -67,9 +67,9 @@ class Player(models.Model):
 
     @transaction.atomic
     def delete_account(self):
-        """Deletes the whole site account: the user cascades to this player, their reminders, browsers and sent
-        reminders. Admin history about them goes too – it names the player ("Nelly · MGE") and the privacy page
-        promises nothing is left. Entries the user made themselves go with the user's cascade."""
+        """Deletes the whole site account: the user cascades to this player, their reminders and sent reminders.
+        Admin history about them goes too – it names the player ("Nelly · MGE") and the privacy page promises nothing
+        is left. Entries the user made themselves go with the user's cascade."""
         from django.contrib.admin.models import LogEntry
         from django.contrib.contenttypes.models import ContentType
 
@@ -77,7 +77,6 @@ class Player(models.Model):
             type(self.user): [self.user.pk],
             Player: [self.pk],
             EventReminder: self.event_reminders.values_list('pk', flat=True),
-            PushSubscription: self.push_subscriptions.values_list('pk', flat=True),
             SentReminder: SentReminder.objects.filter(player=self).values_list('pk', flat=True),
         }
         for model, pks in about.items():
@@ -109,33 +108,13 @@ class EventReminder(models.Model):
         return f'{self.player} · {self.event}'
 
 
-class PushSubscription(models.Model):
-    """One browser (phone, PC) where the player switched on notifications. The keys only encrypt the messages."""
-
-    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='push_subscriptions', verbose_name='hráč')
-    endpoint = models.URLField('adresa push služby', max_length=500, unique=True)
-    p256dh = models.CharField(max_length=200)
-    auth = models.CharField(max_length=100)
-    created_at = models.DateTimeField('vytvorené', auto_now_add=True)
-    last_used_at = models.DateTimeField('naposledy odoslané', null=True, blank=True)
-    # failed sends in a row; the subscription is dropped after a few
-    failures = models.PositiveSmallIntegerField('chyby za sebou', default=0)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'prehliadač s notifikáciami'
-        verbose_name_plural = 'prehliadače s notifikáciami'
-
-    def __str__(self):
-        return f'{self.player} · {self.endpoint[:40]}…'
-
-
 class SentReminder(models.Model):
-    """Log of personal reminders, one row per channel – the worker never sends the same one twice. Kept 30 days."""
+    """Log of personal reminders, one row per channel – the worker never sends the same one twice. Kept 30 days.
+
+    Discord DM from the bot is the only channel; the field stays so another channel would need no new constraint."""
 
     class Channel(models.TextChoices):
         DISCORD = 'discord', 'Discord'
-        PUSH = 'push', 'prehliadač'
 
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='+', verbose_name='hráč')
     event = models.ForeignKey('kingdom.KingdomEvent', on_delete=models.CASCADE, related_name='+', verbose_name='event')

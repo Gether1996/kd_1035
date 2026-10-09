@@ -1,4 +1,4 @@
-"""The signed-in player's event reminders and notification channels (/api/me/…).
+"""The signed-in player's event reminders (/api/me/…), sent as a Discord DM from the bot.
 
 Only players signed in with Discord (session + CSRF like /api/auth/me/). Players see and pick only active events
 shown on the web; the worker sends the reminders (reminders.py).
@@ -10,7 +10,6 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
@@ -19,13 +18,10 @@ from kingdom.event_icons import icon_url
 from kingdom.events import upcoming
 from kingdom.models import KingdomEvent
 
-from . import discord_bot, push
-from .models import EventReminder, PushSubscription
-from .serializers import OffsetsSerializer, PushSubscriptionSerializer, ReminderSettingsSerializer
+from . import discord_bot
+from .models import EventReminder
+from .serializers import OffsetsSerializer, ReminderSettingsSerializer
 from .views import player_of
-
-# browsers per player; registering one more drops the oldest
-MAX_DEVICES = 10
 
 
 class IsPlayer(BasePermission):
@@ -36,7 +32,8 @@ class IsPlayer(BasePermission):
 
 
 class WriteThrottle(UserRateThrottle):
-    """Changes per player (every chip on /ucet saves at once). The cache is per process, so it is a soft limit."""
+    """Changes per player (every chip on /pripomienky saves at once). The cache is per process, so it is a soft
+    limit."""
 
     scope = 'reminders'
     rate = '60/minute'
@@ -93,8 +90,6 @@ def reminders(request):
         {
             'discord': player.remind_discord,
             'discord_available': discord_bot.enabled(),
-            'push_key': push.public_key(),
-            'push_devices': player.push_subscriptions.count(),
             'lang': player.lang,
             'events': events,
         }
@@ -118,30 +113,3 @@ def event_reminder(request, event_id):
     offsets = data.validated_data['offsets']
     EventReminder.objects.update_or_create(player=player, event=event, defaults={'offsets': offsets})
     return Response(event_data(event, offsets, next_start(event, timezone.now())))
-
-
-@never_cache
-@api_view(['POST', 'DELETE'])
-@permission_classes([IsPlayer])
-@throttle_classes([WriteThrottle])
-def push_subscription(request):
-    """POST: this browser's subscription (upsert – an endpoint used by another player before moves to this one).
-    DELETE {endpoint}: notifications off on this browser."""
-    player = request.user.player
-    if request.method == 'DELETE':
-        endpoint = request.data.get('endpoint') if isinstance(request.data, dict) else None
-        if not isinstance(endpoint, str) or not endpoint:
-            raise ValidationError({'endpoint': 'Chýba adresa.'})
-        player.push_subscriptions.filter(endpoint=endpoint).delete()
-        return Response({'push_devices': player.push_subscriptions.count()})
-
-    data = PushSubscriptionSerializer(data=request.data)
-    data.is_valid(raise_exception=True)
-    keys = data.validated_data['keys']
-    _, created = PushSubscription.objects.update_or_create(
-        endpoint=data.validated_data['endpoint'],
-        defaults={'player': player, 'p256dh': keys['p256dh'], 'auth': keys['auth'], 'failures': 0},
-    )
-    stale = list(player.push_subscriptions.order_by('-created_at', '-pk').values_list('pk', flat=True)[MAX_DEVICES:])
-    PushSubscription.objects.filter(pk__in=stale).delete()
-    return Response({'push_devices': player.push_subscriptions.count()}, status=201 if created else 200)
