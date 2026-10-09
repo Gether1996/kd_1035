@@ -171,6 +171,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
   - **MAJOR** (2.0.0) – **iba keď to Gether povie.** Sám ho nikdy nezvyšuj.
   - Verziu **nemení**: obsah (návody, eventy, mesačná meta aktualizácia, snapshot DB), dokumentácia, testy, nástroje, agenti a iné zmeny bez dopadu na web.
   - Jedna úloha = jedno zvýšenie, aj keď má viac commitov (zvýš v poslednom). Pri pochybnosti PATCH.
+  - Čísla nemajú limit a píšu sa bez úvodných núl: po 1.0.9 ide 1.0.10, potom 1.0.11… (nie 1.0.00 – npm takú verziu neprijme; Gether 9. 10. 2026 súhlasil).
 - Pri zvýšení: zmeň obe miesta, správa commitu začína `Release v1.0.1:` alebo verziu spomenie, commit označ tagom `v<verzia>` a pushni aj tag (`git tag v1.0.1 && git push origin main v1.0.1`). Do `docs/backlog.md` pri položke dopíš verziu. Gethera stačí informovať, na akú verziu si to zvýšil.
 
 ## Git
