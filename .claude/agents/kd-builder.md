@@ -7,13 +7,13 @@ You are the senior full-stack developer of the KD 1035 website (Django 6 + DRF b
 
 ## Ground rules
 - The working tree must be clean when you start a new feature (`git status`). If it is not, stop and return `blocked`. Record `git rev-parse HEAD` as `base_sha` before the first change.
-- Follow CLAUDE.md to the letter. Read the neighbouring code first and write code that looks like it was there from the beginning – same naming, structure, comment density.
+- Follow CLAUDE.md to the letter, and before touching events/calendar/notifications, guides or player accounts read the matching detail file (docs/eventy.md, docs/navody.md, docs/ucty.md). Read the neighbouring code first and write code that looks like it was there from the beginning – same naming, structure, comment density.
 - Docker only: the dev stack is `docker compose -f docker-compose.dev.yml up -d` (web :4200 with hot reload, Django :8000). Run npm and manage.py through `docker compose -f docker-compose.dev.yml run --rm …` or `exec`.
 - Every visible text in `sk.ts` and `cs.ts`; new pages wired into routes, server routes, i18n `parseUrl`/`Page` and sitemap `STATIC_PAGES`.
 - Backend: additive migrations, admin, validation, permissions, tests. New env variables go to `.env.example` with a description (never real values) and, if needed locally, to `.env`.
 - Things only Gether can provide (Discord OAuth app, webhook, texts, photos): build the feature so it is configurable and degrades gracefully without them, and list them in `needs_from_user`.
 - Do not leave test data in the dev database – the pre-commit hook may export the database into git. Use unit tests; delete anything you created by hand.
-- Record new architectural/design decisions in CLAUDE.md (in Slovak, short) and operator steps in README.md.
+- Record new architectural/design decisions in CLAUDE.md, or in the matching docs/*.md detail file when they only concern that area (in Slovak, short) and operator steps in README.md.
 
 ## Verify before you hand over
 ```bash

@@ -107,7 +107,7 @@ phase('Research')
 const research = await parallel(MODULES.map(m => () =>
   agent(
     `You keep the Rise of Kingdoms guides of the KD 1035 website current. Today's month: ${MONTH}.
-Read ${m.file} (its VERIFIED value is the month of the last check; its GUIDES are the current content). Load WebSearch and WebFetch via ToolSearch ("select:WebSearch,WebFetch").
+Read docs/navody.md (rules for these guides) and ${m.file} (its VERIFIED value is the month of the last check; its GUIDES are the current content). Load WebSearch and WebFetch via ToolSearch ("select:WebSearch,WebFetch").
 Research what changed in the meta of ${m.topic} since VERIFIED: new or reworked commanders/items/events, buffs and nerfs, shifted recommendations, wrong or outdated statements in the current guides, dead source links. ${m.key === 'commanders' ? YOUTUBE_NOTE : YOUTUBE_OTHER}
 ${m.key === 'events' ? 'If the module has few or no guides, propose the most useful missing event guides as new:<slug> entries with full facts.' : ''}
 ${SOURCES_NOTE}
@@ -127,7 +127,7 @@ phase('Update')
 const brief = JSON.stringify(found, null, 2)
 let build = await run(
   'kd-builder',
-  `Monthly meta update of the KD 1035 guides (${MONTH}). Apply the researched changes below to the meta modules in backend/guides/meta/ – the database is never edited directly; \`sync_meta_guides\` writes the modules into it.
+  `Monthly meta update of the KD 1035 guides (${MONTH}). Read docs/navody.md first (rules for these guides). Apply the researched changes below to the meta modules in backend/guides/meta/ – the database is never edited directly; \`sync_meta_guides\` writes the modules into it.
 Rules:
 - Write every changed or new text yourself in Slovak AND Czech (correct diacritics, short, no ballast), keep the existing data structure and block types (see backend/guides/meta/render.py), add/replace sources with their dates.
 - Apply only changes with solid evidence; list anything you skip in "skipped" with the reason.
