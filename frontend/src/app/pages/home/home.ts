@@ -6,15 +6,17 @@ import { Hero } from './hero/hero';
 import { Intro } from './intro/intro';
 import { Marquee } from './marquee/marquee';
 import { Notify } from './notify/notify';
+import { Upcoming } from './upcoming/upcoming';
 
 @Component({
   selector: 'app-home',
-  imports: [Hero, Intro, Marquee, Notify, AllianceSection, Guides, Community],
+  imports: [Hero, Intro, Marquee, Notify, Upcoming, AllianceSection, Guides, Community],
   template: `
     <app-hero />
     <app-intro />
     <app-marquee />
     <app-notify />
+    <app-upcoming />
     <app-alliance />
     <app-guides />
     <app-community />

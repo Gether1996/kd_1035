@@ -1,0 +1,106 @@
+:host {
+  display: block;
+}
+
+// one under another on phones, three side by side from 768 px (fewer stay card-wide and centred)
+.cards {
+  --gap: clamp(14px, 2.4vw, 28px);
+  display: grid;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(var(--count, 3), minmax(0, calc((100% - 2 * var(--gap)) / 3)));
+    justify-content: center;
+  }
+
+  li {
+    display: grid;
+  }
+}
+
+// the event's calendar colour (data-accent) as a line on the left edge
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: clamp(18px, 2.4vw, 26px);
+  padding-right: 52px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: inset 3px 0 0 var(--accent);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.3s;
+
+  &:hover {
+    border-color: var(--line-strong);
+  }
+
+  &:hover .card__arrow {
+    color: var(--gold-300);
+    transform: translateX(4px);
+  }
+}
+
+.card__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.card__icon {
+  --size: 48px;
+}
+
+.card__day {
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.card__live {
+  height: 24px;
+  border-color: color-mix(in srgb, var(--red-300) 60%, transparent);
+  background: color-mix(in srgb, var(--red-500) 18%, transparent);
+  color: var(--red-300);
+}
+
+.card__name {
+  font: 600 1.1875rem/1.25 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.card__when {
+  color: var(--text-dim);
+  font-size: 0.9375rem;
+
+  small {
+    margin-left: 6px;
+    color: var(--text-mute);
+    font-size: 0.8125rem;
+  }
+}
+
+.card__arrow {
+  position: absolute;
+  right: clamp(18px, 2.4vw, 26px);
+  bottom: clamp(18px, 2.4vw, 26px);
+  color: var(--text-dim);
+  transition:
+    transform 0.35s var(--ease-out),
+    color 0.25s;
+}
+
+.more {
+  margin-top: clamp(28px, 4vw, 40px);
+  text-align: center;
+}
+

@@ -72,6 +72,14 @@ export const sk = {
       { title: 'Pomoc nováčikom', text: 'Poradíme s commandermi, výbavou aj eventmi.' },
     ],
   },
+  upcoming: {
+    eyebrow: 'Kalendár',
+    title: 'Najbližšie eventy',
+    today: 'Dnes',
+    tomorrow: 'Zajtra',
+    running: 'Prebieha',
+    all: 'Celý kalendár',
+  },
   notify: {
     eyebrow: 'Pripomienky',
     title: 'Nezmeškaj event',

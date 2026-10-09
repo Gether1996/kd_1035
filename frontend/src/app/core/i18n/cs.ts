@@ -74,6 +74,14 @@ export const cs: Dict = {
       { title: 'Pomoc nováčkům', text: 'Poradíme s commandery, výbavou i eventy.' },
     ],
   },
+  upcoming: {
+    eyebrow: 'Kalendář',
+    title: 'Nejbližší eventy',
+    today: 'Dnes',
+    tomorrow: 'Zítra',
+    running: 'Probíhá',
+    all: 'Celý kalendář',
+  },
   notify: {
     eyebrow: 'Připomínky',
     title: 'Nezmeškej event',
