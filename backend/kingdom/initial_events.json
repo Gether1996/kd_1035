@@ -401,5 +401,155 @@
     ],
     "guide": null,
     "is_active": true
+  },
+  {
+    "name_sk": "Champions of Olympia",
+    "name_cs": "",
+    "icon": "olympia",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-10T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 7,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "champions-of-olympia",
+    "is_active": false
+  },
+  {
+    "name_sk": "Realm of Mystique",
+    "name_cs": "",
+    "icon": "realm-of-mystique",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-12T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 14,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": false
+  },
+  {
+    "name_sk": "Armament: Reveal Thyself",
+    "name_cs": "",
+    "icon": "armament",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-12T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 28,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": false
+  },
+  {
+    "name_sk": "Ceroli Crisis",
+    "name_cs": "",
+    "icon": "ceroli",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-19T00:00:00+00:00",
+    "duration_minutes": 4320,
+    "repeat_days": 14,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "ceroli-crisis",
+    "is_active": false
+  },
+  {
+    "name_sk": "Golden Kingdom",
+    "name_cs": "",
+    "icon": "golden-kingdom",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-21T00:00:00+00:00",
+    "duration_minutes": 4320,
+    "repeat_days": 14,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": "golden-kingdom",
+    "is_active": false
+  },
+  {
+    "name_sk": "Dhalruk's Puzzle Box",
+    "name_cs": "",
+    "icon": "dhalruk",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-26T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 56,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": false
   }
 ]

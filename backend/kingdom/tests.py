@@ -886,7 +886,7 @@ class EventTemplateTests(TestCase):
             self.assertIsNotNone(event_icons.icon_url(event.icon), event.icon)
 
         # an edited or renamed draft is never overwritten, a deleted one comes back
-        KingdomEvent.objects.filter(name_sk='Esmeralda').delete()
+        KingdomEvent.objects.filter(name_sk='Golden Kingdom').delete()
         KingdomEvent.objects.filter(name_sk='Wheel of Fortune').update(repeat_days=21)
         call_command('seed_event_templates', stdout=StringIO())
         self.assertEqual(KingdomEvent.objects.count(), len(TEMPLATES) + len(IRREGULAR_TEMPLATES))

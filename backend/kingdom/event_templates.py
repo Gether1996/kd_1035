@@ -12,7 +12,7 @@ from pathlib import Path
 from .models import KingdomEvent
 
 # The kingdom's events as Gether set them up in the dev database (8. 10. 2026: the rotation above switched on,
-# Esmeralda removed, Hunt for History and Holy Knight's Treasure taking turns). A brand-new production database starts with them once (entrypoint.sh), later they are
+# Esmeralda removed – also from the drafts below, Hunt for History and Holy Knight's Treasure taking turns). A brand-new production database starts with them once (entrypoint.sh), later they are
 # managed only in the production admin / calendar.
 INITIAL_EVENTS = Path(__file__).with_name('initial_events.json')
 
@@ -31,7 +31,6 @@ TEMPLATES = [
     ('MGE – Lukostrelci', 'MGE – Lučištníci', utc(2026, 11, 2), 56, 6, 'mightiest-governor-mge'),
     ('Ark of Osiris', 'Ark of Osiris', utc(2026, 10, 14), 14, 5, 'ark-of-osiris'),
     ('Wheel of Fortune', 'Wheel of Fortune', utc(2026, 10, 6), 14, 3, 'wheel-of-fortune'),
-    ('Esmeralda', 'Esmeralda', utc(2026, 10, 19), 14, 2, ''),
     # hammer (Hunt for History) and egg (Holy Knight's Treasure) take turns every two weeks, each one every four
     # weeks (Gether, 8. 10. 2026); the egg cycles through three equipment sets, so each set comes every 12 weeks
     # (Gether, 9. 10. 2026: the last egg was weapon + accessories)
@@ -45,6 +44,14 @@ TEMPLATES = [
     ('More Than Gems', 'More Than Gems', utc(2026, 10, 10), 28, 2, 'more-than-gems'),
     # every second Friday 00:00 UTC for 48 h, confirmed by Gether (8. 10. 2026)
     ('20 GH', '20 GH', utc(2026, 10, 16), 14, 2, ''),
+    # more regular events, added inactive for Gether to set up (9. 10. 2026); next dates, cycles and durations from
+    # the codexhelper.com calendar API – an estimate, not game data
+    ('Champions of Olympia', 'Champions of Olympia', utc(2026, 10, 10), 7, 2, 'champions-of-olympia'),
+    ('Realm of Mystique', 'Realm of Mystique', utc(2026, 10, 12), 14, 2, ''),
+    ('Armament: Reveal Thyself', 'Armament: Reveal Thyself', utc(2026, 10, 12), 28, 2, ''),
+    ('Ceroli Crisis', 'Ceroli Crisis', utc(2026, 10, 19), 14, 3, 'ceroli-crisis'),
+    ('Golden Kingdom', 'Golden Kingdom', utc(2026, 10, 21), 14, 3, 'golden-kingdom'),
+    ("Dhalruk's Puzzle Box", "Dhalruk's Puzzle Box", utc(2026, 10, 26), 56, 2, ''),
 ]
 
 MESSAGE = '**{name}** začína {start} ({relative}).'
