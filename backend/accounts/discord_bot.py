@@ -14,17 +14,21 @@ from .discord_oauth import API, DISCORD_ID, USER_AGENT
 
 # Discord error code: the user blocks DMs or shares no server with the bot
 CANNOT_MESSAGE_USER = 50007
+# the exact error text for CANNOT_MESSAGE_USER – SentReminder.error equals it, so /pripomienky can tell the player why
+BLOCKED_MESSAGE = 'Hráč nemá povolené súkromné správy alebo nie je na Discord serveri s botom.'
 
 
 class BotError(Exception):
     """Discord refused or did not answer. The message never contains the token.
 
     temporary: rate limit, server error or no answer – worth trying again in a moment (the worker does, next tick).
+    blocked: the bot cannot write to this player (not on the server, or DMs from its members are off).
     """
 
-    def __init__(self, message: str, temporary: bool = False):
+    def __init__(self, message: str, temporary: bool = False, blocked: bool = False):
         super().__init__(message)
         self.temporary = temporary
+        self.blocked = blocked
 
 
 def enabled() -> bool:
@@ -68,7 +72,7 @@ def _error(exc: urllib.error.HTTPError) -> BotError:
         # the worker never waits here: it pauses Discord for the rest of the round and retries on the next tick
         return BotError(f'Discord limit (429), skúsiť o {body.get("retry_after", "?")} s', temporary=True)
     if body.get('code') == CANNOT_MESSAGE_USER:
-        return BotError('Hráč nemá povolené súkromné správy alebo nie je na Discord serveri s botom.')
+        return BotError(BLOCKED_MESSAGE, blocked=True)
     return BotError(f'Discord odpovedal {exc.code}: {raw.decode(errors="replace")}', temporary=exc.code >= 500)
 
 

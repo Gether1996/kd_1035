@@ -19,7 +19,7 @@ from kingdom.models import KingdomEvent
 
 from . import discord_bot, reminders
 from .models import EventReminder, Player, SentReminder, validate_offsets
-from .reminder_views import WriteThrottle
+from .reminder_views import TestMessageThrottle, WriteThrottle, last_delivery
 
 BOT = {'DISCORD_BOT_TOKEN': 'bot-secret-token'}
 NO_BOT = {'DISCORD_BOT_TOKEN': ''}
@@ -119,6 +119,7 @@ class RemindersApiTests(ApiTestCase):
                         'offsets': None,
                     },
                 ],
+                'last_delivery': None,
             },
         )
 
@@ -128,7 +129,7 @@ class RemindersApiTests(ApiTestCase):
         EventReminder.objects.create(player=self.player, event=event, offsets=[60, 10])
         data = self.client.get(self.url).json()
         # Discord DM is the only channel – no web push fields
-        self.assertEqual(set(data), {'discord', 'discord_available', 'lang', 'events'})
+        self.assertEqual(set(data), {'discord', 'discord_available', 'lang', 'events', 'last_delivery'})
         self.assertTrue(data['discord_available'])
         self.assertEqual(data['events'][0]['offsets'], [60, 10])
 
@@ -252,6 +253,135 @@ class RemindersApiTests(ApiTestCase):
             self.assertEqual(self.client.get(self.url).status_code, 200)  # reading is not limited
 
 
+def discord_answer(data):
+    return io.BytesIO(json.dumps(data).encode())
+
+
+def discord_refusal(code, body):
+    return urllib.error.HTTPError('https://discord.com', code, 'Error', {}, io.BytesIO(json.dumps(body).encode()))
+
+
+def dm_answers():
+    """urlopen for any number of DMs: open the channel, post the message"""
+    calls = iter(range(1000))
+    return lambda *args, **kwargs: discord_answer({'id': '1234567890123'} if next(calls) % 2 == 0 else {'id': '9'})
+
+
+@override_settings(**BOT)
+class TestDmApiTests(ApiTestCase):
+    url = '/api/me/reminders/test/'
+
+    def test_sends_a_test_message_and_stores_nothing(self):
+        with mock.patch('urllib.request.urlopen', side_effect=dm_answers()) as urlopen:
+            response = self.send('post', self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('no-store', response['Cache-Control'])
+        self.assertEqual(response.json(), {'ok': True})
+        opened, posted = (c.args[0] for c in urlopen.call_args_list)
+        self.assertEqual(json.loads(opened.data), {'recipient_id': self.player.discord_id})
+        self.assertEqual(json.loads(posted.data)['embeds'][0]['title'], 'Skúšobná správa')
+        self.assertFalse(SentReminder.objects.exists())
+
+    @override_settings(SITE_URL='https://kd1035.test')
+    def test_in_the_players_language(self):
+        Player.objects.filter(pk=self.player.pk).update(lang='cs')
+        with mock.patch('urllib.request.urlopen', side_effect=dm_answers()) as urlopen:
+            self.send('post', self.url)
+        embed = json.loads(urlopen.call_args_list[1].args[0].data)['embeds'][0]
+        self.assertEqual(embed['title'], 'Zkušební zpráva')
+        self.assertIn('[Změnit připomínky](https://kd1035.test/cz/pripomienky)', embed['description'])
+
+    def test_blocked_and_unavailable(self):
+        cases = [
+            (discord_refusal(403, {'message': 'Cannot send messages to this user', 'code': 50007}), 'blocked'),
+            (discord_refusal(500, {}), 'unavailable'),
+            (discord_refusal(429, {'retry_after': 1}), 'unavailable'),
+            (urllib.error.URLError('down'), 'unavailable'),
+        ]
+        for side_effect, reason in cases:
+            cache.clear()
+            with self.subTest(reason), mock.patch('urllib.request.urlopen', side_effect=side_effect):
+                with self.assertLogs('accounts.reminder_views', 'WARNING') as logs:
+                    response = self.send('post', self.url)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), {'ok': False, 'reason': reason})
+                # the player's ID only, never the Discord ID
+                self.assertIn(f'player {self.player.pk} ', logs.output[0])
+                self.assertNotIn(self.player.discord_id, logs.output[0])
+        self.assertFalse(SentReminder.objects.exists())
+
+    @override_settings(**NO_BOT)
+    def test_without_the_bot_discord_is_not_asked(self):
+        with mock.patch('urllib.request.urlopen') as urlopen:
+            response = self.send('post', self.url)
+        self.assertEqual(response.json(), {'ok': False, 'reason': 'unavailable'})
+        urlopen.assert_not_called()
+
+    def test_three_per_ten_minutes_apart_from_the_write_limit(self):
+        self.assertEqual(TestMessageThrottle().parse_rate(TestMessageThrottle.rate), (3, 600))
+        self.assertNotEqual(TestMessageThrottle.scope, WriteThrottle.scope)
+        with mock.patch('urllib.request.urlopen', side_effect=dm_answers()):
+            for _ in range(3):
+                self.assertEqual(self.send('post', self.url).status_code, 200)
+            self.assertEqual(self.send('post', self.url).status_code, 429)
+        # other changes on /pripomienky still work
+        self.assertEqual(self.send('patch', '/api/me/reminders/', {'discord': True}).status_code, 200)
+
+    def test_needs_post_csrf_and_a_player(self):
+        with mock.patch('urllib.request.urlopen') as urlopen:
+            self.assertEqual(self.client.get(self.url).status_code, 405)
+            self.assertEqual(self.send('post', self.url, token=False).status_code, 403)
+            self.client.logout()
+            for user in (None, User.objects.create_superuser('boss', password='x')):
+                if user:
+                    self.client.force_login(user)
+                self.token = self.client.get('/api/auth/me/').cookies['csrftoken'].value
+                with self.subTest(user=user and user.username):
+                    self.assertEqual(self.send('post', self.url).status_code, 403)
+        urlopen.assert_not_called()
+
+
+class LastDeliveryTests(ApiTestCase):
+    url = '/api/me/reminders/'
+
+    def log(self, player, sent_at, ok=False, error=''):
+        return SentReminder.objects.create(
+            player=player,
+            event=self.event,
+            occurrence=sent_at,
+            offset=10,
+            channel=Channel.DISCORD,
+            sent_at=sent_at,
+            ok=ok,
+            error=error,
+        )
+
+    def last(self):
+        return self.client.get(self.url).json()['last_delivery']
+
+    def test_newest_reminder_of_any_event(self):
+        self.event = make_event()
+        self.assertIsNone(self.last())
+        self.log(self.player, utc(2026, 10, 1, 18), ok=True)
+        self.assertEqual(self.last(), {'ok': True, 'blocked': False, 'at': '2026-10-01T18:00:00Z'})
+
+        self.log(self.player, utc(2026, 10, 2, 18), error=discord_bot.BLOCKED_MESSAGE)
+        self.assertEqual(self.last(), {'ok': False, 'blocked': True, 'at': '2026-10-02T18:00:00Z'})
+
+        self.event = make_event(name_sk='KvK')
+        self.log(self.player, utc(2026, 10, 3, 18), error='Discord odpovedal 401: …')
+        self.assertEqual(self.last(), {'ok': False, 'blocked': False, 'at': '2026-10-03T18:00:00Z'})
+
+        # a reminder still being sent and other players' reminders do not count
+        self.log(self.player, utc(2026, 10, 4, 18))
+        self.log(make_player('80351110224678913'), utc(2026, 10, 5, 18), ok=True)
+        self.assertEqual(self.last()['at'], '2026-10-03T18:00:00Z')
+
+        # a later delivery ends the warning
+        self.log(self.player, utc(2026, 10, 6, 18), ok=True)
+        self.assertEqual(self.last(), {'ok': True, 'blocked': False, 'at': '2026-10-06T18:00:00Z'})
+
+
 class MessageTests(TestCase):
     def setUp(self):
         self.event = make_event(name_cs='Ruiny CZ')
@@ -313,6 +443,21 @@ class MessageTests(TestCase):
         self.assertEqual(reminders.page_path(self.event, 'sk'), '/pripomienky')
         self.event.guide.is_published = True
         self.assertEqual(reminders.page_path(self.event, 'cs'), '/cz/navody/eventy/ruiny-y')
+
+    @override_settings(SITE_URL='https://kd1035.test')
+    def test_test_message_looks_like_a_reminder(self):
+        embed = reminders.test_message('sk')['embeds'][0]
+        reminder = reminders.discord_message(self.event, utc(2026, 10, 10, 18), 'sk')['embeds'][0]
+        self.assertEqual(embed['title'], 'Skúšobná správa')
+        self.assertEqual(
+            embed['description'],
+            'Pripomienky ti budú chodiť sem.\n[Zmeniť pripomienky](https://kd1035.test/pripomienky)',
+        )
+        self.assertEqual((embed['color'], embed['footer']), (reminder['color'], reminder['footer']))
+        embed = reminders.test_message('cs')['embeds'][0]
+        self.assertEqual(embed['title'], 'Zkušební zpráva')
+        self.assertIn('Připomínky ti budou chodit sem.', embed['description'])
+        self.assertIn('(https://kd1035.test/cz/pripomienky)', embed['description'])
 
 
 @override_settings(**BOT)
@@ -379,6 +524,16 @@ class SendRemindersTests(TestCase):
         self.assertEqual((row.ok, row.error), (False, 'Hráč nemá povolené súkromné správy.'))
         self.run_at(2026, 10, 10, 17, 1)
         self.assertEqual(self.dm.call_count, 1)
+
+    def test_a_blocked_player_is_logged_with_the_text_the_web_recognises(self):
+        # the same BotError send_dm raises for Discord 50007 – BLOCKED_MESSAGE and `blocked` never drift apart
+        self.dm.side_effect = discord_bot._error(discord_refusal(403, {'code': 50007}))
+        self.assertTrue(self.dm.side_effect.blocked)
+        self.assertFalse(self.dm.side_effect.temporary)
+        with self.assertLogs('accounts.reminders', 'WARNING'):
+            self.run_at(2026, 10, 10, 17, 0)
+        self.assertEqual(SentReminder.objects.get().error, discord_bot.BLOCKED_MESSAGE)
+        self.assertTrue(last_delivery(self.player)['blocked'])
 
     def test_discord_rate_limit_retries_on_the_next_tick(self):
         self.dm.side_effect = discord_bot.BotError('Discord limit (429), skúsiť o 1.5 s', temporary=True)
@@ -506,6 +661,10 @@ class DiscordBotTests(SimpleTestCase):
                     discord_bot.send_dm('80351110224678912', {'content': 'x'})
                 self.assertIn(text, str(ctx.exception))
                 self.assertEqual(ctx.exception.temporary, text in temporary)
+                # only 50007 means the bot cannot reach the player, with exactly the text /pripomienky recognises
+                self.assertEqual(ctx.exception.blocked, text == 'súkromné správy')
+                if ctx.exception.blocked:
+                    self.assertEqual(str(ctx.exception), discord_bot.BLOCKED_MESSAGE)
                 self.assertNotIn('bot-secret-token', str(ctx.exception))
 
     @override_settings(DISCORD_BOT_TOKEN='')

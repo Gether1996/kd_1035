@@ -4,8 +4,10 @@ Only players signed in with Discord (session + CSRF like /api/auth/me/). Players
 shown on the web; the worker sends the reminders (reminders.py).
 """
 
+import logging
 from datetime import UTC
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
@@ -19,9 +21,12 @@ from kingdom.events import upcoming
 from kingdom.models import KingdomEvent
 
 from . import discord_bot
-from .models import EventReminder
+from .models import EventReminder, Player, SentReminder
+from .reminders import test_message
 from .serializers import OffsetsSerializer, ReminderSettingsSerializer
 from .views import player_of
+
+log = logging.getLogger(__name__)
 
 
 class IsPlayer(BasePermission):
@@ -40,6 +45,37 @@ class WriteThrottle(UserRateThrottle):
 
     def allow_request(self, request, view):
         return request.method in SAFE_METHODS or super().allow_request(request, view)
+
+
+class TestMessageThrottle(UserRateThrottle):
+    """The test DM button: 3 per 10 minutes per player, with its own history (scope) apart from WriteThrottle."""
+
+    scope = 'reminder_test'
+    rate = '3/10m'
+
+    def parse_rate(self, rate):
+        # DRF reads only the unit ('m'); '3/10m' = 3 requests per 10 minutes
+        num, period = rate.split('/')
+        return int(num), int(period[:-1] or 1) * {'s': 1, 'm': 60, 'h': 3600}[period[-1]]
+
+
+def last_delivery(player: Player) -> dict | None:
+    """The player's newest personal reminder (any event): did it reach them? A row still being sent (no result
+    yet) does not count."""
+    row = (
+        SentReminder.objects.filter(player=player)
+        .filter(Q(ok=True) | ~Q(error=''))
+        .order_by('-sent_at', '-pk')
+        .only('ok', 'error', 'sent_at')
+        .first()
+    )
+    if not row:
+        return None
+    return {
+        'ok': row.ok,
+        'blocked': not row.ok and row.error == discord_bot.BLOCKED_MESSAGE,
+        'at': row.sent_at.astimezone(UTC).isoformat().replace('+00:00', 'Z'),
+    }
 
 
 def visible_events():
@@ -94,8 +130,29 @@ def reminders(request):
             'discord_available': discord_bot.enabled(),
             'lang': player.lang,
             'events': events,
+            # null = no reminder sent yet (the log keeps 30 days)
+            'last_delivery': last_delivery(player),
         }
     )
+
+
+@never_cache
+@api_view(['POST'])
+@permission_classes([IsPlayer])
+@throttle_classes([TestMessageThrottle])
+def test_dm(request):
+    """Sends the player a test DM right now. Nothing is stored; the answer says whether the bot can reach them:
+    {ok: true} | {ok: false, reason: 'blocked' (not on the server / DMs off) | 'unavailable' (no bot, Discord down)}."""
+    player = request.user.player
+    if not discord_bot.enabled():
+        return Response({'ok': False, 'reason': 'unavailable'})
+    try:
+        discord_bot.send_dm(player.discord_id, test_message(player.lang))
+    except discord_bot.BotError as exc:
+        # the player's ID only – no Discord ID or name in the log
+        log.warning('Test DM for player %s failed: %s', player.pk, exc)
+        return Response({'ok': False, 'reason': 'blocked' if exc.blocked else 'unavailable'})
+    return Response({'ok': True})
 
 
 @never_cache

@@ -35,6 +35,9 @@ TEXTS = {
         'manage': 'Zmeniť pripomienky',
         'footer': 'KD 1035 · pripomienku si nastavil na webe v časti Pripomienky eventov',
         'days': ('deň', 'dni', 'dní'),
+        # "Poslať skúšobnú správu" on /pripomienky
+        'test_title': 'Skúšobná správa',
+        'test_text': 'Pripomienky ti budú chodiť sem.',
     },
     'cs': {
         'start': 'Začátek: {start} ({relative})',
@@ -42,6 +45,8 @@ TEXTS = {
         'manage': 'Změnit připomínky',
         'footer': 'KD 1035 · připomínku sis nastavil na webu v části Připomínky eventů',
         'days': ('den', 'dny', 'dní'),
+        'test_title': 'Zkušební zpráva',
+        'test_text': 'Připomínky ti budou chodit sem.',
     },
 }
 
@@ -92,6 +97,16 @@ def discord_message(event: KingdomEvent, start, lang: str) -> dict:
             lines.append(f'[{t["guide"]}]({embed["url"]})')
         lines.append(f'[{t["manage"]}]({settings.SITE_URL}{"/cz" if lang == "cs" else ""}{REMINDERS_PAGE})')
     embed['description'] = '\n'.join(lines)
+    return {'embeds': [embed]}
+
+
+def test_message(lang: str) -> dict:
+    """The test DM from /pripomienky: proves the bot can reach the player, looks like a real reminder."""
+    t = texts(lang)
+    lines = [t['test_text']]
+    if settings.SITE_URL:
+        lines.append(f'[{t["manage"]}]({settings.SITE_URL}{"/cz" if lang == "cs" else ""}{REMINDERS_PAGE})')
+    embed = {'title': t['test_title'], 'description': '\n'.join(lines), 'color': GOLD, 'footer': {'text': t['footer']}}
     return {'embeds': [embed]}
 
 
