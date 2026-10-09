@@ -7,6 +7,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 ## Automatizácia agentmi
 - Web vylepšujú agenti v kolách (`kd-improve`) a návody sa mesačne aktualizujú (`kd-meta-update`). Plán, pravidlá a postup: `docs/agenti.md`, konfigurácia a stav kôl: `.claude/kd-agents.json`, čo je hotové a čo čaká: `docs/backlog.md`.
 - Keď Gether povie „pokračuj“ (aj na inom PC), najprv si prečítaj tieto tri súbory a pokračuj podľa `next` v `.claude/kd-agents.json`.
+- Opakované postupy sú skilly v `.claude/skills/` – `kd-verify` (testy + screenshoty), `kd-event-data` (zmena eventov), `kd-release` (nová verzia), `kd-review-branch` (vetva spolupracovníka); použi ich namiesto vymýšľania vlastných skriptov.
 
 ## Komunikácia
 - S používateľom (Gether) komunikuj po slovensky.
@@ -22,7 +23,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Nesmie to vyzerať ako AI slop:** žiadne generické gradientové fľaky, emoji namiesto ikon, prázdne marketingové frázy ani glow efekty všade. Grafika je ručne navrhnutá (SVG) a drží jednu paletu a jeden štýl.
 - **Plynulé pohyby:** parallax pozadia (`appScrollFx` → CSS `--progress`), posúvaný text pri scrollovaní, scroll reveal (`appReveal`), jemné hover stavy. Animuj len `transform`/`translate` a `opacity`. Vždy rešpektuj `prefers-reduced-motion`.
 - **Výkon animácií** (Gether 8. 10. 2026: „sekajú, lagujú“): žiadny `backdrop-filter` (hlavička, karty), žiadne nekonečné animácie, ktoré prekresľujú (`background-position`, `filter`, `letter-spacing` – napr. lesk na „1035“), žiadny parallax podľa myši. Callback `Scroll.onFrame` iba číta layout a vráti funkciu, ktorá zapisuje štýly – všetky čítania snímky idú pred zápismi.
-- **100 % responzívne** – mobil od 320 px, landscape mobil, tablet, notebook, desktop, ultrawide. Každú vizuálnu zmenu over screenshotmi (`tools/screenshots/shoot.mjs`) minimálne na 360, 768, 1280, 1920 a 2560.
+- **100 % responzívne** – mobil od 320 px, landscape mobil, tablet, notebook, desktop, ultrawide. Každú vizuálnu zmenu over screenshotmi (`tools/screenshots/shoot.sh`, skill `kd-verify`) minimálne na 360, 768, 1280, 1920 a 2560.
 - Prístupnosť: dostatočný kontrast, viditeľný focus, `alt`/`aria-label`, ovládanie klávesnicou.
 - Spoločné štýly formulárov (`.field`, `.input`, `.select`, `.choice`, `.chips`/`.chip`, `.segmented`, `.switch`, tokeny `--field-*`), tlačidlá `.pill-btn` (+ `--quiet`) a `.danger` a rám dialógu `.modal` (`.modal__head`, `__title`, `__close`…, na mobile spodný panel) sú v `styles.scss` – nové formuláre a dialógy ich používajú.
 
@@ -136,19 +137,12 @@ docker compose up -d --build
 docker compose -f docker-compose.dev.yml run --rm frontend npm <príkaz>
 docker compose -f docker-compose.dev.yml run --rm backend python manage.py <príkaz>
 
-# testy
-docker compose -f docker-compose.dev.yml run --rm backend python manage.py test
-docker compose -f docker-compose.dev.yml run --rm frontend npx ng test --watch=false
+# testy + produkčný build bez bind mountu (Docker Desktop na Windows pri ňom padá), vypíše len súhrn alebo chyby;
+# --ref <vetva> otestuje kód z gitu namiesto pracovného adresára
+tools/test.sh [--ref <commit>] [backend [label…] | frontend [args…] | build | all]
 
-# screenshoty na viacerých rozlíšeniach (beží dev server) → tools/screenshots/out/
-docker run --rm --add-host=host.docker.internal:host-gateway -v "$PWD:/work" -w /work \
-  mcr.microsoft.com/playwright:v1.63.0-noble sh -c \
-  "cd tools/screenshots && npm i --no-save playwright@1.63.0 >/dev/null && node shoot.mjs"
-
-# Docker Desktop na Windows občas zlyhá pri bind mounte s vnoreným volume (I/O error, „cannot allocate memory“,
-# „No tests found“). Pomôže `docker desktop restart`, alebo testy úplne bez bind mountu:
-tar -c --exclude=__pycache__ --exclude=data --exclude=media -C backend . | docker run -i --rm -u root -e DJANGO_DEBUG=1   -w /app --entrypoint sh kd1035-dev-backend -c "tar -x && python manage.py test"
-tar -c --exclude=node_modules --exclude=.angular --exclude=dist -C frontend . | docker run -i --rm   -v kd1035-dev_frontend_node_modules:/app/node_modules -w /app node:24-alpine sh -c "tar -x && npx ng test --watch=false"
+# screenshoty na viacerých rozlíšeniach (beží dev server) → tools/screenshots/out/; premenné v shoot.mjs
+tools/screenshots/shoot.sh [--player | --superuser] [PAGES=/,/cz/kalendar] [SIZES=…] [SELECTOR=…] [MEASURE=…]
 
 # pregenerovanie hero grafiky + og-image + ikon aplikácie
 docker build -t kd1035-artgen tools/background

@@ -134,7 +134,7 @@ Rules:
 - Set VERIFIED = '${MONTH}' in ${verifiedModules.map(k => `backend/guides/meta/${k}.py`).join(', ')} (checked this month, even without changes). Do not bump modules whose research failed.
 - Set LAST_UPDATE = '${DATE}' in backend/guides/meta/__init__.py (the site footer shows it as "Informácie aktualizované").
 - New guides: unique slug, right CATEGORY module, first paragraph ≤ 160 chars (it is the excerpt), a ('note',) block, sources.
-- Verify: \`docker compose -f docker-compose.dev.yml run --rm backend python manage.py test\`, then \`sh .githooks/dbsync.sh sync\` (or \`docker compose -f docker-compose.dev.yml exec backend python manage.py sync_meta_guides\`) and open a changed guide on http://localhost:4200 to check it renders.
+- Verify: \`tools/test.sh backend\` (tests without a bind mount, prints only the summary or the failures), then \`sh .githooks/dbsync.sh sync\` (or \`docker compose -f docker-compose.dev.yml exec backend python manage.py sync_meta_guides\`) and open a changed guide on http://localhost:4200 to check it renders.
 - Commit locally ("Update RoK meta guides ${MONTH}", message ending with "${TRAILER}"); do not push.
 
 Research results:

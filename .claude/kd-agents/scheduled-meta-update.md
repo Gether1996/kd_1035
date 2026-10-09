@@ -15,7 +15,7 @@ Steps:
 3. If the Workflow tool is not available in this session, do the same steps yourself:
    - Research each module with WebSearch/WebFetch, using reliable dated sources: allclash.com, official Lilith patch notes, app.rokstats.online, riseofkingdomsguides.com (beware bulk "Jan 2, 2026" dates). Do not use the lootbar.com blog.
    - Edit the modules: original text in both languages, sources with dates, and set VERIFIED to the current month in every module you checked and LAST_UPDATE (backend/guides/meta/__init__.py, shown in the site footer) to today.
-   - Run `docker compose -f docker-compose.dev.yml run --rm backend python manage.py test` and `sh .githooks/dbsync.sh sync`.
+   - Run `tools/test.sh backend` and `sh .githooks/dbsync.sh sync`.
    - Re-verify every changed claim against its source.
    - Commit ("Update RoK meta guides YYYY-MM", ending with "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>") and `git push origin main`.
 4. Finish with a short Slovak summary:

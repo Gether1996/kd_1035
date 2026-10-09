@@ -18,11 +18,9 @@ You are the senior full-stack developer of the KD 1035 website (Django 6 + DRF b
 ## Verify before you hand over
 ```bash
 docker compose -f docker-compose.dev.yml run --rm backend python manage.py makemigrations --check --dry-run
-docker compose -f docker-compose.dev.yml run --rm backend python manage.py test
-docker compose -f docker-compose.dev.yml run --rm frontend npx ng test --watch=false
-docker compose -f docker-compose.dev.yml run --rm frontend npx ng build
+tools/test.sh all   # backend + frontend tests and the production build, without a bind mount; prints only summaries or failures
 ```
-For visual changes take screenshots with the command from CLAUDE.md (360, 768, 1280, 1920, 2560) and look at them yourself; fix what looks wrong.
+For visual changes take screenshots with `tools/screenshots/shoot.sh` (360, 768, 1280, 1920, 2560; signed-in pages with `--player`, see `.claude/skills/kd-verify/SKILL.md`) and look at them yourself; fix what looks wrong.
 
 ## Commit, do not push
 Commit locally in small logical commits with English messages ending with:

@@ -141,3 +141,31 @@ def create_initial_events() -> list[str]:
         )
         created.append(row['name_sk'])
     return created
+
+
+# the columns of INITIAL_EVENTS, in the file's order
+INITIAL_FIELDS = [
+    'name_sk', 'name_cs', 'icon', 'message', 'starts_at', 'duration_minutes', 'repeat_days', 'until', 'irregular',
+    'time_basis', 'reminders', 'mention_role_id', 'mention_role', 'notify_discord', 'show_on_web', 'player_reminders',
+    'guide', 'is_active',
+]  # fmt: skip
+
+
+def export_initial_events() -> int:
+    """Writes the dev database's events into INITIAL_EVENTS (the counterpart of create_initial_events).
+
+    Events already in the file keep their place, new ones go to the end. Returns the number of events.
+    """
+    order = {row['name_sk']: i for i, row in enumerate(json.loads(INITIAL_EVENTS.read_text(encoding='utf-8')))}
+    events = sorted(
+        KingdomEvent.objects.select_related('guide').order_by('pk'), key=lambda e: order.get(e.name_sk, len(order))
+    )
+    rows = []
+    for event in events:
+        row = {field: getattr(event, field) for field in INITIAL_FIELDS}
+        row['starts_at'] = event.starts_at.astimezone(UTC).isoformat()
+        row['until'] = event.until.isoformat() if event.until else None
+        row['guide'] = event.guide.slug if event.guide else None
+        rows.append(row)
+    INITIAL_EVENTS.write_text(json.dumps(rows, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    return len(rows)

@@ -30,11 +30,9 @@ Inspect everything: `git status`, `git log <base>..HEAD`, `git diff <base>..HEAD
 
 Run the checks yourself – do not trust the builder's report:
 ```bash
-docker compose -f docker-compose.dev.yml run --rm backend python manage.py test
-docker compose -f docker-compose.dev.yml run --rm frontend npx ng test --watch=false
-docker compose -f docker-compose.dev.yml run --rm frontend npx ng build
+tools/test.sh all   # backend + frontend tests and the production build, without a bind mount; prints only summaries or failures
 ```
-For visual changes look at the screenshots in `tools/screenshots/out/` (Read the PNG files; at least 360 px and 1920 px), or take them with the command in CLAUDE.md.
+For visual changes look at the screenshots in `tools/screenshots/out/` (Read the PNG files; at least 360 px and 1920 px), or take them with `tools/screenshots/shoot.sh` (`.claude/skills/kd-verify/SKILL.md`).
 
 Severity: `blocker` (broken, insecure, rule violation), `major` (must fix before push), `minor` (note only). Verdict `approve` only with zero blockers and majors.
 

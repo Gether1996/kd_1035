@@ -917,6 +917,42 @@ class EventTemplateTests(TestCase):
         call_command('seed_initial_events', stdout=StringIO())
         self.assertEqual(KingdomEvent.objects.count(), len(rows))
 
+    def test_export_initial_events_round_trips(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        from . import event_templates
+
+        guide = Guide.objects.create(
+            category='eventy', slug='more-than-gems', title_sk='MTG', html_sk='<p>x</p>', is_published=True
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'initial_events.json'
+            path.write_text(json.dumps([{'name_sk': 'Ark of Osiris'}]), encoding='utf-8')
+            KingdomEvent.objects.create(
+                name_sk='More Than Gems', starts_at=utc(2026, 10, 10), repeat_days=28, until=date(2026, 12, 31),
+                guide=guide, reminders=[1440],
+            )  # fmt: skip
+            KingdomEvent.objects.create(name_sk='Ark of Osiris', starts_at=utc(2026, 10, 14), repeat_days=14)
+            with mock.patch.object(event_templates, 'INITIAL_EVENTS', path):
+                call_command('export_initial_events', stdout=StringIO())
+                rows = json.loads(path.read_text(encoding='utf-8'))
+                # the file's order first, new events at the end
+                self.assertEqual([r['name_sk'] for r in rows], ['Ark of Osiris', 'More Than Gems'])
+                self.assertEqual(list(rows[1]), event_templates.INITIAL_FIELDS)
+                self.assertEqual(
+                    (rows[1]['starts_at'], rows[1]['until'], rows[1]['guide']),
+                    ('2026-10-10T00:00:00+00:00', '2026-12-31', 'more-than-gems'),
+                )
+                self.assertIsNone(rows[0]['guide'])
+
+                before = list(KingdomEvent.objects.order_by('name_sk').values(*event_templates.INITIAL_FIELDS))
+                KingdomEvent.objects.all().delete()
+                self.assertEqual(len(event_templates.create_initial_events()), 2)
+            after = list(KingdomEvent.objects.order_by('name_sk').values(*event_templates.INITIAL_FIELDS))
+            self.assertEqual(after, before)
+
     def test_hunt_for_history_is_split_into_hammer_and_egg(self):
         from importlib import import_module
 

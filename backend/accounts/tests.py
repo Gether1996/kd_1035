@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
+from django.core.management import CommandError, call_command
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 
@@ -345,6 +346,39 @@ class MeTests(TestCase):
     def test_admin_without_discord_is_not_a_site_account(self):
         self.client.force_login(User.objects.create_superuser('boss', password='x'))
         self.assertEqual(self.client.get('/api/auth/me/').json(), {'login_enabled': True, 'user': None})
+
+
+@override_settings(**DISCORD, DEBUG=True)
+class TestSessionCommandTests(TestCase):
+    def session(self, *args):
+        out = io.StringIO()
+        call_command('test_session', *args, stdout=out, stderr=io.StringIO())
+        return out.getvalue().strip()
+
+    def me(self, key):
+        self.client.cookies['sessionid'] = key
+        return self.client.get('/api/auth/me/').json()['user']
+
+    def test_signs_in_a_test_player_and_deletes_it(self):
+        first = self.session()
+        self.assertEqual(self.me(first)['discord_id'], '999000111')
+        self.assertFalse(self.me(first)['is_superuser'])
+
+        # again as superuser: the same player, the older session is gone
+        second = self.session('--superuser')
+        self.assertIsNone(self.me(first))
+        self.assertTrue(self.me(second)['is_superuser'])
+        self.assertEqual(Player.objects.count(), 1)
+
+        self.session('--delete')
+        self.assertIsNone(self.me(second))
+        self.assertFalse(User.objects.filter(username='discord_999000111').exists())
+
+    @override_settings(DEBUG=False)
+    def test_refused_outside_development(self):
+        with self.assertRaises(CommandError):
+            self.session()
+        self.assertFalse(Player.objects.exists())
 
 
 class SessionActionTests(TestCase):
