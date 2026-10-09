@@ -33,6 +33,8 @@ case "$1" in
     manage import_snapshot
     ;;
   sync)
+    # the same pull may bring a migration the meta guides need (e.g. a new Guide field)
+    manage migrate --noinput
     manage sync_meta_guides
     ;;
   push)
