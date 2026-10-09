@@ -33,9 +33,15 @@ TEMPLATES = [
     ('Wheel of Fortune', 'Wheel of Fortune', utc(2026, 10, 6), 14, 3, 'wheel-of-fortune'),
     ('Esmeralda', 'Esmeralda', utc(2026, 10, 19), 14, 2, ''),
     # hammer (Hunt for History) and egg (Holy Knight's Treasure) take turns every two weeks, each one every four
-    # weeks (Gether, 8. 10. 2026)
+    # weeks (Gether, 8. 10. 2026); the egg cycles through three equipment sets, so each set comes every 12 weeks
+    # (Gether, 9. 10. 2026: the last egg was weapon + accessories)
     ('Hunt for History', 'Hunt for History', utc(2026, 10, 16), 28, 2, ''),
-    ("Holy Knight's Treasure", "Holy Knight's Treasure", utc(2026, 10, 30), 28, 2, ''),
+    ("Holy Knight's Treasure – hruď, rukavice, topánky", "Holy Knight's Treasure – hruď, rukavice, boty",
+     utc(2026, 10, 30), 84, 2, ''),
+    ("Holy Knight's Treasure – prilba, nohavice", "Holy Knight's Treasure – helma, kalhoty",
+     utc(2026, 11, 27), 84, 2, ''),
+    ("Holy Knight's Treasure – zbraň, doplnky", "Holy Knight's Treasure – zbraň, doplňky",
+     utc(2026, 12, 25), 84, 2, ''),
     ('More Than Gems', 'More Than Gems', utc(2026, 10, 10), 28, 2, 'more-than-gems'),
     # every second Friday 00:00 UTC for 48 h, confirmed by Gether (8. 10. 2026)
     ('20 GH', '20 GH', utc(2026, 10, 16), 14, 2, ''),

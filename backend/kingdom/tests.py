@@ -955,6 +955,29 @@ class EventTemplateTests(TestCase):
         self.assertEqual((egg.name_sk, egg.name_cs, egg.icon), ("Holy Knight's Treasure", '', 'egg'))
         self.assertFalse(EventNotification.objects.exists())
 
+    def test_holy_knights_treasure_takes_turns_with_three_equipment_sets(self):
+        from importlib import import_module
+
+        from django.apps import apps
+
+        split = import_module('kingdom.migrations.0010_holy_knights_treasure_sets').split
+        egg = KingdomEvent.objects.create(
+            name_sk="Holy Knight's Treasure", icon='egg', starts_at=utc(2026, 10, 30), duration_minutes=2880,
+            repeat_days=28,
+        )
+        EventNotification.objects.create(title="Holy Knight's Treasure", send_at=utc(2026, 10, 29), event=egg)
+        split(apps, None)
+        split(apps, None)  # once only
+        sets = list(KingdomEvent.objects.order_by('starts_at').values_list('name_cs', 'starts_at', 'repeat_days', 'icon'))
+        self.assertEqual(sets, [
+            ("Holy Knight's Treasure – hruď, rukavice, boty", utc(2026, 10, 30), 84, 'egg'),
+            ("Holy Knight's Treasure – helma, kalhoty", utc(2026, 11, 27), 84, 'egg'),
+            ("Holy Knight's Treasure – zbraň, doplňky", utc(2026, 12, 25), 84, 'egg'),
+        ])  # fmt: skip
+        # the first set keeps the original event (and the players' reminders of it)
+        self.assertEqual(KingdomEvent.objects.get(pk=egg.pk).name_sk, "Holy Knight's Treasure – hruď, rukavice, topánky")
+        self.assertFalse(EventNotification.objects.exists())
+
     def test_irregular_event_has_no_cycle(self):
         event = KingdomEvent(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=7, irregular=True)
         with self.assertRaises(ValidationError) as ctx:

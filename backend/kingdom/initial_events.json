@@ -175,13 +175,63 @@
     "is_active": true
   },
   {
-    "name_sk": "Holy Knight's Treasure",
-    "name_cs": "",
+    "name_sk": "Holy Knight's Treasure – hruď, rukavice, topánky",
+    "name_cs": "Holy Knight's Treasure – hruď, rukavice, boty",
     "icon": "egg",
     "message": "**{name}** začína {start} ({relative}).",
     "starts_at": "2026-10-30T00:00:00+00:00",
     "duration_minutes": 2880,
-    "repeat_days": 28,
+    "repeat_days": 84,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": true
+  },
+  {
+    "name_sk": "Holy Knight's Treasure – prilba, nohavice",
+    "name_cs": "Holy Knight's Treasure – helma, kalhoty",
+    "icon": "egg",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-11-27T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 84,
+    "until": null,
+    "irregular": false,
+    "time_basis": "utc",
+    "reminders": [
+      1440
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      60,
+      1440
+    ],
+    "guide": null,
+    "is_active": true
+  },
+  {
+    "name_sk": "Holy Knight's Treasure – zbraň, doplnky",
+    "name_cs": "Holy Knight's Treasure – zbraň, doplňky",
+    "icon": "egg",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-12-25T00:00:00+00:00",
+    "duration_minutes": 2880,
+    "repeat_days": 84,
     "until": null,
     "irregular": false,
     "time_basis": "utc",
