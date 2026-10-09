@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 9. 10. 2026 – kolo 
 
 ## Hotové
 
+- **9. 10. 2026 – v1.1.1:** odkazy Aliancia/Návody/Komunita v hlavičke dosadnú na svoju sekciu aj keď sa nad ňou neskôr načítajú Najbližšie eventy; späť/dopredu v prehliadači vráti na pôvodné miesto (vetva TTakedaSVK).
 - **9. 10. 2026 – v1.1.0, kolo 4:** skúšobná správa od bota na `/pripomienky` a varovanie pri nedoručenej pripomienke; prehľad na úvode adminu (worker, zálohy, najbližšie a zlyhané notifikácie); najbližšie eventy na úvodnej stránke; najbližší termín eventu priamo v jeho návode.
 - **9. 10. 2026 – v1.0.2:** blok Nepravidelné eventy v kalendári ukazuje všetky nepravidelné eventy aj s termínom (napr. Alliance Mobilization).
 - **9. 10. 2026 – Páry commanderov podľa WarDaddyChadského** (mimo kola, Gether): prepisy jeho videí cez `tools/youtube`, mesačná aktualizácia ho berie ako hlavný zdroj, leadership návod zrušený.

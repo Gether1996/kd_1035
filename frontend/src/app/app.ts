@@ -63,6 +63,9 @@ export class App {
         // the router saved the position when the visitor left the page; after a reload it has none
         if (e.position) restoring = restore(scroller, e.position);
         else if (changed && !e.anchor) scroller.scrollToPosition([0, 0], { behavior: 'instant' });
+      } else if (e instanceof Scroll && e.anchor) {
+        // a section link (/#alliance): sections above it that load from the API afterwards would push it away
+        restoring = follow(scroller, doc, e.anchor);
       }
     });
 
@@ -94,4 +97,32 @@ function restore(scroller: ViewportScroller, [x, y]: [number, number]): AbortCon
   };
   step();
   return restoring;
+}
+
+/**
+ * Keeps a section link on its section while the page above it still grows – the home page's next events arrive from
+ * the API after the jump and pushed Aliancia/Komunita down by a whole section. Only reacts when the page height
+ * changes, so the smooth scroll itself is left alone. Gives up after 2.5 s, or as soon as the visitor scrolls or
+ * clicks.
+ */
+function follow(scroller: ViewportScroller, doc: Document, anchor: string): AbortController {
+  const following = new AbortController();
+  const main = doc.querySelector('main');
+  if (!main || typeof ResizeObserver === 'undefined') return following;
+  for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+    addEventListener(type, () => following.abort(), { passive: true, signal: following.signal });
+  }
+  let height = main.offsetHeight;
+  const observer = new ResizeObserver(() => {
+    if (main.offsetHeight === height) return;
+    height = main.offsetHeight;
+    scroller.scrollToAnchor(anchor, { behavior: 'instant' });
+  });
+  observer.observe(main);
+  const timer = setTimeout(() => following.abort(), 2500);
+  following.signal.addEventListener('abort', () => {
+    observer.disconnect();
+    clearTimeout(timer);
+  });
+  return following;
 }
