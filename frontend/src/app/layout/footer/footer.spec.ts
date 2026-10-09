@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { SITE_VERSION } from '../../core/version';
 import { Footer } from './footer';
 
 describe('Footer', () => {
@@ -49,5 +50,12 @@ describe('Footer', () => {
       http.expectOne('/api/status/').flush('down', { status: 500, statusText: 'Server Error' }),
     );
     expect(el.querySelector('.footer__updated')).toBeNull();
+  });
+
+  it('shows the version of the website after the legal links', async () => {
+    const el = await render(() => undefined);
+    const version = el.querySelector('.footer__links .footer__version');
+    expect(version?.textContent?.trim()).toBe(`Verzia webu v${SITE_VERSION}`);
+    expect(SITE_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });

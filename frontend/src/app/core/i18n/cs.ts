@@ -504,5 +504,6 @@ export const cs: Dict = {
       'Neoficiální fanouškovská stránka hráčů království 1035, bez propojení se společností Lilith Games. Rise of Kingdoms a herní grafika jsou majetkem Lilith Games.',
     madeBy: 'Vytvořil',
     updated: 'Informace aktualizovány',
+    version: 'Verze webu',
   },
 };

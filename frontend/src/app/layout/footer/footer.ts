@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { KingdomApi } from '../../core/api';
 import { I18n } from '../../core/i18n/i18n';
+import { SITE_VERSION } from '../../core/version';
 import { Icon } from '../../shared/icon';
 import { Logo } from '../../shared/logo';
 
@@ -29,6 +30,7 @@ import { Logo } from '../../shared/logo';
         <ul class="footer__links">
           <li><a [routerLink]="i18n.path('terms')">{{ i18n.t().nav.terms }}</a></li>
           <li><a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a></li>
+          <li class="footer__version"><span class="sr-only">{{ i18n.t().footer.version }} </span>v{{ version }}</li>
         </ul>
       </div>
       @if (updated(); as updated) {
@@ -45,6 +47,7 @@ import { Logo } from '../../shared/logo';
 export class Footer {
   protected readonly i18n = inject(I18n);
   protected readonly api = inject(KingdomApi);
+  protected readonly version = SITE_VERSION;
 
   protected readonly updated = computed(() => {
     const iso = this.api.updated();

@@ -104,6 +104,15 @@
   }
 }
 
+// "v1.0.0" after the legal links: quiet, not a link
+.footer__version {
+  align-self: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
 .footer__updated {
   font-size: 0.8125rem;
   color: var(--text-mute);
