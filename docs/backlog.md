@@ -1,9 +1,10 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 3 zastavené na pokyn Gethera. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 9. 10. 2026 – kolo 4 hotové. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json).
 
 ## Hotové
 
+- **9. 10. 2026 – kolo 4:** skúšobná správa od bota na `/pripomienky` a varovanie pri nedoručenej pripomienke; prehľad na úvode adminu (worker, zálohy, najbližšie a zlyhané notifikácie); najbližšie eventy na úvodnej stránke; najbližší termín eventu priamo v jeho návode.
 - **9. 10. 2026 – v1.0.2:** blok Nepravidelné eventy v kalendári ukazuje všetky nepravidelné eventy aj s termínom (napr. Alliance Mobilization).
 - **9. 10. 2026 – Páry commanderov podľa WarDaddyChadského** (mimo kola, Gether): prepisy jeho videí cez `tools/youtube`, mesačná aktualizácia ho berie ako hlavný zdroj, leadership návod zrušený.
 - **9. 10. 2026 – v1.0.1:** pri pravidelných eventoch a Alliance Mobilization sa na `/pripomienky` ukazuje iba deň, čas len pri krátkych nepravidelných eventoch (ako v kalendári).
@@ -20,19 +21,20 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 8. 10. 2026 – kolo 
 - **7. 10. 2026 – Opakované eventy kráľovstva s automatickými Discord pripomienkami** (kolo 1, schválené kritikom). Admin → Eventy kráľovstva, pripomienky posiela worker.
 - **7. 10. 2026 – mimo kôl:** návody commanderi (10), výbava (7) a eventy (13) v SK/CZ so zdrojmi, ich mesačná automatická aktualizácia, dátum poslednej aktualizácie v pätičke, nočná krajina na pozadí webu, synchronizácia dev databázy cez git.
 
-## Ďalšie v poradí
+## Odložené
 
-Nič schválené – ďalšie kolo začne nápadmi.
-
-## Odložené (kritik: upraviť podľa poznámok v next-round.json)
-
-- Najbližšie eventy na úvodnej stránke (kritik schválil, môže použiť API kalendára)
-- Náhľad Discord správy a testovacie odoslanie v admine
-- Prehľad v admine: stav workera, najbližšie a zlyhané notifikácie
-- Odber kalendára eventov (iCal) do mobilu
+- Odber kalendára eventov (iCal) do mobilu – schválené, nepostavené.
+- Testovacie odoslanie Discord notifikácie do súkromného kanála – schválené, čaká na `DISCORD_TEST_WEBHOOK_URL`.
+- Rozcestník `/navody` s vyhľadávaním – upraviť (dva commity: rozcestník, potom vyhľadávanie).
+- Audit prístupnosti (axe) – upraviť (skip link už existuje, len critical/serious).
+- Týždenný prehľad eventov na Discorde – až po zapnutí rotácie a súhlase Gethera.
+- Stav migrácie v admine – iba ak vedenie chce stav udržiavať.
+- Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
+- Drobnosti z kola 4: spoločný štýl `.tag--live`, odkaz zlyhaných notifikácií len za 7 dní, naivný čas v `worker_status.json`, CZ „Kalendář“ na `/pripomienky` pretečie?, `#alliance` pri 360 px, nové screenshoty.
 
 ## Zamietnuté
 
+- Bezpečnostné hlavičky v nginx – už existujú (`security-headers.conf`); plná CSP by mala malý prínos a riziko.
 - Registrácia Governor ID so schválením R4, prístup R4 do adminu s exportom governorov, upozornenia vedenia na nové registrácie – Gether registráciu governorov zrušil (8. 10. 2026).
 
 ## Čaká na Gethera
@@ -45,3 +47,6 @@ Nič schválené – ďalšie kolo začne nápadmi.
 - **Server:** DNS pre kd1035.eu a www, HTTPS proxy (Caddy), `.env` – postup v README → Doména kd1035.eu.
 - **Bot na Discord serveri:** pridaný (8. 10. 2026); DM príde len hráčom, ktorí majú povolené súkromné správy od členov servera.
 - Pre odložené funkcie: webhook testovacieho kanála (`DISCORD_TEST_WEBHOOK_URL`) a súkromného kanála vedenia (`DISCORD_STAFF_WEBHOOK_URL`).
+- **Skúšobná správa:** raz kliknúť „Poslať skúšobnú správu“ na `/pripomienky` (SK aj `/cz`) so skutočným Discord účtom.
+- **Úvod a návody:** na serveri zapnúť eventy rotácie so „zobraziť na webe“ (inak sekcia Najbližšie eventy ostane skrytá) a v admine prepojiť eventy s návodmi (pole „návod“).
+- **Rozhodnúť:** týždenný prehľad na Discorde (`DISCORD_WEEKLY_DIGEST`, pondelok 9:00?), stav migrácie na webe, Discord Scheduled Events (`DISCORD_GUILD_ID` + právo Manage Events).
