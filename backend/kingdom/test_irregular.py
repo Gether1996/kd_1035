@@ -225,7 +225,8 @@ class EventIconTests(TestCase):
         for name, icon in (
             ('MGE – Jazda', 'mge'),
             ('Ark of Osiris', 'ark'),
-            ('Hunt for History (vajce)', 'egg'),
+            ('Hunt for History', 'hammer'),
+            ("Holy Knight's Treasure", 'egg'),
             ('20 GH', 'gold-head'),
             ('Karuak Boss', 'ceroli'),
             ('Silk Road', 'silk-road'),

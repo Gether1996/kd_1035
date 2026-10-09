@@ -937,6 +937,24 @@ class EventTemplateTests(TestCase):
         self.assertEqual(KingdomEvent.objects.count(), 2)
         self.assertFalse(EventNotification.objects.exists())
 
+    def test_the_egg_is_holy_knights_treasure_and_the_hammer_hunt_for_history(self):
+        from importlib import import_module
+
+        from django.apps import apps
+
+        rename = import_module('kingdom.migrations.0009_holy_knights_treasure').rename
+        hammer = KingdomEvent.objects.create(name_sk='Hunt for History (kladivo)', icon='egg', starts_at=utc(2026, 10, 16))
+        egg = KingdomEvent.objects.create(
+            name_sk='Hunt for History (vajce)', name_cs='Hunt for History (vejce)', icon='egg', starts_at=utc(2026, 10, 30)
+        )
+        EventNotification.objects.create(title='Hunt for History (vajce)', send_at=utc(2026, 10, 29), event=egg)
+        rename(apps, None)
+        hammer.refresh_from_db()
+        egg.refresh_from_db()
+        self.assertEqual((hammer.name_sk, hammer.name_cs, hammer.icon), ('Hunt for History', '', 'hammer'))
+        self.assertEqual((egg.name_sk, egg.name_cs, egg.icon), ("Holy Knight's Treasure", '', 'egg'))
+        self.assertFalse(EventNotification.objects.exists())
+
     def test_irregular_event_has_no_cycle(self):
         event = KingdomEvent(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=7, irregular=True)
         with self.assertRaises(ValidationError) as ctx:

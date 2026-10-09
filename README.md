@@ -104,7 +104,7 @@ Produkčný webhook patrí **iba do `.env` na serveri**. Do vývojového `.env` 
 
 ### Opakovaný event (napr. každý týždeň)
 
-**Šablóna:** `docker compose exec -u app backend python manage.py seed_event_templates` založí neaktívne koncepty bežnej rotácie (MGE, Ark of Osiris, Wheel, Esmeralda, Hunt for History, More Than Gems, Alliance Mobilization). Dátumy sú odhad podľa rokcentral.com – v admine ich over (najmä Alliance Mobilization nemá zdroj), uprav časy pripomienok a zaškrtni **aktívny**.
+**Šablóna:** `docker compose exec -u app backend python manage.py seed_event_templates` založí neaktívne koncepty bežnej rotácie (MGE, Ark of Osiris, Wheel, Esmeralda, Hunt for History, Holy Knight's Treasure, More Than Gems, Alliance Mobilization). Dátumy sú odhad podľa rokcentral.com – v admine ich over (najmä Alliance Mobilization nemá zdroj), uprav časy pripomienok a zaškrtni **aktívny**.
 
 **Nepravidelný event** (Silk Road, Shadow Legion…): zaškrtni **nepravidelný** a opakovanie nechaj 0. Hráči ho na webe vidia aj bez termínu („Ďalší termín oznámime“) a môžu si nastaviť pripomienky vopred. Keď ho naplánujete, v admine zmeň **prvý začiatok** na nový dátum a čas a ulož – pripomienky prídu všetkým, ktorí si ho vybrali. Šablóna zakladá Silk Road, Shadow Legion a Karuak Boss; ďalšie pridáš rovnako.
 

@@ -12,7 +12,7 @@ from pathlib import Path
 from .models import KingdomEvent
 
 # The kingdom's events as Gether set them up in the dev database (8. 10. 2026: the rotation above switched on,
-# Esmeralda removed, Hunt for History split into hammer and egg). A brand-new production database starts with them once (entrypoint.sh), later they are
+# Esmeralda removed, Hunt for History and Holy Knight's Treasure taking turns). A brand-new production database starts with them once (entrypoint.sh), later they are
 # managed only in the production admin / calendar.
 INITIAL_EVENTS = Path(__file__).with_name('initial_events.json')
 
@@ -32,9 +32,10 @@ TEMPLATES = [
     ('Ark of Osiris', 'Ark of Osiris', utc(2026, 10, 14), 14, 5, 'ark-of-osiris'),
     ('Wheel of Fortune', 'Wheel of Fortune', utc(2026, 10, 6), 14, 3, 'wheel-of-fortune'),
     ('Esmeralda', 'Esmeralda', utc(2026, 10, 19), 14, 2, ''),
-    # hammer and egg take turns every two weeks, each one every four weeks (Gether, 8. 10. 2026)
-    ('Hunt for History (kladivo)', 'Hunt for History (kladivo)', utc(2026, 10, 16), 28, 2, ''),
-    ('Hunt for History (vajce)', 'Hunt for History (vejce)', utc(2026, 10, 30), 28, 2, ''),
+    # hammer (Hunt for History) and egg (Holy Knight's Treasure) take turns every two weeks, each one every four
+    # weeks (Gether, 8. 10. 2026)
+    ('Hunt for History', 'Hunt for History', utc(2026, 10, 16), 28, 2, ''),
+    ("Holy Knight's Treasure", "Holy Knight's Treasure", utc(2026, 10, 30), 28, 2, ''),
     ('More Than Gems', 'More Than Gems', utc(2026, 10, 10), 28, 2, 'more-than-gems'),
     # every second Friday 00:00 UTC for 48 h, confirmed by Gether (8. 10. 2026)
     ('20 GH', '20 GH', utc(2026, 10, 16), 14, 2, ''),
