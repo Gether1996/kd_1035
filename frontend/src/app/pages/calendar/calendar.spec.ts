@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Me } from '../../core/auth';
 import { EventCalendar } from '../../core/events-api';
 import { ReminderSettings } from '../../core/reminders-api';
@@ -124,8 +124,13 @@ describe('Calendar', () => {
   }
 
   // whenStable() would wait for the open requests, so they are answered first
-  async function render(me: Me, data: EventCalendar | 'error' = DATA) {
+  async function render(
+    me: Me,
+    data: EventCalendar | 'error' = DATA,
+    { query = {}, range = ['2026-09-27', '2026-11-02'] }: { query?: Record<string, string>; range?: string[] } = {},
+  ) {
     fixture = TestBed.createComponent(Calendar);
+    for (const [name, value] of Object.entries(query)) fixture.componentRef.setInput(name, value);
     fixture.detectChanges();
     http.expectOne('/api/auth/me/').flush(me);
     await settle(); // the month is set after the first render, in the browser
@@ -133,8 +138,8 @@ describe('Calendar', () => {
     if (me.user) http.expectOne('/api/me/reminders/').flush(SETTINGS);
     const events = http.expectOne((req) => req.url === '/api/events/');
     // the month grid in whole weeks and a day more on each side
-    expect(events.request.params.get('from')).toBe('2026-09-27');
-    expect(events.request.params.get('to')).toBe('2026-11-02');
+    expect(events.request.params.get('from')).toBe(range[0]);
+    expect(events.request.params.get('to')).toBe(range[1]);
     if (data === 'error') events.flush('down', { status: 502, statusText: 'Bad Gateway' });
     else events.flush(data);
     await fixture.whenStable();
@@ -196,7 +201,7 @@ describe('Calendar', () => {
     expect(dialog()!.querySelector('.guide')?.getAttribute('href')).toBe('/navody/eventy/mge');
     const login = dialog()!.querySelector('.remind__login');
     expect(login?.getAttribute('href')).toBe(
-      '/api/auth/discord/login/?next=%2Fkalendar%3Fevent%3D2',
+      '/api/auth/discord/login/?next=%2Fkalendar%3Fevent%3D2%26on%3D2026-10-08',
     );
     expect(dialog()!.querySelector('.switch')).toBeNull();
 
@@ -245,6 +250,32 @@ describe('Calendar', () => {
     expect(dialog()!.textContent).toContain('Ďalší termín oznámime.');
     expect(dialog()!.textContent).toContain('nepravidelne');
     expect(dialog()!.querySelector('.remind')).toBeNull();
+  });
+
+  it('a link with ?event= and ?on= opens that month and the run on that day, then drops both', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    // MGE again in November: the link from the home page names the day of the run
+    const november = { ...MGE, start: '2026-11-30T00:00:00Z', end: '2026-12-06T00:00:00Z' };
+    await render(
+      { login_enabled: false, user: null },
+      { ...DATA, from: '2026-10-25', to: '2026-12-07', occurrences: [november], irregular: [] },
+      { query: { event: '2', on: '2026-11-30' }, range: ['2026-10-25', '2026-12-07'] },
+    );
+    expect(el().querySelector('.toolbar__title')?.textContent).toContain('november 2026');
+    expect(dialog()?.textContent).toContain('30. 11.');
+    expect(navigate).toHaveBeenCalledWith([], {
+      queryParams: { event: null, on: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  });
+
+  it('a bad ?on= is ignored: the current month, and the event still opens', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await render({ login_enabled: false, user: null }, DATA, { query: { event: '11', on: '2026-02-30' } });
+    expect(el().querySelector('.toolbar__title')?.textContent).toContain('október 2026');
+    expect(dialog()?.textContent).toContain('Silk Road');
+    expect(navigate.mock.calls[0][1]?.queryParams).toEqual({ event: null, on: null });
   });
 
   it('says when the month has no events', async () => {

@@ -13,9 +13,10 @@ import { I18n } from '../../core/i18n/i18n';
 import { KingdomApi } from '../../core/api';
 import { LastDelivery, ReminderEvent, RemindersApi, TestResult } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
+import { showsClock } from '../../shared/event-time';
 import { Icon } from '../../shared/icon';
 import { EventDialog, RemindState } from '../calendar/event-dialog';
-import { duration, plural, repeatLabel, showsClock } from './format';
+import { duration, plural, repeatLabel } from './format';
 
 type Filter = 'all' | 'regular' | 'irregular';
 

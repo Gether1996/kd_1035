@@ -13,14 +13,23 @@ import {
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { EventsAdminApi, ManagedEvent } from '../../core/events-admin-api';
-import { EventsApi, IrregularEvent, Occurrence, PublicEvent, eventName } from '../../core/events-api';
+import {
+  EventsApi,
+  IrregularEvent,
+  Occurrence,
+  PublicEvent,
+  eventName,
+  isOccurrence,
+} from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { RemindersApi } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
+import { occurrenceShowsClock } from '../../shared/event-time';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
-import { repeatLabel, showsClock } from '../reminders/format';
+import { repeatLabel } from '../reminders/format';
 import { DateDialog } from './admin/date-dialog';
+import { calendarQuery, runsOn, validDay } from './deep-link';
 import { EventEditor } from './admin/event-editor';
 import { EventsPanel } from './admin/events-panel';
 import { EventDialog, RemindState } from './event-dialog';
@@ -59,8 +68,11 @@ const ACCENTS = ['gold', 'red', 'navy'] as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Calendar {
-  /** ?event=<id> – back from the Discord login started in that event's dialog, which opens again */
+  /** ?event=<id> – back from the Discord login started in that event's dialog, or a link from the home page: the
+   * event's dialog opens */
   readonly event = input<string>();
+  /** ?on=<YYYY-MM-DD> – the month to open and the day of the run (deep-link.ts calendarQuery); a bad value is ignored */
+  readonly on = input<string>();
 
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
@@ -169,21 +181,25 @@ export class Calendar {
     afterNextRender(() => {
       const tick = () => this.now.set(new Date());
       tick();
-      this.month.set(monthOf(dayKey(this.now()!)));
+      this.month.set(monthOf(validDay(this.on()) ?? dayKey(this.now()!)));
       this.zone.set(Intl.DateTimeFormat().resolvedOptions().timeZone ?? '');
       // "Prebieha" and today move on by themselves
       const timer = setInterval(tick, 60_000);
       this.destroyRef.onDestroy(() => clearInterval(timer));
     });
 
-    // back from the login started in a dialog: open the same event again, then drop ?event= from the address
+    // back from the login started in a dialog (or a link from the home page): open the event – its run on ?on= when
+    // there is one – then drop ?event= and ?on= from the address
     effect(() => {
       const id = Number(this.event());
-      if (!id || !this.loaded()) return;
+      const on = this.on();
+      if ((!id && !on) || !this.loaded()) return;
       untracked(() => {
         const now = Date.now();
-        const runs = this.all().filter((o) => o.id === id);
+        const day = validDay(on);
+        const runs = id ? this.all().filter((o) => o.id === id) : [];
         const item =
+          (day ? runs.find((o) => runsOn(o, day)) : undefined) ??
           runs.find((o) => Date.parse(o.end ?? o.start) > now) ??
           this.irregular()
             .filter((e) => e.id === id)
@@ -191,7 +207,7 @@ export class Calendar {
           runs.at(-1);
         if (item) this.selected.set(item);
         void this.router.navigate([], {
-          queryParams: { event: null },
+          queryParams: { event: null, on: null },
           queryParamsHandling: 'merge',
           replaceUrl: true,
         });
@@ -305,8 +321,7 @@ export class Calendar {
   /** the start time matters only for short irregular events (an evening Silk Road), not for game events that start
    *  at 00:00 UTC and run for days (Alliance Mobilization, MGE…) */
   protected timed(item: Occurrence): boolean {
-    const minutes = item.end ? (Date.parse(item.end) - Date.parse(item.start)) / 60_000 : null;
-    return showsClock(item.irregular, minutes);
+    return occurrenceShowsClock(item);
   }
 
   protected running(item: Occurrence): boolean {
@@ -394,7 +409,9 @@ export class Calendar {
     });
   }
 
+  /** a run comes back to its own month (?on=), an irregular event without a date only by its id */
   private returnPath(item: PublicEvent): string {
-    return `${this.i18n.path('calendar')}?event=${item.id}`;
+    const query = isOccurrence(item) ? calendarQuery(item, new Date()) : { event: item.id };
+    return `${this.i18n.path('calendar')}?${new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)]))}`;
   }
 }
