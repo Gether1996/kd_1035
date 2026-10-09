@@ -109,8 +109,8 @@
                 @if (bar.starts && bar.item.icon) {
                   <app-event-icon class="bar__icon" bare [src]="bar.item.icon" />
                 }
-                <!-- the start time matters only for irregular events (recurring game events start at 00:00 UTC) -->
-                @if (bar.starts && bar.item.irregular) {
+                <!-- the start time matters only for short irregular events (game events start at 00:00 UTC) -->
+                @if (bar.starts && timed(bar.item)) {
                   <span class="bar__time" aria-hidden="true">{{ clock(bar.item.start) }}</span>
                 }
                 <span class="bar__name">{{ name(bar.item) }}</span>
@@ -144,11 +144,11 @@
                     <button
                       type="button"
                       class="row"
-                      [class.row--untimed]="!item.irregular"
+                      [class.row--untimed]="!timed(item)"
                       [attr.data-accent]="accent(item)"
                       (click)="open(item, $event)"
                     >
-                      @if (item.irregular) {
+                      @if (timed(item)) {
                         <span class="row__time">
                           {{ clock(item.start) }}
                           <small>UTC {{ clock(item.start, 'UTC') }}</small>

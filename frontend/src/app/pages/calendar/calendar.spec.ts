@@ -135,6 +135,22 @@ describe('Calendar', () => {
     expect(dialog()).not.toBeNull();
   }
 
+  it('has no start time for an irregular event that runs for days', async () => {
+    const mobilization = {
+      ...SILK_ROAD,
+      id: 13,
+      name_sk: 'Alliance Mobilization',
+      start: '2026-10-19T00:00:00Z',
+      end: '2026-10-26T00:00:00Z',
+    };
+    await render(
+      { login_enabled: false, user: null },
+      { ...DATA, occurrences: [MGE, SILK_ROAD, mobilization] },
+    );
+    expect(bar('Alliance Mobilization').querySelector('.bar__time')).toBeNull();
+    expect(bar('Silk Road').querySelector('.bar__time')).not.toBeNull();
+  });
+
   it('shows the month with today, running events and the irregular ones', async () => {
     await render({ login_enabled: false, user: null });
     expect(el().querySelector('.toolbar__title')?.textContent).toContain('október 2026');

@@ -281,6 +281,12 @@ export class Calendar {
     return clock(iso, this.i18n.locale(), timeZone);
   }
 
+  /** the start time matters only for short irregular events (an evening Silk Road), not for game events that start
+   *  at 00:00 UTC and run for days (Alliance Mobilization, MGE…) */
+  protected timed(item: Occurrence): boolean {
+    return item.irregular && (!item.end || Date.parse(item.end) - Date.parse(item.start) < 864e5);
+  }
+
   protected running(item: Occurrence): boolean {
     const now = this.now()?.getTime() ?? 0;
     return !!item.end && Date.parse(item.start) <= now && now < Date.parse(item.end);
