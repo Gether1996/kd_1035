@@ -11,6 +11,7 @@ from accounts.reminders import prune_sent, send_personal_reminders
 from kingdom.backups import backup_due, create_backup
 from kingdom.discord import send_due
 from kingdom.events import plan_reminders
+from kingdom.overview import Heartbeat
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         folder = Path(settings.BACKUP_DIR)
         log.info('Worker started (backups → %s every %s days)', folder, settings.BACKUP_INTERVAL_DAYS)
+        heartbeat = Heartbeat(folder)  # keeps the last backup across restarts
         next_plan = next_backup_check = next_session_cleanup = 0.0
         while True:
             close_old_connections()
@@ -55,7 +57,9 @@ class Command(BaseCommand):
                 next_backup_check = time.monotonic() + BACKUP_CHECK_SECONDS
                 try:
                     if backup_due(folder, settings.BACKUP_INTERVAL_DAYS):
-                        log.info('Backup written: %s', create_backup(folder, settings.BACKUP_KEEP))
+                        archive = create_backup(folder, settings.BACKUP_KEEP)
+                        heartbeat.backup_written(archive)
+                        log.info('Backup written: %s', archive)
                 except Exception:
                     log.exception('Backup failed')
 
@@ -71,4 +75,5 @@ class Command(BaseCommand):
                 except Exception:
                     log.exception('Pruning sent reminders failed')
 
+            heartbeat.tick()  # a file for the admin overview, never a DB write
             time.sleep(TICK_SECONDS)

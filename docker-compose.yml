@@ -32,6 +32,7 @@ services:
     entrypoint: ["sh", "/app/worker.sh"]
     command: []
     volumes:
+      # same volume as backend: the admin overview reads the worker's heartbeat /app/data/worker_status.json
       - db_data:/app/data
       - uploads:/app/media:ro
       - ${BACKUP_PATH:-./backups}:/backups

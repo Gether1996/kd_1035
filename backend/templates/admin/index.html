@@ -1,0 +1,74 @@
+{% extends "admin/index.html" %}
+{% load kd_admin %}
+{% comment %}
+  Adds only the overview panel above the app list (kingdom/overview.py); everything else stays Django's own index.
+{% endcomment %}
+
+{% block content %}
+{% kd_overview as o %}
+{% if o %}
+<style>
+  .kd-overview table { width: 100%; table-layout: fixed; }
+  /* dashboard.css gives app list headers the full width and keeps cells on one line */
+  .dashboard .kd-overview table th { width: 33%; }
+  .dashboard .kd-overview table td { white-space: normal; overflow-wrap: anywhere; }
+  .kd-overview td ul { margin: 0; padding: 0; list-style: none; }
+  .kd-overview td li { padding: 1px 0; }
+  .kd-overview .kd-bad td, .kd-overview .kd-bad th { background: var(--message-error-bg); }
+  .kd-overview .kd-warn td, .kd-overview .kd-warn th { background: var(--message-warning-bg); }
+  .kd-overview .kd-quiet { color: var(--body-quiet-color); }
+  .kd-overview .kd-flags { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .kd-overview code { font-size: 0.85em; }
+  @media (max-width: 767px) {
+    .dashboard .kd-overview :is(table, caption, tbody, tr, th, td) { display: block; width: auto; }
+    .kd-overview th { border-bottom: 0; padding-bottom: 0; }
+  }
+</style>
+<div class="module kd-overview" id="kd-overview">
+  <table>
+    <caption>Prehľad</caption>
+    <tr class="{% if o.worker.state != 'ok' %}kd-bad{% endif %}">
+      <th scope="row">Worker</th>
+      <td>
+        {% if o.worker.state == 'ok' %}Beží <span class="kd-quiet">· naposledy {{ o.worker.at|date:"H:i:s" }}</span>
+        {% elif o.worker.state == 'stale' %}<strong>Worker nebeží</strong> · naposledy {{ o.worker.at|date:"j. n. Y H:i" }} (pred {{ o.worker.age }})
+        {% else %}<strong>Worker ešte nezapísal stav</strong>{% endif %}
+      </td>
+    </tr>
+    <tr class="{% if o.backup.state != 'ok' %}kd-warn{% endif %}">
+      <th scope="row">Posledná záloha</th>
+      <td>
+        {% if o.backup.at %}pred {{ o.backup.age }} <span class="kd-quiet">· {{ o.backup.at|date:"j. n. Y H:i" }}{% if o.backup.file %} · {{ o.backup.file }}{% endif %}</span>
+          {% if o.backup.state == 'old' %}<br><strong>Záloha je staršia, ako má byť</strong> (každých {{ o.backup_interval }} dní){% endif %}
+        {% else %}<strong>Žiadna záloha</strong>{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <th scope="row"><a href="{{ o.pending_url }}">Najbližšie notifikácie</a></th>
+      <td>
+        {% if o.pending %}
+        <ul>
+          {% for n in o.pending %}<li><span class="kd-quiet">{{ n.send_at|date:"D j. n. H:i" }}</span> · <a href="{{ n.url }}">{{ n.title }}</a></li>{% endfor %}
+        </ul>
+        {% else %}<span class="kd-quiet">Nič nie je naplánované</span>{% endif %}
+      </td>
+    </tr>
+    <tr class="{% if o.failed %}kd-bad{% endif %}">
+      <th scope="row"><a href="{{ o.failed_url }}">Zlyhané notifikácie</a></th>
+      <td>{{ o.failed }} <span class="kd-quiet">za posledných 7 dní</span></td>
+    </tr>
+    <tr class="{% if o.reminders_failed %}kd-warn{% endif %}">
+      <th scope="row"><a href="{{ o.reminders_url }}">Nedoručené pripomienky hráčov</a></th>
+      <td>{{ o.reminders_failed }} <span class="kd-quiet">za posledných 7 dní</span></td>
+    </tr>
+    <tr>
+      <th scope="row">Nastavenia (.env)</th>
+      <td>
+        <div class="kd-flags">{% for name, is_set in o.config %}<span><code>{{ name }}</code> {% if is_set %}nastavené{% else %}<strong>chýba</strong>{% endif %}</span>{% endfor %}</div>
+      </td>
+    </tr>
+  </table>
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}

@@ -775,6 +775,7 @@ class WorkerTests(TestCase):
             mock.patch(f'{worker}.send_personal_reminders') as personal,
             mock.patch(f'{worker}.prune_sent') as prune,
             mock.patch(f'{worker}.backup_due', return_value=False),
+            mock.patch(f'{worker}.Heartbeat'),  # would write the real /app/data/worker_status.json
             mock.patch('time.sleep', side_effect=Stop),
             self.assertRaises(Stop),
         ):

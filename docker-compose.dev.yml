@@ -37,6 +37,7 @@ services:
     user: root
     volumes:
       - ./backend:/app
+      # same volume as backend: the admin overview reads the worker's heartbeat /app/data/worker_status.json
       - backend_data:/app/data
       - ./backups:/backups
     depends_on:

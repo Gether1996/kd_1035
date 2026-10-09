@@ -45,7 +45,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # admin/index.html adds the overview panel (kingdom/overview.py) – no app overrides admin templates
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,6 +77,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # production image (.dockerignore); the base file says which snapshot this database was last synced with.
 SNAPSHOT_PATH = BASE_DIR / 'snapshot' / 'db.sqlite3'
 SNAPSHOT_BASE_PATH = SQLITE_PATH.parent / 'snapshot_base'
+# heartbeat of the worker for the admin overview – a file, not a DB row, so the snapshot stays unchanged
+WORKER_STATUS_PATH = SQLITE_PATH.parent / 'worker_status.json'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
