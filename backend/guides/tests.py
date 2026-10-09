@@ -69,7 +69,7 @@ class MetaGuidesTests(TestCase):
         guides = list(rendered_guides())
         slugs = [g['slug'] for g in guides]
         self.assertEqual(len(slugs), len(set(slugs)))
-        self.assertGreaterEqual(len([g for g in guides if g['category'] == 'commanderi']), 10)
+        self.assertGreaterEqual(len([g for g in guides if g['category'] == 'commanderi']), 9)
         self.assertGreaterEqual(len([g for g in guides if g['category'] == 'vybava']), 7)
         self.assertGreaterEqual(len([g for g in guides if g['category'] == 'eventy']), 10)
         for data in guides:
@@ -249,13 +249,21 @@ class MetaSyncTests(TestCase):
         self.assertNotEqual(Guide.objects.get(slug='pary-pre-jazdu').html_sk, '<p>stará meta</p>')
         self.assertEqual(Guide.objects.get(slug='pary-pre-pechotu').html_sk, '<p>môj text</p>')
 
+    def test_a_new_position_alone_keeps_the_update_date(self):
+        sync_guides()
+        guide = Guide.objects.get(slug='pary-na-zber-surovin')
+        Guide.objects.filter(pk=guide.pk).update(order=guide.order + 1)  # as if a guide before it was dropped
+        self.assertEqual(sync_guides()['updated'], 0)
+        moved = Guide.objects.get(pk=guide.pk)
+        self.assertEqual((moved.order, moved.updated_at), (guide.order, guide.updated_at))
+
     def test_specialties_come_from_the_meta(self):
         sync_guides()
         self.assertEqual(
-            dict(Guide.objects.exclude(specialty='').values_list('slug', 'specialty')),
+            dict(Guide.objects.filter(is_published=True).exclude(specialty='').values_list('slug', 'specialty')),
             {
                 'pary-pre-jazdu': 'cavalry', 'pary-pre-pechotu': 'infantry', 'pary-pre-lukostrelcov': 'archer',
-                'pary-leadership-a-mix': 'leadership', 'pary-pre-garrison': 'garrison',
+                'pary-pre-garrison': 'garrison',
                 'pary-pre-rally': 'conquering', 'pary-na-barbarov-a-pevnosti': 'peacekeeping',
                 'pary-na-zber-surovin': 'gathering', 'vybava-pre-jazdu': 'cavalry', 'vybava-pre-pechotu': 'infantry',
                 'vybava-pre-lukostrelcov': 'archer', 'vybava-pre-leadership': 'leadership',
@@ -265,9 +273,9 @@ class MetaSyncTests(TestCase):
     def test_migration_sets_specialties_and_keeps_the_date(self):
         migration = importlib.import_module('guides.migrations.0007_guide_specialty')
         sync_guides()
-        # the migration knows the same specialties as the meta modules
+        # the migration knows the specialties of the meta modules (and of guides dropped from them later)
         meta = {g['slug']: g['specialty'] for g in rendered_guides() if g['specialty']}
-        self.assertEqual(migration.SPECIALTIES, meta)
+        self.assertEqual({slug: s for slug, s in migration.SPECIALTIES.items() if slug in meta}, meta)
         Guide.objects.update(specialty='')  # as before the migration
         Guide.objects.filter(slug='pary-pre-pechotu').update(specialty='archer')  # already set by hand
         before = dict(Guide.objects.values_list('slug', 'updated_at'))

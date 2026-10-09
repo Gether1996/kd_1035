@@ -33,7 +33,10 @@ def sync_guides(modules=MODULES) -> dict:
             stats['created'] += 1
         elif guide.auto_update:
             changed = [field for field, value in data.items() if getattr(guide, field) != value]
-            if changed:
+            if changed == ['order']:
+                # another guide was added or dropped: the content is the same, so "Aktualizované" keeps its date
+                Guide.objects.filter(pk=guide.pk).update(order=data['order'])
+            elif changed:
                 for field in changed:
                     setattr(guide, field, data[field])
                 guide.save()

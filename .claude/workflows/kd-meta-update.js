@@ -3,6 +3,7 @@ export const meta = {
   description: 'Monthly KD 1035 meta update: research commanders, equipment and events, update backend/guides/meta, fact-check every change, push',
   whenToUse: 'Once a month (scheduled task) or on demand. args: {date: "YYYY-MM-DD" (required – today)}',
   phases: [
+    { title: 'Transcripts', detail: 'fresh transcripts of the latest WarDaddyChadski guide videos (tools/youtube)' },
     { title: 'Research', detail: 'one researcher per meta module (commanders, equipment, events)' },
     { title: 'Update', detail: 'kd-builder edits backend/guides/meta and bumps VERIFIED' },
     { title: 'Fact-check', detail: 'kd-critic verifies every change against its source, then pushes' },
@@ -20,6 +21,13 @@ const MODULES = [
   { key: 'events', file: 'backend/guides/meta/events.py', topic: 'recurring events (MGE, More Than Gems, Ark of Osiris, Sunset Canyon, Olympia, KvK phases …) – rules, scoring, strategy, recommended commanders' },
 ]
 
+// Gether 9. 10. 2026: commander pairings follow the YouTube creator WarDaddyChadski (dated troop-type guides every
+// month or two, backed by RoKBattles data). His videos are read as auto-caption transcripts (tools/youtube/transcripts.py).
+const TRANSCRIPTS_CMD =
+  'MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/tools/youtube:/work" -w /work python:3.13-slim sh -c ' +
+  '"pip install -q yt-dlp >/dev/null 2>&1 && python transcripts.py --days 120"'
+const YOUTUBE_NOTE = `PRIMARY SOURCE (owner's decision): the YouTube creator WarDaddyChadski. Transcripts of his guide videos from the last 120 days are in tools/youtube/out/<videoId>.txt (one line per minute, "[07m] …"); tools/youtube/out/index.tsv lists date, id, url and title. Read the newest dated guides for your topic (e.g. "New Cavalry Guide [October 2026]", "Archer Guide [July 2026]", "Meta Garrison Guide", "Meta Field March Line Ups") – the newest video wins over older videos and over websites. Auto captions garble names: map them to real commander names ("Gang Gang" = Gang Gamchan, never Genghis Khan; "Ailla"/"Attilla" = Attila; "Versie"/"Mercy" = Vercingetorix; "Sunzu" = Sun Tzu; "BQ" = Bai Qi; "Luche" = Liu Che) and leave out anything you cannot map with certainty. In "evidence" give the video id and minute; cite the video as "WarDaddyChadski: <short title> (MM/YYYY)" with its watch URL. Never copy his sentences – facts only, in your own words. The websites below remain for topics he does not cover (barbarians, gathering, F2P, item stats).`
+const YOUTUBE_OTHER = `WarDaddyChadski transcripts in tools/youtube/out/ (see index.tsv) may also cover your topic (gear, armaments, Sunset Canyon …) – use them like a dated source when they do: cite the video and give its id + minute in "evidence".`
 const SOURCES_NOTE = `Usable: allclash.com (newest, partly paywalled), official Lilith patch notes (rok-club.lilith.com, forum-global.lilithgame.com), app.rokstats.online, riseofkingdomsguides.com (many pages carry a bulk "Jan 2, 2026" date on old content – check the content), heaven-guardian.com / ldshop.gg (shop/SEO blogs – lower reliability), YouTube descriptions. Known bad: lootbar.com blog (invents item names). Unreachable so far: rokboom.com, rok.guide (503), rokhub.xyz, fandom (402), reddit.`
 
 const RESEARCH = {
@@ -85,12 +93,23 @@ async function run(type, prompt, extra) {
 }
 
 // ---------------------------------------------------------------------------------------------
+phase('Transcripts')
+const transcripts = await agent(
+  `In the git repository in the current directory run exactly this command (Docker Desktop must be running – if \`docker info\` fails, run \`docker desktop start\` and wait until it works):
+${TRANSCRIPTS_CMD}
+It downloads the auto captions of the latest WarDaddyChadski guide videos into tools/youtube/out/ (git-ignored). Do not edit any file. Reply with the number of videos in tools/youtube/out/index.tsv (lines minus the header) and any error output.`,
+  { label: 'transcripts', phase: 'Transcripts', effort: 'low' },
+)
+log(`transcripts: ${String(transcripts).slice(0, 200)}`)
+
+// ---------------------------------------------------------------------------------------------
 phase('Research')
 const research = await parallel(MODULES.map(m => () =>
   agent(
     `You keep the Rise of Kingdoms guides of the KD 1035 website current. Today's month: ${MONTH}.
 Read ${m.file} (its VERIFIED value is the month of the last check; its GUIDES are the current content). Load WebSearch and WebFetch via ToolSearch ("select:WebSearch,WebFetch").
-Research what changed in the meta of ${m.topic} since VERIFIED: new or reworked commanders/items/events, buffs and nerfs, shifted recommendations, wrong or outdated statements in the current guides, dead source links. ${m.key === 'events' ? 'If the module has few or no guides, propose the most useful missing event guides as new:<slug> entries with full facts.' : ''}
+Research what changed in the meta of ${m.topic} since VERIFIED: new or reworked commanders/items/events, buffs and nerfs, shifted recommendations, wrong or outdated statements in the current guides, dead source links. ${m.key === 'commanders' ? YOUTUBE_NOTE : YOUTUBE_OTHER}
+${m.key === 'events' ? 'If the module has few or no guides, propose the most useful missing event guides as new:<slug> entries with full facts.' : ''}
 ${SOURCES_NOTE}
 Report only changes backed by a dated, reliable source (two independent sources for anything surprising). Paraphrase facts – the site never copies prose. If nothing relevant changed, return verdict "no_change". Do not edit any file.`,
     { label: `research:${m.key}`, phase: 'Research', schema: RESEARCH },
@@ -132,7 +151,7 @@ for (let round = 1; round <= 2; round++) {
   review = await run(
     'kd-critic',
     `Fact-check the monthly meta update of the KD 1035 guides: commits ${base}..HEAD (backend/guides/meta/*).
-For EVERY changed or added claim (commander pair, item, stat value, event rule, number) open the cited source with WebFetch (load it via ToolSearch "select:WebFetch,WebSearch") and confirm the source really says it and is current. Unsupported or invented claims are blockers. Also check: texts are original (not copied prose), SK and CZ both correct, VERIFIED bumped only for researched modules, LAST_UPDATE = ${DATE}, tests pass (\`docker compose -f docker-compose.dev.yml run --rm backend python manage.py test\`).
+For EVERY changed or added claim (commander pair, item, stat value, event rule, number) open the cited source with WebFetch (load it via ToolSearch "select:WebFetch,WebSearch") and confirm the source really says it and is current. A cited YouTube video (WarDaddyChadski) is checked in its transcript tools/youtube/out/<videoId>.txt at the minute given in the research evidence – confirm the claim is there and every commander name is mapped correctly from the garbled captions. Unsupported or invented claims are blockers. Also check: texts are original (not copied prose), SK and CZ both correct, VERIFIED bumped only for researched modules, LAST_UPDATE = ${DATE}, tests pass (\`docker compose -f docker-compose.dev.yml run --rm backend python manage.py test\`).
 Research brief the update was based on:
 ${brief}
 
