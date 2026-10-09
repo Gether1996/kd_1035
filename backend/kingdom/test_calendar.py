@@ -95,9 +95,20 @@ class EventCalendarTests(TestCase):
         planned = make_event(name_sk='Shadow Legion', starts_at=utc(2026, 10, 9, 18), repeat_days=0, irregular=True)
         make_event(name_sk='Skrytý', starts_at=utc(2026, 10, 1, 18), repeat_days=0, irregular=True, show_on_web=False)
         data = self.get().json()
+        # every irregular event, the next date first; a waiting one has no date
         self.assertEqual(
-            data['irregular_waiting'],
+            data['irregular'],
             [
+                {
+                    'id': planned.pk,
+                    'name_sk': 'Shadow Legion',
+                    'name_cs': '',
+                    'icon': '/static/kingdom/events/shadow-legion.webp',
+                    'offered': [10, 60],
+                    'guide': None,
+                    'start': '2026-10-09T18:00:00Z',
+                    'end': '2026-10-09T19:00:00Z',
+                },
                 {
                     'id': waiting.pk,
                     'name_sk': 'Silk Road',
@@ -105,16 +116,21 @@ class EventCalendarTests(TestCase):
                     'icon': '/static/kingdom/events/silk-road.webp',
                     'offered': [10, 60],
                     'guide': None,
-                }
+                    'start': None,
+                    'end': None,
+                },
             ],
         )
         # the past start of a waiting event is only a placeholder → not in the calendar
         self.assertEqual([(o['id'], o['irregular']) for o in data['occurrences']], [(planned.pk, True)])
 
-        # running right now: in the calendar, not waiting
+        # running right now: in the calendar, and with its date in the list
         KingdomEvent.objects.filter(pk=waiting.pk).update(starts_at=utc(2026, 10, 8, 11, 30))
         data = self.get().json()
-        self.assertEqual(data['irregular_waiting'], [])
+        self.assertEqual(
+            [(e['id'], e['start']) for e in data['irregular']],
+            [(waiting.pk, '2026-10-08T11:30:00Z'), (planned.pk, '2026-10-09T18:00:00Z')],
+        )
         self.assertEqual([o['id'] for o in data['occurrences']], [waiting.pk, planned.pk])
 
     def test_guide_only_when_published(self, _now):
@@ -133,12 +149,14 @@ class EventCalendarTests(TestCase):
         make_event(message='Tajný text', mention_role_id='123456', reminders=[60], player_reminders=[15, 60])
         make_event(name_sk='Silk Road', starts_at=utc(2026, 10, 1, 18), repeat_days=0, irregular=True)
         data = self.get().json()
-        self.assertEqual(set(data), {'from', 'to', 'occurrences', 'irregular_waiting'})
+        self.assertEqual(set(data), {'from', 'to', 'occurrences', 'irregular'})
         self.assertEqual(
             set(data['occurrences'][0]),
             {'id', 'name_sk', 'name_cs', 'icon', 'start', 'end', 'repeat_days', 'irregular', 'offered', 'guide'},
         )
-        self.assertEqual(set(data['irregular_waiting'][0]), {'id', 'name_sk', 'name_cs', 'icon', 'offered', 'guide'})
+        self.assertEqual(
+            set(data['irregular'][0]), {'id', 'name_sk', 'name_cs', 'icon', 'offered', 'guide', 'start', 'end'}
+        )
         self.assertNotIn('Tajný', str(data))
         self.assertNotIn('123456', str(data))
 

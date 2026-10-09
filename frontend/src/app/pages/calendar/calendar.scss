@@ -7,28 +7,6 @@
   padding-bottom: clamp(80px, 12vw, 140px);
 }
 
-// accent of an event (by its id), the same in the grid, the agenda and the lists
-[data-accent='gold'] {
-  --accent: var(--gold-400);
-  --tint: color-mix(in srgb, var(--gold-400) 11%, var(--bg-raised));
-  --tint-hover: color-mix(in srgb, var(--gold-400) 20%, var(--bg-raised));
-  --ink: var(--gold-100);
-}
-
-[data-accent='red'] {
-  --accent: var(--red-300);
-  --tint: color-mix(in srgb, var(--red-500) 24%, var(--bg-raised));
-  --tint-hover: color-mix(in srgb, var(--red-500) 38%, var(--bg-raised));
-  --ink: var(--text);
-}
-
-[data-accent='navy'] {
-  --accent: var(--text-dim);
-  --tint: color-mix(in srgb, var(--text-dim) 15%, var(--bg-raised));
-  --tint-hover: color-mix(in srgb, var(--text-dim) 26%, var(--bg-raised));
-  --ink: var(--text);
-}
-
 // ---------------------------------------------------------------- toolbar: month · today · previous / next
 
 .toolbar {
@@ -484,8 +462,32 @@
   align-self: center;
 }
 
-.strip--irregular .pill-event__icon {
-  --size: 26px;
+.strip--irregular {
+  .pill-event {
+    align-items: center;
+  }
+
+  .pill-event__icon {
+    --size: 30px;
+  }
+}
+
+// irregular events: the name, and under it the next date (or "termín oznámime")
+.pill-event__text {
+  display: grid;
+  gap: 2px;
+}
+
+.pill-event__when {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+
+  &.is-none {
+    font-style: italic;
+    color: var(--text-mute);
+  }
 }
 
 .bar__icon {

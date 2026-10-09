@@ -193,6 +193,7 @@ export const sk = {
     daily: 'Každý deň',
     irregular: 'Nepravidelné eventy',
     irregularText: 'Ďalší termín oznámime.',
+    irregularIntro: 'Nemajú pevný cyklus, termín oznamuje vedenie kráľovstva.',
     empty: 'Zatiaľ nie sú naplánované žiadne eventy.',
     error: 'Kalendár sa nepodarilo načítať. Skús to znova o chvíľu.',
     since: 'od {date}',

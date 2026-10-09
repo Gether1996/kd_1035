@@ -194,6 +194,7 @@ export const cs: Dict = {
     daily: 'Každý den',
     irregular: 'Nepravidelné eventy',
     irregularText: 'Další termín oznámíme.',
+    irregularIntro: 'Nemají pevný cyklus, termín oznamuje vedení království.',
     empty: 'Zatím nejsou naplánované žádné eventy.',
     error: 'Kalendář se nepodařilo načíst. Zkus to znovu za chvíli.',
     since: 'od {date}',

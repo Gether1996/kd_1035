@@ -13,7 +13,7 @@ import {
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { EventsAdminApi, ManagedEvent } from '../../core/events-admin-api';
-import { EventsApi, Occurrence, PublicEvent, eventName } from '../../core/events-api';
+import { EventsApi, IrregularEvent, Occurrence, PublicEvent, eventName } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { RemindersApi } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
@@ -111,8 +111,9 @@ export class Calendar {
     const month = this.month();
     return month ? agenda(this.dated(), month, this.today() ?? undefined) : [];
   });
-  protected readonly waiting = computed(() =>
-    this.data.hasValue() ? this.data.value().irregular_waiting : [],
+  /** every irregular event with its next date (or none yet) – the block under the calendar */
+  protected readonly irregular = computed(() =>
+    this.data.hasValue() ? this.data.value().irregular : [],
   );
   protected readonly empty = computed(() => this.loaded() && !this.inMonth(this.all()).length);
 
@@ -184,7 +185,9 @@ export class Calendar {
         const runs = this.all().filter((o) => o.id === id);
         const item =
           runs.find((o) => Date.parse(o.end ?? o.start) > now) ??
-          this.waiting().find((e) => e.id === id) ??
+          this.irregular()
+            .filter((e) => e.id === id)
+            .map((e) => this.irregularItem(e))[0] ??
           runs.at(-1);
         if (item) this.selected.set(item);
         void this.router.navigate([], {
@@ -278,6 +281,25 @@ export class Calendar {
 
   protected clock(iso: string, timeZone?: string): string {
     return clock(iso, this.i18n.locale(), timeZone);
+  }
+
+  /** an irregular event as the dialog shows it: its next date, or "ďalší termín oznámime" */
+  protected irregularItem(event: IrregularEvent): PublicEvent | Occurrence {
+    const { start, end, ...base } = event;
+    return start ? { ...base, start, end, repeat_days: 0, irregular: true } : base;
+  }
+
+  /** "po 5. 10. – po 12. 10.", "so 10. 10. 20:00", "Prebieha · do po 12. 10.", "termín oznámime" */
+  protected irregularWhen(event: IrregularEvent): string {
+    if (!event.start) return this.t().reminders.noDate;
+    const c = this.t().calendar;
+    const locale = this.i18n.locale();
+    const first = dayKey(new Date(event.start));
+    const last = event.end ? dayKey(new Date(event.end)) : first;
+    const item = this.irregularItem(event) as Occurrence;
+    if (this.running(item)) return `${c.running} · ${c.until.replace('{date}', shortDay(last, locale))}`;
+    if (this.timed(item)) return `${shortDay(first, locale)} ${this.clock(event.start)}`;
+    return first === last ? shortDay(first, locale) : `${shortDay(first, locale)} – ${shortDay(last, locale)}`;
   }
 
   /** the start time matters only for short irregular events (an evening Silk Road), not for game events that start

@@ -37,8 +37,19 @@ const DATA: EventCalendar = {
   from: '2026-09-27',
   to: '2026-11-02',
   occurrences: [MGE, SILK_ROAD],
-  irregular_waiting: [
-    { id: 12, name_sk: 'Shadow Legion', name_cs: '', icon: null, offered: [15, 60], guide: null },
+  // the next date first, then those without one
+  irregular: [
+    { ...SILK_ROAD, start: SILK_ROAD.start, end: SILK_ROAD.end },
+    {
+      id: 12,
+      name_sk: 'Shadow Legion',
+      name_cs: '',
+      icon: null,
+      offered: [15, 60],
+      guide: null,
+      start: null,
+      end: null,
+    },
   ],
 };
 const PLAYER: Me = {
@@ -223,7 +234,13 @@ describe('Calendar', () => {
 
   it('an irregular event without a date opens too; login off = no reminders part', async () => {
     await render({ login_enabled: false, user: null });
-    await open(el().querySelector<HTMLButtonElement>('.strip--irregular .pill-event')!);
+    const pills = el().querySelectorAll<HTMLButtonElement>('.strip--irregular .pill-event');
+    // every irregular event with its date: Silk Road on Tuesday evening, Shadow Legion not dated yet
+    expect([...pills].map((p) => p.querySelector('.pill-event__when')?.textContent?.trim())).toEqual([
+      'ut 13. 10. 18:00',
+      'termín oznámime',
+    ]);
+    await open(pills[1]);
     expect(dialog()!.textContent).toContain('Ďalší termín oznámime.');
     expect(dialog()!.textContent).toContain('nepravidelne');
     expect(dialog()!.querySelector('.remind')).toBeNull();
@@ -232,7 +249,7 @@ describe('Calendar', () => {
   it('says when the month has no events', async () => {
     await render(
       { login_enabled: false, user: null },
-      { ...DATA, occurrences: [], irregular_waiting: [] },
+      { ...DATA, occurrences: [], irregular: [] },
     );
     expect(el().querySelector('.state')?.textContent).toContain(
       'Zatiaľ nie sú naplánované žiadne eventy.',

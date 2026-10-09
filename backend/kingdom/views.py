@@ -78,7 +78,8 @@ def event_data(event: KingdomEvent) -> dict:
 
 class EventCalendar(APIView):
     """Public calendar (/kalendar): occurrences of active events shown on the web that overlap the days asked for
-    (Europe/Bratislava), a running multi-day event included, plus irregular events still waiting for a date."""
+    (Europe/Bratislava), a running multi-day event included, plus every irregular event with its next (or running)
+    date – null while leadership has not announced one."""
 
     # public and the same for everyone: no session (a cache may keep it), nothing to protect with CSRF
     authentication_classes = []
@@ -102,14 +103,24 @@ class EventCalendar(APIView):
                     'irregular': event.irregular,
                 }
             )
-        # no date yet (or the last one is over): leadership announces the next one, players may pick it in advance
-        waiting = [
-            event_data(event)
-            for event in sorted(visible, key=lambda e: e.name_sk)
-            if event.irregular and next(events.overlapping(event, now), None) is None
-        ]
+        # irregular events have no cycle: the calendar lists them all, the next date first, then those still waiting
+        # (no date yet, or the last one is over – players may pick them in advance)
+        irregular = []
+        for event in visible:
+            if not event.irregular:
+                continue
+            begin = next(events.overlapping(event, now), None)
+            length = timedelta(minutes=event.duration_minutes)
+            irregular.append(
+                {
+                    **event_data(event),
+                    'start': iso(begin) if begin else None,
+                    'end': iso(begin + length) if begin and length else None,
+                }
+            )
+        irregular.sort(key=lambda e: (e['start'] is None, e['start'] or '', e['name_sk']))
         response = Response(
-            {'from': first.isoformat(), 'to': last.isoformat(), 'occurrences': occurrences, 'irregular_waiting': waiting}
+            {'from': first.isoformat(), 'to': last.isoformat(), 'occurrences': occurrences, 'irregular': irregular}
         )
         response['Cache-Control'] = 'public, max-age=300'
         return response

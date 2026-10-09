@@ -656,6 +656,30 @@ p {
   }
 }
 
+// ---------------------------------------------------------------- calendar events
+
+// accent of a calendar event (by its id, calendar.ts accent()): the same in the grid, the agenda and the lists
+[data-accent='gold'] {
+  --accent: var(--gold-400);
+  --tint: color-mix(in srgb, var(--gold-400) 11%, var(--bg-raised));
+  --tint-hover: color-mix(in srgb, var(--gold-400) 20%, var(--bg-raised));
+  --ink: var(--gold-100);
+}
+
+[data-accent='red'] {
+  --accent: var(--red-300);
+  --tint: color-mix(in srgb, var(--red-500) 24%, var(--bg-raised));
+  --tint-hover: color-mix(in srgb, var(--red-500) 38%, var(--bg-raised));
+  --ink: var(--text);
+}
+
+[data-accent='navy'] {
+  --accent: var(--text-dim);
+  --tint: color-mix(in srgb, var(--text-dim) 15%, var(--bg-raised));
+  --tint-hover: color-mix(in srgb, var(--text-dim) 26%, var(--bg-raised));
+  --ink: var(--text);
+}
+
 // ---------------------------------------------------------------- modal dialog
 // <dialog class="modal"><div class="modal__body"><header class="modal__head">…</header>…</div></dialog>
 // A centred card on larger screens, a bottom sheet on phones. Only transform/opacity animate.

@@ -174,21 +174,27 @@
         }
       </div>
 
-      @if (waiting().length) {
+      @if (irregular().length) {
+        <!-- all irregular events: the next date first, then those leadership has not dated yet -->
         <section class="strip strip--irregular" aria-labelledby="irregular-title">
           <h3 class="strip__title" id="irregular-title">{{ c.irregular }}</h3>
-          <p class="strip__text">{{ c.irregularText }}</p>
+          <p class="strip__text">{{ c.irregularIntro }}</p>
           <ul class="strip__list">
-            @for (item of waiting(); track item.id) {
+            @for (item of irregular(); track item.id) {
               <li>
                 <button
                   type="button"
                   class="pill-event"
                   [attr.data-accent]="accent(item)"
-                  (click)="open(item, $event)"
+                  (click)="open(irregularItem(item), $event)"
                 >
                   <app-event-icon class="pill-event__icon" [src]="item.icon" [name]="name(item)" />
-                  {{ name(item) }}
+                  <span class="pill-event__text">
+                    {{ name(item) }}
+                    <small class="pill-event__when" [class.is-none]="!item.start">{{
+                      irregularWhen(item)
+                    }}</small>
+                  </span>
                 </button>
               </li>
             }

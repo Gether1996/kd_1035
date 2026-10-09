@@ -36,14 +36,20 @@ export interface Occurrence extends PublicEvent {
   irregular: boolean;
 }
 
+/** An irregular event with its next (or running) date; both null while leadership has not announced one. */
+export interface IrregularEvent extends PublicEvent {
+  start: string | null;
+  end: string | null;
+}
+
 export interface EventCalendar {
   /** the days asked for (Europe/Bratislava), both included */
   from: string;
   to: string;
   /** soonest first; a multi-day event that started before `from` and still runs is included */
   occurrences: Occurrence[];
-  /** irregular events without a next date yet ("ďalší termín oznámime") */
-  irregular_waiting: PublicEvent[];
+  /** every irregular event, the next date first, then those without one ("termín oznámime") */
+  irregular: IrregularEvent[];
 }
 
 export function isOccurrence(item: PublicEvent): item is Occurrence {
