@@ -64,6 +64,7 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
 - Databáza (`db_data`) a nahrané súbory (`uploads`) sú v Docker volumes. Prežijú rebuild aj `docker compose down`.
 - **Nikdy nespúšťaj `docker compose down -v`.** Zmaže volumes aj s databázou.
 - Kontajner `worker` robí každých `BACKUP_INTERVAL_DAYS` (7) dní zálohu do `BACKUP_PATH` (`./backups`) a nechá posledných `BACKUP_KEEP` (8). Raz denne zmaže expirované prihlásenia (session).
+- Úvod adminu (`/admin/`, iba superuser) ukazuje panel **Prehľad**: či worker beží, vek poslednej zálohy, najbližšie a zlyhané notifikácie a či sú v `.env` nastavené Discord premenné. Červené „Worker nebeží“ = `docker compose logs worker` a `docker compose up -d worker`.
 
 ```bash
 # záloha hneď
