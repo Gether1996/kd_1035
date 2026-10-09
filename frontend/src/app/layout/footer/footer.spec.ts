@@ -58,4 +58,10 @@ describe('Footer', () => {
     expect(version?.textContent?.trim()).toBe(`Verzia webu v${SITE_VERSION}`);
     expect(SITE_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
+
+  it('names who made the website', async () => {
+    const el = await render(() => undefined);
+    const text = el.querySelector('.watermark')?.textContent?.replace(/\s+/g, ' ').trim();
+    expect(text).toBe('Vytvoril Gether v spolupráci s TTakedaSVK · 2026');
+  });
 });

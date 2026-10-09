@@ -505,6 +505,7 @@ export const sk = {
     fanSite:
       'Neoficiálna fanúšikovská stránka hráčov kráľovstva 1035, bez prepojenia so spoločnosťou Lilith Games. Rise of Kingdoms a herné grafiky sú majetkom Lilith Games.',
     madeBy: 'Vytvoril',
+    together: 'v spolupráci s',
     updated: 'Informácie aktualizované',
     version: 'Verzia webu',
   },

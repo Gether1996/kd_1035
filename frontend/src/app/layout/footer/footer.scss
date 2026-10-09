@@ -113,6 +113,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.footer__credits {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  @media (min-width: 900px) {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
 .footer__updated {
   font-size: 0.8125rem;
   color: var(--text-mute);
@@ -123,7 +134,7 @@
 }
 
 .watermark {
-  font: 500 0.75rem/1 var(--font-body);
+  font: 500 0.75rem/1.6 var(--font-body);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-mute);

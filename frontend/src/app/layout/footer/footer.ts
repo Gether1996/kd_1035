@@ -33,12 +33,17 @@ import { Logo } from '../../shared/logo';
           <li class="footer__version"><span class="sr-only">{{ i18n.t().footer.version }} </span>v{{ version }}</li>
         </ul>
       </div>
-      @if (updated(); as updated) {
-        <p class="footer__updated">
-          {{ i18n.t().footer.updated }} <time [attr.datetime]="updated.iso">{{ updated.text }}</time>
+      <!-- right column on wide screens: when the information was updated, who made the website -->
+      <div class="footer__credits">
+        @if (updated(); as updated) {
+          <p class="footer__updated">
+            {{ i18n.t().footer.updated }} <time [attr.datetime]="updated.iso">{{ updated.text }}</time>
+          </p>
+        }
+        <p class="watermark">
+          {{ i18n.t().footer.madeBy }} <span>Gether</span> {{ i18n.t().footer.together }} <span>TTakedaSVK</span> · 2026
         </p>
-      }
-      <p class="watermark">{{ i18n.t().footer.madeBy }} <span>Gether</span> · 2026</p>
+      </div>
     </div>
   `,
   styleUrl: './footer.scss',
