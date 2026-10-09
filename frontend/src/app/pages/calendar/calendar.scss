@@ -524,17 +524,21 @@
     height: 15px;
   }
 
-  .week:hover &,
-  &:focus-visible {
-    opacity: 1;
-  }
-
   &:hover {
+    opacity: 1;
     background: color-mix(in srgb, var(--gold-400) 18%, var(--bg-raised));
   }
 
   &:focus-visible {
+    opacity: 1;
     border-radius: 50%;
+  }
+
+  // only on the day under the mouse: its top row (where the "+" sits) is never covered by a bar
+  @for $col from 0 through 6 {
+    .week:has(.day[data-d='#{$col}']:hover) &[data-d='#{$col}'] {
+      opacity: 1;
+    }
   }
 
   // touch screens have no hover: always visible, a little quieter

@@ -70,6 +70,7 @@
                 [class.is-out]="!isIn(key)"
                 [class.is-today]="key === today()"
                 [style.grid-column]="col + 1"
+                [attr.data-d]="col"
                 aria-hidden="true"
               >
                 <span class="day__num">{{ dayNumber(key) }}</span>
@@ -82,6 +83,7 @@
                   <button
                     type="button"
                     class="day__add"
+                    [attr.data-d]="col"
                     [style.grid-column]="col + 1"
                     [attr.aria-label]="addLabel(key)"
                     [title]="addLabel(key)"
