@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -6,11 +6,6 @@ import { provideRouter } from '@angular/router';
 import { Me } from '../../core/auth';
 import { Scroll } from '../../core/scroll';
 import { Account } from './account';
-import { Reminders } from './reminders/reminders';
-
-// the reminders section of a signed-in player has its own tests
-@Component({ selector: 'app-reminders', template: '' })
-class NoReminders {}
 
 describe('Account', () => {
   beforeEach(() => {
@@ -23,7 +18,6 @@ describe('Account', () => {
         { provide: Scroll, useValue: { scrolled: signal(false), reducedMotion: true } },
       ],
     });
-    TestBed.overrideComponent(Account, { remove: { imports: [Reminders] }, add: { imports: [NoReminders] } });
   });
 
   async function render(me: Me) {
@@ -54,5 +48,7 @@ describe('Account', () => {
     });
     expect(el.querySelector('#account-name')?.textContent).toContain('Nelly');
     expect(privacyLink(el)?.getAttribute('href')).toBe('/ochrana-udajov');
+    // the reminders have their own page
+    expect(el.querySelector('.shortcut')?.getAttribute('href')).toBe('/pripomienky');
   });
 });

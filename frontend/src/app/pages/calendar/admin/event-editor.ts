@@ -25,7 +25,7 @@ import {
 import { I18n } from '../../../core/i18n/i18n';
 import { EventIcon } from '../../../shared/event-icon';
 import { Icon } from '../../../shared/icon';
-import { plural, reminderLabel } from '../../account/reminders/format';
+import { plural, reminderLabel } from '../../reminders/format';
 import { KINGDOM_ZONE, shiftDate, toInstant, wallClock, zoneOf } from './zone';
 
 export type Kind = 'once' | 'repeat' | 'irregular';

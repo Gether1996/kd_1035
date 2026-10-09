@@ -70,6 +70,14 @@ describe('Header account slot', () => {
     expect(links[0].textContent).toContain('Prihlásiť');
   });
 
+  it('has the bell to the event reminders next to the player, also before signing in', async () => {
+    await answer({ login_enabled: true, user: null });
+    const bell = el().querySelector<HTMLAnchorElement>('.account__bell');
+    expect(bell?.getAttribute('href')).toBe('/pripomienky');
+    expect(bell?.getAttribute('aria-label')).toBe('Pripomienky eventov');
+    expect(el().querySelector('.drawer__reminders')?.getAttribute('href')).toBe('/pripomienky');
+  });
+
   it('shows the signed-in player linking to the account page', async () => {
     await answer({
       login_enabled: true,
@@ -83,7 +91,7 @@ describe('Header account slot', () => {
       },
     });
     expect(loginLinks().length).toBe(0);
-    const link = el().querySelector<HTMLAnchorElement>('.account__link');
+    const link = el().querySelector<HTMLAnchorElement>('.account__link:not(.account__bell)');
     expect(link?.getAttribute('href')).toBe('/ucet');
     expect(link?.textContent).toContain('Nelly');
     expect(link?.querySelector('img')?.getAttribute('alt')).toBe('');

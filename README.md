@@ -149,9 +149,9 @@ Prihlásený hráč si na `/ucet` vyplní **meno v hre**, aby ho vedenie spoznal
 
 Superadmin sa do adminu prihlasuje cez Discord: jeho Discord ID patrí do `DISCORD_ADMIN_IDS` v `.env` (Gether: `245662824171438090`). Po prihlásení na webe má na `/ucet` odkaz **Administrácia**. Ďalšie práva (napr. pre R4) sa dávajú ručne v admine → **Používatelia** → `discord_<id>` → správcovský prístup.
 
-## Pripomienky eventov pre hráčov (Discord správa, notifikácie)
+## Pripomienky eventov pre hráčov (Discord správa)
 
-Prihlásený hráč si na `/ucet` → **Pripomienky eventov** vyberie eventy a kedy mu ich pripomenúť. Príde mu **súkromná správa od Discord bota**, **notifikácia v prehliadači / na mobile**, alebo oboje. Bez nastavenia je daný spôsob vypnutý (na webe „Zatiaľ nie je zapnuté“), nič sa nepokazí.
+Prihlásený hráč si na stránke **Pripomienky eventov** (`/pripomienky`, zvonček v hlavičke) vyberie eventy a kedy mu ich pripomenúť. Príde mu **súkromná správa od Discord bota** – iný spôsob nie je (notifikácie v prehliadači sme 9. 10. 2026 zrušili). Bez tokenu bota je to vypnuté (na webe „Bot zatiaľ nie je zapnutý“), nič sa nepokazí.
 
 **Discord bot** (tá istá aplikácia ako prihlásenie):
 
@@ -160,12 +160,6 @@ Prihlásený hráč si na `/ucet` → **Pripomienky eventov** vyberie eventy a k
    `https://discord.com/oauth2/authorize?client_id=1557662862179311636&scope=bot&permissions=0`
    (číslo za `client_id=` je `DISCORD_CLIENT_ID`).
 3. Správu dostane iba hráč, ktorý je na tom serveri a má povolené súkromné správy od jeho členov (v Discorde: názov servera → Nastavenia súkromia → Priame správy). Inak sa doručenie nepodarí – web mu to vysvetľuje.
-
-**Notifikácie v prehliadači** (web push, na serveri potrebuje HTTPS):
-
-1. Raz vygeneruj kľúče: `docker compose exec -u app backend python manage.py generate_vapid_keys` a tri riadky (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) vlož do `.env`.
-2. Kľúče už nemeň – s novými by si hráči museli notifikácie zapnúť znova.
-3. iPhone/iPad: notifikácie fungujú len po pridaní webu na plochu (Safari → Zdieľať → Pridať na plochu) a otvorení odtiaľ.
 
 Po úprave `.env`: `docker compose up -d` (backend aj worker načítajú nové hodnoty).
 

@@ -3,9 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { ReminderEvent } from '../../../core/reminders-api';
-import { cs } from '../../../core/i18n/cs';
-import { sk } from '../../../core/i18n/sk';
+import { ReminderEvent } from '../../core/reminders-api';
+import { cs } from '../../core/i18n/cs';
+import { sk } from '../../core/i18n/sk';
 import { reminderLabel, repeatLabel } from './format';
 import { ReminderPicker, ownMinutes } from './reminder-picker';
 

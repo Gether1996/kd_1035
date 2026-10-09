@@ -1,95 +1,59 @@
 @let r = t();
 
-<section class="reminders" aria-labelledby="reminders-title">
-  <header class="reminders__head">
-    <h2 class="reminders__title" id="reminders-title">{{ r.title }}</h2>
-    <p class="reminders__lead">{{ r.lead }}</p>
-  </header>
-
-  @if (data.error()) {
-    <p class="state">{{ r.error }}</p>
-  } @else if (settings(); as s) {
-    <div class="channels" role="group" aria-labelledby="channels-title">
-      <h3 class="channels__title" id="channels-title">{{ r.channels }}</h3>
-
-      <div class="channels__list">
-        <div class="channel">
-          <span class="channel__icon channel__icon--discord"><svg appIcon="discord"></svg></span>
-          <div class="channel__body">
-            <label class="channel__name" for="remind-discord">{{ r.discord }}</label>
-            <p class="channel__hint" id="remind-discord-hint">
-              {{ s.discord_available ? r.discordHint : r.off }}
-            </p>
-          </div>
-          <div class="channel__action">
-            <input
-              #discordSwitch
-              id="remind-discord"
-              class="switch"
-              type="checkbox"
-              role="switch"
-              aria-describedby="remind-discord-hint"
-              [checked]="s.discord_available && discord()"
-              [disabled]="!s.discord_available"
-              (change)="setDiscord(discordSwitch.checked)"
-            />
-          </div>
+@if (data.error()) {
+  <p class="state">{{ r.error }}</p>
+} @else if (settings(); as s) {
+  <div class="board">
+    <!-- large screens: the switch and the player's reminders stay in view next to a long list of events -->
+    <div class="side">
+      <div class="discord" [class.is-off]="s.discord_available && !discord()">
+        <span class="discord__icon"><svg appIcon="discord"></svg></span>
+        <div class="discord__body">
+          <label class="discord__name" for="remind-discord">{{ r.discord }}</label>
+          <p class="discord__state" id="remind-discord-state" role="status">
+            @if (!s.discord_available) {
+              {{ r.off }}
+            } @else if (discordState() === 'failed') {
+              <span class="is-error">{{ r.failed }}</span>
+            } @else if (discord()) {
+              <span class="is-on">{{ r.discordOn }}</span>
+            } @else {
+              <span class="is-error">{{ r.discordOff }}</span>
+            }
+          </p>
         </div>
-
-        <div class="channel">
-          <span class="channel__icon"><svg appIcon="bell"></svg></span>
-          <div class="channel__body">
-            <p class="channel__name" id="push-name">{{ r.push }}</p>
-            <p class="channel__hint" [class.is-error]="pushFailed()">{{ pushNote() }}</p>
-          </div>
-          @if (s.push_key && (push() === 'on' || push() === 'off')) {
-            <div class="channel__action">
-              <button
-                type="button"
-                class="pill-btn"
-                aria-describedby="push-name"
-                [disabled]="pushBusy()"
-                (click)="push() === 'on' ? disablePush() : enablePush()"
-              >
-                {{ push() === 'on' ? r.disable : r.enable }}
-              </button>
-            </div>
-          }
-        </div>
+        <input
+          #discordSwitch
+          id="remind-discord"
+          class="switch"
+          type="checkbox"
+          role="switch"
+          aria-describedby="remind-discord-state remind-discord-hint"
+          [checked]="s.discord_available && discord()"
+          [disabled]="!s.discord_available"
+          (change)="setDiscord(discordSwitch.checked)"
+        />
+        @if (s.discord_available) {
+          <p class="discord__hint" id="remind-discord-hint">{{ r.discordHint }}</p>
+        }
       </div>
 
-      <p
-        class="channels__state"
-        role="status"
-        [class.is-error]="noChannel() || discordState() === 'failed'"
-      >
-        @if (noChannel()) {
-          {{ r.noChannel }}
-        } @else if (discordState(); as state) {
-          {{ r[state] }}
-        }
-      </p>
-    </div>
-
-    @if (!s.events.length) {
-      <p class="state">{{ r.empty }}</p>
-    } @else {
-      <section class="group" aria-labelledby="mine-title">
+      <section class="mine" aria-labelledby="mine-title">
         <div class="group__head">
-          <h3 class="group__title" id="mine-title">
+          <h2 class="group__title" id="mine-title">
             {{ r.mine }} <span class="group__count">{{ mine().length }}</span>
-          </h3>
+          </h2>
           <a class="group__link" [routerLink]="i18n.path('calendar')">
             <svg appIcon="calendar-days"></svg>{{ r.calendarLink }}
           </a>
         </div>
         @if (mine().length) {
-          <!-- one short line per event: what, when, how long before; edit or stop right there -->
-          <ul class="mine">
+          <!-- one short block per event: what, when, how long before; edit or stop right there -->
+          <ul class="mine__list">
             @for (event of mine(); track event.id) {
               <li class="mine__row">
                 <app-event-icon [src]="event.icon" [name]="name(event)" />
-                <span class="mine__name" [id]="'mine-' + event.id">{{ name(event) }}</span>
+                <span class="mine__name">{{ name(event) }}</span>
                 <span class="mine__when" [class.is-none]="!event.next_start">{{
                   when(event)
                 }}</span>
@@ -119,19 +83,33 @@
             }
           </ul>
         } @else {
-          <p class="group__empty">{{ r.mineEmpty }}</p>
+          <!-- first visit: three steps instead of an empty box -->
+          <div class="mine__empty">
+            <p>{{ r.mineEmpty }}</p>
+            <ol class="steps">
+              @for (step of r.steps; track step; let i = $index) {
+                <li class="steps__item">
+                  <span class="steps__num" aria-hidden="true">{{ i + 1 }}</span>{{ step }}
+                </li>
+              }
+            </ol>
+          </div>
         }
         @if (stopFailed()) {
           <p class="group__error" role="alert">{{ r.failed }}</p>
         }
       </section>
+    </div>
 
-      <section class="group" aria-labelledby="all-title">
-        <div class="group__head">
-          <h3 class="group__title" id="all-title">
-            {{ r.all }} <span class="group__count">{{ s.events.length }}</span>
-          </h3>
-        </div>
+    <section class="all" aria-labelledby="all-title">
+      <div class="group__head">
+        <h2 class="group__title" id="all-title">
+          {{ r.all }} <span class="group__count">{{ s.events.length }}</span>
+        </h2>
+      </div>
+      @if (!s.events.length) {
+        <p class="group__empty">{{ r.empty }}</p>
+      } @else {
         <div class="tools">
           <label class="tools__search">
             <svg appIcon="search"></svg>
@@ -192,16 +170,16 @@
         } @else {
           <p class="group__empty">{{ r.noMatch }}</p>
         }
-      </section>
-    }
-  } @else {
-    <div class="skeleton-list" aria-hidden="true">
-      <span class="skeleton"></span>
-      <span class="skeleton"></span>
-      <span class="skeleton"></span>
-    </div>
-  }
-</section>
+      }
+    </section>
+  </div>
+} @else {
+  <div class="skeleton-list" aria-hidden="true">
+    <span class="skeleton"></span>
+    <span class="skeleton"></span>
+    <span class="skeleton"></span>
+  </div>
+}
 
 @if (dialogItem(); as item) {
   <app-event-dialog

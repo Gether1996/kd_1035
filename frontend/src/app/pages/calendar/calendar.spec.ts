@@ -53,10 +53,8 @@ const PLAYER: Me = {
   },
 };
 const SETTINGS: ReminderSettings = {
-  discord: true,
-  discord_available: false,
-  push_key: 'BPublicKey',
-  push_devices: 0,
+  discord: false,
+  discord_available: true,
   lang: 'sk',
   events: [
     {
@@ -197,10 +195,10 @@ describe('Calendar', () => {
   it('a signed-in player sets the reminders right in the dialog', async () => {
     await render(PLAYER);
     await open(bar('Silk Road'));
-    // no channel reaches the player yet → the warning with a link to the account page
+    // the bot's messages are switched off → the warning with a link to the reminders page
     const note = dialog()!.querySelector('.remind__note');
     expect(note?.classList).toContain('is-warning');
-    expect(note?.querySelector('a')?.getAttribute('href')).toBe('/ucet');
+    expect(note?.querySelector('a')?.getAttribute('href')).toBe('/pripomienky');
 
     dialog()!.querySelector<HTMLInputElement>('.switch')!.click();
     const put = http.expectOne('/api/me/reminders/11/');

@@ -29,6 +29,17 @@
     <!-- desktop: fixed-width slot in every state (loading, login off, API down), so the bar never moves -->
     <div class="account">
       @if (auth.enabled()) {
+        <!-- event reminders: for everyone, the page asks a visitor to sign in -->
+        <a
+          class="account__link account__bell"
+          [routerLink]="i18n.path('reminders')"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          [attr.aria-label]="t.reminders"
+          [title]="t.reminders"
+        >
+          <svg appIcon="bell"></svg>
+        </a>
         @if (auth.user(); as user) {
           <a
             class="account__link"
@@ -82,6 +93,11 @@
 
   @if (auth.enabled()) {
     <div class="drawer__account" [style.--i]="items().length">
+      <a class="drawer__reminders" [routerLink]="i18n.path('reminders')" (click)="close()">
+        <svg appIcon="bell"></svg>
+        <span>{{ t.reminders }}</span>
+        <svg appIcon="chevron-right"></svg>
+      </a>
       @if (auth.user(); as user) {
         <a class="drawer__user" [routerLink]="i18n.path('account')" (click)="close()">
           <img [src]="user.avatar_url" alt="" width="44" height="44" />

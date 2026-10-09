@@ -19,7 +19,7 @@ import { RemindersApi } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
-import { repeatLabel } from '../account/reminders/format';
+import { repeatLabel } from '../reminders/format';
 import { DateDialog } from './admin/date-dialog';
 import { EventEditor } from './admin/event-editor';
 import { EventsPanel } from './admin/events-panel';
@@ -139,13 +139,12 @@ export class Calendar {
     if (this.reminders.error()) return { kind: 'error' };
     if (!this.reminders.hasValue()) return { kind: 'loading' };
     const s = this.reminders.value();
-    const discord = s.discord_available && s.discord;
-    const push = !!s.push_key && s.push_devices > 0;
     return {
       kind: 'player',
       // missing = the event will not run again (a finished one-off)
       event: s.events.find((e) => e.id === item.id) ?? null,
-      noChannel: (s.discord_available || !!s.push_key) && !discord && !push,
+      // the bot is set up, but the player switched its messages off
+      noChannel: s.discord_available && !s.discord,
     };
   });
   /** the event that opened the dialog gets the focus back */

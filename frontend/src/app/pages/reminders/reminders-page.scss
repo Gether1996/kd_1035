@@ -1,0 +1,110 @@
+:host {
+  display: block;
+}
+
+.content {
+  max-width: 560px;
+  padding-bottom: clamp(80px, 12vw, 140px);
+
+  // signed in: the reminders; two columns on large screens
+  &.is-wide {
+    max-width: 760px;
+
+    @media (min-width: 1024px) {
+      max-width: var(--container);
+    }
+  }
+}
+
+.notice {
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--gold-400) 7%, transparent);
+  color: var(--text);
+  text-align: center;
+}
+
+.notice--error {
+  border-color: color-mix(in srgb, var(--red-500) 70%, transparent);
+  background: color-mix(in srgb, var(--red-500) 12%, transparent);
+}
+
+// while /api/auth/me/ loads – keeps the footer from jumping up and down
+.placeholder {
+  min-height: 320px;
+}
+
+// ---------------------------------------------------------------- not signed in
+
+.login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(28px, 6vw, 44px) clamp(20px, 5vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  text-align: center;
+
+  .btn {
+    margin-top: 28px;
+    max-width: 100%;
+  }
+}
+
+.login__badge {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--gold-400) 10%, transparent);
+  color: var(--gold-300);
+
+  .icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.login__title {
+  margin-top: 18px;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 1.875rem);
+}
+
+.login__text {
+  max-width: 40ch;
+  margin-top: 12px;
+  color: var(--text-dim);
+  text-wrap: pretty;
+}
+
+// "what we store about you" → privacy page; quiet text link like on the account page
+.login__privacy {
+  margin-top: 14px;
+  padding-block: 4px;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  transition:
+    color 0.25s,
+    text-decoration-color 0.25s;
+
+  &:hover {
+    color: var(--gold-300);
+    text-decoration-color: currentColor;
+  }
+}
+
+.state {
+  padding: 40px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--text-dim);
+}

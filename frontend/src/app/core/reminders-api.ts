@@ -28,17 +28,12 @@ export interface ReminderSettings {
   discord: boolean;
   /** false while the bot is not set up on the server */
   discord_available: boolean;
-  /** VAPID public key for the browser, '' while web push is not set up */
-  push_key: string;
-  /** browsers of this player with notifications on */
-  push_devices: number;
   lang: Lang;
   /** active events with another start, soonest first */
   events: ReminderEvent[];
 }
 
 const REMINDERS_URL = '/api/me/reminders/';
-const PUSH_URL = '/api/me/push/';
 export const MAX_REMINDERS = 5;
 export const MAX_MINUTES = 7 * 24 * 60;
 
@@ -71,16 +66,5 @@ export class RemindersApi {
   /** Discord messages on/off, language of the messages (the site's language). */
   async update(changes: { discord?: boolean; lang?: Lang }): Promise<void> {
     await firstValueFrom(this.http.patch(REMINDERS_URL, changes));
-  }
-
-  /** Stores this browser's push subscription; resolves with the player's number of browsers. */
-  async addDevice(subscription: PushSubscriptionJSON): Promise<number> {
-    return (await firstValueFrom(this.http.post<{ push_devices: number }>(PUSH_URL, subscription)))
-      .push_devices;
-  }
-
-  async removeDevice(endpoint: string): Promise<number> {
-    const answer = this.http.delete<{ push_devices: number }>(PUSH_URL, { body: { endpoint } });
-    return (await firstValueFrom(answer)).push_devices;
   }
 }

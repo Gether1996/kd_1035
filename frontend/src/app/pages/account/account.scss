@@ -5,35 +5,12 @@
 .content {
   max-width: 560px;
   padding-bottom: clamp(80px, 12vw, 140px);
-
-  // signed in: the profile and the reminders; two columns on large screens
-  &.is-wide {
-    max-width: 760px;
-
-    @media (min-width: 1024px) {
-      max-width: var(--container);
-    }
-  }
 }
 
+// signed in: the profile, and under it the way to the reminders
 .layout {
   display: grid;
-  gap: clamp(40px, 6vw, 56px);
-
-  @media (min-width: 1024px) {
-    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
-    align-items: start;
-    gap: 40px;
-  }
-}
-
-// large screens: the profile stays in view next to a long list of events
-.profile {
-  @media (min-width: 1024px) {
-    position: sticky;
-    top: calc(var(--header-h) + 24px);
-    padding: 32px 24px;
-  }
+  gap: 16px;
 }
 
 .notice {
@@ -175,6 +152,86 @@
 .btn:disabled {
   opacity: 0.6;
   cursor: progress;
+}
+
+// ---------------------------------------------------------------- the reminders page
+
+// the whole row is the link: bell · title + one sentence · "Nastaviť ›"
+.shortcut {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px clamp(16px, 4vw, 22px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text);
+  transition:
+    border-color 0.25s,
+    transform 0.35s var(--ease-out);
+
+  &:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-2px);
+  }
+}
+
+.shortcut__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--gold-400) 10%, transparent);
+  color: var(--gold-300);
+
+  .icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.shortcut__body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+
+  strong {
+    font: 700 1.0625rem/1.3 var(--font-display);
+  }
+
+  small {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--text-dim);
+  }
+}
+
+.shortcut__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--gold-300);
+  font-weight: 600;
+  font-size: 0.9375rem;
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// phones: the action under the text
+@media (max-width: 479px) {
+  .shortcut {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .shortcut__go {
+    grid-column: 2;
+  }
 }
 
 // ---------------------------------------------------------------- delete account

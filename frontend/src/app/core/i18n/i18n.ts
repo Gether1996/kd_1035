@@ -7,7 +7,16 @@ import { cs } from './cs';
 import { sk } from './sk';
 
 export type Lang = 'sk' | 'cs';
-export type Page = 'home' | 'about' | 'calendar' | 'terms' | 'privacy' | 'account' | 'guides' | 'guide';
+export type Page =
+  | 'home'
+  | 'about'
+  | 'calendar'
+  | 'terms'
+  | 'privacy'
+  | 'account'
+  | 'reminders'
+  | 'guides'
+  | 'guide';
 export type GuideCategory = 'commanderi' | 'vybava' | 'eventy';
 
 export const GUIDE_CATEGORIES: GuideCategory[] = ['commanderi', 'vybava', 'eventy'];
@@ -25,6 +34,7 @@ const FIXED_PATHS = {
   terms: '/podmienky',
   privacy: '/ochrana-udajov',
   account: '/ucet',
+  reminders: '/pripomienky',
 } satisfies Partial<Record<Page, string>>;
 type FixedPage = keyof typeof FIXED_PATHS;
 

@@ -2,8 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { ReminderEvent, ReminderSettings } from '../../../core/reminders-api';
-import { monogram } from '../../../shared/event-icon';
+import { ReminderEvent, ReminderSettings } from '../../core/reminders-api';
+import { monogram } from '../../shared/event-icon';
 import { Reminders, plain } from './reminders';
 
 const event = (id: number, changes: Partial<ReminderEvent>): ReminderEvent => ({
@@ -22,8 +22,6 @@ const event = (id: number, changes: Partial<ReminderEvent>): ReminderEvent => ({
 const SETTINGS: ReminderSettings = {
   discord: true,
   discord_available: true,
-  push_key: '',
-  push_devices: 0,
   lang: 'sk',
   events: [
     event(1, {
@@ -42,10 +40,10 @@ const SETTINGS: ReminderSettings = {
   ],
 };
 
-describe('Reminders on /ucet', () => {
+describe('Reminders on /pripomienky', () => {
   let http: HttpTestingController;
 
-  async function render() {
+  async function render(settings: ReminderSettings = SETTINGS) {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: '**', children: [] }]),
@@ -56,7 +54,7 @@ describe('Reminders on /ucet', () => {
     http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(Reminders);
     fixture.detectChanges(); // the settings are asked in the first change detection
-    http.expectOne('/api/me/reminders/').flush(SETTINGS);
+    http.expectOne('/api/me/reminders/').flush(settings);
     await fixture.whenStable();
     return { fixture, el: fixture.nativeElement as HTMLElement };
   }
@@ -117,7 +115,7 @@ describe('Reminders on /ucet', () => {
     await fixture.whenStable();
     const dialog = el.querySelector('dialog')!;
     expect(text(dialog.querySelector('.modal__title'))).toBe('MGE – Pěchota');
-    expect(dialog.querySelector('.remind__note')).toBeNull(); // no "set it up on Môj účet" – we are there
+    expect(dialog.querySelector('.remind__note')).toBeNull(); // no "set it up on Pripomienky eventov" – we are there
     dialog.querySelector<HTMLInputElement>('.switch')!.click();
     const put = http.expectOne('/api/me/reminders/2/');
     expect(put.request.body).toEqual({ offsets: [10] });
@@ -148,6 +146,30 @@ describe('Reminders on /ucet', () => {
     await fixture.whenStable();
     expect(tiles(el).map((tile) => text(tile.querySelector('.tile__name')))).toEqual(['Silk Road']);
     expect(plain('  MGE – Pěchota ')).toBe('mge – pechota');
+  });
+
+  it('one switch for the Discord messages from the bot; off warns the player', async () => {
+    const { fixture, el } = await render();
+    const toggle = el.querySelector<HTMLInputElement>('#remind-discord')!;
+    expect(toggle.checked).toBe(true);
+    expect(text(el.querySelector('.discord__state'))).toBe('Zapnuté');
+    expect(el.querySelectorAll('.switch').length).toBe(1);
+    toggle.click();
+    const patch = http.expectOne('/api/me/reminders/');
+    expect(patch.request.body).toEqual({ discord: false });
+    patch.flush({});
+    await fixture.whenStable();
+    expect(text(el.querySelector('.discord__state'))).toBe('Vypnuté – pripomienky ti neprídu.');
+    expect(el.querySelector('.discord.is-off')).not.toBeNull();
+  });
+
+  it('without any reminder the player sees how it works', async () => {
+    const { el } = await render({
+      ...SETTINGS,
+      events: SETTINGS.events.map((e) => ({ ...e, offsets: null })),
+    });
+    expect(mine(el).length).toBe(0);
+    expect(el.querySelectorAll('.steps__item').length).toBe(3);
   });
 
   it('monograms for events without game art', () => {

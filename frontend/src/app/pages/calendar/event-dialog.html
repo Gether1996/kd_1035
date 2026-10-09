@@ -59,11 +59,11 @@
           @if (!onAccount()) {
             <p class="remind__note" [class.is-warning]="r.noChannel">
               {{ r.noChannel ? c.remind.noChannel : c.remind.channels }}
-              <a [routerLink]="i18n.path('account')">{{ t().nav.account }}</a
+              <a [routerLink]="i18n.path('reminders')">{{ t().nav.reminders }}</a
               >.
             </p>
           } @else if (r.noChannel) {
-            <p class="remind__note is-warning">{{ t().reminders.noChannel }}</p>
+            <p class="remind__note is-warning">{{ t().reminders.discordOff }}</p>
           }
         } @else {
           <h3 class="remind__title" id="remind-title">{{ c.remind.title }}</h3>

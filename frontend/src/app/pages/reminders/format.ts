@@ -1,4 +1,4 @@
-import { Dict } from '../../../core/i18n/sk';
+import { Dict } from '../../core/i18n/sk';
 
 type Texts = Dict['reminders'];
 

@@ -31,6 +31,10 @@ export const sk = {
       title: 'Môj účet | KD 1035',
       description: 'Prihlásenie hráčov kráľovstva KD 1035 cez Discord.',
     },
+    reminders: {
+      title: 'Pripomienky eventov na Discorde | KD 1035',
+      description: 'Vyber si eventy kráľovstva KD 1035 a náš Discord bot ti pred začiatkom pošle súkromnú správu.',
+    },
   },
   nav: {
     home: 'Domov',
@@ -49,6 +53,7 @@ export const sk = {
     skip: 'Preskočiť na obsah',
     login: 'Prihlásiť',
     account: 'Môj účet',
+    reminders: 'Pripomienky eventov',
   },
   hero: {
     tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',
@@ -66,6 +71,22 @@ export const sk = {
       { title: 'Jedno časové pásmo', text: 'Rally aj eventy v čase, keď sú hore všetci.' },
       { title: 'Pomoc nováčikom', text: 'Poradíme s commandermi, výbavou aj eventmi.' },
     ],
+  },
+  notify: {
+    eyebrow: 'Pripomienky',
+    title: 'Nezmeškaj event',
+    text: 'Vyber si eventy a náš bot ti pred začiatkom napíše súkromnú správu na Discorde.',
+    cta: 'Nastaviť pripomienky',
+    // the sample message (as the bot sends it, see backend/accounts/reminders.py)
+    preview: {
+      label: 'Ukážka správy od bota',
+      bot: 'Kingdom 1035',
+      tag: 'BOT',
+      time: 'dnes o 19:00',
+      event: 'Silk Road',
+      start: 'Začiatok: dnes o 20:00 (o 1 hodinu)',
+      manage: 'Zmeniť pripomienky',
+    },
   },
   alliance: {
     eyebrow: 'Hlavná aliancia',
@@ -181,8 +202,8 @@ export const sk = {
     close: 'Zavrieť',
     remind: {
       title: 'Pripomienky',
-      channels: 'Kam ti ich pošleme, si nastavíš na stránke',
-      noChannel: 'Zatiaľ ti nemajú kam prísť – zapni si Discord alebo notifikácie na stránke',
+      channels: 'Prídu ti ako súkromná správa od bota na Discorde. Všetky máš na stránke',
+      noChannel: 'Správy od bota máš vypnuté, takže ti nepríde nič. Zapneš ich na stránke',
       login: 'Prihlás sa a pripomenieme ti začiatok tohto eventu.',
       ended: 'Tento event sa už nebude opakovať.',
     },
@@ -337,7 +358,6 @@ export const sk = {
         text: 'Pre pripomienky ukladáme:',
         list: [
           'Vybrané eventy, časy pripomienok, jazyk správ a či ich chceš dostávať na Discorde.',
-          'Prehliadače so zapnutými notifikáciami: adresu push služby, šifrovacie kľúče a čas posledného odoslania.',
           'Záznam odoslaných pripomienok na 30 dní, aby žiadna neprišla dvakrát.',
         ],
       },
@@ -354,7 +374,6 @@ export const sk = {
         text: 'Pri týchto veciach sa tvoj prehliadač alebo náš server spája s cudzou službou:',
         list: [
           'Discord – prihlásenie, súkromné správy od bota a obrázky avatarov.',
-          'Push služby prehliadačov (Google, Mozilla, Apple, Microsoft) – doručia zašifrovanú notifikáciu.',
           'YouTube v režime youtube-nocookie alebo Twitch – iba ak je v návode video.',
         ],
         link: { label: 'Ochrana súkromia na Discorde', href: 'https://discord.com/privacy' },
@@ -371,7 +390,7 @@ export const sk = {
       },
       {
         title: 'Tvoje možnosti',
-        text: 'Meno v hre a pripomienky zmeníš na stránke Môj účet.',
+        text: 'Meno v hre zmeníš na stránke Môj účet, pripomienky na stránke Pripomienky eventov.',
         list: [
           'Tlačidlo Zmazať účet hneď zmaže všetky údaje o tebe uvedené vyššie, zo záloh zmiznú do 8 týždňov. Účty vedenia maže správca.',
           'O kópiu alebo opravu svojich údajov požiadaj vedenie na Discorde.',
@@ -409,6 +428,11 @@ export const sk = {
     actionError: 'Nepodarilo sa to. Skús to znova.',
     staff: 'Účet vedenia sa maže v admine.',
     admin: 'Administrácia',
+    reminders: {
+      title: 'Pripomienky eventov',
+      text: 'Vyber si eventy a bot ti pred začiatkom napíše na Discorde.',
+      link: 'Nastaviť',
+    },
     ingame: {
       label: 'Meno v hre',
       hint: 'Ako sa voláš v Rise of Kingdoms, aby ťa vedenie spoznalo.',
@@ -418,26 +442,22 @@ export const sk = {
     },
   },
   reminders: {
+    eyebrow: 'Discord',
     title: 'Pripomienky eventov',
-    lead: 'Vyber si eventy a kedy ti máme pripomenúť ich začiatok.',
-    channels: 'Kam ti ich pošleme',
-    discord: 'Súkromná správa na Discorde',
+    lead: 'Vyber si eventy a náš bot ti pred začiatkom pošle súkromnú správu na Discorde.',
+    loginTitle: 'Prihlás sa cez Discord',
+    loginText: 'Potom si vyberieš eventy a časy. Žiadne nové heslo, iba tvoj Discord účet.',
+    disabled: 'Pripomienky zatiaľ nie sú zapnuté.',
+    discord: 'Správy od bota',
     discordHint: 'Musíš byť na Discord serveri kráľovstva a mať povolené súkromné správy od jeho členov.',
-    push: 'Notifikácie v tomto prehliadači',
-    pushHint: 'Prídu na mobil aj počítač, aj keď web nemáš otvorený.',
-    pushOn: 'Zapnuté v tomto prehliadači.',
-    pushDenied: 'Notifikácie sú pre tento web zablokované. Povoľ ich v nastaveniach prehliadača.',
-    pushUnsupported:
-      'Tento prehliadač ich nepodporuje. Na iPhone fungujú po pridaní webu na plochu (Zdieľať → Pridať na plochu).',
-    pushError: 'Notifikácie sa nepodarilo zapnúť. Skús to znova.',
-    enable: 'Zapnúť',
-    disable: 'Vypnúť',
-    off: 'Zatiaľ nie je zapnuté.',
-    noChannel: 'Zapni aspoň jeden spôsob, inak ti pripomienky neprídu.',
+    discordOn: 'Zapnuté',
+    discordOff: 'Vypnuté – pripomienky ti neprídu.',
+    off: 'Bot zatiaľ nie je zapnutý.',
     empty: 'Zatiaľ nie sú naplánované žiadne eventy.',
     error: 'Pripomienky sa nepodarilo načítať. Skús to znova o chvíľu.',
     mine: 'Moje pripomienky',
-    mineEmpty: 'Zatiaľ nemáš zapnuté žiadne pripomienky. Vyber si event nižšie alebo v kalendári.',
+    mineEmpty: 'Zatiaľ nemáš žiadne. Ako na to:',
+    steps: ['Nechaj zapnuté správy od bota.', 'Vyber si event.', 'Zvoľ, kedy ti máme pripomenúť.'],
     calendarLink: 'Kalendár',
     all: 'Všetky eventy',
     search: 'Hľadať event',

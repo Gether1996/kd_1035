@@ -8,9 +8,9 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { I18n } from '../../../core/i18n/i18n';
-import { MAX_MINUTES, MAX_REMINDERS, ReminderEvent, RemindersApi } from '../../../core/reminders-api';
-import { Icon } from '../../../shared/icon';
+import { I18n } from '../../core/i18n/i18n';
+import { MAX_MINUTES, MAX_REMINDERS, ReminderEvent, RemindersApi } from '../../core/reminders-api';
+import { Icon } from '../../shared/icon';
 import { reminderLabel } from './format';
 
 /** Offered first when a player switches on an event that offers no times. */

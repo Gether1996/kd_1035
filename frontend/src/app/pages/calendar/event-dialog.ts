@@ -17,8 +17,8 @@ import { I18n } from '../../core/i18n/i18n';
 import { ReminderEvent } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
-import { repeatLabel } from '../account/reminders/format';
-import { ReminderPicker } from '../account/reminders/reminder-picker';
+import { repeatLabel } from '../reminders/format';
+import { ReminderPicker } from '../reminders/reminder-picker';
 import { clock, dayKey, longDay, numericDay } from './month';
 
 /** The reminders part of the dialog: nothing (login off), a login button, or the player's own choice. */
@@ -48,7 +48,7 @@ export class EventDialog {
   readonly item = input.required<PublicEvent>();
   readonly now = input.required<Date>();
   readonly remind = input.required<RemindState>();
-  /** opened on /ucet: the note pointing to the account page is left out */
+  /** opened on /pripomienky: the note pointing to that page is left out */
   readonly onAccount = input(false);
   /** a superuser: buttons to edit the event and to set the date of an irregular one */
   readonly admin = input(false);

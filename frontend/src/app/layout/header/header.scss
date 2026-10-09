@@ -104,11 +104,13 @@
 // The slot has a fixed width in every state – empty while /api/auth/me/ loads or when login is off,
 // and a long player name is cut inside it – so the nav and the language switch never move.
 
+// the bell (event reminders) and the player / "Prihlásiť"
 .account {
   display: none;
   flex: none;
   justify-content: flex-end;
-  width: 40px;
+  gap: 8px;
+  width: 88px;
 }
 
 .account__link {
@@ -116,8 +118,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  flex: none;
   width: 40px;
-  max-width: 100%;
   height: 40px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
@@ -140,6 +142,10 @@
     border-color: var(--gold-400);
     background-color: var(--panel-strong);
   }
+}
+
+.account__bell .icon {
+  color: var(--gold-300);
 }
 
 .account__avatar {
@@ -261,6 +267,27 @@
   width: 100%;
 }
 
+.drawer__reminders {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(17, 36, 68, 0.5);
+  font-weight: 600;
+  color: var(--text);
+
+  span {
+    margin-right: auto;
+  }
+
+  .icon {
+    color: var(--gold-400);
+  }
+}
+
 .drawer__user {
   display: flex;
   align-items: center;
@@ -318,11 +345,14 @@
 // wide desktops: the pill shows "Prihlásiť" or the player's name (cut with … to the slot, full name in the title)
 @media (min-width: 1100px) {
   .account {
-    width: 132px;
+    width: 180px; // the bell (40) + gap (8) + the pill (132)
   }
 
-  .account__link {
+  .account__link:not(.account__bell) {
+    flex: 0 1 auto;
     width: auto;
+    min-width: 0;
+    max-width: 132px;
     padding: 0 16px 0 12px;
 
     &:has(.account__avatar) {

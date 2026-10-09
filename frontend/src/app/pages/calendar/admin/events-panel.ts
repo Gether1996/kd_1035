@@ -11,7 +11,7 @@ import { EventsAdminApi, ManageData, ManagedEvent } from '../../../core/events-a
 import { I18n } from '../../../core/i18n/i18n';
 import { EventIcon } from '../../../shared/event-icon';
 import { Icon } from '../../../shared/icon';
-import { plural, repeatLabel } from '../../account/reminders/format';
+import { plural, repeatLabel } from '../../reminders/format';
 
 /**
  * "Správa eventov" under the calendar, for superusers only: every event (inactive drafts too) on one line each –

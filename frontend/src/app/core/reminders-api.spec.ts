@@ -7,8 +7,6 @@ import { ReminderSettings, RemindersApi } from './reminders-api';
 const SETTINGS: ReminderSettings = {
   discord: true,
   discord_available: true,
-  push_key: 'BPublicKey',
-  push_devices: 0,
   lang: 'sk',
   events: [
     {
@@ -80,24 +78,6 @@ describe('RemindersApi', () => {
     expect(patch.request.body).toEqual({ discord: false, lang: 'cs' });
     patch.flush({ discord: false, lang: 'cs' });
     await update;
-  });
-
-  it('stores and removes this browser for notifications', async () => {
-    setup();
-    const subscription = { endpoint: 'https://fcm.googleapis.com/fcm/send/x', keys: { p256dh: 'p', auth: 'a' } };
-    const add = api.addDevice(subscription);
-    const post = http.expectOne('/api/me/push/');
-    expect(post.request.method).toBe('POST');
-    expect(post.request.body).toEqual(subscription);
-    post.flush({ push_devices: 2 }, { status: 201, statusText: 'Created' });
-    expect(await add).toBe(2);
-
-    const remove = api.removeDevice(subscription.endpoint);
-    const del = http.expectOne('/api/me/push/');
-    expect(del.request.method).toBe('DELETE');
-    expect(del.request.body).toEqual({ endpoint: subscription.endpoint });
-    del.flush({ push_devices: 1 });
-    expect(await remove).toBe(1);
   });
 
   it('a refused change rejects', async () => {

@@ -2,7 +2,7 @@
 
 <app-page-header [crumbs]="crumbs()" [eyebrow]="a.eyebrow" [title]="a.title" />
 
-<div class="container content" [class.is-wide]="!!auth.user()">
+<div class="container content">
   <div role="status">
     @if (notice(); as n) {
       <p class="notice" [class.notice--error]="n.error">{{ n.text }}</p>
@@ -99,7 +99,15 @@
         </div>
       </section>
 
-      <app-reminders class="layout__main" />
+      <!-- the reminders have their own page (the bell in the header) -->
+      <a class="shortcut" [routerLink]="i18n.path('reminders')">
+        <span class="shortcut__icon"><svg appIcon="bell"></svg></span>
+        <span class="shortcut__body">
+          <strong>{{ a.reminders.title }}</strong>
+          <small>{{ a.reminders.text }}</small>
+        </span>
+        <span class="shortcut__go">{{ a.reminders.link }}<svg appIcon="chevron-right"></svg></span>
+      </a>
     </div>
   } @else {
     <section class="card" aria-labelledby="account-login">
