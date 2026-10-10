@@ -1,9 +1,10 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 4 hotové, v1.3.0. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 4 hotové, v1.3.1. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
 
 ## Hotové
 
+- **10. 10. 2026 – v1.3.1:** v sekcii Komunita odkaz „Ako prebieha migrácia“ priamo na kroky migrácie na `/o-nas`; pri členoch vedenia voliteľný riadok „na čo sa obrátiť“ (vypĺňa Gether v admine).
 - **10. 10. 2026 – v1.3.0:** rozcestník `/navody` so všetkými návodmi podľa kategórií; „Návody“ v hlavičke naň vedie a svieti na každej stránke návodov, breadcrumbs Domov › Návody › Kategória.
 - **10. 10. 2026 – v1.2.1:** tabuľky párov commanderov už nemajú stĺpec F2P (Gether).
 - **10. 10. 2026 – v1.2.0:** herné eventy (00:00 UTC) pripomíname deň vopred o 18:00 nášho času namiesto v noci (Discord kanál aj osobné pripomienky, nová voľba „deň vopred o 18:00“); nový nepravidelný event Karuak Ceremony; návody commanderov majú F2P v každej tabuľke párov, zostavy armád ako portréty a zdroj (WarDaddyChadski) len dole.
