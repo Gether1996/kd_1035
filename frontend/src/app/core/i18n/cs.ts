@@ -153,6 +153,12 @@ export const cs: Dict = {
       running: 'Probíhá',
       announceLater: 'Další termín oznámíme',
     },
+    related: {
+      title: 'Související návody',
+      copy: 'Kopírovat odkaz',
+      copied: 'Odkaz zkopírován',
+      copyFailed: 'Zkopíruj odkaz ručně:',
+    },
   },
   // "S kým spárovat commandera" on /navody (pages/guides/commander-finder.ts)
   finder: {

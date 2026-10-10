@@ -153,6 +153,13 @@ export const sk = {
       running: 'Prebieha',
       announceLater: 'Ďalší termín oznámime',
     },
+    // the end of a guide: related guides and its link for Discord (guide-page.ts)
+    related: {
+      title: 'Súvisiace návody',
+      copy: 'Kopírovať odkaz',
+      copied: 'Odkaz skopírovaný',
+      copyFailed: 'Skopíruj odkaz ručne:',
+    },
   },
   // "S kým spárovať commandera" on /navody (pages/guides/commander-finder.ts)
   finder: {

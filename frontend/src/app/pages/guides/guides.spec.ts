@@ -205,6 +205,96 @@ describe('Guide pages', () => {
     expect(rows[0].querySelector('img.row__specialty')?.getAttribute('alt')).toBe('');
   });
 
+  describe('end of a guide', () => {
+    const detail = {
+      ...summary('pary-pre-jazdu', 'commanderi'),
+      specialty: 'cavalry',
+      title_sk: 'Páry pre jazdu',
+      html_sk: '<p>Úvod.</p>',
+      html_cs: '',
+    };
+    const listed = (slug: string, category: string, specialty = '') => ({
+      ...summary(slug, category),
+      specialty,
+      specialty_icon: specialty ? `/static/guides/specialties/${specialty}.webp` : null,
+    });
+
+    async function open(list: (req: ReturnType<HttpTestingController['expectOne']>) => void) {
+      const fixture = TestBed.createComponent(GuidePage);
+      fixture.componentRef.setInput('category', 'commanderi');
+      fixture.componentRef.setInput('slug', 'pary-pre-jazdu');
+      fixture.detectChanges();
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne('/api/guides/pary-pre-jazdu/').flush(detail);
+      list(http.expectOne('/api/guides/'));
+      await settle(fixture);
+      return fixture;
+    }
+
+    it('links up to three related guides, the same specialty first and never the guide itself', async () => {
+      const fixture = await open((req) =>
+        req.flush([
+          listed('ako-skladat-pary-commanderov', 'commanderi'),
+          listed('pary-pre-jazdu', 'commanderi', 'cavalry'),
+          listed('pary-pre-pechotu', 'commanderi', 'infantry'),
+          listed('pary-pre-rally', 'commanderi', 'conquering'),
+          listed('mge', 'eventy'),
+          listed('vybava-pre-jazdu', 'vybava', 'cavalry'),
+        ]),
+      );
+      const el = fixture.nativeElement as HTMLElement;
+      const related = el.querySelector('.related');
+      expect(related?.querySelector('h2')?.textContent).toContain('Súvisiace návody');
+      const rows = [...(related?.querySelectorAll('a.row') ?? [])];
+      expect(rows.map((a) => a.getAttribute('href'))).toEqual([
+        '/navody/vybava/vybava-pre-jazdu',
+        '/navody/commanderi/ako-skladat-pary-commanderov',
+        '/navody/commanderi/pary-pre-pechotu',
+      ]);
+      expect(rows[0].querySelector('.row__eyebrow')?.textContent).toContain('Výbava');
+      expect(rows[0].querySelector('img.row__specialty')?.getAttribute('src')).toBe(
+        '/static/guides/specialties/cavalry.webp',
+      );
+    });
+
+    it('still shows the guide without the related block when the list fails', async () => {
+      const fixture = await open((req) => req.flush('down', { status: 502, statusText: 'Bad Gateway' }));
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('.prose')?.textContent).toContain('Úvod.');
+      expect(el.querySelector('.related')).toBeNull();
+      expect(el.querySelector('.guide-foot .back')).not.toBeNull();
+    });
+
+    it('copies the link of the page in its language and announces it', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+      const fixture = await open((req) => req.flush([]));
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('.related')).toBeNull();
+
+      const button = el.querySelector<HTMLButtonElement>('.guide-actions button')!;
+      expect(button.textContent).toContain('Kopírovať odkaz');
+      button.click();
+      expect(writeText).toHaveBeenCalledWith(`${location.origin}/navody/commanderi/pary-pre-jazdu`);
+      await fixture.whenStable();
+      expect(el.querySelector('[role="status"]')?.textContent).toContain('Odkaz skopírovaný');
+      expect(el.querySelector('.manual-link')).toBeNull();
+    });
+
+    it('shows the link to copy by hand without clipboard and share sheet', async () => {
+      vi.stubGlobal('navigator', {});
+      const fixture = await open((req) => req.flush([]));
+      const el = fixture.nativeElement as HTMLElement;
+
+      el.querySelector<HTMLButtonElement>('.guide-actions button')!.click();
+      await fixture.whenStable();
+      const input = el.querySelector<HTMLInputElement>('.manual-link input');
+      expect(input?.value).toBe(`${location.origin}/navody/commanderi/pary-pre-jazdu`);
+      expect(input?.readOnly).toBe(true);
+      expect(el.querySelector('[role="status"]')?.textContent?.trim()).toBe('');
+    });
+  });
+
   describe('next runs of the linked events', () => {
     const guide = (events?: unknown[]) => ({
       slug: 'mge',

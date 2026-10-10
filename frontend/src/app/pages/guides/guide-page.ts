@@ -3,13 +3,18 @@ import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
+  DOCUMENT,
   DestroyRef,
+  ElementRef,
+  Injector,
   PLATFORM_ID,
+  afterNextRender,
   computed,
   effect,
   inject,
   input,
   signal,
+  viewChild,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
@@ -17,9 +22,11 @@ import { GuideDetail, GuidesApi } from '../../core/guides-api';
 import { GUIDE_CATEGORIES, GuideCategory, I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Breadcrumbs } from '../../shared/breadcrumbs';
+import { copyLink } from '../../shared/copy-link';
 import { Icon } from '../../shared/icon';
 import { NotFoundLinks, notFoundMeta } from '../../shared/not-found';
 import { GuideEvents } from './guide-events';
+import { relatedGuides } from './related';
 
 /** /navody/:category/:slug – one guide; its HTML comes from the admin. */
 @Component({
@@ -38,6 +45,8 @@ export class GuidePage {
   protected readonly i18n = inject(I18n);
   protected readonly guides = inject(GuidesApi);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly doc = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly res = httpResource<GuideDetail>(() =>
@@ -78,6 +87,42 @@ export class GuidePage {
     ];
   });
 
+  /** "Súvisiace návody" – only once both the guide and the list are loaded; none without a match or on a list error */
+  protected readonly related = computed(() => {
+    const g = this.guide();
+    return g && this.guides.ready() ? relatedGuides(g, this.guides.all()) : [];
+  });
+
+  /** "Kopírovať odkaz": 'copied' for a moment, or the URL to copy by hand when neither clipboard nor share worked */
+  protected readonly copied = signal(false);
+  protected readonly manualUrl = signal('');
+  private readonly manualInput = viewChild<ElementRef<HTMLInputElement>>('manual');
+  private copiedTimer?: ReturnType<typeof setTimeout>;
+
+  /** No `await` before copyLink(): the clipboard needs the click's user activation. */
+  protected copyLink(): void {
+    const g = this.guide();
+    if (!g) return;
+    // the page's own address in its language, without a query or hash
+    const url = this.doc.location.origin + this.i18n.guidePath(g.category, g.slug);
+    copyLink(url, this.title()).then((result) => {
+      clearTimeout(this.copiedTimer);
+      this.copied.set(result === 'copied');
+      this.manualUrl.set(result === 'failed' ? url : '');
+      if (result === 'copied') this.copiedTimer = setTimeout(() => this.copied.set(false), 2500);
+      if (result === 'failed') {
+        afterNextRender(
+          () => {
+            const input = this.manualInput()?.nativeElement;
+            input?.focus();
+            input?.select();
+          },
+          { injector: this.injector },
+        );
+      }
+    });
+  }
+
   /** image from the article shown full screen */
   protected readonly lightbox = signal<string | null>(null);
 
@@ -89,6 +134,14 @@ export class GuidePage {
   constructor() {
     const seo = inject(Seo);
     const router = inject(Router);
+
+    // a related guide opens in this same component: no copy feedback from the previous guide
+    effect(() => {
+      this.slug();
+      clearTimeout(this.copiedTimer);
+      this.copied.set(false);
+      this.manualUrl.set('');
+    });
 
     effect(() => {
       // unknown or unpublished slug: the app shell answers 200 here, so keep the page out of search results
@@ -109,6 +162,9 @@ export class GuidePage {
         breadcrumbs: this.crumbs(),
       });
     });
-    inject(DestroyRef).onDestroy(() => seo.set(null));
+    inject(DestroyRef).onDestroy(() => {
+      seo.set(null);
+      clearTimeout(this.copiedTimer);
+    });
   }
 }

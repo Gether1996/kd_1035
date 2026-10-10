@@ -46,9 +46,55 @@
 
   @if (categoryKey(); as key) {
     <footer class="container guide-foot">
-      <a class="back" [routerLink]="i18n.guidePath(key)">
-        <svg appIcon="arrow-left"></svg> {{ t.guides.back }}
-      </a>
+      @if (related().length) {
+        <section class="related" aria-labelledby="related-title">
+          <h2 class="related__title" id="related-title">{{ t.guides.related.title }}</h2>
+          <ul class="list">
+            @for (r of related(); track r.slug) {
+              <li>
+                <a class="row row--compact row--related" [routerLink]="i18n.guidePath(r.category, r.slug)">
+                  <span class="row__body">
+                    <span class="row__eyebrow">{{ t.guides.categories[r.category].title }}</span>
+                    <strong>
+                      @if (r.specialty_icon) {
+                        <img class="row__specialty" [src]="r.specialty_icon" alt="" width="96" height="96" decoding="async" />
+                      }
+                      {{ guides.title(r) }}
+                    </strong>
+                  </span>
+                  <svg class="row__arrow" appIcon="arrow-right"></svg>
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <div class="guide-actions">
+        <a class="back" [routerLink]="i18n.guidePath(key)">
+          <svg appIcon="arrow-left"></svg> {{ t.guides.back }}
+        </a>
+        <div class="guide-actions__share">
+          @if (guide()) {
+            <button type="button" class="pill-btn pill-btn--quiet" (click)="copyLink()">
+              <svg appIcon="link"></svg> {{ t.guides.related.copy }}
+            </button>
+          }
+          <!-- always in the DOM, so screen readers announce the change -->
+          <p class="guide-actions__status" role="status">
+            @if (copied()) {
+              <svg appIcon="check"></svg> {{ t.guides.related.copied }}
+            }
+          </p>
+        </div>
+      </div>
+
+      @if (manualUrl(); as url) {
+        <label class="field manual-link">
+          <span class="field__label">{{ t.guides.related.copyFailed }}</span>
+          <input #manual class="input" type="url" readonly [value]="url" (focus)="manual.select()" />
+        </label>
+      }
     </footer>
   }
 </article>
