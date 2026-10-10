@@ -1,6 +1,7 @@
 # Automatizácia agentmi
 
 Web vylepšujú traja agenti v kolách a raz za mesiac sa sama aktualizuje meta v návodoch. Konfigurácia a stav sú v [`.claude/kd-agents.json`](../.claude/kd-agents.json), zoznam hotového a čakajúceho v [`backlog.md`](backlog.md).
+UX analýza webu (prečo ho hráči používajú, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
 
 ## Cieľ
 
