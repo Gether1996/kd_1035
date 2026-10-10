@@ -1,4 +1,5 @@
-"""One run of a kingdom event as an iCalendar file (RFC 5545) for Google, iOS/macOS or Outlook calendars."""
+"""Kingdom events as iCalendar (RFC 5545) for Google, iOS/macOS or Outlook calendars: the file of one run and the
+subscribed feed of all public events."""
 
 from datetime import UTC, datetime
 
@@ -33,16 +34,28 @@ def stamp(moment: datetime) -> str:
     return moment.astimezone(UTC).strftime('%Y%m%dT%H%M%SZ')
 
 
-def event_file(
+# the same header for a single run and for the whole feed
+HEADER = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//KD 1035//Kalendar//SK',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+]
+# how often a subscribed calendar should ask again (Apple and Outlook honour it, Google refreshes on its own schedule)
+REFRESH = 'PT6H'
+
+
+def content(lines: list[str]) -> str:
+    """Content lines folded, each ending with CRLF."""
+    return ''.join(fold(line) + CRLF for line in lines)
+
+
+def vevent_lines(
     *, uid: str, name: str, start: datetime, end: datetime | None, url: str, description: str, now: datetime
-) -> str:
-    """A VCALENDAR with one VEVENT; no DTEND for an event without an end (the calendar shows just its start)."""
+) -> list[str]:
+    """One VEVENT; no DTEND for an event without an end (the calendar shows just its start)."""
     lines = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//KD 1035//Kalendar//SK',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
         'BEGIN:VEVENT',
         f'UID:{uid}',
         f'DTSTAMP:{stamp(now)}',
@@ -50,12 +63,32 @@ def event_file(
     ]
     if end:
         lines.append(f'DTEND:{stamp(end)}')
-    lines += [
+    return lines + [
         f'SUMMARY:{escape(name)}',
         # URL is a URI value, not TEXT – no escaping
         f'URL:{url}',
         f'DESCRIPTION:{escape(description)}',
         'END:VEVENT',
-        'END:VCALENDAR',
     ]
-    return ''.join(fold(line) + CRLF for line in lines)
+
+
+def event_file(
+    *, uid: str, name: str, start: datetime, end: datetime | None, url: str, description: str, now: datetime
+) -> str:
+    """A VCALENDAR with one VEVENT – the .ics file of one run."""
+    vevent = vevent_lines(uid=uid, name=name, start=start, end=end, url=url, description=description, now=now)
+    return content([*HEADER, *vevent, 'END:VCALENDAR'])
+
+
+def calendar_file(vevents: list[list[str]], *, name: str) -> str:
+    """A subscribed calendar (feed): its name, how often to refresh it and every VEVENT; may have none."""
+    return content(
+        [
+            *HEADER,
+            f'X-WR-CALNAME:{escape(name)}',
+            f'REFRESH-INTERVAL;VALUE=DURATION:{REFRESH}',
+            f'X-PUBLISHED-TTL:{REFRESH}',
+            *(line for vevent in vevents for line in vevent),
+            'END:VCALENDAR',
+        ]
+    )

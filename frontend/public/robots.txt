@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+# the subscribed calendar: Google fetches it as a robot (the longer rule wins over /api/)
+Allow: /api/calendar.ics
 Disallow: /api/
 
 Sitemap: __SITE_ORIGIN__/sitemap.xml

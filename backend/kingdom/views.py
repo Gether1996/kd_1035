@@ -20,6 +20,10 @@ from .serializers import AllianceSerializer, SocialLinkSerializer
 # the calendar page asks for a month grid (at most 6 weeks) and a day more on each side for other time zones
 MAX_CALENDAR_DAYS = 62
 MAX_OCCURRENCES = 500
+# the subscribed calendar: the last two weeks (a running MGE or Ark stays in it) and two months ahead
+FEED_PAST = timedelta(days=14)
+FEED_AHEAD = timedelta(days=60)
+FEED_NAME = {'sk': 'KD 1035 – eventy', 'cs': 'KD 1035 – eventy'}
 DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
 
 
@@ -130,6 +134,25 @@ class EventCalendar(APIView):
         return response
 
 
+def site_origin(request) -> str:
+    return settings.SITE_URL or f'{request.scheme}://{request.get_host()}'
+
+
+def run_data(event: KingdomEvent, begin: datetime, day: date, origin: str, cs: bool) -> dict:
+    """A run as an iCalendar VEVENT: its name in the language (CS → SK) and a link to its day (Europe/Bratislava) in
+    our calendar. The UID stays the same for the run, so a calendar updates it instead of adding a copy."""
+    name = (cs and event.name_cs) or event.name_sk
+    url = f'{origin}{"/cz" if cs else ""}/kalendar?event={event.pk}&on={day.isoformat()}'
+    length = timedelta(minutes=event.duration_minutes)
+    return {
+        'uid': f'{event.pk}-{ical.stamp(begin)}@kd1035',
+        'name': name,
+        'start': begin,
+        'end': begin + length if length else None,
+        'url': url,
+        'description': f'Kingdom 1035: {url}',
+    }
+
 
 @require_GET
 def event_ics(request, pk):
@@ -149,22 +172,34 @@ def event_ics(request, pk):
         return HttpResponseNotFound(content_type='text/plain; charset=utf-8')
 
     cs = request.GET.get('lang') == 'cs'
-    name = (cs and event.name_cs) or event.name_sk
-    origin = settings.SITE_URL or f'{request.scheme}://{request.get_host()}'
-    url = f'{origin}{"/cz" if cs else ""}/kalendar?event={event.pk}&on={day.isoformat()}'
-    length = timedelta(minutes=event.duration_minutes)
-    body = ical.event_file(
-        uid=f'{event.pk}-{ical.stamp(begin)}@kd1035',
-        name=name,
-        start=begin,
-        end=begin + length if length else None,
-        url=url,
-        description=f'Kingdom 1035: {url}',
-        now=timezone.now(),
-    )
+    body = ical.event_file(**run_data(event, begin, day, site_origin(request), cs), now=timezone.now())
     response = HttpResponse(body, content_type='text/calendar; charset=utf-8')
     filename = f'kd1035-{slugify(event.name_sk) or "event"}-{day.isoformat()}.ics'
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     response['Cache-Control'] = 'public, max-age=300'
+    response['X-Robots-Tag'] = 'noindex'
+    return response
+
+
+@require_GET
+def calendar_feed(request):
+    """GET /api/calendar.ics[?lang=cs] – every public event from two weeks ago to two months ahead as a calendar the
+    visitor subscribes to (Google, Apple, Outlook); any other `lang` means Slovak.
+
+    Daily events are left out (60 entries each would bury the rest), so is everything hidden or inactive. Irregular
+    events only from now, like on the web. No VALARM: players set their own alerts in the calendar.
+    """
+    cs = request.GET.get('lang') == 'cs'
+    now = timezone.now()
+    visible = KingdomEvent.objects.filter(is_active=True, show_on_web=True).exclude(repeat_days=1)
+    origin = site_origin(request)
+    vevents = [
+        ical.vevent_lines(**run_data(event, begin, begin.astimezone(events.LOCAL_TZ).date(), origin, cs), now=now)
+        for begin, event in events.calendar(visible, now - FEED_PAST, now + FEED_AHEAD, MAX_OCCURRENCES, now)
+    ]
+    body = ical.calendar_file(vevents, name=FEED_NAME['cs' if cs else 'sk'])
+    response = HttpResponse(body, content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = 'inline; filename="kd1035.ics"'
+    response['Cache-Control'] = 'public, max-age=900'
     response['X-Robots-Tag'] = 'noindex'
     return response
