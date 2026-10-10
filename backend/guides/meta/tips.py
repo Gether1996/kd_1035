@@ -70,12 +70,9 @@ GUIDES = [
         'title': t('Maximum speedupov z fortov s vlastnou farmou', 'Maximum speedupů z fortů s vlastní farmou'),
         'blocks': [
             ('p', t(
-                'Barbarský fort zober s vlastnou farmou namiesto spojencov. Keď main spraví aspoň 90 % damage, dostane '
-                'z fortu maximálne odmeny – a s nimi veľa speedupov.',
-                'Barbarský fort dej s vlastní farmou místo spojenců. Když main udělá aspoň 90 % damage, dostane z fortu '
-                'maximální odměny – a s nimi hodně speedupů.',
+                'Návod, ako robiť barbarské forty sám s vlastnou farmou a dostať z nich čo najviac speedupov.',
+                'Návod, jak dělat barbarské forty sám s vlastní farmou a dostat z nich co nejvíc speedupů.',
             )),
-            ('note',),
             ('h2', t('Ako na to', 'Jak na to')),
             ('ul', [
                 t('<strong>Rally môže založiť main aj farma</strong>, druhý účet sa doň pridá. Na úrovni fortu nezáleží.',
