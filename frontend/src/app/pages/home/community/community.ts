@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { KingdomApi, Platform } from '../../../core/api';
 import { I18n } from '../../../core/i18n/i18n';
 import { Icon } from '../../../shared/icon';
@@ -7,7 +8,7 @@ import { ScrollFx } from '../../../shared/scroll-fx';
 
 @Component({
   selector: 'app-community',
-  imports: [Icon, Reveal, ScrollFx],
+  imports: [Icon, Reveal, RouterLink, ScrollFx],
   template: `
     <section class="section" id="community" appScrollFx>
       <div class="art" aria-hidden="true">
@@ -20,6 +21,11 @@ import { ScrollFx } from '../../../shared/scroll-fx';
           <p class="eyebrow">{{ t().community.eyebrow }}</p>
           <h2 class="title">{{ t().community.title }}</h2>
           <p class="lead">{{ t().community.text }}</p>
+          <p class="more">
+            <a class="more__link" [routerLink]="i18n.path('about')" fragment="migracia">
+              {{ t().community.migration }} <svg appIcon="arrow-right"></svg>
+            </a>
+          </p>
         </header>
 
         <div class="links">
@@ -53,7 +59,8 @@ import { ScrollFx } from '../../../shared/scroll-fx';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Community {
-  protected readonly t = inject(I18n).t;
+  protected readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
   protected readonly api = inject(KingdomApi);
   protected readonly platforms: { platform: Platform; name: string }[] = [
     { platform: 'discord', name: 'Discord' },

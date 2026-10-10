@@ -29,6 +29,11 @@
   }
 }
 
+// the community section links here (/o-nas#migracia); land below the fixed header like the home sections
+.block--migration {
+  scroll-margin-top: calc(var(--header-h) - 1px);
+}
+
 .block__num {
   font-size: 0.55em;
   letter-spacing: 0.12em;

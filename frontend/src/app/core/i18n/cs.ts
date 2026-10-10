@@ -152,6 +152,7 @@ export const cs: Dict = {
     eyebrow: 'Komunita',
     title: 'Přidej se k nám',
     text: 'Migrace pouze po předchozí domluvě s vedením.',
+    migration: 'Jak probíhá migrace',
     discord: 'Hlavní kanál království',
     facebook: 'Novinky a fotky',
     soon: 'Brzy',

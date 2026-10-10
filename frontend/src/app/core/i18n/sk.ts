@@ -152,6 +152,7 @@ export const sk = {
     eyebrow: 'Komunita',
     title: 'Pridaj sa k nám',
     text: 'Migrácia iba po predchádzajúcej dohode s vedením.',
+    migration: 'Ako prebieha migrácia',
     discord: 'Hlavný kanál kráľovstva',
     facebook: 'Novinky a fotky',
     soon: 'Čoskoro',

@@ -19,25 +19,28 @@
     </section>
   }
 
-  <section class="block block--migration" appReveal>
-    <h2><span class="block__num">0{{ page.sections.length + 1 }}</span>{{ page.migration.title }}</h2>
-    <p>{{ page.migration.text }}</p>
-    <ol class="steps">
-      @for (step of page.migration.steps; track $index) {
-        <li>
-          <span>{{ step }}</span>
-          @if ($index === 0 && discord()) {
-            <a class="step-action step-action--discord" [href]="discord()" target="_blank" rel="noopener noreferrer">
-              <svg appIcon="discord"></svg>{{ page.migration.joinDiscord }}
-            </a>
-          } @else if ($index === 1) {
-            <a class="step-action" [routerLink]="i18n.path('home')" fragment="alliance">
-              {{ page.migration.leaders }} <svg appIcon="arrow-right"></svg>
-            </a>
-          }
-        </li>
-      }
-    </ol>
+  <!-- the anchor itself does not slide in: the jump would measure it 32 px lower and hide its top under the header -->
+  <section class="block block--migration" id="migracia">
+    <div appReveal>
+      <h2><span class="block__num">0{{ page.sections.length + 1 }}</span>{{ page.migration.title }}</h2>
+      <p>{{ page.migration.text }}</p>
+      <ol class="steps">
+        @for (step of page.migration.steps; track $index) {
+          <li>
+            <span>{{ step }}</span>
+            @if ($index === 0 && discord()) {
+              <a class="step-action step-action--discord" [href]="discord()" target="_blank" rel="noopener noreferrer">
+                <svg appIcon="discord"></svg>{{ page.migration.joinDiscord }}
+              </a>
+            } @else if ($index === 1) {
+              <a class="step-action" [routerLink]="i18n.path('home')" fragment="alliance">
+                {{ page.migration.leaders }} <svg appIcon="arrow-right"></svg>
+              </a>
+            }
+          </li>
+        }
+      </ol>
+    </div>
   </section>
 
   <div class="cta" appReveal>
