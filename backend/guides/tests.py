@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from kingdom.models import KingdomEvent
 
+from . import commander_index
 from .meta import LAST_UPDATE, MODULES
 from .meta.render import (
     COMMANDER_DIR, GEAR_DIR, SPECIALTY_DIR, commander_icons, gear_icons, render, slug, specialty_icon, verified_note,
@@ -382,6 +383,80 @@ class SiteStatusTests(TestCase):
 
         Guide.objects.filter(pk=guide.pk).update(is_published=False)  # hidden guides do not count
         self.assertEqual(self.client.get('/api/status/').json()['updated'], LAST_UPDATE)
+
+
+class CommanderIndexTests(TestCase):
+    def setUp(self):
+        Guide.objects.all().delete()
+        sync_guides()
+        commander_index._cache.clear()
+
+    def entries(self, name):
+        return next(item['entries'] for item in commander_index.commander_index() if item['name'] == name)
+
+    def test_api_lists_ivan_iv_with_achilles_from_the_cavalry_guide(self):
+        response = self.client.get('/api/commanders/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Cache-Control'], 'public, max-age=3600')
+        ivan = next(item for item in response.json() if item['name'] == 'Ivan IV')
+        self.assertEqual(ivan['icon'], '/static/guides/commanders/ivan-iv.webp')
+        self.assertIn(
+            {
+                'slug': 'pary-pre-jazdu',
+                'category': 'commanderi',
+                'title_sk': 'Páry commanderov pre jazdu',
+                'title_cs': 'Páry commanderů pro jízdu',
+                'role': 'primary',
+                'partners': [{'name': 'Achilles', 'icon': '/static/guides/commanders/achilles.webp'}],
+                'context_sk': '',
+                'context_cs': '',
+            },
+            ivan['entries'],
+        )
+        # the context is the troops column of a pair table or the label of a line-up
+        contexts = {(e['slug'], e['context_sk'], e['context_cs']) for e in self.entries('Ivan IV')}
+        self.assertIn(('ako-skladat-pary-commanderov', 'Jazda – pole', 'Jízda – pole'), contexts)
+        self.assertIn(('pary-pre-jazdu', 'Tri bez Attilu', 'Tři bez Attily'), contexts)
+
+    def test_every_commander_has_a_portrait_and_entries(self):
+        index = commander_index.commander_index()
+        self.assertEqual([item['name'] for item in index], sorted((item['name'] for item in index), key=str.casefold))
+        for item in index:
+            self.assertTrue(item['entries'], item['name'])
+            for icon in [item['icon']] + [p['icon'] for e in item['entries'] for p in e['partners']]:
+                self.assertTrue((COMMANDER_DIR / icon.rsplit('/', 1)[1]).exists(), icon)
+            self.assertNotIn('f2p', item['entries'][0])
+        self.assertEqual(len({item['icon'] for item in index}), len(index))
+
+    def test_alternatives_anyone_and_single_commanders(self):
+        marshal = self.entries('William Marshal')
+        self.assertIn(['Attila', 'Gang Gamchan'], [[p['name'] for p in e['partners']] for e in marshal])
+        self.assertIn(('primary', []), [(e['role'], e['partners']) for e in self.entries('Casimir III')])
+        # a 1-tuple of a line-up: a commander to focus on, no partner
+        self.assertIn(('solo', 'KvK2'), [(e['role'], e['context_sk']) for e in self.entries('Saladin')])
+
+    def test_a_pair_repeated_in_a_line_up_is_listed_once(self):
+        arthur = [(e['slug'], e['role'], e['partners'][0]['name']) for e in self.entries('Arthur Pendragon')]
+        self.assertEqual(arthur.count(('pary-pre-jazdu', 'primary', 'Ivan IV')), 1)
+
+    def test_hidden_or_hand_edited_guides_drop_out(self):
+        def slugs():
+            return {e['slug'] for item in commander_index.commander_index() for e in item['entries']}
+
+        self.assertIn('pary-pre-rally', slugs())
+        with self.assertNumQueries(1):  # cached: only the published slugs are read
+            slugs()
+        Guide.objects.filter(slug='pary-pre-rally').update(is_published=False)
+        Guide.objects.filter(slug='pary-pre-pechotu').update(auto_update=False)
+        self.assertEqual(slugs() & {'pary-pre-rally', 'pary-pre-pechotu'}, set())
+        self.assertNotIn('Nebuchadnezzar II', [item['name'] for item in commander_index.commander_index()])
+
+    def test_a_pair_row_without_both_commanders_fails_loudly(self):
+        # the monthly meta update may change the columns of a pair table – the finder must not silently lose pairs
+        row = {'primary': 'Attila', 'why': '…'}
+        guide = {'slug': 'x', 'title': {'sk': 'X', 'cs': 'X'}, 'blocks': [('pairs', ['primary', 'why'], [row])]}
+        with self.assertRaisesMessage(ValueError, 'x: pair row without secondary'):
+            commander_index.build_index([guide])
 
 
 class GuideApiTests(TestCase):

@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import meta
+from .commander_index import commander_index
 from .models import Guide
 from .serializers import GuideDetailSerializer, GuideListSerializer
 
@@ -55,6 +56,16 @@ class SiteStatus(APIView):
         changed = Guide.objects.filter(is_published=True).aggregate(last=Max('updated_at'))['last']
         updated = max(verified, timezone.localdate(changed)) if changed else verified
         return Response({'updated': updated.isoformat(), 'meta_verified': verified.isoformat()})
+
+
+class CommanderIndex(APIView):
+    """Commander finder on /navody: every commander of the commander guides with the pairs recommended for them."""
+
+    def get(self, request):
+        response = Response(commander_index())
+        # changes with the monthly meta update or when a guide is hidden in the admin – an hour late is fine
+        response['Cache-Control'] = 'public, max-age=3600'
+        return response
 
 
 def sitemap(request):
