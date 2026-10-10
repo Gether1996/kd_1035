@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **10. 10. 2026 – v1.6.3:** lepšie čitateľné tlmené texty (min. kontrast 4,5 : 1) – „termín oznámime“ pri nepravidelných eventoch, popisky v dialógu eventu; nový audit prístupnosti `tools/a11y/audit.sh` (axe) bez kritických chýb.
 - **10. 10. 2026 – v1.6.2:** odkaz na event z kalendára ukáže na Discorde a Facebooku názov a termín eventu (napr. „Ark of Osiris · 14.–18. 10. 2026“), nie všeobecnú kartu kalendára.
 - **10. 10. 2026 – v1.6.1:** v dialógu eventu v kalendári tlačidlo „Kopírovať odkaz na event“ – odkaz otvorí ten istý mesiac s otvoreným dialógom (napr. Ark of Osiris do Discordu).
 - **10. 10. 2026 – v1.6.0:** odber kalendára – všetky eventy kráľovstva v kalendári v mobile (Google, iPhone, Outlook) jedným odkazom, aktualizujú sa samy; na `/kalendar` blok „Odber kalendára“ (Pridať do kalendára, Kopírovať odkaz).
@@ -40,7 +41,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - `guides-search` Vyhľadávanie a filter v návodoch – schválené (`fold()` už je v `shared/search.ts`; čipy len so špecializáciami z dát, bez skoku hore pri zmene query).
 - `guide-related-and-share` Súvisiace návody + „Kopírovať odkaz“ na konci návodu – upraviť: clipboard → fallback `navigator.share`, helper `shared/copy-link.ts`, overiť špecializácie výbavy v `guides/meta`, sekcia až po načítaní.
 - `game-clock-reset` Herný čas UTC a odpočet do resetu – schválené, iba na `/kalendar` vedľa riadku s časovou zónou.
-- `a11y-audit-axe` Audit prístupnosti (axe) – schválené, len critical/serious, vrátane `/navody` a comboboxu hľadania commandera.
+- Zvyšok auditu prístupnosti (`tools/a11y/audit.sh`, 10. 10. 2026): moderate/minor nález žiadny. Ostáva: ~1 600 kontrastov, ktoré axe nevie posúdiť (text na prechodoch a SVG krajine – „incomplete“ v `tools/a11y/out`), ručne prejsť; dialógy superusera v kalendári (editor eventu, dátumy) zatiaľ nie sú v `STATE_LIST`; ručný test klávesnicou (poradie fokusu, pasca fokusu v dialógoch).
 - `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
 - Drobnosti z kola 5: tagy `v1.3.1` a `v1.3.2` chýbajú na origin; portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.
 - Testovacie odoslanie Discord notifikácie do súkromného kanála – schválené, čaká na `DISCORD_TEST_WEBHOOK_URL`.

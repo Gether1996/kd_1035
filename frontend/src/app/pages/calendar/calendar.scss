@@ -486,7 +486,7 @@
 
   &.is-none {
     font-style: italic;
-    color: var(--text-mute);
+    // --text-mute fails 4.5:1 on the tinted pill (axe); the italics alone mark the missing date
   }
 }
 
