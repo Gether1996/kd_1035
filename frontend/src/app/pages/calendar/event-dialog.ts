@@ -15,10 +15,12 @@ import { RouterLink } from '@angular/router';
 import { EventGuide, PublicEvent, eventName, isOccurrence } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { ReminderEvent } from '../../core/reminders-api';
+import { googleUrl } from '../../shared/calendar-export';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { repeatLabel } from '../reminders/format';
 import { ReminderPicker } from '../reminders/reminder-picker';
+import { KINGDOM_ZONE, calendarQuery } from './deep-link';
 import { clock, dayKey, longDay, numericDay } from './month';
 
 /** The reminders part of the dialog: nothing (login off), a login button, or the player's own choice. */
@@ -61,6 +63,7 @@ export class EventDialog {
 
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
+  private readonly doc = inject(DOCUMENT);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   protected readonly occurrence = computed(() => {
@@ -109,8 +112,23 @@ export class EventDialog {
     return `${day(start)} – ${sameDay ? clock(end, locale, 'UTC') : day(end)}`;
   });
 
+  /** the run into the visitor's own calendar: Google's prefilled page and the .ics file from the API (iPhone,
+   * macOS, Outlook) – both plain links, nothing is asked before a click; null for an event without a date */
+  protected readonly exportLinks = computed(() => {
+    const o = this.occurrence();
+    if (!o) return null;
+    const { event, on } = calendarQuery(o, this.now());
+    const origin = this.doc.defaultView?.location.origin ?? '';
+    const link = `${origin}${this.i18n.path('calendar')}?event=${event}&on=${on}`;
+    const first = dayKey(new Date(o.start), KINGDOM_ZONE);
+    return {
+      google: googleUrl({ name: this.name(), start: o.start, end: o.end, details: `Kingdom 1035: ${link}` }),
+      ics: `/api/events/${o.id}/ics?on=${first}${this.i18n.lang() === 'cs' ? '&lang=cs' : ''}`,
+    };
+  });
+
   constructor() {
-    const doc = inject(DOCUMENT);
+    const doc = this.doc;
     afterNextRender(() => {
       const dialog = this.dialog().nativeElement;
       // modal: the rest of the page is inert, focus moves in, Esc closes (older test DOMs only know the attribute)

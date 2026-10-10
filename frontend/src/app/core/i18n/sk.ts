@@ -225,6 +225,11 @@ export const sk = {
     gameTime: 'herný čas',
     guide: 'Návod',
     close: 'Zavrieť',
+    export: {
+      label: 'Pridať do môjho kalendára',
+      google: 'Google Kalendár',
+      ics: 'iPhone, Outlook (.ics)',
+    },
     remind: {
       title: 'Pripomienky',
       channels: 'Prídu ti ako súkromná správa od bota na Discorde. Všetky máš na stránke',

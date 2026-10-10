@@ -31,6 +31,19 @@
         </p>
         <p class="when__utc">UTC {{ utc() }} · {{ c.gameTime }}</p>
       </div>
+      @if (exportLinks(); as x) {
+        <div class="export" role="group" aria-labelledby="export-label">
+          <p class="export__label" id="export-label">{{ c.export.label }}</p>
+          <div class="export__actions">
+            <a class="pill-btn pill-btn--quiet" [href]="x.google" target="_blank" rel="noopener">
+              <svg appIcon="calendar-plus"></svg>{{ c.export.google }}
+            </a>
+            <a class="pill-btn pill-btn--quiet" [href]="x.ics" download>
+              <svg appIcon="download"></svg>{{ c.export.ics }}
+            </a>
+          </div>
+        </div>
+      }
     } @else {
       <p class="when when__local">
         <svg appIcon="calendar-days"></svg>

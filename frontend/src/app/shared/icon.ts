@@ -14,6 +14,7 @@ export type IconName =
   | 'clock'
   | 'crown'
   | 'discord'
+  | 'download'
   | 'eye-off'
   | 'facebook'
   | 'flag'

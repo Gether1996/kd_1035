@@ -204,6 +204,15 @@ describe('Calendar', () => {
       '/api/auth/discord/login/?next=%2Fkalendar%3Fevent%3D2%26on%3D2026-10-08',
     );
     expect(dialog()!.querySelector('.switch')).toBeNull();
+    // into the visitor's own calendar: Google prefilled with the exact UTC run, the .ics file of its first day
+    const [google, ics] = dialog()!.querySelectorAll<HTMLAnchorElement>('.export a');
+    const params = new URL(google.href).searchParams;
+    expect(params.get('dates')).toBe('20261005T000000Z/20261011T000000Z');
+    expect(params.get('text')).toBe('MGE – Jazda');
+    expect(params.get('details')).toContain('/kalendar?event=2&on=2026-10-08');
+    expect(google.target).toBe('_blank');
+    expect(ics.getAttribute('href')).toBe('/api/events/2/ics?on=2026-10-05');
+    expect(ics.hasAttribute('download')).toBe(true);
 
     dialog()!.querySelector<HTMLButtonElement>('.modal__close')!.click();
     await fixture.whenStable();
@@ -250,6 +259,7 @@ describe('Calendar', () => {
     expect(dialog()!.textContent).toContain('Ďalší termín oznámime.');
     expect(dialog()!.textContent).toContain('nepravidelne');
     expect(dialog()!.querySelector('.remind')).toBeNull();
+    expect(dialog()!.querySelector('.export')).toBeNull();
   });
 
   it('a link with ?event= and ?on= opens that month and the run on that day, then drops both', async () => {

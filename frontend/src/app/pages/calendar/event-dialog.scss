@@ -52,6 +52,30 @@
   font-variant-numeric: tabular-nums;
 }
 
+// ---------------------------------------------------------------- own calendar
+
+.export {
+  display: grid;
+  gap: 10px;
+}
+
+.export__label {
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.export__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .pill-btn {
+    flex: 1 1 auto;
+  }
+}
+
 // ---------------------------------------------------------------- guide
 
 .guide {

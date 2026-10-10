@@ -225,6 +225,11 @@ export const cs: Dict = {
     gameTime: 'herní čas',
     guide: 'Návod',
     close: 'Zavřít',
+    export: {
+      label: 'Přidat do mého kalendáře',
+      google: 'Google Kalendář',
+      ics: 'iPhone, Outlook (.ics)',
+    },
     remind: {
       title: 'Připomínky',
       channels: 'Přijdou ti jako soukromá zpráva od bota na Discordu. Všechny máš na stránce',
