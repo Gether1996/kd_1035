@@ -17,7 +17,7 @@ from guides.models import Guide
 
 from . import backups, discord, event_icons, events
 from .admin import local_time, repeat_text
-from .models import TWIN_EVENT_ERROR, Alliance, EventNotification, KingdomEvent, SocialLink
+from .models import EVENING_BEFORE, TWIN_EVENT_ERROR, Alliance, EventNotification, KingdomEvent, SocialLink
 
 Status = EventNotification.Status
 
@@ -259,6 +259,27 @@ class PlanRemindersTests(TestCase):
         self.make(starts_at=utc(2026, 10, 1, 18), repeat_days=0)
         self.assertEqual(events.plan_reminders(now=self.now), 0)
         self.assertFalse(EventNotification.objects.exists())
+
+    def test_evening_before_is_18_00_in_bratislava_in_summer_and_winter(self):
+        # a game event at 00:00 UTC: 8 h before in summer (CEST), 7 h in winter (CET); the DST change on 25. 10.
+        self.assertEqual(events.send_time(utc(2026, 10, 12), EVENING_BEFORE), utc(2026, 10, 11, 16))
+        self.assertEqual(events.send_time(utc(2026, 10, 26), EVENING_BEFORE), utc(2026, 10, 25, 17))
+        self.assertEqual(events.send_time(utc(2026, 11, 2), EVENING_BEFORE), utc(2026, 11, 1, 17))
+        # an evening event (20:00 our time) – the day before, too
+        self.assertEqual(events.send_time(utc(2026, 11, 2, 19), EVENING_BEFORE), utc(2026, 11, 1, 17))
+
+    def test_plans_the_evening_before(self):
+        event = self.make(starts_at=utc(2026, 10, 9), reminders=[EVENING_BEFORE, 60])
+        self.assertEqual(events.plan_reminders(now=self.now), 2)
+        rows = list(event.notifications.order_by('send_at').values_list('offset_minutes', 'send_at'))
+        self.assertEqual(rows, [(EVENING_BEFORE, utc(2026, 10, 8, 16)), (60, utc(2026, 10, 8, 23))])
+        self.assertEqual(events.plan_reminders(now=self.now), 0)
+
+    def test_evening_before_already_past_is_skipped(self):
+        # tonight at 22:00 our time: its evening before was yesterday
+        event = self.make(starts_at=utc(2026, 10, 7, 20), repeat_days=0, reminders=[EVENING_BEFORE])
+        self.assertEqual(events.plan_reminders(now=self.now), 0)
+        self.assertFalse(event.notifications.exists())
 
     @override_settings(DISCORD_WEBHOOK_URL='')
     def test_without_webhook_nothing_is_planned(self):
@@ -530,10 +551,19 @@ class KingdomEventAdminTests(TestCase):
         event.refresh_from_db()
         self.assertEqual(event.player_reminders, [])
 
-    def test_new_event_offers_ten_and_sixty_minutes(self):
+    def test_new_event_offers_the_evening_before(self):
         response = self.client.get(f'{self.url}add/')
-        self.assertContains(response, 'value="10, 60"')
-        self.assertEqual(KingdomEvent(name_sk='x', starts_at=self.soon()).player_reminders, [10, 60])
+        self.assertContains(response, 'value="18:00, 180"')
+        event = KingdomEvent(name_sk='x', starts_at=self.soon())
+        self.assertEqual((event.reminders, event.player_reminders), ([EVENING_BEFORE], [EVENING_BEFORE, 180]))
+
+    def test_offered_times_take_the_evening_before_as_18_00(self):
+        event = KingdomEvent.objects.create(name_sk='Ruiny', starts_at=self.soon())
+        start = timezone.localtime(event.starts_at)
+        self.client.post(f'{self.url}{event.pk}/change/', self.form_data(start, player_reminders='60, 18:00, 1440'))
+        event.refresh_from_db()
+        self.assertEqual(event.player_reminders, [60, EVENING_BEFORE, 1440])
+        self.assertContains(self.client.get(f'{self.url}{event.pk}/change/'), 'value="60, 18:00, 1440"')
 
     def test_cancel_action(self):
         self.client.post(f'{self.url}add/', self.form_data(self.soon()))
@@ -876,10 +906,10 @@ class EventTemplateTests(TestCase):
         self.assertEqual(mtg.guide.slug, 'more-than-gems')
         self.assertEqual(events.upcoming(mtg, 2, now=utc(2026, 10, 8)), [utc(2026, 10, 10), utc(2026, 11, 7)])
         self.assertEqual(KingdomEvent.objects.get(name_sk='MGE – Jazda').name_cs, 'MGE – Jízda')
-        # Alliance Mobilization: a week from Monday 00:00 UTC, reminded the day before (00:00 UTC is at night here)
+        # Alliance Mobilization: a week from Monday 00:00 UTC, reminded the evening before (00:00 UTC is at night here)
         am = KingdomEvent.objects.get(name_sk='Alliance Mobilization')
         self.assertEqual((am.irregular, am.time_basis, am.duration_minutes), (True, 'utc', 7 * 24 * 60))
-        self.assertEqual((am.reminders, am.player_reminders), ([24 * 60], [60, 24 * 60]))
+        self.assertEqual((am.reminders, am.player_reminders), ([EVENING_BEFORE], [EVENING_BEFORE, 180]))
         # every template with game art gets its icon, and the icon file exists
         self.assertEqual(KingdomEvent.objects.get(name_sk='Karuak Boss').icon, 'ceroli')
         self.assertEqual(KingdomEvent.objects.get(name_sk='20 GH').icon, 'gold-head')

@@ -509,6 +509,7 @@ export const cs: Dict = {
     saved: 'Uloženo.',
     failed: 'Nepodařilo se uložit. Zkus to znovu.',
     atStart: 'při začátku',
+    evening: 'den předem v 18:00',
     before: '{time} předem',
     days: ['{n} den', '{n} dny', '{n} dní'],
     repeat: {

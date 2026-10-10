@@ -13,7 +13,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from kingdom.events import occurrences
+from kingdom.events import longest_lead, occurrences, send_time
 from kingdom.models import KingdomEvent
 
 from . import discord_bot
@@ -111,9 +111,10 @@ def test_message(lang: str) -> dict:
 
 
 def due_starts(event: KingdomEvent, offset: int, now) -> list:
-    """Starts whose send time (start − offset) lies in (now − WINDOW, now]."""
-    delta, tick = timedelta(minutes=offset), timedelta(microseconds=1)
-    return list(occurrences(event, now - WINDOW + delta + tick, now + delta + tick))
+    """Starts whose send time (send_time: start − offset, or the evening before) lies in (now − WINDOW, now]."""
+    tick = timedelta(microseconds=1)
+    candidates = occurrences(event, now - WINDOW + tick, now + longest_lead(offset) + tick)
+    return [start for start in candidates if now - WINDOW < send_time(start, offset) <= now]
 
 
 def send_personal_reminders(now=None) -> int:

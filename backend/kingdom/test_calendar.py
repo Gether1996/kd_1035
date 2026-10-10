@@ -5,7 +5,7 @@ from django.test import TestCase, override_settings
 
 from guides.models import Guide
 
-from .models import KingdomEvent
+from .models import EVENING_BEFORE, KingdomEvent
 
 URL = '/api/events/'
 DAY = 24 * 60
@@ -104,7 +104,7 @@ class EventCalendarTests(TestCase):
                     'name_sk': 'Shadow Legion',
                     'name_cs': '',
                     'icon': '/static/kingdom/events/shadow-legion.webp',
-                    'offered': [10, 60],
+                    'offered': [EVENING_BEFORE, 180],
                     'guide': None,
                     'start': '2026-10-09T18:00:00Z',
                     'end': '2026-10-09T19:00:00Z',
@@ -114,7 +114,7 @@ class EventCalendarTests(TestCase):
                     'name_sk': 'Silk Road',
                     'name_cs': '',
                     'icon': '/static/kingdom/events/silk-road.webp',
-                    'offered': [10, 60],
+                    'offered': [EVENING_BEFORE, 180],
                     'guide': None,
                     'start': None,
                     'end': None,

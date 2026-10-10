@@ -11,15 +11,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "mightiest-governor-mge",
     "is_active": true
@@ -36,15 +36,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "mightiest-governor-mge",
     "is_active": true
@@ -61,15 +61,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "mightiest-governor-mge",
     "is_active": true
@@ -86,15 +86,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "mightiest-governor-mge",
     "is_active": true
@@ -111,15 +111,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "ark-of-osiris",
     "is_active": true
@@ -136,15 +136,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "wheel-of-fortune",
     "is_active": true
@@ -161,15 +161,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": true
@@ -186,15 +186,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": true
@@ -211,15 +211,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": true
@@ -236,15 +236,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": true
@@ -261,15 +261,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "more-than-gems",
     "is_active": true
@@ -286,15 +286,15 @@
     "irregular": true,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "alliance-mobilization",
     "is_active": true
@@ -311,15 +311,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": true
@@ -414,15 +414,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "champions-of-olympia",
     "is_active": false
@@ -439,15 +439,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": false
@@ -464,15 +464,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": false
@@ -489,15 +489,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "ceroli-crisis",
     "is_active": false
@@ -514,15 +514,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": "golden-kingdom",
     "is_active": false
@@ -539,15 +539,15 @@
     "irregular": false,
     "time_basis": "utc",
     "reminders": [
-      1440
+      -1080
     ],
     "mention_role_id": "",
     "mention_role": true,
     "notify_discord": true,
     "show_on_web": true,
     "player_reminders": [
-      60,
-      1440
+      -1080,
+      180
     ],
     "guide": null,
     "is_active": false

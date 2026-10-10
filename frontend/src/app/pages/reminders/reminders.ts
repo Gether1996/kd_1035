@@ -16,7 +16,7 @@ import { EventIcon } from '../../shared/event-icon';
 import { showsClock } from '../../shared/event-time';
 import { Icon } from '../../shared/icon';
 import { EventDialog, RemindState } from '../calendar/event-dialog';
-import { duration, plural, repeatLabel } from './format';
+import { EVENING_BEFORE, duration, plural, repeatLabel } from './format';
 
 type Filter = 'all' | 'regular' | 'irregular';
 
@@ -184,12 +184,13 @@ export class Reminders {
     return `${day} ${clock()} · UTC ${clock('UTC')}`;
   }
 
-  /** "1 deň 6 h · 1 h vopred", "10 min vopred · pri začiatku" */
+  /** "1 deň 6 h · 1 h vopred", "10 min vopred · pri začiatku", "deň vopred o 18:00 · 3 h vopred" */
   protected times(event: ReminderEvent): string {
     const t = this.t();
     const offsets = event.offsets ?? [];
     const before = offsets.filter((m) => m > 0).map((m) => duration(m, t));
     const parts = before.length ? [t.before.replace('{time}', before.join(' · '))] : [];
+    if (offsets.includes(EVENING_BEFORE)) parts.unshift(t.evening);
     if (offsets.includes(0)) parts.push(t.atStart);
     return parts.join(' · ');
   }

@@ -514,6 +514,7 @@ export const sk = {
     saved: 'Uložené.',
     failed: 'Nepodarilo sa uložiť. Skús to znova.',
     atStart: 'pri začiatku',
+    evening: 'deň vopred o 18:00',
     before: '{time} vopred',
     days: ['{n} deň', '{n} dni', '{n} dní'],
     repeat: {

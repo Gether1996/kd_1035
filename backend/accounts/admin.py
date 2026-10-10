@@ -3,10 +3,14 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 
+from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
 from .models import EventReminder, Player, SentReminder
 from .reminders import duration
+
+# 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
+REMINDER_LABELS = dict(REMINDER_CHOICES)
 
 
 @admin.register(Player)
@@ -127,4 +131,4 @@ class EventReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
     @admin.display(description='pripomenúť pred začiatkom')
     def times(self, obj):
-        return ', '.join(duration(minutes, 'sk') if minutes else 'pri začiatku' for minutes in obj.offsets)
+        return ', '.join(REMINDER_LABELS.get(minutes) or duration(minutes, 'sk') for minutes in obj.offsets)

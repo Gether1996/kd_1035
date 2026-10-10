@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from kingdom.models import MAX_REMINDER_MINUTES
+from kingdom.models import is_reminder_minutes, lead_order
 
 from .models import MAX_PLAYER_REMINDERS, Player
 
@@ -14,25 +14,29 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class Minutes(serializers.IntegerField):
-    """Whole minutes as a JSON number only – no "10", 10.0 or true."""
+    """Whole minutes 0–10080 or EVENING_BEFORE as a JSON number only – no "10", 10.0 or true."""
+
+    default_error_messages = {'range': 'Minúty od 0 do 7 dní alebo deň vopred o 18:00.'}
 
     def to_internal_value(self, data):
         if type(data) is not int:
             self.fail('invalid')
-        return super().to_internal_value(data)
+        if not is_reminder_minutes(data):
+            self.fail('range')
+        return data
 
 
 class OffsetsSerializer(serializers.Serializer):
     """PUT /api/me/reminders/<event>/: any times the player wants (also their own, not only the offered ones)."""
 
     offsets = serializers.ListField(
-        child=Minutes(min_value=0, max_value=MAX_REMINDER_MINUTES),
+        child=Minutes(),
         min_length=1,
         max_length=MAX_PLAYER_REMINDERS,
     )
 
     def validate_offsets(self, value):
-        return sorted(set(value), reverse=True)
+        return sorted(set(value), key=lead_order, reverse=True)
 
 
 class ReminderSettingsSerializer(serializers.ModelSerializer):

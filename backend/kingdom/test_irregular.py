@@ -8,7 +8,7 @@ from accounts.models import EventReminder, Player
 from guides.models import Guide
 
 from . import event_icons
-from .models import EventNotification, KingdomEvent
+from .models import EVENING_BEFORE, EventNotification, KingdomEvent
 from .tests import PLAIN_STATIC
 
 LIST = '/api/events/manage/'
@@ -88,7 +88,7 @@ class IrregularDateTests(TestCase):
         self.assertIn(
             {'slug': 'ceroli', 'label': 'Ceroli / Karuak', 'url': '/static/kingdom/events/ceroli.webp'}, data['icons']
         )
-        self.assertEqual(data['reminder_choices'], [1440, 180, 60, 30, 15, 0])
+        self.assertEqual(data['reminder_choices'], [1440, EVENING_BEFORE, 180, 60, 30, 15, 0])
         self.assertTrue(data['webhook'])
 
     def test_set_move_and_cancel_a_date(self, _now):

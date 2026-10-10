@@ -1,5 +1,5 @@
 import re
-from datetime import UTC, timedelta
+from datetime import UTC
 
 from django import forms
 from django.conf import settings
@@ -12,8 +12,9 @@ from django.utils.html import format_html, format_html_join
 
 from . import event_icons
 from .discord import MAX_DELAY, deliver
-from .events import HORIZON, LOCAL_TZ, replan, upcoming
+from .events import HORIZON, LOCAL_TZ, replan, send_time, upcoming
 from .models import (
+    EVENING_BEFORE,
     MAX_OFFERED_REMINDERS,
     MAX_REMINDER_MINUTES,
     REMINDER_CHOICES,
@@ -24,6 +25,7 @@ from .models import (
     Officer,
     SocialLink,
     default_player_reminders,
+    lead_order,
 )
 from .permissions import SuperuserOnlyAdmin
 
@@ -105,18 +107,25 @@ class SocialLinkAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
 
 
+# EVENING_BEFORE as typed in the admin
+EVENING_TEXT = '18:00'
+
+
 class MinutesField(forms.CharField):
-    """A JSON list of minutes typed as plain text: '10, 60, 1440' ↔ [10, 60, 1440] (sorted, duplicates dropped)."""
+    """A JSON list of minutes typed as plain text: '18:00, 60, 1440' ↔ [EVENING_BEFORE, 60, 1440] (sorted by
+    lead_order, duplicates dropped)."""
 
     def prepare_value(self, value):
-        return ', '.join(map(str, value)) if isinstance(value, list) else value
+        if not isinstance(value, list):
+            return value
+        return ', '.join(EVENING_TEXT if v == EVENING_BEFORE else str(v) for v in value)
 
     def to_python(self, value):
         text = super().to_python(value)
         parts = [p for p in re.split(r'[\s,;]+', text) if p]
-        if not all(re.fullmatch(r'[0-9]{1,5}', p) for p in parts):
-            raise forms.ValidationError('Napíš celé minúty oddelené čiarkou, napr. 10, 60, 1440.')
-        minutes = sorted({int(p) for p in parts})
+        if not all(re.fullmatch(r'[0-9]{1,5}', p) or p == EVENING_TEXT for p in parts):
+            raise forms.ValidationError('Napíš celé minúty oddelené čiarkou, napr. 18:00, 60, 1440.')
+        minutes = sorted({EVENING_BEFORE if p == EVENING_TEXT else int(p) for p in parts}, key=lead_order)
         if minutes and minutes[-1] > MAX_REMINDER_MINUTES:
             raise forms.ValidationError(f'Najviac {MAX_REMINDER_MINUTES} minút (7 dní).')
         if len(minutes) > MAX_OFFERED_REMINDERS:
@@ -144,9 +153,10 @@ class KingdomEventForm(forms.ModelForm):
         label='Časy pre hráčov',
         required=False,
         initial=default_player_reminders,  # a declared field does not take the model default by itself
-        widget=forms.TextInput(attrs={'placeholder': '10, 60', 'inputmode': 'numeric'}),
-        help_text='Minúty pred začiatkom oddelené čiarkou, napr. 10, 60, 1440 (= 1 deň). Najviac 6, od 0 do 10080 '
-        '(7 dní). Hráč si ich vyberie na webe v časti Pripomienky eventov a môže si zadať aj vlastný čas.',
+        widget=forms.TextInput(attrs={'placeholder': '18:00, 60'}),
+        help_text='Minúty pred začiatkom oddelené čiarkou, napr. 10, 60, 1440 (= 1 deň), a 18:00 = deň vopred o 18:00 '
+        'nášho času (pri herných eventoch o 00:00 UTC). Najviac 6, minúty od 0 do 10080 (7 dní). Hráč si ich vyberie '
+        'na webe v časti Pripomienky eventov a môže si zadať aj vlastný čas.',
     )
 
     class Meta:
@@ -281,7 +291,7 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         dates = upcoming(obj, count=5)
         if not dates:
             return 'Žiadne ďalšie termíny.'
-        offsets = sorted(set(obj.reminders or []), reverse=True) if obj.notify_discord else []
+        offsets = sorted(set(obj.reminders or []), key=lead_order, reverse=True) if obj.notify_discord else []
         planned = {
             (n.occurrence_start, n.offset_minutes): n.get_status_display()
             for n in obj.notifications.filter(occurrence_start__in=dates)
@@ -291,7 +301,7 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         def state(start, offset):
             if (start, offset) in planned:
                 return f' – {planned[start, offset]}'
-            return ' – čas už prešiel' if start - timedelta(minutes=offset) <= now else ''
+            return ' – čas už prešiel' if send_time(start, offset) <= now else ''
 
         rows = []
         for start in dates:
@@ -301,7 +311,7 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
                 (
                     (
                         REMINDER_LABELS.get(offset, f'{offset} min'),
-                        local_time(start - timedelta(minutes=offset)),
+                        local_time(send_time(start, offset)),
                         state(start, offset),
                     )
                     for offset in offsets
@@ -356,7 +366,7 @@ class EventNotificationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     list_filter = ['status', 'event']
     search_fields = ['title', 'message']
     date_hierarchy = 'send_at'
-    readonly_fields = ['status', 'sent_at', 'error', 'event', 'occurrence_start', 'offset_minutes']
+    readonly_fields = ['status', 'sent_at', 'error', 'event', 'occurrence_start', 'reminder']
     actions = ['send_now', 'reschedule', 'cancel']
     # "Uložiť ako nový" = a new pending notification; readonly fields (state, event link) are not copied
     save_as = True
@@ -365,9 +375,14 @@ class EventNotificationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         fields = ['title', 'message', 'send_at', 'event_start', 'mention_role', 'mention_role_id']
         fieldsets = [(None, {'fields': fields + ['status', 'sent_at', 'error']})]
         if obj and obj.event_id:
-            generated = {'fields': ['event', 'occurrence_start', 'offset_minutes'], 'description': REPLAN_NOTE}
+            generated = {'fields': ['event', 'occurrence_start', 'reminder'], 'description': REPLAN_NOTE}
             fieldsets.append(('Z opakovaného eventu', generated))
         return fieldsets
+
+    @admin.display(description='pripomienka')
+    def reminder(self, obj):
+        offset = obj.offset_minutes
+        return '—' if offset is None else REMINDER_LABELS.get(offset, f'{offset} min')
 
     def save_model(self, request, obj, form, change):
         # editing a failed notification plans it again

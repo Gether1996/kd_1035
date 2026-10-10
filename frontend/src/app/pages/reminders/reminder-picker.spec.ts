@@ -6,7 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { ReminderEvent } from '../../core/reminders-api';
 import { cs } from '../../core/i18n/cs';
 import { sk } from '../../core/i18n/sk';
-import { reminderLabel, repeatLabel } from './format';
+import { EVENING_BEFORE, reminderLabel, repeatLabel } from './format';
 import { ReminderPicker, ownMinutes } from './reminder-picker';
 
 const EVENT: ReminderEvent = {
@@ -53,6 +53,8 @@ describe('reminder labels', () => {
     ]);
     expect(reminderLabel(4320, cs.reminders)).toBe('3 dny předem');
     expect(reminderLabel(1800, cs.reminders)).toBe('1 den 6 h předem');
+    expect(reminderLabel(EVENING_BEFORE, sk.reminders)).toBe('deň vopred o 18:00');
+    expect(reminderLabel(EVENING_BEFORE, cs.reminders)).toBe('den předem v 18:00');
     expect([0, 1, 7, 3, 10, 14, 56].map((d) => repeatLabel(d, sk.reminders))).toEqual([
       'jednorazovo',
       'denne',
@@ -137,6 +139,16 @@ describe('ReminderPicker', () => {
     expect(el.querySelector<HTMLInputElement>('.chip input')!.checked).toBe(true);
     expect(el.querySelector('.picker__state')?.textContent).toContain('Uložené.');
     expect(el.querySelector('.switch')?.getAttribute('aria-describedby')).toBe('event-7');
+  });
+
+  it('a game event switches on with the evening before, listed where it falls (7–8 h)', async () => {
+    const { fixture, el } = await render({ offered: [180, 1440, EVENING_BEFORE] });
+    el.querySelector<HTMLInputElement>('.switch')!.click();
+    expect(flush([EVENING_BEFORE]).body).toEqual({ offsets: [EVENING_BEFORE] });
+    await fixture.whenStable();
+    expect(chips(el)).toEqual(['3 h vopred', 'deň vopred o 18:00', '1 deň vopred']);
+    el.querySelectorAll<HTMLInputElement>('.chip input')[2].click();
+    expect(flush([1440, EVENING_BEFORE]).body).toEqual({ offsets: [1440, EVENING_BEFORE] });
   });
 
   it('changes made while saving are sent afterwards, in order', async () => {

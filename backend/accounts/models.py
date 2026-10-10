@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.utils import timezone
 
-from kingdom.models import MAX_REMINDER_MINUTES, is_minutes_list
+from kingdom.models import EVENING_BEFORE, MAX_REMINDER_MINUTES, is_minutes_list
 
 CDN = 'https://cdn.discordapp.com'
 MAX_PLAYER_REMINDERS = 5
@@ -12,8 +12,8 @@ MAX_PLAYER_REMINDERS = 5
 def validate_offsets(value):
     if not is_minutes_list(value) or not 1 <= len(value) <= MAX_PLAYER_REMINDERS:
         raise ValidationError(
-            '1 až %(count)s rôznych čísel od 0 do %(max)s (minúty).',
-            params={'count': MAX_PLAYER_REMINDERS, 'max': MAX_REMINDER_MINUTES},
+            '1 až %(count)s rôznych čísel od 0 do %(max)s (minúty) alebo %(evening)s (deň vopred o 18:00).',
+            params={'count': MAX_PLAYER_REMINDERS, 'max': MAX_REMINDER_MINUTES, 'evening': EVENING_BEFORE},
         )
 
 
@@ -93,7 +93,7 @@ class EventReminder(models.Model):
     event = models.ForeignKey(
         'kingdom.KingdomEvent', on_delete=models.CASCADE, related_name='subscriptions', verbose_name='event'
     )
-    # unique minutes, largest first
+    # unique minutes or kingdom.models.EVENING_BEFORE, largest first (lead_order)
     offsets = models.JSONField('minút pred začiatkom', validators=[validate_offsets])
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
@@ -119,7 +119,7 @@ class SentReminder(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='+', verbose_name='hráč')
     event = models.ForeignKey('kingdom.KingdomEvent', on_delete=models.CASCADE, related_name='+', verbose_name='event')
     occurrence = models.DateTimeField('termín eventu')
-    offset = models.PositiveIntegerField('minút pred začiatkom')
+    offset = models.IntegerField('minút pred začiatkom')  # or EVENING_BEFORE (negative)
     channel = models.CharField('kanál', max_length=8, choices=Channel.choices)
     sent_at = models.DateTimeField('odoslané', default=timezone.now)
     ok = models.BooleanField('doručené', default=False)

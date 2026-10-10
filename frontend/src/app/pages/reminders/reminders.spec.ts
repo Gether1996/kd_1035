@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 import { KingdomApi } from '../../core/api';
 import { ReminderEvent, ReminderSettings } from '../../core/reminders-api';
 import { monogram } from '../../shared/event-icon';
+import { EVENING_BEFORE } from './format';
 import { Reminders, plain } from './reminders';
 
 const event = (id: number, changes: Partial<ReminderEvent>): ReminderEvent => ({
@@ -31,7 +32,7 @@ const SETTINGS: ReminderSettings = {
     event(1, {
       name_sk: '20 GH',
       icon: '/static/kingdom/events/gold-head.webp',
-      offsets: [1800, 60],
+      offsets: [1800, EVENING_BEFORE, 60],
     }),
     event(2, { name_sk: 'MGE – Pěchota', repeat_days: 56 }),
     event(3, {
@@ -81,7 +82,7 @@ describe('Reminders on /pripomienky', () => {
       '20 GH',
       'Silk Road',
     ]);
-    expect(text(rows[0].querySelector('.mine__times'))).toBe('1 deň 6 h · 1 h vopred');
+    expect(text(rows[0].querySelector('.mine__times'))).toBe('deň vopred o 18:00 · 1 deň 6 h · 1 h vopred');
     // a game event: the day says enough, no clock
     expect(text(rows[0].querySelector('.mine__when'))).toBe('so 10. 10.');
     expect(text(rows[1].querySelector('.mine__times'))).toBe('15 min vopred · pri začiatku');
@@ -107,7 +108,7 @@ describe('Reminders on /pripomienky', () => {
     const { el } = await render();
     expect(tiles(el).map((tile) => text(tile.querySelector('.tile__action')))).toEqual([
       '2 pripomienky',
-      '2 pripomienky',
+      '3 pripomienky',
       'Nastaviť',
     ]);
     expect(tiles(el).map((tile) => tile.classList.contains('is-on'))).toEqual([true, true, false]);

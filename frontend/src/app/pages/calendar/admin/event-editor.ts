@@ -25,13 +25,13 @@ import {
 import { I18n } from '../../../core/i18n/i18n';
 import { EventIcon } from '../../../shared/event-icon';
 import { Icon } from '../../../shared/icon';
-import { plural, reminderLabel } from '../../reminders/format';
+import { EVENING_BEFORE, leadOrder, plural, reminderLabel } from '../../reminders/format';
 import { KINGDOM_ZONE, shiftDate, toInstant, wallClock, zoneOf } from './zone';
 
 export type Kind = 'once' | 'repeat' | 'irregular';
 
 /** times offered to players to pick from (plus the ones the event already has) */
-const PLAYER_PRESETS = [5, 10, 15, 30, 60, 180, 720, 1440, 2880];
+const PLAYER_PRESETS = [5, 10, 15, 30, 60, 180, 720, 1440, 2880, EVENING_BEFORE];
 const MAX_OFFERED = 6;
 const REPEAT_PRESETS = [7, 14, 28, 56];
 
@@ -115,11 +115,11 @@ export class EventEditor {
   protected readonly durHours = linkedSignal(() => this.length().hours);
   protected readonly durMinutes = linkedSignal(() => this.length().minutes);
   protected readonly notify = linkedSignal(() => this.event()?.notify_discord ?? true);
-  protected readonly reminders = linkedSignal(() => this.event()?.reminders ?? [60]);
+  protected readonly reminders = linkedSignal(() => this.event()?.reminders ?? [EVENING_BEFORE]);
   protected readonly mention = linkedSignal(() => this.event()?.mention_role ?? true);
   protected readonly roleId = linkedSignal(() => this.event()?.mention_role_id ?? '');
   protected readonly message = linkedSignal(() => this.event()?.message ?? '');
-  protected readonly offered = linkedSignal(() => this.event()?.player_reminders ?? [10, 60]);
+  protected readonly offered = linkedSignal(() => this.event()?.player_reminders ?? [EVENING_BEFORE, 180]);
   protected readonly guide = linkedSignal(() => this.event()?.guide ?? null);
   protected readonly web = linkedSignal(() => this.event()?.show_on_web ?? true);
   protected readonly active = linkedSignal(() => this.event()?.is_active ?? true);
@@ -156,7 +156,7 @@ export class EventEditor {
   );
   protected readonly reminderChoices = computed(() => this.data().reminder_choices);
   protected readonly playerChoices = computed(() =>
-    [...new Set([...PLAYER_PRESETS, ...this.offered()])].sort((a, b) => a - b),
+    [...new Set([...PLAYER_PRESETS, ...this.offered()])].sort((a, b) => leadOrder(a) - leadOrder(b)),
   );
   protected readonly offeredFull = computed(() => this.offered().length >= MAX_OFFERED);
   protected readonly players = computed(() => {
@@ -188,7 +188,7 @@ export class EventEditor {
     target.update((values) =>
       values.includes(minutes)
         ? values.filter((m) => m !== minutes)
-        : [...values, minutes].sort((a, b) => b - a),
+        : [...values, minutes].sort((a, b) => leadOrder(b) - leadOrder(a)),
     );
   }
 

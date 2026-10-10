@@ -9,7 +9,7 @@ import json
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from .models import KingdomEvent
+from .models import EVENING_BEFORE, KingdomEvent
 
 # The kingdom's events as Gether set them up in the dev database (8. 10. 2026: the rotation above switched on,
 # Esmeralda removed – also from the drafts below, Hunt for History and Holy Knight's Treasure taking turns). A brand-new production database starts with them once (entrypoint.sh), later they are
@@ -56,6 +56,9 @@ TEMPLATES = [
 
 MESSAGE = '**{name}** začína {start} ({relative}).'
 
+# times offered to players for a game event starting at 00:00 UTC (Gether, 10. 10. 2026: no reminders at night)
+GAME_PLAYER_REMINDERS = [EVENING_BEFORE, 180]
+
 NOT_PLANNED = datetime(2026, 10, 1, 18, tzinfo=UTC)  # 20:00 in Bratislava – the usual evening hour
 
 # Irregular events without a fixed cycle (named by Gether). Active right away without a date: players see "ďalší
@@ -90,9 +93,9 @@ def create_templates() -> list[str]:
             duration_minutes=days * DAY,
             repeat_days=repeat_days,
             time_basis=KingdomEvent.TimeBasis.UTC,
-            # the day before (00:00 UTC is 1–2 am in Bratislava, an hour before would ping at night)
-            reminders=[DAY],
-            player_reminders=[60, DAY],
+            # 00:00 UTC is 1–2 am in Bratislava: 18:00 the day before, players also 3 h before (22:00 / 23:00)
+            reminders=[EVENING_BEFORE],
+            player_reminders=GAME_PLAYER_REMINDERS,
             guide=guides.get(guide),
             is_active=False,
         )
@@ -109,9 +112,9 @@ def create_templates() -> list[str]:
             duration_minutes=minutes,
             irregular=True,
             time_basis=basis,
-            # 00:00 UTC is at night here: the day before instead of an hour before
-            reminders=[60, 15] if evening else [DAY],
-            player_reminders=[15, 60] if evening else [60, DAY],
+            # 00:00 UTC is at night here: the evening before instead of an hour before
+            reminders=[60, 15] if evening else [EVENING_BEFORE],
+            player_reminders=[15, 60] if evening else GAME_PLAYER_REMINDERS,
             guide=guides.get(guide),
             is_active=True,
         )

@@ -2,6 +2,15 @@ import { Dict } from '../../core/i18n/sk';
 
 type Texts = Dict['reminders'];
 
+/** Not minutes: 18:00 our time on the day before the start – 7 h before a game event (00:00 UTC) in winter, 8 h in
+ * summer. Same as EVENING_BEFORE in backend/kingdom/models.py. */
+export const EVENING_BEFORE = -18 * 60;
+
+/** Sort key of reminder times: the evening before goes where it falls for a game event (7–8 h). */
+export function leadOrder(minutes: number): number {
+  return minutes === EVENING_BEFORE ? 7 * 60 + 30 : minutes;
+}
+
 /** Slovak and Czech plural: 1 → one, 2–4 → few, 5+ → many ("{n}" is replaced by the number). */
 export function plural(n: number, [one, few, many]: string[]): string {
   return (n === 1 ? one : n >= 2 && n <= 4 ? few : many).replace('{n}', String(n));
@@ -17,8 +26,10 @@ export function duration(minutes: number, t: Texts): string {
   return parts.filter(Boolean).join(' ') || '0 min';
 }
 
-/** 0 → "pri začiatku", 10 → "10 min vopred", 1500 → "1 deň 1 h vopred", 2880 → "2 dni vopred". */
+/** 0 → "pri začiatku", 10 → "10 min vopred", 1500 → "1 deň 1 h vopred", 2880 → "2 dni vopred",
+ * EVENING_BEFORE → "deň vopred o 18:00". */
 export function reminderLabel(minutes: number, t: Texts): string {
+  if (minutes === EVENING_BEFORE) return t.evening;
   return minutes ? t.before.replace('{time}', duration(minutes, t)) : t.atStart;
 }
 

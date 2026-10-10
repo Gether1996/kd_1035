@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from guides.models import Guide
 from kingdom import snapshot
-from kingdom.models import KingdomEvent
+from kingdom.models import EVENING_BEFORE, KingdomEvent
 
 from . import discord_bot, reminders
 from .models import EventReminder, Player, SentReminder, validate_offsets
@@ -46,16 +46,16 @@ def make_event(**kwargs):
 
 class OffsetValidationTests(SimpleTestCase):
     def test_model_validators(self):
-        for good in ([0], [10080], [60, 10], [1, 2, 3, 4, 5]):
+        for good in ([0], [10080], [60, 10], [1, 2, 3, 4, 5], [EVENING_BEFORE, 60]):
             validate_offsets(good)
-        for bad in ([], [1, 2, 3, 4, 5, 6], [10, 10], [-1], [10081], ['10'], [10.0], [True], None, 10):
+        for bad in ([], [1, 2, 3, 4, 5, 6], [10, 10], [-1], [-1081], [EVENING_BEFORE, EVENING_BEFORE], [10081], ['10'], [10.0], [True], None, 10):
             with self.subTest(bad), self.assertRaises(ValidationError):
                 validate_offsets(bad)
 
     def test_offered_times_allow_up_to_six_or_none(self):
         from kingdom.models import validate_player_reminders
 
-        for good in ([], [10, 60], [0, 5, 10, 30, 60, 1440]):
+        for good in ([], [10, 60], [0, 5, 10, 30, 60, 1440], [EVENING_BEFORE, 180]):
             validate_player_reminders(good)
         for bad in ([1, 2, 3, 4, 5, 6, 7], [60, 60], [10081], [True], 'x'):
             with self.subTest(bad), self.assertRaises(ValidationError):
@@ -103,7 +103,7 @@ class RemindersApiTests(ApiTestCase):
                         'repeat_days': 0,
                         'duration_minutes': 60,
                         'irregular': False,
-                        'offered': [10, 60],
+                        'offered': [EVENING_BEFORE, 180],
                         'offsets': None,
                     },
                     {
@@ -173,6 +173,10 @@ class RemindersApiTests(ApiTestCase):
 
         self.assertEqual(self.send('put', url, {'offsets': [25]}).status_code, 200)  # own time, not offered
         self.assertEqual(EventReminder.objects.get().offsets, [25])
+
+        # the evening before sorts where it falls for a game event (7–8 h)
+        response = self.send('put', url, {'offsets': [60, EVENING_BEFORE, 1440]})
+        self.assertEqual(response.json()['offsets'], [1440, EVENING_BEFORE, 60])
 
         self.assertEqual(self.send('delete', url).status_code, 204)
         self.assertFalse(EventReminder.objects.exists())
@@ -514,6 +518,20 @@ class SendRemindersTests(TestCase):
             sorted(SentReminder.objects.values_list('event__name_sk', 'occurrence')),
             [('Lokálny', utc(2026, 10, 31, 19)), ('Ruiny', utc(2026, 10, 31, 18))],
         )
+
+    def test_evening_before_a_game_event(self):
+        # a game event at 00:00 UTC on Monday 26. 10. (winter time since Sunday): 18:00 our time = 17:00 UTC
+        game = make_event(name_sk='MGE', starts_at=utc(2026, 10, 12), repeat_days=14)
+        EventReminder.objects.create(player=self.player, event=game, offsets=[EVENING_BEFORE])
+        self.reminder.delete()
+        self.assertEqual(self.run_at(2026, 10, 25, 16, 59), 0)
+        self.assertEqual(self.run_at(2026, 10, 25, 17, 5), 1)
+        self.assertEqual(self.run_at(2026, 10, 25, 17, 8), 0)
+        self.assertEqual(
+            list(SentReminder.objects.values_list('offset', 'occurrence')), [(EVENING_BEFORE, utc(2026, 10, 26))]
+        )
+        # in summer time two weeks earlier it went out at 16:00 UTC
+        self.assertEqual(self.run_at(2026, 10, 11, 16, 1), 1)
 
     def test_discord_failure_is_recorded_and_not_retried(self):
         self.dm.side_effect = discord_bot.BotError('Hráč nemá povolené súkromné správy.')

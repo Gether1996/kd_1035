@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .models import EventNotification, KingdomEvent
+from .models import EVENING_BEFORE, EventNotification, KingdomEvent
 
 LOCAL_TZ = ZoneInfo('Europe/Bratislava')
 # reminders are created this far ahead; the worker plans every few minutes
@@ -53,6 +53,20 @@ def occurrences(event: KingdomEvent, start: datetime, end: datetime | None = Non
     while end is None or at(k) < end:
         yield at(k)
         k += 1
+
+
+def send_time(start: datetime, offset: int) -> datetime:
+    """When the reminder `offset` (minutes before, or EVENING_BEFORE) of the occurrence `start` goes out (UTC)."""
+    if offset == EVENING_BEFORE:
+        day = start.astimezone(LOCAL_TZ).date() - timedelta(days=1)
+        clock = time(hour=-offset // 60, minute=-offset % 60)
+        return datetime.combine(day, clock, tzinfo=LOCAL_TZ).astimezone(UTC)
+    return start - timedelta(minutes=offset)
+
+
+def longest_lead(offset: int) -> timedelta:
+    """The most a reminder can go out before the start: EVENING_BEFORE of an event at 23:59 is under 30 h ahead."""
+    return timedelta(hours=31) if offset == EVENING_BEFORE else timedelta(minutes=offset)
 
 
 def upcoming(event: KingdomEvent, count: int = 5, now=None) -> list[datetime]:
@@ -115,13 +129,13 @@ def plan_reminders(now=None, horizon=HORIZON, events=None) -> int:
     # its reminders, so the worker never recreates rows for a time that replan() has just removed
     with transaction.atomic():
         for event in events.filter(is_active=True, notify_discord=True):
-            offsets = sorted(set(event.reminders or []))
+            offsets = set(event.reminders or [])
             if not offsets:
                 continue
-            window_end = now + horizon + timedelta(minutes=offsets[-1], microseconds=1)
+            window_end = now + horizon + max(map(longest_lead, offsets)) + timedelta(microseconds=1)
             for start in occurrences(event, now, window_end):
                 for offset in offsets:
-                    send_at = start - timedelta(minutes=offset)
+                    send_at = send_time(start, offset)
                     if not now < send_at <= now + horizon:
                         continue
                     _, new = EventNotification.objects.get_or_create(

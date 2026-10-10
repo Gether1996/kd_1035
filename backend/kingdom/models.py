@@ -6,9 +6,15 @@ from django.utils import timezone
 discord_id_validator = RegexValidator(r'^[0-9]{5,24}$', 'Iba číslice (Developer Mode → pravý klik → Copy ID).')
 TWIN_EVENT_ERROR = 'Aktívny event s rovnakým názvom a prvým začiatkom už existuje – zmeň názov alebo čas.'
 
+# Not minutes: 18:00 in Bratislava on the day before the start (Gether, 10. 10. 2026). Game events start at 00:00 UTC,
+# so a fixed offset would ping at night – this one is 7 h before in winter and 8 h in summer. It sits among the minutes
+# of every reminder list and is turned into a send time per occurrence by events.send_time().
+EVENING_BEFORE = -18 * 60
+
 # minutes before the start → label in the admin
 REMINDER_CHOICES = [
     (1440, '1 deň'),
+    (EVENING_BEFORE, 'deň vopred o 18:00'),
     (180, '3 h'),
     (60, '1 h'),
     (30, '30 min'),
@@ -18,7 +24,7 @@ REMINDER_CHOICES = [
 
 
 def default_reminders():
-    return [60]
+    return [EVENING_BEFORE]
 
 
 def validate_reminders(value):
@@ -33,23 +39,29 @@ MAX_OFFERED_REMINDERS = 6
 
 
 def default_player_reminders():
-    return [10, 60]
+    return [EVENING_BEFORE, 180]
+
+
+def is_reminder_minutes(value) -> bool:
+    """Whole minutes 0–10080 or EVENING_BEFORE (bool is an int in Python, so it is checked by type)."""
+    return type(value) is int and (0 <= value <= MAX_REMINDER_MINUTES or value == EVENING_BEFORE)
+
+
+def lead_order(minutes: int) -> int:
+    """Sort key of reminder times: EVENING_BEFORE goes where it falls for a game event (00:00 UTC), 7–8 h."""
+    return 7 * 60 + 30 if minutes == EVENING_BEFORE else minutes
 
 
 def is_minutes_list(value) -> bool:
-    """A list of unique whole minutes 0–10080 (bool is an int in Python, so it is checked by type)."""
-    return (
-        isinstance(value, list)
-        and len(set(value)) == len(value)
-        and all(type(v) is int and 0 <= v <= MAX_REMINDER_MINUTES for v in value)
-    )
+    """A list of unique reminder times (is_reminder_minutes)."""
+    return isinstance(value, list) and len(set(value)) == len(value) and all(map(is_reminder_minutes, value))
 
 
 def validate_player_reminders(value):
     if not is_minutes_list(value) or len(value) > MAX_OFFERED_REMINDERS:
         raise ValidationError(
-            'Najviac %(count)s rôznych čísel od 0 do %(max)s (minúty).',
-            params={'count': MAX_OFFERED_REMINDERS, 'max': MAX_REMINDER_MINUTES},
+            'Najviac %(count)s rôznych čísel od 0 do %(max)s (minúty) alebo %(evening)s (deň vopred o 18:00).',
+            params={'count': MAX_OFFERED_REMINDERS, 'max': MAX_REMINDER_MINUTES, 'evening': EVENING_BEFORE},
         )
 
 
@@ -171,7 +183,7 @@ class KingdomEvent(models.Model):
         default=default_reminders,
         blank=True,
         validators=[validate_reminders],
-        help_text='Kedy pred začiatkom poslať správu na Discord.',
+        help_text='Kedy pred začiatkom poslať správu na Discord. Pri herných eventoch (00:00 UTC) „deň vopred o 18:00“.',
     )
     mention_role_id = models.CharField(
         'ID roly (nepovinné)',
@@ -293,7 +305,8 @@ class EventNotification(models.Model):
         verbose_name='event kráľovstva',
     )
     occurrence_start = models.DateTimeField('termín eventu', null=True, blank=True)
-    offset_minutes = models.PositiveIntegerField('minút pred začiatkom', null=True, blank=True)
+    # minutes, or EVENING_BEFORE (negative)
+    offset_minutes = models.IntegerField('minút pred začiatkom', null=True, blank=True)
 
     class Meta:
         ordering = ['-send_at']

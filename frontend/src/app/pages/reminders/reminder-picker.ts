@@ -11,7 +11,7 @@ import {
 import { I18n } from '../../core/i18n/i18n';
 import { MAX_MINUTES, MAX_REMINDERS, ReminderEvent, RemindersApi } from '../../core/reminders-api';
 import { Icon } from '../../shared/icon';
-import { reminderLabel } from './format';
+import { EVENING_BEFORE, leadOrder, reminderLabel } from './format';
 
 /** Offered first when a player switches on an event that offers no times. */
 const DEFAULT_MINUTES = 10;
@@ -60,12 +60,12 @@ export class ReminderPicker {
   protected readonly offsets = linkedSignal(() => this.event().offsets ?? []);
   protected readonly on = computed(() => this.offsets().length > 0);
   protected readonly full = computed(() => this.offsets().length >= MAX_REMINDERS);
-  protected readonly offered = computed(() => [...this.event().offered].sort((a, b) => a - b));
+  protected readonly offered = computed(() => [...this.event().offered].sort((a, b) => leadOrder(a) - leadOrder(b)));
   /** times the player typed in, not among the offered ones */
   protected readonly own = computed(() =>
     this.offsets()
       .filter((minutes) => !this.event().offered.includes(minutes))
-      .sort((a, b) => a - b),
+      .sort((a, b) => leadOrder(a) - leadOrder(b)),
   );
   protected readonly name = computed(() => (this.i18n.lang() === 'cs' && this.event().name_cs) || this.event().name_sk);
   protected readonly state = signal<'saved' | 'failed' | null>(null);
@@ -89,8 +89,14 @@ export class ReminderPicker {
       this.previous = this.offsets();
       this.change([]);
     } else {
-      this.change(this.previous.length ? this.previous : [this.offered()[0] ?? DEFAULT_MINUTES]);
+      this.change(this.previous.length ? this.previous : [this.firstChoice()]);
     }
+  }
+
+  /** the evening before when leadership offers it (game events start at night), otherwise the shortest time */
+  private firstChoice(): number {
+    const offered = this.offered();
+    return offered.includes(EVENING_BEFORE) ? EVENING_BEFORE : (offered[0] ?? DEFAULT_MINUTES);
   }
 
   protected toggleTime(minutes: number): void {
@@ -112,7 +118,7 @@ export class ReminderPicker {
   }
 
   private change(offsets: number[]): void {
-    this.offsets.set([...offsets].sort((a, b) => b - a));
+    this.offsets.set([...offsets].sort((a, b) => leadOrder(b) - leadOrder(a)));
     this.invalid.set(false);
     this.changed.emit(this.offsets().length ? this.offsets() : null);
     void this.save();
