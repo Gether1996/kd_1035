@@ -25,6 +25,7 @@ describe('routes', () => {
       class {
         observe() {}
         unobserve() {}
+        disconnect() {}
       },
     );
     // admin content (links, guides) stays pending – not under test

@@ -16,6 +16,7 @@ describe('Guide pages', () => {
       class {
         observe() {}
         unobserve() {}
+        disconnect() {}
       },
     );
     TestBed.configureTestingModule({
@@ -138,6 +139,23 @@ describe('Guide pages', () => {
       const el = await open((req) => req.flush('down', { status: 502, statusText: 'Bad Gateway' }));
       expect(el.querySelector('.state')?.textContent).toContain('Návody sa nepodarilo načítať');
       expect(el.querySelector('.group')).toBeNull();
+    });
+
+    it('loads the commander finder when it scrolls into view, or at once for a link with ?commander=', async () => {
+      const el = await open((req) => req.flush([]));
+      // jsdom never reports the viewport (no IntersectionObserver callbacks): only the placeholder
+      expect(el.querySelector('app-commander-finder')).toBeNull();
+      expect(el.querySelector('.finder-placeholder')).not.toBeNull();
+
+      const shared = TestBed.createComponent(GuideHub);
+      shared.componentRef.setInput('commander', 'attila');
+      // the block's chunk is imported asynchronously
+      await vi.waitFor(() => {
+        shared.detectChanges();
+        expect(shared.nativeElement.querySelector('app-commander-finder')).not.toBeNull();
+      });
+      TestBed.tick();
+      TestBed.inject(HttpTestingController).expectOne('/api/commanders/').flush([]);
     });
   });
 

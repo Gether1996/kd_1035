@@ -143,6 +143,14 @@
 
 // ---------------------------------------------------------------- hub (/navody)
 
+// the height of the commander finder before its chunk loads (the guide list below does not jump)
+.finder-placeholder {
+  height: 206px;
+  margin-bottom: clamp(40px, 6vw, 56px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
 .group + .group {
   margin-top: clamp(40px, 6vw, 56px);
 }

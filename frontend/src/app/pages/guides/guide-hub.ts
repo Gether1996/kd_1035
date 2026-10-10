@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { GuidesApi } from '../../core/guides-api';
 import { GUIDE_CATEGORIES, I18n } from '../../core/i18n/i18n';
@@ -6,16 +6,20 @@ import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { Reveal } from '../../shared/reveal';
+import { CommanderFinder } from './commander-finder';
 
 /** /navody – every published guide on one page, grouped by category. */
 @Component({
   selector: 'app-guide-hub',
-  imports: [RouterLink, RouterLinkActive, Icon, PageHeader, Reveal],
+  imports: [RouterLink, RouterLinkActive, Icon, PageHeader, Reveal, CommanderFinder],
   templateUrl: './guide-hub.html',
   styleUrl: './guides.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GuideHub {
+  /** ?commander= – the commander chosen in "Nájdi pár pre commandera" */
+  readonly commander = input<string>();
+
   protected readonly i18n = inject(I18n);
   protected readonly guides = inject(GuidesApi);
   protected readonly categories = GUIDE_CATEGORIES;

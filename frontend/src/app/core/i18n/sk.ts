@@ -148,6 +148,22 @@ export const sk = {
       announceLater: 'Ďalší termín oznámime',
     },
   },
+  // "S kým spárovať commandera" on /navody (pages/guides/commander-finder.ts)
+  finder: {
+    title: 'Nájdi pár pre commandera',
+    intro: 'S kým spárovať commandera, ktorého máš – podľa našich návodov.',
+    label: 'Meno commandera',
+    placeholder: 'Napr. Attila',
+    clear: 'Vymazať',
+    noMatch: 'Takého commandera naše návody nespomínajú.',
+    roles: {
+      primary: 'Ako primárny',
+      secondary: 'Ako sekundárny',
+      solo: 'Na koho sa sústrediť',
+    },
+    anyone: 'ktokoľvek',
+    count: { one: 'odporúčanie', few: 'odporúčania', other: 'odporúčaní' },
+  },
   community: {
     eyebrow: 'Komunita',
     title: 'Pridaj sa k nám',

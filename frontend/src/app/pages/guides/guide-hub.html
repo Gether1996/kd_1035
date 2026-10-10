@@ -18,6 +18,13 @@
     }
   </nav>
 
+  <!-- its own chunk (bundle budget); a shared link with ?commander= loads it right away -->
+  @defer (on viewport; when !!commander()) {
+    <app-commander-finder [commander]="commander()" />
+  } @placeholder {
+    <div class="finder-placeholder" aria-hidden="true"></div>
+  }
+
   @if (guides.failed()) {
     <p class="state">{{ t.guides.error }}</p>
   } @else if (groups().length) {

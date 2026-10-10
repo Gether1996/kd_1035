@@ -148,6 +148,22 @@ export const cs: Dict = {
       announceLater: 'Další termín oznámíme',
     },
   },
+  // "S kým spárovat commandera" on /navody (pages/guides/commander-finder.ts)
+  finder: {
+    title: 'Najdi pár pro commandera',
+    intro: 'S kým spárovat commandera, kterého máš – podle našich návodů.',
+    label: 'Jméno commandera',
+    placeholder: 'Např. Attila',
+    clear: 'Vymazat',
+    noMatch: 'Takového commandera naše návody nezmiňují.',
+    roles: {
+      primary: 'Jako primární',
+      secondary: 'Jako sekundární',
+      solo: 'Na koho se soustředit',
+    },
+    anyone: 'kdokoli',
+    count: { one: 'doporučení', few: 'doporučení', other: 'doporučení' },
+  },
   community: {
     eyebrow: 'Komunita',
     title: 'Přidej se k nám',

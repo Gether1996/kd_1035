@@ -1,0 +1,212 @@
+:host {
+  display: block;
+  margin-bottom: clamp(40px, 6vw, 56px);
+}
+
+.finder {
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.finder__title {
+  font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.5rem);
+}
+
+.finder__intro {
+  margin-top: 6px;
+  color: var(--text-dim);
+}
+
+// ---------------------------------------------------------------- combobox
+
+.finder__field {
+  position: relative;
+  max-width: 460px;
+  margin-top: 16px;
+
+  .input {
+    padding-inline: 42px;
+  }
+}
+
+.finder__search {
+  position: absolute;
+  top: 24px;
+  left: 14px;
+  width: 17px;
+  height: 17px;
+  color: var(--text-mute);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.finder__clear {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.finder__options {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline: 0;
+  z-index: 20;
+  max-height: min(320px, 50vh);
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+
+  &.is-active {
+    background: rgba(245, 196, 81, 0.12);
+    color: var(--gold-300);
+  }
+}
+
+.finder__empty {
+  margin-top: 12px;
+  color: var(--text-dim);
+}
+
+// ---------------------------------------------------------------- portraits (as in the guides, .prose img.pic__icon)
+
+.portrait {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
+}
+
+.portrait--small {
+  width: 34px;
+  height: 34px;
+  padding: 2px;
+}
+
+.portrait--any {
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ---------------------------------------------------------------- result
+
+.result__role {
+  margin: 24px 0 10px;
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// portraits | partner and the guides naming the pair
+.card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 10, 23, 0.35);
+}
+
+// two alternatives (Attila / Gang Gamchan) side by side, more wrap under each other
+.card__pics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 94px;
+}
+
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.card__name {
+  font: 700 1.0625rem/1.25 var(--font-display);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+// "Páry commanderov pre rally · jazda" (the template drops the space after the link)
+.card__context {
+  margin-left: 0.3em;
+}
+
+.card__guide {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--text-dim);
+
+  a {
+    color: var(--gold-300);
+    text-decoration: underline;
+    text-decoration-color: rgba(245, 196, 81, 0.35);
+    text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+}

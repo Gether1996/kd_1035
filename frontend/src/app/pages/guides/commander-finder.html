@@ -1,0 +1,113 @@
+@let f = t();
+@if (!data.error()) {
+  <section class="finder" aria-labelledby="finder-title">
+    <h2 class="finder__title" id="finder-title">{{ f.title }}</h2>
+    <p class="finder__intro">{{ f.intro }}</p>
+
+    <div class="finder__field">
+      <label class="sr-only" for="finder-input">{{ f.label }}</label>
+      <svg class="finder__search" appIcon="search"></svg>
+      <input
+        #field
+        id="finder-input"
+        class="input"
+        type="text"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls="finder-options"
+        autocomplete="off"
+        autocapitalize="words"
+        spellcheck="false"
+        [attr.aria-expanded]="open()"
+        [attr.aria-activedescendant]="activeId()"
+        [placeholder]="f.placeholder"
+        [value]="query()"
+        (input)="type(field.value)"
+        (click)="open.set(true)"
+        (keydown)="key($event)"
+        (blur)="open.set(false)"
+      />
+      @if (query()) {
+        <button type="button" class="finder__clear" [attr.aria-label]="f.clear" (click)="clear()">
+          <svg appIcon="x"></svg>
+        </button>
+      }
+      <ul
+        #list
+        id="finder-options"
+        class="finder__options"
+        role="listbox"
+        [attr.aria-label]="f.label"
+        [hidden]="!open() || !options().length"
+      >
+        @for (c of options(); track c.icon; let i = $index) {
+          <!-- mousedown would blur the field and close the list before the click -->
+          <li
+            role="option"
+            class="option"
+            [id]="'finder-option-' + i"
+            [class.is-active]="i === active()"
+            [attr.aria-selected]="i === active()"
+            (mousedown)="$event.preventDefault()"
+            (mousemove)="active.set(i)"
+            (click)="choose(c)"
+          >
+            <img class="portrait portrait--small" [src]="c.icon" alt="" width="96" height="96" loading="lazy" />
+            {{ c.name }}
+          </li>
+        }
+      </ul>
+    </div>
+
+    @if (open() && query() && !options().length && data.hasValue()) {
+      <p class="finder__empty" role="status">{{ f.noMatch }}</p>
+    }
+
+    @if (selected(); as c) {
+      <div class="result">
+        <p class="sr-only" role="status">{{ c.name }}: {{ count() }}</p>
+        @for (group of groups(); track group.role) {
+          <h3 class="result__role">{{ f.roles[group.role] }}</h3>
+          <ul class="cards">
+            @for (card of group.cards; track card.key) {
+              <li class="card">
+                <span class="card__pics">
+                  @for (p of card.partners; track p.icon) {
+                    <img class="portrait" [src]="p.icon" alt="" width="96" height="96" loading="lazy" />
+                  } @empty {
+                    @if (group.role === 'primary') {
+                      <span class="portrait portrait--any"><svg appIcon="users"></svg></span>
+                    } @else {
+                      <img class="portrait" [src]="c.icon" alt="" width="96" height="96" loading="lazy" />
+                    }
+                  }
+                </span>
+                <span class="card__body">
+                  <strong class="card__name">
+                    @if (group.role === 'solo') {
+                      {{ c.name }}
+                    } @else {
+                      @for (p of card.partners; track p.icon; let last = $last) {
+                        {{ p.name }}{{ last ? '' : ' / ' }}
+                      } @empty {
+                        {{ f.anyone }}
+                      }
+                    }
+                  </strong>
+                  @for (g of card.guides; track g.slug + g.context) {
+                    <span class="card__guide">
+                      <a [routerLink]="i18n.guidePath(g.category, g.slug)">{{ g.title }}</a>
+                      @if (g.context) {
+                        <span class="card__context">· {{ g.context }}</span>
+                      }
+                    </span>
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  </section>
+}

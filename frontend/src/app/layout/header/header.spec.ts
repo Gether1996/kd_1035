@@ -110,6 +110,7 @@ describe('Header active item', () => {
       class {
         observe() {}
         unobserve() {}
+        disconnect() {}
       },
     );
     TestBed.configureTestingModule({
