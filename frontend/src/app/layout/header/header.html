@@ -18,7 +18,7 @@
           [fragment]="item.fragment"
           [routerLinkActive]="item.fragment ? [] : 'is-active'"
           [routerLinkActiveOptions]="{ exact: item.exact ?? true }"
-          [ariaCurrentWhenActive]="item.fragment ? false : 'page'"
+          [ariaCurrentWhenActive]="item.fragment ? false : item.exact === false ? true : 'page'"
           >{{ item.label }}</a
         >
       }
@@ -82,7 +82,7 @@
         [fragment]="item.fragment"
         [routerLinkActive]="item.fragment ? [] : 'is-active'"
         [routerLinkActiveOptions]="{ exact: item.exact ?? true }"
-        [ariaCurrentWhenActive]="item.fragment ? false : 'page'"
+        [ariaCurrentWhenActive]="item.fragment ? false : item.exact === false ? true : 'page'"
         [style.--i]="i"
         (click)="close()"
       >

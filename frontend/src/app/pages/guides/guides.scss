@@ -208,9 +208,22 @@
   .row__date {
     display: none;
   }
+}
 
+// four tabs do not fit one row on a phone: a 2 × 2 grid instead of a hidden horizontal scroll
+@media (max-width: 539px) {
   .tabs {
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    width: 100%;
+    border-radius: 22px;
+  }
+
+  .tab {
+    padding: 10px 12px;
+    letter-spacing: 0.08em;
+    text-align: center;
   }
 }
 

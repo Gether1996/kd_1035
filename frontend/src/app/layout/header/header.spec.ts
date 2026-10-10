@@ -133,18 +133,21 @@ describe('Header active item', () => {
     await new Promise((resolve) => setTimeout(resolve));
     const el = fixture.nativeElement as HTMLElement;
     return Array.from(el.querySelectorAll('.nav__link.is-active, .drawer__link.is-active'), (a) =>
-      [a.className.split(' ')[0], a.getAttribute('href'), a.textContent?.trim()].join(' '),
+      [a.className.split(' ')[0], a.getAttribute('href'), a.textContent?.trim(), a.getAttribute('aria-current')].join(
+        ' ',
+      ),
     );
   }
 
-  const guides = ['nav__link /navody Návody', 'drawer__link /navody Návody'];
+  // a section link marks the current section (aria-current="true"), never claims to be the exact page
+  const guides = ['nav__link /navody Návody true', 'drawer__link /navody Návody true'];
   const cases: [string, string[]][] = [
     ['/navody', guides],
     ['/navody/commanderi', guides],
     ['/navody/commanderi/pary-pre-jazdu', guides],
-    ['/cz/navody/eventy', ['nav__link /cz/navody Návody', 'drawer__link /cz/navody Návody']],
-    ['/o-nas', ['nav__link /o-nas O nás', 'drawer__link /o-nas O nás']],
-    ['/kalendar', ['nav__link /kalendar Kalendár', 'drawer__link /kalendar Kalendár']],
+    ['/cz/navody/eventy', ['nav__link /cz/navody Návody true', 'drawer__link /cz/navody Návody true']],
+    ['/o-nas', ['nav__link /o-nas O nás page', 'drawer__link /o-nas O nás page']],
+    ['/kalendar', ['nav__link /kalendar Kalendár page', 'drawer__link /kalendar Kalendár page']],
     ['/', []],
   ];
   for (const [url, active] of cases) {
