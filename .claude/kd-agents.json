@@ -69,7 +69,30 @@
         "guide-link-previews"
       ],
       "note": "Kolo zastavené na pokyn Gethera (nápady a kritik). guide-link-previews kritik neprezrel – overené ručne (testy, build, nginx s user-agentom Discordbot). Mimo kola: šablóny eventov, nepravidelné eventy, 20 GH, kalendár eventov, vlastné časy v dňoch/h/min, prehľad pripomienok na /ucet."
+    },
+    {
+      "round": 5,
+      "date": "2026-10-10",
+      "shipped": [
+        "ux-analysis-doc",
+        "guides-hub",
+        "join-path-and-officer-focus",
+        "event-add-to-calendar",
+        "commander-finder"
+      ],
+      "approved_not_built": [
+        "guides-search",
+        "ics-calendar-feed",
+        "game-clock-reset",
+        "a11y-audit-axe",
+        "guide-related-and-share",
+        "calendar-event-link-previews"
+      ],
+      "deferred": [
+        "migration-status"
+      ],
+      "note": "Zameranie: UX analýza (docs/ux-analyza.md). Verzie v1.3.0–v1.4.0 (tagy v1.3.1 a v1.3.2 dorobené ručne). Mimo kola: pripomienka deň vopred o 18:00, Karuak Ceremony, návody bez F2P stĺpca so zostavami ako portréty (v1.2.x), kategória Tipy a triky (v1.5.0). Kritik: site_finished=true, zvyšok je nasadenie a obsah od Gethera."
     }
   ],
-  "next": "Spusti workflow kd-improve (scriptPath .claude/workflows/kd-improve.js) s args z .claude/kd-agents/next-round.json (doplň date). Nič nie je schválené na stavbu – kolo začne nápadmi (kandidáti: home-upcoming-events, discord-preview-and-test-send, admin-dashboard, ics-calendar-feed)."
+  "next": "Spusti workflow kd-improve (scriptPath .claude/workflows/kd-improve.js) s args z .claude/kd-agents/next-round.json (doplň date). Schválené na stavbu z kola 5: guides-search, ics-calendar-feed, game-clock-reset, a11y-audit-axe, guide-related-and-share, calendar-event-link-previews (zadania v docs/ux-analyza.md). Kritik v kole 5 uviedol site_finished=true – po tomto kole napísať docs/odporucania.md."
 }
