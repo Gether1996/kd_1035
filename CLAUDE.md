@@ -146,6 +146,10 @@ tools/test.sh [--ref <commit>] [backend [label…] | frontend [args…] | build 
 # screenshoty na viacerých rozlíšeniach (beží dev server) → tools/screenshots/out/; premenné v shoot.mjs
 tools/screenshots/shoot.sh [--player | --superuser] [PAGES=/,/cz/kalendar] [SIZES=…] [SELECTOR=…] [MEASURE=…]
 
+# audit prístupnosti (axe, WCAG 2.1 A/AA) všetkých stránok na 360 a 1280 vrátane dialógu eventu, hľadania commandera a mobilného menu;
+# exit 1 pri critical/serious, JSON → tools/a11y/out/; premenné v audit.mjs
+tools/a11y/audit.sh [--player | --superuser] [PAGES=…] [SIZES=…] [STATES=0]
+
 # pregenerovanie hero grafiky + og-image + ikon aplikácie
 docker build -t kd1035-artgen tools/background
 docker run --rm -v "$PWD:/work" kd1035-artgen --raster

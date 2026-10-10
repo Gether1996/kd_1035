@@ -28,6 +28,8 @@ Thumbs.db
 .idea/
 tools/screenshots/out/
 tools/screenshots/node_modules/
+tools/a11y/out/
+tools/a11y/node_modules/
 tools/youtube/out/
 
 # Database backups (worker)

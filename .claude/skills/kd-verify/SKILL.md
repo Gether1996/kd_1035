@@ -41,6 +41,16 @@ tools/screenshots/shoot.sh --player SHOT=0 PAGES=/,/cz SIZES=900x800,960x800,102
 ```
 Pass when: no `OVERFLOW` line, `.nav` right < `.account` x, and `.nav` x is the same signed in and out (the `.account` slot is fixed: 88 px from 900, 180 px from 1100). Below 900 px the burger menu takes over.
 
+## 4. Accessibility audit (optional, for UI changes: new dialog, form, colours, interactive widget)
+
+```bash
+tools/a11y/audit.sh --player                         # every page at 360 and 1280 + event dialog, commander finder, mobile menu, ~3 min
+tools/a11y/audit.sh PAGES=/kalendar SIZES=360x780    # while iterating
+```
+- axe-core with WCAG 2.1 A/AA tags against the dev site; prints one line per violated rule and exits 1 on any critical/serious one – fix those before committing. Moderate/minor go to `docs/backlog.md` → Odložené.
+- Full results (incl. axe's "incomplete" checks, e.g. contrast over gradients) in `tools/a11y/out/*.json`. A new interactive state goes into `STATE_LIST` in `tools/a11y/audit.mjs`.
+- Same test player as the screenshots (deleted at the end); same cleanup command if the script was killed.
+
 ## What to look at
 
 - Output lines `OVERFLOW` (page scrolls sideways), `PAGE ERROR`, `CONSOLE` – each one is a bug.
