@@ -1,13 +1,13 @@
-<!doctype html>{# guide link preview for Discord, Facebook and other bots without JavaScript (views.link_preview) #}
+<!doctype html>{# Open Graph page for Discord, Facebook and other bots without JavaScript: guides.views.link_preview, kingdom.preview.event_preview #}
 <html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
   <title>{{ page_title }}</title>
   <meta name="description" content="{{ description }}">
   <meta name="robots" content="noindex">
-  {% if guide %}<link rel="canonical" href="{{ url }}">{% endif %}
+  {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
   <meta name="theme-color" content="#f5c451">
-  <meta property="og:type" content="{% if guide %}article{% else %}website{% endif %}">
+  <meta property="og:type" content="{{ og_type }}">
   <meta property="og:site_name" content="Kingdom 1035">
   <meta property="og:title" content="{{ title }}">
   <meta property="og:description" content="{{ description }}">
@@ -17,7 +17,7 @@
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="{{ locale }}">
   <meta property="og:locale:alternate" content="{{ locale_alternate }}">
-  {% if guide %}<meta property="article:modified_time" content="{{ guide.updated_at|date:'c' }}">{% endif %}
+  {% if modified %}<meta property="article:modified_time" content="{{ modified|date:'c' }}">{% endif %}
   <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>

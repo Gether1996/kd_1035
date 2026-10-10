@@ -19,6 +19,13 @@ map $http_user_agent $kd_link_bot {
     ~*(discordbot|facebookexternalhit|facebot|twitterbot|slackbot|telegrambot|whatsapp|linkedinbot|skypeuripreview|redditbot|mastodon|embedly|pinterest) 1;
 }
 
+# A calendar link to one event (/kalendar?event=<id>&on=<day>, the "Copy link" button) gives preview bots the event's
+# name and date from Django (kingdom/preview.py); /kalendar without an event keeps the prerendered page and its meta.
+map "$kd_link_bot:$arg_event" $kd_event_preview {
+    default 0;
+    ~^1:[0-9]+$ 1;
+}
+
 # Access log without the visitor's IP address (the privacy page promises it). Both servers below use it; the
 # image's default `main` format is replaced, not doubled, because access_log is set on the server level.
 log_format kd_noip '[$time_local] "$request" $status $body_bytes_sent "$http_user_agent" $request_time';
@@ -92,6 +99,18 @@ server {
             rewrite ^/(.*)$ /api/link-preview/$1 last;
         }
         try_files /index.csr.html =404;
+        add_header Cache-Control "no-cache";
+        add_header Vary "User-Agent";
+        include /etc/nginx/snippets/security-headers.conf;
+    }
+
+    # the calendar: a copy of `location /` below, except that a preview bot asking for one event gets Django's
+    # /api/link-preview/[cz/]kalendar page (the query string stays) and the answer varies by User-Agent
+    location ~ ^/(cz/)?kalendar/?$ {
+        if ($kd_event_preview) {
+            rewrite ^/(.*?)/?$ /api/link-preview/$1 last;
+        }
+        try_files $uri $uri/index.html =404;
         add_header Cache-Control "no-cache";
         add_header Vary "User-Agent";
         include /etc/nginx/snippets/security-headers.conf;

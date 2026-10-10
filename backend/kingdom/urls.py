@@ -1,6 +1,6 @@
-from django.urls import path
+from django.urls import path, re_path
 
-from . import manage_api, views
+from . import manage_api, preview, views
 
 urlpatterns = [
     path('health/', views.health),
@@ -12,4 +12,7 @@ urlpatterns = [
     path('events/manage/', manage_api.event_list),
     path('events/manage/<int:pk>/', manage_api.event_detail),
     path('events/manage/<int:pk>/date/', manage_api.irregular_date),
+    # nginx rewrites /[cz/]kalendar?event=<id> here for link-preview bots; kingdom.urls is included before
+    # guides.urls, so this wins over guides' catch-all link-preview/<path>
+    re_path(r'^link-preview/(?P<cz>cz/)?kalendar/?$', preview.event_preview),
 ]

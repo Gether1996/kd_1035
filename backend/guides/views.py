@@ -35,6 +35,31 @@ SITE_META = {
         'Discord a pomoc nováčkům.',
     ),
 }
+# Calendar page title and description (seo.calendar in sk.ts and cs.ts): the preview of an unknown or hidden event
+CALENDAR_META = {
+    'sk': (
+        'Kalendár eventov · KD 1035 Rise of Kingdoms CZ/SK',
+        'Všetky eventy slovensko-českého kráľovstva KD 1035 v Rise of Kingdoms na jednom mieste – v tvojom čase aj '
+        'v hernom čase UTC.',
+    ),
+    'cs': (
+        'Kalendář eventů · KD 1035 Rise of Kingdoms CZ/SK',
+        'Všechny eventy česko-slovenského království KD 1035 v Rise of Kingdoms na jednom místě – ve tvém čase i '
+        'v herním čase UTC.',
+    ),
+}
+# Description of an event's preview (kingdom.preview): a run with its date / an event without one. Only here – the
+# web says the same with calendar.intro and calendar.irregularText in sk.ts and cs.ts; keep the tone in sync.
+EVENT_META = {
+    'sk': (
+        'Kalendár eventov KD 1035 – termín v tvojom čase a pripomienka na Discorde.',
+        'Ďalší termín oznámime v kalendári KD 1035.',
+    ),
+    'cs': (
+        'Kalendář eventů KD 1035 – termín ve tvém čase a připomínka na Discordu.',
+        'Další termín oznámíme v kalendáři KD 1035.',
+    ),
+}
 
 
 class GuideList(ListAPIView):
@@ -111,29 +136,48 @@ def link_preview(request, path):
     guide = Guide.objects.filter(is_published=True, slug=match[3]).first() if match else None
 
     site_title, site_description = SITE_META[lang]
-    if guide:
-        title = guide.title_cs if lang == 'cs' and guide.title_cs else guide.title_sk
-        description = guide.excerpt(lang) or site_description
-        url = origin + prefix + guide.get_absolute_url()
-    else:
+    if not guide:
         # unknown, unpublished or malformed address: nothing about the guide, only the site itself
-        title, description, url = site_title, site_description, origin + (prefix or '/')
+        return preview_page(
+            request, lang, origin, 404, title=site_title, description=site_description, url=origin + (prefix or '/')
+        )
 
+    title = guide.title_cs if lang == 'cs' and guide.title_cs else guide.title_sk
+    url = origin + prefix + guide.get_absolute_url()
+    return preview_page(
+        request,
+        lang,
+        origin,
+        200,
+        title=title,
+        page_title=f'{title} | KD 1035',
+        description=guide.excerpt(lang) or site_description,
+        url=url,
+        canonical=url,
+        og_type='article',
+        modified=guide.updated_at,
+    )
+
+
+def preview_page(request, lang: str, origin: str, status: int, **context):
+    """link_preview.html (Open Graph tags for link-preview bots) with the headers every preview needs.
+
+    `context` gives title, description and url; page_title (default: title), og_type (website), canonical and
+    modified are optional. Shared by guide and calendar event previews (kingdom.preview).
+    """
     context = {
         'lang': lang,
-        'guide': guide,
-        'title': title,
-        'page_title': f'{title} | KD 1035' if guide else title,
-        'description': description,
-        'url': url,
+        'page_title': context['title'],
+        'og_type': 'website',
         'image': f'{origin}/og-image.jpg',
         'locale': 'cs_CZ' if lang == 'cs' else 'sk_SK',
         'locale_alternate': 'sk_SK' if lang == 'cs' else 'cs_CZ',
+        **context,
     }
-    response = render(request, 'guides/link_preview.html', context, status=200 if guide else 404)
+    response = render(request, 'link_preview.html', context, status=status)
     response['Cache-Control'] = 'public, max-age=300'
     # bot-only HTML must never compete with the real page in search results
     response['X-Robots-Tag'] = 'noindex'
-    # served under the public guide address to bots only (shared caches must not hand it to browsers)
+    # served under the public page address to bots only (shared caches must not hand it to browsers)
     patch_vary_headers(response, ['User-Agent'])
     return response
