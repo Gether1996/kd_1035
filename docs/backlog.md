@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **10. 10. 2026 – v1.5.2:** na konci návodu „Súvisiace návody“ (napr. Páry pre jazdu → Výbava pre jazdu) a tlačidlo „Kopírovať odkaz“ – odkaz na návod do Discordu jedným ťuknutím aj na mobile.
 - **10. 10. 2026 – v1.5.1:** zdieľaný odkaz (`/kalendar?event=…&on=…`, `/navody?commander=…`) si pri presmerovaní na zapamätaný jazyk aj pri prepnutí SK/CZ nechá parametre – český hráč z Discordu uvidí event aj páry commandera.
 - **10. 10. 2026 – v1.5.0:** nová kategória návodov **Tipy a triky** (`/navody/tipy`) s prvým návodom Speedupy za nepotrebné siege jednotky; karty návodov na úvode 1 / 2 / 4 v rade.
 - **10. 10. 2026 – kolo 5, UX analýza** (`docs/ux-analyza.md`): prečo web používať, čo chýba, poradie nápadov kola 5 (bez zmeny verzie).
