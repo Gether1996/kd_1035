@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18n, Lang } from '../../core/i18n/i18n';
 
-/** SK / CZ toggle. Real links to the same page in the other language (crawlable, keeps the section). */
+/** SK / CZ toggle. Real links to the same page in the other language (crawlable, keeps the section and the query). */
 @Component({
   selector: 'app-lang-switch',
   imports: [RouterLink],
@@ -13,6 +13,7 @@ import { I18n, Lang } from '../../core/i18n/i18n';
         <a
           [routerLink]="i18n.switchPath(option.lang)"
           [preserveFragment]="true"
+          queryParamsHandling="preserve"
           [attr.hreflang]="option.lang"
           [attr.lang]="option.lang"
           [attr.aria-current]="i18n.lang() === option.lang ? 'true' : null"

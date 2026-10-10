@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Seo } from './seo';
 
 describe('Seo', () => {
@@ -15,7 +15,7 @@ describe('Seo', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([{ path: '**', children: [] }])],
     });
     seo = TestBed.inject(Seo);
   });
@@ -50,5 +50,17 @@ describe('Seo', () => {
     expect(robots()).toBeNull();
     expect(canonical()?.getAttribute('href')).toMatch(/\/$/);
     expect(hreflangs()).toEqual(['sk', 'cs', 'x-default']);
+  });
+
+  it('keeps the query of a shared link out of canonical and hreflang', async () => {
+    await TestBed.inject(Router).navigateByUrl('/kalendar?event=5&on=2026-10-14#top');
+    TestBed.tick();
+    const hrefs = Array.from(
+      head().querySelectorAll('link[rel="canonical"], link[rel="alternate"][hreflang]'),
+      (el) => el.getAttribute('href'),
+    );
+    expect(hrefs.length).toBe(4);
+    for (const href of hrefs) expect(href).toMatch(/\/(cz\/)?kalendar$/);
+    expect(head().querySelector('meta[property="og:url"]')?.getAttribute('content')).toMatch(/\/kalendar$/);
   });
 });

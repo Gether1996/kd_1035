@@ -70,10 +70,12 @@ export class App {
     });
 
     afterNextRender(() => {
-      // returning visitors get the language they chose last time (Czech browsers default to CZ)
+      // returning visitors get the language they chose last time (Czech browsers default to CZ);
+      // a shared link keeps its query (/kalendar?event=12&on=… opens the event in CZ too)
       const preferred = this.i18n.preferred();
       if (preferred && preferred !== this.i18n.lang()) {
-        router.navigateByUrl(this.i18n.switchPath(preferred) + location.hash, { replaceUrl: true });
+        const url = this.i18n.switchPath(preferred) + location.search + location.hash;
+        router.navigateByUrl(url, { replaceUrl: true });
       }
     });
   }

@@ -94,7 +94,11 @@ export class I18n {
     return `${PREFIX[lang]}/navody/${category}${slug ? `/${slug}` : ''}`;
   }
 
-  /** The page currently shown, in `lang` – used by the language switch and hreflang links. */
+  /**
+   * The page currently shown, in `lang` – used by the language switch and hreflang links.
+   * Path only, on purpose: canonical, hreflang and the login `next` must never carry a query.
+   * Callers that keep a shared link's parameters add them themselves (language switch, preferred-language redirect).
+   */
   switchPath(lang: Lang): string {
     return PREFIX[lang] + this.route().rest || '/';
   }
