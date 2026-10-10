@@ -329,4 +329,58 @@ describe('Calendar', () => {
     expect(el().querySelector('.day__add')).toBeNull();
     expect(el().querySelector('app-events-panel')).toBeNull();
   });
+
+  describe('"Odber kalendára"', () => {
+    const section = () => el().querySelector<HTMLElement>('.subscribe')!;
+    const feed = (lang: string) => `${location.origin}/api/calendar.ics?lang=${lang}`;
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('subscribes through webcal:// and copies the https address', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+      await render({ login_enabled: false, user: null });
+      expect(section().querySelector('h2')?.textContent).toContain('Odber kalendára');
+      const [add, copy] = section().querySelectorAll<HTMLElement>('.pill-btn');
+      expect(add.textContent).toContain('Pridať do kalendára');
+      expect(add.getAttribute('href')).toBe(`webcal://${location.host}/api/calendar.ics?lang=sk`);
+      expect(copy.textContent).toContain('Kopírovať odkaz');
+
+      copy.click();
+      expect(writeText).toHaveBeenCalledWith(feed('sk'));
+      await fixture.whenStable();
+      expect(section().querySelector('[role="status"]')?.textContent).toContain('Odkaz skopírovaný');
+      expect(section().querySelector('.subscribe__manual')).toBeNull();
+    });
+
+    it('shows the address to copy by hand without clipboard and share sheet', async () => {
+      vi.stubGlobal('navigator', {});
+      await render({ login_enabled: false, user: null });
+      section().querySelector<HTMLButtonElement>('button')!.click();
+      await fixture.whenStable();
+      const input = section().querySelector<HTMLInputElement>('.subscribe__manual input');
+      expect(input?.value).toBe(feed('sk'));
+      expect(input?.readOnly).toBe(true);
+    });
+
+    it('stays when the calendar fails to load', async () => {
+      await render({ login_enabled: false, user: null }, 'error');
+      expect(section()).not.toBeNull();
+    });
+
+    it('the Czech page subscribes to the Czech feed', async () => {
+      const router = TestBed.inject(Router);
+      router.resetConfig([{ path: '**', children: [] }]);
+      await router.navigateByUrl('/cz/kalendar');
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+      await render({ login_enabled: false, user: null });
+      expect(section().querySelector('h2')?.textContent).toContain('Odběr kalendáře');
+      expect(section().querySelector('a')?.getAttribute('href')).toBe(
+        `webcal://${location.host}/api/calendar.ics?lang=cs`,
+      );
+      section().querySelector<HTMLButtonElement>('button')!.click();
+      expect(writeText).toHaveBeenCalledWith(feed('cs'));
+    });
+  });
 });

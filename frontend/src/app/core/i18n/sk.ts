@@ -259,6 +259,15 @@ export const sk = {
       google: 'Google Kalendár',
       ics: 'iPhone, Outlook (.ics)',
     },
+    subscribe: {
+      title: 'Odber kalendára',
+      text: 'Všetky eventy kráľovstva v kalendári v mobile, aktualizujú sa samy.',
+      add: 'Pridať do kalendára',
+      copy: 'Kopírovať odkaz',
+      copied: 'Odkaz skopírovaný',
+      copyFailed: 'Skopíruj odkaz ručne:',
+      hint: 'V Google Kalendári pridaj kalendár z adresy URL a vlož skopírovaný odkaz.',
+    },
     remind: {
       title: 'Pripomienky',
       channels: 'Prídu ti ako súkromná správa od bota na Discorde. Všetky máš na stránke',

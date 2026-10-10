@@ -1,0 +1,94 @@
+:host {
+  display: block;
+}
+
+.subscribe {
+  display: grid;
+  margin-top: 28px;
+  padding: 18px clamp(16px, 3vw, 24px) 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.subscribe__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+
+  .icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--gold-400);
+  }
+}
+
+.subscribe__text p {
+  margin-top: 6px;
+  color: var(--text-dim);
+}
+
+.subscribe__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+
+  // both equally prominent; on a narrow phone the label may wrap instead of overflowing
+  .pill-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-block: 8px;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+// "Odkaz skopírovaný" – empty until a copy succeeds; never display: none, so screen readers announce it
+.subscribe__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gold-300);
+
+  &:has(.icon) {
+    margin-top: 12px;
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.subscribe__manual {
+  margin-top: 12px;
+}
+
+.subscribe__hint {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+// text on the left, the two buttons on the right
+@media (min-width: 900px) {
+  .subscribe {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 32px;
+    align-items: center;
+
+    > :not(.subscribe__text, .subscribe__actions) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .subscribe__actions {
+    margin-top: 0;
+    flex-wrap: nowrap;
+  }
+}

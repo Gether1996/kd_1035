@@ -1,0 +1,29 @@
+@let c = i18n.t().calendar.subscribe;
+
+<section class="subscribe" aria-labelledby="subscribe-title">
+  <div class="subscribe__text">
+    <h2 class="subscribe__title" id="subscribe-title">
+      <svg appIcon="calendar-days"></svg>{{ c.title }}
+    </h2>
+    <p>{{ c.text }}</p>
+  </div>
+  <div class="subscribe__actions">
+    <a class="pill-btn" [href]="subscribeUrl()"> <svg appIcon="calendar-plus"></svg>{{ c.add }} </a>
+    <button type="button" class="pill-btn" (click)="copy()">
+      <svg appIcon="link"></svg>{{ c.copy }}
+    </button>
+  </div>
+  <!-- always in the DOM, so screen readers announce the change -->
+  <p class="subscribe__status" role="status">
+    @if (copied()) {
+      <svg appIcon="check"></svg> {{ c.copied }}
+    }
+  </p>
+  @if (manualUrl(); as url) {
+    <label class="field subscribe__manual">
+      <span class="field__label">{{ c.copyFailed }}</span>
+      <input #manual class="input" type="url" readonly [value]="url" (focus)="manual.select()" />
+    </label>
+  }
+  <p class="subscribe__hint">{{ c.hint }}</p>
+</section>

@@ -258,6 +258,15 @@ export const cs: Dict = {
       google: 'Google Kalendář',
       ics: 'iPhone, Outlook (.ics)',
     },
+    subscribe: {
+      title: 'Odběr kalendáře',
+      text: 'Všechny eventy království v kalendáři v mobilu, aktualizují se samy.',
+      add: 'Přidat do kalendáře',
+      copy: 'Kopírovat odkaz',
+      copied: 'Odkaz zkopírován',
+      copyFailed: 'Zkopíruj odkaz ručně:',
+      hint: 'V Google Kalendáři přidej kalendář z adresy URL a vlož zkopírovaný odkaz.',
+    },
     remind: {
       title: 'Připomínky',
       channels: 'Přijdou ti jako soukromá zpráva od bota na Discordu. Všechny máš na stránce',

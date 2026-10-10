@@ -33,6 +33,7 @@ import { calendarQuery, runsOn, validDay } from './deep-link';
 import { EventEditor } from './admin/event-editor';
 import { EventsPanel } from './admin/events-panel';
 import { EventDialog, RemindState } from './event-dialog';
+import { Subscribe } from './subscribe';
 import {
   Month,
   Week,
@@ -62,7 +63,16 @@ const ACCENTS = ['gold', 'red', 'navy'] as const;
  */
 @Component({
   selector: 'app-calendar',
-  imports: [Icon, EventIcon, PageHeader, EventDialog, EventsPanel, EventEditor, DateDialog],
+  imports: [
+    Icon,
+    EventIcon,
+    PageHeader,
+    EventDialog,
+    EventsPanel,
+    EventEditor,
+    DateDialog,
+    Subscribe,
+  ],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
