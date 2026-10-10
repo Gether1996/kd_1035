@@ -89,8 +89,6 @@ GUIDES = [
             ]),
             ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
             ('ul', [
-                t('Farma má v oboch príkladoch zhruba 7 % jednotiek. Damage však závisí aj od commanderov – ak main maximum nedostal, pošli nabudúce z farmy menej.',
-                  'Farma má v obou příkladech zhruba 7 % jednotek. Damage ale závisí i na commanderech – pokud main maximum nedostal, pošli příště z farmy méně.'),
                 t('S veľkou armádou na forte sa hospital plní rýchlejšie. Za to dostaneš veľa speedupov.',
                   'S velkou armádou na fortu se hospital plní rychleji. Za to dostaneš hodně speedupů.'),
             ]),
