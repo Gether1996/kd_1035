@@ -100,6 +100,7 @@ class RemindersApiTests(ApiTestCase):
                         'name_cs': 'KvK CZ',
                         'icon': None,
                         'next_start': '2026-10-09T19:00:00Z',
+                        'running_until': None,
                         'repeat_days': 0,
                         'duration_minutes': 60,
                         'irregular': False,
@@ -112,6 +113,7 @@ class RemindersApiTests(ApiTestCase):
                         'name_cs': '',
                         'icon': None,
                         'next_start': '2026-10-10T18:00:00Z',
+                        'running_until': None,
                         'repeat_days': 7,
                         'duration_minutes': 60,
                         'irregular': False,
@@ -153,6 +155,14 @@ class RemindersApiTests(ApiTestCase):
         events = self.client.get(self.url).json()['events']
         self.assertEqual([e['id'] for e in events], [planned.pk, waiting.pk])  # planned first
         self.assertEqual((events[1]['next_start'], events[1]['irregular']), (None, True))
+        self.assertIsNone(events[1]['running_until'])
+        # Alliance Mobilization mid-week: no next date, but it runs now (5.–12. 10., now is 8. 10.)
+        running = make_event(
+            name_sk='Alliance Mobilization', starts_at=utc(2026, 10, 5), duration_minutes=7 * 24 * 60, repeat_days=0,
+            irregular=True,
+        )
+        row = next(e for e in self.client.get(self.url).json()['events'] if e['id'] == running.pk)
+        self.assertEqual((row['next_start'], row['running_until']), (None, '2026-10-12T00:00:00Z'))
         # players pick it in advance
         self.assertEqual(self.send('put', f'{self.url}{waiting.pk}/', {'offsets': [15]}).status_code, 200)
         # leadership sets the next date: it moves up like any other event

@@ -13,6 +13,8 @@ export interface ReminderEvent {
   icon: string | null;
   /** next start, ISO 8601 in UTC; null = an irregular event without a next date yet */
   next_start: string | null;
+  /** an irregular event without a next date that is running now: its end (ISO 8601 UTC), else null */
+  running_until: string | null;
   /** 0 = one-off */
   repeat_days: number;
   /** 0 = no end */

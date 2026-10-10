@@ -75,6 +75,7 @@ const SETTINGS: ReminderSettings = {
       name_cs: '',
       icon: null,
       next_start: SILK_ROAD.start,
+      running_until: null,
       repeat_days: 0,
       duration_minutes: 60,
       irregular: true,

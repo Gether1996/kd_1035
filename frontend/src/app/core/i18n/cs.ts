@@ -213,14 +213,14 @@ export const cs: Dict = {
       {
         title: 'Jak to u nás funguje',
         paragraphs: [
-          'Království má jednu hlavní alianci – [CS35] CZ/SK Legends. Vede ji král spolu se svými R4. Důležité informace, plány na KvK a eventy sdílíme na Discordu, aby měl každý přehled i tehdy, když zrovna není ve hře.',
+          'Království má jednu hlavní alianci – [CS35] CZ/SK Legends. Vede ji vůdce spolu se svými R4. Důležité informace, plány na KvK a eventy sdílíme na Discordu, aby měl každý přehled i tehdy, když zrovna není ve hře.',
         ],
         list: [],
       },
     ],
     migration: {
       title: 'Migrace do KD 1035',
-      text: 'Chceš se k nám přesunout? Migrace je možná pouze po předchozí domluvě s vedením království. Ozvi se nám na Discordu, řekni nám něco o svém účtu a společně najdeme alianci, která ti sedne.',
+      text: 'Chceš se k nám přesunout? Migrace je možná pouze po předchozí domluvě s vedením království. Ozvi se nám na Discordu, řekni nám něco o svém účtu a domluvíme se, kdy a jak se přesuneš.',
       steps: [
         'Přidej se na náš Discord.',
         'Napiš R4 nebo vedení království.',

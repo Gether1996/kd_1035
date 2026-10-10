@@ -16,6 +16,7 @@ const SETTINGS: ReminderSettings = {
       name_cs: '',
       icon: null,
       next_start: '2026-10-10T18:00:00Z',
+      running_until: null,
       repeat_days: 7,
       duration_minutes: 60,
       irregular: false,

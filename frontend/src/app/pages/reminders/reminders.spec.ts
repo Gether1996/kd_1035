@@ -15,6 +15,7 @@ const event = (id: number, changes: Partial<ReminderEvent>): ReminderEvent => ({
   name_cs: '',
   icon: null,
   next_start: '2026-10-10T18:00:00Z',
+  running_until: null,
   repeat_days: 7,
   duration_minutes: 2880,
   irregular: false,
@@ -38,6 +39,7 @@ const SETTINGS: ReminderSettings = {
     event(3, {
       name_sk: 'Silk Road',
       next_start: null,
+      running_until: null,
       repeat_days: 0,
       irregular: true,
       offsets: [0, 15],
@@ -93,6 +95,19 @@ describe('Reminders on /pripomienky', () => {
     );
     expect(text(rows[1].querySelector('app-event-icon'))).toBe('SR');
     expect(text(el.querySelector('#mine-title .group__count'))).toBe('2');
+  });
+
+  it('an irregular event running now says so instead of "termín oznámime", like the calendar', async () => {
+    const running = event(4, {
+      name_sk: 'Alliance Mobilization',
+      next_start: null,
+      running_until: '2026-10-12T09:00:00Z',
+      repeat_days: 0,
+      irregular: true,
+      offsets: [EVENING_BEFORE],
+    });
+    const { el } = await render({ ...SETTINGS, events: [running] });
+    expect(text(mine(el)[0].querySelector('.mine__when'))).toBe('Prebieha · do po 12. 10.');
   });
 
   it('the clock only for a short irregular event, not for one running for days', async () => {

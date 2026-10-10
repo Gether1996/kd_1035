@@ -5,7 +5,7 @@ shown on the web; the worker sends the reminders (reminders.py).
 """
 
 import logging
-from datetime import UTC
+from datetime import UTC, timedelta
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from kingdom.event_icons import icon_url
-from kingdom.events import upcoming
+from kingdom.events import overlapping, upcoming
 from kingdom.models import KingdomEvent
 
 from . import discord_bot
@@ -87,13 +87,29 @@ def next_start(event: KingdomEvent, now):
     return dates[0] if dates else None
 
 
-def event_data(event: KingdomEvent, offsets: list | None, start) -> dict:
+def iso(moment):
+    return moment.astimezone(UTC).isoformat().replace('+00:00', 'Z')
+
+
+def running_until(event: KingdomEvent, now):
+    """End of the irregular event's run going on right now (Alliance Mobilization mid-week), else None – without it
+    /pripomienky would say "termín oznámime" while the calendar says "Prebieha"."""
+    if not event.irregular or not event.duration_minutes:
+        return None
+    begin = next(overlapping(event, now, now + timedelta(microseconds=1)), None)
+    return begin + timedelta(minutes=event.duration_minutes) if begin and begin <= now else None
+
+
+def event_data(event: KingdomEvent, offsets: list | None, start, now=None) -> dict:
+    end = None if start else running_until(event, now or timezone.now())
     return {
         'id': event.pk,
         'name_sk': event.name_sk,
         'name_cs': event.name_cs,
         'icon': icon_url(event.icon),
-        'next_start': start.astimezone(UTC).isoformat().replace('+00:00', 'Z') if start else None,
+        'next_start': iso(start) if start else None,
+        # an irregular event without a next date that is running now: its end
+        'running_until': iso(end) if end else None,
         'repeat_days': event.repeat_days,
         # 0 = no end; the website shows the clock only for a short irregular event
         'duration_minutes': event.duration_minutes,
@@ -123,7 +139,7 @@ def reminders(request):
     starts = [(next_start(event, now), event) for event in visible_events()]
     planned = sorted((pair for pair in starts if pair[0]), key=lambda pair: pair[0])
     waiting = sorted((pair for pair in starts if not pair[0] and pair[1].irregular), key=lambda pair: pair[1].name_sk)
-    events = [event_data(event, chosen.get(event.pk), start) for start, event in planned + waiting]
+    events = [event_data(event, chosen.get(event.pk), start, now) for start, event in planned + waiting]
     return Response(
         {
             'discord': player.remind_discord,

@@ -214,14 +214,14 @@ export const sk = {
       {
         title: 'Ako to u nás funguje',
         paragraphs: [
-          'Kráľovstvo má jednu hlavnú alianciu – [CS35] CZ/SK Legends. Vedie ju kráľ spolu so svojimi R4. Dôležité informácie, plány na KvK a eventy zdieľame na Discorde, aby mal každý prehľad aj vtedy, keď práve nie je v hre.',
+          'Kráľovstvo má jednu hlavnú alianciu – [CS35] CZ/SK Legends. Vedie ju vodca spolu so svojimi R4. Dôležité informácie, plány na KvK a eventy zdieľame na Discorde, aby mal každý prehľad aj vtedy, keď práve nie je v hre.',
         ],
         list: [],
       },
     ],
     migration: {
       title: 'Migrácia do KD 1035',
-      text: 'Chceš sa presunúť k nám? Migrácia je možná iba po predchádzajúcej dohode s vedením kráľovstva. Ozvi sa nám na Discorde, povedz nám niečo o svojom účte a spoločne nájdeme alianciu, ktorá ti sadne.',
+      text: 'Chceš sa presunúť k nám? Migrácia je možná iba po predchádzajúcej dohode s vedením kráľovstva. Ozvi sa nám na Discorde, povedz nám niečo o svojom účte a dohodneme sa, kedy a ako sa presunieš.',
       steps: [
         'Pridaj sa na náš Discord.',
         'Napíš R4 alebo vedeniu kráľovstva.',

@@ -166,6 +166,13 @@ export class Reminders {
   /** "pi 16. 10." – with "20:00 · UTC 18:00" in the player's own time zone only for a short irregular event
    *  (the year only when it is not this one) */
   protected when(event: ReminderEvent): string {
+    if (!event.next_start && event.running_until) {
+      // like the calendar: "Prebieha · do po 12. 10."
+      const c = this.i18n.t().calendar;
+      const end = new Date(event.running_until);
+      const weekday = new Intl.DateTimeFormat(this.i18n.locale(), { weekday: 'short' }).format(end);
+      return `${c.running} · ${c.until.replace('{date}', `${weekday} ${end.getDate()}. ${end.getMonth() + 1}.`)}`;
+    }
     if (!event.next_start) return this.t().noDate;
     const start = new Date(event.next_start);
     const locale = this.i18n.locale();
