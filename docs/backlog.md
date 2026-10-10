@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **10. 10. 2026 – v1.6.2:** odkaz na event z kalendára ukáže na Discorde a Facebooku názov a termín eventu (napr. „Ark of Osiris · 14.–18. 10. 2026“), nie všeobecnú kartu kalendára.
 - **10. 10. 2026 – v1.6.1:** v dialógu eventu v kalendári tlačidlo „Kopírovať odkaz na event“ – odkaz otvorí ten istý mesiac s otvoreným dialógom (napr. Ark of Osiris do Discordu).
 - **10. 10. 2026 – v1.6.0:** odber kalendára – všetky eventy kráľovstva v kalendári v mobile (Google, iPhone, Outlook) jedným odkazom, aktualizujú sa samy; na `/kalendar` blok „Odber kalendára“ (Pridať do kalendára, Kopírovať odkaz).
 - **10. 10. 2026 – v1.5.2:** na konci návodu „Súvisiace návody“ (napr. Páry pre jazdu → Výbava pre jazdu) a tlačidlo „Kopírovať odkaz“ – odkaz na návod do Discordu jedným ťuknutím aj na mobile.
@@ -38,7 +39,6 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 - `guides-search` Vyhľadávanie a filter v návodoch – schválené (`fold()` už je v `shared/search.ts`; čipy len so špecializáciami z dát, bez skoku hore pri zmene query).
 - `guide-related-and-share` Súvisiace návody + „Kopírovať odkaz“ na konci návodu – upraviť: clipboard → fallback `navigator.share`, helper `shared/copy-link.ts`, overiť špecializácie výbavy v `guides/meta`, sekcia až po načítaní.
-- `calendar-event-link-previews` Náhľad odkazu na event na Discorde – upraviť: builder v `kingdom/preview.py`, presne ukotvený nginx regex s `$args`, testy proti úniku skrytých eventov.
 - `game-clock-reset` Herný čas UTC a odpočet do resetu – schválené, iba na `/kalendar` vedľa riadku s časovou zónou.
 - `a11y-audit-axe` Audit prístupnosti (axe) – schválené, len critical/serious, vrátane `/navody` a comboboxu hľadania commandera.
 - `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
