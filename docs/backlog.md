@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **10. 10. 2026 – v1.5.1:** zdieľaný odkaz (`/kalendar?event=…&on=…`, `/navody?commander=…`) si pri presmerovaní na zapamätaný jazyk aj pri prepnutí SK/CZ nechá parametre – český hráč z Discordu uvidí event aj páry commandera.
 - **10. 10. 2026 – v1.5.0:** nová kategória návodov **Tipy a triky** (`/navody/tipy`) s prvým návodom Speedupy za nepotrebné siege jednotky; karty návodov na úvode 1 / 2 / 4 v rade.
 - **10. 10. 2026 – kolo 5, UX analýza** (`docs/ux-analyza.md`): prečo web používať, čo chýba, poradie nápadov kola 5 (bez zmeny verzie).
 - **10. 10. 2026 – v1.4.0:** na `/navody` blok „Nájdi pár pre commandera“ – napíšeš meno commandera a uvidíš, s kým ho párujú naše návody (ako primárny, sekundárny, na koho sa sústrediť), s portrétmi a odkazom na návod.
@@ -39,7 +40,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - `game-clock-reset` Herný čas UTC a odpočet do resetu – schválené, iba na `/kalendar` vedľa riadku s časovou zónou.
 - `a11y-audit-axe` Audit prístupnosti (axe) – schválené, len critical/serious, vrátane `/navody` a comboboxu hľadania commandera.
 - `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
-- Drobnosti z kola 5: tagy `v1.3.1` a `v1.3.2` chýbajú na origin; prepínač jazyka stratí `?commander=`; portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.
+- Drobnosti z kola 5: tagy `v1.3.1` a `v1.3.2` chýbajú na origin; portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.
 - Testovacie odoslanie Discord notifikácie do súkromného kanála – schválené, čaká na `DISCORD_TEST_WEBHOOK_URL`.
 - Týždenný prehľad eventov na Discorde – až po zapnutí rotácie a súhlase Gethera.
 - Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
