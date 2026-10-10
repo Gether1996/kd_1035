@@ -19,7 +19,6 @@ import {
   Occurrence,
   PublicEvent,
   eventName,
-  isOccurrence,
 } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { RemindersApi } from '../../core/reminders-api';
@@ -29,7 +28,7 @@ import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { repeatLabel } from '../reminders/format';
 import { DateDialog } from './admin/date-dialog';
-import { calendarQuery, runsOn, validDay } from './deep-link';
+import { eventLink, runsOn, validDay } from './deep-link';
 import { EventEditor } from './admin/event-editor';
 import { EventsPanel } from './admin/events-panel';
 import { EventDialog, RemindState } from './event-dialog';
@@ -421,7 +420,6 @@ export class Calendar {
 
   /** a run comes back to its own month (?on=), an irregular event without a date only by its id */
   private returnPath(item: PublicEvent): string {
-    const query = isOccurrence(item) ? calendarQuery(item, new Date()) : { event: item.id };
-    return `${this.i18n.path('calendar')}?${new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)]))}`;
+    return this.i18n.path('calendar') + eventLink(item, new Date());
   }
 }

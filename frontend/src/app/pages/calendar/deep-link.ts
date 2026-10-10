@@ -1,4 +1,4 @@
-import { Occurrence } from '../../core/events-api';
+import { Occurrence, PublicEvent } from '../../core/events-api';
 import { DayKey, dayKey, keyDate } from './month';
 
 /** The kingdom's days – `on` in a calendar link is a day here, like the days of /api/events/. */
@@ -11,6 +11,18 @@ export function calendarQuery(item: Pick<Occurrence, 'id' | 'start'>, now: Date)
   const first = dayKey(new Date(item.start), KINGDOM_ZONE);
   const today = dayKey(now, KINGDOM_ZONE);
   return { event: item.id, on: first > today ? first : today };
+}
+
+/** The query part of a link to an event's dialog: `?event=<id>&on=<day>` for a run (calendarQuery), `?event=<id>`
+ * for an irregular event still without a date. Put after `i18n.path('calendar')` – the login return, the link in a
+ * calendar export and "Kopírovať odkaz na event" all use it. */
+export function eventLink(
+  item: Pick<PublicEvent, 'id'> & { start?: string | null },
+  now: Date,
+): string {
+  if (!item.start) return `?event=${item.id}`;
+  const { event, on } = calendarQuery({ id: item.id, start: item.start }, now);
+  return `?event=${event}&on=${on}`;
 }
 
 /** `on` from the address when it is a real day, otherwise null (the calendar then opens the current month). */
