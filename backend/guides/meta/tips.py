@@ -8,15 +8,15 @@ named only in the sources list, never in the text (Gether, 10. 10. 2026).
 from .render import t
 
 CATEGORY = 'tipy'
-# year-month of the source a trick was checked against – "Stav k augustu 2025"; a guide may set its own 'verified'
-VERIFIED = '2025-08'
+# no "Stav k …" and no dates in tips and tricks (Gether, 10. 10. 2026)
+VERIFIED = None
 NOTE = t('Triky fungujú, kým ich Lilith nezmení – pred väčšou akciou ich over na malom počte jednotiek.',
          'Triky fungují, dokud je Lilith nezmění – před větší akcí je ověř na malém počtu jednotek.')  # fmt: skip
 
-CH_SIEGE = ('WarDaddyChadski: 52 Days of Speed Ups For Free? Use this Old Trick (08/2025)',
+CH_SIEGE = ('WarDaddyChadski: 52 Days of Speed Ups For Free? Use this Old Trick',
             'https://www.youtube.com/watch?v=h1PRC3mPSSI')  # fmt: skip
 # no published source – Gether's own routine, confirmed in game (10. 10. 2026)
-GETHER = (t('Gether, R4 KD 1035 – overené v hre (10/2026)', 'Gether, R4 KD 1035 – ověřeno ve hře (10/2026)'), '')
+GETHER = (t('Gether, R4 KD 1035 – overené v hre', 'Gether, R4 KD 1035 – ověřeno ve hře'), '')
 
 GUIDES = [
     {
@@ -66,7 +66,6 @@ GUIDES = [
         # confirmed in game by Gether (10. 10. 2026): the account with 90 %+ of the damage gets the full rewards;
         # his split: main 210k + farm 15k, or farm 20k + main 240k; the fort level does not matter
         'slug': 'maximum-speedupov-z-fortov',
-        'verified': '2026-10',
         'title': t('Maximum speedupov z fortov s vlastnou farmou', 'Maximum speedupů z fortů s vlastní farmou'),
         'blocks': [
             ('p', t(

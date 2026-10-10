@@ -162,7 +162,10 @@ def _with_icons(kind, icons, html):
 
 
 def verified_note(verified, note):
-    """('2026-10', t('Meta sa mení…', …)) → t('Stav k októbru 2026. Meta sa mení…', …)"""
+    """('2026-10', t('Meta sa mení…', …)) → t('Stav k októbru 2026. Meta sa mení…', …); None = the note alone
+    (tips and tricks have no dates, Gether 10. 10. 2026)"""
+    if verified is None:
+        return note
     year, month = (int(part) for part in verified.split('-'))
     return {lang: f'{LABELS[lang]["state"]} {MONTHS[lang][month - 1]} {year}. {note[lang]}' for lang in ('sk', 'cs')}
 
