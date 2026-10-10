@@ -274,8 +274,11 @@ class MetaGuidesTests(TestCase):
             call_command('fetch_specialty_icons', stdout=StringIO())
             with Image.open(Path(folder) / 'garrison.webp') as icon:
                 self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)))
+            # the fort emblem is cut from Gether's screenshot, not downloaded
+            own = sorted(fetch_specialty_icons.OWN)
             self.assertEqual(
-                sorted(path.stem for path in Path(folder).glob('*.webp')), sorted(Guide.Specialty.values)
+                sorted(path.stem for path in Path(folder).glob('*.webp')),
+                sorted(set(Guide.Specialty.values) - set(own)),
             )
             self.assertIn('https://app.rokstats.online/icons/type1.png', urls)
 
@@ -333,6 +336,7 @@ class MetaSyncTests(TestCase):
                 'pary-pre-rally': 'conquering', 'pary-na-barbarov-a-pevnosti': 'peacekeeping',
                 'pary-na-zber-surovin': 'gathering', 'vybava-pre-jazdu': 'cavalry', 'vybava-pre-pechotu': 'infantry',
                 'vybava-pre-lukostrelcov': 'archer', 'vybava-pre-leadership': 'leadership',
+                'maximum-speedupov-z-fortov': 'barbarian-fort',
             },
         )  # fmt: skip
 
@@ -340,7 +344,8 @@ class MetaSyncTests(TestCase):
         migration = importlib.import_module('guides.migrations.0007_guide_specialty')
         sync_guides()
         # the migration knows the specialties of the meta modules (and of guides dropped from them later)
-        meta = {g['slug']: g['specialty'] for g in rendered_guides() if g['specialty']}
+        # tips came later – their icon is set by the sync itself
+        meta = {g['slug']: g['specialty'] for g in rendered_guides() if g['specialty'] and g['category'] != 'tipy'}
         self.assertEqual({slug: s for slug, s in migration.SPECIALTIES.items() if slug in meta}, meta)
         Guide.objects.update(specialty='')  # as before the migration
         Guide.objects.filter(slug='pary-pre-pechotu').update(specialty='archer')  # already set by hand

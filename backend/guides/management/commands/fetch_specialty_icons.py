@@ -11,6 +11,8 @@ from .fetch_gear_icons import fetch, normalise
 
 # rokstats.online reads the commander specialty tags from the game client (game art, used with consent, 8. 10. 2026):
 # its commander catalog lists every tag with a slug ('infantry', 'garrison', …) and the small in-game icon (diamond)
+# icons that are not commander tags – cut from Gether's screenshots, never downloaded
+OWN = {Guide.Specialty.BARBARIAN_FORT}
 CATALOG = re.compile(r'<script type="application/json" id="commander-catalog-data">(.*?)</script>', re.S)
 
 
@@ -25,6 +27,8 @@ class Command(BaseCommand):
         SPECIALTY_DIR.mkdir(parents=True, exist_ok=True)
         missing = []
         for specialty in Guide.Specialty.values:
+            if specialty in OWN:
+                continue
             if specialty not in tags:
                 missing.append(specialty)
                 continue

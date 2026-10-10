@@ -20,7 +20,8 @@ class Guide(models.Model):
         TIPS = 'tipy', 'Tipy a triky'
 
     class Specialty(models.TextChoices):
-        """Commander specialties of the game – the values are the slugs of their in-game tags (icons)."""
+        """Commander specialties of the game – the values are the slugs of their in-game tags (icons). BARBARIAN_FORT is
+        no commander tag: the fort emblem cut from Gether's rally screenshot, for the fort tips (10. 10. 2026)."""
 
         CAVALRY = 'cavalry', 'Jazda'
         INFANTRY = 'infantry', 'Pechota'
@@ -30,6 +31,7 @@ class Guide(models.Model):
         CONQUERING = 'conquering', 'Conquering (rally)'
         PEACEKEEPING = 'peacekeeping', 'Peacekeeping (barbari)'
         GATHERING = 'gathering', 'Gathering (zber)'
+        BARBARIAN_FORT = 'barbarian-fort', 'Barbarský fort (tipy)'
 
     category = models.CharField('kategória', max_length=16, choices=Category.choices)
     specialty = models.CharField(

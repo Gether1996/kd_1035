@@ -3,7 +3,8 @@ import { httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, computed, inject } from '@angular/core';
 import { GuideCategory, I18n } from './i18n/i18n';
 
-/** Commander specialty a guide is about (troop type or scenario) – shown as its in-game tag in the list. */
+/** Commander specialty a guide is about (troop type or scenario) – shown as its in-game tag in the list; for the fort
+ * tips the fort emblem. */
 export type GuideSpecialty =
   | 'cavalry'
   | 'infantry'
@@ -12,7 +13,8 @@ export type GuideSpecialty =
   | 'garrison'
   | 'conquering'
   | 'peacekeeping'
-  | 'gathering';
+  | 'gathering'
+  | 'barbarian-fort';
 
 export interface GuideSummary {
   slug: string;

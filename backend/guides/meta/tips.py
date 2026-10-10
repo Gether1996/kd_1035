@@ -66,6 +66,7 @@ GUIDES = [
         # confirmed in game by Gether (10. 10. 2026): the account with 90 %+ of the damage gets the full rewards;
         # his split: main 210k + farm 15k, or farm 20k + main 240k; the fort level does not matter
         'slug': 'maximum-speedupov-z-fortov',
+        'specialty': 'barbarian-fort',
         'title': t('Maximum speedupov z fortov s vlastnou farmou', 'Maximum speedupů z fortů s vlastní farmou'),
         'blocks': [
             ('p', t(
