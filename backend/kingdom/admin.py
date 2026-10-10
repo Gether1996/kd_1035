@@ -78,7 +78,7 @@ def repeat_text(days: int) -> str:
 class OfficerInline(admin.TabularInline):
     model = Officer
     extra = 1
-    fields = ['order', 'title_sk', 'title_cs', 'name', 'discord_id', 'discord_username']
+    fields = ['order', 'title_sk', 'title_cs', 'name', 'focus_sk', 'focus_cs', 'discord_id', 'discord_username']
 
 
 @admin.register(Alliance)

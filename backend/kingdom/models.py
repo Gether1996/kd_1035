@@ -90,6 +90,13 @@ class Officer(models.Model):
     name = models.CharField('meno v hre', max_length=64)
     title_sk = models.CharField('funkcia (SK)', max_length=48, help_text='napr. Vodca, Kancelár, R4')
     title_cs = models.CharField('funkce (CZ)', max_length=48, help_text='např. Vůdce, Kancléř, R4')
+    # what newcomers should message this officer about; empty = the card shows only the title
+    focus_sk = models.CharField(
+        'na čo sa obrátiť (SK)', max_length=60, blank=True, help_text='napr. Migrácia, KvK, návody – prázdne = nezobrazí sa'
+    )
+    focus_cs = models.CharField(
+        'na čo sa obrátiť (CZ)', max_length=60, blank=True, help_text='např. Migrace, KvK, návody – prázdné = SK text'
+    )
     discord_id = models.CharField(
         'Discord User ID',
         max_length=24,

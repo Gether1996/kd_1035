@@ -37,6 +37,17 @@ class ApiTests(TestCase):
         self.assertEqual(set(data[0]), {'id', 'tag', 'name', 'officers'})
         self.assertEqual([o['name'] for o in data[0]['officers']], ['Methiu von CzF', 'Gether', 'Hefarion'])
 
+    def test_officer_focus(self):
+        # the seeded officers have no focus yet (nothing invented); the admin fills it in
+        officers = Alliance.objects.get(tag='CS35').officers.all()
+        self.assertEqual({(o.focus_sk, o.focus_cs) for o in officers}, {('', '')})
+        officers.filter(name='Gether').update(focus_sk='Web, eventy', focus_cs='Web, eventy')
+        data = self.client.get('/api/alliances/').json()[0]['officers']
+        self.assertEqual(
+            set(data[0]), {'name', 'title_sk', 'title_cs', 'focus_sk', 'focus_cs', 'discord_id', 'discord_username'}
+        )
+        self.assertEqual([(o['focus_sk'], o['focus_cs']) for o in data], [('', ''), ('Web, eventy', 'Web, eventy'), ('', '')])
+
     def test_links_hide_inactive(self):
         # both links are seeded by migration
         SocialLink.objects.filter(platform='facebook').update(is_active=False)

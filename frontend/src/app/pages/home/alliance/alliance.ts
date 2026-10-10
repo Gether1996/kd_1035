@@ -22,6 +22,11 @@ export class AllianceSection {
     return this.i18n.lang() === 'cs' ? officer.title_cs : officer.title_sk;
   }
 
+  /** What to contact the officer about (empty = no line); Czech falls back to the Slovak text. */
+  protected focus(officer: Officer): string {
+    return ((this.i18n.lang() === 'cs' && officer.focus_cs) || officer.focus_sk).trim();
+  }
+
   protected async copy(username: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(username);

@@ -6,6 +6,9 @@ export interface Officer {
   name: string;
   title_sk: string;
   title_cs: string;
+  /** what to contact this officer about; empty = not shown (CZ falls back to SK) */
+  focus_sk: string;
+  focus_cs: string;
   discord_id: string;
   discord_username: string;
 }

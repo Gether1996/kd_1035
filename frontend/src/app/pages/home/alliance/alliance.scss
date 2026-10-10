@@ -160,6 +160,13 @@
   }
 }
 
+// what to contact the officer about – optional, one quiet line under the name
+.officer__focus {
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
 .officer__contact {
   display: inline-flex;
   align-items: center;

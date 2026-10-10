@@ -53,6 +53,9 @@
                     <span class="officer__who">
                       <small>{{ title(o) }}</small>
                       <strong>{{ o.name }}</strong>
+                      @if (focus(o); as f) {
+                        <span class="officer__focus">{{ f }}</span>
+                      }
                     </span>
                     @if (o.discord_id) {
                       <a

@@ -6,7 +6,7 @@ from .models import Alliance, Officer, SocialLink
 class OfficerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Officer
-        fields = ['name', 'title_sk', 'title_cs', 'discord_id', 'discord_username']
+        fields = ['name', 'title_sk', 'title_cs', 'focus_sk', 'focus_cs', 'discord_id', 'discord_username']
 
 
 class AllianceSerializer(serializers.ModelSerializer):
