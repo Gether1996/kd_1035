@@ -258,6 +258,11 @@ export const cs: Dict = {
       google: 'Google Kalendář',
       ics: 'iPhone, Outlook (.ics)',
     },
+    share: {
+      copy: 'Kopírovat odkaz na event',
+      copied: 'Odkaz zkopírován',
+      copyFailed: 'Zkopíruj odkaz ručně:',
+    },
     subscribe: {
       title: 'Odběr kalendáře',
       text: 'Všechny eventy království v kalendáři v mobilu, aktualizují se samy.',

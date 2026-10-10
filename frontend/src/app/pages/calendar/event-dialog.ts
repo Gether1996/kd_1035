@@ -4,11 +4,13 @@ import {
   DOCUMENT,
   DestroyRef,
   ElementRef,
+  Injector,
   afterNextRender,
   computed,
   inject,
   input,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -16,11 +18,12 @@ import { EventGuide, PublicEvent, eventName, isOccurrence } from '../../core/eve
 import { I18n } from '../../core/i18n/i18n';
 import { ReminderEvent } from '../../core/reminders-api';
 import { googleUrl } from '../../shared/calendar-export';
+import { copyLink } from '../../shared/copy-link';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { repeatLabel } from '../reminders/format';
 import { ReminderPicker } from '../reminders/reminder-picker';
-import { KINGDOM_ZONE, calendarQuery } from './deep-link';
+import { KINGDOM_ZONE, eventLink } from './deep-link';
 import { clock, dayKey, longDay, numericDay } from './month';
 
 /** The reminders part of the dialog: nothing (login off), a login button, or the player's own choice. */
@@ -64,6 +67,7 @@ export class EventDialog {
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   private readonly doc = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   protected readonly occurrence = computed(() => {
@@ -117,15 +121,26 @@ export class EventDialog {
   protected readonly exportLinks = computed(() => {
     const o = this.occurrence();
     if (!o) return null;
-    const { event, on } = calendarQuery(o, this.now());
-    const origin = this.doc.defaultView?.location.origin ?? '';
-    const link = `${origin}${this.i18n.path('calendar')}?event=${event}&on=${on}`;
+    const link = this.link();
     const first = dayKey(new Date(o.start), KINGDOM_ZONE);
     return {
       google: googleUrl({ name: this.name(), start: o.start, end: o.end, details: `Kingdom 1035: ${link}` }),
       ics: `/api/events/${o.id}/ics?on=${first}${this.i18n.lang() === 'cs' ? '&lang=cs' : ''}`,
     };
   });
+
+  /** this event in our calendar, in the page's language: the run's month with this dialog open (deep-link.ts) */
+  private readonly link = computed(() => {
+    const origin = this.doc.defaultView?.location.origin ?? '';
+    return origin + this.i18n.path('calendar') + eventLink(this.item(), this.now());
+  });
+
+  /** "Kopírovať odkaz na event": 'copied' for a moment, or the URL to copy by hand when neither clipboard nor share
+   * worked – both inside the dialog, so the focus never leaves it */
+  protected readonly copied = signal(false);
+  protected readonly manualUrl = signal('');
+  private readonly manualInput = viewChild<ElementRef<HTMLInputElement>>('manual');
+  private copiedTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     const doc = this.doc;
@@ -137,7 +152,31 @@ export class EventDialog {
       doc.body.style.overflow = 'hidden';
     });
     // the page removes the dialog after `closed` (or leaves for the guide)
-    inject(DestroyRef).onDestroy(() => (doc.body.style.overflow = ''));
+    inject(DestroyRef).onDestroy(() => {
+      doc.body.style.overflow = '';
+      clearTimeout(this.copiedTimer);
+    });
+  }
+
+  /** No `await` before copyLink(): the clipboard needs the click's user activation. */
+  protected copyLink(): void {
+    const url = this.link();
+    copyLink(url, this.name()).then((result) => {
+      clearTimeout(this.copiedTimer);
+      this.copied.set(result === 'copied');
+      this.manualUrl.set(result === 'failed' ? url : '');
+      if (result === 'copied') this.copiedTimer = setTimeout(() => this.copied.set(false), 2500);
+      if (result === 'failed') {
+        afterNextRender(
+          () => {
+            const input = this.manualInput()?.nativeElement;
+            input?.focus();
+            input?.select();
+          },
+          { injector: this.injector },
+        );
+      }
+    });
   }
 
   protected guideTitle(guide: EventGuide): string {

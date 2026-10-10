@@ -330,6 +330,66 @@ describe('Calendar', () => {
     expect(el().querySelector('app-events-panel')).toBeNull();
   });
 
+  describe('"Kopírovať odkaz na event" in the dialog', () => {
+    const share = () => dialog()!.querySelector<HTMLElement>('.share')!;
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('copies the link to the run in the page language, without a hash', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+      await render({ login_enabled: false, user: null });
+      await open(bar('MGE'));
+      const button = share().querySelector<HTMLButtonElement>('button')!;
+      expect(button.textContent).toContain('Kopírovať odkaz na event');
+      expect(share().querySelector('[role="status"]')?.textContent?.trim()).toBe('');
+
+      button.click();
+      // running since Monday: today's day, so the link opens the dialog while the run lasts
+      expect(writeText).toHaveBeenCalledWith(`${location.origin}/kalendar?event=2&on=2026-10-08`);
+      await fixture.whenStable();
+      expect(share().querySelector('[role="status"]')?.textContent).toContain('Odkaz skopírovaný');
+      expect(share().querySelector('.share__manual')).toBeNull();
+    });
+
+    it('an irregular event without a date is linked by its id only', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+      await render({ login_enabled: false, user: null });
+      await open(el().querySelectorAll<HTMLButtonElement>('.strip--irregular .pill-event')[1]);
+      share().querySelector<HTMLButtonElement>('button')!.click();
+      expect(writeText).toHaveBeenCalledWith(`${location.origin}/kalendar?event=12`);
+    });
+
+    it('the Czech page copies the Czech address', async () => {
+      const router = TestBed.inject(Router);
+      router.resetConfig([{ path: '**', children: [] }]);
+      await router.navigateByUrl('/cz/kalendar');
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText } });
+      await render({ login_enabled: false, user: null });
+      await open(bar('Silk Road'));
+      const button = share().querySelector<HTMLButtonElement>('button')!;
+      expect(button.textContent).toContain('Kopírovat odkaz na event');
+      button.click();
+      expect(writeText).toHaveBeenCalledWith(`${location.origin}/cz/kalendar?event=11&on=2026-10-13`);
+      await fixture.whenStable();
+      expect(share().querySelector('[role="status"]')?.textContent).toContain('Odkaz zkopírován');
+    });
+
+    it('without clipboard and share sheet the address to copy by hand stays inside the dialog', async () => {
+      vi.stubGlobal('navigator', {});
+      await render({ login_enabled: false, user: null });
+      await open(bar('Silk Road'));
+      share().querySelector<HTMLButtonElement>('button')!.click();
+      await fixture.whenStable();
+      const input = dialog()!.querySelector<HTMLInputElement>('dialog .share__manual input');
+      expect(input?.value).toBe(`${location.origin}/kalendar?event=11&on=2026-10-13`);
+      expect(input?.readOnly).toBe(true);
+      expect(input?.tabIndex).toBe(0);
+    });
+  });
+
   describe('"Odber kalendára"', () => {
     const section = () => el().querySelector<HTMLElement>('.subscribe')!;
     const feed = (lang: string) => `${location.origin}/api/calendar.ics?lang=${lang}`;

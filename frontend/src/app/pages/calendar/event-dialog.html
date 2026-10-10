@@ -51,6 +51,24 @@
       </p>
     }
 
+    <div class="share">
+      <button type="button" class="pill-btn pill-btn--quiet" (click)="copyLink()">
+        <svg appIcon="link"></svg>{{ c.share.copy }}
+      </button>
+      <!-- always in the DOM, so screen readers announce the change -->
+      <p class="share__status" role="status">
+        @if (copied()) {
+          <svg appIcon="check"></svg> {{ c.share.copied }}
+        }
+      </p>
+      @if (manualUrl(); as url) {
+        <label class="field share__manual">
+          <span class="field__label">{{ c.share.copyFailed }}</span>
+          <input #manual class="input" type="url" readonly [value]="url" (focus)="manual.select()" />
+        </label>
+      }
+    </div>
+
     @if (item().guide; as guide) {
       <a class="guide" [routerLink]="i18n.guidePath(guide.category, guide.slug)">
         <span class="guide__label">{{ c.guide }}</span>

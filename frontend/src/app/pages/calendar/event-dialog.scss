@@ -76,6 +76,42 @@
   }
 }
 
+// ---------------------------------------------------------------- link to this event
+
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 10px;
+
+  // a long Czech label may wrap on a narrow phone instead of overflowing the sheet
+  .pill-btn {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+// "Odkaz skopírovaný" – empty until a copy succeeds; never display: none, so screen readers announce it
+.share__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gold-300);
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.share__manual {
+  flex-basis: 100%;
+}
+
 // ---------------------------------------------------------------- guide
 
 .guide {
@@ -192,8 +228,13 @@
 // ---------------------------------------------------------------- phones
 
 @media (max-width: 599px) {
+  // "Přihlásit přes Discord" is wider than a 320 px sheet: less padding, and the label may wrap
   .remind__login {
     justify-self: stretch;
+    min-width: 0;
+    padding-inline: calc(var(--notch) + 0.75em);
+    white-space: normal;
+    text-align: center;
   }
 }
 
