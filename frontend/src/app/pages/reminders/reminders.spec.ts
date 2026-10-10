@@ -7,7 +7,7 @@ import { KingdomApi } from '../../core/api';
 import { ReminderEvent, ReminderSettings } from '../../core/reminders-api';
 import { monogram } from '../../shared/event-icon';
 import { EVENING_BEFORE } from './format';
-import { Reminders, plain } from './reminders';
+import { Reminders } from './reminders';
 
 const event = (id: number, changes: Partial<ReminderEvent>): ReminderEvent => ({
   id,
@@ -163,7 +163,6 @@ describe('Reminders on /pripomienky', () => {
     el.querySelectorAll<HTMLButtonElement>('.segmented button')[2].click();
     await fixture.whenStable();
     expect(tiles(el).map((tile) => text(tile.querySelector('.tile__name')))).toEqual(['Silk Road']);
-    expect(plain('  MGE – Pěchota ')).toBe('mge – pechota');
   });
 
   it('one switch for the Discord messages from the bot; off warns the player', async () => {

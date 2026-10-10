@@ -15,6 +15,7 @@ import { LastDelivery, ReminderEvent, RemindersApi, TestResult } from '../../cor
 import { EventIcon } from '../../shared/event-icon';
 import { showsClock } from '../../shared/event-time';
 import { Icon } from '../../shared/icon';
+import { fold } from '../../shared/search';
 import { EventDialog, RemindState } from '../calendar/event-dialog';
 import { EVENING_BEFORE, duration, plural, repeatLabel } from './format';
 
@@ -22,11 +23,6 @@ type Filter = 'all' | 'regular' | 'irregular';
 
 /** events shown in "Všetky eventy" before "Zobraziť ďalšie" */
 const PAGE = 12;
-
-/** lower case without diacritics: "Pěchota" and "pechota" find the same event */
-export function plain(text: string): string {
-  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-}
 
 /**
  * The reminders panel of /pripomienky (signed-in players only, so it only ever renders in the browser): the switch
@@ -67,12 +63,12 @@ export class Reminders {
   protected readonly filters: Filter[] = ['all', 'regular', 'irregular'];
   /** irregular events first (Gether: they are the ones to watch), each group in the server's order (soonest first) */
   protected readonly matching = computed(() => {
-    const query = plain(this.query());
+    const query = fold(this.query());
     const filter = this.filter();
     const found = this.events().filter(
       (event) =>
         (filter === 'all' || (filter === 'irregular') === event.irregular) &&
-        (!query || plain(`${event.name_sk} ${event.name_cs}`).includes(query)),
+        (!query || fold(`${event.name_sk} ${event.name_cs}`).includes(query)),
     );
     return [...found.filter((event) => event.irregular), ...found.filter((event) => !event.irregular)];
   });
