@@ -2,8 +2,6 @@ import { Routes } from '@angular/router';
 import { About } from './pages/about/about';
 import { Account } from './pages/account/account';
 import { Calendar } from './pages/calendar/calendar';
-import { GuideList } from './pages/guides/guide-list';
-import { GuidePage } from './pages/guides/guide-page';
 import { Home } from './pages/home/home';
 import { NotFound } from './pages/not-found/not-found';
 import { Privacy } from './pages/privacy/privacy';
@@ -19,8 +17,13 @@ const pages = (): Routes => [
   { path: 'ochrana-udajov', component: Privacy },
   { path: 'ucet', component: Account },
   { path: 'pripomienky', component: RemindersPage },
-  { path: 'navody/:category', component: GuideList },
-  { path: 'navody/:category/:slug', component: GuidePage },
+  // guides are loaded on demand: the initial bundle stays within its 600 kB budget (angular.json)
+  { path: 'navody', loadComponent: () => import('./pages/guides/guide-hub').then((m) => m.GuideHub) },
+  { path: 'navody/:category', loadComponent: () => import('./pages/guides/guide-list').then((m) => m.GuideList) },
+  {
+    path: 'navody/:category/:slug',
+    loadComponent: () => import('./pages/guides/guide-page').then((m) => m.GuidePage),
+  },
 ];
 
 // Unknown addresses keep their URL and show the 404 page; each wildcard must stay the last route of its level.

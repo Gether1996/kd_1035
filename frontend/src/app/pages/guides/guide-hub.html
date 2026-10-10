@@ -1,0 +1,62 @@
+@let t = i18n.t();
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="t.guides.eyebrow" [title]="t.guides.title" [intro]="t.guides.intro" />
+
+<div class="container content">
+  <nav class="tabs" [attr.aria-label]="t.guides.eyebrow">
+    <a
+      class="tab"
+      [routerLink]="i18n.path('guideHub')"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      ariaCurrentWhenActive="page"
+    >
+      {{ t.guides.all }}
+    </a>
+    @for (key of categories; track key) {
+      <a class="tab" [routerLink]="i18n.guidePath(key)">{{ t.guides.categories[key].title }}</a>
+    }
+  </nav>
+
+  @if (guides.failed()) {
+    <p class="state">{{ t.guides.error }}</p>
+  } @else if (groups().length) {
+    @for (group of groups(); track group.key) {
+      <section class="group" [attr.aria-labelledby]="'hub-' + group.key">
+        <header class="group__head">
+          <h2 class="group__title" [id]="'hub-' + group.key">{{ t.guides.categories[group.key].title }}</h2>
+          <a class="group__all" [routerLink]="i18n.guidePath(group.key)">
+            {{ t.guides.wholeCategory }} <svg appIcon="arrow-right"></svg>
+          </a>
+        </header>
+        <ol class="list">
+          @for (g of group.items; track g.slug; let i = $index) {
+            <li [appReveal]="i * 40">
+              <a class="row row--compact" [routerLink]="i18n.guidePath(g.category, g.slug)">
+                <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
+                <span class="row__body">
+                  <strong>
+                    @if (g.specialty_icon) {
+                      <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
+                    }
+                    {{ guides.title(g) }}
+                  </strong>
+                </span>
+                <time class="row__date" [attr.datetime]="g.updated_at">{{ guides.date(g.updated_at) }}</time>
+                <svg class="row__arrow" appIcon="arrow-right"></svg>
+              </a>
+            </li>
+          }
+        </ol>
+      </section>
+    }
+  } @else if (!guides.ready()) {
+    <div class="list list--loading" aria-hidden="true">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <span class="row row--skeleton row--compact"></span>
+      }
+    </div>
+  } @else {
+    <p class="state">{{ t.guides.empty }}</p>
+  }
+</div>

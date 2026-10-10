@@ -28,7 +28,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 - Odber kalendára eventov (iCal) do mobilu – schválené, nepostavené.
 - Testovacie odoslanie Discord notifikácie do súkromného kanála – schválené, čaká na `DISCORD_TEST_WEBHOOK_URL`.
-- Rozcestník `/navody` s vyhľadávaním – upraviť (dva commity: rozcestník, potom vyhľadávanie).
+- Vyhľadávanie v rozcestníku `/navody` – rozcestník je hotový (v1.3.0), vyhľadávanie čaká.
 - Audit prístupnosti (axe) – upraviť (skip link už existuje, len critical/serious).
 - Týždenný prehľad eventov na Discorde – až po zapnutí rotácie a súhlase Gethera.
 - Stav migrácie v admine – iba ak vedenie chce stav udržiavať.

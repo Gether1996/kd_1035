@@ -26,7 +26,7 @@ import { Reveal } from '../../../shared/reveal';
             </ng-template>
             <!-- the last pillar (help with commanders, gear, events) leads to the guides -->
             @if ($last) {
-              <a class="pillar pillar--link" [routerLink]="i18n.guidePath('commanderi')" [appReveal]="$index * 120">
+              <a class="pillar pillar--link" [routerLink]="i18n.path('guideHub')" [appReveal]="$index * 120">
                 <ng-container [ngTemplateOutlet]="body" />
                 <span class="pillar__cta">{{ t().intro.guides }} <svg appIcon="arrow-right"></svg></span>
               </a>

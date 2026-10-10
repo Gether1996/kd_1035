@@ -136,6 +136,62 @@
     200% 100%;
 }
 
+// the global focus ring would square the card's corners
+.row:focus-visible {
+  border-radius: var(--radius);
+}
+
+// ---------------------------------------------------------------- hub (/navody)
+
+.group + .group {
+  margin-top: clamp(40px, 6vw, 56px);
+}
+
+.group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.group__title {
+  font-size: clamp(1.375rem, 1.1rem + 1vw, 1.75rem);
+}
+
+.group__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 0.8125rem/1 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.35s var(--ease-out);
+  }
+
+  &:hover .icon {
+    transform: translateX(4px);
+  }
+}
+
+.row--compact {
+  padding-block: clamp(14px, 2vw, 18px);
+
+  .row__body strong {
+    font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  }
+
+  &.row--skeleton {
+    height: 64px;
+  }
+}
+
 .state {
   padding: 48px 20px;
   border: 1px dashed var(--line-strong);

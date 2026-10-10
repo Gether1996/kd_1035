@@ -9,6 +9,7 @@
 
 <div class="container content">
   <nav class="tabs" [attr.aria-label]="t.guides.eyebrow">
+    <a class="tab" [routerLink]="i18n.path('guideHub')">{{ t.guides.all }}</a>
     @for (key of categories; track key) {
       <a class="tab" [routerLink]="i18n.guidePath(key)" routerLinkActive="is-active" ariaCurrentWhenActive="page">
         {{ t.guides.categories[key].title }}

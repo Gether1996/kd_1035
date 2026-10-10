@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { DOCUMENT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { GuideHub } from './guide-hub';
 import { GuideList } from './guide-list';
 import { GuidePage } from './guide-page';
 
@@ -51,7 +52,7 @@ describe('Guide pages', () => {
     expect(el.querySelector('.state')?.textContent).toContain('Tento návod neexistuje');
     expect(links(el)).toEqual([
       ['/', 'Domov'],
-      ['/navody/commanderi', 'Návody'],
+      ['/navody', 'Návody'],
     ]);
     expect(head().querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex');
     expect(head().querySelector('link[rel="canonical"]')).toBeNull();
@@ -66,7 +67,7 @@ describe('Guide pages', () => {
     const el = fixture.nativeElement as HTMLElement;
 
     expect(el.querySelector('.state')?.textContent).toContain('Tento návod neexistuje');
-    expect(links(el).map(([href]) => href)).toEqual(['/', '/navody/commanderi']);
+    expect(links(el).map(([href]) => href)).toEqual(['/', '/navody']);
     expect(head().querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex');
     expect(head().querySelector('link[rel="canonical"]')).toBeNull();
   });
@@ -80,6 +81,79 @@ describe('Guide pages', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('app-not-found-links')).toBeNull();
     expect(head().querySelector('meta[name="robots"]')).toBeNull();
     expect(head().querySelector('link[rel="canonical"]')).not.toBeNull();
+  });
+
+  const summary = (slug: string, category: string) => ({
+    slug,
+    category,
+    specialty: '',
+    specialty_icon: null,
+    title_sk: slug,
+    title_cs: '',
+    excerpt_sk: '',
+    excerpt_cs: '',
+    updated_at: '2026-10-08T12:00:00Z',
+  });
+  const breadcrumbs = () => {
+    const ld = JSON.parse(head().querySelector('script[type="application/ld+json"]')?.textContent ?? '{}');
+    const list = ld['@graph'].find((node: { '@type': string }) => node['@type'] === 'BreadcrumbList');
+    return list.itemListElement.map((item: { name: string; item: string }) => [item.name, new URL(item.item).pathname]);
+  };
+
+  describe('hub /navody', () => {
+    async function open(answer: (req: ReturnType<HttpTestingController['expectOne']>) => void) {
+      const fixture = TestBed.createComponent(GuideHub);
+      fixture.detectChanges();
+      answer(TestBed.inject(HttpTestingController).expectOne('/api/guides/'));
+      await settle(fixture);
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('lists every guide under its category with a link to the whole category', async () => {
+      const el = await open((req) =>
+        req.flush([
+          summary('mge', 'eventy'),
+          summary('pary-pre-jazdu', 'commanderi'),
+          summary('pary-pre-rally', 'commanderi'),
+        ]),
+      );
+      const groups = [...el.querySelectorAll('.group')].map((group) => [
+        group.querySelector('h2')?.textContent?.trim(),
+        group.querySelector('.group__all')?.getAttribute('href'),
+        [...group.querySelectorAll('a.row')].map((a) => a.getAttribute('href')),
+      ]);
+      // fixed category order, a category without guides is left out
+      expect(groups).toEqual([
+        ['Commanderi', '/navody/commanderi', ['/navody/commanderi/pary-pre-jazdu', '/navody/commanderi/pary-pre-rally']],
+        ['Eventy', '/navody/eventy', ['/navody/eventy/mge']],
+      ]);
+      expect(TestBed.inject(DOCUMENT).title).toBe('Návody pre Rise of Kingdoms · KD 1035 CZ/SK');
+      expect(breadcrumbs()).toEqual([
+        ['Domov', '/'],
+        ['Návody', '/navody'],
+      ]);
+    });
+
+    it('shows the error text when the API fails', async () => {
+      const el = await open((req) => req.flush('down', { status: 502, statusText: 'Bad Gateway' }));
+      expect(el.querySelector('.state')?.textContent).toContain('Návody sa nepodarilo načítať');
+      expect(el.querySelector('.group')).toBeNull();
+    });
+  });
+
+  it('puts the hub between home and the category in the breadcrumbs', async () => {
+    const fixture = TestBed.createComponent(GuideList);
+    fixture.componentRef.setInput('category', 'vybava');
+    fixture.detectChanges();
+    await settle(fixture);
+
+    const crumbs = (fixture.nativeElement as HTMLElement).querySelectorAll('app-breadcrumbs a');
+    expect(Array.from(crumbs, (a) => a.getAttribute('href'))).toEqual(['/', '/navody']);
+    expect(breadcrumbs()).toEqual([
+      ['Domov', '/'],
+      ['Návody', '/navody'],
+      ['Výbava', '/navody/vybava'],
+    ]);
   });
 
   it('marks a guide about one commander specialty with its in-game tag', async () => {

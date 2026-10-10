@@ -41,7 +41,12 @@ export class Seo {
       const page = i18n.page();
       const t = i18n.t();
       const fixed =
-        page === 'home' || page === 'about' || page === 'calendar' || page === 'terms' || page === 'privacy'
+        page === 'home' ||
+        page === 'about' ||
+        page === 'calendar' ||
+        page === 'terms' ||
+        page === 'privacy' ||
+        page === 'guideHub'
           ? t.seo[page]
           : null;
       const current: PageMeta = this.override() ?? fixed ?? t.seo.home;

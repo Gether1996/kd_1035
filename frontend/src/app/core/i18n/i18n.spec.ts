@@ -16,6 +16,8 @@ describe('parseUrl', () => {
     expect(parseUrl('/cz/podmienky/')).toEqual({ lang: 'cs', page: 'terms', rest: '/podmienky' });
     expect(parseUrl('/ochrana-udajov')).toEqual({ lang: 'sk', page: 'privacy', rest: '/ochrana-udajov' });
     expect(parseUrl('/cz/ochrana-udajov')).toEqual({ lang: 'cs', page: 'privacy', rest: '/ochrana-udajov' });
+    expect(parseUrl('/navody')).toEqual({ lang: 'sk', page: 'guideHub', rest: '/navody' });
+    expect(parseUrl('/cz/navody/')).toEqual({ lang: 'cs', page: 'guideHub', rest: '/navody' });
     expect(parseUrl('/navody/vybava')).toEqual({ lang: 'sk', page: 'guides', rest: '/navody/vybava' });
     expect(parseUrl('/cz/navody/eventy/mge')).toEqual({ lang: 'cs', page: 'guide', rest: '/navody/eventy/mge' });
     expect(parseUrl('/czech')).toEqual({ lang: 'sk', page: 'home', rest: '/czech' });

@@ -35,6 +35,11 @@ export const sk = {
       title: 'Pripomienky eventov na Discorde | KD 1035',
       description: 'Vyber si eventy kráľovstva KD 1035 a náš Discord bot ti pred začiatkom pošle súkromnú správu.',
     },
+    guideHub: {
+      title: 'Návody pre Rise of Kingdoms · KD 1035 CZ/SK',
+      description:
+        'Návody na commanderov, výbavu a eventy v Rise of Kingdoms od hráčov slovensko-českého kráľovstva KD 1035 – všetko na jednom mieste.',
+    },
   },
   nav: {
     home: 'Domov',
@@ -107,6 +112,9 @@ export const sk = {
     eyebrow: 'Návody',
     title: 'Hraj s rozumom',
     soon: 'Čoskoro',
+    intro: 'Commanderi, výbava a eventy na jednom mieste.',
+    all: 'Všetky',
+    wholeCategory: 'Celá kategória',
     count: { one: 'návod', few: 'návody', other: 'návodov' },
     categories: {
       commanderi: {

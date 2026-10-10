@@ -20,7 +20,7 @@ export const notFoundMeta = (t: Dict): PageMeta => ({
     <a class="btn btn--gold" [routerLink]="i18n.path('home')">
       {{ i18n.t().notFound.home }} <svg appIcon="arrow-right"></svg>
     </a>
-    <a class="btn btn--ghost" [routerLink]="i18n.guidePath('commanderi')">{{ i18n.t().notFound.guides }}</a>
+    <a class="btn btn--ghost" [routerLink]="i18n.path('guideHub')">{{ i18n.t().notFound.guides }}</a>
   `,
   styles: `
     :host {

@@ -72,6 +72,7 @@ export class GuidePage {
     const key = this.categoryKey();
     return [
       { label: t.nav.home, link: this.i18n.path('home') },
+      { label: t.nav.guides, link: this.i18n.path('guideHub') },
       ...(key ? [{ label: t.guides.categories[key].title, link: this.i18n.guidePath(key) }] : []),
       ...(this.guide() ? [{ label: this.title(), link: this.i18n.guidePath(this.category(), this.slug()) }] : []),
     ];

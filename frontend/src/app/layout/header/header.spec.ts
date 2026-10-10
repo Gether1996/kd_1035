@@ -2,7 +2,9 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { routes } from '../../app.routes';
 import { Me } from '../../core/auth';
 import { Scroll } from '../../core/scroll';
 import { Header } from './header';
@@ -97,4 +99,57 @@ describe('Header account slot', () => {
     expect(link?.querySelector('img')?.getAttribute('alt')).toBe('');
     expect(el().querySelector('.drawer__user')?.textContent).toContain('Nelly');
   });
+});
+
+describe('Header active item', () => {
+  beforeEach(() => {
+    // the pages behind the routes use the page header parallax and the scroll reveal
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        observe() {}
+        unobserve() {}
+      },
+    );
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter(routes, withComponentInputBinding()),
+        { provide: Scroll, useValue: { scrolled: signal(false) } },
+      ],
+    });
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  async function activeAt(url: string): Promise<string[]> {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(url);
+    const fixture = TestBed.createComponent(Header);
+    fixture.detectChanges();
+    // RouterLinkActive sets its class in a microtask; whenStable() would wait for the pending API calls
+    await new Promise((resolve) => setTimeout(resolve));
+    const el = fixture.nativeElement as HTMLElement;
+    return Array.from(el.querySelectorAll('.nav__link.is-active, .drawer__link.is-active'), (a) =>
+      [a.className.split(' ')[0], a.getAttribute('href'), a.textContent?.trim()].join(' '),
+    );
+  }
+
+  const guides = ['nav__link /navody Návody', 'drawer__link /navody Návody'];
+  const cases: [string, string[]][] = [
+    ['/navody', guides],
+    ['/navody/commanderi', guides],
+    ['/navody/commanderi/pary-pre-jazdu', guides],
+    ['/cz/navody/eventy', ['nav__link /cz/navody Návody', 'drawer__link /cz/navody Návody']],
+    ['/o-nas', ['nav__link /o-nas O nás', 'drawer__link /o-nas O nás']],
+    ['/kalendar', ['nav__link /kalendar Kalendár', 'drawer__link /kalendar Kalendár']],
+    ['/', []],
+  ];
+  for (const [url, active] of cases) {
+    it(`highlights only the right item on ${url}`, async () => {
+      expect(await activeAt(url)).toEqual(active);
+    });
+  }
 });

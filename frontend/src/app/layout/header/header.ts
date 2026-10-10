@@ -11,6 +11,8 @@ interface NavItem {
   label: string;
   link: string;
   fragment?: string;
+  /** false = also active on the pages below it (Návody on every category and guide) */
+  exact?: boolean;
 }
 
 @Component({
@@ -37,7 +39,7 @@ export class Header {
       { label: t.about, link: this.i18n.path('about') },
       { label: t.calendar, link: this.i18n.path('calendar') },
       { label: t.alliance, link: home, fragment: 'alliance' },
-      { label: t.guides, link: home, fragment: 'guides' },
+      { label: t.guides, link: this.i18n.path('guideHub'), exact: false },
       { label: t.community, link: home, fragment: 'community' },
     ];
   });
