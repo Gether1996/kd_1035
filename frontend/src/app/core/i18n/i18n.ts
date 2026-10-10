@@ -18,9 +18,9 @@ export type Page =
   | 'guideHub'
   | 'guides'
   | 'guide';
-export type GuideCategory = 'commanderi' | 'vybava' | 'eventy';
+export type GuideCategory = 'commanderi' | 'vybava' | 'eventy' | 'tipy';
 
-export const GUIDE_CATEGORIES: GuideCategory[] = ['commanderi', 'vybava', 'eventy'];
+export const GUIDE_CATEGORIES: GuideCategory[] = ['commanderi', 'vybava', 'eventy', 'tipy'];
 
 const DICTS = { sk, cs };
 const LOCALES: Record<Lang, string> = { sk: 'sk-SK', cs: 'cs-CZ' };

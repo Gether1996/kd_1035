@@ -112,7 +112,7 @@ export const sk = {
     eyebrow: 'Návody',
     title: 'Hraj s rozumom',
     soon: 'Čoskoro',
-    intro: 'Commanderi, výbava a eventy na jednom mieste.',
+    intro: 'Commanderi, výbava, eventy a triky na jednom mieste.',
     all: 'Všetky',
     wholeCategory: 'Celá kategória',
     count: { one: 'návod', few: 'návody', other: 'návodov' },
@@ -133,6 +133,12 @@ export const sk = {
         text: 'Ako z eventov vyťažiť maximum.',
         description:
           'Ako hrať eventy v Rise of Kingdoms naplno – tipy a návody od slovensko-českého kráľovstva KD 1035.',
+      },
+      tipy: {
+        title: 'Tipy a triky',
+        text: 'Triky, ktoré ušetria speedupy a suroviny.',
+        description:
+          'Tipy a triky do Rise of Kingdoms, ktoré šetria speedupy a suroviny – od hráčov slovensko-českého KD 1035.',
       },
     },
     empty: 'Návody sa pripravujú. Pozri sa sem čoskoro.',

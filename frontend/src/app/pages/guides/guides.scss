@@ -218,8 +218,8 @@
   }
 }
 
-// four tabs do not fit one row on a phone: a 2 × 2 grid instead of a hidden horizontal scroll
-@media (max-width: 539px) {
+// five tabs do not fit one row on a phone or a small tablet: "Všetky" on top, the categories 2 × 2 below
+@media (max-width: 767px) {
   .tabs {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -232,6 +232,10 @@
     padding: 10px 12px;
     letter-spacing: 0.08em;
     text-align: center;
+
+    &:first-child {
+      grid-column: 1 / -1;
+    }
   }
 }
 

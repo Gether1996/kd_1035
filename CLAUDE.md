@@ -41,7 +41,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - Herné pojmy neprekladáme, píšeme ich tak, ako ich hráči používajú: **rally, garrison** (nikdy „garnizóna“), combo, skill, rage… (pokyn Gethera 8. 10. 2026).
 
 ## Obsah
-- Plánované: návody (kombinácie commanderov, najlepšia výbava, eventy), ďalšie kontakty na R4.
+- Návody majú kategórie Commanderi, Výbava, Eventy a **Tipy a triky** (`tipy`, Gether 10. 10. 2026). Plánované: ďalšie kontakty na R4.
 - **Rise of Kingdoms / Lilith nemá verejné API** (ani na hráčov, ani na kráľovstvá). Na webe preto **nezobrazujeme meniace sa čísla** (sila, počet členov, územie…), lebo by zastarali. Len stabilné údaje zadané v admine.
 - Kráľovstvo má **vždy len jednu alianciu**: [CS35] CZ/SK Legends (admin ďalšiu pridať ani túto zmazať nedovolí, zoznam rovno otvorí jej úpravu). Vedenie (model `Officer`): Methiu von CzF – Vodca, Gether – R4, Hefarion – R4 (Discord ID všetkých troch v seed migrácii). Tlačidlo „Kontaktovať“ otvorí `discord.com/users/<ID>`, bez ID skopíruje Discord meno. Voliteľné „na čo sa obrátiť“ (`focus_sk`/`focus_cs`, CZ prázdne = SK) je tichý riadok pod menom, prázdne = nezobrazí sa; text vypĺňa Gether v admine, nevymýšľame ho. Komunita na úvode odkazuje na kroky migrácie `/o-nas#migracia`.
 - Odkazy (admin → Odkazy): Facebook skupina https://www.facebook.com/groups/550189483954751, Discord trvalá pozvánka https://discord.gg/NhwP6y9ssM (nikdy nevyprší, neobmedzené použitia; obe v seed migrácii 0002).

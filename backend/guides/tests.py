@@ -76,6 +76,7 @@ class MetaGuidesTests(TestCase):
         self.assertGreaterEqual(len([g for g in guides if g['category'] == 'commanderi']), 9)
         self.assertGreaterEqual(len([g for g in guides if g['category'] == 'vybava']), 7)
         self.assertGreaterEqual(len([g for g in guides if g['category'] == 'eventy']), 10)
+        self.assertGreaterEqual(len([g for g in guides if g['category'] == 'tipy']), 1)
         for data in guides:
             self.assertIn(data['category'], Guide.Category.values)
             self.assertIn(data['specialty'], ['', *Guide.Specialty.values], data['slug'])

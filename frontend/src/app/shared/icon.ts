@@ -22,6 +22,7 @@ export type IconName =
   | 'gift'
   | 'hand-helping'
   | 'languages'
+  | 'lightbulb'
   | 'log-out'
   | 'map'
   | 'menu'

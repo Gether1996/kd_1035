@@ -2,10 +2,19 @@
   display: block;
 }
 
+// four categories: 1, 2 × 2 or 4 in a row – never three plus a lone card
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: 1fr;
   gap: clamp(14px, 2.4vw, 28px);
+
+  @media (min-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .guide {

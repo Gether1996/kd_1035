@@ -17,6 +17,7 @@ class Guide(models.Model):
         COMMANDERS = 'commanderi', 'Commanderi (páry)'
         EQUIPMENT = 'vybava', 'Výbava'
         EVENTS = 'eventy', 'Eventy'
+        TIPS = 'tipy', 'Tipy a triky'
 
     class Specialty(models.TextChoices):
         """Commander specialties of the game – the values are the slugs of their in-game tags (icons)."""

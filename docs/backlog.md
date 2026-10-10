@@ -1,9 +1,10 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 5 hotové, v1.4.0. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 5 hotové, v1.5.0. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
 
 ## Hotové
 
+- **10. 10. 2026 – v1.5.0:** nová kategória návodov **Tipy a triky** (`/navody/tipy`) s prvým návodom Speedupy za nepotrebné siege jednotky; karty návodov na úvode 1 / 2 / 4 v rade.
 - **10. 10. 2026 – kolo 5, UX analýza** (`docs/ux-analyza.md`): prečo web používať, čo chýba, poradie nápadov kola 5 (bez zmeny verzie).
 - **10. 10. 2026 – v1.4.0:** na `/navody` blok „Nájdi pár pre commandera“ – napíšeš meno commandera a uvidíš, s kým ho párujú naše návody (ako primárny, sekundárny, na koho sa sústrediť), s portrétmi a odkazom na návod.
 - **10. 10. 2026 – v1.3.2:** v detaile eventu v kalendári tlačidlá „Google Kalendár“ a „iPhone, Outlook (.ics)“ – jeden termín do vlastného kalendára bez prihlásenia.

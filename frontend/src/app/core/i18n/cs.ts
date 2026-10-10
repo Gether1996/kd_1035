@@ -113,7 +113,7 @@ export const cs: Dict = {
     eyebrow: 'Návody',
     title: 'Hraj s rozumem',
     soon: 'Brzy',
-    intro: 'Commandeři, výbava a eventy na jednom místě.',
+    intro: 'Commandeři, výbava, eventy a triky na jednom místě.',
     all: 'Všechny',
     wholeCategory: 'Celá kategorie',
     count: { one: 'návod', few: 'návody', other: 'návodů' },
@@ -134,6 +134,12 @@ export const cs: Dict = {
         text: 'Jak z eventů vytěžit maximum.',
         description:
           'Jak hrát eventy v Rise of Kingdoms naplno – tipy a návody od česko-slovenského království KD 1035.',
+      },
+      tipy: {
+        title: 'Tipy a triky',
+        text: 'Triky, které ušetří speedupy a suroviny.',
+        description:
+          'Tipy a triky do Rise of Kingdoms, které šetří speedupy a suroviny – od hráčů česko-slovenského KD 1035.',
       },
     },
     empty: 'Návody se připravují. Podívej se sem brzy.',

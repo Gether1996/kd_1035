@@ -52,5 +52,6 @@ export class Guides {
     commanderi: 'swords',
     vybava: 'shield',
     eventy: 'calendar-days',
+    tipy: 'lightbulb',
   };
 }
