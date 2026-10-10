@@ -162,6 +162,21 @@ class MetaGuidesTests(TestCase):
                 self.assertNotIn('Stav k', html)
                 self.assertNotRegex(html, r'\(\d\d/20\d\d\)|20\d\d')
 
+    def test_every_reward_item_and_figure_exists(self):
+        from .meta.render import FIGURE_DIR, ITEM_DIR
+
+        for module in MODULES:
+            for guide in module.GUIDES:
+                for block in guide['blocks']:
+                    if block[0] == 'rewards':
+                        for item, _ in block[1]:
+                            self.assertTrue((ITEM_DIR / f'{item}.webp').exists(), item)
+                    if block[0] == 'figure':
+                        self.assertTrue((FIGURE_DIR / block[1]).exists(), block[1])
+        html = render([('rewards', [('gold-key', {'sk': 'Gold key', 'cs': 'Gold key'})])], 'sk', {})
+        self.assertEqual(clean_html(html), html)
+        self.assertIn('src="/static/guides/items/gold-key.webp"', html)
+
     def test_lineups_are_portraits_with_the_names_in_alt_and_title(self):
         html = render([('lineups', [('KvK1', [('Ivan IV', 'Achilles'), ('Sun Tzu',)])])], 'sk', {})
         self.assertEqual(clean_html(html), html)

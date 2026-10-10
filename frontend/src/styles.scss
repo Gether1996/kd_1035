@@ -992,6 +992,25 @@ p {
     max-width: 100%;
   }
 
+  // game items with icons (render.py _rewards), e.g. what a fort gives
+  .rewards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    padding-left: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    li + li {
+      margin-top: 0;
+    }
+  }
+
   // army line-ups as portraits only, one framed group per army (render.py _lineups)
   .lineups {
     padding-left: 0;

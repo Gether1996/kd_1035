@@ -3,6 +3,8 @@
 Blocks: ('p', text) · ('h2', text) · ('ul', [text, …]) · ('note',) · ('pairs', columns, rows)
 · ('lineups', [(label, [(primary, secondary), …]), …]) · ('table', columns, rows) · ('sources', [(label, url), …])
 – a source with url '' (e.g. confirmed in game by Gether) is plain text.
+· ('rewards', [(item, text), …]) – game items with their icons (guides/static/guides/items/<item>.webp)
+· ('figure', file, caption) – a picture from guides/static/guides/figures/ with its caption (also its alt text).
 A text is t(sk, cs) or a plain string.
 """
 
@@ -17,6 +19,10 @@ GEAR_DIR = ICON_ROOT / 'gear'
 COMMANDER_DIR = ICON_ROOT / 'commanders'
 # commander specialty tags of the game (Infantry, Garrison, …) – shown next to a guide in the guide list
 SPECIALTY_DIR = ICON_ROOT / 'specialties'
+# game items in the tips (speedups, AP potions, keys – codexhelper.com / the RoK wiki, with Gether's consent)
+ITEM_DIR = ICON_ROOT / 'items'
+# screenshots from the game sent by Gether (reports and the like)
+FIGURE_DIR = ICON_ROOT / 'figures'
 
 
 def _known(folder):
@@ -153,6 +159,28 @@ def _lineups(rows, lang):
     return f'<ul class="lineups">{items}</ul>'
 
 
+def _rewards(rows, lang):
+    """Game items as icon + name, e.g. what a fort gives."""
+    items = ''.join(
+        f'<li><img class="pic__icon" src="/static/guides/items/{item}.webp" alt="" width="44" height="44" '
+        f'loading="lazy"><span>{text(label, lang)}</span></li>'
+        for item, label in rows
+    )
+    return f'<ul class="rewards">{items}</ul>'
+
+
+def _figure(file, caption, lang):
+    from PIL import Image
+
+    with Image.open(FIGURE_DIR / file) as image:
+        width, height = image.size
+    alt = text(caption, lang)
+    return (
+        f'<figure><img src="/static/guides/figures/{file}" alt="{alt}" width="{width}" height="{height}" '
+        f'loading="lazy"><figcaption>{alt}</figcaption></figure>'
+    )
+
+
 def _with_icons(kind, icons, html):
     """Icons in front of the name(s); on phones they sit above it (styles.scss → .prose .pic)."""
     if not icons:
@@ -245,6 +273,10 @@ def render(blocks, lang, note):
             html.append(_pairs(block[1], block[2], lang))
         elif kind == 'lineups':
             html.append(_lineups(block[1], lang))
+        elif kind == 'rewards':
+            html.append(_rewards(block[1], lang))
+        elif kind == 'figure':
+            html.append(_figure(block[1], block[2], lang))
         elif kind == 'table':
             html.append(_table(block[1], block[2], lang))
         elif kind == 'sources':

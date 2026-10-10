@@ -88,8 +88,15 @@ GUIDES = [
             ]),
             ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
             ('ul', [
-                t('S veľkou armádou na forte sa hospital plní rýchlejšie. Za to dostaneš veľa speedupov.',
-                  'S velkou armádou na fortu se hospital plní rychleji. Za to dostaneš hodně speedupů.'),
+                t('Na fort sa bežne chodí s aspoň 400 000 jednotkami. Práve kvôli menšej armáde sú straty väčšie a zranení idú do hospitalu, takže sa plní rýchlejšie.',
+                  'Na fort se běžně chodí s aspoň 400 000 jednotkami. Právě kvůli menší armádě jsou ztráty větší a zranění jdou do hospitalu, takže se plní rychleji.'),
+                t('Za to má main za každý fort maximum speedupov, aké sa dá získať, a väčšinou aj AP flašky alebo gold key.',
+                  'Za to má main za každý fort maximum speedupů, jaké se dá získat, a většinou i AP flašky nebo gold key.'),
+            ]),
+            ('rewards', [
+                ('speedup', t('Speedupy – maximum za fort', 'Speedupy – maximum za fort')),
+                ('ap-potion', t('AP flašky', 'AP flašky')),
+                ('gold-key', t('Gold key', 'Gold key')),
             ]),
             ('sources', [GETHER]),
         ],
