@@ -317,3 +317,4 @@ class CalendarFeedTests(TestCase):
 
     def test_only_get(self, _now):
         self.assertEqual(self.client.post('/api/calendar.ics').status_code, 405)
+        self.assertEqual(self.client.head('/api/calendar.ics').status_code, 200)  # calendar apps check with HEAD

@@ -5,7 +5,7 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
 from django.utils import timezone
 from django.utils.text import slugify
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_safe
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
@@ -191,7 +191,8 @@ def event_ics(request, pk):
     return response
 
 
-@require_GET
+# GET and HEAD: some calendar apps check a subscription with HEAD first
+@require_safe
 def calendar_feed(request):
     """GET /api/calendar.ics[?lang=cs] – every public event from two weeks ago to two months ahead as a calendar the
     visitor subscribes to (Google, Apple, Outlook); any other `lang` means Slovak.
