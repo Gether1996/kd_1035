@@ -44,7 +44,7 @@ def text(value, lang):
 LABELS = {
     'sk': {
         'primary': 'Primárny', 'secondary': 'Sekundárny', 'pair': 'Primárny + sekundárny', 'troops': 'Jednotky',
-        'why': 'Prečo to funguje', 'talents': 'Talenty', 'f2p': 'F2P', 'yes': 'áno', 'partly': 'čiastočne', 'no': 'nie',
+        'why': 'Prečo to funguje', 'talents': 'Talenty',
         'slot': 'Slot', 'item': 'Predmet', 'stats': 'Hlavné staty', 'alt': 'Alternatíva', 'gear': 'Výbava',
         'tier': 'Tier', 'accessory': 'Doplnok', 'effect': 'Efekt', 'what': 'Čo', 'detail': 'Detail',
         'stage': 'Fáza', 'points': 'Body', 'rank': 'Umiestnenie', 'reward': 'Odmena', 'cadence': 'Ako často',
@@ -53,7 +53,7 @@ LABELS = {
     },
     'cs': {
         'primary': 'Primární', 'secondary': 'Sekundární', 'pair': 'Primární + sekundární', 'troops': 'Jednotky',
-        'why': 'Proč to funguje', 'talents': 'Talenty', 'f2p': 'F2P', 'yes': 'ano', 'partly': 'částečně', 'no': 'ne',
+        'why': 'Proč to funguje', 'talents': 'Talenty',
         'slot': 'Slot', 'item': 'Předmět', 'stats': 'Hlavní staty', 'alt': 'Alternativa', 'gear': 'Výbava',
         'tier': 'Tier', 'accessory': 'Doplněk', 'effect': 'Efekt', 'what': 'Co', 'detail': 'Detail',
         'stage': 'Fáze', 'points': 'Body', 'rank': 'Umístění', 'reward': 'Odměna', 'cadence': 'Jak často',
@@ -175,9 +175,6 @@ def _pairs(columns, rows, lang):
         for row in rows:
             cells = ''
             for c in columns:
-                if c == 'f2p':
-                    cells += f'<td>{labels[row["f2p"]]}</td>'
-                    continue
                 value = f'<strong>{text(row[c], lang)}</strong>' if c == 'primary' else text(row[c], lang)
                 if c in ('primary', 'secondary'):
                     value = _with_icons('commanders', commander_icons(row[c]), value)
@@ -187,8 +184,6 @@ def _pairs(columns, rows, lang):
 
     # pair, troops and talents are folded into two cells so the table stays readable on phones
     head = f'<th scope="col">{labels["pair"]}</th><th scope="col">{labels["why"]}</th>'
-    if 'f2p' in columns:
-        head += f'<th scope="col">{labels["f2p"]}</th>'
     body = ''
     for row in rows:
         pair = f'<strong>{row["primary"]}</strong> + {text(row["secondary"], lang)}'
@@ -200,8 +195,6 @@ def _pairs(columns, rows, lang):
         if 'talents' in columns and row.get('talents'):
             why += f'<br><small>{labels["talents"]}: {row["talents"]}</small>'
         cells = f'<td>{pair}</td><td>{why}</td>'
-        if 'f2p' in columns:
-            cells += f'<td>{labels[row["f2p"]]}</td>'
         body += f'<tr>{cells}</tr>'
     return f'<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'
 

@@ -126,16 +126,15 @@ class MetaGuidesTests(TestCase):
             with self.assertRaises(CommandError):
                 call_command('fetch_gear_icons', 'Unknown Blade', stdout=StringIO())
 
-    def test_every_pair_table_says_whether_it_is_f2p(self):
-        # Gether, 10. 10. 2026: F2P everywhere
+    def test_pair_tables_have_no_f2p_column(self):
+        # Gether, 10. 10. 2026: the F2P column goes everywhere
         from .meta import commanders
 
         for guide in commanders.GUIDES:
             for block in guide['blocks']:
                 if block[0] == 'pairs':
-                    self.assertIn('f2p', block[1], guide['slug'])
-                    for row in block[2]:
-                        self.assertIn(row['f2p'], ('yes', 'partly', 'no'), guide['slug'])
+                    self.assertNotIn('f2p', block[1], guide['slug'])
+                    self.assertFalse(any('f2p' in row for row in block[2]), guide['slug'])
 
     def test_sources_are_named_only_in_the_sources_list(self):
         # Gether, 10. 10. 2026: no "podľa Chadského" in the text, the video is listed under Zdroje

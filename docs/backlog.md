@@ -1,9 +1,10 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 4 hotové, v1.2.0. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 4 hotové, v1.2.1. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json).
 
 ## Hotové
 
+- **10. 10. 2026 – v1.2.1:** tabuľky párov commanderov už nemajú stĺpec F2P (Gether).
 - **10. 10. 2026 – v1.2.0:** herné eventy (00:00 UTC) pripomíname deň vopred o 18:00 nášho času namiesto v noci (Discord kanál aj osobné pripomienky, nová voľba „deň vopred o 18:00“); nový nepravidelný event Karuak Ceremony; návody commanderov majú F2P v každej tabuľke párov, zostavy armád ako portréty a zdroj (WarDaddyChadski) len dole.
 - **9. 10. 2026 – v1.1.1:** odkazy Aliancia/Návody/Komunita v hlavičke dosadnú na svoju sekciu aj keď sa nad ňou neskôr načítajú Najbližšie eventy; späť/dopredu v prehliadači vráti na pôvodné miesto (vetva TTakedaSVK).
 - **9. 10. 2026 – v1.1.0, kolo 4:** skúšobná správa od bota na `/pripomienky` a varovanie pri nedoručenej pripomienke; prehľad na úvode adminu (worker, zálohy, najbližšie a zlyhané notifikácie); najbližšie eventy na úvodnej stránke; najbližší termín eventu priamo v jeho návode.
