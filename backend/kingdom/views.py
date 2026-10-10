@@ -25,6 +25,19 @@ FEED_PAST = timedelta(days=14)
 FEED_AHEAD = timedelta(days=60)
 FEED_NAME = {'sk': 'KD 1035 – eventy', 'cs': 'KD 1035 – eventy'}
 DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
+# days a link or query may ask for: the run lookups add and subtract weeks, so 9999-12-31 or 0001-01-01 would overflow
+DAYS = date(2000, 1, 1), date(2100, 12, 31)
+
+
+def parse_day(raw: str | None) -> date:
+    """A YYYY-MM-DD day from a query, ValueError when it is missing, malformed, impossible (2026-02-30) or out of
+    DAYS."""
+    if not raw or not DATE.fullmatch(raw):
+        raise ValueError(raw)
+    day = date.fromisoformat(raw)
+    if not DAYS[0] <= day <= DAYS[1]:
+        raise ValueError(raw)
+    return day
 
 
 @api_view(['GET'])
@@ -56,10 +69,8 @@ def calendar_range(params) -> tuple[date, date]:
         last = (first + timedelta(days=32)).replace(day=1) - timedelta(days=1)
         return first - timedelta(days=first.weekday()), last + timedelta(days=6 - last.weekday())
     try:
-        if not all(value and DATE.fullmatch(value) for value in raw):
-            raise ValueError
-        first, last = map(date.fromisoformat, raw)
-    except ValueError:  # one of them missing, malformed or impossible (2026-02-30)
+        first, last = map(parse_day, raw)
+    except ValueError:  # one of them missing, malformed, impossible (2026-02-30) or out of range
         raise ValidationError({'detail': 'Zadaj from aj to v tvare RRRR-MM-DD.'}) from None
     if not 0 <= (last - first).days < MAX_CALENDAR_DAYS:
         raise ValidationError({'detail': f'Rozsah musí mať 1 až {MAX_CALENDAR_DAYS} dní (from ≤ to).'})
@@ -161,10 +172,9 @@ def event_ics(request, pk):
 
     A hidden or inactive event, no run that day or a bad date is a bare 404 that names nothing.
     """
-    raw = request.GET.get('on', '')
     try:
-        day = date.fromisoformat(raw) if DATE.fullmatch(raw) else None
-    except ValueError:  # 2026-02-30
+        day = parse_day(request.GET.get('on'))
+    except ValueError:  # missing, malformed, 2026-02-30 or 9999-12-31
         day = None
     event = KingdomEvent.objects.filter(pk=pk, is_active=True, show_on_web=True).first() if day else None
     begin = events.run_on(event, day) if event else None

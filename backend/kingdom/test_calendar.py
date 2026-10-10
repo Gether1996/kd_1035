@@ -55,6 +55,8 @@ class EventCalendarTests(TestCase):
             {'from': '20261001', 'to': '20261031'},
             {'from': '2026-10-31', 'to': '2026-10-01'},
             {'from': '2026-10-01', 'to': '2026-12-02'},  # 63 days
+            {'from': '9999-12-01', 'to': '9999-12-31'},  # the occurrence lookup would overflow
+            {'from': '0001-01-01', 'to': '0001-01-31'},
         ):
             with self.subTest(params):
                 self.assertEqual(self.get(**params).status_code, 400)

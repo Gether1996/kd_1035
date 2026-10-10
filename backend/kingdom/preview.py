@@ -2,7 +2,7 @@
 
 The calendar page is prerendered with its generic meta only. nginx sends known preview bots asking for
 /[cz/]kalendar?event=<id>[&on=<day>] here (frontend/nginx/default.conf.template), so a link posted on Discord reads
-"Ark of Osiris · 14.–19. 10. 2026" instead of the calendar's own card. Same pattern as guides.views.link_preview.
+"Ark of Osiris · 14.–18. 10. 2026" instead of the calendar's own card. Same pattern as guides.views.link_preview.
 """
 
 import re
@@ -15,7 +15,7 @@ from guides.views import CALENDAR_META, EVENT_META, preview_page
 
 from . import events
 from .models import KingdomEvent
-from .views import DATE, site_origin
+from .views import parse_day, site_origin
 
 EVENT_ID = re.compile(r'[0-9]{1,9}')
 # a multi-day run ending before 06:00 does not take that day (NIGHT_ENDS_AT in pages/calendar/month.ts, daysOf())
@@ -40,7 +40,7 @@ def day_text(day: date) -> str:
 
 
 def days_text(first: date, last: date) -> str:
-    """'14. 10. 2026', '14.–19. 10. 2026', '30. 10. – 2. 11. 2026' (the same in Slovak and Czech)."""
+    """'14. 10. 2026', '14.–18. 10. 2026', '30. 10. – 2. 11. 2026' (the same in Slovak and Czech)."""
     if first == last:
         return day_text(first)
     if (first.year, first.month) == (last.year, last.month):
@@ -77,10 +77,10 @@ def event_preview(request, cz=None):
     calendar_url = f'{origin}{"/cz" if cz else ""}/kalendar'
     raw_id, raw_day = request.GET.get('event', ''), request.GET.get('on')
     try:
-        if not EVENT_ID.fullmatch(raw_id) or (raw_day is not None and not DATE.fullmatch(raw_day)):
-            raise ValueError
-        day = date.fromisoformat(raw_day) if raw_day is not None else None
-    except ValueError:  # a malformed id or day, or an impossible day (2026-02-30)
+        if not EVENT_ID.fullmatch(raw_id):
+            raise ValueError(raw_id)
+        day = parse_day(raw_day) if raw_day is not None else None
+    except ValueError:  # a malformed id or day, an impossible day (2026-02-30) or one out of range (9999-12-31)
         event = None
     else:
         event = KingdomEvent.objects.filter(pk=raw_id, is_active=True, show_on_web=True).first()

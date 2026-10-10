@@ -175,6 +175,8 @@ class EventIcsTests(TestCase):
             (visible.pk, {'on': 'tomorrow'}),
             (visible.pk, {'on': '2026-02-30'}),
             (visible.pk, {'on': '20261010'}),
+            (visible.pk, {'on': '9999-12-31'}),  # well-formed, but the run lookup would overflow
+            (visible.pk, {'on': '0001-01-01'}),
             (visible.pk, {'on': '2026-10-11'}),  # no run that day
             (999999, {'on': '2026-10-10'}),
         ]

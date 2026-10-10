@@ -152,6 +152,8 @@ class EventPreviewTests(TestCase):
             {'event': visible.pk, 'on': '20261010'},
             {'event': visible.pk, 'on': '2026-10-10T00:00'},
             {'event': visible.pk, 'on': '٢٠٢٦-١٠-١٠'},
+            {'event': visible.pk, 'on': '9999-12-31'},  # well-formed, but the run lookup would overflow
+            {'event': visible.pk, 'on': '0001-01-01'},
         ]
         for params in cases:
             with self.subTest(params=params):
