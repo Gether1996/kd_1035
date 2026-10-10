@@ -73,6 +73,8 @@ IRREGULAR_TEMPLATES = [
     # the competition runs a week from Monday 00:00 UTC; 5.–12. 10. 2026 from Gether's screenshot of the game
     ('Alliance Mobilization', 'Alliance Mobilization', utc(2026, 10, 5), 7 * DAY, KingdomEvent.TimeBasis.UTC,
      'alliance-mobilization'),
+    # several days like Alliance Mobilization; UTC 14.–17. 10. 2026 from Gether's screenshot (10. 10. 2026)
+    ('Karuak Ceremony', 'Karuak Ceremony', utc(2026, 10, 14), 3 * DAY, KingdomEvent.TimeBasis.UTC, ''),
 ]
 
 

@@ -551,5 +551,30 @@
     ],
     "guide": null,
     "is_active": false
+  },
+  {
+    "name_sk": "Karuak Ceremony",
+    "name_cs": "",
+    "icon": "ceroli",
+    "message": "**{name}** začína {start} ({relative}).",
+    "starts_at": "2026-10-14T00:00:00+00:00",
+    "duration_minutes": 4320,
+    "repeat_days": 0,
+    "until": null,
+    "irregular": true,
+    "time_basis": "utc",
+    "reminders": [
+      -1080
+    ],
+    "mention_role_id": "",
+    "mention_role": true,
+    "notify_discord": true,
+    "show_on_web": true,
+    "player_reminders": [
+      -1080,
+      180
+    ],
+    "guide": null,
+    "is_active": true
   }
 ]

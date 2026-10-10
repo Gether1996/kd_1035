@@ -899,7 +899,7 @@ class EventTemplateTests(TestCase):
         self.assertFalse(KingdomEvent.objects.filter(is_active=True, irregular=False).exists())
         for event in KingdomEvent.objects.filter(irregular=True):
             self.assertTrue(event.is_active)
-            self.assertEqual(events.upcoming(event, 1, now=utc(2026, 10, 8)), [])
+            self.assertEqual(events.upcoming(event, 1, now=utc(2026, 10, 20)), [])
         for event in KingdomEvent.objects.all():
             event.full_clean()
         mtg = KingdomEvent.objects.get(name_sk='More Than Gems')
@@ -910,6 +910,9 @@ class EventTemplateTests(TestCase):
         am = KingdomEvent.objects.get(name_sk='Alliance Mobilization')
         self.assertEqual((am.irregular, am.time_basis, am.duration_minutes), (True, 'utc', 7 * 24 * 60))
         self.assertEqual((am.reminders, am.player_reminders), ([EVENING_BEFORE], [EVENING_BEFORE, 180]))
+        karuak = KingdomEvent.objects.get(name_sk='Karuak Ceremony')
+        self.assertEqual((karuak.irregular, karuak.duration_minutes, karuak.icon), (True, 3 * 24 * 60, 'ceroli'))
+        self.assertEqual(karuak.reminders, [EVENING_BEFORE])
         # every template with game art gets its icon, and the icon file exists
         self.assertEqual(KingdomEvent.objects.get(name_sk='Karuak Boss').icon, 'ceroli')
         self.assertEqual(KingdomEvent.objects.get(name_sk='20 GH').icon, 'gold-head')
@@ -1044,6 +1047,23 @@ class EventTemplateTests(TestCase):
         # the first set keeps the original event (and the players' reminders of it)
         self.assertEqual(KingdomEvent.objects.get(pk=egg.pk).name_sk, "Holy Knight's Treasure – hruď, rukavice, topánky")
         self.assertFalse(EventNotification.objects.exists())
+
+    def test_karuak_ceremony_is_added_once_to_a_kingdom_with_events(self):
+        from importlib import import_module
+
+        from django.apps import apps
+
+        create = import_module('kingdom.migrations.0014_karuak_ceremony').create
+        create(apps, None)
+        self.assertFalse(KingdomEvent.objects.exists())  # a new database takes initial_events.json
+        KingdomEvent.objects.create(name_sk='MGE', starts_at=utc(2026, 10, 5))
+        create(apps, None)
+        create(apps, None)
+        karuak = KingdomEvent.objects.get(name_sk='Karuak Ceremony')
+        self.assertEqual((karuak.starts_at, karuak.duration_minutes), (utc(2026, 10, 14), 3 * 24 * 60))
+        self.assertEqual((karuak.irregular, karuak.time_basis, karuak.icon), (True, 'utc', 'ceroli'))
+        self.assertEqual((karuak.reminders, karuak.player_reminders), ([EVENING_BEFORE], [EVENING_BEFORE, 180]))
+        karuak.full_clean()
 
     def test_irregular_event_has_no_cycle(self):
         event = KingdomEvent(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=7, irregular=True)
