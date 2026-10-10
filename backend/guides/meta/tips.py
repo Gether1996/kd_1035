@@ -86,6 +86,11 @@ GUIDES = [
                 t('<strong>Farma zakladá:</strong> farma pošle 20 000 jednotiek, main pridá 240 000.',
                   '<strong>Farma zakládá:</strong> farma pošle 20 000 jednotek, main přidá 240 000.'),
             ]),
+            # Gether's screenshots from the game (10. 10. 2026)
+            ('figure', 'fort-rally-main-zaklada.webp', t('Main zakladá: main 216 300 jednotiek, farma 16 000.',
+                                                       'Main zakládá: main 216 300 jednotek, farma 16 000.')),
+            ('figure', 'fort-rally-farma-zaklada.webp', t('Farma zakladá: farma 20 000 jednotiek, main 246 000.',
+                                                        'Farma zakládá: farma 20 000 jednotek, main 246 000.')),
             ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
             ('ul', [
                 t('Na fort sa bežne chodí s aspoň 400 000 jednotkami. Práve kvôli menšej armáde sú straty väčšie a zranení idú do hospitalu, takže sa plní rýchlejšie.',
@@ -98,6 +103,8 @@ GUIDES = [
                 ('ap-potion', t('AP flašky', 'AP flašky')),
                 ('gold-key', t('Gold key', 'Gold key')),
             ]),
+            ('figure', 'fort-report-94.webp', t('Report: main spravil 94 % damage a dostal odmeny Tier 10.',
+                                              'Report: main udělal 94 % damage a dostal odměny Tier 10.')),
             ('sources', [GETHER]),
         ],
     },

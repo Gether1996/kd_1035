@@ -114,5 +114,5 @@
       "note": "Verzie v1.5.1–v1.6.3 (chýbajúce tagy dorobené ručne, HEAD pre odber kalendára mimo kola). Kritik znova site_finished=true → napísané docs/odporucania.md."
     }
   ],
-  "next": "Web je viac-menej hotový (docs/odporucania.md). Ďalšie kolo len na Getherov pokyn: kd-improve s focus na guides-search a game-clock-reset (zadania v docs/backlog.md → Odložené), prípadne drobnosti z kôl 4–6."
+  "next": "Kolá kd-improve sa už nespúšťajú (Gether 10. 10. 2026) – práca pokračuje klasicky v konverzácii. Mesačný kd-meta-update ostáva."
 }

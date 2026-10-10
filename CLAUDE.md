@@ -5,8 +5,8 @@ Promo web pre kráľovstvo **1035** v hre Rise of Kingdoms (https://rok.lilith.c
 Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové dôležité rozhodnutie (konfigurácia, dizajn, architektúra, workflow) hneď zapíš sem. Detaily jednotlivých oblastí sú v `docs/` (`docs/eventy.md`, `docs/navody.md`, `docs/ucty.md`) – čítaj ich len pri práci na danej oblasti a ich detaily zapisuj tam; tu ostáva jadro a pravidlá, ktoré platia vždy (Gether 9. 10. 2026: šetríme tokeny, tento súbor sa načítava do každej konverzácie aj každého agenta).
 
 ## Automatizácia agentmi
-- Web vylepšujú agenti v kolách (`kd-improve`) a návody sa mesačne aktualizujú (`kd-meta-update`). Plán, pravidlá a postup: `docs/agenti.md`, konfigurácia a stav kôl: `.claude/kd-agents.json`, čo je hotové a čo čaká: `docs/backlog.md`.
-- Keď Gether povie „pokračuj“ (aj na inom PC), najprv si prečítaj tieto tri súbory a pokračuj podľa `next` v `.claude/kd-agents.json`.
+- **Kolá agentov `kd-improve` sa už nespúšťajú** (Gether 10. 10. 2026: po 6. kole je web viac-menej hotový, ďalej pracujeme klasicky v konverzácii). Mesačná aktualizácia návodov (`kd-meta-update`) beží ďalej. História kôl: `docs/agenti.md`, `.claude/kd-agents.json`; čo je hotové a čo čaká: `docs/backlog.md`, odporúčania pre Gethera: `docs/odporucania.md`.
+- Keď Gether povie „pokračuj“ (aj na inom PC), prečítaj `docs/backlog.md` a `docs/odporucania.md`.
 - Opakované postupy sú skilly v `.claude/skills/` – `kd-verify` (testy + screenshoty), `kd-event-data` (zmena eventov), `kd-release` (nová verzia), `kd-review-branch` (vetva spolupracovníka); použi ich namiesto vymýšľania vlastných skriptov.
 
 ## Komunikácia
