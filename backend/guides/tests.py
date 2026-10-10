@@ -64,8 +64,8 @@ class SanitizeTests(TestCase):
 class MetaGuidesTests(TestCase):
     def test_rendered_guides_are_clean_bilingual_with_short_excerpts(self):
         for module in MODULES:
-            note = verified_note(module.VERIFIED, module.NOTE)
             for guide in module.GUIDES:
+                note = verified_note(guide.get('verified', module.VERIFIED), module.NOTE)
                 for lang in ('sk', 'cs'):
                     html = render(guide['blocks'], lang, note)
                     # what the sync writes is exactly what the sanitizer keeps
@@ -148,6 +148,16 @@ class MetaGuidesTests(TestCase):
                     text = html.split('<h2>Zdroje</h2>')[0]
                     self.assertNotIn('Chadsk', text, guide['slug'])
                     self.assertNotIn('WarDaddy', text, guide['slug'])
+
+    def test_a_source_without_a_link_and_a_guide_with_its_own_month(self):
+        from .meta import tips
+
+        html = render([('sources', [({'sk': 'Gether – overené v hre', 'cs': 'Gether – ověřeno ve hře'}, '')])], 'cs', {})
+        self.assertIn('<li>Gether – ověřeno ve hře</li>', html)
+        self.assertEqual(clean_html(html), html)
+        guides = {g['slug']: g for g in rendered_guides([tips])}
+        self.assertIn('Stav k augustu 2025', guides['speedupy-za-nepotrebne-siege']['html_sk'])
+        self.assertIn('Stav k októbru 2026', guides['maximum-speedupov-z-fortov']['html_sk'])
 
     def test_lineups_are_portraits_with_the_names_in_alt_and_title(self):
         html = render([('lineups', [('KvK1', [('Ivan IV', 'Achilles'), ('Sun Tzu',)])])], 'sk', {})

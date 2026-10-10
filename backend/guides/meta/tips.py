@@ -8,13 +8,15 @@ named only in the sources list, never in the text (Gether, 10. 10. 2026).
 from .render import t
 
 CATEGORY = 'tipy'
-# year-month of the source the tricks were checked against – shown as "Stav k augustu 2025" in every guide
+# year-month of the source a trick was checked against – "Stav k augustu 2025"; a guide may set its own 'verified'
 VERIFIED = '2025-08'
 NOTE = t('Triky fungujú, kým ich Lilith nezmení – pred väčšou akciou ich over na malom počte jednotiek.',
          'Triky fungují, dokud je Lilith nezmění – před větší akcí je ověř na malém počtu jednotek.')  # fmt: skip
 
 CH_SIEGE = ('WarDaddyChadski: 52 Days of Speed Ups For Free? Use this Old Trick (08/2025)',
             'https://www.youtube.com/watch?v=h1PRC3mPSSI')  # fmt: skip
+# no published source – Gether's own routine, confirmed in game (10. 10. 2026)
+GETHER = (t('Gether, R4 KD 1035 – overené v hre (10/2026)', 'Gether, R4 KD 1035 – ověřeno ve hře (10/2026)'), '')
 
 GUIDES = [
     {
@@ -58,6 +60,41 @@ GUIDES = [
                   'Dokud je hospital plný, umírají i jednotky zraněné v jiných bojích. Dělej to v klidném čase a potom hospital vyleč.'),
             ]),
             ('sources', [CH_SIEGE]),
+        ],
+    },
+    {
+        # confirmed in game by Gether (10. 10. 2026): the account with 90 %+ of the damage gets the full rewards;
+        # his split: main 210k + farm 15k, or farm 20k + main 240k; the fort level does not matter
+        'slug': 'maximum-speedupov-z-fortov',
+        'verified': '2026-10',
+        'title': t('Maximum speedupov z fortov s vlastnou farmou', 'Maximum speedupů z fortů s vlastní farmou'),
+        'blocks': [
+            ('p', t(
+                'Barbarský fort zober s vlastnou farmou namiesto spojencov. Keď main spraví aspoň 90 % damage, dostane '
+                'z fortu maximálne odmeny – a s nimi veľa speedupov.',
+                'Barbarský fort dej s vlastní farmou místo spojenců. Když main udělá aspoň 90 % damage, dostane z fortu '
+                'maximální odměny – a s nimi hodně speedupů.',
+            )),
+            ('note',),
+            ('h2', t('Ako na to', 'Jak na to')),
+            ('ul', [
+                t('<strong>Rally môže založiť main aj farma</strong>, druhý účet sa doň pridá. Na úrovni fortu nezáleží.',
+                  '<strong>Rally může založit main i farma</strong>, druhý účet se do ní přidá. Na úrovni fortu nezáleží.'),
+                t('<strong>Main musí spraviť aspoň 90 % damage.</strong> Farma pošle len malú armádu, main skoro všetko. Iba tak má main maximálne odmeny.',
+                  '<strong>Main musí udělat aspoň 90 % damage.</strong> Farma pošle jen malou armádu, main skoro všechno. Jen tak má main maximální odměny.'),
+                t('<strong>Main zakladá:</strong> main pošle 210 000 jednotiek, farma pridá 15 000.',
+                  '<strong>Main zakládá:</strong> main pošle 210 000 jednotek, farma přidá 15 000.'),
+                t('<strong>Farma zakladá:</strong> farma pošle 20 000 jednotiek, main pridá 240 000.',
+                  '<strong>Farma zakládá:</strong> farma pošle 20 000 jednotek, main přidá 240 000.'),
+            ]),
+            ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
+            ('ul', [
+                t('Farma má v oboch príkladoch zhruba 7 % jednotiek. Damage však závisí aj od commanderov – ak main maximum nedostal, pošli nabudúce z farmy menej.',
+                  'Farma má v obou příkladech zhruba 7 % jednotek. Damage ale závisí i na commanderech – pokud main maximum nedostal, pošli příště z farmy méně.'),
+                t('S veľkou armádou na forte sa hospital plní rýchlejšie. Za to dostaneš veľa speedupov.',
+                  'S velkou armádou na fortu se hospital plní rychleji. Za to dostaneš hodně speedupů.'),
+            ]),
+            ('sources', [GETHER]),
         ],
     },
 ]

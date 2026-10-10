@@ -1,7 +1,8 @@
 """Turns the guide data of the meta modules into the HTML stored in Guide.html_sk / html_cs.
 
 Blocks: ('p', text) · ('h2', text) · ('ul', [text, …]) · ('note',) · ('pairs', columns, rows)
-· ('lineups', [(label, [(primary, secondary), …]), …]) · ('table', columns, rows) · ('sources', [(label, url), …]).
+· ('lineups', [(label, [(primary, secondary), …]), …]) · ('table', columns, rows) · ('sources', [(label, url), …])
+– a source with url '' (e.g. confirmed in game by Gether) is plain text.
 A text is t(sk, cs) or a plain string.
 """
 
@@ -246,7 +247,10 @@ def render(blocks, lang, note):
         elif kind == 'sources':
             html.append(f'<h2>{LABELS[lang]["sources"]}</h2>')
             links = ''.join(
-                f'<li><a href="{url}" target="_blank" rel="noopener noreferrer">{label}</a></li>' for label, url in block[1]
+                f'<li><a href="{url}" target="_blank" rel="noopener noreferrer">{text(label, lang)}</a></li>'
+                if url
+                else f'<li>{text(label, lang)}</li>'
+                for label, url in block[1]
             )
             html.append(f'<ul>{links}</ul>')
         else:

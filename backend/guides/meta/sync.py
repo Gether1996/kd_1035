@@ -7,8 +7,9 @@ from .render import render, verified_note
 def rendered_guides(modules=MODULES):
     """Every guide of the meta modules as Guide field values (HTML already in its sanitized form)."""
     for module in modules:
-        note = verified_note(module.VERIFIED, module.NOTE)
         for order, guide in enumerate(module.GUIDES):
+            # a guide may carry its own 'verified' (tips: each trick has its own source and month)
+            note = verified_note(guide.get('verified', module.VERIFIED), module.NOTE)
             yield {
                 'slug': guide['slug'],
                 'category': module.CATEGORY,
