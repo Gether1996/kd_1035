@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **10. 10. 2026 – v1.6.0:** odber kalendára – všetky eventy kráľovstva v kalendári v mobile (Google, iPhone, Outlook) jedným odkazom, aktualizujú sa samy; na `/kalendar` blok „Odber kalendára“ (Pridať do kalendára, Kopírovať odkaz).
 - **10. 10. 2026 – v1.5.2:** na konci návodu „Súvisiace návody“ (napr. Páry pre jazdu → Výbava pre jazdu) a tlačidlo „Kopírovať odkaz“ – odkaz na návod do Discordu jedným ťuknutím aj na mobile.
 - **10. 10. 2026 – v1.5.1:** zdieľaný odkaz (`/kalendar?event=…&on=…`, `/navody?commander=…`) si pri presmerovaní na zapamätaný jazyk aj pri prepnutí SK/CZ nechá parametre – český hráč z Discordu uvidí event aj páry commandera.
 - **10. 10. 2026 – v1.5.0:** nová kategória návodov **Tipy a triky** (`/navody/tipy`) s prvým návodom Speedupy za nepotrebné siege jednotky; karty návodov na úvode 1 / 2 / 4 v rade.
@@ -34,7 +35,6 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Odložené
 
-- `ics-calendar-feed` Odber kalendára eventov (iCal) do mobilu – schválené, ďalšie na rade; postaviť na `kingdom/ical.py`. Má zmysel až po zapnutí rotácie.
 - `guides-search` Vyhľadávanie a filter v návodoch – schválené (`fold()` už je v `shared/search.ts`; čipy len so špecializáciami z dát, bez skoku hore pri zmene query).
 - `guide-related-and-share` Súvisiace návody + „Kopírovať odkaz“ na konci návodu – upraviť: clipboard → fallback `navigator.share`, helper `shared/copy-link.ts`, overiť špecializácie výbavy v `guides/meta`, sekcia až po načítaní.
 - `calendar-event-link-previews` Náhľad odkazu na event na Discorde – upraviť: builder v `kingdom/preview.py`, presne ukotvený nginx regex s `$args`, testy proti úniku skrytých eventov.
