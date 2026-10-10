@@ -1,9 +1,10 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 4 hotové, v1.4.0. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 5 hotové, v1.4.0. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
 
 ## Hotové
 
+- **10. 10. 2026 – kolo 5, UX analýza** (`docs/ux-analyza.md`): prečo web používať, čo chýba, poradie nápadov kola 5 (bez zmeny verzie).
 - **10. 10. 2026 – v1.4.0:** na `/navody` blok „Nájdi pár pre commandera“ – napíšeš meno commandera a uvidíš, s kým ho párujú naše návody (ako primárny, sekundárny, na koho sa sústrediť), s portrétmi a odkazom na návod.
 - **10. 10. 2026 – v1.3.2:** v detaile eventu v kalendári tlačidlá „Google Kalendár“ a „iPhone, Outlook (.ics)“ – jeden termín do vlastného kalendára bez prihlásenia.
 - **10. 10. 2026 – v1.3.1:** v sekcii Komunita odkaz „Ako prebieha migrácia“ priamo na kroky migrácie na `/o-nas`; pri členoch vedenia voliteľný riadok „na čo sa obrátiť“ (vypĺňa Gether v admine).
@@ -30,12 +31,16 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Odložené
 
-- Odber kalendára eventov (iCal) do mobilu – schválené, nepostavené.
+- `ics-calendar-feed` Odber kalendára eventov (iCal) do mobilu – schválené, ďalšie na rade; postaviť na `kingdom/ical.py`. Má zmysel až po zapnutí rotácie.
+- `guides-search` Vyhľadávanie a filter v návodoch – schválené (`fold()` už je v `shared/search.ts`; čipy len so špecializáciami z dát, bez skoku hore pri zmene query).
+- `guide-related-and-share` Súvisiace návody + „Kopírovať odkaz“ na konci návodu – upraviť: clipboard → fallback `navigator.share`, helper `shared/copy-link.ts`, overiť špecializácie výbavy v `guides/meta`, sekcia až po načítaní.
+- `calendar-event-link-previews` Náhľad odkazu na event na Discorde – upraviť: builder v `kingdom/preview.py`, presne ukotvený nginx regex s `$args`, testy proti úniku skrytých eventov.
+- `game-clock-reset` Herný čas UTC a odpočet do resetu – schválené, iba na `/kalendar` vedľa riadku s časovou zónou.
+- `a11y-audit-axe` Audit prístupnosti (axe) – schválené, len critical/serious, vrátane `/navody` a comboboxu hľadania commandera.
+- `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
+- Drobnosti z kola 5: tagy `v1.3.1` a `v1.3.2` chýbajú na origin; prepínač jazyka stratí `?commander=`; portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.
 - Testovacie odoslanie Discord notifikácie do súkromného kanála – schválené, čaká na `DISCORD_TEST_WEBHOOK_URL`.
-- Vyhľadávanie v rozcestníku `/navody` – rozcestník je hotový (v1.3.0), vyhľadávanie čaká.
-- Audit prístupnosti (axe) – upraviť (skip link už existuje, len critical/serious).
 - Týždenný prehľad eventov na Discorde – až po zapnutí rotácie a súhlase Gethera.
-- Stav migrácie v admine – iba ak vedenie chce stav udržiavať.
 - Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
 - Drobnosti z kola 4: spoločný štýl `.tag--live`, odkaz zlyhaných notifikácií len za 7 dní, naivný čas v `worker_status.json`, CZ „Kalendář“ na `/pripomienky` pretečie?, `#alliance` pri 360 px, nové screenshoty.
 
@@ -56,4 +61,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - Pre odložené funkcie: webhook testovacieho kanála (`DISCORD_TEST_WEBHOOK_URL`) a súkromného kanála vedenia (`DISCORD_STAFF_WEBHOOK_URL`).
 - **Skúšobná správa:** raz kliknúť „Poslať skúšobnú správu“ na `/pripomienky` (SK aj `/cz`) so skutočným Discord účtom.
 - **Úvod a návody:** na serveri zapnúť eventy rotácie so „zobraziť na webe“ (inak sekcia Najbližšie eventy ostane skrytá) a v admine prepojiť eventy s návodmi (pole „návod“).
+- **Vedenie – „na čo sa obrátiť“:** krátky text pre Methiu, Gethera a Hefariona v SK aj CZ (admin → Aliancia → vedenie); dovtedy riadok skrytý.
+- **Export eventu do kalendára:** na skutočnom zariadení stiahnuť .ics (napr. Ark of Osiris) a importovať do Google Kalendára a iPhone/macOS; overiť lokálny čas (00:00 UTC = 02:00 letný čas) a či Safari neuloží súbor do Files.
+- **Stav migrácie:** ak áno, aktuálny stav, poznámka a podmienky v SK aj CZ.
 - **Rozhodnúť:** týždenný prehľad na Discorde (`DISCORD_WEEKLY_DIGEST`, pondelok 9:00?), stav migrácie na webe, Discord Scheduled Events (`DISCORD_GUILD_ID` + právo Manage Events).
