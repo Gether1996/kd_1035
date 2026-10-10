@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **10. 10. 2026 – v1.6.1:** v dialógu eventu v kalendári tlačidlo „Kopírovať odkaz na event“ – odkaz otvorí ten istý mesiac s otvoreným dialógom (napr. Ark of Osiris do Discordu).
 - **10. 10. 2026 – v1.6.0:** odber kalendára – všetky eventy kráľovstva v kalendári v mobile (Google, iPhone, Outlook) jedným odkazom, aktualizujú sa samy; na `/kalendar` blok „Odber kalendára“ (Pridať do kalendára, Kopírovať odkaz).
 - **10. 10. 2026 – v1.5.2:** na konci návodu „Súvisiace návody“ (napr. Páry pre jazdu → Výbava pre jazdu) a tlačidlo „Kopírovať odkaz“ – odkaz na návod do Discordu jedným ťuknutím aj na mobile.
 - **10. 10. 2026 – v1.5.1:** zdieľaný odkaz (`/kalendar?event=…&on=…`, `/navody?commander=…`) si pri presmerovaní na zapamätaný jazyk aj pri prepnutí SK/CZ nechá parametre – český hráč z Discordu uvidí event aj páry commandera.
