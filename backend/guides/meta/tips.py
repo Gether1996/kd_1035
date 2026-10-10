@@ -22,6 +22,16 @@ STTUU_BIRTHDAY = ('Sttuu: Too Many RoK Players Are Sleeping on This', YT + '2GlA
 STTUU_SETTINGS = ('Sttuu: Most Players Are Using the Wrong Combat Settings', YT + 'Py6yVF1qwkM')
 STTUU_TIPS = ('Sttuu: 20 Tips and Tricks That Make a HUGE Difference', YT + 'N6yQuWNsWZU')
 STTUU_LESSONS = ('Sttuu: Even Experienced Players Learn These Lessons the Hard Way', YT + 'XBD_j0D-k3Q')
+CHIS_ARMS = ('Chisgule Gaming: Arms Training Guide to 1st', YT + 'q4jCY9dVCaY')
+CHIS_ARMS_ORDER = ('Chisgule Gaming: Copy this exact Arms Training Order', YT + 'VtJaNg2Na0I')
+CHIS_HOLY = ('Chisgule Gaming: Shocking Gem Value of Holy Knights Treasure', YT + 'gJfbc44gTSQ')
+CHIS_MATERIALS = ('Chisgule Gaming: Get More Materials NOW', YT + '7cvT0K-dUus')
+CHIS_TRANSMUTE = ('Chisgule Gaming: Save Transmutation Crystals', YT + 'hO870US6AH8')
+CHIS_ARMAMENT = ('Chisgule Gaming: Don’t make this armament mistake', YT + 'NmtyQ9YcWhI')
+CHIS_MIGRATION = ('Chisgule Gaming: Top 8 Migration Mistakes', YT + 'yQfN2Vome9E')
+CHIS_SLEEPER = ('Chisgule Gaming: Sleeper Accounts in Rise of Kingdoms', YT + 'WzPDjn5Y4uc')
+CHIS_SPEEDUPS = ('Chisgule Gaming: All ways to get Speedups in Rise of Kingdoms', YT + '3avRwxToaVU')
+CHIS_NEW = ('Chisgule Gaming: 16+ New Player Tips and Tricks', YT + 'UDZOvNAra8s')
 # no published source – Gether's own routine, confirmed in game (10. 10. 2026)
 GETHER = (t('Gether, R4 KD 1035 – overené v hre', 'Gether, R4 KD 1035 – ověřeno ve hře'), '')
 
@@ -275,6 +285,167 @@ GUIDES = [
                   'Dobré armamenty hned zamkni, aby ti je hromadné rozebírání nevzalo.'),
             ]),
             ('sources', [STTUU_TIPS, STTUU_LESSONS]),
+        ],
+    },
+    {
+        'slug': 'arms-training-vyssie-skore',
+        'title': t('Arms Training: vyššie skóre aj bez veľkého rozšírenia', 'Arms Training: vyšší skóre i bez velkého rozšíření'),
+        'blocks': [
+            ('p', t(
+                'V Arms Training proti Loharovi rozhoduje, koľko jednotiek ti na konci ostane. S dobrou prípravou sa dá dostať vysoko aj s 25 % rozšírením.',
+                'V Arms Training proti Loharovi rozhoduje, kolik jednotek ti na konci zůstane. S dobrou přípravou se dá dostat vysoko i s 25% rozšířením.',
+            )),
+            ('h2', t('Ako na to', 'Jak na to')),
+            ('ul', [
+                t('<strong>Bojuj na aliančnom území.</strong> Výskum územia dáva veľký bonus k útoku. Pomôže aj bojová runa (zdravie) a aktívny aliančný buff.',
+                  '<strong>Bojuj na aliančním území.</strong> Výzkum území dává velký bonus k útoku. Pomůže i bojová runa (zdraví) a aktivní alianční buff.'),
+                t('<strong>Poradie skillov nastav vopred.</strong> Každé kráľovstvo má inú ponuku skillov – tie, ktoré chýbajú, preskoč a ostatné nechaj v poradí.',
+                  '<strong>Pořadí skillů nastav předem.</strong> Každé království má jinou nabídku skillů – ty, které chybí, přeskoč a ostatní nech v pořadí.'),
+                t('<strong>Daj si horn na rage</strong> a armádu vyšli ručne. Kliknutie na preset by ti mohlo vymeniť výbavu.',
+                  '<strong>Dej si horn na rage</strong> a armádu vyšli ručně. Kliknutí na preset by ti mohlo vyměnit výbavu.'),
+                t('<strong>Okolie vyčisti od barbarov</strong> druhým pochodom. Barbar, ktorý na teba zaútočí, ti zníži počet jednotiek a tým aj skóre.',
+                  '<strong>Okolí vyčisti od barbarů</strong> druhým pochodem. Barbar, který na tebe zaútočí, ti sníží počet jednotek a tím i skóre.'),
+                t('<strong>Teleport netreba.</strong> Prvý Lohar sa objaví náhodne, ďalší už pri tvojom pochode. Stačí presunúť pochod späť na územie.',
+                  '<strong>Teleport není potřeba.</strong> První Lohar se objeví náhodně, další už u tvého pochodu. Stačí přesunout pochod zpět na území.'),
+            ]),
+            ('h2', t('Prečo sa to oplatí', 'Proč se to vyplatí')),
+            ('ul', [
+                t('S 25 % rozšírením a bez ďalších buffov sa takto dá dostať do top 4 kráľovstva.',
+                  'S 25% rozšířením a bez dalších buffů se takhle dá dostat do top 4 království.'),
+            ]),
+            ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
+            ('ul', [
+                t('Lohar sa nepočíta ako barbar, takže skilly s bonusom proti barbarom nepomôžu.',
+                  'Lohar se nepočítá jako barbar, takže skilly s bonusem proti barbarům nepomůžou.'),
+                t('Ikona, ktorá ukazuje, ktorý typ jednotiek je v kole oslabený, môže klamať. Over si to v záznamoch boja.',
+                  'Ikona, která ukazuje, který typ jednotek je v kole oslabený, může klamat. Ověř si to v záznamech boje.'),
+                t('Najvyššie miesta často berú hráči so skinom mesta, ktorý lieči jednotky.',
+                  'Nejvyšší místa často berou hráči se skinem města, který léčí jednotky.'),
+            ]),
+            ('sources', [CHIS_ARMS, CHIS_ARMS_ORDER]),
+        ],
+    },
+    {
+        'slug': 'holy-knights-treasure',
+        'title': t('Holy Knight’s Treasure: najviac za gemy', 'Holy Knight’s Treasure: nejvíc za gemy'),
+        'blocks': [
+            ('p', t(
+                'Holy Knight’s Treasure je raz za mesiac a za gemy dá viac ako VIP obchod – blueprinty, materiály aj speedupy.',
+                'Holy Knight’s Treasure je jednou za měsíc a za gemy dá víc než VIP obchod – blueprinty, materiály i speedupy.',
+            )),
+            ('h2', t('Ako na to', 'Jak na to')),
+            ('ul', [
+                t('<strong>Dotiahni ho aspoň na 10 točení</strong> – prvý pity stupeň dá kúsky blueprintu, ktorý si vyberieš.',
+                  '<strong>Dotáhni ho aspoň na 10 točení</strong> – první pity stupeň dá kousky blueprintu, který si vybereš.'),
+                t('<strong>Vzory sa každý mesiac striedajú.</strong> Najviac sa oplatí, keď je v ponuke vzor, ktorý potrebuješ.',
+                  '<strong>Vzory se každý měsíc střídají.</strong> Nejvíc se vyplatí, když je v nabídce vzor, který potřebuješ.'),
+                t('<strong>Nekuj hneď.</strong> Kovanie si nechaj na Alliance Mobilization.',
+                  '<strong>Nekuj hned.</strong> Kování si nech na Alliance Mobilization.'),
+            ]),
+            ('h2', t('Prečo sa to oplatí', 'Proč se to vyplatí')),
+            ('ul', [
+                t('S odmenami za stupne dá každý gem asi 2,4-násobok hodnoty VIP obchodu, bez nich asi 1,6-násobok.',
+                  'S odměnami za stupně dá každý gem asi 2,4násobek hodnoty VIP obchodu, bez nich asi 1,6násobek.'),
+                t('Väčšinu hodnoty tvoria legendárne blueprinty, nie materiály.',
+                  'Většinu hodnoty tvoří legendární blueprinty, ne materiály.'),
+            ]),
+            ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
+            ('ul', [
+                t('Dáva len blueprinty, materiály a speedupy. Ak potrebuješ napríklad armamenty, gemy daj inam.',
+                  'Dává jen blueprinty, materiály a speedupy. Pokud potřebuješ například armamenty, gemy dej jinam.'),
+                t('Celých 100 točení stojí asi 48 000 gemov. Ak chceš už len speedupy a materiály, po 100 točeniach je lepší VIP obchod.',
+                  'Celých 100 točení stojí asi 48 000 gemů. Pokud chceš už jen speedupy a materiály, po 100 točeních je lepší VIP obchod.'),
+            ]),
+            ('sources', [CHIS_HOLY, CHIS_MATERIALS]),
+        ],
+    },
+    {
+        'slug': 'armament-skusobne-rerolly',
+        'title': t('Lacné rerolly na nepotrebnom armamente', 'Levné rerolly na nepotřebném armamentu'),
+        'blocks': [
+            ('p', t(
+                'Namiesto drahého opravovania slabého armamentu skús šťastie na takom, ktorý nepoužívaš. Keď padne vysoký atribút, pokračuj s ním.',
+                'Místo drahého opravování slabého armamentu zkus štěstí na takovém, který nepoužíváš. Když padne vysoký atribut, pokračuj s ním.',
+            )),
+            ('h2', t('Ako na to', 'Jak na to')),
+            ('ul', [
+                t('<strong>Vezmi nepoužívaný armament</strong> rovnakého slotu a transmutuj ho bez zamknutých atribútov.',
+                  '<strong>Vezmi nepoužívaný armament</strong> stejného slotu a transmutuj ho bez zamčených atributů.'),
+                t('<strong>Keď padne vysoký atribút</strong>, zamkni ho a rerolluj zvyšné.',
+                  '<strong>Když padne vysoký atribut</strong>, zamkni ho a rerolluj zbylé.'),
+                t('<strong>Hotový armament premeň</strong> na inscription, ktorú potrebuješ. Pri vzácnom armamente to stojí 3 conversion stones.',
+                  '<strong>Hotový armament přeměň</strong> na inscription, kterou potřebuješ. U vzácného armamentu to stojí 3 conversion stones.'),
+            ]),
+            ('h2', t('Prečo sa to oplatí', 'Proč se to vyplatí')),
+            ('ul', [
+                t('Reroll bez zámku je najlacnejší, so zamknutým atribútom stojí trojnásobok a s dvoma päťnásobok. Vysoký atribút tak hľadáš za najnižšiu cenu.',
+                  'Reroll bez zámku je nejlevnější, se zamčeným atributem stojí trojnásobek a se dvěma pětinásobek. Vysoký atribut tak hledáš za nejnižší cenu.'),
+                t('V najhoršom prípade prídeš o armament, ktorý si aj tak nepoužíval.',
+                  'V nejhorším případě přijdeš o armament, který jsi stejně nepoužíval.'),
+            ]),
+            ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
+            ('ul', [
+                t('Bez zámku sa ti nebuduje pity – len skúšaš šťastie na vysoký atribút.', 'Bez zámku se ti nebuduje pity – jen zkoušíš štěstí na vysoký atribut.'),
+                t('Legendárna inscription stojí pri premene 10 conversion stones.', 'Legendární inscription stojí při přeměně 10 conversion stones.'),
+            ]),
+            ('sources', [CHIS_TRANSMUTE, CHIS_ARMAMENT]),
+        ],
+    },
+    {
+        'slug': 'pred-migraciou',
+        'title': t('Pred migráciou: na čo nezabudnúť', 'Před migrací: na co nezapomenout'),
+        'blocks': [
+            ('p', t(
+                'Pri migrácii sa najčastejšie zbytočne stratia jednotky, gemy alebo suroviny. Trocha plánovania ich ušetrí.',
+                'Při migraci se nejčastěji zbytečně ztratí jednotky, gemy nebo suroviny. Trocha plánování je ušetří.',
+            )),
+            ('h2', t('Ako na to', 'Jak na to')),
+            ('ul', [
+                t('<strong>Počkaj na vrátenie jednotiek po KvK.</strong> Pri najvyššom stupni KvK sa vráti až 65 % padlých jednotiek. Kto odíde skôr, dostane menej.',
+                  '<strong>Počkej na vrácení jednotek po KvK.</strong> U nejvyššího stupně KvK se vrátí až 65 % padlých jednotek. Kdo odejde dřív, dostane méně.'),
+                t('<strong>Miň suroviny, ktoré neprenesieš.</strong> Zlato daj do výbavy na zber, zvyšok do veľkého tréningu – ideálne pred Mightiest Governor alebo iným tréningovým eventom.',
+                  '<strong>Utrať suroviny, které nepřeneseš.</strong> Zlato dej do výbavy na sběr, zbytek do velkého tréninku – ideálně před Mightiest Governor nebo jiným tréninkovým eventem.'),
+                t('<strong>Po oznámení odchodu si daj štít</strong> (peace shield). Nie každé kráľovstvo sa k odchádzajúcim správa pekne.',
+                  '<strong>Po oznámení odchodu si dej štít</strong> (peace shield). Ne každé království se k odcházejícím chová hezky.'),
+                t('<strong>Neodchádzaj uprostred eventu.</strong> Najlepšie je prísť do nového kráľovstva počas eventu za gemy, napríklad Holy Knight’s Treasure – zahráš si ho v oboch.',
+                  '<strong>Neodcházej uprostřed eventu.</strong> Nejlepší je přijít do nového království během eventu za gemy, například Holy Knight’s Treasure – zahraješ si ho v obou.'),
+                t('<strong>Spoznaj hráčov nového kráľovstva</strong> na ich Discorde ešte pred príchodom.',
+                  '<strong>Seznam se s hráči nového království</strong> na jejich Discordu ještě před příchodem.'),
+            ]),
+            ('h2', t('Prečo sa to oplatí', 'Proč se to vyplatí')),
+            ('ul', [
+                t('Pas vyjde lacnejšie, keď máš nižšiu silu – pomôže napríklad plný hospital.',
+                  'Pas vyjde levněji, když máš nižší sílu – pomůže například plný hospital.'),
+            ]),
+            ('h2', t('Na čo si dať pozor', 'Na co si dát pozor')),
+            ('ul', [
+                t('Keď odchod oznámiš, aliancia ťa už nemusí prijať späť.', 'Když odchod oznámíš, aliance tě už nemusí přijmout zpět.'),
+            ]),
+            ('sources', [CHIS_MIGRATION, CHIS_SLEEPER]),
+        ],
+    },
+    {
+        'slug': 'speedupy-ktore-hraci-prehliadaju',
+        'title': t('Speedupy, ktoré hráči prehliadajú', 'Speedupy, které hráči přehlížejí'),
+        'blocks': [
+            ('p', t(
+                'Pár drobností, ktoré ti každý týždeň pridajú speedupy takmer bez námahy.',
+                'Pár drobností, které ti každý týden přidají speedupy téměř bez námahy.',
+            )),
+            ('h2', t('Ako na to', 'Jak na to')),
+            ('ul', [
+                t('<strong>Mapy kráľovstva si nechaj.</strong> Keď je hmla vyčistená, každá mapa dá 5-minútový speedup – 200 máp je 200 takýchto speedupov.',
+                  '<strong>Mapy království si nech.</strong> Když je mlha vyčištěná, každá mapa dá 5minutový speedup – 200 map je 200 takových speedupů.'),
+                t('<strong>Aliančné truhly otváraj denne.</strong> Po 24 hodinách zmiznú a ich otvorenie dá aj aliančné kredity.',
+                  '<strong>Alianční truhly otevírej denně.</strong> Po 24 hodinách zmizí a jejich otevření dá i alianční kredity.'),
+                t('<strong>Vo VIP obchode</strong> si každý týždeň kúp 55-minútové speedupy za suroviny.',
+                  '<strong>Ve VIP obchodě</strong> si každý týden kup 55minutové speedupy za suroviny.'),
+                t('<strong>Nenechaj AP plné.</strong> Kým je ukazovateľ plný, AP sa nedopĺňajú a prichádzaš o ne.',
+                  '<strong>Nenech AP plné.</strong> Dokud je ukazatel plný, AP se nedoplňují a přicházíš o ně.'),
+                t('<strong>Urýchli stavbu kasární a akadémie.</strong> Počas vylepšovania v nich nemôžeš trénovať ani skúmať, takže speedup tam pomôže dvakrát.',
+                  '<strong>Urychli stavbu kasáren a akademie.</strong> Během vylepšování v nich nemůžeš trénovat ani zkoumat, takže speedup tam pomůže dvakrát.'),
+            ]),
+            ('sources', [CHIS_SPEEDUPS, CHIS_NEW]),
         ],
     },
 ]
