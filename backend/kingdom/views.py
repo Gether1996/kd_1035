@@ -1,14 +1,18 @@
 import re
 from datetime import UTC, date, datetime, time, timedelta
 
+from django.conf import settings
+from django.http import HttpResponse, HttpResponseNotFound
 from django.utils import timezone
+from django.utils.text import slugify
+from django.views.decorators.http import require_GET
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import events
+from . import events, ical
 from .event_icons import icon_url
 from .models import Alliance, KingdomEvent, SocialLink
 from .serializers import AllianceSerializer, SocialLinkSerializer
@@ -125,3 +129,42 @@ class EventCalendar(APIView):
         response['Cache-Control'] = 'public, max-age=300'
         return response
 
+
+
+@require_GET
+def event_ics(request, pk):
+    """GET /api/events/<id>/ics?on=YYYY-MM-DD[&lang=cs] – the run of a public event shown on that day
+    (Europe/Bratislava, normally its first day) as an .ics file for the visitor's own calendar.
+
+    A hidden or inactive event, no run that day or a bad date is a bare 404 that names nothing.
+    """
+    raw = request.GET.get('on', '')
+    try:
+        day = date.fromisoformat(raw) if DATE.fullmatch(raw) else None
+    except ValueError:  # 2026-02-30
+        day = None
+    event = KingdomEvent.objects.filter(pk=pk, is_active=True, show_on_web=True).first() if day else None
+    begin = events.run_on(event, day) if event else None
+    if begin is None:
+        return HttpResponseNotFound(content_type='text/plain; charset=utf-8')
+
+    cs = request.GET.get('lang') == 'cs'
+    name = (cs and event.name_cs) or event.name_sk
+    origin = settings.SITE_URL or f'{request.scheme}://{request.get_host()}'
+    url = f'{origin}{"/cz" if cs else ""}/kalendar?event={event.pk}&on={day.isoformat()}'
+    length = timedelta(minutes=event.duration_minutes)
+    body = ical.event_file(
+        uid=f'{event.pk}-{ical.stamp(begin)}@kd1035',
+        name=name,
+        start=begin,
+        end=begin + length if length else None,
+        url=url,
+        description=f'Kingdom 1035: {url}',
+        now=timezone.now(),
+    )
+    response = HttpResponse(body, content_type='text/calendar; charset=utf-8')
+    filename = f'kd1035-{slugify(event.name_sk) or "event"}-{day.isoformat()}.ics'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Cache-Control'] = 'public, max-age=300'
+    response['X-Robots-Tag'] = 'noindex'
+    return response

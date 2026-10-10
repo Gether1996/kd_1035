@@ -1,7 +1,7 @@
 """Recurring kingdom events → occurrences → Discord reminders (EventNotification rows the worker sends)."""
 
 import math
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from itertools import islice
 from zoneinfo import ZoneInfo
 
@@ -96,6 +96,21 @@ def calendar(events, start: datetime, end: datetime, limit: int, now=None) -> li
     ]
     found.sort(key=lambda pair: (pair[0], pair[1].pk))
     return found[:limit]
+
+
+def run_on(event: KingdomEvent, day: date, now=None) -> datetime | None:
+    """Start of the event's run shown on the local day `day`: the one starting that day, otherwise one still running
+    then. An irregular event counts only while its run is ahead or running – an older start is a placeholder."""
+    now = now or timezone.now()
+    start = datetime.combine(day, time.min, tzinfo=LOCAL_TZ)
+    end = datetime.combine(day + timedelta(days=1), time.min, tzinfo=LOCAL_TZ)
+    length = timedelta(minutes=event.duration_minutes)
+    runs = [
+        begin
+        for begin in overlapping(event, start, end)
+        if not event.irregular or begin >= now or begin + length > now
+    ]
+    return next((begin for begin in runs if begin >= start), runs[0] if runs else None)
 
 
 def render(event: KingdomEvent, occurrence: datetime) -> str:
