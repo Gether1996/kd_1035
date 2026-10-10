@@ -1,6 +1,6 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 6 hotové, v1.6.3. Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 6 hotové, v1.6.3. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
 
 ## Hotové
 
@@ -42,12 +42,12 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - `game-clock-reset` Herný čas UTC a odpočet do resetu – schválené, odložené na ďalšie kolo. Iba na `/kalendar`; oba časovače rušiť v DestroyRef (test s fake timers), jeden helper „{h} h {m} min“ s testami 0:00, 23:59:30, 23:00.
 - Zvyšok auditu prístupnosti (`tools/a11y/audit.sh`, 10. 10. 2026): moderate/minor nález žiadny. Ostáva: ~1 600 kontrastov, ktoré axe nevie posúdiť (text na prechodoch a SVG krajine – „incomplete“ v `tools/a11y/out`), ručne prejsť; dialógy superusera v kalendári (editor eventu, dátumy) zatiaľ nie sú v `STATE_LIST`; ručný test klávesnicou (poradie fokusu, pasca fokusu v dialógoch).
 - `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
-- Drobnosti z kola 5: tagy `v1.3.1`, `v1.3.2`, `v1.5.1`, `v1.5.2`, `v1.6.0`, `v1.6.1`, `v1.6.2` chýbajú na origin (reviewer smie len `git push origin main`; pri release pushovať `main v<verzia>`); portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.
+- Drobnosti z kola 5: portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.
 - Testovacie odoslanie Discord notifikácie do súkromného kanála – schválené, čaká na `DISCORD_TEST_WEBHOOK_URL`.
 - Týždenný prehľad eventov na Discorde – až po zapnutí rotácie a súhlase Gethera.
 - Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
 - `ui-polish-leftovers` Drobnosti z kola 4 (kritik: upraviť, až po funkciách; rgba v commander-finder vynechať – len ako rozhodnutie pre celý repo): spoločný štýl `.tag--live` (screenshoty pred/po na 5 šírkach), odkaz zlyhaných notifikácií len za 7 dní, naivný čas v `worker_status.json` (test spätne kompatibilného čítania), CZ „Kalendář“ na `/pripomienky` pretečie?, `#alliance` pri 360 px, nové screenshoty.
-- Drobnosti z kola 6: `/api/calendar.ics` a `.ics` eventu odpovedajú na HEAD 405 → `require_safe` + test; dialóg eventu sa pri prepnutí jazyka zatvorí (kalendár maže `?event=` z URL); konzolová chyba „Transition was skipped“ pri deep linku v kalendári; opakované „Kopírovať odkaz“ do 2,5 s čítačka neoznámi znova (návod aj dialóg); na desktop Chrome/Edge pri odmietnutí clipboardu otvorí systémové zdieľanie; náhľad skončeného jednorazového eventu bez `on` hovorí „ďalší termín oznámime“; „termín oznámime“ odlíšiť aj inak než kurzívou; release commit má byť posledný v úlohe.
+- Drobnosti z kola 6: `.ics` jedného eventu odpovedá na HEAD 405 (odber `/api/calendar.ics` už HEAD vie); dialóg eventu sa pri prepnutí jazyka zatvorí (kalendár maže `?event=` z URL); konzolová chyba „Transition was skipped“ pri deep linku v kalendári; opakované „Kopírovať odkaz“ do 2,5 s čítačka neoznámi znova (návod aj dialóg); na desktop Chrome/Edge pri odmietnutí clipboardu otvorí systémové zdieľanie; náhľad skončeného jednorazového eventu bez `on` hovorí „ďalší termín oznámime“; „termín oznámime“ odlíšiť aj inak než kurzívou; release commit má byť posledný v úlohe.
 
 ## Zamietnuté
 
@@ -73,5 +73,4 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - **Rozhodnúť:** týždenný prehľad na Discorde (`DISCORD_WEEKLY_DIGEST`, pondelok 9:00?), stav migrácie na webe, Discord Scheduled Events (`DISCORD_GUILD_ID` + právo Manage Events).
 - **Odber kalendára (v1.6.0):** po nasadení sa raz prihlásiť na odber v Google Kalendári (Iné kalendáre → Z URL, skopírovaný https odkaz) a na iPhone („Pridať do kalendára“); Google obnovuje hodiny až deň. Voliteľne `https://kd1035.eu/api/calendar.ics` do validátora (icalendar.org).
 - **Náhľad eventu (v1.6.2):** po nasadení vložiť odkaz na event do Discord kanála a skontrolovať kartu (čerstvý odkaz, Discord cachuje).
-- **Release tagy:** `git tag v1.5.2 d43dcdc && git tag v1.6.0 e5d78fa && git tag v1.6.1 92b69c0 && git tag v1.6.2 85e0269 && git push origin v1.3.1 v1.3.2 v1.5.1 v1.5.2 v1.6.0 v1.6.1 v1.6.2` (ak ich orchestrátor nedoplní).
 - **Rozhodnúť:** chce Gether príkaz /eventy pre bota na Discorde (áno/nie)? Ak áno, `DISCORD_PUBLIC_KEY` (+ voliteľne `DISCORD_GUILD_ID`) do `.env` na serveri.

@@ -92,7 +92,27 @@
         "migration-status"
       ],
       "note": "Zameranie: UX analýza (docs/ux-analyza.md). Verzie v1.3.0–v1.4.0 (tagy v1.3.1 a v1.3.2 dorobené ručne). Mimo kola: pripomienka deň vopred o 18:00, Karuak Ceremony, návody bez F2P stĺpca so zostavami ako portréty (v1.2.x), kategória Tipy a triky (v1.5.0). Kritik: site_finished=true, zvyšok je nasadenie a obsah od Gethera."
+    },
+    {
+      "round": 6,
+      "date": "2026-10-10",
+      "shipped": [
+        "lang-switch-keeps-query",
+        "guide-related-and-share",
+        "ics-calendar-feed",
+        "event-copy-link",
+        "calendar-event-link-previews",
+        "a11y-audit-axe"
+      ],
+      "approved_not_built": [
+        "guides-search",
+        "game-clock-reset"
+      ],
+      "rejected": [
+        "discord-slash-events"
+      ],
+      "note": "Verzie v1.5.1–v1.6.3 (chýbajúce tagy dorobené ručne, HEAD pre odber kalendára mimo kola). Kritik znova site_finished=true → napísané docs/odporucania.md."
     }
   ],
-  "next": "Spusti workflow kd-improve (scriptPath .claude/workflows/kd-improve.js) s args z .claude/kd-agents/next-round.json (doplň date). Schválené na stavbu z kola 5: guides-search, ics-calendar-feed, game-clock-reset, a11y-audit-axe, guide-related-and-share, calendar-event-link-previews (zadania v docs/ux-analyza.md). Kritik v kole 5 uviedol site_finished=true – po tomto kole napísať docs/odporucania.md."
+  "next": "Web je viac-menej hotový (docs/odporucania.md). Ďalšie kolo len na Getherov pokyn: kd-improve s focus na guides-search a game-clock-reset (zadania v docs/backlog.md → Odložené), prípadne drobnosti z kôl 4–6."
 }
