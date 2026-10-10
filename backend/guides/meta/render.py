@@ -1,7 +1,8 @@
 """Turns the guide data of the meta modules into the HTML stored in Guide.html_sk / html_cs.
 
 Blocks: ('p', text) · ('h2', text) · ('ul', [text, …]) · ('note',) · ('pairs', columns, rows)
-· ('table', columns, rows) · ('sources', [(label, url), …]). A text is t(sk, cs) or a plain string.
+· ('lineups', [(label, [(primary, secondary), …]), …]) · ('table', columns, rows) · ('sources', [(label, url), …]).
+A text is t(sk, cs) or a plain string.
 """
 
 import re
@@ -132,6 +133,25 @@ def _icon(kind, name, small=False):
     return f'<img class="pic__icon{extra}" src="{src}" alt="" width="{size}" height="{size}" loading="lazy">'
 
 
+def _portrait(name):
+    """A commander's portrait standing for the name itself (alt and tooltip carry the name)."""
+    src = f'/static/guides/commanders/{slug(name)}.webp'
+    return f'<img class="pic__icon" src="{src}" alt="{name}" title="{name}" width="44" height="44" loading="lazy">'
+
+
+def _lineups(rows, lang):
+    """Army line-ups as portraits only (Gether, 10. 10. 2026): a label, then one group per army – a pair or a single
+    commander. The names are in the pair tables above, here the faces are enough."""
+    items = ''
+    for label, armies in rows:
+        groups = ''.join(
+            f'<span class="army" title="{" + ".join(army)}">{"".join(_portrait(name) for name in army)}</span>'
+            for army in armies
+        )
+        items += f'<li><strong>{text(label, lang)}</strong><span class="lineups__armies">{groups}</span></li>'
+    return f'<ul class="lineups">{items}</ul>'
+
+
 def _with_icons(kind, icons, html):
     """Icons in front of the name(s); on phones they sit above it (styles.scss → .prose .pic)."""
     if not icons:
@@ -155,6 +175,9 @@ def _pairs(columns, rows, lang):
         for row in rows:
             cells = ''
             for c in columns:
+                if c == 'f2p':
+                    cells += f'<td>{labels[row["f2p"]]}</td>'
+                    continue
                 value = f'<strong>{text(row[c], lang)}</strong>' if c == 'primary' else text(row[c], lang)
                 if c in ('primary', 'secondary'):
                     value = _with_icons('commanders', commander_icons(row[c]), value)
@@ -223,6 +246,8 @@ def render(blocks, lang, note):
             html.append('<ul>' + ''.join(f'<li>{text(item, lang)}</li>' for item in block[1]) + '</ul>')
         elif kind == 'pairs':
             html.append(_pairs(block[1], block[2], lang))
+        elif kind == 'lineups':
+            html.append(_lineups(block[1], lang))
         elif kind == 'table':
             html.append(_table(block[1], block[2], lang))
         elif kind == 'sources':

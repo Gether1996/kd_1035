@@ -126,12 +126,46 @@ class MetaGuidesTests(TestCase):
             with self.assertRaises(CommandError):
                 call_command('fetch_gear_icons', 'Unknown Blade', stdout=StringIO())
 
+    def test_every_pair_table_says_whether_it_is_f2p(self):
+        # Gether, 10. 10. 2026: F2P everywhere
+        from .meta import commanders
+
+        for guide in commanders.GUIDES:
+            for block in guide['blocks']:
+                if block[0] == 'pairs':
+                    self.assertIn('f2p', block[1], guide['slug'])
+                    for row in block[2]:
+                        self.assertIn(row['f2p'], ('yes', 'partly', 'no'), guide['slug'])
+
+    def test_sources_are_named_only_in_the_sources_list(self):
+        # Gether, 10. 10. 2026: no "podľa Chadského" in the text, the video is listed under Zdroje
+        for module in MODULES:
+            note = verified_note(module.VERIFIED, module.NOTE)
+            for guide in module.GUIDES:
+                for lang in ('sk', 'cs'):
+                    html = render(guide['blocks'], lang, note)
+                    text = html.split('<h2>Zdroje</h2>')[0]
+                    self.assertNotIn('Chadsk', text, guide['slug'])
+                    self.assertNotIn('WarDaddy', text, guide['slug'])
+
+    def test_lineups_are_portraits_with_the_names_in_alt_and_title(self):
+        html = render([('lineups', [('KvK1', [('Ivan IV', 'Achilles'), ('Sun Tzu',)])])], 'sk', {})
+        self.assertEqual(clean_html(html), html)
+        self.assertIn('<strong>KvK1</strong>', html)
+        self.assertIn('<span class="army" title="Ivan IV + Achilles">', html)
+        self.assertIn('src="/static/guides/commanders/ivan-iv.webp" alt="Ivan IV" title="Ivan IV"', html)
+        self.assertIn('<span class="army" title="Sun Tzu"><img', html)
+
     def test_every_commander_in_pair_tables_has_a_portrait(self):
         # a new commander from the monthly meta update needs a portrait: manage.py fetch_commander_icons "Name"
         from .meta import commanders
 
         for guide in commanders.GUIDES:
             for block in guide['blocks']:
+                if block[0] == 'lineups':  # portraits only, no names next to them
+                    for _, armies in block[1]:
+                        for name in (name for army in armies for name in army):
+                            self.assertEqual(commander_icons(name), [slug(name)], f'{guide["slug"]}: {name}')
                 if block[0] != 'pairs':
                     continue
                 for row in block[2]:

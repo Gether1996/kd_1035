@@ -983,10 +983,55 @@ p {
     gap: 12px;
   }
 
+  // wraps in a narrow cell: three portraits (Attila / Gang Gamchan + Marshal) would spill into the next column
   .pic__icons {
     display: flex;
+    flex-wrap: wrap;
     flex-shrink: 0;
     gap: 6px;
+    max-width: 100%;
+  }
+
+  // army line-ups as portraits only, one framed group per army (render.py _lineups)
+  .lineups {
+    padding-left: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 16px;
+    }
+
+    li + li {
+      margin-top: 14px;
+    }
+
+    strong {
+      flex: 0 0 9.5em;
+    }
+  }
+
+  .lineups__armies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .army {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.02);
+
+    img.pic__icon {
+      width: 40px;
+      height: 40px;
+      padding: 2px;
+    }
   }
 
   img.pic__icon {
@@ -1021,6 +1066,11 @@ p {
       width: 36px;
       height: 36px;
       padding: 2px;
+    }
+
+    // the label above the armies
+    .lineups strong {
+      flex-basis: 100%;
     }
   }
 
