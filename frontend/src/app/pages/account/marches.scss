@@ -43,9 +43,30 @@
   color: var(--text-dim);
 }
 
-.march__remove {
-  min-height: 38px;
-  padding: 0 14px;
+.march--editing {
+  border-color: var(--line-strong);
+}
+
+.march__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .pill-btn,
+  .danger {
+    min-height: 38px;
+    padding: 0 14px;
+  }
+
+  .icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.march-hint {
+  margin-top: 14px;
+  color: var(--text-dim);
 }
 
 // the eight march types as icons; the chosen one is lit
@@ -137,6 +158,29 @@
   }
 }
 
+.pick--view {
+  cursor: default;
+
+  &:hover {
+    border-color: var(--field-line);
+  }
+}
+
+.pick__body {
+  display: grid;
+  min-width: 0;
+
+  small {
+    font-size: 0.75rem;
+    color: var(--text-mute);
+  }
+}
+
+.pick.is-invalid,
+.kind-picker.is-invalid .kind {
+  border-color: var(--red-500);
+}
+
 .pick__name {
   min-width: 0;
   overflow-wrap: break-word;
@@ -145,6 +189,37 @@
 
 .shots--march {
   margin-top: 0;
+}
+
+.shot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+// Gether's screenshot from the game: what the upload should show
+.example {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: var(--text-mute);
+  font-size: 0.8125rem;
+
+  img {
+    width: auto;
+    max-width: 120px;
+    height: 88px;
+    object-fit: contain;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    opacity: 0.85;
+  }
+
+  &:hover img {
+    opacity: 1;
+  }
 }
 
 .add-march {
@@ -191,11 +266,18 @@
   max-height: min(52dvh, 460px);
   margin: 0;
   padding: 2px;
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
+
+  // grid items shrink with their column
+  > li {
+    min-width: 0;
+  }
 }
 
 .picker-tile {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -226,6 +308,12 @@
     background: rgba(245, 196, 81, 0.12);
     color: var(--gold-100);
   }
+}
+
+// a long name ("Nebuchadnezzar II") wraps instead of widening the grid
+.picker-tile__name {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .picker-tile--clear {

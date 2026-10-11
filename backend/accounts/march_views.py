@@ -19,6 +19,8 @@ from .models import MAX_MARCHES, March, MarchImage
 from .reminder_views import IsPlayer, WriteThrottle
 
 IMAGE_KINDS = [kind for kind, _ in MarchImage.Kind.choices]
+# one screenshot of the equipment and one of the armaments per march (Gether 11. 10. 2026)
+MAX_IMAGES_PER_KIND = 1
 
 
 class MarchSerializer(serializers.Serializer):
@@ -27,6 +29,11 @@ class MarchSerializer(serializers.Serializer):
     secondary = serializers.CharField(max_length=40, allow_blank=True, required=False)
 
     def validate(self, data):
+        # a new march is saved with its type and primary commander (the web asks for both)
+        if not self.partial:
+            for field in ('kind', 'primary'):
+                if not data.get(field):
+                    raise serializers.ValidationError({field: 'required'})
         # only commanders of our guides – the web shows their portraits
         known = {c['name'] for c in commander_index()}
         for field in ('primary', 'secondary'):
@@ -86,13 +93,13 @@ def march(request, march_id):
 @permission_classes([IsPlayer])
 @throttle_classes([UploadThrottle])
 def upload(request, march_id):
-    """POST multipart {kind: equipment|armaments, file}: a screenshot of the march (max 3 per kind)."""
+    """POST multipart {kind: equipment|armaments, file}: the screenshot of the march's equipment or armaments (one each)."""
     mine = get_object_or_404(March, pk=march_id, player=request.user.player)
     kind = request.data.get('kind')
     upload_file = request.FILES.get('file')
     if kind not in IMAGE_KINDS or not upload_file:
         return Response({'detail': 'bad_request'}, status=400)
-    if mine.images.filter(kind=kind).count() >= private_images.MAX_PER_KIND:
+    if mine.images.filter(kind=kind).count() >= MAX_IMAGES_PER_KIND:
         return Response({'detail': 'limit'}, status=400)
     try:
         picture = store_image(MarchImage, upload_file, 'marches', march=mine, kind=kind)

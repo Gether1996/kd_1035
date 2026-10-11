@@ -13,134 +13,201 @@
   } @else if (loaded()) {
     <ol class="march-list">
       @for (march of marches(); track march.id) {
-        <li class="march">
-          <header class="march__head">
-            @if (march.kind) {
-              <img class="march__kind-icon" [src]="icon(march.kind)" alt="" width="96" height="96" />
-            }
-            <h3 class="march__title">
-              {{ m.march.replace('{n}', '' + march.position) }}
+        @if (draft()?.id === march.id) {
+          <li class="march march--editing">
+            <ng-container *ngTemplateOutlet="editor" />
+          </li>
+        } @else {
+          <li class="march">
+            <header class="march__head">
               @if (march.kind) {
-                <span class="march__kind-name">· {{ m.kinds[march.kind] }}</span>
+                <img class="march__kind-icon" [src]="icon(march.kind)" alt="" width="96" height="96" />
               }
-            </h3>
-            <button type="button" class="danger march__remove" [class.is-armed]="armed() === march.id" (click)="remove(march)">
-              <svg appIcon="trash-2"></svg>{{ armed() === march.id ? m.removeConfirm : m.remove }}
-            </button>
-          </header>
-
-          <fieldset class="field">
-            <legend class="field__label">{{ m.kind }}</legend>
-            <div class="kind-picker">
-              @for (kind of kinds; track kind) {
-                <button
-                  type="button"
-                  class="kind"
-                  [attr.aria-pressed]="march.kind === kind"
-                  [attr.aria-label]="m.kinds[kind]"
-                  [title]="m.kinds[kind]"
-                  (click)="setKind(march, kind)"
-                >
-                  <img [src]="icon(kind)" alt="" width="96" height="96" />
+              <h3 class="march__title">
+                {{ m.march.replace('{n}', '' + march.position) }}
+                @if (march.kind) {
+                  <span class="march__kind-name">· {{ m.kinds[march.kind] }}</span>
+                }
+              </h3>
+              <div class="march__actions">
+                <button type="button" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="!!draft() || null" (click)="edit(march)">
+                  <svg appIcon="pencil"></svg>{{ m.edit }}
                 </button>
-              }
-            </div>
-          </fieldset>
+                <button type="button" class="danger" [class.is-armed]="armed() === march.id" (click)="remove(march)">
+                  <svg appIcon="trash-2"></svg>{{ armed() === march.id ? m.removeConfirm : m.remove }}
+                </button>
+              </div>
+            </header>
 
-          <div class="pair">
-            @for (slot of ['primary', 'secondary']; track slot) {
-              @let name = slot === 'primary' ? march.primary : march.secondary;
-              <div class="field">
-                <span class="field__label" [id]="'march-' + march.id + '-' + slot">{{ m.slots[slot === 'primary' ? 'primary' : 'secondary'] }}</span>
-                <button
-                  type="button"
-                  class="pick"
-                  [attr.aria-labelledby]="'march-' + march.id + '-' + slot + ' march-' + march.id + '-' + slot + '-value'"
-                  (click)="openPicker(march, slot === 'primary' ? 'primary' : 'secondary', $event)"
-                >
+            <div class="pair pair--view">
+              @for (name of [march.primary, march.secondary]; track $index) {
+                <div class="pick pick--view">
                   @if (name && portrait(name); as src) {
                     <img class="pick__portrait" [src]="src" alt="" width="96" height="96" />
                   } @else {
-                    <span class="pick__portrait pick__portrait--empty"><svg appIcon="plus"></svg></span>
+                    <span class="pick__portrait pick__portrait--empty"></span>
                   }
-                  <span class="pick__name" [id]="'march-' + march.id + '-' + slot + '-value'">{{ name || m.choose }}</span>
-                </button>
-              </div>
-            }
-          </div>
-
-          <div class="shots shots--march">
-            @for (kind of imageKinds; track kind) {
-              @let key = march.id + '-' + kind;
-              <div class="shot-group" role="group" [attr.aria-labelledby]="'march-shots-' + key">
-                <div class="shot-group__head">
-                  <h4 class="shot-group__title" [id]="'march-shots-' + key">{{ m.images[kind] }}</h4>
-                  <span class="shot-group__count">{{ imagesOf(march, kind).length }}/{{ maxPerKind }}</span>
+                  <span class="pick__body">
+                    <small>{{ m.slots[$index ? 'secondary' : 'primary'] }}</small>
+                    <span class="pick__name">{{ name || '–' }}</span>
+                  </span>
                 </div>
-                <ul class="thumbs">
-                  @for (image of imagesOf(march, kind); track image.id) {
-                    <li class="thumb">
-                      <a [href]="image.url" target="_blank" rel="noopener">
-                        <img [src]="image.thumb" [alt]="m.images[kind]" loading="lazy" />
-                      </a>
-                      <button
-                        type="button"
-                        class="thumb__remove"
-                        [attr.aria-label]="m.removeImage + ': ' + m.images[kind]"
-                        (click)="removeImage(march, image)"
-                      >
-                        <svg appIcon="x"></svg>
-                      </button>
-                    </li>
-                  }
-                  @if (imagesOf(march, kind).length < maxPerKind) {
-                    <li>
+              }
+            </div>
+
+            <div class="shots shots--march">
+              @for (kind of imageKinds; track kind) {
+                @let key = march.id + '-' + kind;
+                @let image = imageOf(march, kind);
+                <div class="shot-group" role="group" [attr.aria-labelledby]="'march-shots-' + key">
+                  <div class="shot-group__head">
+                    <h4 class="shot-group__title" [id]="'march-shots-' + key">
+                      @if (image) {
+                        <svg class="shot-group__ok" appIcon="check"></svg>
+                      }
+                      {{ m.images[kind] }}
+                    </h4>
+                  </div>
+                  <div class="shot-row">
+                    @if (image) {
+                      <div class="thumb">
+                        <a [href]="image.url" target="_blank" rel="noopener">
+                          <img [src]="image.thumb" [alt]="m.images[kind]" loading="lazy" />
+                        </a>
+                        <button
+                          type="button"
+                          class="thumb__remove"
+                          [attr.aria-label]="m.removeImage + ': ' + m.images[kind]"
+                          (click)="removeImage(march, image)"
+                        >
+                          <svg appIcon="x"></svg>
+                        </button>
+                      </div>
+                    } @else {
                       <label class="thumb thumb--add" [class.is-busy]="uploading().has(key)">
                         <input
                           #file
                           class="sr-only"
                           type="file"
                           accept="image/png,image/jpeg,image/webp"
-                          multiple
                           [disabled]="uploading().has(key)"
                           (change)="upload(march, kind, file)"
                         />
                         <svg appIcon="plus"></svg>
                         <span>{{ uploading().has(key) ? m.uploading : m.addImage }}</span>
                       </label>
-                    </li>
+                    }
+                    <!-- what the screenshot should show (Gether's examples from the game) -->
+                    <a class="example" [href]="'img/examples/' + kind + '.webp'" target="_blank" rel="noopener">
+                      <img [src]="'img/examples/' + kind + '.webp'" alt="" loading="lazy" />
+                      <span>{{ m.example }}</span>
+                    </a>
+                  </div>
+                  @if (uploadError(); as u) {
+                    @if (u.key === key) {
+                      <p class="shot-group__error" role="alert">{{ i18n.t().kvk.uploadErrors[u.error] }}</p>
+                    }
                   }
-                </ul>
-                @if (uploadError(); as u) {
-                  @if (u.key === key) {
-                    <p class="shot-group__error" role="alert">{{ i18n.t().kvk.uploadErrors[u.error] }}</p>
-                  }
-                }
-              </div>
-            }
-          </div>
+                </div>
+              }
+            </div>
+          </li>
+        }
+      }
+      @if (draft()?.id === null) {
+        <li class="march march--editing">
+          <ng-container *ngTemplateOutlet="editor" />
         </li>
       }
     </ol>
 
-    @if (marches().length < max()) {
+    @if (canAdd()) {
       <button type="button" class="add-march" [attr.aria-disabled]="busy() || null" (click)="add()">
         <span class="add-march__plus"><svg appIcon="plus"></svg></span>
         {{ addLabel() }}
       </button>
+    } @else if (draft() && marches().length < max()) {
+      <p class="march-hint">{{ m.saveFirst }}</p>
     }
     <p class="form__state is-error" role="status">{{ error() }}</p>
     <p class="panel__privacy">{{ m.privacy }}</p>
   }
 </section>
 
+<!-- the march being edited (new or saved): type and commanders; nothing is sent before "Uložiť" -->
+<ng-template #editor>
+  @if (draft(); as d) {
+    <header class="march__head">
+      <h3 class="march__title">{{ m.march.replace('{n}', '' + draftPosition()) }}</h3>
+    </header>
+
+    <fieldset class="field">
+      <legend class="field__label">{{ m.kind }}</legend>
+      <div class="kind-picker" [class.is-invalid]="draftError() === 'kind'">
+        @for (kind of kinds; track kind) {
+          <button
+            type="button"
+            class="kind"
+            [attr.aria-pressed]="d.kind === kind"
+            [attr.aria-label]="m.kinds[kind]"
+            [title]="m.kinds[kind]"
+            (click)="setKind(kind)"
+          >
+            <img [src]="icon(kind)" alt="" width="96" height="96" />
+          </button>
+        }
+      </div>
+      @if (d.kind) {
+        <p class="field__hint">{{ m.kinds[d.kind] }}</p>
+      }
+    </fieldset>
+
+    <div class="pair">
+      @for (slot of ['primary', 'secondary']; track slot) {
+        @let isPrimary = slot === 'primary';
+        @let name = isPrimary ? d.primary : d.secondary;
+        <div class="field">
+          <span class="field__label" [id]="'march-draft-' + slot">{{ m.slots[isPrimary ? 'primary' : 'secondary'] }}</span>
+          <button
+            type="button"
+            class="pick"
+            [class.is-invalid]="isPrimary && draftError() === 'primary'"
+            [attr.aria-labelledby]="'march-draft-' + slot + ' march-draft-' + slot + '-value'"
+            (click)="openPicker(isPrimary ? 'primary' : 'secondary', $event)"
+          >
+            @if (name && portrait(name); as src) {
+              <img class="pick__portrait" [src]="src" alt="" width="96" height="96" />
+            } @else {
+              <span class="pick__portrait pick__portrait--empty"><svg appIcon="plus"></svg></span>
+            }
+            <span class="pick__name" [id]="'march-draft-' + slot + '-value'">{{ name || m.choose }}</span>
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="form__actions">
+      <button type="button" class="pill-btn" [attr.aria-disabled]="busy() || null" (click)="save()">{{ m.save }}</button>
+      <button type="button" class="pill-btn pill-btn--quiet" (click)="cancel()">{{ m.cancel }}</button>
+      <p class="form__state is-error" role="status">
+        @if (draftError(); as e) {
+          {{ m.required[e] }}
+        }
+      </p>
+    </div>
+    @if (d.id === null) {
+      <p class="field__hint">{{ m.shotsAfterSave }}</p>
+    }
+  }
+</ng-template>
+
 <dialog #picker class="modal modal--wide" (close)="pickerClosed()" aria-labelledby="march-picker-title">
-  @if (picking(); as p) {
+  @if (picking(); as slot) {
     <div class="modal__body">
       <header class="modal__head">
         <div class="modal__heading">
-          <h2 class="modal__title" id="march-picker-title">{{ m.slots[p.slot] }}</h2>
-          <p class="modal__eyebrow">{{ m.march.replace('{n}', '' + p.march.position) }}</p>
+          <h2 class="modal__title" id="march-picker-title">{{ m.slots[slot] }}</h2>
+          <p class="modal__eyebrow">{{ m.march.replace('{n}', '' + draftPosition()) }}</p>
         </div>
         <button type="button" class="modal__close" [attr.aria-label]="i18n.t().kvk.close" (click)="closePicker()">
           <svg appIcon="x"></svg>
@@ -160,19 +227,19 @@
         />
       </div>
       <ul class="picker-grid">
-        @if (p.march[p.slot]) {
+        @if (draft()?.[slot]) {
           <li>
             <button type="button" class="picker-tile picker-tile--clear" (click)="pick('')">
               <span class="pick__portrait pick__portrait--empty"><svg appIcon="x"></svg></span>
-              {{ m.clear }}
+              <span class="picker-tile__name">{{ m.clear }}</span>
             </button>
           </li>
         }
         @for (c of shown(); track c.icon) {
           <li>
-            <button type="button" class="picker-tile" [attr.aria-pressed]="p.march[p.slot] === c.name" (click)="pick(c.name)">
+            <button type="button" class="picker-tile" [attr.aria-pressed]="draft()?.[slot] === c.name" (click)="pick(c.name)">
               <img class="pick__portrait" [src]="c.icon" alt="" width="96" height="96" loading="lazy" />
-              {{ c.name }}
+              <span class="picker-tile__name">{{ c.name }}</span>
             </button>
           </li>
         }

@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -12,24 +12,34 @@ import {
   viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { MARCH_KINDS, MAX_PER_KIND, March, MarchImage, MarchKind, UploadError, marchIcon } from '../../core/kvk-api';
-import { MarchChange, MarchesApi } from '../../core/marches-api';
+import { MARCH_KINDS, March, MarchImage, MarchKind, UploadError, marchIcon } from '../../core/kvk-api';
+import { MarchesApi } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
 import { CommanderRef } from '../guides/commander-finder';
 import { shownCommander } from '../guides/hidden-commanders';
 
 type Slot = 'primary' | 'secondary';
-const IMAGE_KINDS: MarchImage['kind'][] = ['equipment', 'armaments'];
+type ImageKind = MarchImage['kind'];
+const IMAGE_KINDS: ImageKind[] = ['equipment', 'armaments'];
+
+/** The march being edited: a new one (id null) or a saved one; nothing is sent before "Uložiť". */
+interface Draft {
+  id: number | null;
+  kind: MarchKind | '';
+  primary: string;
+  secondary: string;
+}
 
 /**
- * "Moji commanderi a výbava" on /ucet (Gether 11. 10. 2026): up to 7 marches added one by one with "+", each with a
- * type icon, a commander pair picked from the portraits of our guides, and screenshots of equipment and armaments.
- * Seen by the player, the reviewers (R4) and the superuser – next to the KvK sign-up.
+ * "Moji commanderi a výbava" on /ucet (Gether 11. 10. 2026): up to 7 marches. A march is filled in (type icon,
+ * commander pair from the portraits of our guides) and saved; only then the next one can be added and its screenshots
+ * of equipment and armaments (one each, with an example how it should look) uploaded. Seen by the player, the
+ * reviewers (R4) and the superuser – next to the KvK sign-up.
  */
 @Component({
   selector: 'app-marches',
-  imports: [Icon],
+  imports: [Icon, NgTemplateOutlet],
   templateUrl: './marches.html',
   styleUrls: ['../kvk/kvk.scss', './marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,7 +50,6 @@ export class Marches {
   protected readonly t = computed(() => this.i18n.t().marches);
   protected readonly kinds = MARCH_KINDS;
   protected readonly imageKinds = IMAGE_KINDS;
-  protected readonly maxPerKind = MAX_PER_KIND;
   protected readonly icon = marchIcon;
 
   private readonly data = this.api.list();
@@ -52,20 +61,24 @@ export class Marches {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   /** the commanders of our guides with their portraits (the same list as "Nájdi pár pre commandera") */
   private readonly commanderData = httpResource<CommanderRef[]>(() => (this.isBrowser ? '/api/commanders/' : undefined));
-  /** the meta commanders to pick from (without gatherers and KvK1 / KvK2 commanders, hidden-commanders.ts) */
   private readonly allCommanders = computed(() => (this.commanderData.hasValue() ? this.commanderData.value() : []));
+  /** the meta commanders to pick from (hidden-commanders.ts) */
   protected readonly commanders = computed(() => this.allCommanders().filter((c) => shownCommander(c.name)));
   // every portrait – a march saved before a commander was hidden keeps its picture
   private readonly portraits = computed(() => new Map(this.allCommanders().map((c) => [c.name, c.icon])));
 
+  protected readonly draft = signal<Draft | null>(null);
+  protected readonly draftError = signal<'kind' | 'primary' | null>(null);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly uploading = signal<ReadonlySet<string>>(new Set());
   protected readonly uploadError = signal<{ key: string; error: UploadError } | null>(null);
   protected readonly armed = signal<number | null>(null);
+  /** a new march can be added once nothing is being edited */
+  protected readonly canAdd = computed(() => !this.draft() && this.marches().length < this.max());
 
   // ---------------------------------------------------------------- commander picker
-  protected readonly picking = signal<{ march: March; slot: Slot } | null>(null);
+  protected readonly picking = signal<Slot | null>(null);
   protected readonly search = signal('');
   protected readonly shown = computed(() => {
     const query = fold(this.search());
@@ -79,37 +92,74 @@ export class Marches {
     return this.t().add.replace('{n}', ordinals[this.marches().length] ?? String(this.marches().length + 1));
   }
 
+  /** the number of the march being edited */
+  protected draftPosition(): number {
+    const draft = this.draft();
+    return (draft?.id && this.marches().find((m) => m.id === draft.id)?.position) || this.marches().length + 1;
+  }
+
   protected portrait(name: string): string | undefined {
     return this.portraits().get(name);
   }
 
-  protected imagesOf(march: March, kind: MarchImage['kind']): MarchImage[] {
-    return march.images.filter((image) => image.kind === kind);
+  protected imageOf(march: March, kind: ImageKind): MarchImage | undefined {
+    return march.images.find((image) => image.kind === kind);
   }
 
-  protected async add(): Promise<void> {
-    if (this.busy() || this.marches().length >= this.max()) return;
+  // ---------------------------------------------------------------- editing
+
+  protected add(): void {
+    if (!this.canAdd()) return;
+    this.draft.set({ id: null, kind: '', primary: '', secondary: '' });
+    this.draftError.set(null);
+  }
+
+  protected edit(march: March): void {
+    if (this.draft()) return;
+    this.draft.set({ id: march.id, kind: march.kind, primary: march.primary, secondary: march.secondary });
+    this.draftError.set(null);
+  }
+
+  protected cancel(): void {
+    this.draft.set(null);
+    this.draftError.set(null);
+  }
+
+  protected setKind(kind: MarchKind): void {
+    this.draft.update((d) => (d ? { ...d, kind: d.kind === kind ? '' : kind } : d));
+    this.draftError.set(null);
+  }
+
+  protected async save(): Promise<void> {
+    const draft = this.draft();
+    if (!draft || this.busy()) return;
+    if (!draft.kind) return this.draftError.set('kind');
+    if (!draft.primary) return this.draftError.set('primary');
+    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary };
     await this.run(async () => {
-      const march = await this.api.add();
-      this.marches.update((list) => [...list, march]);
+      if (draft.id === null) {
+        const created = await this.api.add(change);
+        this.marches.update((list) => [...list, created]);
+      } else {
+        const saved = await this.api.update(draft.id, change);
+        this.replace(draft.id, () => saved);
+      }
+      this.draft.set(null);
     });
   }
 
-  protected setKind(march: March, kind: MarchKind): Promise<void> {
-    return this.change(march, { kind: march.kind === kind ? '' : kind });
-  }
-
-  protected openPicker(march: March, slot: Slot, event: Event): void {
+  protected openPicker(slot: Slot, event: Event): void {
     this.opener = event.currentTarget as HTMLElement;
     this.search.set('');
-    this.picking.set({ march, slot });
+    this.picking.set(slot);
     this.dialog()?.nativeElement.showModal();
   }
 
-  protected async pick(name: string): Promise<void> {
-    const picking = this.picking();
+  protected pick(name: string): void {
+    const slot = this.picking();
+    if (slot) this.draft.update((d) => (d ? { ...d, [slot]: name } : d));
+    this.draftError.set(null);
     this.closePicker();
-    if (picking) await this.change(picking.march, { [picking.slot]: name });
   }
 
   protected closePicker(): void {
@@ -130,27 +180,22 @@ export class Marches {
     await this.run(async () => {
       await this.api.remove(march.id);
       // the later marches move up on the server too
-      this.marches.update((list) =>
-        list.filter((m) => m.id !== march.id).map((m, i) => ({ ...m, position: i + 1 })),
-      );
+      this.marches.update((list) => list.filter((m) => m.id !== march.id).map((m, i) => ({ ...m, position: i + 1 })));
     });
   }
 
-  protected async upload(march: March, kind: MarchImage['kind'], input: HTMLInputElement): Promise<void> {
+  // ---------------------------------------------------------------- screenshots (one per kind)
+
+  protected async upload(march: March, kind: ImageKind, input: HTMLInputElement): Promise<void> {
     const key = `${march.id}-${kind}`;
-    const files = Array.from(input.files ?? []).slice(0, MAX_PER_KIND - this.imagesOf(march, kind).length);
+    const file = input.files?.[0];
     input.value = '';
-    if (!files.length) return;
+    if (!file || this.imageOf(march, kind)) return;
     this.uploadError.set(null);
     this.uploading.update((set) => new Set(set).add(key));
-    for (const file of files) {
-      const result = await this.api.upload(march.id, kind, file);
-      if (typeof result === 'string') {
-        this.uploadError.set({ key, error: result });
-        break;
-      }
-      this.replace(march.id, (m) => ({ ...m, images: [...m.images, result] }));
-    }
+    const result = await this.api.upload(march.id, kind, file);
+    if (typeof result === 'string') this.uploadError.set({ key, error: result });
+    else this.replace(march.id, (m) => ({ ...m, images: [...m.images, result] }));
     this.uploading.update((set) => {
       const next = new Set(set);
       next.delete(key);
@@ -165,13 +210,6 @@ export class Marches {
     } catch {
       this.uploadError.set({ key: `${march.id}-${image.kind}`, error: 'failed' });
     }
-  }
-
-  private async change(march: March, change: MarchChange): Promise<void> {
-    await this.run(async () => {
-      const saved = await this.api.update(march.id, change);
-      this.replace(march.id, () => saved);
-    });
   }
 
   private replace(id: number, update: (march: March) => March): void {

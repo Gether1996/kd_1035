@@ -312,10 +312,13 @@ class MarchTests(KvkTestCase):
         self.addCleanup(patcher.stop)
 
     def test_add_up_to_seven_edit_and_delete_moves_the_rest_up(self):
+        # a new march needs its type and primary commander
+        self.assertEqual(self.call('post', '/api/me/marches/', {'primary': 'Attila'}).json()['kind'], ['required'])
+        self.assertEqual(self.call('post', '/api/me/marches/', {'kind': 'cavalry'}).json()['primary'], ['required'])
         for i in range(7):
             res = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'})
             self.assertEqual((res.status_code, res.json()['position']), (201, i + 1))
-        self.assertEqual(self.call('post', '/api/me/marches/', {}).json()['detail'], 'limit')
+        self.assertEqual(self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'}).json()['detail'], 'limit')
 
         marches = self.client.get('/api/me/marches/').json()['marches']
         second = marches[1]['id']
@@ -330,7 +333,7 @@ class MarchTests(KvkTestCase):
         self.assertEqual(positions, [1, 2, 3, 4, 5, 6])
 
     def test_screenshots_private_and_deleted_with_the_march(self):
-        march = self.call('post', '/api/me/marches/', {'primary': 'Attila'}).json()
+        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'}).json()
         upload_url = f'/api/me/marches/{march["id"]}/images/'
         res = self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()})
         self.assertEqual(res.status_code, 201, res.content)
@@ -341,6 +344,8 @@ class MarchTests(KvkTestCase):
         self.assertEqual(other.get(url).status_code, 404)
         self.assertEqual(self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()}, other).status_code, 404)
         self.assertEqual(self.call('post_file', upload_url, {'kind': 'vip', 'file': picture()}).status_code, 400)
+        # one screenshot of each kind
+        self.assertEqual(self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()}).json()['detail'], 'limit')
 
         reviewer = make_player('43')
         reviewer.kvk_reviewer = True
@@ -358,6 +363,6 @@ class MarchTests(KvkTestCase):
         self.assertEqual(list((self.media / 'marches').iterdir()), [])
 
     def test_account_deletion_removes_marches(self):
-        self.call('post', '/api/me/marches/', {'primary': 'Attila'})
+        self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'})
         self.player.delete_account()
         self.assertFalse(March.objects.exists())

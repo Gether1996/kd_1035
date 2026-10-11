@@ -33,7 +33,7 @@ describe('Marches', () => {
     };
   });
 
-  it('adds marches one by one, sets the type and picks a commander from the guides', async () => {
+  it('fills a march in, saves it, and only then offers the next one and its screenshots', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
@@ -44,29 +44,42 @@ describe('Marches', () => {
     expect(el.querySelector('.add-march')?.textContent).toContain('Pridať prvý march');
 
     el.querySelector<HTMLButtonElement>('.add-march')!.click();
-    http.expectOne((r) => r.method === 'POST' && r.url === '/api/me/marches/').flush(MARCH);
-    await settle(fixture);
-    expect(el.querySelector('.march__title')?.textContent).toContain('1. march');
-    expect(el.querySelector('.add-march')?.textContent).toContain('Pridať druhý march');
+    await fixture.whenStable();
+    // nothing is sent before "Uložiť"; the next march waits
+    expect(el.querySelector('.add-march')).toBeNull();
+    expect(el.textContent).toContain('Ďalší march pridáš, keď tento uložíš.');
+    const save = () => el.querySelector<HTMLButtonElement>('.march--editing .form__actions .pill-btn')!;
+    save().click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('Vyber typ marchu.');
 
     el.querySelectorAll<HTMLButtonElement>('.kind')[1].click();
-    const kind = http.expectOne('/api/me/marches/1/');
-    expect(kind.request.body).toEqual({ kind: 'cavalry' });
-    kind.flush({ ...MARCH, kind: 'cavalry' });
-    await settle(fixture);
-    expect(el.querySelectorAll('.kind')[1].getAttribute('aria-pressed')).toBe('true');
-
     el.querySelector<HTMLButtonElement>('.pick')!.click();
     await fixture.whenStable();
     const tiles = Array.from(el.querySelectorAll<HTMLButtonElement>('.picker-tile'));
     expect(tiles.map((t) => t.textContent?.trim())).toEqual(['Attila', 'Takeda Shingen']);
     tiles[0].click();
-    const pick = http.expectOne('/api/me/marches/1/');
-    expect(pick.request.body).toEqual({ primary: 'Attila' });
-    pick.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila' });
+    await fixture.whenStable();
+    save().click();
+    const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/me/marches/');
+    expect(req.request.body).toEqual({ kind: 'cavalry', primary: 'Attila', secondary: '' });
+    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila' });
     await settle(fixture);
+    expect(el.querySelector('.march--editing')).toBeNull();
     expect(el.querySelector('.pick__name')?.textContent).toBe('Attila');
-    expect(el.querySelector('.pick img')?.getAttribute('src')).toBe(COMMANDERS[0].icon);
+    expect(el.querySelector('.add-march')?.textContent).toContain('Pridať druhý march');
+    // one screenshot of each kind, with an example
+    expect(el.querySelectorAll('.thumb--add').length).toBe(2);
+    expect(el.querySelector('.example img')?.getAttribute('src')).toBe('img/examples/equipment.webp');
+
+    const input = el.querySelector<HTMLInputElement>('input[type="file"]')!;
+    Object.defineProperty(input, 'files', { value: [new File(['x'], 'eq.png', { type: 'image/png' })] });
+    input.dispatchEvent(new Event('change'));
+    http
+      .expectOne('/api/me/marches/1/images/')
+      .flush({ id: 7, kind: 'equipment', url: '/api/marches/images/7/', thumb: '/api/marches/images/7/?thumb=1', width: 1, height: 1 });
+    await settle(fixture);
+    expect(el.querySelectorAll('.thumb--add').length).toBe(1);
     http.verify();
   });
 
@@ -81,7 +94,7 @@ describe('Marches', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.add-march')).toBeNull();
 
-    const remove = () => el.querySelector<HTMLButtonElement>('.march__remove')!;
+    const remove = () => el.querySelector<HTMLButtonElement>('.march__actions .danger')!;
     remove().click();
     await fixture.whenStable();
     http.expectNone('/api/me/marches/1/');

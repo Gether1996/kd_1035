@@ -17,8 +17,9 @@ export class MarchesApi {
     return httpResource<{ marches: March[]; max: number }>(() => (this.isBrowser ? '/api/me/marches/' : undefined));
   }
 
-  add(): Promise<March> {
-    return firstValueFrom(this.http.post<March>('/api/me/marches/', {}));
+  /** a new march – its type and primary commander are required */
+  add(march: MarchChange): Promise<March> {
+    return firstValueFrom(this.http.post<March>('/api/me/marches/', march));
   }
 
   update(id: number, change: MarchChange): Promise<March> {
