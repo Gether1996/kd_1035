@@ -317,8 +317,45 @@
 
 // ---------------------------------------------------------------- reviewers: the sign-ups
 
-.list__filter {
+// role and troops side by side; on a phone below each other
+.list__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 16px;
+
+  button {
+    white-space: nowrap;
+
+    @media (max-width: 480px) {
+      padding: 0 11px;
+    }
+  }
+}
+
+// cavalry, infantry, archers with their type icons – on a phone only the icon and the count (the name in the title)
+.list__filter--troops {
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.list__troop-name {
+  @media (max-width: 480px) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 // the superuser withdraws a sign-up

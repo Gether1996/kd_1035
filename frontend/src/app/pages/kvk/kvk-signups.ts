@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { IMAGE_KINDS, KvkApi, KvkImage, KvkSignup, MARCH_STATS, March } from '../../core/kvk-api';
+import { IMAGE_KINDS, KVK_KINDS, KvkApi, KvkImage, KvkSignup, MARCH_STATS, March, MarchKind, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { MarchRow } from '../../shared/march-row';
@@ -49,13 +49,22 @@ export class KvkSignups {
   );
 
   protected readonly role = signal<Role>('all');
+  /** the troops filter (Gether 11. 10. 2026), combined with the role */
+  protected readonly troops = signal<MarchKind | 'all'>('all');
+  protected readonly troopKinds = KVK_KINDS;
+  protected readonly icon = marchIcon;
   protected readonly all = computed(() => this.data().value()?.signups ?? []);
   /** the sign-up whose withdraw waits for the second click */
   protected readonly armed = signal<number | null>(null);
   protected readonly failed = signal(false);
-  protected readonly shown = computed(() => {
+  /** the sign-ups of the chosen role – the troops counts are of these */
+  private readonly ofRole = computed(() => {
     const role = this.role();
     return this.all().filter((s) => role === 'all' || s.role === role);
+  });
+  protected readonly shown = computed(() => {
+    const troops = this.troops();
+    return this.ofRole().filter((s) => troops === 'all' || s.kind === troops);
   });
   /** each sign-up as a row like a march (no type, no number) */
   protected readonly armies = computed(
@@ -72,6 +81,11 @@ export class KvkSignups {
     rally: this.all().filter((s) => s.role === 'rally').length,
     garrison: this.all().filter((s) => s.role === 'garrison').length,
   }));
+  protected readonly troopCounts = computed(() => {
+    const counts: Record<string, number> = { all: this.ofRole().length };
+    for (const kind of KVK_KINDS) counts[kind] = this.ofRole().filter((s) => s.kind === kind).length;
+    return counts;
+  });
 
   protected readonly viewing = signal<{ signup: KvkSignup; image: KvkImage } | null>(null);
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('viewer');

@@ -228,9 +228,24 @@ describe('KvkSignups', () => {
     expect(el.querySelector('.mini-march .mrow__head')?.getAttribute('alt')).toBe('Attila');
     expect(el.querySelector('.mini-march .mrow__stats')?.textContent).toContain('Cav ATK 12%');
 
+    // the troops filter, combined with the role
+    const troops = () => [...el.querySelectorAll<HTMLButtonElement>('.list__filter--troops button')];
+    expect(troops().map((b) => b.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'Všetci · 2',
+      'Pechota · 0',
+      'Jazda · 1',
+      'Lukostrelci · 1',
+    ]);
+    troops()[2].click();
+    await fixture.whenStable();
+    expect(Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent)).toEqual(['Nelly']);
+    troops()[0].click();
+    await fixture.whenStable();
+
     el.querySelectorAll<HTMLButtonElement>('.list__filter button')[2].click();
     await fixture.whenStable();
     expect(Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent)).toEqual(['Bob']);
+    expect(troops().map((b) => b.textContent?.replace(/\s+/g, ' ').trim())[3]).toBe('Lukostrelci · 1');
 
     // the sign-up is a row like a march: troops icon, heads, screenshots, bonuses of its troops
     expect(el.querySelector('.signup__army .mrow__kind')?.getAttribute('alt')).toBe('Lukostrelci');

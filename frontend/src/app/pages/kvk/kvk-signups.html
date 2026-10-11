@@ -2,6 +2,7 @@
 <section class="panel" aria-labelledby="kvk-list-title">
   <h2 class="panel__title panel__title--small" id="kvk-list-title">{{ k.listTitle }}</h2>
 
+  <div class="list__filters">
   <div class="segmented list__filter" role="group" [attr.aria-label]="k.role">
     <button type="button" [attr.aria-pressed]="role() === 'all'" (click)="role.set('all')">
       {{ k.all }} · {{ counts().all }}
@@ -12,6 +13,19 @@
     <button type="button" [attr.aria-pressed]="role() === 'garrison'" (click)="role.set('garrison')">
       Garrison · {{ counts().garrison }}
     </button>
+  </div>
+  <!-- the troops of the sign-ups, with the type icons of the game -->
+  <div class="segmented list__filter list__filter--troops" role="group" [attr.aria-label]="i18n.t().marches.kind">
+    <button type="button" [attr.aria-pressed]="troops() === 'all'" (click)="troops.set('all')">
+      {{ k.all }} · {{ troopCounts()['all'] }}
+    </button>
+    @for (kind of troopKinds; track kind) {
+      <button type="button" [attr.aria-pressed]="troops() === kind" [title]="i18n.t().marches.kinds[kind]" (click)="troops.set(kind)">
+        <img [src]="icon(kind)" alt="" width="96" height="96" /><span class="list__troop-name">{{ i18n.t().marches.kinds[kind] }}</span>
+        · {{ troopCounts()[kind] }}
+      </button>
+    }
+  </div>
   </div>
 
   @if (data().error()) {
