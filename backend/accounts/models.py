@@ -259,10 +259,10 @@ class March(models.Model):
         CAVALRY = 'cavalry', 'jazda'
         ARCHER = 'archer', 'lukostrelci'
         LEADERSHIP = 'leadership', 'mix (leadership)'
+        # the in-game tag of siege commanders (Gether 11. 10. 2026: no gathering or barbarian marches, siege instead)
+        ENGINEERING = 'engineering', 'siege'
         GARRISON = 'garrison', 'garrison'
         CONQUERING = 'conquering', 'rally'
-        PEACEKEEPING = 'peacekeeping', 'barbari'
-        GATHERING = 'gathering', 'zber'
 
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='marches', verbose_name='hráč')
     position = models.PositiveSmallIntegerField('poradie', default=1)

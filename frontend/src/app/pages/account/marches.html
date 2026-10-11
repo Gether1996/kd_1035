@@ -57,58 +57,17 @@
               }
             </div>
 
-            <div class="shots shots--march">
+            <div class="saved-shots">
               @for (kind of imageKinds; track kind) {
-                @let key = march.id + '-' + kind;
                 @let image = imageOf(march, kind);
-                <div class="shot-group" role="group" [attr.aria-labelledby]="'march-shots-' + key">
-                  <div class="shot-group__head">
-                    <h4 class="shot-group__title" [id]="'march-shots-' + key">
-                      @if (image) {
-                        <svg class="shot-group__ok" appIcon="check"></svg>
-                      }
-                      {{ m.images[kind] }}
-                    </h4>
-                  </div>
-                  <div class="shot-row">
-                    @if (image) {
-                      <div class="thumb">
-                        <a [href]="image.url" target="_blank" rel="noopener">
-                          <img [src]="image.thumb" [alt]="m.images[kind]" loading="lazy" />
-                        </a>
-                        <button
-                          type="button"
-                          class="thumb__remove"
-                          [attr.aria-label]="m.removeImage + ': ' + m.images[kind]"
-                          (click)="removeImage(march, image)"
-                        >
-                          <svg appIcon="x"></svg>
-                        </button>
-                      </div>
-                    } @else {
-                      <label class="thumb thumb--add" [class.is-busy]="uploading().has(key)">
-                        <input
-                          #file
-                          class="sr-only"
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          [disabled]="uploading().has(key)"
-                          (change)="upload(march, kind, file)"
-                        />
-                        <svg appIcon="plus"></svg>
-                        <span>{{ uploading().has(key) ? m.uploading : m.addImage }}</span>
-                      </label>
-                    }
-                    <!-- what the screenshot should show (Gether's examples from the game) -->
-                    <a class="example" [href]="'img/examples/' + kind + '.webp'" target="_blank" rel="noopener">
-                      <img [src]="'img/examples/' + kind + '.webp'" alt="" loading="lazy" />
-                      <span>{{ m.example }}</span>
+                <div class="saved-shot">
+                  <span class="saved-shot__label">{{ m.images[kind] }}</span>
+                  @if (image) {
+                    <a class="thumb" [href]="image.url" target="_blank" rel="noopener">
+                      <img [src]="image.thumb" [alt]="m.images[kind] + ' – ' + m.march.replace('{n}', '' + march.position)" loading="lazy" />
                     </a>
-                  </div>
-                  @if (uploadError(); as u) {
-                    @if (u.key === key) {
-                      <p class="shot-group__error" role="alert">{{ i18n.t().kvk.uploadErrors[u.error] }}</p>
-                    }
+                  } @else {
+                    <span class="thumb thumb--missing">{{ m.missingShot }}</span>
                   }
                 </div>
               }
@@ -187,8 +146,52 @@
       }
     </div>
 
+    <div class="shots shots--march">
+      @for (kind of imageKinds; track kind) {
+        @let shot = shotOf(kind);
+        <div class="shot-group" role="group" [attr.aria-labelledby]="'march-draft-shot-' + kind" [class.is-invalid]="draftError() === kind">
+          <div class="shot-group__head">
+            <h4 class="shot-group__title" [id]="'march-draft-shot-' + kind">
+              @if (shot) {
+                <svg class="shot-group__ok" appIcon="check"></svg>
+              }
+              {{ m.images[kind] }}
+            </h4>
+          </div>
+          <div class="shot-row">
+            @if (shot) {
+              <div class="thumb">
+                <img [src]="shot" [alt]="m.images[kind]" />
+                <button type="button" class="thumb__remove" [attr.aria-label]="m.removeImage + ': ' + m.images[kind]" (click)="unchoose(kind)">
+                  <svg appIcon="x"></svg>
+                </button>
+              </div>
+            } @else {
+              <label class="thumb thumb--add">
+                <input #file class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" (change)="choose(kind, file)" />
+                <svg appIcon="plus"></svg>
+                <span>{{ m.addImage }}</span>
+              </label>
+            }
+            <!-- what the screenshot should show (Gether's examples from the game) -->
+            <button type="button" class="example" [attr.aria-label]="m.example + ': ' + m.images[kind]" (click)="showExample(kind, $event)">
+              <img [src]="'img/examples/' + kind + '.webp'" alt="" loading="lazy" />
+              <span>{{ m.example }}</span>
+            </button>
+          </div>
+          @if (uploadError(); as u) {
+            @if (u.kind === kind) {
+              <p class="shot-group__error" role="alert">{{ i18n.t().kvk.uploadErrors[u.error] }}</p>
+            }
+          }
+        </div>
+      }
+    </div>
+
     <div class="form__actions">
-      <button type="button" class="pill-btn" [attr.aria-disabled]="busy() || null" (click)="save()">{{ m.save }}</button>
+      <button type="button" class="pill-btn" [attr.aria-disabled]="busy() || null" (click)="save()">
+        {{ busy() ? m.saving : m.save }}
+      </button>
       <button type="button" class="pill-btn pill-btn--quiet" (click)="cancel()">{{ m.cancel }}</button>
       <p class="form__state is-error" role="status">
         @if (draftError(); as e) {
@@ -196,9 +199,6 @@
         }
       </p>
     </div>
-    @if (d.id === null) {
-      <p class="field__hint">{{ m.shotsAfterSave }}</p>
-    }
   }
 </ng-template>
 
@@ -245,6 +245,25 @@
           </li>
         }
       </ul>
+    </div>
+  }
+</dialog>
+
+<!-- the example screenshot in a dialog, not a new page (Gether 11. 10. 2026) -->
+<dialog #exampleDialog class="modal" (close)="exampleClosed()" aria-labelledby="march-example-title">
+  @if (example(); as kind) {
+    <div class="modal__body">
+      <header class="modal__head">
+        <div class="modal__heading">
+          <h2 class="modal__title" id="march-example-title">{{ m.images[kind] }}</h2>
+          <p class="modal__eyebrow">{{ m.example }}</p>
+        </div>
+        <button type="button" class="modal__close" [attr.aria-label]="i18n.t().kvk.close" (click)="closeExample()">
+          <svg appIcon="x"></svg>
+        </button>
+      </header>
+      <img class="example-large" [src]="'img/examples/' + kind + '.webp'" [alt]="m.example + ': ' + m.images[kind]" />
+      <p class="field__hint">{{ m.exampleHint[kind] }}</p>
     </div>
   }
 </dialog>

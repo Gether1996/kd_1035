@@ -17,8 +17,10 @@ function setup() {
   return TestBed.inject(HttpTestingController);
 }
 
+// the save chain (march, then each screenshot) continues in plain promises after each response
 const settle = async (fixture: { whenStable(): Promise<unknown> }) => {
   await fixture.whenStable();
+  await new Promise((resolve) => setTimeout(resolve));
   await fixture.whenStable();
 };
 
@@ -33,7 +35,9 @@ describe('Marches', () => {
     };
   });
 
-  it('fills a march in, saves it, and only then offers the next one and its screenshots', async () => {
+  it('saves a march only with its type, commander and both screenshots, then offers the next one', async () => {
+    URL.createObjectURL ??= () => 'blob:preview';
+    URL.revokeObjectURL ??= () => undefined;
     const http = setup();
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
@@ -60,26 +64,40 @@ describe('Marches', () => {
     expect(tiles.map((t) => t.textContent?.trim())).toEqual(['Attila', 'Takeda Shingen']);
     tiles[0].click();
     await fixture.whenStable();
+    // the screenshots are required too, with an example next to each
+    expect(el.querySelector('.example img')?.getAttribute('src')).toBe('img/examples/equipment.webp');
+    save().click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('Pridaj screenshot výbavy.');
+    http.expectNone('/api/me/marches/');
+
+    const pickFile = async (name: string) => {
+      const input = el.querySelector<HTMLInputElement>('.march--editing input[type="file"]')!;
+      Object.defineProperty(input, 'files', { value: [new File(['x'], name, { type: 'image/png' })] });
+      input.dispatchEvent(new Event('change'));
+      await fixture.whenStable();
+    };
+    await pickFile('equipment.png');
+    await pickFile('armaments.png');
+    expect(el.querySelectorAll('.march--editing .thumb img').length).toBe(2);
+
     save().click();
     const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/me/marches/');
     expect(req.request.body).toEqual({ kind: 'cavalry', primary: 'Attila', secondary: '' });
     req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila' });
     await settle(fixture);
+    const image = (id: number, kind: string) => ({ id, kind, url: `/api/marches/images/${id}/`, thumb: `/api/marches/images/${id}/?thumb=1`, width: 1, height: 1 });
+    const equipment = http.expectOne('/api/me/marches/1/images/');
+    expect((equipment.request.body as FormData).get('kind')).toBe('equipment');
+    equipment.flush(image(7, 'equipment'));
+    await settle(fixture);
+    http.expectOne('/api/me/marches/1/images/').flush(image(8, 'armaments'));
+    await settle(fixture);
+
     expect(el.querySelector('.march--editing')).toBeNull();
     expect(el.querySelector('.pick__name')?.textContent).toBe('Attila');
+    expect(el.querySelectorAll('.saved-shot .thumb img').length).toBe(2);
     expect(el.querySelector('.add-march')?.textContent).toContain('Pridať druhý march');
-    // one screenshot of each kind, with an example
-    expect(el.querySelectorAll('.thumb--add').length).toBe(2);
-    expect(el.querySelector('.example img')?.getAttribute('src')).toBe('img/examples/equipment.webp');
-
-    const input = el.querySelector<HTMLInputElement>('input[type="file"]')!;
-    Object.defineProperty(input, 'files', { value: [new File(['x'], 'eq.png', { type: 'image/png' })] });
-    input.dispatchEvent(new Event('change'));
-    http
-      .expectOne('/api/me/marches/1/images/')
-      .flush({ id: 7, kind: 'equipment', url: '/api/marches/images/7/', thumb: '/api/marches/images/7/?thumb=1', width: 1, height: 1 });
-    await settle(fixture);
-    expect(el.querySelectorAll('.thumb--add').length).toBe(1);
     http.verify();
   });
 

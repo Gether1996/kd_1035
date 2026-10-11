@@ -51,19 +51,17 @@ export type MarchKind =
   | 'cavalry'
   | 'archer'
   | 'leadership'
+  | 'engineering'
   | 'garrison'
-  | 'conquering'
-  | 'peacekeeping'
-  | 'gathering';
+  | 'conquering';
 export const MARCH_KINDS: MarchKind[] = [
   'infantry',
   'cavalry',
   'archer',
   'leadership',
+  'engineering',
   'garrison',
   'conquering',
-  'peacekeeping',
-  'gathering',
 ];
 /** the specialty icons of the guides (backend guides/static/guides/specialties) */
 export const marchIcon = (kind: MarchKind) => `/static/guides/specialties/${kind}.webp`;

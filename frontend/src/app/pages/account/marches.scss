@@ -212,6 +212,34 @@
   margin-top: 0;
 }
 
+.shot-group.is-invalid {
+  border-color: var(--red-500);
+}
+
+.saved-shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.saved-shot {
+  display: grid;
+  gap: 6px;
+}
+
+.saved-shot__label {
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.thumb--missing {
+  border-style: dashed;
+  color: var(--red-300);
+  font-size: 0.8125rem;
+}
+
 .shot-row {
   display: flex;
   flex-wrap: wrap;
@@ -220,8 +248,13 @@
   margin-top: 10px;
 }
 
-// Gether's screenshot from the game: what the upload should show
+// Gether's screenshot from the game: what the upload should show (opens in a dialog)
 .example {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: zoom-in;
   display: grid;
   justify-items: center;
   gap: 4px;
@@ -339,4 +372,12 @@
 
 .picker-tile--clear {
   color: var(--gold-300);
+}
+
+.example-large {
+  display: block;
+  max-width: 100%;
+  max-height: 65dvh;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
 }

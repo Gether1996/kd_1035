@@ -27,6 +27,8 @@ class Guide(models.Model):
         INFANTRY = 'infantry', 'Pechota'
         ARCHER = 'archer', 'Lukostrelci'
         LEADERSHIP = 'leadership', 'Leadership'
+        # siege commanders carry the 'Engineering' tag in the game (Gether 11. 10. 2026: siege marches)
+        ENGINEERING = 'engineering', 'Siege (engineering)'
         GARRISON = 'garrison', 'Garrison'
         CONQUERING = 'conquering', 'Conquering (rally)'
         PEACEKEEPING = 'peacekeeping', 'Peacekeeping (barbari)'
