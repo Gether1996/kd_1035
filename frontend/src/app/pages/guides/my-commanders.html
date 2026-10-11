@@ -1,0 +1,111 @@
+@let b = t();
+@if (!data.error()) {
+  <section class="finder" id="co-mozem-postavit" aria-labelledby="builder-title">
+    <h2 class="finder__title" id="builder-title">{{ b.title }}</h2>
+    <p class="finder__intro">{{ b.intro }}</p>
+
+    <div class="picker">
+      <div class="picker__bar">
+        <div class="finder__field picker__field">
+          <label class="sr-only" for="builder-filter">{{ b.filter }}</label>
+          <svg class="finder__search" appIcon="search"></svg>
+          <input
+            #field
+            id="builder-filter"
+            class="input"
+            type="search"
+            autocomplete="off"
+            spellcheck="false"
+            [placeholder]="b.filter"
+            [value]="filter()"
+            (input)="filter.set(field.value)"
+          />
+        </div>
+        <p class="picker__count" aria-live="polite">{{ count(ownedCount(), b.owned) }}</p>
+        @if (ownedCount()) {
+          <button type="button" class="pill-btn pill-btn--quiet" (click)="clear()">{{ b.clear }}</button>
+        }
+      </div>
+
+      <ul class="picker__grid" [attr.aria-label]="b.listLabel" [attr.aria-busy]="!data.hasValue()">
+        @for (c of shown(); track c.icon) {
+          <li>
+            <button
+              type="button"
+              class="tile"
+              [class.is-owned]="isOwned(c)"
+              [attr.aria-pressed]="isOwned(c)"
+              (click)="toggle(c)"
+            >
+              <img class="portrait" [src]="c.icon" alt="" width="96" height="96" loading="lazy" />
+              <span class="tile__name">{{ c.name }}</span>
+              <svg class="tile__check" appIcon="check"></svg>
+            </button>
+          </li>
+        } @empty {
+          @if (data.hasValue()) {
+            <li class="picker__empty">{{ b.noMatch }}</li>
+          }
+        }
+      </ul>
+      <p class="picker__note">{{ b.saved }}</p>
+    </div>
+
+    @if (!ownedCount()) {
+      <p class="builder__hint">{{ b.start }}</p>
+    } @else {
+      @let r = result();
+      <h3 class="result__role">{{ b.ready }} · {{ r.ready.length }}</h3>
+      @if (r.ready.length) {
+        <ul class="cards">
+          @for (pair of r.ready; track pair.key) {
+            <li class="card">
+              <span class="card__pics">
+                <img class="portrait" [src]="pair.primary.icon" alt="" width="96" height="96" loading="lazy" />
+                @if (pair.secondary; as s) {
+                  <img class="portrait" [src]="s.icon" alt="" width="96" height="96" loading="lazy" />
+                } @else {
+                  <span class="portrait portrait--any"><svg appIcon="users"></svg></span>
+                }
+              </span>
+              <span class="card__body">
+                <strong class="card__name">{{ pair.primary.name }} + {{ pair.secondary?.name ?? b.anyone }}</strong>
+                @for (g of pair.guides; track g.slug + g.context_sk) {
+                  <span class="card__guide">
+                    <a [routerLink]="i18n.guidePath(g.category, g.slug)">{{ title(g) }}</a>
+                    @if (context(g)) {
+                      <span class="card__context">· {{ context(g) }}</span>
+                    }
+                  </span>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="builder__hint">{{ b.none }}</p>
+      }
+
+      @if (r.missing.length) {
+        <h3 class="result__role">{{ b.missing }}</h3>
+        <p class="builder__lead">{{ b.missingIntro }}</p>
+        <ul class="cards">
+          @for (s of r.missing; track s.commander.icon) {
+            <li class="card">
+              <span class="card__pics">
+                <img class="portrait" [src]="s.commander.icon" alt="" width="96" height="96" loading="lazy" />
+              </span>
+              <span class="card__body">
+                <strong class="card__name">{{ s.commander.name }}</strong>
+                <span class="card__guide">{{ count(s.pairs.length, b.unlocks) }}:</span>
+                @for (pair of s.pairs; track pair.key) {
+                  <span class="card__guide">{{ pair.primary.name }} + {{ pair.secondary?.name }}</span>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </section>
+}

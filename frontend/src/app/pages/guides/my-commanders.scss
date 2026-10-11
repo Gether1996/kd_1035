@@ -1,0 +1,122 @@
+// shares .finder, .portrait, .cards and .card with commander-finder.scss
+
+.picker {
+  margin-top: 16px;
+}
+
+.picker__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.picker__field {
+  flex: 1 1 260px;
+  margin-top: 0;
+}
+
+.picker__count {
+  font-weight: 600;
+  color: var(--gold-300);
+}
+
+// 50 commanders: a scrolling box keeps the results close on a phone
+.picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 128px), 1fr));
+  gap: 6px;
+  max-height: min(330px, 55vh);
+  margin: 12px 0 0;
+  padding: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 10, 23, 0.35);
+
+  @media (min-width: 1024px) {
+    max-height: 400px;
+  }
+}
+
+.picker__empty {
+  grid-column: 1 / -1;
+  padding: 12px;
+  color: var(--text-dim);
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 4px 6px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out);
+
+  &:hover {
+    background: rgba(245, 196, 81, 0.06);
+    color: var(--text);
+  }
+
+  .portrait {
+    width: 36px;
+    height: 36px;
+    padding: 2px;
+  }
+
+  &.is-owned {
+    border-color: var(--line-strong);
+    background: rgba(245, 196, 81, 0.12);
+    color: var(--gold-100);
+
+    .tile__check {
+      opacity: 1;
+    }
+  }
+}
+
+.tile__name {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+// a badge on the portrait's corner – the name keeps the whole width
+.tile__check {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--gold-400);
+  color: var(--bg);
+  opacity: 0;
+}
+
+.picker__note,
+.builder__lead {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.builder__hint {
+  margin-top: 20px;
+  color: var(--text-dim);
+}

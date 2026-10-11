@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.7.0:** na `/navody` blok „Čo môžem postaviť“ – hráč označí commanderov, ktorých má, a uvidí páry z našich návodov, ktoré vie postaviť, aj ktorý commander mu pridá najviac párov (výber iba v prehliadači).
 - **11. 10. 2026 – v1.6.4:** herné hodiny nad kalendárom – herný čas UTC a odpočet do denného resetu (00:00 UTC) aj s časom resetu v pásme návštevníka.
 - **10. 10. 2026 – v1.6.3:** lepšie čitateľné tlmené texty (min. kontrast 4,5 : 1) – „termín oznámime“ pri nepravidelných eventoch, popisky v dialógu eventu; nový audit prístupnosti `tools/a11y/audit.sh` (axe) bez kritických chýb.
 - **10. 10. 2026 – v1.6.2:** odkaz na event z kalendára ukáže na Discorde a Facebooku názov a termín eventu (napr. „Ark of Osiris · 14.–18. 10. 2026“), nie všeobecnú kartu kalendára.

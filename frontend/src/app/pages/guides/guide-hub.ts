@@ -7,11 +7,12 @@ import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { Reveal } from '../../shared/reveal';
 import { CommanderFinder } from './commander-finder';
+import { MyCommanders } from './my-commanders';
 
 /** /navody – every published guide on one page, grouped by category. */
 @Component({
   selector: 'app-guide-hub',
-  imports: [RouterLink, RouterLinkActive, Icon, PageHeader, Reveal, CommanderFinder],
+  imports: [RouterLink, RouterLinkActive, Icon, PageHeader, Reveal, CommanderFinder, MyCommanders],
   templateUrl: './guide-hub.html',
   styleUrl: './guides.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

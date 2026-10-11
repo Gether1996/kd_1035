@@ -7,6 +7,7 @@
 //   MEASURE=.brand,.nav,.account  print each element's box (x, width, right) and whether its content overflows
 //   SHOT=0                      no images, only MEASURE and the overflow check (fast)
 //   SESSION=<sessionid>         signed in as that user (shoot.sh --player / --superuser makes a test player)
+//   STORAGE='{"key":"value"}'    localStorage entries set before the page loads (e.g. kd1035.commanders)
 // Every page also reports OVERFLOW when it scrolls sideways.
 // Output: tools/screenshots/out/<page>[-<selector>]-<width>x<height>.png  (git-ignored)
 import { mkdirSync } from 'node:fs';
@@ -22,6 +23,7 @@ const SHOT = process.env.SHOT !== '0';
 const SELECTOR = process.env.SELECTOR;
 const MEASURE = process.env.MEASURE ? process.env.MEASURE.split(',') : [];
 const SESSION = process.env.SESSION;
+const STORAGE = process.env.STORAGE ? JSON.parse(process.env.STORAGE) : null;
 
 mkdirSync('out', { recursive: true });
 const browser = await chromium.launch();
@@ -30,6 +32,10 @@ for (const path of PAGES) {
   for (const [width, height] of SIZES) {
     const context = await browser.newContext({ viewport: { width, height } });
     if (SESSION) await context.addCookies([{ name: 'sessionid', value: SESSION, url: BASE }]);
+    if (STORAGE)
+      await context.addInitScript((entries) => {
+        for (const [key, value] of Object.entries(entries)) localStorage.setItem(key, value);
+      }, STORAGE);
     const page = await context.newPage();
     page.on('pageerror', (e) => console.log('PAGE ERROR', e.message));
     page.on('console', (m) => m.type() === 'error' && console.log('CONSOLE', m.text()));

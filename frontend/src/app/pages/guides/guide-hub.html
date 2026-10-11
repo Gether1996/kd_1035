@@ -25,6 +25,12 @@
     <div class="finder-placeholder" aria-hidden="true"></div>
   }
 
+  @defer (on viewport) {
+    <app-my-commanders />
+  } @placeholder {
+    <div class="finder-placeholder finder-placeholder--builder" aria-hidden="true"></div>
+  }
+
   @if (guides.failed()) {
     <p class="state">{{ t.guides.error }}</p>
   } @else if (groups().length) {

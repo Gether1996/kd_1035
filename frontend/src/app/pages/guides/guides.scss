@@ -149,6 +149,10 @@
   margin-bottom: clamp(40px, 6vw, 56px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+
+  &--builder {
+    height: 560px;
+  }
 }
 
 .group + .group {
