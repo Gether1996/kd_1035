@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.17.3:** v zozname prihlášok na KvK má hráč s prihláškou na rally aj garrison jednu kartu (meno, kontakt a marche raz, pod tým obe prihlášky).
 - **11. 10. 2026 – v1.17.2:** náhľad screenshotu sa všade (Moje marche, Marche hráčov, prihlášky na KvK) otvára v okne na stránke so šípkami medzi screenshotmi, nie na novej stránke; návod o fortoch má značku fortu z mapy.
 - **11. 10. 2026 – v1.17.1:** v zozname prihlášok na KvK filter podľa typu jednotiek (pechota, jazda, lukostrelci) s ikonami, kombinuje sa s filtrom rally / garrison.
 - **11. 10. 2026 – v1.17.0:** prihlášky na KvK **bez kôl** – platia na každé ďalšie KvK, kým ich hráč alebo superadmin nezruší (superadmin ich môže zmazať v zozname); superadmin nastavuje len nadpis s termínom; v prihláške sa vyberá **typ jednotiek** (jazda, pechota, lukostrelci) s ikonou, bonusy sa ukazujú ako „Cav ATK“…

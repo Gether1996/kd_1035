@@ -266,4 +266,34 @@ describe('KvkSignups', () => {
     expect(changed).toBe(1);
     http.verify();
   });
+
+  it('shows a player signed up for rally and garrison as one card with both sign-ups', async () => {
+    const http = setup();
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true, () => 0));
+    const fixture = TestBed.createComponent(KvkSignups);
+    fixture.componentRef.setInput('data', data);
+    fixture.detectChanges();
+    const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42' };
+    const marches = [{ id: 5, position: 1, kind: 'cavalry' as const, primary: 'Attila', secondary: '', images: [] }];
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
+      signups: [
+        { ...SIGNUP, player, marches, note: 'rally note' },
+        { ...SIGNUP, id: 11, role: 'garrison', kind: 'archer', player, marches, updated_at: '2026-10-12T08:00:00Z' },
+      ],
+    });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelectorAll('.signup').length).toBe(1);
+    expect(el.querySelectorAll('.signup__contact').length).toBe(1);
+    expect(el.querySelectorAll('.signup__marches').length).toBe(1);
+    expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Rally', 'Garrison']);
+    // the newest change of the two
+    expect(el.querySelector('.signup__meta')?.textContent).toContain('12. 10.');
+    // a filter keeps only the matching sign-up in the card
+    el.querySelectorAll<HTMLButtonElement>('.list__filter button')[2].click();
+    await fixture.whenStable();
+    expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Garrison']);
+    http.verify();
+  });
 });

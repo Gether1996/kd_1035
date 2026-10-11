@@ -1,6 +1,6 @@
 {
   "name": "kd1035-frontend",
-  "version": "1.17.2",
+  "version": "1.17.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

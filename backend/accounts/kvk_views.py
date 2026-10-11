@@ -246,7 +246,8 @@ def all_signups(request):
     )
     rows = sorted(
         (signup_data(s, with_player=True) for s in signups),
-        key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role']),
+        # by player, the rally sign-up before the garrison one (one card per player on /kvk)
+        key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role'] != 'rally'),
     )
     return Response({'signups': rows})
 

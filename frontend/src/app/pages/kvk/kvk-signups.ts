@@ -19,8 +19,10 @@ import { MarchRow } from '../../shared/march-row';
 type Role = 'all' | 'rally' | 'garrison';
 
 /**
- * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: every sign-up with the player, role, the army as a
- * march row (a thumbnail opens its screenshot in a dialog) and the note. The superuser may withdraw a sign-up.
+ * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: one card per player (Gether 11. 10. 2026: a player
+ * signed up for rally and garrison is one card, not two) with the name, contact and profile marches once and each of
+ * their sign-ups below – role, the army as a march row (a thumbnail opens its screenshot in a dialog), note. The
+ * filters keep the sign-ups that match; the superuser may withdraw a sign-up.
  */
 @Component({
   selector: 'app-kvk-signups',
@@ -63,6 +65,19 @@ export class KvkSignups {
   protected readonly shown = computed(() => {
     const troops = this.troops();
     return this.ofRole().filter((s) => troops === 'all' || s.kind === troops);
+  });
+  /** the shown sign-ups by player, in the order of the list (by name, rally before garrison) */
+  protected readonly players = computed(() => {
+    const groups = new Map<number, KvkSignup[]>();
+    for (const s of this.shown()) {
+      const key = s.player?.id ?? -s.id;
+      groups.set(key, [...(groups.get(key) ?? []), s]);
+    }
+    return [...groups.values()].map((signups) => ({
+      first: signups[0],
+      signups,
+      updated: signups.map((s) => s.updated_at).sort().at(-1)!,
+    }));
   });
   /** each sign-up as a row like a march (no type, no number) */
   protected readonly armies = computed(

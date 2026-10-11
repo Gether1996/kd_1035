@@ -36,7 +36,8 @@
     <p class="panel__lead">{{ k.noSignups }}</p>
   } @else {
     <ul class="signups">
-      @for (s of shown(); track s.id) {
+      @for (g of players(); track g.first.id) {
+        @let s = g.first;
         <li class="signup">
           <div class="signup__head">
             @if (s.player; as p) {
@@ -45,7 +46,7 @@
             <div class="signup__who">
               <strong class="signup__name">{{ name(s) }}</strong>
               <span class="signup__meta">
-                {{ s.player?.name }} · {{ k.updated }} {{ date(s.updated_at) }}
+                {{ s.player?.name }} · {{ k.updated }} {{ date(g.updated) }}
               </span>
             </div>
             @if (s.player; as p) {
@@ -59,33 +60,37 @@
               </a>
             }
           </div>
-          <p class="signup__roles">
-            @if (s.role === 'rally') {
-              <span class="tag"><svg appIcon="swords"></svg>Rally</span>
-            } @else {
-              <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
-            }
-            @if (!s.complete) {
-              <span class="tag tag--warn">{{ k.statusIncomplete }}</span>
-            }
-            @if (superuser()) {
-              <button type="button" class="danger signup__remove" [class.is-armed]="armed() === s.id" (click)="remove(s)">
-                <svg appIcon="trash-2"></svg>{{ armed() === s.id ? k.deleteConfirm : k.withdraw }}
-              </button>
-            }
-          </p>
-          <!-- filled in like a march: commander heads, screenshots, armament bonuses -->
-          <app-march-row
-            class="signup__army"
-            [march]="armies().get(s.id)!"
-            [portraits]="portraits()"
-            [owner]="name(s)"
-            [numbered]="false"
-            [shotKinds]="['equipment', 'armaments']"
-            [showMissing]="true"
-          />
-          @if (s.note) {
-            <p class="signup__line signup__note">{{ s.note }}</p>
+          <!-- each sign-up of the player: rally and / or garrison, each with its own army -->
+          @for (one of g.signups; track one.id) {
+            <div class="signup__entry">
+              <p class="signup__roles">
+                @if (one.role === 'rally') {
+                  <span class="tag"><svg appIcon="swords"></svg>Rally</span>
+                } @else {
+                  <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
+                }
+                @if (!one.complete) {
+                  <span class="tag tag--warn">{{ k.statusIncomplete }}</span>
+                }
+                @if (superuser()) {
+                  <button type="button" class="danger signup__remove" [class.is-armed]="armed() === one.id" (click)="remove(one)">
+                    <svg appIcon="trash-2"></svg>{{ armed() === one.id ? k.deleteConfirm : k.withdraw }}
+                  </button>
+                }
+              </p>
+              <app-march-row
+                class="signup__army"
+                [march]="armies().get(one.id)!"
+                [portraits]="portraits()"
+                [owner]="name(one) + ' · ' + (one.role === 'rally' ? 'Rally' : 'Garrison')"
+                [numbered]="false"
+                [shotKinds]="['equipment', 'armaments']"
+                [showMissing]="true"
+              />
+              @if (one.note) {
+                <p class="signup__line signup__note">{{ one.note }}</p>
+              }
+            </div>
           }
           @if (s.marches?.length) {
             <details class="signup__marches">
@@ -93,7 +98,7 @@
               <ol class="mini-marches">
                 @for (march of s.marches; track march.id) {
                   <li class="mini-march">
-                    <app-march-row [march]="march" [portraits]="portraits()" [owner]="s.player?.ingame_name || s.player?.name || ''" />
+                    <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(s)" />
                   </li>
                 }
               </ol>

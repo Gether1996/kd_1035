@@ -278,12 +278,22 @@
   height: 16px;
 }
 
+// one sign-up of the player's card (rally / garrison), divided by a line from the one above
+.signup__entry {
+  margin-top: 12px;
+
+  & + & {
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+}
+
 .signup__roles {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
+  margin-bottom: 8px;
 }
 
 .tag {
