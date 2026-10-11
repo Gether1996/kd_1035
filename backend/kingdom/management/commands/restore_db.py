@@ -3,7 +3,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from kingdom.backups import private_archive, restore_backup, restore_private
+from kingdom.backups import pre_restore_copy, private_archive, restore_backup, restore_private
 
 
 class Command(BaseCommand):
@@ -21,6 +21,8 @@ class Command(BaseCommand):
             archive = Path(settings.BACKUP_DIR) / archive
         if not archive.is_file():
             raise CommandError(f'{archive} does not exist')
+        safety = pre_restore_copy(Path(settings.BACKUP_DIR))
+        self.stdout.write(f'The current database was saved as {safety.name} first')
         restore_backup(archive)
         self.stdout.write(self.style.SUCCESS(f'Database restored from {archive.name}'))
         screenshots = private_archive(archive)

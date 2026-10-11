@@ -29,6 +29,9 @@ from .models import (
 )
 from .permissions import SuperuserOnlyAdmin
 
+# "Odoslať na Discord hneď": each one waits up to 8 s for Discord inside the admin's request
+SEND_NOW_MAX = 3
+
 WEEKDAYS = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 REMINDER_LABELS = dict(REMINDER_CHOICES)
 # fields whose change alters the planned reminders (web-only fields do not replan)
@@ -392,9 +395,15 @@ class EventNotificationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
     @admin.action(description='Odoslať na Discord hneď')
     def send_now(self, request, queryset):
-        # a bulk selection never sends a sent or cancelled notification again
+        # a bulk selection never sends a sent or cancelled notification again; at most SEND_NOW_MAX at once – each is
+        # an HTTP call inside this request (gunicorn's 30 s timeout), the rest are left for the worker
         rows = list(queryset.filter(status__in=[EventNotification.Status.PENDING, EventNotification.Status.FAILED]))
         skipped = queryset.count() - len(rows)
+        if len(rows) > SEND_NOW_MAX:
+            self.message_user(
+                request, f'Naraz najviac {SEND_NOW_MAX} – vyber menej (ostatné pošle worker v ich čase).', messages.ERROR
+            )
+            return
         sent = sum(deliver(n) for n in rows)
         failed = len(rows) - sent
         if sent:

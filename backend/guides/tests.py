@@ -26,9 +26,9 @@ class SanitizeTests(TestCase):
     def test_removes_scripts_styles_and_handlers(self):
         html = clean_html(
             '<style>body{display:none}</style><h2 onclick="x()">MGE</h2><script>alert(1)</script>'
-            '<a href="javascript:alert(1)">bad</a><img src="https://x.test/a.png" onerror="x()">'
+            '<a href="javascript:alert(1)">bad</a><img src="/uploads/a.png" onerror="x()">'
         )
-        self.assertEqual(html, '<h2>MGE</h2><a rel="noopener noreferrer">bad</a><img src="https://x.test/a.png">')
+        self.assertEqual(html, '<h2>MGE</h2><a rel="noopener noreferrer">bad</a><img src="/uploads/a.png">')
 
     def test_keeps_tables_and_video_embeds_only(self):
         html = clean_html(
@@ -556,6 +556,17 @@ class GuideApiTests(TestCase):
     def test_html_is_sanitized_on_save(self):
         self.guide.refresh_from_db()
         self.assertEqual(self.guide.html_sk, '<p>Text&nbsp;SK</p>')
+
+    def test_pictures_only_from_this_site(self):
+        from .sanitize import clean_html
+
+        self.assertEqual(clean_html('<img src="/uploads/a.webp" alt="a">'), '<img src="/uploads/a.webp" alt="a">')
+        for outside in ('https://evil.example/p.gif', '//evil.example/p.gif', 'data:image/png;base64,AA'):
+            self.assertEqual(clean_html(f'<img src="{outside}" alt="a">'), '<img alt="a">', outside)
+        self.assertEqual(clean_html('<img srcset="/static/a.webp 1x, /static/b.webp 2x">'), '<img srcset="/static/a.webp 1x, /static/b.webp 2x">')
+        self.assertEqual(clean_html('<img srcset="/static/a.webp 1x, https://evil.example/b 2x">'), '<img>')
+        self.assertEqual(clean_html('<p style="background: URL( https://evil.example/p.gif )">x</p>'), '<p>x</p>')
+        self.assertEqual(clean_html('<p style="color: red">x</p>'), '<p style="color: red">x</p>')
 
     def test_list_hides_unpublished_and_has_no_html(self):
         data = self.client.get('/api/guides/').json()

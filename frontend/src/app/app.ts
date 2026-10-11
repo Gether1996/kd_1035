@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, afterNextRender, inject }
 import { NavigationEnd, NavigationStart, Router, RouterOutlet, Scroll } from '@angular/router';
 import { I18n, parseUrl } from './core/i18n/i18n';
 import { Seo } from './core/seo';
+import { SiteUpdate } from './core/site-update';
 import { Footer } from './layout/footer/footer';
 import { Header } from './layout/header/header';
 import { ScrollFx } from './shared/scroll-fx';
@@ -25,12 +26,19 @@ import { ScrollFx } from './shared/scroll-fx';
       </div>
     </div>
     <app-footer />
+    @if (update.available()) {
+      <div class="update-bar" role="status">
+        <span>{{ i18n.t().update.text }}</span>
+        <button type="button" class="pill-btn" (click)="update.reload()">{{ i18n.t().update.reload }}</button>
+      </div>
+    }
   `,
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   protected readonly i18n = inject(I18n);
+  protected readonly update = inject(SiteUpdate);
 
   constructor() {
     inject(Seo);

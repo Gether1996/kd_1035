@@ -4,4 +4,6 @@
 set -e
 mkdir -p "$BACKUP_DIR"
 chown app:app "$BACKUP_DIR" 2>/dev/null || true
+# backups hold personal data: only app reads them (the archives themselves are 0600)
+chmod 700 "$BACKUP_DIR" 2>/dev/null || true
 exec setpriv --reuid=app --regid=app --init-groups python manage.py run_worker

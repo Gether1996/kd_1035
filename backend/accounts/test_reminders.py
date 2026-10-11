@@ -514,7 +514,10 @@ class SendRemindersTests(TestCase):
     def test_reminder_more_than_ten_minutes_late_is_skipped(self):
         self.assertEqual(self.run_at(2026, 10, 10, 17, 10, 1), 0)  # the 60-min one is 10 min 1 s late
         self.assertEqual(self.run_at(2026, 10, 10, 17, 59, 59), 1)  # the 10-min one is 9 min 59 s late
-        self.assertEqual([o for o, _, _ in self.sent()], [10])
+        # the late one is never sent, but logged as not delivered (the overview and /pripomienky show it)
+        self.assertEqual(self.sent(), [(10, Channel.DISCORD, True), (60, Channel.DISCORD, False)])
+        self.assertEqual(SentReminder.objects.get(offset=60).error, reminders.MISSED_MESSAGE)
+        self.assertEqual(self.dm.call_count, 1)
 
     def test_weekly_occurrences_utc_and_local(self):
         # the week after the end of summer time: UTC events stay at 18:00 UTC, local ones at 20:00 Bratislava
@@ -694,6 +697,20 @@ class DiscordBotTests(SimpleTestCase):
                 if ctx.exception.blocked:
                     self.assertEqual(str(ctx.exception), discord_bot.BLOCKED_MESSAGE)
                 self.assertNotIn('bot-secret-token', str(ctx.exception))
+
+    def test_no_answer_to_the_post_itself_is_not_tried_again(self):
+        # the channel opened, the message post timed out: it may have arrived – a retry could send it twice
+        answers = [self.response({'id': '1234567890123'}), TimeoutError('timed out')]
+        with mock.patch('urllib.request.urlopen', side_effect=answers):
+            with self.assertRaises(discord_bot.BotError) as ctx:
+                discord_bot.send_dm('80351110224678912', {'content': 'x'})
+        self.assertEqual(str(ctx.exception), discord_bot.UNCERTAIN_MESSAGE)
+        self.assertFalse(ctx.exception.temporary)
+        # no answer while opening the channel: nothing was sent, so it is tried again
+        with mock.patch('urllib.request.urlopen', side_effect=TimeoutError('timed out')):
+            with self.assertRaises(discord_bot.BotError) as ctx:
+                discord_bot.send_dm('80351110224678912', {'content': 'x'})
+        self.assertTrue(ctx.exception.temporary)
 
     @override_settings(DISCORD_BOT_TOKEN='')
     def test_disabled_without_token(self):

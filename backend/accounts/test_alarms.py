@@ -122,10 +122,13 @@ class SendAlarmsTests(TestCase):
 
     @override_settings(DISCORD_BOT_TOKEN='')
     def test_without_bot_nothing_happens(self):
-        alarm = self.alarm(-1)
+        alarm, missed = self.alarm(-1), self.alarm(-60)
         self.assertEqual(alarms.send_alarms(NOW), 0)
         alarm.refresh_from_db()
+        missed.refresh_from_db()
         self.assertIsNone(alarm.sent_at)
+        # a missed one is closed even while the bot is off
+        self.assertEqual((missed.ok, missed.error), (False, alarms.MISSED))
 
     def test_prune_and_account_deletion(self):
         old = self.alarm(-2000, sent_at=NOW - timedelta(days=2), ok=True)

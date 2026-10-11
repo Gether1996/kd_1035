@@ -1,4 +1,5 @@
 import gzip
+import os
 import json
 import sqlite3
 import tempfile
@@ -78,7 +79,42 @@ class DiscordTests(TestCase):
         with mock.patch.object(discord, 'post', side_effect=discord.DiscordError('boom')):
             discord.send_due()
         n.refresh_from_db()
-        self.assertEqual((n.status, n.error), (EventNotification.Status.FAILED, 'boom'))
+        self.assertEqual((n.status, n.error, n.sent_at), (EventNotification.Status.FAILED, 'boom', None))
+
+    def test_discord_down_is_tried_again_on_the_next_tick(self):
+        first, second = self.make(minutes_ago=2), self.make()
+        down = discord.DiscordError('Discord odpovedal 502', temporary=True)
+        with mock.patch.object(discord, 'post', side_effect=down) as post:
+            self.assertEqual(discord.send_due(), 0)
+        post.assert_called_once_with(first)  # the tick stops at the first one
+        first.refresh_from_db()
+        self.assertEqual((first.status, first.error), (EventNotification.Status.PENDING, 'Discord odpovedal 502'))
+        with mock.patch.object(discord, 'post') as post:
+            self.assertEqual(discord.send_due(), 2)
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertEqual((first.status, second.status), (EventNotification.Status.SENT, EventNotification.Status.SENT))
+        # still down past MAX_DELAY: given up with the reason
+        late = self.make(minutes_ago=7 * 60, error='Discord odpovedal 502')
+        with mock.patch.object(discord, 'post') as post:
+            discord.send_due()
+        post.assert_not_called()
+        late.refresh_from_db()
+        self.assertEqual((late.status, late.error), (EventNotification.Status.FAILED, 'Zmeškaná – Discord odpovedal 502'))
+
+    def test_a_row_sent_or_deleted_meanwhile_is_not_sent_again(self):
+        n = self.make()
+        EventNotification.objects.filter(pk=n.pk).update(status=EventNotification.Status.SENT)
+        with mock.patch.object(discord, 'post') as post:
+            self.assertFalse(discord.deliver(n))
+        post.assert_not_called()
+        other = self.make()
+
+        def delete(notification):
+            EventNotification.objects.filter(pk=notification.pk).delete()  # replan() during the HTTP call
+
+        with mock.patch.object(discord, 'post', side_effect=delete):
+            self.assertTrue(discord.deliver(other))
 
     def test_long_missed_notification_is_not_sent(self):
         n = self.make(minutes_ago=60 * 24)
@@ -864,7 +900,19 @@ class BackupTests(TransactionTestCase):
                     sorted(p.name for p in folder.glob('kd1035_*_private.tar.gz')),
                     sorted(['kd1035_2000-01-03_000000_private.tar.gz', first.name.removesuffix('.sqlite3.gz') + '_private.tar.gz']),
                 )
+                # only the owner may read a backup (personal data)
+                self.assertEqual(first.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(screenshots.stat().st_mode & 0o777, 0o600)
 
+                # restore_db keeps the live database first; the copy goes with the backups of its age
+                safety = backups.pre_restore_copy(folder)
+                self.assertTrue(safety.name.startswith('pre-restore_kd1035_'))
+                old = folder / 'pre-restore_kd1035_2000-01-01_000000.sqlite3.gz'
+                old.write_bytes(b'')
+                os.utime(old, (0, 0))
+                backups.prune(folder, keep=2)
+                self.assertEqual([p.name for p in folder.glob('pre-restore_*')], [safety.name])
+                self.assertEqual(len(list(folder.glob('kd1035_*.sqlite3.gz'))), 2)  # never counted as a backup
 
                 Alliance.objects.all().delete()
                 backups.restore_backup(first)

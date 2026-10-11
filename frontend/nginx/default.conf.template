@@ -157,8 +157,9 @@ server {
         include /etc/nginx/snippets/security-headers.conf;
     }
 
+    # not hashed: a replaced picture (event icon, scenery) reaches returning visitors within a day
     location ~* \.(?:svg|png|jpe?g|webp|avif|ico|webmanifest)$ {
-        expires 7d;
+        expires 1d;
     }
 
     # single guides are rendered in the browser from the app shell; link-preview bots get Django's

@@ -54,6 +54,8 @@ export const sk = {
         'Návody na commanderov, výbavu a eventy v Rise of Kingdoms od hráčov slovensko-českého kráľovstva KD 1035 – všetko na jednom mieste.',
     },
   },
+  // a newer version of the site is deployed than the one open in the tab
+  update: { text: 'Web má novú verziu.', reload: 'Načítať' },
   nav: {
     home: 'Domov',
     breadcrumb: 'Navigačná cesta',

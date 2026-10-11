@@ -14,6 +14,8 @@ from .discord_oauth import API, DISCORD_ID, USER_AGENT
 
 # Discord error code: the user blocks DMs or shares no server with the bot
 CANNOT_MESSAGE_USER = 50007
+# Discord did not answer the post of the message: it may or may not have arrived (never sent again)
+UNCERTAIN_MESSAGE = 'Discord neodpovedal – správa mohla, ale nemusela prísť.'
 # the exact error text for CANNOT_MESSAGE_USER – SentReminder.error equals it, so /pripomienky can tell the player why
 BLOCKED_MESSAGE = 'Hráč nemá povolené súkromné správy alebo nie je na Discord serveri s botom.'
 
@@ -23,12 +25,14 @@ class BotError(Exception):
 
     temporary: rate limit, server error or no answer – worth trying again in a moment (the worker does, next tick).
     blocked: the bot cannot write to this player (not on the server, or DMs from its members are off).
+    answered: Discord sent an HTTP answer – without one (timeout, connection reset) a posted message may have arrived.
     """
 
-    def __init__(self, message: str, temporary: bool = False, blocked: bool = False):
+    def __init__(self, message: str, temporary: bool = False, blocked: bool = False, answered: bool = True):
         super().__init__(message)
         self.temporary = temporary
         self.blocked = blocked
+        self.answered = answered
 
 
 def enabled() -> bool:
@@ -47,12 +51,13 @@ def _post(path: str, payload: dict) -> dict:
         method='POST',
     )
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
+        # short: the test message on /pripomienky waits for two calls inside a gunicorn request (30 s timeout)
+        with urllib.request.urlopen(request, timeout=8) as response:
             data = json.load(response)
     except urllib.error.HTTPError as exc:
         raise _error(exc) from exc
     except OSError as exc:  # URLError, timeout, connection reset
-        raise BotError(f'Discord je nedostupný: {exc}', temporary=True) from exc
+        raise BotError(f'Discord je nedostupný: {exc}', temporary=True, answered=False) from exc
     except ValueError as exc:
         raise BotError('Discord vrátil neplatnú odpoveď') from exc
     if not isinstance(data, dict):
@@ -83,4 +88,10 @@ def send_dm(discord_id: str, message: dict) -> None:
     channel = _post('/users/@me/channels', {'recipient_id': discord_id}).get('id')
     if not isinstance(channel, str) or not DISCORD_ID.fullmatch(channel):
         raise BotError('Discord nevrátil kanál pre súkromnú správu')
-    _post(f'/channels/{channel}/messages', {**message, 'allowed_mentions': {'parse': []}})
+    try:
+        _post(f'/channels/{channel}/messages', {**message, 'allowed_mentions': {'parse': []}})
+    except BotError as exc:
+        if exc.temporary and not exc.answered:
+            # no answer to the post itself: the message may have arrived – trying again could send it twice
+            raise BotError(UNCERTAIN_MESSAGE) from exc
+        raise

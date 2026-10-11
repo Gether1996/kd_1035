@@ -63,11 +63,12 @@ def send_alarms(now=None) -> int:
     channel is off and the alarms wait.
     """
     now = now or timezone.now()
-    if not discord_bot.enabled():
-        return 0
+    # closed also while the bot is off: /pripomienky would show them as waiting forever
     Alarm.objects.filter(sent_at__isnull=True, remind_at__lte=now - WINDOW).update(
         sent_at=now, error=MISSED
     )
+    if not discord_bot.enabled():
+        return 0
     due = Alarm.objects.filter(
         sent_at__isnull=True,
         remind_at__lte=now,

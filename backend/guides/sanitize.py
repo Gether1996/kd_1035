@@ -35,7 +35,22 @@ YOUTUBE = 'https://www.youtube.com/embed/'
 YOUTUBE_NOCOOKIE = 'https://www.youtube-nocookie.com/embed/'
 
 
+def _local(url: str) -> bool:
+    """an address on this site (/uploads/…, /static/…) – not //host/… and no scheme"""
+    return url.startswith('/') and not url.startswith('//') and '\\' not in url
+
+
 def _filter(tag: str, attr: str, value: str) -> str | None:
+    # pictures only from this site: an outside one would tell its server the IP of every reader (the privacy page
+    # names no such third party)
+    if tag in ('img', 'source') and attr == 'src':
+        return value if _local(value.strip()) else None
+    if tag in ('img', 'source') and attr == 'srcset':
+        urls = [candidate.strip().split()[0] for candidate in value.split(',') if candidate.strip()]
+        return value if urls and all(_local(url) for url in urls) else None
+    # url() in a style loads an outside picture the same way
+    if attr == 'style' and 'url(' in value.lower().replace(' ', ''):
+        return None
     if tag == 'iframe' and attr == 'src':
         if not value.startswith(EMBEDS):
             return None

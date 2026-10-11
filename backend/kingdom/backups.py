@@ -14,6 +14,10 @@ from django.db import connection
 from django.utils import timezone
 
 PREFIX = 'kd1035_'
+# the live database just before restore_db replaced it (outside the PREFIX pattern: never counted as a backup)
+PRE_RESTORE = 'pre-restore_'
+# backups hold personal data: only the owner (app) may read them
+MODE = 0o600
 
 
 def _connect_db() -> sqlite3.Connection:
@@ -38,9 +42,35 @@ def create_backup(folder: Path, keep: int) -> Path:
     """Writes kd1035_<time>.sqlite3.gz (+ _uploads.tar.gz and _private.tar.gz when there are such files) and prunes
     old ones."""
     folder.mkdir(parents=True, exist_ok=True)
-    stamp = timezone.localtime().strftime('%Y-%m-%d_%H%M%S')
-    raw = folder / f'{PREFIX}{stamp}.sqlite3'
+    stamp = _stamp()
+    archive = _write_database(folder / f'{PREFIX}{stamp}.sqlite3.gz')
 
+    media = Path(settings.MEDIA_ROOT)
+    if media.is_dir() and any(media.iterdir()):
+        _write_tar(folder / f'{PREFIX}{stamp}_uploads.tar.gz', media, 'uploads')
+
+    # the screenshots of marches and KvK sign-ups (already WebP – gzip gains little, but keeps one format)
+    private = Path(settings.PRIVATE_MEDIA_ROOT)
+    if private.is_dir() and any(private.rglob('*.webp')):
+        _write_tar(folder / f'{PREFIX}{stamp}_private.tar.gz', private, 'private')
+
+    prune(folder, keep)
+    return archive
+
+
+def pre_restore_copy(folder: Path) -> Path:
+    """pre-restore_kd1035_<time>.sqlite3.gz: the live database before restore_db replaces it (a wrong backup picked
+    by mistake can be undone). Deleted with the backups of its age (prune)."""
+    folder.mkdir(parents=True, exist_ok=True)
+    return _write_database(folder / f'{PRE_RESTORE}{PREFIX}{_stamp()}.sqlite3.gz')
+
+
+def _stamp() -> str:
+    return timezone.localtime().strftime('%Y-%m-%d_%H%M%S')
+
+
+def _write_database(archive: Path) -> Path:
+    raw = archive.with_name(archive.name.removesuffix('.gz'))
     # SQLite online backup API – a consistent snapshot even while gunicorn writes
     source = _connect_db()
     target = sqlite3.connect(raw)
@@ -49,25 +79,17 @@ def create_backup(folder: Path, keep: int) -> Path:
     finally:
         target.close()
         source.close()
-
-    archive = raw.with_suffix('.sqlite3.gz')
     with raw.open('rb') as src, gzip.open(archive, 'wb') as dst:
         shutil.copyfileobj(src, dst)
     raw.unlink()
-
-    media = Path(settings.MEDIA_ROOT)
-    if media.is_dir() and any(media.iterdir()):
-        with tarfile.open(folder / f'{PREFIX}{stamp}_uploads.tar.gz', 'w:gz') as tar:
-            tar.add(media, arcname='uploads')
-
-    # the screenshots of marches and KvK sign-ups (already WebP – gzip gains little, but keeps one format)
-    private = Path(settings.PRIVATE_MEDIA_ROOT)
-    if private.is_dir() and any(private.rglob('*.webp')):
-        with tarfile.open(folder / f'{PREFIX}{stamp}_private.tar.gz', 'w:gz') as tar:
-            tar.add(private, arcname='private')
-
-    prune(folder, keep)
+    archive.chmod(MODE)
     return archive
+
+
+def _write_tar(archive: Path, root: Path, arcname: str) -> None:
+    with tarfile.open(archive, 'w:gz') as tar:
+        tar.add(root, arcname=arcname)
+    archive.chmod(MODE)
 
 
 def prune(folder: Path, keep: int) -> None:
@@ -82,6 +104,11 @@ def prune(folder: Path, keep: int) -> None:
         for archive in folder.glob(f'{PREFIX}*{suffix}'):
             if archive.name.removesuffix(suffix) not in kept:
                 archive.unlink()
+    # a safety copy from restore_db lives as long as a backup does (keep × interval, the privacy page)
+    oldest = timezone.now() - timedelta(days=max(keep, 1) * settings.BACKUP_INTERVAL_DAYS)
+    for copy in folder.glob(f'{PRE_RESTORE}*.sqlite3.gz'):
+        if datetime.fromtimestamp(copy.stat().st_mtime, tz=timezone.get_current_timezone()) < oldest:
+            copy.unlink()
 
 
 def private_archive(archive: Path) -> Path:

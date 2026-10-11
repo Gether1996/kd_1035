@@ -56,6 +56,7 @@ export const cs: Dict = {
         'Návody na commandery, výbavu a eventy v Rise of Kingdoms od hráčů česko-slovenského království KD 1035 – vše na jednom místě.',
     },
   },
+  update: { text: 'Web má novou verzi.', reload: 'Načíst' },
   nav: {
     home: 'Domů',
     breadcrumb: 'Drobečková navigace',

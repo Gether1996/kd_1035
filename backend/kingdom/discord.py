@@ -19,7 +19,12 @@ MAX_DELAY = timedelta(hours=6)
 
 
 class DiscordError(Exception):
-    pass
+    """`temporary`: Discord is down, slow or busy (timeout, 5xx, 429) – the notification is tried again on the next tick
+    (until MAX_DELAY); otherwise (deleted webhook, bad payload) it is marked failed."""
+
+    def __init__(self, message: str, temporary: bool = False):
+        super().__init__(message)
+        self.temporary = temporary
 
 
 def mention_role_id(notification: EventNotification) -> str:
@@ -69,13 +74,16 @@ def send(payload: dict, url: str) -> None:
         method='POST',
     )
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
+        # short: the admin's "Odoslať hneď" waits for it inside a gunicorn request
+        with urllib.request.urlopen(request, timeout=8) as response:
             response.read()
     except urllib.error.HTTPError as exc:
         body = exc.read()[:300].decode(errors='replace')
-        raise DiscordError(f'Discord odpovedal {exc.code}: {body}') from exc
+        raise DiscordError(f'Discord odpovedal {exc.code}: {body}', temporary=exc.code >= 500 or exc.code == 429) from exc
     except urllib.error.URLError as exc:
-        raise DiscordError(f'Discord je nedostupný: {exc.reason}') from exc
+        raise DiscordError(f'Discord je nedostupný: {exc.reason}', temporary=True) from exc
+    except TimeoutError as exc:
+        raise DiscordError('Discord neodpovedal včas', temporary=True) from exc
 
 
 def post(notification: EventNotification) -> None:
@@ -85,39 +93,54 @@ def post(notification: EventNotification) -> None:
     send(build_payload(notification), url)
 
 
-def deliver(notification: EventNotification) -> bool:
-    """Sends one notification and stores the outcome. Returns True on success."""
+class Busy(Exception):
+    """Discord is temporarily unavailable – the worker stops this tick and tries again on the next one."""
+
+
+def deliver(notification: EventNotification, retry: bool = False) -> bool:
+    """Sends one pending or failed notification and stores the outcome. Returns True on success.
+
+    The row is claimed first (a conditional update), so the worker and the admin's "Odoslať hneď" never post it twice;
+    the outcome is written with an update, so a row deleted meanwhile (replan) breaks nothing. `retry`: a temporary
+    Discord error puts it back to pending and raises Busy (the worker tries again later) instead of marking it failed.
+    """
+    rows = EventNotification.objects.filter(pk=notification.pk)
+    claimed = rows.filter(status__in=[EventNotification.Status.PENDING, EventNotification.Status.FAILED]).update(
+        status=EventNotification.Status.SENT, sent_at=timezone.now(), error=''
+    )
+    if not claimed:
+        return False  # sent, cancelled or deleted meanwhile
     try:
         post(notification)
     except DiscordError as exc:
-        notification.status = EventNotification.Status.FAILED
-        notification.error = str(exc)
         log.warning('Discord notification %s failed: %s', notification.pk, exc)
-    else:
-        notification.status = EventNotification.Status.SENT
-        notification.sent_at = timezone.now()
-        notification.error = ''
-    notification.save(update_fields=['status', 'sent_at', 'error'])
-    return notification.status == EventNotification.Status.SENT
+        if retry and exc.temporary:
+            rows.update(status=EventNotification.Status.PENDING, sent_at=None, error=str(exc))
+            raise Busy(str(exc)) from exc
+        rows.update(status=EventNotification.Status.FAILED, sent_at=None, error=str(exc))
+        return False
+    return True
 
 
 def send_due(now=None) -> int:
     """Sends every pending notification whose time has come. Returns how many were processed.
 
-    A row cancelled while the loop runs is skipped; one cancelled during its own HTTP call still goes out.
+    A row cancelled or sent (admin) while the loop runs is skipped – deliver() claims each row first. While Discord is
+    temporarily down the tick stops and the rest waits for the next one; past MAX_DELAY a row is given up.
     """
     now = now or timezone.now()
     due = EventNotification.objects.filter(status=EventNotification.Status.PENDING, send_at__lte=now)
     count = 0
     for notification in due.order_by('send_at'):
-        # the admin may have cancelled it since the query (every send before it is an HTTP call)
-        if not EventNotification.objects.filter(pk=notification.pk, status=EventNotification.Status.PENDING).exists():
-            continue
         if notification.send_at < now - MAX_DELAY:
-            notification.status = EventNotification.Status.FAILED
-            notification.error = 'Zmeškaná – worker v tom čase nebežal.'
-            notification.save(update_fields=['status', 'error'])
-        else:
-            deliver(notification)
-        count += 1
+            reason = notification.error or 'worker v tom čase nebežal'
+            missed = EventNotification.objects.filter(pk=notification.pk, status=EventNotification.Status.PENDING)
+            if missed.update(status=EventNotification.Status.FAILED, error=f'Zmeškaná – {reason}'[:500]):
+                count += 1
+            continue
+        try:
+            if deliver(notification, retry=True):
+                count += 1
+        except Busy:
+            break
     return count

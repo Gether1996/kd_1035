@@ -3,7 +3,8 @@ Discord message from the bot – the only channel (web push was dropped on 9. 10
 
 Every tick the worker looks for reminders whose send time (start − offset) lies in (now − WINDOW, now]. Each one is
 logged in SentReminder before it goes out, so it is never sent twice – also after a failure (no retry storms) or with
-a second worker running.
+a second worker running. A reminder whose window passed without a row (Discord down the whole time, worker stopped)
+gets a failed row (MISSED_MESSAGE), so the overview and /pripomienky show it instead of nothing.
 """
 
 import logging
@@ -23,6 +24,9 @@ log = logging.getLogger(__name__)
 
 # a reminder the worker could not send within this time (it was down) is skipped
 WINDOW = timedelta(minutes=10)
+# … and logged as not delivered when it is found up to this long after its window
+MISSED_LOOKBACK = timedelta(hours=2)
+MISSED_MESSAGE = 'Neposlaná – Discord bol nedostupný alebo worker nebežal.'
 KEEP_SENT = timedelta(days=30)
 GOLD = 0xF5C451
 # where players pick their events and times (SK path, /cz prefix for Czech)
@@ -110,11 +114,13 @@ def test_message(lang: str) -> dict:
     return {'embeds': [embed]}
 
 
-def due_starts(event: KingdomEvent, offset: int, now) -> list:
-    """Starts whose send time (send_time: start − offset, or the evening before) lies in (now − WINDOW, now]."""
+def due_starts(event: KingdomEvent, offset: int, now, since=None) -> list:
+    """Starts whose send time (send_time: start − offset, or the evening before) lies in (since, now]; since defaults
+    to now − WINDOW."""
+    since = since or now - WINDOW
     tick = timedelta(microseconds=1)
-    candidates = occurrences(event, now - WINDOW + tick, now + longest_lead(offset) + tick)
-    return [start for start in candidates if now - WINDOW < send_time(start, offset) <= now]
+    candidates = occurrences(event, since + tick, now + longest_lead(offset) + tick)
+    return [start for start in candidates if since < send_time(start, offset) <= now]
 
 
 def send_personal_reminders(now=None) -> int:
@@ -128,9 +134,10 @@ def send_personal_reminders(now=None) -> int:
     reminders = EventReminder.objects.filter(
         event__is_active=True, event__show_on_web=True, player__user__is_active=True, player__remind_discord=True
     ).select_related('player', 'event__guide')
-    # every reminder already handled has an occurrence after now − WINDOW
+    # every reminder handled since the lookback has an occurrence after it (the send time is never after the start)
+    since = now - WINDOW - MISSED_LOOKBACK
     done = set(
-        SentReminder.objects.filter(occurrence__gt=now - WINDOW, channel=SentReminder.Channel.DISCORD).values_list(
+        SentReminder.objects.filter(occurrence__gt=since, channel=SentReminder.Channel.DISCORD).values_list(
             'player_id', 'event_id', 'occurrence', 'offset'
         )
     )
@@ -140,15 +147,35 @@ def send_personal_reminders(now=None) -> int:
         player, event = reminder.player, reminder.event
         for offset in reminder.offsets:
             if (event.pk, offset) not in starts:
-                starts[event.pk, offset] = due_starts(event, offset, now)
+                starts[event.pk, offset] = due_starts(event, offset, now, since=since)
             for start in starts[event.pk, offset]:
-                if (player.pk, event.pk, start, offset) not in done:
-                    try:
-                        attempted += deliver(player, event, start, offset)
-                    except DiscordPaused:
-                        # the rest waits for the next tick (still inside WINDOW)
-                        return attempted
+                if (player.pk, event.pk, start, offset) in done:
+                    continue
+                if send_time(start, offset) <= now - WINDOW:
+                    record_missed(player, event, start, offset)
+                    continue
+                try:
+                    attempted += deliver(player, event, start, offset)
+                except DiscordPaused:
+                    # the rest waits for the next tick (still inside WINDOW)
+                    return attempted
     return attempted
+
+
+def record_missed(player: Player, event: KingdomEvent, start, offset: int) -> None:
+    """A reminder whose window passed unsent: a failed row instead of a silent gap (never sent late)."""
+    try:
+        with transaction.atomic():
+            SentReminder.objects.create(
+                player=player,
+                event=event,
+                occurrence=start,
+                offset=offset,
+                channel=SentReminder.Channel.DISCORD,
+                error=MISSED_MESSAGE,
+            )
+    except IntegrityError:
+        pass
 
 
 def deliver(player: Player, event: KingdomEvent, start, offset: int) -> bool:

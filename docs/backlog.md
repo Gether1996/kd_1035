@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.18.4:** po nasadení novej verzie si otvorená stará karta webu sama všimne novú verziu – ďalší klik načíta stránku nanovo a dole sa ukáže „Web má novú verziu. Načítať“ (hráči so starou kartou nahrávali screenshot armamentov, ktorý server už neberie); opravy po kontrole kritika: kanálové pripomienky sa pri výpadku Discordu skúsia znova a nepošlú sa dvakrát, zmeškané osobné pripomienky a budíky sa zapíšu ako nedoručené, `restore_db` najprv uloží aktuálnu DB, zálohy čitateľné iba pre vlastníka, v návodoch iba obrázky z tohto webu.
 - **11. 10. 2026 – v1.18.3:** bonusy armamentov pri marchi stráži aj server; staré marche bez bonusov ukazujú „Bonusy armamentov nevyplnené“ a vlastník dostane výzvu na doplnenie; zoznamy Marche hráčov a Prihlášky sa obnovia samy po návrate na kartu.
 - **11. 10. 2026 – v1.18.2:** opravy po druhej kontrole kritika: prihláška na KvK po prvom uložení už neznovunačíta celú záložku (ostane hláška aj rozpracovaná druhá rola), nový screenshot nahradí starý až po úspešnom nahratí, staré archívy screenshotov sa zo záloh mažú načas, prázdne meno v hre sa neodošle.
 - **11. 10. 2026 – v1.18.1:** opravy po kontrole agentov: portréty a ikony nenarazia na limit požiadaviek (na serveri by sa nenačítali), počty vo filtroch prihlášok počítajú hráčov, výkričník zmizne hneď po uložení mena v prihláške, meno v hre sa nedá zmazať, tlačidlo Zrušiť prihlášku sa po 5 s vráti, čítačka obrazovky pri menu ohlási chýbajúce meno.
