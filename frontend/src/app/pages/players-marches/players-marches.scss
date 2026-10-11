@@ -51,6 +51,7 @@
 }
 
 .player {
+  position: relative;
   padding: 0;
   transition: border-color 0.2s;
 
@@ -66,7 +67,8 @@
   align-items: center;
   gap: 8px 12px;
   width: 100%;
-  padding: 16px;
+  // room for the chevron, which stays on the name row also on a 320 px phone with two tags
+  padding: 16px 48px 16px 16px;
   border: 0;
   border-radius: var(--radius);
   background: none;
@@ -77,11 +79,13 @@
 }
 
 .player__chevron {
-  flex: none;
+  position: absolute;
+  top: 26px; // the middle of the 40 px avatar
+  right: 16px;
   width: 20px;
   height: 20px;
-  margin-left: auto;
   color: var(--text-dim);
+  pointer-events: none;
   transition: transform 0.25s var(--ease-out);
 
   .is-open & {
@@ -101,6 +105,11 @@
   align-items: center;
   gap: 6px;
   padding-left: 52px;
+
+  // a phone: under the avatar too, so the portraits fit on fewer rows
+  @media (max-width: 400px) {
+    padding-left: 0;
+  }
 }
 
 .player__count {
