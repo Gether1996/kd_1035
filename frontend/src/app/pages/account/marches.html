@@ -7,8 +7,22 @@
     }
   </h2>
   <p class="panel__lead">{{ m.lead }}</p>
-  <!-- who sees the screenshots – before anything is uploaded (Gether 11. 10. 2026) -->
-  <p class="visibility"><svg appIcon="eye-off"></svg>{{ m.privacy }}</p>
+  <!-- who sees the marches and screenshots: R4 only, or every signed-in player (Gether 11. 10. 2026) -->
+  @if (loaded()) {
+    <div class="visibility" role="group" aria-labelledby="marches-visibility">
+      <span class="visibility__label" id="marches-visibility">{{ m.visibility.label }}</span>
+      <div class="segmented">
+        <button type="button" [attr.aria-pressed]="!isPublic()" (click)="setPublic(false)">{{ m.visibility.r4 }}</button>
+        <button type="button" [attr.aria-pressed]="isPublic()" (click)="setPublic(true)">{{ m.visibility.all }}</button>
+      </div>
+      <p class="visibility__hint" role="status" [class.is-error]="visibilityFailed()">
+        {{ visibilityFailed() ? m.failed : isPublic() ? m.visibility.allHint : m.visibility.r4Hint }}
+      </p>
+      <a class="visibility__link" [routerLink]="i18n.path('playersMarches')">
+        {{ m.visibility.others }}<svg appIcon="arrow-right"></svg>
+      </a>
+    </div>
+  }
 
   @if (failed()) {
     <p class="panel__lead is-error">{{ m.loadError }}</p>

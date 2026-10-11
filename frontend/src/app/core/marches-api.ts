@@ -6,6 +6,18 @@ import { March, MarchImage, MarchKind, UploadError, uploadError } from './kvk-ap
 
 export type MarchChange = Partial<{ kind: MarchKind | ''; primary: string; secondary: string }>;
 
+export interface PlayerMarches {
+  id: number;
+  name: string;
+  ingame_name: string;
+  avatar_url: string;
+  /** the player shows the marches to everyone (else only R4 sees them) */
+  public: boolean;
+  /** the visitor's own marches */
+  me: boolean;
+  marches: March[];
+}
+
 /** The player's marches on /ucet (backend accounts/march_views.py); browser only, session + CSRF. */
 @Injectable({ providedIn: 'root' })
 export class MarchesApi {
@@ -14,7 +26,21 @@ export class MarchesApi {
 
   /** must run in an injection context */
   list() {
-    return httpResource<{ marches: March[]; max: number }>(() => (this.isBrowser ? '/api/me/marches/' : undefined));
+    return httpResource<{ marches: March[]; max: number; public: boolean }>(() =>
+      this.isBrowser ? '/api/me/marches/' : undefined,
+    );
+  }
+
+  /** true = every signed-in player sees the marches, false = only R4 and the superuser */
+  setPublic(value: boolean): Promise<{ public: boolean }> {
+    return firstValueFrom(this.http.patch<{ public: boolean }>('/api/me/marches/', { public: value }));
+  }
+
+  /** /marche: the public marches of every player (all of them for R4); must run in an injection context */
+  players(when: () => boolean) {
+    return httpResource<{ players: PlayerMarches[]; reviewer: boolean }>(() =>
+      this.isBrowser && when() ? '/api/marches/' : undefined,
+    );
   }
 
   /** a new march – its type and primary commander are required */

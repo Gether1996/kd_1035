@@ -5,23 +5,50 @@
 }
 
 .visibility {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  gap: 8px;
   margin-top: 14px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--gold-400) 7%, transparent);
-  color: var(--text);
+
+  .segmented {
+    justify-self: start;
+
+    @media (max-width: 420px) {
+      justify-self: stretch;
+    }
+  }
+}
+
+.visibility__label {
+  font: 600 0.8125rem/1.2 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.visibility__hint {
   font-size: 0.9375rem;
+  color: var(--text);
+
+  &.is-error {
+    color: var(--red-300);
+  }
+}
+
+.visibility__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  color: var(--gold-300);
+  font-weight: 600;
 
   .icon {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
-    color: var(--gold-400);
+    width: 15px;
+    height: 15px;
   }
 }
 

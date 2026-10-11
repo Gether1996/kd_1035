@@ -366,3 +366,34 @@ class MarchTests(KvkTestCase):
         self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'})
         self.player.delete_account()
         self.assertFalse(March.objects.exists())
+
+    def test_public_marches_are_seen_by_every_signed_in_player(self):
+        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'}).json()
+        url = self.call(
+            'post_file', f'/api/me/marches/{march["id"]}/images/', {'kind': 'equipment', 'file': picture()}
+        ).json()['url']
+        other = self.login(make_player('42').user)
+        # private by default: only the owner (and R4) sees them
+        self.assertEqual(self.client.get('/api/me/marches/').json()['public'], False)
+        self.assertEqual(other.get('/api/marches/').json()['players'], [])
+        self.assertEqual(other.get(url).status_code, 404)
+        mine = self.client.get('/api/marches/').json()['players']
+        self.assertEqual([(p['me'], p['public']) for p in mine], [(True, False)])
+
+        self.assertEqual(self.call('patch', '/api/me/marches/', {'public': 'yes'}).status_code, 400)
+        self.assertEqual(self.call('patch', '/api/me/marches/', {'public': True}).json(), {'public': True})
+        players = other.get('/api/marches/').json()['players']
+        self.assertEqual([p['marches'][0]['primary'] for p in players], ['Attila'])
+        self.assertEqual(other.get(url).status_code, 200)
+        self.assertEqual(Client().get('/api/marches/').status_code, 403)
+        self.assertEqual(Client().get(url).status_code, 404)
+
+        # back to R4 only
+        self.call('patch', '/api/me/marches/', {'public': False})
+        self.assertEqual(other.get('/api/marches/').json()['players'], [])
+        reviewer = make_player('43')
+        reviewer.kvk_reviewer = True
+        reviewer.save()
+        data = self.login(reviewer.user).get('/api/marches/').json()
+        self.assertTrue(data['reviewer'])
+        self.assertEqual(len(data['players']), 1)

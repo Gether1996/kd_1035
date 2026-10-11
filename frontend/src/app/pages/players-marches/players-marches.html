@@ -1,0 +1,121 @@
+@let p = t().playersMarches;
+@let mk = t().marches;
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="p.eyebrow" [title]="p.title" [intro]="p.intro" />
+
+<div class="container content is-wide">
+  @if (!auth.ready()) {
+    <div class="placeholder" aria-hidden="true"></div>
+  } @else if (auth.failed()) {
+    <p class="state">{{ p.error }}</p>
+  } @else if (!auth.enabled()) {
+    <p class="state">{{ t().reminders.disabled }}</p>
+  } @else if (!auth.user()) {
+    <section class="login" aria-labelledby="marches-login">
+      <span class="login__badge"><svg appIcon="swords"></svg></span>
+      <h2 class="login__title" id="marches-login">{{ p.loginTitle }}</h2>
+      <p class="login__text">{{ p.loginText }}</p>
+      <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ t().account.login }}</a>
+    </section>
+  } @else if (data.error()) {
+    <p class="state">{{ p.error }}</p>
+  } @else if (data.hasValue()) {
+    <div class="bar">
+      <div class="field bar__search">
+        <label class="sr-only" for="marches-search">{{ p.search }}</label>
+        <input
+          #q
+          id="marches-search"
+          class="input"
+          type="search"
+          autocomplete="off"
+          [placeholder]="p.search"
+          [value]="search()"
+          (input)="search.set(q.value)"
+        />
+      </div>
+      <a class="pill-btn pill-btn--quiet" [routerLink]="i18n.path('account')" fragment="marche">{{ p.mine }}</a>
+    </div>
+
+    @if (!players().length) {
+      <p class="state">{{ p.empty }}</p>
+    } @else if (!shown().length) {
+      <p class="state">{{ p.noMatch }}</p>
+    }
+
+    <ul class="players">
+      @for (player of shown(); track player.id) {
+        <li class="player">
+          <header class="player__head">
+            <img class="player__avatar" [src]="player.avatar_url" alt="" width="40" height="40" />
+            <div class="player__who">
+              <strong class="player__name">{{ name(player) }}</strong>
+              @if (player.ingame_name) {
+                <span class="player__discord">{{ player.name }}</span>
+              }
+            </div>
+            @if (player.me) {
+              <span class="tag">{{ p.you }}</span>
+            }
+            @if (!player.public) {
+              <span class="tag tag--private"><svg appIcon="eye-off"></svg>{{ p.r4Only }}</span>
+            }
+          </header>
+          <ol class="player__marches">
+            @for (march of player.marches; track march.id) {
+              <li class="row">
+                <span class="row__num">{{ march.position }}.</span>
+                @if (march.kind) {
+                  <img class="row__kind" [src]="icon(march.kind)" [alt]="mk.kinds[march.kind]" [title]="mk.kinds[march.kind]" width="96" height="96" />
+                }
+                <span class="row__pair">
+                  @for (commander of [march.primary, march.secondary]; track $index) {
+                    @if (commander) {
+                      <span class="row__commander">
+                        @if (portrait(commander); as src) {
+                          <img [src]="src" alt="" width="96" height="96" loading="lazy" />
+                        }
+                        {{ commander }}
+                      </span>
+                    }
+                  }
+                </span>
+                <span class="row__shots">
+                  @for (image of march.images; track image.id) {
+                    <button
+                      type="button"
+                      class="row__shot"
+                      [attr.aria-label]="mk.images[image.kind] + ' – ' + name(player) + ', ' + mk.march.replace('{n}', '' + march.position)"
+                      (click)="open(player, march, image, $event)"
+                    >
+                      <img [src]="image.thumb" alt="" loading="lazy" />
+                    </button>
+                  }
+                </span>
+              </li>
+            }
+          </ol>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="placeholder" aria-hidden="true"></div>
+  }
+</div>
+
+<dialog #viewer class="modal modal--wide" (close)="closed()" aria-labelledby="players-marches-viewer">
+  @if (viewing(); as v) {
+    <div class="modal__body">
+      <header class="modal__head">
+        <div class="modal__heading">
+          <h2 class="modal__title" id="players-marches-viewer">{{ name(v.player) }}</h2>
+          <p class="modal__eyebrow">{{ mk.march.replace('{n}', '' + v.march.position) }} · {{ mk.images[v.image.kind] }}</p>
+        </div>
+        <button type="button" class="modal__close" [attr.aria-label]="t().kvk.close" (click)="close()">
+          <svg appIcon="x"></svg>
+        </button>
+      </header>
+      <img class="viewer-image" [src]="v.image.url" [alt]="mk.images[v.image.kind] + ' – ' + name(v.player)" [width]="v.image.width" [height]="v.image.height" />
+    </div>
+  }
+</dialog>

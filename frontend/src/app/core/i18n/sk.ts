@@ -35,6 +35,10 @@ export const sk = {
       title: 'Pripomienky eventov na Discorde | KD 1035',
       description: 'Vyber si eventy kráľovstva KD 1035 a náš Discord bot ti pred začiatkom pošle súkromnú správu.',
     },
+    playersMarches: {
+      title: 'Marche hráčov | KD 1035',
+      description: 'Marche hráčov kráľovstva KD 1035 – commanderi, výbava a armamenty.',
+    },
     kvk: {
       title: 'Prihláška na KvK | KD 1035',
       description: 'Prihláška hráčov kráľovstva KD 1035 na KvK – rally a garrison.',
@@ -278,6 +282,20 @@ export const sk = {
     loadError: 'Hráčov sa nepodarilo načítať.',
     failed: 'Zmenu sa nepodarilo uložiť. Skús to znova.',
   },
+  playersMarches: {
+    eyebrow: 'Hráči',
+    title: 'Marche hráčov',
+    intro: 'Commanderi, výbava a armamenty hráčov, ktorí ich ukazujú všetkým.',
+    loginTitle: 'Prihlás sa cez Discord',
+    loginText: 'Marche hráčov vidia iba hráči prihlásení na webe.',
+    error: 'Marche sa nepodarilo načítať. Skús to znova o chvíľu.',
+    search: 'Hľadať hráča',
+    mine: 'Moje marche',
+    empty: 'Zatiaľ ich nikto neukazuje všetkým.',
+    noMatch: 'Takého hráča tu nemáme.',
+    you: 'Ty',
+    r4Only: 'len R4',
+  },
   marches: {
     title: 'Moji commanderi a výbava',
     lead: 'Až 7 marchov – typ, commanderi a screenshoty výbavy a armamentov. Pomôžu vedeniu zostaviť tímy na KvK.',
@@ -323,7 +341,14 @@ export const sk = {
     remove: 'Odstrániť',
     removeConfirm: 'Naozaj odstrániť?',
     failed: 'Nepodarilo sa uložiť. Skús to znova.',
-    privacy: 'Tvoje marche a screenshoty uvidia okrem teba iba poverení R4 kráľovstva a superadmin. Nikde inde sa nezobrazia.',
+    visibility: {
+      label: 'Kto uvidí moje marche',
+      r4: 'Len R4',
+      all: 'Všetci hráči',
+      r4Hint: 'Uvidia ich iba poverení R4 kráľovstva a superadmin.',
+      allHint: 'Uvidia ich všetci hráči prihlásení na webe na stránke Marche hráčov.',
+      others: 'Marche ostatných hráčov',
+    },
   },
   alarms: {
     title: 'Budíky',
@@ -697,6 +722,7 @@ export const sk = {
         list: [
           'Údaje vidí správca webu (Gether) v administrácii.',
           'Prihlášky na KvK, ich screenshoty a tvoje marche vidí aj vedenie, ktorému správca povolí prezeranie (R4) – spolu s tvojím menom v hre, Discord menom, avatarom a ID.',
+          'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche a ich screenshoty spolu s menom v hre, Discord menom a avatarom aj všetci hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

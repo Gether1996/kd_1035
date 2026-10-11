@@ -1,4 +1,5 @@
 import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -52,7 +53,7 @@ type DraftError = 'kind' | 'primary' | ImageKind;
  */
 @Component({
   selector: 'app-marches',
-  imports: [Icon, NgTemplateOutlet],
+  imports: [Icon, NgTemplateOutlet, RouterLink],
   templateUrl: './marches.html',
   styleUrls: ['../kvk/kvk.scss', './marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,6 +71,9 @@ export class Marches {
   protected readonly failed = computed(() => !!this.data.error());
   protected readonly marches = linkedSignal<March[]>(() => (this.data.hasValue() ? this.data.value().marches : []));
   protected readonly max = computed(() => (this.data.hasValue() ? this.data.value().max : 7));
+  /** who sees the marches: every signed-in player (true) or only R4 and the superuser */
+  protected readonly isPublic = linkedSignal(() => (this.data.hasValue() ? this.data.value().public : false));
+  protected readonly visibilityFailed = signal(false);
 
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   /** the commanders of our guides with their portraits (the same list as "Nájdi pár pre commandera") */
@@ -116,6 +120,19 @@ export class Marches {
   protected exampleClosed(): void {
     this.example.set(null);
     this.opener?.focus();
+  }
+
+  protected async setPublic(value: boolean): Promise<void> {
+    if (value === this.isPublic()) return;
+    const before = this.isPublic();
+    this.isPublic.set(value);
+    this.visibilityFailed.set(false);
+    try {
+      await this.api.setPublic(value);
+    } catch {
+      this.isPublic.set(before);
+      this.visibilityFailed.set(true);
+    }
   }
 
   protected addLabel(): string {

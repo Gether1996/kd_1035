@@ -163,3 +163,33 @@ describe('PlayersAdmin', () => {
     http.verify();
   });
 });
+
+describe('Marches visibility', () => {
+  it('switches between R4 only and every player, and goes back when saving fails', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(Marches);
+    fixture.detectChanges();
+    http.expectOne('/api/me/marches/').flush({ marches: [], max: 7, public: false });
+    http.expectOne('/api/commanders/').flush(COMMANDERS);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const [r4, all] = Array.from(el.querySelectorAll<HTMLButtonElement>('.visibility button'));
+    expect(r4.getAttribute('aria-pressed')).toBe('true');
+    expect(el.querySelector('.visibility__hint')?.textContent).toContain('iba poverení R4');
+
+    all.click();
+    const req = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/me/marches/');
+    expect(req.request.body).toEqual({ public: true });
+    req.flush({ public: true });
+    await settle(fixture);
+    expect(all.getAttribute('aria-pressed')).toBe('true');
+    expect(el.querySelector('.visibility__hint')?.textContent).toContain('všetci hráči');
+
+    r4.click();
+    http.expectOne((r) => r.method === 'PATCH').flush('x', { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+    expect(all.getAttribute('aria-pressed')).toBe('true');
+    expect(el.querySelector('.visibility__hint')?.classList).toContain('is-error');
+    http.verify();
+  });
+});

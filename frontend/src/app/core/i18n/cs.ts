@@ -37,6 +37,10 @@ export const cs: Dict = {
       title: 'Připomínky eventů na Discordu | KD 1035',
       description: 'Vyber si eventy království KD 1035 a náš Discord bot ti před začátkem pošle soukromou zprávu.',
     },
+    playersMarches: {
+      title: 'Marche hráčů | KD 1035',
+      description: 'Marche hráčů království KD 1035 – commandeři, výbava a armamenty.',
+    },
     kvk: {
       title: 'Přihláška na KvK | KD 1035',
       description: 'Přihláška hráčů království KD 1035 na KvK – rally a garrison.',
@@ -277,6 +281,20 @@ export const cs: Dict = {
     loadError: 'Hráče se nepodařilo načíst.',
     failed: 'Změnu se nepodařilo uložit. Zkus to znovu.',
   },
+  playersMarches: {
+    eyebrow: 'Hráči',
+    title: 'Marche hráčů',
+    intro: 'Commandeři, výbava a armamenty hráčů, kteří je ukazují všem.',
+    loginTitle: 'Přihlas se přes Discord',
+    loginText: 'Marche hráčů vidí jen hráči přihlášení na webu.',
+    error: 'Marche se nepodařilo načíst. Zkus to znovu za chvíli.',
+    search: 'Hledat hráče',
+    mine: 'Moje marche',
+    empty: 'Zatím je nikdo neukazuje všem.',
+    noMatch: 'Takového hráče tu nemáme.',
+    you: 'Ty',
+    r4Only: 'jen R4',
+  },
   marches: {
     title: 'Moji commandeři a výbava',
     lead: 'Až 7 marchů – typ, commandeři a screenshoty výbavy a armamentů. Pomůžou vedení sestavit týmy na KvK.',
@@ -322,7 +340,14 @@ export const cs: Dict = {
     remove: 'Odstranit',
     removeConfirm: 'Opravdu odstranit?',
     failed: 'Nepodařilo se uložit. Zkus to znovu.',
-    privacy: 'Tvé marche a screenshoty uvidí kromě tebe jen pověření R4 království a superadmin. Nikde jinde se nezobrazí.',
+    visibility: {
+      label: 'Kdo uvidí moje marche',
+      r4: 'Jen R4',
+      all: 'Všichni hráči',
+      r4Hint: 'Uvidí je jen pověření R4 království a superadmin.',
+      allHint: 'Uvidí je všichni hráči přihlášení na webu na stránce Marche hráčů.',
+      others: 'Marche ostatních hráčů',
+    },
   },
   alarms: {
     title: 'Budíky',
@@ -695,6 +720,7 @@ export const cs: Dict = {
         list: [
           'Údaje vidí správce webu (Gether) v administraci.',
           'Přihlášky na KvK, jejich screenshoty a tvé marche vidí i vedení, kterému správce povolí prohlížení (R4) – spolu s tvým jménem ve hře, Discord jménem, avatarem a ID.',
+          'Pokud u marchí zvolíš „Všichni hráči“, uvidí tvé marche a jejich screenshoty spolu se jménem ve hře, Discord jménem a avatarem i všichni hráči přihlášení na webu (stránka Marche hráčů). Změnit to můžeš kdykoli.',
           'Nic nezveřejňujeme, neprodáváme ani nepředáváme dál – kromě služeb v následujícím bodě.',
         ],
       },

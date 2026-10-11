@@ -45,6 +45,11 @@ class Player(models.Model):
         help_text='Jazyk pripomienok – podľa verzie webu, na ktorej bol hráč naposledy.',
     )
     created_at = models.DateTimeField('registrovaný', auto_now_add=True)
+    marches_public = models.BooleanField(
+        'marche vidia všetci',
+        default=False,
+        help_text='Hráč povolil, aby jeho marche a screenshoty videli všetci hráči prihlásení na webe (inak len R4).',
+    )
     kvk_reviewer = models.BooleanField(
         'vidí KvK prihlášky',
         default=False,
