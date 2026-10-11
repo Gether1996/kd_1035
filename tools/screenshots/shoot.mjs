@@ -8,6 +8,7 @@
 //   SHOT=0                      no images, only MEASURE and the overflow check (fast)
 //   SESSION=<sessionid>         signed in as that user (shoot.sh --player / --superuser makes a test player)
 //   CLICK=.alarms__head .pill-btn  click these elements (comma separated, in order) before the shot – open a form
+//   FILL='#passports-power=42,5'  type a value into a field before the shot (selector=value, several separated by |)
 //   STORAGE='{"key":"value"}'    localStorage entries set before the page loads (e.g. kd1035.commanders)
 // Every page also reports OVERFLOW when it scrolls sideways.
 // Output: tools/screenshots/out/<page>[-<selector>]-<width>x<height>.png  (git-ignored)
@@ -25,6 +26,7 @@ const SELECTOR = process.env.SELECTOR;
 const MEASURE = process.env.MEASURE ? process.env.MEASURE.split(',') : [];
 const SESSION = process.env.SESSION;
 const CLICK = process.env.CLICK ? process.env.CLICK.split(',') : [];
+const FILL = process.env.FILL ? process.env.FILL.split('|').map((pair) => pair.split(/=(.*)/s)) : [];
 const STORAGE = process.env.STORAGE ? JSON.parse(process.env.STORAGE) : null;
 
 mkdirSync('out', { recursive: true });
@@ -57,6 +59,11 @@ for (const path of PAGES) {
     for (const selector of CLICK) {
       await page.locator(selector).first().click({ timeout: 5000 });
       await page.waitForTimeout(400);
+    }
+
+    for (const [selector, value] of FILL) {
+      await page.locator(selector).first().fill(value, { timeout: 5000 });
+      await page.waitForTimeout(300);
     }
 
     const where = `${path} ${width}x${height}`;

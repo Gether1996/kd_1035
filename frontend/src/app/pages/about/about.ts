@@ -5,11 +5,12 @@ import { I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { Reveal } from '../../shared/reveal';
+import { Passports } from './passports';
 
 /** "O nás" – the long-form SEO page about the only CZ/SK kingdom in Rise of Kingdoms. */
 @Component({
   selector: 'app-about',
-  imports: [RouterLink, Icon, PageHeader, Reveal],
+  imports: [RouterLink, Icon, PageHeader, Reveal, Passports],
   templateUrl: './about.html',
   styleUrl: './about.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

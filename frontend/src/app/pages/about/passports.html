@@ -1,0 +1,84 @@
+@let p = t();
+<section class="calc" aria-labelledby="passports-title">
+  <h3 class="calc__title" id="passports-title">{{ p.title }}</h3>
+  <p class="calc__intro">{{ p.intro }}</p>
+
+  <div class="calc__form">
+    <div class="field calc__power">
+      <label class="field__label" for="passports-power">{{ p.power }}</label>
+      <input
+        #powerInput
+        id="passports-power"
+        class="input"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        [placeholder]="p.powerPlaceholder"
+        [value]="text()"
+        [attr.aria-invalid]="(text() && !power()) || null"
+        aria-describedby="passports-power-hint"
+        (input)="text.set(powerInput.value)"
+      />
+      <p class="field__hint" id="passports-power-hint">{{ p.powerHint }}</p>
+    </div>
+    <details class="calc__hospital">
+      <summary>{{ p.hospital }}</summary>
+      <p class="field__hint">{{ p.hospitalHint }}</p>
+      <div class="calc__troops">
+        <div class="field">
+          <label class="field__label" for="passports-t4">{{ p.t4 }}</label>
+          <input #t4Input id="passports-t4" class="input" type="text" inputmode="numeric" placeholder="0" (input)="t4.set(count(t4Input.value))" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="passports-t5">{{ p.t5 }}</label>
+          <input #t5Input id="passports-t5" class="input" type="text" inputmode="numeric" placeholder="0" (input)="t5.set(count(t5Input.value))" />
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="calc__result" role="status" aria-live="polite">
+    @if (result(); as r) {
+      <p class="calc__pages">{{ pages(r.pages) }}</p>
+      <p class="calc__credits">{{ p.credits.replace('{n}', number(r.credits)) }}</p>
+      @if (t4() || t5()) {
+        <p class="calc__note">{{ p.counted.replace('{n}', number(r.power)) }}</p>
+      }
+      @if (lower(); as lower) {
+        <p class="calc__note">{{ lower }}</p>
+      }
+    } @else if (text()) {
+      <p class="calc__note is-error">{{ p.invalid }}</p>
+    } @else {
+      <p class="calc__note">{{ p.empty }}</p>
+    }
+  </div>
+
+  <details class="calc__table">
+    <summary>{{ p.table }}</summary>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{{ p.power }}</th>
+          <th scope="col">{{ p.pagesHead }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows; track row.to; let i = $index) {
+          <tr [class.is-current]="result()?.row === i">
+            <td>{{ range(row) }}</td>
+            <td>{{ row.pages }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </details>
+
+  <h4 class="calc__subtitle">{{ p.rulesTitle }}</h4>
+  <ul class="calc__rules">
+    @for (rule of p.rules; track rule) {
+      <li>{{ rule }}</li>
+    }
+  </ul>
+  <p class="calc__source">{{ p.source }}</p>
+</section>
