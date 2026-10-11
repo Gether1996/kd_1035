@@ -1,5 +1,5 @@
-"""KvK sign-ups (/api/kvk/…): players sign up for rally / garrison with screenshots of their VIP level, equipment,
-armaments and commander pair; reviewers (Player.kvk_reviewer, e.g. R4) and the superuser see every sign-up together
+"""KvK sign-ups (/api/kvk/…): players sign up for rally / garrison filled in like a march (Gether 11. 10. 2026) –
+commander pair, armament bonuses and one screenshot of the equipment and one of the armaments; reviewers (Player.kvk_reviewer, e.g. R4) and the superuser see every sign-up together
 with the player's marches (/ucet); the superuser opens and closes the rounds and picks the reviewers. Session + CSRF
 like the rest of the player API. Closed rounds are deleted KVK_KEEP_DAYS later (cleanup.py).
 """
@@ -20,12 +20,15 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from . import private_images
+from .army import ArmySerializer
 from .models import MARCH_STATS, KvkImage, KvkRound, KvkSignup, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import player_of
 
 log = logging.getLogger(__name__)
 KINDS = [kind for kind, _ in KvkImage.Kind.choices]
+# one screenshot of the equipment and one of the armaments, like a march
+MAX_IMAGES_PER_KIND = 1
 
 
 class IsReviewer(BasePermission):
@@ -73,14 +76,17 @@ def image_data(image, base: str) -> dict:
     }
 
 
+def army_data(army) -> dict:
+    """The commander pair and the armament bonuses of a march or a sign-up (ArmyFields)."""
+    return {'primary': army.primary, 'secondary': army.secondary, **{field: getattr(army, field) for field in MARCH_STATS}}
+
+
 def march_data(march: March) -> dict:
     return {
         'id': march.pk,
         'position': march.position,
         'kind': march.kind,
-        'primary': march.primary,
-        'secondary': march.secondary,
-        **{field: getattr(march, field) for field in MARCH_STATS},
+        **army_data(march),
         'images': [image_data(image, '/api/marches/images/') for image in march.images.all()],
     }
 
@@ -92,7 +98,7 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
         'round': signup.round_id,
         'rally': signup.rally,
         'garrison': signup.garrison,
-        'commanders': signup.commanders,
+        **army_data(signup),
         'note': signup.note,
         'updated_at': iso(signup.updated_at),
         'images': [image_data(image, '/api/kvk/images/') for image in images],
@@ -129,17 +135,19 @@ def signups_of(player: Player) -> list[KvkSignup]:
 # ---------------------------------------------------------------- the player
 
 
-class SignupSerializer(serializers.Serializer):
+class SignupSerializer(ArmySerializer):
     ingame_name = serializers.CharField(max_length=32, trim_whitespace=True)
     rally = serializers.BooleanField(default=False)
     garrison = serializers.BooleanField(default=False)
-    commanders = serializers.CharField(max_length=120, allow_blank=True, default='', trim_whitespace=True)
     note = serializers.CharField(max_length=500, allow_blank=True, default='', trim_whitespace=True)
 
     def validate(self, data):
         if not (data['rally'] or data['garrison']):
             raise serializers.ValidationError({'role': 'required'})
-        return data
+        # the primary commander is required, like in a march
+        if not data.get('primary'):
+            raise serializers.ValidationError({'primary': 'required'})
+        return super().validate(data)
 
 
 @never_cache
@@ -210,7 +218,7 @@ def store_image(model, upload_file, folder: str, **fields):
 @permission_classes([IsPlayer])
 @throttle_classes([UploadThrottle])
 def upload(request):
-    """POST multipart {kind, file}: one screenshot for the player's sign-up in the open round (max 3 per kind)."""
+    """POST multipart {kind: equipment|armaments, file}: the screenshot for the player's sign-up in the open round."""
     player = request.user.player
     current = open_round()
     mine = current and KvkSignup.objects.filter(round=current, player=player).first()
@@ -220,7 +228,7 @@ def upload(request):
     upload_file = request.FILES.get('file')
     if kind not in KINDS or not upload_file:
         return Response({'detail': 'bad_request'}, status=400)
-    if mine.images.filter(kind=kind).count() >= private_images.MAX_PER_KIND:
+    if mine.images.filter(kind=kind).count() >= MAX_IMAGES_PER_KIND:
         return Response({'detail': 'limit'}, status=400)
     try:
         picture = store_image(KvkImage, upload_file, 'kvk', signup=mine, kind=kind)

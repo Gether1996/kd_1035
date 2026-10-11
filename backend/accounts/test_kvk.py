@@ -55,10 +55,10 @@ class KvkTestCase(TestCase):
         return getattr(client, method)(url, body, content_type='application/json', HTTP_X_CSRFTOKEN=client.token, **extra)
 
     def sign_up(self, client=None, **data):
-        body = {'ingame_name': 'Nelly', 'rally': True, 'garrison': False, 'commanders': 'Attila + Takeda', **data}
+        body = {'ingame_name': 'Nelly', 'rally': True, 'garrison': False, 'primary': 'Attila', **data}
         return self.call('put', '/api/kvk/signup/', body, client)
 
-    def upload(self, kind='vip', file=None, client=None):
+    def upload(self, kind='equipment', file=None, client=None):
         return self.call('post_file', '/api/kvk/signup/images/', {'kind': kind, 'file': file or picture()}, client)
 
 
@@ -81,6 +81,22 @@ class SignupTests(KvkTestCase):
 
         self.assertEqual(self.call('delete', '/api/kvk/signup/').status_code, 204)
         self.assertFalse(KvkSignup.objects.exists())
+
+    def test_filled_in_like_a_march(self):
+        res = self.sign_up(secondary='Takeda Shingen', attack=12, gold=3)
+        self.assertEqual(res.status_code, 200, res.content)
+        data = res.json()
+        self.assertEqual((data['primary'], data['secondary'], data['attack'], data['defense'], data['gold']), ('Attila', 'Takeda Shingen', 12, None, 3))
+        # the primary commander is required and must be one of the roster; bonuses have two digits
+        self.assertEqual(self.sign_up(primary='').json()['primary'], ['required'])
+        self.assertEqual(self.sign_up(primary='Nobody').json()['primary'], ['unknown'])
+        self.assertEqual(self.sign_up(attack=100).status_code, 400)
+        # a screenshot of the equipment and of the armaments makes it complete
+        self.upload()
+        self.assertFalse(self.client.get('/api/kvk/').json()['signup']['complete'])
+        self.upload(kind='armaments')
+        self.assertTrue(self.client.get('/api/kvk/').json()['signup']['complete'])
+        self.assertEqual(self.upload(kind='vip').status_code, 400)
 
     def test_needs_a_role_a_name_and_an_open_round(self):
         self.assertEqual(self.sign_up(rally=False).status_code, 400)
@@ -115,7 +131,7 @@ class ImageTests(KvkTestCase):
         self.assertLessEqual(max(Image.open(self.media / image.thumb).size), private_images.THUMB_SIDE)
         self.assertNotIn(str(self.media), res.json()['url'])
 
-    def test_refuses_non_images_big_files_and_more_than_three_per_kind(self):
+    def test_refuses_non_images_big_files_and_a_second_one_of_a_kind(self):
         fake = SimpleUploadedFile('shot.png', b'<?php echo 1; ?>', content_type='image/png')
         self.assertEqual(self.upload(file=fake).json()['detail'], 'not_image')
         gif = io.BytesIO()
@@ -128,8 +144,7 @@ class ImageTests(KvkTestCase):
             self.assertEqual(self.upload().json()['detail'], 'too_big')
         finally:
             private_images.MAX_BYTES = original
-        for _ in range(3):
-            self.assertEqual(self.upload(kind='equipment', file=picture('PNG', (800, 600), exif=False)).status_code, 201)
+        self.assertEqual(self.upload(kind='equipment', file=picture('PNG', (800, 600), exif=False)).status_code, 201)
         self.assertEqual(self.upload(kind='equipment').json()['detail'], 'limit')
 
     def test_only_owner_reviewers_and_superuser_see_the_file(self):
@@ -305,7 +320,7 @@ class MarchTests(KvkTestCase):
         from unittest import mock
 
         patcher = mock.patch(
-            'accounts.march_views.march_commanders',
+            'accounts.army.march_commanders',
             return_value=[{'name': 'Attila'}, {'name': 'Takeda Shingen'}, {'name': 'Scipio Africanus'}],
         )
         patcher.start()

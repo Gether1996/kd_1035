@@ -1,7 +1,9 @@
 @let m = march();
 @let k = t();
 <div class="mrow__main">
-  <span class="mrow__num">{{ m.position }}.</span>
+  @if (numbered()) {
+    <span class="mrow__num">{{ m.position }}.</span>
+  }
   @if (m.kind) {
     <img class="mrow__kind" [src]="icon(m.kind)" [alt]="k.kinds[m.kind]" [title]="k.kinds[m.kind]" width="96" height="96" />
   }

@@ -1,5 +1,5 @@
-"""The player's marches on /ucet ("Moji commanderi a výbava", Gether 11. 10. 2026): up to MAX_MARCHES, each with a
-type, a commander pair from our guides and screenshots of equipment and armaments. The player edits them; the
+"""The player's marches on /marche ("Moje marche", Gether 11. 10. 2026): up to MAX_MARCHES, each with a type, the
+army (commander pair, armament bonuses – army.py) and screenshots of equipment and armaments. The player edits them; the
 reviewers and the superuser see them next to the player's KvK sign-up. Session + CSRF, players signed in with Discord.
 """
 
@@ -7,7 +7,6 @@ from django.db import transaction
 from django.db.models import F, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
-from guides.roster import march_commanders
 from rest_framework import serializers
 from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
 from rest_framework.parsers import MultiPartParser
@@ -15,8 +14,9 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
 from . import private_images
+from .army import ArmySerializer
 from .kvk_views import UploadThrottle, image_data, march_data, owner_or_reviewer, store_image
-from .models import MAX_MARCHES, STAT_MAX, March, MarchImage, Player
+from .models import MAX_MARCHES, March, MarchImage, Player
 from .reminder_views import IsPlayer, WriteThrottle
 from .views import player_of
 
@@ -25,18 +25,8 @@ IMAGE_KINDS = [kind for kind, _ in MarchImage.Kind.choices]
 MAX_IMAGES_PER_KIND = 1
 
 
-class MarchSerializer(serializers.Serializer):
+class MarchSerializer(ArmySerializer):
     kind = serializers.ChoiceField(choices=March.Kind.choices, allow_blank=True, required=False)
-    primary = serializers.CharField(max_length=40, allow_blank=True, required=False)
-    secondary = serializers.CharField(max_length=40, allow_blank=True, required=False)
-    # armament bonuses (whole %, rounded up) and inscriptions; null = not filled in
-    attack = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
-    defense = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
-    health = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
-    damage = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
-    white = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
-    blue = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
-    gold = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
 
     def validate(self, data):
         # a new march is saved with its type and primary commander (the web asks for both)
@@ -44,13 +34,7 @@ class MarchSerializer(serializers.Serializer):
             for field in ('kind', 'primary'):
                 if not data.get(field):
                     raise serializers.ValidationError({field: 'required'})
-        # only commanders with a portrait: guides/roster.py and our guides (a march saved before a commander was
-        # excluded can still be edited)
-        known = {c['name'] for c in march_commanders()}
-        for field in ('primary', 'secondary'):
-            if data.get(field) and data[field] not in known:
-                raise serializers.ValidationError({field: 'unknown'})
-        return data
+        return super().validate(data)
 
 
 def marches_of(player):

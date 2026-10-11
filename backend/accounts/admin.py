@@ -186,10 +186,27 @@ class KvkRoundAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 class KvkSignupAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     """Sign-ups read only (screenshots are on /kvk) – delete stays allowed for the cascades."""
 
-    list_display = ['player_name', 'round', 'rally', 'garrison', 'commanders', 'updated_at']
+    list_display = ['player_name', 'round', 'rally', 'garrison', 'primary', 'secondary', 'updated_at']
     list_filter = ['round', 'rally', 'garrison']
     list_select_related = ['player', 'round']
-    fields = ['round', 'player', 'rally', 'garrison', 'commanders', 'note', 'created_at', 'updated_at']
+    fields = [
+        'round',
+        'player',
+        'rally',
+        'garrison',
+        'primary',
+        'secondary',
+        'attack',
+        'defense',
+        'health',
+        'damage',
+        'gold',
+        'blue',
+        'white',
+        'note',
+        'created_at',
+        'updated_at',
+    ]
     readonly_fields = fields
 
     def has_add_permission(self, request):

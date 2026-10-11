@@ -13,11 +13,11 @@
         <h2 class="panel__title" id="kvk-form-title">{{ title() }}</h2>
       </div>
       @if (signup(); as s) {
-        <span class="badge" [class.badge--done]="!missing().length">
-          @if (!missing().length) {
+        <span class="badge" [class.badge--done]="s.complete">
+          @if (s.complete) {
             <svg appIcon="check"></svg>
           }
-          {{ missing().length ? k.statusIncomplete : k.statusDone }}
+          {{ s.complete ? k.statusDone : k.statusIncomplete }}
         </span>
       }
     </header>
@@ -54,20 +54,17 @@
         </div>
       </fieldset>
 
-      <div class="field">
-        <label class="field__label" for="kvk-commanders">{{ k.commanders }}</label>
-        <input
-          #commandersInput
-          id="kvk-commanders"
-          class="input"
-          type="text"
-          maxlength="120"
-          autocomplete="off"
-          [placeholder]="k.commandersPlaceholder"
-          [value]="commanders()"
-          (input)="commanders.set(commandersInput.value)"
-        />
-      </div>
+      <!-- the army like in a march: commander pair, screenshots of the equipment and the armaments, bonuses -->
+      <app-march-fields
+        [value]="army()"
+        (valueChange)="setArmy($event)"
+        [commanders]="commanders()"
+        [withKind]="false"
+        [error]="armyProblem()"
+        [uploadError]="uploadError()"
+        [heading]="title()"
+        idPrefix="kvk"
+      />
 
       <div class="field">
         <label class="field__label" for="kvk-note">{{ k.note }}</label>
@@ -85,82 +82,25 @@
 
       <div class="form__actions">
         <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">
-          {{ signup() ? k.save : k.submit }}
+          {{ saving() ? k.saving : signup() ? k.save : k.submit }}
         </button>
-        <p class="form__state" role="status" [class.is-error]="!!formError()">
+        <p class="form__state" role="status" [class.is-error]="!!formError() || !!armyProblem()">
           @if (formError(); as e) {
             {{ k.errors[e] }}
+          } @else if (armyProblem(); as e) {
+            {{ i18n.t().marches.required[e] }}
           } @else if (saved()) {
             {{ k.saved }}
           }
         </p>
       </div>
     </form>
+    <p class="panel__privacy">
+      {{ k.privacy }} <a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a>
+    </p>
   </section>
 
-  @if (signup(); as s) {
-    <section class="panel" aria-labelledby="kvk-shots-title">
-      <h2 class="panel__title panel__title--small" id="kvk-shots-title">{{ k.shotsTitle }}</h2>
-      <p class="panel__lead">{{ k.shotsLead }}</p>
-
-      <div class="shots">
-        @for (kind of kinds; track kind) {
-          <div class="shot-group" [attr.aria-labelledby]="'kvk-kind-' + kind" role="group">
-            <div class="shot-group__head">
-              <h3 class="shot-group__title" [id]="'kvk-kind-' + kind">
-                @if (imagesOf(kind).length) {
-                  <svg class="shot-group__ok" appIcon="check"></svg>
-                }
-                {{ k.kinds[kind].title }}
-              </h3>
-              <span class="shot-group__count">{{ imagesOf(kind).length }}/{{ maxPerKind }}</span>
-            </div>
-            <p class="shot-group__hint">{{ k.kinds[kind].hint }}</p>
-            <ul class="thumbs">
-              @for (image of imagesOf(kind); track image.id) {
-                <li class="thumb">
-                  <img [src]="image.thumb" [alt]="k.kinds[kind].title" loading="lazy" />
-                  <button
-                    type="button"
-                    class="thumb__remove"
-                    [attr.aria-label]="k.removeImage + ': ' + k.kinds[kind].title"
-                    (click)="remove(image)"
-                  >
-                    <svg appIcon="x"></svg>
-                  </button>
-                </li>
-              }
-              @if (imagesOf(kind).length < maxPerKind) {
-                <li>
-                  <label class="thumb thumb--add" [class.is-busy]="uploading().has(kind)">
-                    <input
-                      #file
-                      class="sr-only"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      multiple
-                      [disabled]="uploading().has(kind)"
-                      (change)="upload(kind, file)"
-                    />
-                    <svg appIcon="plus"></svg>
-                    <span>{{ uploading().has(kind) ? k.uploading : k.addImage }}</span>
-                  </label>
-                </li>
-              }
-            </ul>
-            @if (uploadError(); as u) {
-              @if (u.kind === kind) {
-                <p class="shot-group__error" role="alert">{{ k.uploadErrors[u.error] }}</p>
-              }
-            }
-          </div>
-        }
-      </div>
-      <p class="panel__privacy">
-        {{ k.privacy }} <a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a>
-      </p>
-    </section>
-
+  @if (signup()) {
     <div class="withdraw">
       @if (confirmWithdraw() === 'open') {
         <p>{{ k.withdrawConfirm }}</p>
@@ -182,11 +122,11 @@
     <ul class="thumbs">
       @for (image of ordered(o.signup); track image.id) {
         <li class="thumb">
-          <img [src]="image.thumb" [alt]="k.kinds[image.kind].title" loading="lazy" />
+          <img [src]="image.thumb" [alt]="i18n.t().marches.images[image.kind]" loading="lazy" />
           <button
             type="button"
             class="thumb__remove"
-            [attr.aria-label]="k.removeImage + ': ' + k.kinds[image.kind].title"
+            [attr.aria-label]="k.removeImage + ': ' + i18n.t().marches.images[image.kind]"
             (click)="remove(image)"
           >
             <svg appIcon="x"></svg>

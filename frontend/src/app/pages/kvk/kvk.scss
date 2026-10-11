@@ -103,6 +103,7 @@
     grid-template-columns: 1fr 1fr;
 
     .field:has(textarea),
+    app-march-fields,
     .form__actions {
       grid-column: 1 / -1;
     }

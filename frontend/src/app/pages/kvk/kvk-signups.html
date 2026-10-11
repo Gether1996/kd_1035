@@ -73,33 +73,19 @@
                 <span class="tag tag--warn">{{ k.statusIncomplete }}</span>
               }
             </p>
-            @if (s.commanders) {
-              <p class="signup__line"><span>{{ k.commanders }}:</span> {{ s.commanders }}</p>
-            }
+            <!-- filled in like a march: commander heads, screenshots, armament bonuses -->
+            <app-march-row
+              class="signup__army"
+              [march]="armies().get(s.id)!"
+              [portraits]="portraits()"
+              [owner]="name(s)"
+              [numbered]="false"
+              [showMissing]="true"
+              (shot)="open(s, $event.image, $event.event)"
+            />
             @if (s.note) {
               <p class="signup__line signup__note">{{ s.note }}</p>
             }
-            <div class="signup__shots">
-              @for (kind of kinds; track kind) {
-                <div class="signup__kind">
-                  <span class="signup__kind-title">{{ k.kinds[kind].title }}</span>
-                  <div class="signup__thumbs">
-                    @for (image of imagesOf(s, kind); track image.id) {
-                      <button
-                        type="button"
-                        class="signup__thumb"
-                        [attr.aria-label]="k.kinds[kind].title + ' – ' + name(s)"
-                        (click)="open(s, image, $event)"
-                      >
-                        <img [src]="image.thumb" alt="" loading="lazy" />
-                      </button>
-                    } @empty {
-                      <span class="signup__none">–</span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
             @if (s.marches?.length) {
               <details class="signup__marches">
                 <summary>{{ k.marches }} · {{ s.marches!.length }}</summary>
@@ -125,14 +111,14 @@
       <header class="modal__head">
         <div class="modal__heading">
           <h2 class="modal__title" id="kvk-viewer-title">{{ name(v.signup) }}</h2>
-          <p class="modal__eyebrow">{{ k.kinds[v.image.kind].title }}</p>
+          <p class="modal__eyebrow">{{ i18n.t().marches.images[v.image.kind] }}</p>
         </div>
         <button type="button" class="modal__close" [attr.aria-label]="k.close" (click)="close()">
           <svg appIcon="x"></svg>
         </button>
       </header>
       <a class="viewer__image" [href]="v.image.url" target="_blank" rel="noopener">
-        <img [src]="v.image.url" [alt]="k.kinds[v.image.kind].title + ' – ' + name(v.signup)" [width]="v.image.width" [height]="v.image.height" />
+        <img [src]="v.image.url" [alt]="i18n.t().marches.images[v.image.kind] + ' – ' + name(v.signup)" [width]="v.image.width" [height]="v.image.height" />
       </a>
       @if (v.signup.images.length > 1) {
         <div class="viewer__nav">

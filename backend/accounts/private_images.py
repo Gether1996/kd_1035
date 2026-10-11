@@ -22,7 +22,6 @@ MAX_BYTES = 10 * 1024 * 1024
 MAX_PIXELS = 16_000_000
 MAX_SIDE = 2400
 THUMB_SIDE = 480
-MAX_PER_KIND = 3
 FORMATS = {'JPEG', 'PNG', 'WEBP'}
 FOLDERS = ('kvk', 'marches')
 # a file younger than this may belong to an upload whose row is not written yet

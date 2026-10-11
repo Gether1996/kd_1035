@@ -3,10 +3,9 @@ import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/htt
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-export type ImageKind = 'vip' | 'equipment' | 'armaments' | 'commanders';
-export const IMAGE_KINDS: ImageKind[] = ['vip', 'equipment', 'armaments', 'commanders'];
-/** screenshots per kind (backend kvk.MAX_PER_KIND) */
-export const MAX_PER_KIND = 3;
+/** one screenshot of each, like a march (Gether 11. 10. 2026) */
+export type ImageKind = 'equipment' | 'armaments';
+export const IMAGE_KINDS: ImageKind[] = ['equipment', 'armaments'];
 
 export interface KvkRound {
   id: number;
@@ -29,16 +28,18 @@ export interface KvkImage {
   height: number;
 }
 
-export interface KvkSignup {
+/** filled in like a march: commander pair (backend guides/roster.py) and armament bonuses, null = not filled in */
+export interface KvkSignup extends Partial<Record<MarchStat, number | null>> {
   id: number;
   round: number;
   rally: boolean;
   garrison: boolean;
-  commanders: string;
+  primary: string;
+  secondary: string;
   note: string;
   updated_at: string;
   images: KvkImage[];
-  /** a screenshot of every kind */
+  /** a screenshot of the equipment and of the armaments */
   complete: boolean;
   /** for reviewers */
   player?: { id: number; name: string; ingame_name: string; avatar_url: string; discord_id: string };
@@ -108,11 +109,12 @@ export interface KvkState {
   superuser: boolean;
 }
 
-export interface SignupForm {
+export interface SignupForm extends Partial<Record<MarchStat, number | null>> {
   ingame_name: string;
   rally: boolean;
   garrison: boolean;
-  commanders: string;
+  primary: string;
+  secondary: string;
   note: string;
 }
 

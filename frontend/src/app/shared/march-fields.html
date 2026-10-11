@@ -1,0 +1,188 @@
+@let m = t();
+@let d = current();
+@if (withKind()) {
+  <fieldset class="block">
+    <legend class="block__label">
+      {{ m.kind }}
+      @if (d.kind) {
+        <span class="block__value">· {{ m.kinds[d.kind] }}</span>
+      }
+    </legend>
+    <div class="kind-picker" [class.is-invalid]="error() === 'kind'">
+      @for (kind of kinds; track kind) {
+        <button
+          type="button"
+          class="kind"
+          [attr.aria-pressed]="d.kind === kind"
+          [attr.aria-label]="m.kinds[kind]"
+          [title]="m.kinds[kind]"
+          (click)="setKind(kind)"
+        >
+          <img [src]="icon(kind)" alt="" width="96" height="96" />
+        </button>
+      }
+    </div>
+  </fieldset>
+}
+
+<!-- commanders and screenshots side by side: square tiles with a caption -->
+<div class="tiles">
+  @for (slot of slots; track slot) {
+    @let name = d[slot];
+    <button
+      type="button"
+      class="tile"
+      [class.is-invalid]="slot === 'primary' && error() === 'primary'"
+      [attr.aria-label]="m.slots[slot] + ': ' + (name || m.choose)"
+      (click)="openPicker(slot, $event)"
+    >
+      @if (name && portrait(name); as src) {
+        <img class="tile__box" [src]="src" alt="" width="96" height="96" />
+      } @else {
+        <span class="tile__box tile__box--empty"><svg appIcon="plus"></svg></span>
+      }
+      <span class="tile__caption" [class.is-set]="!!name">{{ name || m.slotsShort[slot] }}</span>
+    </button>
+  }
+  @for (kind of shotKinds; track kind) {
+    @let shot = shotOf(kind);
+    <div class="tile" role="group" [attr.aria-labelledby]="idPrefix() + '-shot-' + kind" [class.is-invalid]="error() === kind">
+      @if (shot) {
+        <span class="tile__box tile__box--shot">
+          <img [src]="shot" [alt]="m.images[kind]" />
+          <button type="button" class="tile__remove" [attr.aria-label]="m.removeImage + ': ' + m.images[kind]" (click)="unchoose(kind)">
+            <svg appIcon="x"></svg>
+          </button>
+        </span>
+      } @else {
+        <label class="tile__box tile__box--empty tile__box--file">
+          <input #file class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" (change)="choose(kind, file)" />
+          <svg appIcon="plus"></svg>
+          <span class="sr-only">{{ m.addImage }}: {{ m.images[kind] }}</span>
+        </label>
+      }
+      <span class="tile__caption is-set" [id]="idPrefix() + '-shot-' + kind">{{ m.images[kind] }}</span>
+      <!-- what the screenshot should show (Gether's examples from the game) -->
+      <button type="button" class="tile__example" [attr.aria-label]="m.example + ': ' + m.images[kind]" (click)="showExample(kind, $event)">
+        {{ m.example }}
+      </button>
+    </div>
+  }
+</div>
+@if (uploadError(); as u) {
+  <p class="block__error" role="alert">{{ m.images[u.kind] }}: {{ i18n.t().kvk.uploadErrors[u.error] }}</p>
+}
+
+<!-- armament bonuses of the march's troop type and inscriptions: whole numbers, at most two digits -->
+<fieldset class="block">
+  <legend class="block__label">{{ m.stats.title }}</legend>
+  <div class="stat-grid">
+    @for (stat of armamentStats; track stat) {
+      <label class="stat-field">
+        <span class="stat-field__label">{{ statLabel(stat) }}</span>
+        <span class="stat-field__box">
+          <input
+            class="stat-field__input"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="2"
+            autocomplete="off"
+            [value]="d.stats[stat] ?? ''"
+            (input)="setStat(stat, $event)"
+          />
+          <span class="stat-field__unit" aria-hidden="true">%</span>
+        </span>
+      </label>
+    }
+    @for (stat of inscriptionKinds; track stat) {
+      <label class="stat-field">
+        <span class="stat-field__label">
+          <span class="dot dot--{{ stat }}" aria-hidden="true"></span>{{ m.inscriptions[stat] }}
+          <span class="sr-only">{{ m.inscriptions.title }}</span>
+        </span>
+        <span class="stat-field__box">
+          <input
+            class="stat-field__input"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="2"
+            autocomplete="off"
+            [value]="d.stats[stat] ?? ''"
+            (input)="setStat(stat, $event)"
+          />
+        </span>
+      </label>
+    }
+  </div>
+  <p class="block__hint">{{ m.stats.hint }}</p>
+</fieldset>
+
+<dialog #picker class="modal modal--wide" (close)="pickerClosed()" [attr.aria-labelledby]="idPrefix() + '-picker-title'">
+  @if (picking(); as slot) {
+    <div class="modal__body">
+      <header class="modal__head">
+        <div class="modal__heading">
+          <h2 class="modal__title" [id]="idPrefix() + '-picker-title'">{{ m.slots[slot] }}</h2>
+          @if (heading()) {
+            <p class="modal__eyebrow">{{ heading() }}</p>
+          }
+        </div>
+        <button type="button" class="modal__close" [attr.aria-label]="i18n.t().kvk.close" (click)="closePicker()">
+          <svg appIcon="x"></svg>
+        </button>
+      </header>
+      <div class="field">
+        <label class="sr-only" [for]="idPrefix() + '-picker-search'">{{ m.search }}</label>
+        <input
+          #q
+          [id]="idPrefix() + '-picker-search'"
+          class="input"
+          type="search"
+          autocomplete="off"
+          [placeholder]="m.search"
+          [value]="search()"
+          (input)="search.set(q.value)"
+        />
+      </div>
+      <ul class="picker-grid">
+        @if (d[slot]) {
+          <li>
+            <button type="button" class="picker-tile picker-tile--clear" (click)="pick('')">
+              <span class="pick__portrait pick__portrait--empty"><svg appIcon="x"></svg></span>
+              <span class="picker-tile__name">{{ m.clear }}</span>
+            </button>
+          </li>
+        }
+        @for (c of shown(); track c.icon) {
+          <li>
+            <button type="button" class="picker-tile" [attr.aria-pressed]="d[slot] === c.name" (click)="pick(c.name)">
+              <img class="pick__portrait" [src]="c.icon" alt="" width="96" height="96" loading="lazy" />
+              <span class="picker-tile__name">{{ c.name }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</dialog>
+
+<!-- the example screenshot in a dialog, not a new page (Gether 11. 10. 2026) -->
+<dialog #exampleDialog class="modal" (close)="exampleClosed()" [attr.aria-labelledby]="idPrefix() + '-example-title'">
+  @if (example(); as kind) {
+    <div class="modal__body">
+      <header class="modal__head">
+        <div class="modal__heading">
+          <h2 class="modal__title" [id]="idPrefix() + '-example-title'">{{ m.images[kind] }}</h2>
+          <p class="modal__eyebrow">{{ m.example }}</p>
+        </div>
+        <button type="button" class="modal__close" [attr.aria-label]="i18n.t().kvk.close" (click)="closeExample()">
+          <svg appIcon="x"></svg>
+        </button>
+      </header>
+      <img class="example-large" [src]="'img/examples/' + kind + '.webp'" [alt]="m.example + ': ' + m.images[kind]" />
+      <p class="field__hint">{{ m.exampleHint[kind] }}</p>
+    </div>
+  }
+</dialog>

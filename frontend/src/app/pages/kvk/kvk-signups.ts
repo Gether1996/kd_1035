@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { IMAGE_KINDS, KvkApi, KvkImage, KvkRound, KvkSignup } from '../../core/kvk-api';
+import { IMAGE_KINDS, KvkApi, KvkImage, KvkRound, KvkSignup, MARCH_STATS, March } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { MarchRow } from '../../shared/march-row';
@@ -37,7 +37,6 @@ export class KvkSignups {
   private readonly api = inject(KvkApi);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().kvk);
-  protected readonly kinds = IMAGE_KINDS;
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   /** the portraits of the players' marches */
   private readonly commanderData = httpResource<MarchCommander[]>(() => (this.isBrowser ? marchCommandersUrl : undefined));
@@ -60,6 +59,16 @@ export class KvkSignups {
     const role = this.role();
     return this.all().filter((s) => role === 'all' || s[role]);
   });
+  /** each sign-up as a row like a march (no type, no number) */
+  protected readonly armies = computed(
+    () =>
+      new Map(
+        this.all().map((s): [number, March] => {
+          const stats = Object.fromEntries(MARCH_STATS.map((stat) => [stat, s[stat] ?? null]));
+          return [s.id, { id: s.id, position: 0, kind: '', primary: s.primary, secondary: s.secondary, images: s.images, ...stats }];
+        }),
+      ),
+  );
   protected readonly counts = computed(() => ({
     all: this.all().length,
     rally: this.all().filter((s) => s.rally).length,

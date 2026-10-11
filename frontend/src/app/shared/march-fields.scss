@@ -1,0 +1,382 @@
+// The fields of a march or a KvK sign-up (march-fields.ts): type, commander and screenshot tiles, bonuses, dialogs
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.block__label {
+  // a legend is no grid item of its fieldset: the gap does not apply
+  margin-bottom: 8px;
+  padding: 0;
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.block__value {
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--gold-100);
+}
+
+.block__hint {
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
+.block__error {
+  color: var(--red-300);
+}
+
+// the seven march types as icons in one row (they shrink on a phone); the chosen one is lit
+.kind-picker {
+  display: flex;
+  gap: 5px;
+}
+
+.kind {
+  display: grid;
+  flex: 1 1 0;
+  place-items: center;
+  min-width: 0;
+  max-width: 46px;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
+  img {
+    width: 68%;
+    height: auto;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+  }
+
+  &:hover img {
+    opacity: 0.9;
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--gold-400);
+    background: color-mix(in srgb, var(--gold-400) 14%, var(--field-bg));
+
+    img {
+      opacity: 1;
+    }
+  }
+}
+
+.kind-picker.is-invalid .kind {
+  border-color: var(--red-500);
+}
+
+// two commanders and two screenshots: four square tiles in one row, a caption under each
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 88px));
+  gap: 8px;
+}
+
+.tile {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &[role='group'] {
+    cursor: default;
+  }
+}
+
+.tile__box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 2px;
+  overflow: hidden;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
+  transition: border-color 0.2s;
+
+  .tile:hover > &,
+  &--file:hover {
+    border-color: var(--line-strong);
+  }
+
+  .is-invalid > & {
+    border-color: var(--red-500);
+  }
+
+  > .icon {
+    width: 20px;
+    height: 20px;
+    color: var(--gold-300);
+  }
+}
+
+.tile__box--empty {
+  border-style: dashed;
+  background: var(--field-bg);
+}
+
+.tile__box--file {
+  cursor: pointer;
+}
+
+.tile__box--shot {
+  padding: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.tile__remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(4, 10, 23, 0.8);
+  color: var(--text);
+  cursor: pointer;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// a long name ("Nebuchadnezzar II") takes two lines at most
+.tile__caption {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.6875rem;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: break-word;
+  color: var(--text-mute);
+
+  &.is-set {
+    color: var(--text);
+    font-weight: 600;
+  }
+}
+
+.tile__example {
+  min-height: 24px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--gold-300);
+  font: 600 0.75rem/1 var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: zoom-in;
+}
+
+// four bonuses and three inscriptions, two digits each: one row on wide screens, 4 + 3 on a phone
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 72px));
+  gap: 10px 8px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(7, minmax(0, 72px));
+  }
+}
+
+.stat-field {
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stat-field__label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 0.75rem/1.15 var(--font-body);
+  color: var(--text-dim);
+}
+
+.stat-field__box {
+  position: relative;
+  display: block;
+}
+
+.stat-field__input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px 0 6px;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+  color: var(--text);
+  font: 700 1rem/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+
+  &:hover {
+    border-color: var(--field-line-hover);
+  }
+
+  &:focus-visible {
+    border-color: var(--gold-400);
+    outline: 2px solid var(--gold-400);
+    outline-offset: 1px;
+  }
+}
+
+.stat-field__unit {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  translate: 0 -50%;
+  font-size: 0.75rem;
+  color: var(--text-mute);
+  pointer-events: none;
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+
+  &--white {
+    background: var(--insc-white);
+  }
+
+  &--blue {
+    background: var(--insc-blue);
+  }
+
+  &--gold {
+    background: var(--insc-gold);
+  }
+}
+
+// ---------------------------------------------------------------- the commander picker: a grid of heads
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 4px;
+  max-height: min(60dvh, 520px);
+  margin: 0;
+  padding: 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  list-style: none;
+
+  > li {
+    min-width: 0;
+  }
+}
+
+.picker-tile {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(245, 196, 81, 0.06);
+    color: var(--text);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--line-strong);
+    background: rgba(245, 196, 81, 0.12);
+    color: var(--gold-100);
+  }
+}
+
+.pick__portrait {
+  width: 52px;
+  height: 52px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
+}
+
+.pick__portrait--empty {
+  display: grid;
+  place-items: center;
+  color: var(--gold-300);
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.picker-tile__name {
+  max-width: 100%;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.picker-tile--clear {
+  color: var(--gold-300);
+}
+
+.example-large {
+  display: block;
+  max-width: 100%;
+  max-height: 65dvh;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+}

@@ -201,15 +201,41 @@ class KvkRound(models.Model):
         return self.title_sk
 
 
-class KvkSignup(models.Model):
-    """A player's sign-up for a KvK: role, commander pair, note and screenshots (KvkImage). Seen only by the player,
-    the players with Player.kvk_reviewer and the superuser."""
+# armament bonuses and inscription counts: at most two digits
+STAT_MAX = 99
+STAT_LIMIT = [MaxValueValidator(STAT_MAX)]
+MARCH_STATS = ('attack', 'defense', 'health', 'damage', 'white', 'blue', 'gold')
+
+
+class ArmyFields(models.Model):
+    """What a march and a KvK sign-up both say about an army (Gether 11. 10. 2026: the sign-up is filled in like a
+    march): the commander pair (names of guides/roster.py) and the armament bonuses in whole percent, rounded up, of
+    the march's troop type ("Cav ATK" for a cavalry march…) with the number of inscriptions by colour; empty = not
+    filled in."""
+
+    primary = models.CharField('primárny commander', max_length=40, blank=True)
+    secondary = models.CharField('sekundárny commander', max_length=40, blank=True)
+    attack = models.PositiveSmallIntegerField('ATK %', null=True, blank=True, validators=STAT_LIMIT)
+    defense = models.PositiveSmallIntegerField('DEF %', null=True, blank=True, validators=STAT_LIMIT)
+    health = models.PositiveSmallIntegerField('HP %', null=True, blank=True, validators=STAT_LIMIT)
+    damage = models.PositiveSmallIntegerField('All DMG %', null=True, blank=True, validators=STAT_LIMIT)
+    white = models.PositiveSmallIntegerField('biele inscriptions', null=True, blank=True, validators=STAT_LIMIT)
+    blue = models.PositiveSmallIntegerField('modré inscriptions', null=True, blank=True, validators=STAT_LIMIT)
+    gold = models.PositiveSmallIntegerField('zlaté inscriptions', null=True, blank=True, validators=STAT_LIMIT)
+
+    class Meta:
+        abstract = True
+
+
+class KvkSignup(ArmyFields):
+    """A player's sign-up for a KvK: role, commander pair, armament bonuses, note and one screenshot of the equipment
+    and one of the armaments (KvkImage) – like a march. Seen only by the player, the players with Player.kvk_reviewer
+    and the superuser."""
 
     round = models.ForeignKey(KvkRound, on_delete=models.CASCADE, related_name='signups', verbose_name='KvK')
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kvk_signups', verbose_name='hráč')
     rally = models.BooleanField('rally', default=False)
     garrison = models.BooleanField('garrison', default=False)
-    commanders = models.CharField('commander pár', max_length=120, blank=True)
     note = models.CharField('poznámka', max_length=500, blank=True)
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
@@ -229,10 +255,8 @@ class KvkImage(models.Model):
     thumbnail. The files go with the row (post_delete in cleanup.py)."""
 
     class Kind(models.TextChoices):
-        VIP = 'vip', 'VIP úroveň'
         EQUIPMENT = 'equipment', 'výbava'
         ARMAMENTS = 'armaments', 'armamenty'
-        COMMANDERS = 'commanders', 'commander pár'
 
     signup = models.ForeignKey(KvkSignup, on_delete=models.CASCADE, related_name='images', verbose_name='prihláška')
     kind = models.CharField('čo je na obrázku', max_length=12, choices=Kind.choices)
@@ -255,16 +279,11 @@ class KvkImage(models.Model):
 MAX_MARCHES = 7
 
 
-# armament bonuses and inscription counts: at most two digits
-STAT_MAX = 99
-STAT_LIMIT = [MaxValueValidator(STAT_MAX)]
-MARCH_STATS = ('attack', 'defense', 'health', 'damage', 'white', 'blue', 'gold')
 
-
-class March(models.Model):
-    """One of the player's marches on /ucet ("Moji commanderi a výbava"): its type, the commander pair (names of
-    commanders from our guides) and screenshots of equipment and armaments (MarchImage). Seen by the player, the
-    reviewers and the superuser."""
+class March(ArmyFields):
+    """One of the player's marches on /marche ("Moje marche"): its type, the army (ArmyFields) and screenshots of
+    equipment and armaments (MarchImage). Seen by the player, the reviewers and the superuser – and every signed-in
+    player when the player makes the marches public."""
 
     class Kind(models.TextChoices):
         INFANTRY = 'infantry', 'pechota'
@@ -279,17 +298,6 @@ class March(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='marches', verbose_name='hráč')
     position = models.PositiveSmallIntegerField('poradie', default=1)
     kind = models.CharField('typ', max_length=12, choices=Kind.choices, blank=True)
-    primary = models.CharField('primárny commander', max_length=40, blank=True)
-    secondary = models.CharField('sekundárny commander', max_length=40, blank=True)
-    # the armament bonuses in whole percent, rounded up, of the march's troop type (Gether 11. 10. 2026: "Cav ATK" for
-    # a cavalry march…) and the number of inscriptions by colour; empty = not filled in
-    attack = models.PositiveSmallIntegerField('ATK %', null=True, blank=True, validators=STAT_LIMIT)
-    defense = models.PositiveSmallIntegerField('DEF %', null=True, blank=True, validators=STAT_LIMIT)
-    health = models.PositiveSmallIntegerField('HP %', null=True, blank=True, validators=STAT_LIMIT)
-    damage = models.PositiveSmallIntegerField('All DMG %', null=True, blank=True, validators=STAT_LIMIT)
-    white = models.PositiveSmallIntegerField('biele inscriptions', null=True, blank=True, validators=STAT_LIMIT)
-    blue = models.PositiveSmallIntegerField('modré inscriptions', null=True, blank=True, validators=STAT_LIMIT)
-    gold = models.PositiveSmallIntegerField('zlaté inscriptions', null=True, blank=True, validators=STAT_LIMIT)
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
 

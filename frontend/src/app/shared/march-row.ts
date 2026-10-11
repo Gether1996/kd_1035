@@ -22,6 +22,7 @@ export function statLabel(t: Dict['marches'], kind: MarchKind | '', stat: (typeo
 @Component({
   selector: 'app-march-row',
   imports: [Icon],
+  host: { '[class.is-numbered]': 'numbered()' },
   templateUrl: './march-row.html',
   styleUrl: './march-row.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,8 @@ export class MarchRow {
   readonly links = input(false);
   /** a missing screenshot is marked (the player's own marches) */
   readonly showMissing = input(false);
+  /** the march number in front; a KvK sign-up has none */
+  readonly numbered = input(true);
   readonly shot = output<{ image: MarchImage; event: Event }>();
 
   protected readonly i18n = inject(I18n);
@@ -66,8 +69,8 @@ export class MarchRow {
   }
 
   protected shotLabel(kind: MarchImage['kind']): string {
-    const where = this.t().march.replace('{n}', String(this.march().position));
-    return `${this.t().images[kind]} – ${this.owner() ? `${this.owner()}, ${where}` : where}`;
+    const where = this.numbered() ? this.t().march.replace('{n}', String(this.march().position)) : '';
+    return [this.t().images[kind], [this.owner(), where].filter(Boolean).join(', ')].filter(Boolean).join(' – ');
   }
 
   /** "Gonzalo de Cordoba" → GC, when a portrait is missing */

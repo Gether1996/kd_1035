@@ -28,12 +28,18 @@ const SIGNUP: KvkSignup = {
   round: 3,
   rally: true,
   garrison: false,
-  commanders: 'Attila + Takeda Shingen',
+  primary: 'Attila',
+  secondary: 'Takeda Shingen',
   note: '',
   updated_at: '2026-10-11T11:00:00Z',
-  images: [{ id: 1, kind: 'vip', url: '/api/kvk/images/1/', thumb: '/api/kvk/images/1/?thumb=1', width: 1, height: 1 }],
+  images: [{ id: 1, kind: 'equipment', url: '/api/kvk/images/1/', thumb: '/api/kvk/images/1/?thumb=1', width: 1, height: 1 }],
   complete: false,
 };
+const COMMANDERS = [
+  { name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true },
+  { name: 'Takeda Shingen', icon: '/static/guides/commanders/takeda-shingen.webp', pick: true },
+];
+const image = (id: number, kind: string) => ({ id, kind, url: `/api/kvk/images/${id}/`, thumb: `/api/kvk/images/${id}/?thumb=1`, width: 1, height: 1 });
 
 function setup() {
   TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
@@ -42,51 +48,122 @@ function setup() {
 
 const flushAll = async (fixture: { whenStable(): Promise<unknown> }) => {
   await fixture.whenStable();
+  await new Promise((resolve) => setTimeout(resolve));
   await fixture.whenStable();
 };
 
 describe('KvkForm', () => {
-  it('needs a role, saves the sign-up and then offers the screenshots', async () => {
+  beforeEach(() => {
+    URL.createObjectURL ??= () => 'blob:preview';
+    URL.revokeObjectURL ??= () => undefined;
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+      this.removeAttribute('open');
+      this.dispatchEvent(new Event('close'));
+    };
+  });
+
+  it('is filled in like a march: role, commanders and both screenshots, sent only with "Prihlásiť sa"', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
     fixture.componentRef.setInput('state', STATE);
     fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
+    const submit = () => el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    const state = () => el.querySelector('.form__state')?.textContent;
     expect(el.querySelector<HTMLInputElement>('#kvk-name')!.value).toBe('Nelly');
-    expect(el.querySelector('.shots')).toBeNull();
+    // no march type in a sign-up: plain "ATK"
+    expect(el.querySelector('.kind-picker')).toBeNull();
+    expect(el.querySelector('.stat-field__label')?.textContent?.trim()).toBe('ATK');
 
-    el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    submit();
     await fixture.whenStable();
-    expect(el.querySelector('.form__state')?.textContent).toContain('Vyber rally');
-
+    expect(state()).toContain('Vyber rally');
     el.querySelector<HTMLInputElement>('.chip input')!.click();
-    el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    submit();
+    await fixture.whenStable();
+    expect(state()).toContain('Vyber primárneho commandera.');
+
+    el.querySelector<HTMLButtonElement>('.tile')!.click();
+    await fixture.whenStable();
+    el.querySelector<HTMLButtonElement>('.picker-tile')!.click();
+    await fixture.whenStable();
+    submit();
+    await fixture.whenStable();
+    expect(state()).toContain('Pridaj screenshot výbavy.');
+    http.expectNone('/api/kvk/signup/');
+
+    const pickFile = async (name: string) => {
+      const input = el.querySelector<HTMLInputElement>('input[type="file"]')!;
+      Object.defineProperty(input, 'files', { value: [new File(['x'], name, { type: 'image/png' })] });
+      input.dispatchEvent(new Event('change'));
+      await fixture.whenStable();
+    };
+    await pickFile('equipment.png');
+    await pickFile('armaments.png');
+    const stat = el.querySelector<HTMLInputElement>('.stat-field__input')!;
+    stat.value = '9';
+    stat.dispatchEvent(new Event('input'));
+    submit();
     const req = http.expectOne('/api/kvk/signup/');
     expect(req.request.method).toBe('PUT');
-    expect(req.request.body).toEqual({ ingame_name: 'Nelly', rally: true, garrison: false, commanders: '', note: '' });
-    req.flush({ ...SIGNUP, images: [] });
+    expect(req.request.body).toEqual({
+      ingame_name: 'Nelly',
+      rally: true,
+      garrison: false,
+      primary: 'Attila',
+      secondary: '',
+      attack: 9,
+      defense: null,
+      health: null,
+      damage: null,
+      gold: null,
+      blue: null,
+      white: null,
+      note: '',
+    });
+    req.flush({ ...SIGNUP, secondary: '', attack: 9, images: [] });
     await flushAll(fixture);
-    expect(el.querySelectorAll('.shot-group').length).toBe(4);
-    expect(el.querySelector('.badge')?.textContent).toContain('Chýbajú screenshoty');
+    http.expectOne('/api/kvk/signup/images/').flush(image(7, 'equipment'));
+    await flushAll(fixture);
+    const second = http.expectOne('/api/kvk/signup/images/');
+    expect((second.request.body as FormData).get('kind')).toBe('armaments');
+    second.flush(image(8, 'armaments'));
+    await flushAll(fixture);
+    expect(el.querySelector('.badge')?.textContent).toContain('Kompletná');
+    expect(state()).toContain('Uložené');
     http.verify();
   });
 
-  it('says why an upload was refused', async () => {
+  it('says why an upload was refused and keeps the chosen file', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
     fixture.componentRef.setInput('state', { ...STATE, signup: SIGNUP });
     fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelectorAll('.thumb img').length).toBe(1);
+    // the saved sign-up fills the form: its commanders and its equipment screenshot
+    expect([...el.querySelectorAll('.tile__caption')].map((c) => c.textContent?.trim()).slice(0, 2)).toEqual(['Attila', 'Takeda Shingen']);
+    expect(el.querySelectorAll('.tile__box--shot img').length).toBe(1);
 
-    const input = el.querySelectorAll<HTMLInputElement>('input[type="file"]')[1];
+    const input = el.querySelector<HTMLInputElement>('input[type="file"]')!;
     Object.defineProperty(input, 'files', { value: [new File(['x'], 'a.txt', { type: 'text/plain' })] });
     input.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    http.expectOne('/api/kvk/signup/').flush(SIGNUP);
+    await flushAll(fixture);
     const req = http.expectOne('/api/kvk/signup/images/');
-    expect((req.request.body as FormData).get('kind')).toBe('equipment');
+    expect((req.request.body as FormData).get('kind')).toBe('armaments');
     req.flush({ detail: 'not_image' }, { status: 400, statusText: 'Bad Request' });
     await flushAll(fixture);
-    expect(el.querySelector('.shot-group__error')?.textContent).toContain('nie je obrázok');
+    expect(el.querySelector('.block__error')?.textContent).toContain('nie je obrázok');
+    expect(el.querySelectorAll('.tile__box--shot img').length).toBe(2);
     http.verify();
   });
 
@@ -99,6 +176,7 @@ describe('KvkForm', () => {
       older: [{ round: { ...ROUND, is_open: false }, signup: SIGNUP }],
     });
     fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     const el = fixture.nativeElement as HTMLElement;
     // the new form starts empty, the old sign-up has its own panel
     expect(el.querySelector('.chip input:checked')).toBeNull();
@@ -147,7 +225,8 @@ describe('KvkSignups', () => {
     await fixture.whenStable();
     expect(Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent)).toEqual(['Bob']);
 
-    el.querySelector<HTMLButtonElement>('.signup__thumb')!.click();
+    // the sign-up is a row like a march: heads, screenshots, bonuses
+    el.querySelector<HTMLButtonElement>('.signup__army .mrow__shot')!.click();
     await fixture.whenStable();
     expect(el.querySelector('.viewer__image img')?.getAttribute('src')).toBe('/api/kvk/images/1/');
     http.verify();
