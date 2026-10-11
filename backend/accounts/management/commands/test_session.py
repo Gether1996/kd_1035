@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand, CommandError
 from PIL import Image
 
 from accounts.kvk_views import store_image
-from accounts.models import March, MarchImage, Player
+from accounts.models import MARCH_STATS, March, MarchImage, Player
 
 # a made-up Discord ID: the snapshot leaves discord_* users and every accounts_* row out (kingdom/snapshot.py)
 DISCORD_ID = '999000111'
@@ -85,7 +85,11 @@ class Command(BaseCommand):
         player.marches_public = True
         player.save()
         for position, (kind, primary, secondary) in enumerate(SAMPLE_MARCHES, start=1):
-            march = March.objects.create(player=player, position=position, kind=kind, primary=primary, secondary=secondary)
+            # armament bonuses and inscriptions on all but the last march (the last one is not filled in)
+            stats = dict(zip(MARCH_STATS, (12, 8, 10, 4, 6, 3, 1))) if position < len(SAMPLE_MARCHES) else {}
+            march = March.objects.create(
+                player=player, position=position, kind=kind, primary=primary, secondary=secondary, **stats
+            )
             for image_kind, colour in (('equipment', (180, 140, 60)), ('armaments', (40, 70, 130))):
                 upload = io.BytesIO()
                 Image.new('RGB', (640, 400), colour).save(upload, 'PNG')

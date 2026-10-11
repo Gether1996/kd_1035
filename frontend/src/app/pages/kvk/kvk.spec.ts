@@ -130,15 +130,18 @@ describe('KvkSignups', () => {
     http.expectOne('/api/kvk/rounds/3/signups/').flush({
       round: ROUND,
       signups: [
-        { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', images: [] }] },
+        { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', images: [], attack: 12 }] },
         { ...SIGNUP, id: 10, rally: false, garrison: true, player: { ...player, id: 2, ingame_name: 'Bob' } },
       ],
     });
+    http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
     await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.signup').length).toBe(2);
     expect(el.querySelector('.signup__contact')?.getAttribute('href')).toBe('https://discord.com/users/42');
-    expect(el.querySelector('.mini-march__pair')?.textContent).toContain('Attila');
+    // the march as a row of portraits, the bonuses of its troop type below
+    expect(el.querySelector('.mini-march .mrow__head')?.getAttribute('alt')).toBe('Attila');
+    expect(el.querySelector('.mini-march .mrow__stats')?.textContent).toContain('Cav ATK 12%');
 
     el.querySelectorAll<HTMLButtonElement>('.list__filter button')[2].click();
     await fixture.whenStable();

@@ -70,34 +70,7 @@
           <ol class="player__marches">
             @for (march of player.marches; track march.id) {
               <li class="row">
-                <span class="row__num">{{ march.position }}.</span>
-                @if (march.kind) {
-                  <img class="row__kind" [src]="icon(march.kind)" [alt]="mk.kinds[march.kind]" [title]="mk.kinds[march.kind]" width="96" height="96" />
-                }
-                <span class="row__pair">
-                  @for (commander of [march.primary, march.secondary]; track $index) {
-                    @if (commander) {
-                      <span class="row__commander">
-                        @if (portrait(commander); as src) {
-                          <img [src]="src" alt="" width="96" height="96" loading="lazy" />
-                        }
-                        {{ commander }}
-                      </span>
-                    }
-                  }
-                </span>
-                <span class="row__shots">
-                  @for (image of march.images; track image.id) {
-                    <button
-                      type="button"
-                      class="row__shot"
-                      [attr.aria-label]="mk.images[image.kind] + ' – ' + name(player) + ', ' + mk.march.replace('{n}', '' + march.position)"
-                      (click)="open(player, march, image, $event)"
-                    >
-                      <img [src]="image.thumb" alt="" loading="lazy" />
-                    </button>
-                  }
-                </span>
+                <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" (shot)="open(player, march, $event.image, $event.event)" />
               </li>
             }
           </ol>

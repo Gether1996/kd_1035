@@ -60,14 +60,32 @@ describe('Marches', () => {
     expect(el.textContent).toContain('Vyber typ marchu.');
 
     el.querySelectorAll<HTMLButtonElement>('.kind')[1].click();
-    el.querySelector<HTMLButtonElement>('.pick')!.click();
+    await fixture.whenStable();
+    // the bonuses are read as those of the march's troop type
+    expect(Array.from(el.querySelectorAll('.stat-field__label'), (l) => l.textContent?.trim()).slice(0, 4)).toEqual([
+      'Cav ATK',
+      'Cav DEF',
+      'Cav HP',
+      'All DMG',
+    ]);
+    const stat = (i: number, value: string) => {
+      const input = el.querySelectorAll<HTMLInputElement>('.stat-field__input')[i];
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      return input;
+    };
+    // whole numbers of two digits: anything else is dropped as it is typed
+    expect(stat(0, '12,5').value).toBe('12');
+    stat(3, '4');
+    stat(4, '3');
+    el.querySelector<HTMLButtonElement>('.tile')!.click();
     await fixture.whenStable();
     const tiles = Array.from(el.querySelectorAll<HTMLButtonElement>('.picker-tile'));
     expect(tiles.map((t) => t.textContent?.trim())).toEqual(['Attila', 'Takeda Shingen']);
     tiles[0].click();
     await fixture.whenStable();
     // the screenshots are required too, with an example next to each
-    expect(el.querySelector('.example img')?.getAttribute('src')).toBe('img/examples/equipment.webp');
+    expect(el.querySelectorAll('.tile__example').length).toBe(2);
     save().click();
     await fixture.whenStable();
     expect(el.textContent).toContain('Pridaj screenshot výbavy.');
@@ -81,12 +99,23 @@ describe('Marches', () => {
     };
     await pickFile('equipment.png');
     await pickFile('armaments.png');
-    expect(el.querySelectorAll('.march--editing .thumb img').length).toBe(2);
+    expect(el.querySelectorAll('.march--editing .tile__box--shot img').length).toBe(2);
 
     save().click();
     const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/me/marches/');
-    expect(req.request.body).toEqual({ kind: 'cavalry', primary: 'Attila', secondary: '' });
-    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila' });
+    expect(req.request.body).toEqual({
+      kind: 'cavalry',
+      primary: 'Attila',
+      secondary: '',
+      attack: 12,
+      defense: null,
+      health: null,
+      damage: 4,
+      gold: 3,
+      blue: null,
+      white: null,
+    });
+    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, damage: 4, gold: 3 });
     await settle(fixture);
     const image = (id: number, kind: string) => ({ id, kind, url: `/api/marches/images/${id}/`, thumb: `/api/marches/images/${id}/?thumb=1`, width: 1, height: 1 });
     const equipment = http.expectOne('/api/me/marches/1/images/');
@@ -97,13 +126,17 @@ describe('Marches', () => {
     await settle(fixture);
 
     expect(el.querySelector('.march--editing')).toBeNull();
-    expect(el.querySelector('.pick__name')?.textContent).toBe('Attila');
-    expect(el.querySelectorAll('.saved-shot .thumb img').length).toBe(2);
+    expect(el.querySelector('.mrow__head')?.getAttribute('alt')).toBe('Attila');
+    expect(el.querySelectorAll('.mrow__shot img').length).toBe(2);
+    // short labels next to the type icon, the full "Cav ATK" in the title (and for screen readers)
+    const stats = Array.from(el.querySelectorAll<HTMLElement>('.mrow__stat'));
+    expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'All DMG', 'Zlaté']);
+    expect(stats.map((s) => s.textContent?.match(/\d+%?/)?.[0])).toEqual(['12%', '4%', '3']);
     expect(el.querySelector('.add-march')?.textContent).toContain('Pridať druhý march');
     http.verify();
   });
 
-  it('stops at seven and removes a march only on the second click', async () => {
+  it('stops at seven and removes a march from its editor only on the second click', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
@@ -114,14 +147,17 @@ describe('Marches', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.add-march')).toBeNull();
 
-    const remove = () => el.querySelector<HTMLButtonElement>('.march__actions .danger')!;
+    // removing is in the editor of the march
+    el.querySelector<HTMLButtonElement>('.march__edit')!.click();
+    await fixture.whenStable();
+    const remove = () => el.querySelector<HTMLButtonElement>('.march__remove')!;
     remove().click();
     await fixture.whenStable();
     http.expectNone('/api/me/marches/1/');
     remove().click();
     http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/me/marches/1/').flush(null, { status: 204, statusText: '' });
     await settle(fixture);
-    expect(Array.from(el.querySelectorAll('.march__title'), (t) => t.textContent?.trim().slice(0, 2))).toEqual([
+    expect(Array.from(el.querySelectorAll('.mrow__num'), (t) => t.textContent?.trim())).toEqual([
       '1.',
       '2.',
       '3.',
@@ -177,7 +213,6 @@ describe('Marches visibility', () => {
     const el = fixture.nativeElement as HTMLElement;
     const [r4, all] = Array.from(el.querySelectorAll<HTMLButtonElement>('.visibility button'));
     expect(r4.getAttribute('aria-pressed')).toBe('true');
-    expect(el.querySelector('.visibility__hint')?.textContent).toContain('iba poverení R4');
 
     all.click();
     const req = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/me/marches/');
@@ -185,13 +220,12 @@ describe('Marches visibility', () => {
     req.flush({ public: true });
     await settle(fixture);
     expect(all.getAttribute('aria-pressed')).toBe('true');
-    expect(el.querySelector('.visibility__hint')?.textContent).toContain('všetci hráči');
 
     r4.click();
     http.expectOne((r) => r.method === 'PATCH').flush('x', { status: 500, statusText: 'Server Error' });
     await settle(fixture);
     expect(all.getAttribute('aria-pressed')).toBe('true');
-    expect(el.querySelector('.visibility__hint')?.classList).toContain('is-error');
+    expect(el.querySelector('.visibility__error')?.textContent).toContain('Nepodarilo');
     http.verify();
   });
 });

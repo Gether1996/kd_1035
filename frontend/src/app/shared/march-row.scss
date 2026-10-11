@@ -1,0 +1,159 @@
+// One march in a compact row: number, type, portraits and screenshots on the first line, bonuses (+ the buttons of
+// the own marches) on the second. Fits one line from 320 px.
+:host {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mrow__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mrow__num {
+  min-width: 1.4em;
+  font: 700 1rem/1 var(--font-display);
+  color: var(--text-dim);
+}
+
+.mrow__kind {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+}
+
+.mrow__pair {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 4px;
+  min-width: 0;
+}
+
+.mrow__head {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
+}
+
+.mrow__head--text {
+  display: grid;
+  place-items: center;
+  color: var(--gold-100);
+  font: 700 0.875rem/1 var(--font-body);
+}
+
+.mrow__none {
+  color: var(--text-mute);
+}
+
+.mrow__shots {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.mrow__shot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--field-bg);
+  cursor: zoom-in;
+  transition: border-color 0.2s;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:hover {
+    border-color: var(--line-strong);
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.mrow__shot--missing {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--red-300) 60%, transparent);
+  color: var(--red-300);
+  cursor: default;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--red-300) 60%, transparent);
+  }
+}
+
+.mrow__foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px 10px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.mrow__stats {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 0 calc(1.4em + 8px);
+  list-style: none;
+  font: 600 0.875rem/1.3 var(--font-body);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.mrow__stat {
+  white-space: nowrap;
+}
+
+.mrow__stat-label {
+  font-weight: 500;
+  color: var(--text-dim);
+}
+
+.mrow__insc {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mrow__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+
+  &--white {
+    background: var(--insc-white);
+  }
+
+  &--blue {
+    background: var(--insc-blue);
+  }
+
+  &--gold {
+    background: var(--insc-gold);
+  }
+}

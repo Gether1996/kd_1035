@@ -13,14 +13,16 @@ export MSYS_NO_PATHCONV=1  # Git Bash on Windows would rewrite /work and /app
 ROOT="$(pwd -W 2>/dev/null || pwd)"
 
 role=''
+seed=''
 envs=()
 for arg in "$@"; do
   case "$arg" in
     --player) role=player ;;
     --superuser) role=superuser ;;
+    --marches) seed=--marches ;;  # the test player gets seven sample marches (/marche)
     *=*) envs+=(-e "$arg") ;;
     *)
-      echo "usage: tools/a11y/audit.sh [--player | --superuser] [NAME=value …]" >&2
+      echo "usage: tools/a11y/audit.sh [--player | --superuser] [--marches] [NAME=value …]" >&2
       exit 2
       ;;
   esac
@@ -30,7 +32,7 @@ manage() { docker compose -f docker-compose.dev.yml exec -T backend python manag
 if [ -n "$role" ]; then
   flag=''
   [ "$role" = superuser ] && flag=--superuser
-  session="$(manage test_session $flag)"
+  session="$(manage test_session $flag $seed)"
   trap 'manage test_session --delete' EXIT
   envs+=(-e "SESSION=$session")
 fi

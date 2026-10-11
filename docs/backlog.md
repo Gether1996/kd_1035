@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.13.0:** marche prerobené na kompaktné riadky (len hlavy commanderov, typ, screenshoty) na mobile aj desktope, jednoduchší editor a výber commandera ako mriežka hláv; nové polia na bonusy armamentov (ATK, DEF, HP, All DMG podľa typu marchu) a počet bielych, modrých a zlatých inscriptions.
 - **11. 10. 2026 – v1.12.3:** pri marchoch sa dá vybrať 90 legendárnych commanderov vrátane starších mimo mety (Yi Seong-Gye, Alexander Nevsky, Joan of Arc Prime, Jan Žižka…), bez commanderov zo zlatých kľúčov a zberačov.
 - **11. 10. 2026 – v1.12.2:** vlastné marche sa presunuli z Môjho účtu na stránku `/marche` ako druhá záložka „Moje marche“ (vedľa „Marche hráčov“).
 - **11. 10. 2026 – v1.12.1:** v hlavičke menu hráča – po prejdení myšou na účet Môj účet, Marche hráčov, Pripomienky eventov a Prihláška na KvK; zvonček zrušený.

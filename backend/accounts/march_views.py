@@ -16,7 +16,7 @@ from rest_framework.response import Response
 
 from . import private_images
 from .kvk_views import UploadThrottle, image_data, march_data, owner_or_reviewer, store_image
-from .models import MAX_MARCHES, March, MarchImage, Player
+from .models import MAX_MARCHES, STAT_MAX, March, MarchImage, Player
 from .reminder_views import IsPlayer, WriteThrottle
 from .views import player_of
 
@@ -29,6 +29,14 @@ class MarchSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=March.Kind.choices, allow_blank=True, required=False)
     primary = serializers.CharField(max_length=40, allow_blank=True, required=False)
     secondary = serializers.CharField(max_length=40, allow_blank=True, required=False)
+    # armament bonuses (whole %, rounded up) and inscriptions; null = not filled in
+    attack = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
+    defense = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
+    health = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
+    damage = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
+    white = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
+    blue = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
+    gold = serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
 
     def validate(self, data):
         # a new march is saved with its type and primary commander (the web asks for both)
@@ -83,7 +91,7 @@ def marches(request):
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def march(request, march_id):
-    """PATCH {kind?, primary?, secondary?}. DELETE: the march and its screenshots; the later ones move up."""
+    """PATCH {kind?, primary?, secondary?, attack?, defense?, health?, damage?, white?, blue?, gold?}. DELETE: the march and its screenshots; the later ones move up."""
     player = request.user.player
     mine = get_object_or_404(marches_of(player), pk=march_id)
     if request.method == 'DELETE':

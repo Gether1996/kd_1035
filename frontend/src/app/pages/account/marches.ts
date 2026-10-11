@@ -1,5 +1,4 @@
 import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -13,9 +12,22 @@ import {
   viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { MARCH_KINDS, March, MarchImage, MarchKind, UploadError, marchIcon } from '../../core/kvk-api';
+import {
+  ARMAMENT_STATS,
+  INSCRIPTIONS,
+  MARCH_KINDS,
+  MARCH_STATS,
+  March,
+  MarchImage,
+  MarchKind,
+  MarchStat,
+  STAT_MAX,
+  UploadError,
+  marchIcon,
+} from '../../core/kvk-api';
 import { MarchesApi } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
+import { MarchRow, statLabel } from '../../shared/march-row';
 import { fold } from '../../shared/search';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 
@@ -36,6 +48,8 @@ interface Draft {
   kind: MarchKind | '';
   primary: string;
   secondary: string;
+  /** armament bonuses and inscriptions, null = empty field */
+  stats: Record<MarchStat, number | null>;
   keep: Partial<Record<ImageKind, MarchImage>>;
   chosen: Partial<Record<ImageKind, Chosen>>;
   /** saved screenshots the player removed – deleted on "Uložiť" */
@@ -44,15 +58,19 @@ interface Draft {
 
 type DraftError = 'kind' | 'primary' | ImageKind;
 
+const noStats = (): Record<MarchStat, number | null> =>
+  Object.fromEntries(MARCH_STATS.map((stat) => [stat, null])) as Record<MarchStat, number | null>;
+
 /**
- * "Moji commanderi a výbava" on /ucet (Gether 11. 10. 2026): up to 7 marches. A march is filled in (type icon,
- * commander pair from the portraits of our guides, one screenshot of the equipment and one of the armaments – both
- * required, with an example how they should look) and saved; only then the next one can be added. Seen by the player, the
- * reviewers (R4) and the superuser – next to the KvK sign-up.
+ * "Moji commanderi a výbava" on /marche?tab=moje (Gether 11. 10. 2026): up to 7 marches, each a compact row
+ * (MarchRow). A march is filled in (type icon, commander pair from portraits, one screenshot of the equipment and one of
+ * the armaments – both required, with an example how they should look – and optionally the armament bonuses of its troop
+ * type and the inscriptions) and saved; only then the next one can be added. Seen by the player, the reviewers (R4) and
+ * the superuser – and every signed-in player when the player makes them public.
  */
 @Component({
   selector: 'app-marches',
-  imports: [Icon, NgTemplateOutlet, RouterLink],
+  imports: [Icon, MarchRow, NgTemplateOutlet],
   templateUrl: './marches.html',
   styleUrls: ['../kvk/kvk.scss', './marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,6 +81,9 @@ export class Marches {
   protected readonly t = computed(() => this.i18n.t().marches);
   protected readonly kinds = MARCH_KINDS;
   protected readonly imageKinds = IMAGE_KINDS;
+  protected readonly slots: Slot[] = ['primary', 'secondary'];
+  protected readonly armamentStats = ARMAMENT_STATS;
+  protected readonly inscriptionKinds = INSCRIPTIONS;
   protected readonly icon = marchIcon;
 
   private readonly data = this.api.list();
@@ -81,7 +102,7 @@ export class Marches {
   /** the commanders to pick from – no golden keys, gatherers, epic or elite ones (Gether 11. 10. 2026) */
   protected readonly commanders = computed(() => this.allCommanders().filter((c) => c.pick));
   // every portrait – a march saved before a commander was left out keeps its picture
-  private readonly portraits = computed(() => new Map(this.allCommanders().map((c) => [c.name, c.icon])));
+  protected readonly portraits = computed(() => new Map(this.allCommanders().map((c) => [c.name, c.icon])));
 
   protected readonly draft = signal<Draft | null>(null);
   protected readonly draftError = signal<DraftError | null>(null);
@@ -149,7 +170,7 @@ export class Marches {
     return this.portraits().get(name);
   }
 
-  protected imageOf(march: March, kind: ImageKind): MarchImage | undefined {
+  private imageOf(march: March, kind: ImageKind): MarchImage | undefined {
     return march.images.find((image) => image.kind === kind);
   }
 
@@ -157,7 +178,7 @@ export class Marches {
 
   protected add(): void {
     if (!this.canAdd()) return;
-    this.draft.set({ id: null, kind: '', primary: '', secondary: '', keep: {}, chosen: {}, removed: [] });
+    this.draft.set({ id: null, kind: '', primary: '', secondary: '', stats: noStats(), keep: {}, chosen: {}, removed: [] });
     this.draftError.set(null);
     this.uploadError.set(null);
   }
@@ -166,12 +187,15 @@ export class Marches {
     if (this.draft()) return;
     const keep: Draft['keep'] = {};
     for (const kind of IMAGE_KINDS) keep[kind] = this.imageOf(march, kind);
-    this.draft.set({ id: march.id, kind: march.kind, primary: march.primary, secondary: march.secondary, keep, chosen: {}, removed: [] });
+    const stats = noStats();
+    for (const stat of MARCH_STATS) stats[stat] = march[stat] ?? null;
+    this.draft.set({ id: march.id, kind: march.kind, primary: march.primary, secondary: march.secondary, stats, keep, chosen: {}, removed: [] });
     this.draftError.set(null);
     this.uploadError.set(null);
   }
 
   protected cancel(): void {
+    this.armed.set(null);
     this.release(this.draft());
     this.draft.set(null);
     this.draftError.set(null);
@@ -181,6 +205,19 @@ export class Marches {
   protected setKind(kind: MarchKind): void {
     this.draft.update((d) => (d ? { ...d, kind: d.kind === kind ? '' : kind } : d));
     this.draftError.set(null);
+  }
+
+  protected statLabel(kind: MarchKind | '', stat: (typeof ARMAMENT_STATS)[number]): string {
+    return statLabel(this.t(), kind, stat);
+  }
+
+  /** whole numbers of at most two digits; anything else typed is dropped at once (no decimals – rounded up) */
+  protected setStat(stat: MarchStat, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 2);
+    if (input.value !== digits) input.value = digits;
+    const value = digits === '' ? null : Math.min(Number(digits), STAT_MAX);
+    this.draft.update((d) => (d ? { ...d, stats: { ...d.stats, [stat]: value } } : d));
   }
 
   /** the screenshot shown in the editor for a kind: newly chosen, or the saved one */
@@ -221,7 +258,7 @@ export class Marches {
     if (!draft.primary) return this.draftError.set('primary');
     const missing = IMAGE_KINDS.find((kind) => !draft.keep[kind] && !draft.chosen[kind]);
     if (missing) return this.draftError.set(missing);
-    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary };
+    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, ...draft.stats };
     await this.run(async () => {
       let march = draft.id === null ? await this.api.add(change) : await this.api.update(draft.id, change);
       for (const image of draft.removed) await this.api.removeImage(image.id);
@@ -279,16 +316,22 @@ export class Marches {
     this.opener?.focus();
   }
 
-  protected async remove(march: March): Promise<void> {
-    if (this.armed() !== march.id) {
-      this.armed.set(march.id);
+  /** "Odstrániť" in the editor of a saved march; the second click removes it with its screenshots */
+  protected async removeDraft(): Promise<void> {
+    const draft = this.draft();
+    if (draft?.id == null || this.busy()) return;
+    const id = draft.id;
+    if (this.armed() !== id) {
+      this.armed.set(id);
       return;
     }
     this.armed.set(null);
     await this.run(async () => {
-      await this.api.remove(march.id);
+      await this.api.remove(id);
+      this.release(draft);
+      this.draft.set(null);
       // the later marches move up on the server too
-      this.marches.update((list) => list.filter((m) => m.id !== march.id).map((m, i) => ({ ...m, position: i + 1 })));
+      this.marches.update((list) => list.filter((m) => m.id !== id).map((m, i) => ({ ...m, position: i + 1 })));
     });
   }
 

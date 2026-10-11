@@ -16,10 +16,11 @@ import {
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
-import { March, MarchImage, marchIcon } from '../../core/kvk-api';
+import { March, MarchImage } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
+import { MarchRow } from '../../shared/march-row';
 import { PageHeader } from '../../shared/page-header';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
@@ -32,7 +33,7 @@ import { Marches } from '../account/marches';
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [Icon, PageHeader, Marches],
+  imports: [Icon, PageHeader, Marches, MarchRow],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,12 +47,11 @@ export class PlayersMarches {
   protected readonly mine = computed(() => this.tab() === 'moje');
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
-  protected readonly icon = marchIcon;
 
   protected readonly data = inject(MarchesApi).players(() => !!this.auth.user());
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly commanderData = httpResource<MarchCommander[]>(() => (this.isBrowser ? marchCommandersUrl : undefined));
-  private readonly portraits = computed(
+  protected readonly portraits = computed(
     () => new Map((this.commanderData.hasValue() ? this.commanderData.value() : []).map((c) => [c.name, c.icon])),
   );
 
@@ -84,10 +84,6 @@ export class PlayersMarches {
 
   protected name(player: PlayerMarches): string {
     return player.ingame_name || player.name;
-  }
-
-  protected portrait(name: string): string | undefined {
-    return this.portraits().get(name);
   }
 
   protected open(player: PlayerMarches, march: March, image: MarchImage, event: Event): void {

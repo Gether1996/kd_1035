@@ -299,8 +299,7 @@ export const cs: Dict = {
     r4Only: 'jen R4',
   },
   marches: {
-    title: 'Moji commandeři a výbava',
-    lead: 'Až 7 marchů – typ, commandeři a screenshoty výbavy a armamentů. Pomůžou vedení sestavit týmy na KvK.',
+    title: 'Moje marche',
     loadError: 'Marche se nepodařilo načíst.',
     march: '{n}. march',
     add: 'Přidat {n} march',
@@ -316,6 +315,17 @@ export const cs: Dict = {
       conquering: 'Rally',
     },
     slots: { primary: 'Primární commander', secondary: 'Sekundární commander' },
+    slotsShort: { primary: 'Primární', secondary: 'Sekundární' },
+    troops: { infantry: 'Inf', cavalry: 'Cav', archer: 'Arch', engineering: 'Siege' },
+    stats: {
+      title: 'Bonusy armamentů',
+      attack: 'ATK',
+      defense: 'DEF',
+      health: 'HP',
+      damage: 'All DMG',
+      hint: 'V %, celá čísla – zaokrouhli nahoru (9,5 → 10).',
+    },
+    inscriptions: { title: 'Inscriptions', white: 'Bílé', blue: 'Modré', gold: 'Zlaté' },
     choose: 'Vybrat',
     edit: 'Upravit',
     save: 'Uložit march',
@@ -347,9 +357,6 @@ export const cs: Dict = {
       label: 'Kdo uvidí moje marche',
       r4: 'Jen R4',
       all: 'Všichni hráči',
-      r4Hint: 'Uvidí je jen pověření R4 království a superadmin.',
-      allHint: 'Uvidí je všichni hráči přihlášení na webu na stránce Marche hráčů.',
-      others: 'Marche ostatních hráčů',
     },
   },
   alarms: {
@@ -713,7 +720,7 @@ export const cs: Dict = {
         text: 'Pokud je vyplníš, ukládáme:',
         list: [
           'Přihlášku na KvK – roli (rally, garrison), commander pár, poznámku a screenshoty VIP úrovně, výbavy, armamentů a commanderů.',
-          'Marche na stránce Můj účet – typ, commandery a screenshoty výbavy a armamentů.',
+          'Marche na stránce Marche – typ, commandery, bonusy armamentů, počet inscriptions a screenshoty výbavy a armamentů.',
           'Screenshoty uložíme jako nový obrázek bez údajů z telefonu (poloha, model apod.). Nejsou veřejné – zobrazí je jen web těm, kdo je smějí vidět.',
         ],
       },
@@ -748,7 +755,7 @@ export const cs: Dict = {
       },
       {
         title: 'Tvoje možnosti',
-        text: 'Jméno ve hře a marche změníš na stránce Můj účet, připomínky a budíky na stránce Připomínky eventů, přihlášku na KvK i se screenshoty zrušíš na stránce Přihláška na KvK.',
+        text: 'Jméno ve hře změníš na stránce Můj účet, marche na stránce Marche, připomínky a budíky na stránce Připomínky eventů, přihlášku na KvK i se screenshoty zrušíš na stránce Přihláška na KvK.',
         list: [
           'Tlačítko Smazat účet hned smaže všechny údaje o tobě uvedené výše, ze záloh zmizí do 8 týdnů. Účty vedení maže správce.',
           'O kopii nebo opravu svých údajů požádej vedení na Discordu.',

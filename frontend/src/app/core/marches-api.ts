@@ -2,9 +2,9 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { March, MarchImage, MarchKind, UploadError, uploadError } from './kvk-api';
+import { March, MarchImage, MarchKind, MarchStat, UploadError, uploadError } from './kvk-api';
 
-export type MarchChange = Partial<{ kind: MarchKind | ''; primary: string; secondary: string }>;
+export type MarchChange = Partial<{ kind: MarchKind | ''; primary: string; secondary: string } & Record<MarchStat, number | null>>;
 
 /** /api/commanders/marches/ – every commander a march may name (backend/guides/roster.py) */
 export const marchCommandersUrl = '/api/commanders/marches/';

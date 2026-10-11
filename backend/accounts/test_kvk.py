@@ -332,6 +332,19 @@ class MarchTests(KvkTestCase):
         positions = [m['position'] for m in self.client.get('/api/me/marches/').json()['marches']]
         self.assertEqual(positions, [1, 2, 3, 4, 5, 6])
 
+    def test_armament_bonuses_and_inscriptions_are_whole_numbers_up_to_99(self):
+        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', 'attack': 12, 'gold': 3})
+        self.assertEqual(march.status_code, 201, march.content)
+        self.assertEqual((march.json()['attack'], march.json()['defense'], march.json()['gold']), (12, None, 3))
+        url = f'/api/me/marches/{march.json()["id"]}/'
+        res = self.call('patch', url, {'defense': 8, 'health': 0, 'damage': 99, 'white': 10, 'blue': None})
+        self.assertEqual(res.status_code, 200, res.content)
+        self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage', 'white', 'blue')], [12, 8, 0, 99, 10, None])
+        for bad in ({'attack': 100}, {'defense': -1}, {'health': 9.5}, {'gold': 'x'}):
+            self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
+        # R4 sees them next to the sign-up and on /marche
+        self.assertEqual(self.client.get('/api/me/marches/').json()['marches'][0]['damage'], 99)
+
     def test_screenshots_private_and_deleted_with_the_march(self):
         march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'}).json()
         upload_url = f'/api/me/marches/{march["id"]}/images/'

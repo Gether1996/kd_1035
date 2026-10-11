@@ -66,6 +66,15 @@ export const MARCH_KINDS: MarchKind[] = [
 /** the specialty icons of the guides (backend guides/static/guides/specialties) */
 export const marchIcon = (kind: MarchKind) => `/static/guides/specialties/${kind}.webp`;
 
+/** the armament bonuses of a march (whole %, rounded up – Gether 11. 10. 2026), read as the bonuses of its troop type */
+export const ARMAMENT_STATS = ['attack', 'defense', 'health', 'damage'] as const;
+/** the inscriptions of the armaments by colour, the rarest first */
+export const INSCRIPTIONS = ['gold', 'blue', 'white'] as const;
+export type MarchStat = (typeof ARMAMENT_STATS)[number] | (typeof INSCRIPTIONS)[number];
+export const MARCH_STATS: MarchStat[] = [...ARMAMENT_STATS, ...INSCRIPTIONS];
+/** at most two digits */
+export const STAT_MAX = 99;
+
 export interface MarchImage {
   id: number;
   kind: 'equipment' | 'armaments';
@@ -75,11 +84,11 @@ export interface MarchImage {
   height: number;
 }
 
-export interface March {
+export interface March extends Partial<Record<MarchStat, number | null>> {
   id: number;
   position: number;
   kind: MarchKind | '';
-  /** commander names from our guides, '' = not chosen */
+  /** commander names (backend guides/roster.py), '' = not chosen; the stats are null when not filled in */
   primary: string;
   secondary: string;
   images: MarchImage[];

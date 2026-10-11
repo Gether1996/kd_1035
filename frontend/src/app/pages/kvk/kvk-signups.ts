@@ -1,7 +1,10 @@
+import { isPlatformBrowser } from '@angular/common';
+import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  PLATFORM_ID,
   computed,
   inject,
   input,
@@ -10,8 +13,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { IMAGE_KINDS, KvkApi, KvkImage, KvkRound, KvkSignup, marchIcon } from '../../core/kvk-api';
+import { IMAGE_KINDS, KvkApi, KvkImage, KvkRound, KvkSignup } from '../../core/kvk-api';
+import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
+import { MarchRow } from '../../shared/march-row';
 
 type Role = 'all' | 'rally' | 'garrison';
 
@@ -21,7 +26,7 @@ type Role = 'all' | 'rally' | 'garrison';
  */
 @Component({
   selector: 'app-kvk-signups',
-  imports: [Icon],
+  imports: [Icon, MarchRow],
   templateUrl: './kvk-signups.html',
   styleUrl: './kvk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,7 +38,12 @@ export class KvkSignups {
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().kvk);
   protected readonly kinds = IMAGE_KINDS;
-  protected readonly icon = marchIcon;
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  /** the portraits of the players' marches */
+  private readonly commanderData = httpResource<MarchCommander[]>(() => (this.isBrowser ? marchCommandersUrl : undefined));
+  protected readonly portraits = computed(
+    () => new Map((this.commanderData.hasValue() ? this.commanderData.value() : []).map((c) => [c.name, c.icon])),
+  );
 
   /** the open round, else the newest */
   protected readonly roundId = linkedSignal<KvkRound[], number | null>({

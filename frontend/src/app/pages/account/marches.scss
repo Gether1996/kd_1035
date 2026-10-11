@@ -1,23 +1,23 @@
-// panel, shots and thumbs come from ../kvk/kvk.scss
+// panel and form actions come from ../kvk/kvk.scss, the march row from shared/march-row
 :host {
   display: block;
   scroll-margin-top: calc(var(--header-h) + 16px);
 }
 
 .visibility {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
   margin-top: 14px;
-  padding: 14px 16px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--gold-400) 7%, transparent);
 
-  .segmented {
-    justify-self: start;
+  @media (max-width: 420px) {
+    .segmented {
+      width: 100%;
 
-    @media (max-width: 420px) {
-      justify-self: stretch;
+      button {
+        flex: 1;
+      }
     }
   }
 }
@@ -29,86 +29,93 @@
   color: var(--text-dim);
 }
 
-.visibility__hint {
-  font-size: 0.9375rem;
-  color: var(--text);
+.visibility__error {
+  flex-basis: 100%;
+  color: var(--red-300);
 
-  &.is-error {
-    color: var(--red-300);
+  &:empty {
+    display: none;
   }
 }
 
-.visibility__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  justify-self: start;
-  color: var(--gold-300);
-  font-weight: 600;
-
-  .icon {
-    width: 15px;
-    height: 15px;
-  }
-}
+// ---------------------------------------------------------------- the list: rows divided by a line
 
 .march-list {
   display: grid;
-  gap: 14px;
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .march {
-  display: grid;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: rgba(4, 10, 23, 0.35);
-}
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
 
-.march__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 12px;
-}
-
-.march__kind-icon {
-  width: 32px;
-  height: 32px;
-}
-
-.march__title {
-  flex: 1 1 140px;
-  font-size: 1.125rem;
-}
-
-.march__kind-name {
-  font: 600 0.9375rem/1.2 var(--font-body);
-  color: var(--text-dim);
+  &:last-child {
+    border-bottom: 1px solid var(--line);
+  }
 }
 
 .march--editing {
-  border-color: var(--line-strong);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin: 8px 0;
+  padding: clamp(12px, 3vw, 18px);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 10, 23, 0.35);
+
+  & + .march {
+    border-top: 0;
+  }
 }
 
-.march__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.march__title {
+  font-size: 1.125rem;
+}
 
-  .pill-btn,
-  .danger {
-    min-height: 38px;
-    padding: 0 14px;
-  }
+.march__edit {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.march__remove {
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+// edit as an icon (aria-label + title)
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  background: none;
+  color: var(--gold-300);
+  font: 600 0.8125rem/1 var(--font-body);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 
   .icon {
-    width: 15px;
-    height: 15px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    border-color: var(--line-strong);
+    background: rgba(245, 196, 81, 0.08);
+  }
+
+  &[aria-disabled='true'] {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
 
@@ -117,18 +124,54 @@
   color: var(--text-dim);
 }
 
-// the eight march types as icons; the chosen one is lit
+// ---------------------------------------------------------------- the editor
+
+.block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.block__label {
+  padding: 0;
+  font: 600 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.block__value {
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--gold-100);
+}
+
+.block__hint {
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
+.block__error {
+  color: var(--red-300);
+}
+
+// the seven march types as icons in one row (they shrink on a phone); the chosen one is lit
 .kind-picker {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .kind {
   display: grid;
+  flex: 1 1 0;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  min-width: 0;
+  max-width: 46px;
+  aspect-ratio: 1;
   padding: 0;
   border: 1px solid var(--field-line);
   border-radius: var(--radius-sm);
@@ -139,8 +182,8 @@
     background-color 0.2s;
 
   img {
-    width: 32px;
-    height: 32px;
+    width: 68%;
+    height: auto;
     opacity: 0.55;
     transition: opacity 0.2s;
   }
@@ -159,147 +202,216 @@
   }
 }
 
-.pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.pick {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 56px;
-  padding: 6px 10px 6px 6px;
-  border: 1px solid var(--field-line);
-  border-radius: var(--radius-sm);
-  background: var(--field-bg);
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-
-  &:hover {
-    border-color: var(--field-line-hover);
-  }
-}
-
-.pick__portrait {
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  padding: 2px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
-}
-
-.pick__portrait--empty {
-  display: grid;
-  place-items: center;
-  color: var(--gold-300);
-
-  .icon {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.pick--view {
-  cursor: default;
-
-  &:hover {
-    border-color: var(--field-line);
-  }
-}
-
-.pick__body {
-  display: grid;
-  min-width: 0;
-
-  small {
-    font-size: 0.75rem;
-    color: var(--text-mute);
-  }
-}
-
-.pick.is-invalid,
 .kind-picker.is-invalid .kind {
   border-color: var(--red-500);
 }
 
-.pick__name {
-  min-width: 0;
-  overflow-wrap: break-word;
-  font-weight: 600;
-}
-
-.shots--march {
-  margin-top: 0;
-}
-
-.shot-group.is-invalid {
-  border-color: var(--red-500);
-}
-
-.saved-shots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-
-.saved-shot {
+// two commanders and two screenshots: four square tiles in one row, a caption under each
+.tiles {
   display: grid;
-  gap: 6px;
+  grid-template-columns: repeat(4, minmax(0, 88px));
+  gap: 8px;
 }
 
-.saved-shot__label {
-  font: 600 0.75rem/1.2 var(--font-body);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-.thumb--missing {
-  border-style: dashed;
-  color: var(--red-300);
-  font-size: 0.8125rem;
-}
-
-.shot-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-// Gether's screenshot from the game: what the upload should show (opens in a dialog)
-.example {
+.tile {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
   padding: 0;
   border: 0;
   background: none;
+  color: inherit;
   font: inherit;
-  cursor: zoom-in;
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  color: var(--text-mute);
-  font-size: 0.8125rem;
+  cursor: pointer;
 
-  img {
-    width: auto;
-    max-width: 120px;
-    height: 88px;
-    object-fit: contain;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    opacity: 0.85;
+  &[role='group'] {
+    cursor: default;
+  }
+}
+
+.tile__box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 2px;
+  overflow: hidden;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
+  transition: border-color 0.2s;
+
+  .tile:hover > &,
+  &--file:hover {
+    border-color: var(--line-strong);
   }
 
-  &:hover img {
-    opacity: 1;
+  .is-invalid > & {
+    border-color: var(--red-500);
+  }
+
+  > .icon {
+    width: 20px;
+    height: 20px;
+    color: var(--gold-300);
+  }
+}
+
+.tile__box--empty {
+  border-style: dashed;
+  background: var(--field-bg);
+}
+
+.tile__box--file {
+  cursor: pointer;
+}
+
+.tile__box--shot {
+  padding: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.tile__remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(4, 10, 23, 0.8);
+  color: var(--text);
+  cursor: pointer;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// a long name ("Nebuchadnezzar II") takes two lines at most
+.tile__caption {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.6875rem;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: break-word;
+  color: var(--text-mute);
+
+  &.is-set {
+    color: var(--text);
+    font-weight: 600;
+  }
+}
+
+.tile__example {
+  min-height: 24px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--gold-300);
+  font: 600 0.75rem/1 var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: zoom-in;
+}
+
+// four bonuses and three inscriptions, two digits each: one row on wide screens, 4 + 3 on a phone
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 72px));
+  gap: 10px 8px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(7, minmax(0, 72px));
+  }
+}
+
+.stat-field {
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stat-field__label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 0.75rem/1.15 var(--font-body);
+  color: var(--text-dim);
+}
+
+.stat-field__box {
+  position: relative;
+  display: block;
+}
+
+.stat-field__input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px 0 6px;
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+  color: var(--text);
+  font: 700 1rem/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+
+  &:hover {
+    border-color: var(--field-line-hover);
+  }
+
+  &:focus-visible {
+    border-color: var(--gold-400);
+    outline: 2px solid var(--gold-400);
+    outline-offset: 1px;
+  }
+}
+
+.stat-field__unit {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  translate: 0 -50%;
+  font-size: 0.75rem;
+  color: var(--text-mute);
+  pointer-events: none;
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+
+  &--white {
+    background: var(--insc-white);
+  }
+
+  &--blue {
+    background: var(--insc-blue);
+  }
+
+  &--gold {
+    background: var(--insc-gold);
   }
 }
 
@@ -309,7 +421,7 @@
   gap: 12px;
   width: 100%;
   margin-top: 14px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius-sm);
   background: none;
@@ -327,8 +439,8 @@
 .add-march__plus {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--line-strong);
   border-radius: 50%;
 
@@ -338,46 +450,38 @@
   }
 }
 
-// ---------------------------------------------------------------- the commander picker
+// ---------------------------------------------------------------- the commander picker: a grid of heads
 
 .picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
-  gap: 6px;
-  max-height: min(52dvh, 460px);
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 4px;
+  max-height: min(60dvh, 520px);
   margin: 0;
   padding: 2px;
   overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
 
-  // grid items shrink with their column
   > li {
     min-width: 0;
   }
 }
 
 .picker-tile {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
   width: 100%;
-  min-height: 52px;
-  padding: 4px 8px 4px 4px;
+  min-width: 0;
+  padding: 6px 2px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: none;
   color: var(--text-dim);
   font: inherit;
-  font-size: 0.9375rem;
-  text-align: left;
   cursor: pointer;
-
-  .pick__portrait {
-    width: 40px;
-    height: 40px;
-  }
 
   &:hover {
     background: rgba(245, 196, 81, 0.06);
@@ -391,10 +495,32 @@
   }
 }
 
-// a long name ("Nebuchadnezzar II") wraps instead of widening the grid
+.pick__portrait {
+  width: 52px;
+  height: 52px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
+}
+
+.pick__portrait--empty {
+  display: grid;
+  place-items: center;
+  color: var(--gold-300);
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .picker-tile__name {
-  min-width: 0;
-  overflow-wrap: break-word;
+  max-width: 100%;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .picker-tile--clear {

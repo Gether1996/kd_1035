@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.db import models, transaction
 from django.utils import timezone
 
@@ -254,6 +255,12 @@ class KvkImage(models.Model):
 MAX_MARCHES = 7
 
 
+# armament bonuses and inscription counts: at most two digits
+STAT_MAX = 99
+STAT_LIMIT = [MaxValueValidator(STAT_MAX)]
+MARCH_STATS = ('attack', 'defense', 'health', 'damage', 'white', 'blue', 'gold')
+
+
 class March(models.Model):
     """One of the player's marches on /ucet ("Moji commanderi a výbava"): its type, the commander pair (names of
     commanders from our guides) and screenshots of equipment and armaments (MarchImage). Seen by the player, the
@@ -274,6 +281,15 @@ class March(models.Model):
     kind = models.CharField('typ', max_length=12, choices=Kind.choices, blank=True)
     primary = models.CharField('primárny commander', max_length=40, blank=True)
     secondary = models.CharField('sekundárny commander', max_length=40, blank=True)
+    # the armament bonuses in whole percent, rounded up, of the march's troop type (Gether 11. 10. 2026: "Cav ATK" for
+    # a cavalry march…) and the number of inscriptions by colour; empty = not filled in
+    attack = models.PositiveSmallIntegerField('ATK %', null=True, blank=True, validators=STAT_LIMIT)
+    defense = models.PositiveSmallIntegerField('DEF %', null=True, blank=True, validators=STAT_LIMIT)
+    health = models.PositiveSmallIntegerField('HP %', null=True, blank=True, validators=STAT_LIMIT)
+    damage = models.PositiveSmallIntegerField('All DMG %', null=True, blank=True, validators=STAT_LIMIT)
+    white = models.PositiveSmallIntegerField('biele inscriptions', null=True, blank=True, validators=STAT_LIMIT)
+    blue = models.PositiveSmallIntegerField('modré inscriptions', null=True, blank=True, validators=STAT_LIMIT)
+    gold = models.PositiveSmallIntegerField('zlaté inscriptions', null=True, blank=True, validators=STAT_LIMIT)
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
 

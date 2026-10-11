@@ -6,7 +6,6 @@
       <span class="count">{{ marches().length }}/{{ max() }}</span>
     }
   </h2>
-  <p class="panel__lead">{{ m.lead }}</p>
   <!-- who sees the marches and screenshots: R4 only, or every signed-in player (Gether 11. 10. 2026) -->
   @if (loaded()) {
     <div class="visibility" role="group" aria-labelledby="marches-visibility">
@@ -15,12 +14,7 @@
         <button type="button" [attr.aria-pressed]="!isPublic()" (click)="setPublic(false)">{{ m.visibility.r4 }}</button>
         <button type="button" [attr.aria-pressed]="isPublic()" (click)="setPublic(true)">{{ m.visibility.all }}</button>
       </div>
-      <p class="visibility__hint" role="status" [class.is-error]="visibilityFailed()">
-        {{ visibilityFailed() ? m.failed : isPublic() ? m.visibility.allHint : m.visibility.r4Hint }}
-      </p>
-      <a class="visibility__link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: null }">
-        {{ m.visibility.others }}<svg appIcon="arrow-right"></svg>
-      </a>
+      <p class="visibility__error" role="status">{{ visibilityFailed() ? m.failed : '' }}</p>
     </div>
   }
 
@@ -35,57 +29,19 @@
           </li>
         } @else {
           <li class="march">
-            <header class="march__head">
-              @if (march.kind) {
-                <img class="march__kind-icon" [src]="icon(march.kind)" alt="" width="96" height="96" />
-              }
-              <h3 class="march__title">
-                {{ m.march.replace('{n}', '' + march.position) }}
-                @if (march.kind) {
-                  <span class="march__kind-name">· {{ m.kinds[march.kind] }}</span>
-                }
-              </h3>
-              <div class="march__actions">
-                <button type="button" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="!!draft() || null" (click)="edit(march)">
-                  <svg appIcon="pencil"></svg>{{ m.edit }}
-                </button>
-                <button type="button" class="danger" [class.is-armed]="armed() === march.id" (click)="remove(march)">
-                  <svg appIcon="trash-2"></svg>{{ armed() === march.id ? m.removeConfirm : m.remove }}
-                </button>
-              </div>
-            </header>
-
-            <div class="pair pair--view">
-              @for (name of [march.primary, march.secondary]; track $index) {
-                <div class="pick pick--view">
-                  @if (name && portrait(name); as src) {
-                    <img class="pick__portrait" [src]="src" alt="" width="96" height="96" />
-                  } @else {
-                    <span class="pick__portrait pick__portrait--empty"></span>
-                  }
-                  <span class="pick__body">
-                    <small>{{ m.slots[$index ? 'secondary' : 'primary'] }}</small>
-                    <span class="pick__name">{{ name || '–' }}</span>
-                  </span>
-                </div>
-              }
-            </div>
-
-            <div class="saved-shots">
-              @for (kind of imageKinds; track kind) {
-                @let image = imageOf(march, kind);
-                <div class="saved-shot">
-                  <span class="saved-shot__label">{{ m.images[kind] }}</span>
-                  @if (image) {
-                    <a class="thumb" [href]="image.url" target="_blank" rel="noopener">
-                      <img [src]="image.thumb" [alt]="m.images[kind] + ' – ' + m.march.replace('{n}', '' + march.position)" loading="lazy" />
-                    </a>
-                  } @else {
-                    <span class="thumb thumb--missing">{{ m.missingShot }}</span>
-                  }
-                </div>
-              }
-            </div>
+            <app-march-row [march]="march" [portraits]="portraits()" [links]="true" [showMissing]="true">
+              <!-- removing is in the editor: one button per row leaves the bonuses room on a phone -->
+              <button
+                type="button"
+                class="icon-btn march__edit"
+                [attr.aria-label]="m.edit + ': ' + m.march.replace('{n}', '' + march.position)"
+                [title]="m.edit"
+                [attr.aria-disabled]="!!draft() || null"
+                (click)="edit(march)"
+              >
+                <svg appIcon="pencil"></svg>
+              </button>
+            </app-march-row>
           </li>
         }
       }
@@ -108,15 +64,18 @@
   }
 </section>
 
-<!-- the march being edited (new or saved): type and commanders; nothing is sent before "Uložiť" -->
+<!-- the march being edited (new or saved); nothing is sent before "Uložiť" -->
 <ng-template #editor>
   @if (draft(); as d) {
-    <header class="march__head">
-      <h3 class="march__title">{{ m.march.replace('{n}', '' + draftPosition()) }}</h3>
-    </header>
+    <h3 class="march__title">{{ m.march.replace('{n}', '' + draftPosition()) }}</h3>
 
-    <fieldset class="field">
-      <legend class="field__label">{{ m.kind }}</legend>
+    <fieldset class="block">
+      <legend class="block__label">
+        {{ m.kind }}
+        @if (d.kind) {
+          <span class="block__value">· {{ m.kinds[d.kind] }}</span>
+        }
+      </legend>
       <div class="kind-picker" [class.is-invalid]="draftError() === 'kind'">
         @for (kind of kinds; track kind) {
           <button
@@ -131,82 +90,112 @@
           </button>
         }
       </div>
-      @if (d.kind) {
-        <p class="field__hint">{{ m.kinds[d.kind] }}</p>
-      }
     </fieldset>
 
-    <div class="pair">
-      @for (slot of ['primary', 'secondary']; track slot) {
-        @let isPrimary = slot === 'primary';
-        @let name = isPrimary ? d.primary : d.secondary;
-        <div class="field">
-          <span class="field__label" [id]="'march-draft-' + slot">{{ m.slots[isPrimary ? 'primary' : 'secondary'] }}</span>
-          <button
-            type="button"
-            class="pick"
-            [class.is-invalid]="isPrimary && draftError() === 'primary'"
-            [attr.aria-labelledby]="'march-draft-' + slot + ' march-draft-' + slot + '-value'"
-            (click)="openPicker(isPrimary ? 'primary' : 'secondary', $event)"
-          >
-            @if (name && portrait(name); as src) {
-              <img class="pick__portrait" [src]="src" alt="" width="96" height="96" />
-            } @else {
-              <span class="pick__portrait pick__portrait--empty"><svg appIcon="plus"></svg></span>
-            }
-            <span class="pick__name" [id]="'march-draft-' + slot + '-value'">{{ name || m.choose }}</span>
+    <!-- commanders and screenshots side by side: square tiles with a caption -->
+    <div class="tiles">
+      @for (slot of slots; track slot) {
+        @let name = d[slot];
+        <button
+          type="button"
+          class="tile"
+          [class.is-invalid]="slot === 'primary' && draftError() === 'primary'"
+          [attr.aria-label]="m.slots[slot] + ': ' + (name || m.choose)"
+          (click)="openPicker(slot, $event)"
+        >
+          @if (name && portrait(name); as src) {
+            <img class="tile__box" [src]="src" alt="" width="96" height="96" />
+          } @else {
+            <span class="tile__box tile__box--empty"><svg appIcon="plus"></svg></span>
+          }
+          <span class="tile__caption" [class.is-set]="!!name">{{ name || m.slotsShort[slot] }}</span>
+        </button>
+      }
+      @for (kind of imageKinds; track kind) {
+        @let shot = shotOf(kind);
+        <div class="tile" role="group" [attr.aria-labelledby]="'march-shot-' + kind" [class.is-invalid]="draftError() === kind">
+          @if (shot) {
+            <span class="tile__box tile__box--shot">
+              <img [src]="shot" [alt]="m.images[kind]" />
+              <button type="button" class="tile__remove" [attr.aria-label]="m.removeImage + ': ' + m.images[kind]" (click)="unchoose(kind)">
+                <svg appIcon="x"></svg>
+              </button>
+            </span>
+          } @else {
+            <label class="tile__box tile__box--empty tile__box--file">
+              <input #file class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" (change)="choose(kind, file)" />
+              <svg appIcon="plus"></svg>
+              <span class="sr-only">{{ m.addImage }}: {{ m.images[kind] }}</span>
+            </label>
+          }
+          <span class="tile__caption is-set" [id]="'march-shot-' + kind">{{ m.images[kind] }}</span>
+          <!-- what the screenshot should show (Gether's examples from the game) -->
+          <button type="button" class="tile__example" [attr.aria-label]="m.example + ': ' + m.images[kind]" (click)="showExample(kind, $event)">
+            {{ m.example }}
           </button>
         </div>
       }
     </div>
+    @if (uploadError(); as u) {
+      <p class="block__error" role="alert">{{ m.images[u.kind] }}: {{ i18n.t().kvk.uploadErrors[u.error] }}</p>
+    }
 
-    <div class="shots shots--march">
-      @for (kind of imageKinds; track kind) {
-        @let shot = shotOf(kind);
-        <div class="shot-group" role="group" [attr.aria-labelledby]="'march-draft-shot-' + kind" [class.is-invalid]="draftError() === kind">
-          <div class="shot-group__head">
-            <h4 class="shot-group__title" [id]="'march-draft-shot-' + kind">
-              @if (shot) {
-                <svg class="shot-group__ok" appIcon="check"></svg>
-              }
-              {{ m.images[kind] }}
-            </h4>
-          </div>
-          <div class="shot-row">
-            @if (shot) {
-              <div class="thumb">
-                <img [src]="shot" [alt]="m.images[kind]" />
-                <button type="button" class="thumb__remove" [attr.aria-label]="m.removeImage + ': ' + m.images[kind]" (click)="unchoose(kind)">
-                  <svg appIcon="x"></svg>
-                </button>
-              </div>
-            } @else {
-              <label class="thumb thumb--add">
-                <input #file class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" (change)="choose(kind, file)" />
-                <svg appIcon="plus"></svg>
-                <span>{{ m.addImage }}</span>
-              </label>
-            }
-            <!-- what the screenshot should show (Gether's examples from the game) -->
-            <button type="button" class="example" [attr.aria-label]="m.example + ': ' + m.images[kind]" (click)="showExample(kind, $event)">
-              <img [src]="'img/examples/' + kind + '.webp'" alt="" loading="lazy" />
-              <span>{{ m.example }}</span>
-            </button>
-          </div>
-          @if (uploadError(); as u) {
-            @if (u.kind === kind) {
-              <p class="shot-group__error" role="alert">{{ i18n.t().kvk.uploadErrors[u.error] }}</p>
-            }
-          }
-        </div>
-      }
-    </div>
+    <!-- armament bonuses of the march's troop type and inscriptions: whole numbers, at most two digits -->
+    <fieldset class="block">
+      <legend class="block__label">{{ m.stats.title }}</legend>
+      <div class="stat-grid">
+        @for (stat of armamentStats; track stat) {
+          <label class="stat-field">
+            <span class="stat-field__label">{{ statLabel(d.kind, stat) }}</span>
+            <span class="stat-field__box">
+              <input
+                class="stat-field__input"
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="2"
+                autocomplete="off"
+                [value]="d.stats[stat] ?? ''"
+                (input)="setStat(stat, $event)"
+              />
+              <span class="stat-field__unit" aria-hidden="true">%</span>
+            </span>
+          </label>
+        }
+        @for (stat of inscriptionKinds; track stat) {
+          <label class="stat-field">
+            <span class="stat-field__label">
+              <span class="dot dot--{{ stat }}" aria-hidden="true"></span>{{ m.inscriptions[stat] }}
+              <span class="sr-only">{{ m.inscriptions.title }}</span>
+            </span>
+            <span class="stat-field__box">
+              <input
+                class="stat-field__input"
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="2"
+                autocomplete="off"
+                [value]="d.stats[stat] ?? ''"
+                (input)="setStat(stat, $event)"
+              />
+            </span>
+          </label>
+        }
+      </div>
+      <p class="block__hint">{{ m.stats.hint }}</p>
+    </fieldset>
 
     <div class="form__actions">
       <button type="button" class="pill-btn" [attr.aria-disabled]="busy() || null" (click)="save()">
         {{ busy() ? m.saving : m.save }}
       </button>
       <button type="button" class="pill-btn pill-btn--quiet" (click)="cancel()">{{ m.cancel }}</button>
+      @if (d.id !== null) {
+        <button type="button" class="danger march__remove" [class.is-armed]="armed() === d.id" (click)="removeDraft()">
+          <svg appIcon="trash-2"></svg>{{ armed() === d.id ? m.removeConfirm : m.remove }}
+        </button>
+      }
       <p class="form__state is-error" role="status">
         @if (draftError(); as e) {
           {{ m.required[e] }}

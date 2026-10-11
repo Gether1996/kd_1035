@@ -106,19 +106,7 @@
                 <ol class="mini-marches">
                   @for (march of s.marches; track march.id) {
                     <li class="mini-march">
-                      @if (march.kind) {
-                        <img class="mini-march__icon" [src]="icon(march.kind)" [alt]="i18n.t().marches.kinds[march.kind]" width="96" height="96" />
-                      }
-                      <span class="mini-march__pair">
-                        {{ march.position }}. {{ march.primary || '–' }}{{ march.secondary ? ' + ' + march.secondary : '' }}
-                      </span>
-                      <span class="signup__thumbs">
-                        @for (image of march.images; track image.id) {
-                          <a class="signup__thumb" [href]="image.url" target="_blank" rel="noopener" [attr.aria-label]="i18n.t().marches.images[image.kind] + ' – ' + march.position + '. march'">
-                            <img [src]="image.thumb" alt="" loading="lazy" />
-                          </a>
-                        }
-                      </span>
+                      <app-march-row [march]="march" [portraits]="portraits()" [owner]="s.player?.ingame_name || s.player?.name || ''" [links]="true" />
                     </li>
                   }
                 </ol>

@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from . import private_images
-from .models import KvkImage, KvkRound, KvkSignup, March, Player
+from .models import MARCH_STATS, KvkImage, KvkRound, KvkSignup, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import player_of
 
@@ -80,6 +80,7 @@ def march_data(march: March) -> dict:
         'kind': march.kind,
         'primary': march.primary,
         'secondary': march.secondary,
+        **{field: getattr(march, field) for field in MARCH_STATS},
         'images': [image_data(image, '/api/marches/images/') for image in march.images.all()],
     }
 

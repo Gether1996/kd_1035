@@ -300,8 +300,7 @@ export const sk = {
     r4Only: 'len R4',
   },
   marches: {
-    title: 'Moji commanderi a výbava',
-    lead: 'Až 7 marchov – typ, commanderi a screenshoty výbavy a armamentov. Pomôžu vedeniu zostaviť tímy na KvK.',
+    title: 'Moje marche',
     loadError: 'Marche sa nepodarilo načítať.',
     march: '{n}. march',
     add: 'Pridať {n} march',
@@ -317,6 +316,18 @@ export const sk = {
       conquering: 'Rally',
     },
     slots: { primary: 'Primárny commander', secondary: 'Sekundárny commander' },
+    slotsShort: { primary: 'Primárny', secondary: 'Sekundárny' },
+    // the armament bonuses count for the march's troop type: "Cav ATK" for cavalry (game abbreviations)
+    troops: { infantry: 'Inf', cavalry: 'Cav', archer: 'Arch', engineering: 'Siege' },
+    stats: {
+      title: 'Bonusy armamentov',
+      attack: 'ATK',
+      defense: 'DEF',
+      health: 'HP',
+      damage: 'All DMG',
+      hint: 'V %, celé čísla – zaokrúhli nahor (9,5 → 10).',
+    },
+    inscriptions: { title: 'Inscriptions', white: 'Biele', blue: 'Modré', gold: 'Zlaté' },
     choose: 'Vybrať',
     edit: 'Upraviť',
     save: 'Uložiť march',
@@ -348,9 +359,6 @@ export const sk = {
       label: 'Kto uvidí moje marche',
       r4: 'Len R4',
       all: 'Všetci hráči',
-      r4Hint: 'Uvidia ich iba poverení R4 kráľovstva a superadmin.',
-      allHint: 'Uvidia ich všetci hráči prihlásení na webe na stránke Marche hráčov.',
-      others: 'Marche ostatných hráčov',
     },
   },
   alarms: {
@@ -715,7 +723,7 @@ export const sk = {
         text: 'Ak ich vyplníš, ukladáme:',
         list: [
           'Prihlášku na KvK – rolu (rally, garrison), commander pár, poznámku a screenshoty VIP úrovne, výbavy, armamentov a commanderov.',
-          'Marche na stránke Môj účet – typ, commanderov a screenshoty výbavy a armamentov.',
+          'Marche na stránke Marche – typ, commanderov, bonusy armamentov, počet inscriptions a screenshoty výbavy a armamentov.',
           'Screenshoty uložíme ako nový obrázok bez údajov z telefónu (poloha, model a pod.). Nie sú verejné – zobrazí ich iba web tým, ktorí ich smú vidieť.',
         ],
       },
@@ -751,7 +759,7 @@ export const sk = {
       },
       {
         title: 'Tvoje možnosti',
-        text: 'Meno v hre a marche zmeníš na stránke Môj účet, pripomienky a budíky na stránke Pripomienky eventov, prihlášku na KvK aj so screenshotmi zrušíš na stránke Prihláška na KvK.',
+        text: 'Meno v hre zmeníš na stránke Môj účet, marche na stránke Marche, pripomienky a budíky na stránke Pripomienky eventov, prihlášku na KvK aj so screenshotmi zrušíš na stránke Prihláška na KvK.',
         list: [
           'Tlačidlo Zmazať účet hneď zmaže všetky údaje o tebe uvedené vyššie, zo záloh zmiznú do 8 týždňov. Účty vedenia maže správca.',
           'O kópiu alebo opravu svojich údajov požiadaj vedenie na Discorde.',

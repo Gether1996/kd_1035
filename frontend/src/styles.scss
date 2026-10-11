@@ -21,6 +21,10 @@
   --red-300: #f2958c;
   --red-500: #c9372c;
   --red-700: #8f231c;
+  // armament inscriptions by rarity, like in the game (march rows and the march editor)
+  --insc-white: #e4e9f2;
+  --insc-blue: #5aa2ff;
+  --insc-gold: var(--gold-400);
 
   --card-bg: linear-gradient(180deg, rgba(20, 42, 80, 0.55), rgba(9, 19, 40, 0.6));
   --field-bg: rgba(4, 10, 23, 0.6);

@@ -506,20 +506,8 @@
 }
 
 .mini-march {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-}
-
-.mini-march__icon {
-  width: 26px;
-  height: 26px;
-}
-
-.mini-march__pair {
-  flex: 1 1 180px;
-  color: var(--text);
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
 }
 
 .signup__none {

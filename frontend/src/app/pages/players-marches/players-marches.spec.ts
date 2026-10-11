@@ -60,7 +60,10 @@ describe('PlayersMarches', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['Nelly', 'bob']);
     expect(el.querySelector('.tag')?.textContent).toContain('Ty');
-    expect(el.querySelector('.row__commander img')?.getAttribute('src')).toBe('/static/guides/commanders/attila.webp');
+    // only the heads, the name in alt and title
+    const head = el.querySelector('.mrow__head')!;
+    expect(head.getAttribute('src')).toBe('/static/guides/commanders/attila.webp');
+    expect(head.getAttribute('title')).toBe('Attila');
 
     const search = el.querySelector<HTMLInputElement>('#marches-search')!;
     search.value = 'BOB';
@@ -71,7 +74,7 @@ describe('PlayersMarches', () => {
     // two tabs: the players' marches and the player's own
     expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Marche hráčov', 'Moje marche']);
 
-    el.querySelector<HTMLButtonElement>('.row__shot')!.click();
+    el.querySelector<HTMLButtonElement>('.mrow__shot')!.click();
     await tick(fixture);
     expect(el.querySelector('.viewer-image')?.getAttribute('src')).toBe('/api/marches/images/7/');
     http.match(() => true).forEach((r) => r.flush({}));
