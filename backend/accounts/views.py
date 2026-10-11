@@ -73,6 +73,17 @@ def back_to(next_url: str, status: str = '') -> HttpResponseRedirect:
     return HttpResponseRedirect(urlunsplit(parts._replace(query=urlencode(query))))
 
 
+def ask_for_name(next_url: str) -> str:
+    """A player without an in-game name (the first sign-in) lands on the account page with the name field first
+    (Gether 11. 10. 2026: required at the first sign-in); ?next= brings them back where they were going."""
+    path = urlsplit(next_url).path
+    account = '/cz/ucet' if path == '/cz' or path.startswith('/cz/') else DEFAULT_NEXT
+    query = {'meno': '1'}
+    if path.rstrip('/') != account:
+        query['next'] = next_url
+    return f'{account}?{urlencode(query)}'
+
+
 @transaction.atomic
 def save_player(profile: dict) -> User:
     """Creates or refreshes the user + player behind a Discord profile (see discord_oauth.fetch_user)."""
@@ -151,6 +162,8 @@ def discord_callback(request):
         log.warning('Discord login of inactive user %s', user.pk)
         return back_to(next_url, 'error')
     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    if not user.player.ingame_name.strip():
+        return back_to(ask_for_name(next_url))
     return back_to(next_url)
 
 

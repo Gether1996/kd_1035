@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Me } from '../../core/auth';
 import { Scroll } from '../../core/scroll';
 import { Account } from './account';
@@ -20,8 +20,9 @@ describe('Account', () => {
     });
   });
 
-  async function render(me: Me) {
+  async function render(me: Me, next?: string) {
     const fixture = TestBed.createComponent(Account);
+    if (next) fixture.componentRef.setInput('next', next);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/auth/me/').flush(me);
@@ -50,5 +51,28 @@ describe('Account', () => {
     expect(privacyLink(el)?.getAttribute('href')).toBe('/ochrana-udajov');
     // the reminders have their own page
     expect(el.querySelector('.shortcut')?.getAttribute('href')).toBe('/pripomienky');
+  });
+
+  it('asks for the in-game name first and then goes on to the page the player came for', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', is_staff: false, is_superuser: false };
+    const el = await render({ login_enabled: true, user }, '/kalendar');
+    const input = el.querySelector<HTMLInputElement>('#ingame-name')!;
+    expect(el.querySelector('.ingame__ask')?.textContent).toContain('Najprv si nastav meno v hre');
+    expect(input.getAttribute('aria-required')).toBe('true');
+    expect(document.activeElement).toBe(input);
+
+    // an empty name is not sent
+    el.querySelector<HTMLFormElement>('form.ingame')!.dispatchEvent(new Event('submit'));
+    const http = TestBed.inject(HttpTestingController);
+    http.expectNone('/api/auth/me/');
+
+    input.value = ' Nelly ';
+    el.querySelector<HTMLFormElement>('form.ingame')!.dispatchEvent(new Event('submit'));
+    const req = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/auth/me/');
+    expect(req.request.body).toEqual({ ingame_name: 'Nelly' });
+    req.flush({ login_enabled: true, user: { ...user, ingame_name: 'Nelly' } });
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(navigate).toHaveBeenCalledWith('/kalendar');
   });
 });

@@ -38,6 +38,12 @@ export class Auth {
   readonly failed = computed(() => !!this.me.error());
   readonly enabled = computed(() => this.me.hasValue() && this.me.value().login_enabled);
   readonly user = computed(() => (this.me.hasValue() ? this.me.value().user : null));
+  /** signed in without an in-game name yet – the header shows a red "!" and the account page asks for it
+   * (Gether 11. 10. 2026: required at the first sign-in, a reminder until it is set) */
+  readonly needsName = computed(() => {
+    const user = this.user();
+    return !!user && !user.ingame_name.trim();
+  });
 
   /** Full navigation to Discord; afterwards the player comes back to `next` (the current page by default). */
   loginUrl(next = this.i18n.switchPath(this.i18n.lang())): string {

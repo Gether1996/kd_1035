@@ -345,3 +345,37 @@
     background-position: -200% 0;
   }
 }
+
+// no in-game name yet (Gether 11. 10. 2026): the form asks for it first
+.ingame {
+  scroll-margin-top: calc(var(--header-h) + 24px);
+}
+
+.ingame.is-required .input {
+  border-color: var(--red-500);
+}
+
+.ingame__ask {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--red-500) 60%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--red-500) 12%, transparent);
+  color: var(--text);
+  text-align: left;
+}
+
+.ingame__mark {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red-500);
+  color: var(--text);
+  font: 700 0.75rem/1 var(--font-body);
+}

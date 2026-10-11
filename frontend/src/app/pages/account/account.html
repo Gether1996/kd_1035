@@ -28,7 +28,10 @@
           {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
         </p>
 
-        <form class="ingame" novalidate (submit)="saveName($event, nameInput)">
+        <form id="meno" class="ingame" [class.is-required]="auth.needsName()" novalidate (submit)="saveName($event, nameInput)">
+          @if (auth.needsName()) {
+            <p class="ingame__ask" role="status"><span class="ingame__mark" aria-hidden="true">!</span>{{ a.ingame.required }}</p>
+          }
           <label class="field__label" for="ingame-name">{{ a.ingame.label }}</label>
           <div class="ingame__row">
             <input
@@ -39,6 +42,8 @@
               maxlength="32"
               autocomplete="nickname"
               [value]="user.ingame_name"
+              [attr.aria-required]="auth.needsName() || null"
+              [attr.aria-invalid]="auth.needsName() || null"
               aria-describedby="ingame-hint ingame-state"
               (input)="nameState.set(null)"
             />

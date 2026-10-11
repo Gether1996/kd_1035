@@ -75,6 +75,9 @@ export const sk = {
     marches: 'Marche',
     kvk: 'Prihláška na KvK',
     accountMenu: 'Stránky hráča',
+    // the in-game name is missing: the red "!" in the header (screen readers) and the menu item to set it
+    nameMissing: 'Chýba ti meno v hre',
+    setName: 'Doplň meno v hre',
   },
   hero: {
     tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',
@@ -813,6 +816,7 @@ export const sk = {
     ingame: {
       label: 'Meno v hre',
       hint: 'Ako sa voláš v Rise of Kingdoms, aby ťa vedenie spoznalo.',
+      required: 'Najprv si nastav meno v hre – podľa neho ťa vedenie spozná pri marchoch aj na KvK.',
       save: 'Uložiť',
       saved: 'Uložené.',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',

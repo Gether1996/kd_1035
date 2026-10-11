@@ -101,18 +101,33 @@ describe('Header account slot', () => {
       a.getAttribute('href'),
       a.textContent?.trim(),
     ]);
+    // no in-game name yet: a red "!" on the pill and the burger, and the menu leads to the name field first
     expect(menu).toEqual([
+      ['/ucet#meno', '!Doplň meno v hre'],
       ['/ucet', 'Môj účet'],
       ['/marche', 'Marche'],
       ['/pripomienky', 'Pripomienky eventov'],
       ['/kvk', 'Prihláška na KvK'],
     ]);
+    expect(link?.querySelector('.alert-badge')).not.toBeNull();
+    expect(link?.textContent).toContain('Chýba ti meno v hre');
+    expect(el().querySelector('.burger .alert-badge')).not.toBeNull();
     expect(el().querySelector('.drawer__user')?.textContent).toContain('Nelly');
     expect(Array.from(el().querySelectorAll('.drawer__page'), (a) => a.getAttribute('href'))).toEqual([
+      '/ucet#meno',
       '/marche',
       '/pripomienky',
       '/kvk',
     ]);
+  });
+
+  it('has no "!" once the player has an in-game name', async () => {
+    await answer({
+      login_enabled: true,
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', is_staff: false, is_superuser: false },
+    });
+    expect(el().querySelector('.alert-badge')).toBeNull();
+    expect(el().querySelector('.is-alert')).toBeNull();
   });
 });
 

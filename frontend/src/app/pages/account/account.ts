@@ -1,5 +1,18 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  PLATFORM_ID,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
@@ -22,6 +35,8 @@ import { PlayersAdmin } from './players-admin';
 export class Account {
   /** ?login=error|cancelled – set by the backend after an unsuccessful Discord sign-in */
   readonly login = input<string>();
+  /** ?next= – after the first sign-in the player sets the in-game name here, then goes on to where they were going */
+  readonly next = input<string>();
 
   protected readonly i18n = inject(I18n);
   protected readonly auth = inject(Auth);
@@ -50,10 +65,27 @@ export class Account {
   });
 
   constructor() {
+    // no in-game name yet: the field gets the focus once, so the player can type right away
+    const isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+    effect(() => {
+      const input = this.nameInput()?.nativeElement;
+      if (!isBrowser || this.asked || !input || !this.auth.needsName()) return;
+      this.asked = true;
+      input.focus();
+    });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.account, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
   }
+
+  /** the page the player was going to before the name was asked for – a path on this site only */
+  protected readonly nextPage = computed(() => {
+    const next = this.next() ?? '';
+    return next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : null;
+  });
+  private readonly router = inject(Router);
+  private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
+  private asked = false;
 
   protected async saveName(event: Event, input: HTMLInputElement): Promise<void> {
     event.preventDefault();
@@ -62,8 +94,15 @@ export class Account {
     try {
       // the field shows what was saved, also when only spaces around the name changed
       input.value = input.value.trim();
+      if (!input.value && this.auth.needsName()) {
+        input.focus();
+        return;
+      }
       await this.auth.saveIngameName(input.value);
       this.nameState.set('saved');
+      // the first sign-in goes on to the page the player came for
+      const next = this.nextPage();
+      if (next && !this.auth.needsName()) void this.router.navigateByUrl(next);
     } catch {
       this.nameState.set('failed');
     } finally {

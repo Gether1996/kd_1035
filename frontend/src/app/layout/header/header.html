@@ -42,10 +42,20 @@
             >
               <img class="account__avatar" [src]="user.avatar_url" alt="" width="28" height="28" />
               <span class="account__label">{{ user.name }}</span>
+              @if (auth.needsName()) {
+                <span class="alert-badge" aria-hidden="true">!</span><span class="sr-only">{{ t.nameMissing }}</span>
+              }
             </a>
             <nav class="account__dropdown" aria-labelledby="account-menu-label" (keydown.escape)="closeMenu($event)">
               <span class="sr-only" id="account-menu-label">{{ t.accountMenu }}</span>
               <ul>
+                @if (auth.needsName()) {
+                  <li>
+                    <a class="is-alert" [routerLink]="i18n.path('account')" fragment="meno">
+                      <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>{{ t.setName }}
+                    </a>
+                  </li>
+                }
                 @for (item of accountItems(); track item.link) {
                   <li>
                     <a [routerLink]="item.link" routerLinkActive="is-active" ariaCurrentWhenActive="page">
@@ -74,6 +84,9 @@
       (click)="toggle()"
     >
       <span></span><span></span>
+      @if (auth.needsName()) {
+        <span class="alert-badge" aria-hidden="true">!</span>
+      }
     </button>
   </div>
 </div>
@@ -108,6 +121,15 @@
           <svg appIcon="chevron-right"></svg>
         </a>
         <ul class="drawer__pages">
+          @if (auth.needsName()) {
+            <li>
+              <a class="drawer__page is-alert" [routerLink]="i18n.path('account')" fragment="meno" (click)="close()">
+                <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>
+                <span>{{ t.setName }}</span>
+                <svg appIcon="chevron-right"></svg>
+              </a>
+            </li>
+          }
           @for (item of accountItems().slice(1); track item.link) {
             <li>
               <a class="drawer__page" [routerLink]="item.link" (click)="close()">

@@ -114,6 +114,7 @@
 }
 
 .account__link {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,7 +254,8 @@
   background: rgba(7, 15, 31, 0.55);
   cursor: pointer;
 
-  span {
+  // the two lines (the red "!" of a missing in-game name is a third span)
+  span:not(.alert-badge) {
     display: block;
     width: 20px;
     height: 1.5px;
@@ -262,11 +264,11 @@
   }
 
   &[aria-expanded='true'] {
-    span:first-child {
+    span:nth-child(1) {
       transform: translateY(3.75px) rotate(45deg);
     }
 
-    span:last-child {
+    span:nth-child(2) {
       transform: translateY(-3.75px) rotate(-45deg);
     }
   }
@@ -361,7 +363,7 @@
   font-weight: 600;
   color: var(--text);
 
-  span {
+  span:not(.alert-badge) {
     margin-right: auto;
   }
 
@@ -462,4 +464,36 @@
   .brand__text {
     display: none;
   }
+}
+
+// the in-game name is missing (Gether 11. 10. 2026): a red "!" on the account, the burger and the menu item
+.alert-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--red-500);
+  box-shadow: 0 0 0 2px var(--bg);
+  color: var(--text);
+  font: 700 0.6875rem/1 var(--font-body);
+  pointer-events: none;
+}
+
+.alert-badge--inline {
+  position: static;
+  flex-shrink: 0;
+  box-shadow: none;
+}
+
+.account__dropdown a.is-alert,
+.drawer__page.is-alert {
+  color: var(--red-300);
+}
+
+.burger {
+  position: relative;
 }

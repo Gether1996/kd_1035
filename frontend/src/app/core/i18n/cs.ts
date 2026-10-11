@@ -77,6 +77,8 @@ export const cs: Dict = {
     marches: 'Marche',
     kvk: 'Přihláška na KvK',
     accountMenu: 'Stránky hráče',
+    nameMissing: 'Chybí ti jméno ve hře',
+    setName: 'Doplň jméno ve hře',
   },
   hero: {
     tagline: 'Jediné čistě česko-slovenské království ve hře.',
@@ -808,6 +810,7 @@ export const cs: Dict = {
     ingame: {
       label: 'Jméno ve hře',
       hint: 'Jak se jmenuješ v Rise of Kingdoms, aby tě vedení poznalo.',
+      required: 'Nejdřív si nastav jméno ve hře – podle něj tě vedení pozná u marchů i na KvK.',
       save: 'Uložit',
       saved: 'Uloženo.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',

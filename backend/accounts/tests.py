@@ -164,7 +164,8 @@ class LoginFlowTests(TestCase):
     def test_success_creates_player_and_logs_in(self):
         state = self.start('/o-nas')
         response = self.callback(state=state, code='abc')
-        self.assertRedirects(response, '/o-nas', fetch_redirect_response=False)
+        # the first sign-in asks for the in-game name, then goes on to /o-nas
+        self.assertRedirects(response, '/ucet?meno=1&next=%2Fo-nas', fetch_redirect_response=False)
         self.exchange.assert_called_once_with('abc', CALLBACK)
         self.fetch.assert_called_once_with('tok')
 
@@ -196,7 +197,7 @@ class LoginFlowTests(TestCase):
         self.client.logout()
         self.fetch.return_value = {**PROFILE, 'global_name': None, 'username': 'nelly2', 'avatar': None}
         response = self.callback(state=self.start(), code='def')
-        self.assertRedirects(response, '/ucet', fetch_redirect_response=False)
+        self.assertRedirects(response, '/ucet?meno=1', fetch_redirect_response=False)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(Player.objects.count(), 1)
         player = Player.objects.select_related('user').get()
@@ -205,11 +206,24 @@ class LoginFlowTests(TestCase):
         self.assertTrue(player.user.is_staff)
         self.assertTrue(self.logged_in())
 
+    def test_a_player_with_an_in_game_name_goes_straight_on(self):
+        player = make_player()
+        player.ingame_name = 'Nelly'
+        player.save()
+        response = self.callback(state=self.start('/cz/kalendar'), code='abc')
+        self.assertRedirects(response, '/cz/kalendar', fetch_redirect_response=False)
+        # without one, the Czech account page for a Czech page
+        player.ingame_name = ' '
+        player.save()
+        self.client.logout()
+        response = self.callback(state=self.start('/cz/kalendar'), code='abc')
+        self.assertRedirects(response, '/cz/ucet?meno=1&next=%2Fcz%2Fkalendar', fetch_redirect_response=False)
+
     def test_user_renamed_in_the_admin_keeps_the_account(self):
         player = make_player()
         User.objects.filter(pk=player.user_id).update(username='Nelly (R4)')
         response = self.callback(state=self.start(), code='abc')
-        self.assertRedirects(response, '/ucet', fetch_redirect_response=False)
+        self.assertRedirects(response, '/ucet?meno=1', fetch_redirect_response=False)
         self.assertEqual(list(User.objects.values_list('pk', 'username')), [(player.user_id, 'Nelly (R4)')])
         self.assertEqual(Player.objects.get().avatar, PROFILE['avatar'])
         self.assertEqual(self.client.session['_auth_user_id'], str(player.user_id))
