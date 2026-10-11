@@ -84,8 +84,8 @@ describe('Marches', () => {
     expect(tiles.map((t) => t.textContent?.trim())).toEqual(['Attila', 'Takeda Shingen']);
     tiles[0].click();
     await fixture.whenStable();
-    // the screenshots are required too, with an example next to each
-    expect(el.querySelectorAll('.tile__example').length).toBe(2);
+    // only the equipment screenshot (the armaments are typed in), with an example
+    expect(el.querySelectorAll('.tile__example').length).toBe(1);
     save().click();
     await fixture.whenStable();
     expect(el.textContent).toContain('Pridaj screenshot výbavy.');
@@ -98,8 +98,17 @@ describe('Marches', () => {
       await fixture.whenStable();
     };
     await pickFile('equipment.png');
-    await pickFile('armaments.png');
-    expect(el.querySelectorAll('.march--editing .tile__box--shot img').length).toBe(2);
+    expect(el.querySelectorAll('.march--editing .tile__box--shot img').length).toBe(1);
+    // every bonus and inscription count is required instead of the armaments screenshot (0 counts)
+    save().click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('Vyplň bonusy armamentov a počet inscriptions');
+    expect(el.querySelector('.stat-grid')?.classList).toContain('is-invalid');
+    http.expectNone('/api/me/marches/');
+    stat(1, '8');
+    stat(2, '0');
+    stat(5, '2');
+    stat(6, '10');
 
     save().click();
     const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/me/marches/');
@@ -108,12 +117,12 @@ describe('Marches', () => {
       primary: 'Attila',
       secondary: '',
       attack: 12,
-      defense: null,
-      health: null,
+      defense: 8,
+      health: 0,
       damage: 4,
       gold: 3,
-      blue: null,
-      white: null,
+      blue: 2,
+      white: 10,
     });
     req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, damage: 4, gold: 3 });
     await settle(fixture);
@@ -122,12 +131,10 @@ describe('Marches', () => {
     expect((equipment.request.body as FormData).get('kind')).toBe('equipment');
     equipment.flush(image(7, 'equipment'));
     await settle(fixture);
-    http.expectOne('/api/me/marches/1/images/').flush(image(8, 'armaments'));
-    await settle(fixture);
 
     expect(el.querySelector('.march--editing')).toBeNull();
     expect(el.querySelector('.mrow__head')?.getAttribute('alt')).toBe('Attila');
-    expect(el.querySelectorAll('.mrow__shot img').length).toBe(2);
+    expect(el.querySelectorAll('.mrow__shot img').length).toBe(1);
     // short labels next to the type icon, the full "Cav ATK" in the title (and for screen readers)
     const stats = Array.from(el.querySelectorAll<HTMLElement>('.mrow__stat'));
     expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'All DMG', 'Zlaté']);

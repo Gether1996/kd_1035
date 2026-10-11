@@ -44,7 +44,7 @@
       <span class="tile__caption" [class.is-set]="!!name">{{ name || m.slotsShort[slot] }}</span>
     </button>
   }
-  @for (kind of shotKinds; track kind) {
+  @for (kind of shotKinds(); track kind) {
     @let shot = shotOf(kind);
     <div class="tile" role="group" [attr.aria-labelledby]="idPrefix() + '-shot-' + kind" [class.is-invalid]="error() === kind">
       @if (shot) {
@@ -76,7 +76,7 @@
 <!-- armament bonuses of the march's troop type and inscriptions: whole numbers, at most two digits -->
 <fieldset class="block">
   <legend class="block__label">{{ m.stats.title }}</legend>
-  <div class="stat-grid">
+  <div class="stat-grid" [class.is-invalid]="error() === 'stats'">
     @for (stat of armamentStats; track stat) {
       <label class="stat-field">
         <span class="stat-field__label">{{ statLabel(stat) }}</span>

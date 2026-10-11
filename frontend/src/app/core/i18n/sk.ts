@@ -354,6 +354,7 @@ export const sk = {
       primary: 'Vyber primárneho commandera.',
       equipment: 'Pridaj screenshot výbavy.',
       armaments: 'Pridaj screenshot armamentov.',
+      stats: 'Vyplň bonusy armamentov a počet inscriptions (aj 0).',
     },
     search: 'Hľadať commandera',
     clear: 'Bez commandera',
@@ -732,7 +733,7 @@ export const sk = {
         text: 'Ak ich vyplníš, ukladáme:',
         list: [
           'Prihlášku na KvK – rolu (rally, garrison), commanderov, bonusy armamentov, počet inscriptions, poznámku a screenshoty výbavy a armamentov.',
-          'Marche na stránke Marche – typ, commanderov, bonusy armamentov, počet inscriptions a screenshoty výbavy a armamentov.',
+          'Marche na stránke Marche – typ, commanderov, bonusy armamentov, počet inscriptions a screenshot výbavy.',
           'Screenshoty uložíme ako nový obrázok bez údajov z telefónu (poloha, model a pod.). Nie sú verejné – zobrazí ich iba web tým, ktorí ich smú vidieť.',
         ],
       },

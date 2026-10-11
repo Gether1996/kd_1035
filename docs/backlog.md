@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.15.1:** march už nemá screenshot armamentov – nahrádzajú ho povinné políčka bonusov armamentov a počtu inscriptions; screenshot armamentov ostáva len pri prihláške na KvK.
 - **11. 10. 2026 – v1.15.0:** **prihláška na KvK** sa vypĺňa ako march – výber primárneho a sekundárneho commandera z hláv, screenshot výbavy a armamentov s ukážkou, bonusy armamentov a inscriptions; všetko sa uloží naraz tlačidlom „Prihlásiť sa“. R4 vidí prihlášku ako riadok s hlavami commanderov.
 - **11. 10. 2026 – v1.14.0:** na `/navody` **vyhľadávanie** v návodoch (názov aj úvod, SK aj CZ, bez diakritiky) a **filter podľa typu** – čipy s hernými ikonami (jazda, pechota, garrison, rally, siege…); výsledky namiesto zvyšku rozcestníka, stav v adrese (`?q=`, `?typ=`).
 - **11. 10. 2026 – v1.13.0:** marche prerobené na kompaktné riadky (len hlavy commanderov, typ, screenshoty) na mobile aj desktope, jednoduchší editor a výber commandera ako mriežka hláv; nové polia na bonusy armamentov (ATK, DEF, HP, All DMG podľa typu marchu) a počet bielych, modrých a zlatých inscriptions.

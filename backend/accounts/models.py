@@ -282,7 +282,7 @@ MAX_MARCHES = 7
 
 class March(ArmyFields):
     """One of the player's marches on /marche ("Moje marche"): its type, the army (ArmyFields) and screenshots of
-    equipment and armaments (MarchImage). Seen by the player, the reviewers and the superuser – and every signed-in
+    the equipment (MarchImage). Seen by the player, the reviewers and the superuser – and every signed-in
     player when the player makes the marches public."""
 
     class Kind(models.TextChoices):
@@ -311,11 +311,11 @@ class March(ArmyFields):
 
 
 class MarchImage(models.Model):
-    """A screenshot of a march's equipment or armaments, stored like KvkImage."""
+    """A screenshot of a march's equipment, stored like KvkImage. The armaments are the bonuses and inscriptions typed
+    in (ArmyFields) – Gether 11. 10. 2026: no armaments screenshot in a march, only in the KvK sign-up."""
 
     class Kind(models.TextChoices):
         EQUIPMENT = 'equipment', 'výbava'
-        ARMAMENTS = 'armaments', 'armamenty'
 
     march = models.ForeignKey(March, on_delete=models.CASCADE, related_name='images', verbose_name='march')
     kind = models.CharField('čo je na obrázku', max_length=12, choices=Kind.choices)

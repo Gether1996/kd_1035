@@ -89,7 +89,7 @@ export class KvkForm {
     this.armyProblem.set(null);
     if (!this.ingameName().trim()) return this.formError.set('name');
     if (!this.rally() && !this.garrison()) return this.formError.set('role');
-    const missing = armyError(army, false);
+    const missing = armyError(army, { kind: false, shots: SHOT_KINDS, stats: false });
     if (missing) return this.armyProblem.set(missing);
     this.saving.set(true);
     try {

@@ -19,7 +19,7 @@
     }
   </span>
   <span class="mrow__shots">
-    @for (kind of imageKinds; track kind) {
+    @for (kind of shotKinds(); track kind) {
       @if (imageOf(kind); as image) {
         @if (links()) {
           <a class="mrow__shot" [href]="image.url" target="_blank" rel="noopener" [attr.aria-label]="shotLabel(kind)" [title]="k.images[kind]">

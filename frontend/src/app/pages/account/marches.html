@@ -73,6 +73,7 @@
       [value]="d"
       (valueChange)="update($event)"
       [commanders]="allCommanders()"
+      [shotKinds]="marchShots"
       [error]="draftError()"
       [uploadError]="uploadError()"
       [heading]="m.march.replace('{n}', '' + draftPosition())"

@@ -351,6 +351,7 @@ export const cs: Dict = {
       primary: 'Vyber primárního commandera.',
       equipment: 'Přidej screenshot výbavy.',
       armaments: 'Přidej screenshot armamentů.',
+      stats: 'Vyplň bonusy armamentů a počet inscriptions (i 0).',
     },
     search: 'Hledat commandera',
     clear: 'Bez commandera',
@@ -728,7 +729,7 @@ export const cs: Dict = {
         text: 'Pokud je vyplníš, ukládáme:',
         list: [
           'Přihlášku na KvK – roli (rally, garrison), commandery, bonusy armamentů, počet inscriptions, poznámku a screenshoty výbavy a armamentů.',
-          'Marche na stránce Marche – typ, commandery, bonusy armamentů, počet inscriptions a screenshoty výbavy a armamentů.',
+          'Marche na stránce Marche – typ, commandery, bonusy armamentů, počet inscriptions a screenshot výbavy.',
           'Screenshoty uložíme jako nový obrázek bez údajů z telefonu (poloha, model apod.). Nejsou veřejné – zobrazí je jen web těm, kdo je smějí vidět.',
         ],
       },

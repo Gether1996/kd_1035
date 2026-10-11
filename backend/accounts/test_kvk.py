@@ -372,6 +372,8 @@ class MarchTests(KvkTestCase):
         self.assertEqual(other.get(url).status_code, 404)
         self.assertEqual(self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()}, other).status_code, 404)
         self.assertEqual(self.call('post_file', upload_url, {'kind': 'vip', 'file': picture()}).status_code, 400)
+        # the armaments of a march are typed in, no screenshot (only the KvK sign-up has one)
+        self.assertEqual(self.call('post_file', upload_url, {'kind': 'armaments', 'file': picture()}).status_code, 400)
         # one screenshot of each kind
         self.assertEqual(self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()}).json()['detail'], 'limit')
 

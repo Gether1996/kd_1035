@@ -4,7 +4,6 @@ import { Dict } from '../core/i18n/sk';
 import { I18n } from '../core/i18n/i18n';
 import { Icon } from './icon';
 
-const IMAGE_KINDS: MarchImage['kind'][] = ['equipment', 'armaments'];
 
 /** "Cav ATK" for a cavalry march (Gether 11. 10. 2026); plain "ATK" when the type names no troop (rally, garrison, mix) */
 export function statLabel(t: Dict['marches'], kind: MarchKind | '', stat: (typeof ARMAMENT_STATS)[number]): string {
@@ -37,6 +36,8 @@ export class MarchRow {
   readonly links = input(false);
   /** a missing screenshot is marked (the player's own marches) */
   readonly showMissing = input(false);
+  /** the screenshots it has: a march only the equipment, a KvK sign-up the armaments too */
+  readonly shotKinds = input<MarchImage['kind'][]>(['equipment']);
   /** the march number in front; a KvK sign-up has none */
   readonly numbered = input(true);
   readonly shot = output<{ image: MarchImage; event: Event }>();
@@ -44,7 +45,6 @@ export class MarchRow {
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
   protected readonly icon = marchIcon;
-  protected readonly imageKinds = IMAGE_KINDS;
 
   protected readonly names = computed(() => [this.march().primary, this.march().secondary].filter(Boolean));
 

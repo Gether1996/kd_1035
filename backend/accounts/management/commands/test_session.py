@@ -90,12 +90,11 @@ class Command(BaseCommand):
             march = March.objects.create(
                 player=player, position=position, kind=kind, primary=primary, secondary=secondary, **stats
             )
-            for image_kind, colour in (('equipment', (180, 140, 60)), ('armaments', (40, 70, 130))):
-                upload = io.BytesIO()
-                Image.new('RGB', (640, 400), colour).save(upload, 'PNG')
-                upload.size = upload.tell()
-                upload.seek(0)
-                store_image(MarchImage, upload, 'marches', march=march, kind=image_kind)
+            upload = io.BytesIO()
+            Image.new('RGB', (640, 400), (180, 140, 60)).save(upload, 'PNG')
+            upload.size = upload.tell()
+            upload.seek(0)
+            store_image(MarchImage, upload, 'marches', march=march, kind='equipment')
 
     @staticmethod
     def drop_sessions(user):

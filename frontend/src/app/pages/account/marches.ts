@@ -5,7 +5,7 @@ import { I18n } from '../../core/i18n/i18n';
 import { March, UploadError } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
-import { ArmyDraft, ArmyError, MarchFields, SHOT_KINDS, ShotKind, armyDraft, armyError, releaseArmy } from '../../shared/march-fields';
+import { ArmyDraft, ArmyError, MARCH_SHOTS, MarchFields, ShotKind, armyDraft, armyError, releaseArmy } from '../../shared/march-fields';
 import { MarchRow } from '../../shared/march-row';
 
 /** The march being edited: a new one (id null) or a saved one; nothing is sent before "Uložiť". */
@@ -13,8 +13,8 @@ type Draft = ArmyDraft & { id: number | null };
 
 /**
  * "Moje marche" on /marche?tab=moje (Gether 11. 10. 2026): up to 7 marches, each a compact row (MarchRow). A march is
- * filled in (MarchFields: type, commander pair, one screenshot of the equipment and one of the armaments – both
- * required – and optionally the armament bonuses and inscriptions) and saved; only then the next one can be added.
+ * filled in (MarchFields: type, commander pair, a screenshot of the equipment, the armament bonuses and inscriptions
+ * typed in instead of an armaments screenshot – all required) and saved; only then the next one can be added.
  * Seen by the player, the reviewers (R4) and the superuser – and every signed-in player when the player makes them
  * public.
  */
@@ -29,6 +29,7 @@ export class Marches {
   private readonly api = inject(MarchesApi);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
+  protected readonly marchShots = MARCH_SHOTS;
 
   private readonly data = this.api.list();
   protected readonly loaded = computed(() => this.data.hasValue());
@@ -113,7 +114,7 @@ export class Marches {
   protected async save(): Promise<void> {
     const draft = this.draft();
     if (!draft || this.busy()) return;
-    const missing = armyError(draft, true);
+    const missing = armyError(draft, { kind: true, shots: MARCH_SHOTS, stats: true });
     if (missing) return this.draftError.set(missing);
     const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, ...draft.stats };
     await this.run(async () => {
@@ -122,7 +123,7 @@ export class Marches {
       march = { ...march, images: march.images.filter((i) => !draft.removed.some((r) => r.id === i.id)) };
       // the march exists now: a failed upload keeps the editor open on it, the player only picks that file again
       let current: Draft = { ...draft, id: march.id, removed: [] };
-      for (const kind of SHOT_KINDS) {
+      for (const kind of MARCH_SHOTS) {
         const chosen = current.chosen[kind];
         if (!chosen) continue;
         const result = await this.api.upload(march.id, kind, chosen.file);

@@ -266,6 +266,10 @@
   }
 }
 
+.stat-grid.is-invalid .stat-field__input {
+  border-color: var(--red-500);
+}
+
 .stat-field__unit {
   position: absolute;
   top: 50%;

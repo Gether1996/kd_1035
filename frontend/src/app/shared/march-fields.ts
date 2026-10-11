@@ -29,6 +29,8 @@ import { fold } from './search';
 
 export type ShotKind = 'equipment' | 'armaments';
 export const SHOT_KINDS: ShotKind[] = ['equipment', 'armaments'];
+/** a march has only the equipment screenshot – its armaments are typed in (Gether 11. 10. 2026); the KvK sign-up both */
+export const MARCH_SHOTS: ShotKind[] = ['equipment'];
 type Slot = 'primary' | 'secondary';
 
 /** a screenshot already on the server (MarchImage, KvkImage) */
@@ -60,7 +62,17 @@ export interface ArmyDraft {
   removed: SavedShot[];
 }
 
-export type ArmyError = 'kind' | 'primary' | ShotKind;
+export type ArmyError = 'kind' | 'primary' | ShotKind | 'stats';
+
+/** what a form requires besides the primary commander */
+export interface ArmyRules {
+  /** the march type */
+  kind: boolean;
+  /** the screenshots */
+  shots: ShotKind[];
+  /** every bonus and inscription count (0 counts) */
+  stats: boolean;
+}
 
 /** the draft of a saved march or sign-up (or an empty one) */
 export function armyDraft(
@@ -88,11 +100,14 @@ export function armyDraft(
   };
 }
 
-/** the first missing part, checked in the order of the editor; `withKind` = the march type is required */
-export function armyError(draft: ArmyDraft, withKind: boolean): ArmyError | null {
-  if (withKind && !draft.kind) return 'kind';
+/** the first missing part, checked in the order of the editor */
+export function armyError(draft: ArmyDraft, rules: ArmyRules): ArmyError | null {
+  if (rules.kind && !draft.kind) return 'kind';
   if (!draft.primary) return 'primary';
-  return SHOT_KINDS.find((kind) => !draft.keep[kind] && !draft.chosen[kind]) ?? null;
+  const shot = rules.shots.find((kind) => !draft.keep[kind] && !draft.chosen[kind]);
+  if (shot) return shot;
+  if (rules.stats && MARCH_STATS.some((stat) => draft.stats[stat] === null)) return 'stats';
+  return null;
 }
 
 /** frees the previews of the chosen screenshots */
@@ -119,6 +134,8 @@ export class MarchFields {
   readonly commanders = input<MarchCommander[]>([]);
   /** the march type is part of the form (a KvK sign-up has the role instead) */
   readonly withKind = input(true);
+  /** the screenshots of the form */
+  readonly shotKinds = input<ShotKind[]>(SHOT_KINDS);
   readonly error = input<ArmyError | null>(null);
   readonly uploadError = input<{ kind: ShotKind; error: UploadError } | null>(null);
   /** what is filled in ("2. march"), above the picker's title */
@@ -129,7 +146,6 @@ export class MarchFields {
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
   protected readonly kinds = MARCH_KINDS;
-  protected readonly shotKinds = SHOT_KINDS;
   protected readonly slots: Slot[] = ['primary', 'secondary'];
   protected readonly armamentStats = ARMAMENT_STATS;
   protected readonly inscriptionKinds = INSCRIPTIONS;

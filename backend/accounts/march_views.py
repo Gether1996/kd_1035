@@ -1,5 +1,5 @@
 """The player's marches on /marche ("Moje marche", Gether 11. 10. 2026): up to MAX_MARCHES, each with a type, the
-army (commander pair, armament bonuses – army.py) and screenshots of equipment and armaments. The player edits them; the
+army (commander pair, armament bonuses and inscriptions – army.py) and a screenshot of the equipment. The player edits them; the
 reviewers and the superuser see them next to the player's KvK sign-up. Session + CSRF, players signed in with Discord.
 """
 
@@ -21,7 +21,7 @@ from .reminder_views import IsPlayer, WriteThrottle
 from .views import player_of
 
 IMAGE_KINDS = [kind for kind, _ in MarchImage.Kind.choices]
-# one screenshot of the equipment and one of the armaments per march (Gether 11. 10. 2026)
+# one screenshot of the equipment per march; the armaments are typed in (Gether 11. 10. 2026)
 MAX_IMAGES_PER_KIND = 1
 
 
@@ -98,7 +98,7 @@ def march(request, march_id):
 @permission_classes([IsPlayer])
 @throttle_classes([UploadThrottle])
 def upload(request, march_id):
-    """POST multipart {kind: equipment|armaments, file}: the screenshot of the march's equipment or armaments (one each)."""
+    """POST multipart {kind: equipment, file}: the screenshot of the march's equipment (one)."""
     mine = get_object_or_404(March, pk=march_id, player=request.user.player)
     kind = request.data.get('kind')
     upload_file = request.FILES.get('file')
