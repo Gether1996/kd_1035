@@ -251,6 +251,12 @@ export const cs: Dict = {
     since: 'od {date}',
     until: 'do {date}',
     gameTime: 'herní čas',
+    clock: {
+      label: 'Herní čas a denní reset',
+      gameTime: 'Herní čas',
+      reset: 'Do denního resetu',
+      resetAt: 'reset v {time} tvého času',
+    },
     guide: 'Návod',
     close: 'Zavřít',
     export: {

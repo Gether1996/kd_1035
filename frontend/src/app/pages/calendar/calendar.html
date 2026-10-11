@@ -3,6 +3,7 @@
 <app-page-header [crumbs]="crumbs()" [eyebrow]="c.eyebrow" [title]="c.title" [intro]="c.intro" />
 
 <div class="container content">
+  <app-game-clock />
   @if (month()) {
     <div class="toolbar">
       <h2 class="toolbar__title" aria-live="polite">{{ title() }}</h2>

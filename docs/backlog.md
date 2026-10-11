@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.6.4:** herné hodiny nad kalendárom – herný čas UTC a odpočet do denného resetu (00:00 UTC) aj s časom resetu v pásme návštevníka.
 - **10. 10. 2026 – v1.6.3:** lepšie čitateľné tlmené texty (min. kontrast 4,5 : 1) – „termín oznámime“ pri nepravidelných eventoch, popisky v dialógu eventu; nový audit prístupnosti `tools/a11y/audit.sh` (axe) bez kritických chýb.
 - **10. 10. 2026 – v1.6.2:** odkaz na event z kalendára ukáže na Discorde a Facebooku názov a termín eventu (napr. „Ark of Osiris · 14.–18. 10. 2026“), nie všeobecnú kartu kalendára.
 - **10. 10. 2026 – v1.6.1:** v dialógu eventu v kalendári tlačidlo „Kopírovať odkaz na event“ – odkaz otvorí ten istý mesiac s otvoreným dialógom (napr. Ark of Osiris do Discordu).
@@ -39,7 +40,6 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 ## Odložené
 
 - `guides-search` Vyhľadávanie a filter v návodoch – schválené, nezmestilo sa do kola 6. Čipy až po `guides.ready()` (skryť pri `failed()`), Esc len vymaže hľadanie, počet cez existujúce `guides.count`.
-- `game-clock-reset` Herný čas UTC a odpočet do resetu – schválené, odložené na ďalšie kolo. Iba na `/kalendar`; oba časovače rušiť v DestroyRef (test s fake timers), jeden helper „{h} h {m} min“ s testami 0:00, 23:59:30, 23:00.
 - Zvyšok auditu prístupnosti (`tools/a11y/audit.sh`, 10. 10. 2026): moderate/minor nález žiadny. Ostáva: ~1 600 kontrastov, ktoré axe nevie posúdiť (text na prechodoch a SVG krajine – „incomplete“ v `tools/a11y/out`), ručne prejsť; dialógy superusera v kalendári (editor eventu, dátumy) zatiaľ nie sú v `STATE_LIST`; ručný test klávesnicou (poradie fokusu, pasca fokusu v dialógoch).
 - `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
 - Drobnosti z kola 5: portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.

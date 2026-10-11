@@ -252,6 +252,12 @@ export const sk = {
     since: 'od {date}',
     until: 'do {date}',
     gameTime: 'herný čas',
+    clock: {
+      label: 'Herný čas a denný reset',
+      gameTime: 'Herný čas',
+      reset: 'Do denného resetu',
+      resetAt: 'reset o {time} tvojho času',
+    },
     guide: 'Návod',
     close: 'Zavrieť',
     export: {
