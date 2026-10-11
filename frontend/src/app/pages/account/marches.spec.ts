@@ -76,7 +76,6 @@ describe('Marches', () => {
     };
     // whole numbers of two digits: anything else is dropped as it is typed
     expect(stat(0, '12,5').value).toBe('12');
-    stat(3, '4');
     stat(4, '3');
     el.querySelector<HTMLButtonElement>('.tile')!.click();
     await fixture.whenStable();
@@ -102,7 +101,7 @@ describe('Marches', () => {
     // every bonus and inscription count is required instead of the armaments screenshot (0 counts)
     save().click();
     await fixture.whenStable();
-    expect(el.textContent).toContain('Vyplň bonusy armamentov a počet inscriptions');
+    expect(el.textContent).toContain('Vyplň ATK, DEF, HP a počet inscriptions');
     expect(el.querySelector('.stat-grid')?.classList).toContain('is-invalid');
     http.expectNone('/api/me/marches/');
     stat(1, '8');
@@ -110,6 +109,8 @@ describe('Marches', () => {
     stat(5, '2');
     stat(6, '10');
 
+    // All DMG may stay empty: it is sent as 0
+    expect(el.querySelectorAll<HTMLInputElement>('.stat-field__input')[3].placeholder).toBe('0');
     save().click();
     const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/me/marches/');
     expect(req.request.body).toEqual({
@@ -119,12 +120,12 @@ describe('Marches', () => {
       attack: 12,
       defense: 8,
       health: 0,
-      damage: 4,
+      damage: 0,
       gold: 3,
       blue: 2,
       white: 10,
     });
-    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, damage: 4, gold: 3 });
+    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, damage: 0, gold: 3 });
     await settle(fixture);
     const image = (id: number, kind: string) => ({ id, kind, url: `/api/marches/images/${id}/`, thumb: `/api/marches/images/${id}/?thumb=1`, width: 1, height: 1 });
     const equipment = http.expectOne('/api/me/marches/1/images/');
@@ -138,7 +139,7 @@ describe('Marches', () => {
     // short labels next to the type icon, the full "Cav ATK" in the title (and for screen readers)
     const stats = Array.from(el.querySelectorAll<HTMLElement>('.mrow__stat'));
     expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'All DMG', 'Zlaté']);
-    expect(stats.map((s) => s.textContent?.match(/\d+%?/)?.[0])).toEqual(['12%', '4%', '3']);
+    expect(stats.map((s) => s.textContent?.match(/\d+%?/)?.[0])).toEqual(['12%', '0%', '3']);
     expect(el.querySelector('.add-march')?.textContent).toContain('Pridať druhý march');
     http.verify();
   });

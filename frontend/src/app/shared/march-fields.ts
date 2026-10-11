@@ -70,9 +70,12 @@ export interface ArmyRules {
   kind: boolean;
   /** the screenshots */
   shots: ShotKind[];
-  /** every bonus and inscription count (0 counts) */
+  /** every bonus and inscription count (0 counts) – but All DMG, which is 0 when left empty (Gether 11. 10. 2026) */
   stats: boolean;
 }
+
+/** All DMG may stay empty in a march: it is saved as 0 */
+export const OPTIONAL_STATS: MarchStat[] = ['damage'];
 
 /** the draft of a saved march or sign-up (or an empty one) */
 export function armyDraft(
@@ -106,7 +109,9 @@ export function armyError(draft: ArmyDraft, rules: ArmyRules): ArmyError | null 
   if (!draft.primary) return 'primary';
   const shot = rules.shots.find((kind) => !draft.keep[kind] && !draft.chosen[kind]);
   if (shot) return shot;
-  if (rules.stats && MARCH_STATS.some((stat) => draft.stats[stat] === null)) return 'stats';
+  if (rules.stats && MARCH_STATS.some((stat) => draft.stats[stat] === null && !OPTIONAL_STATS.includes(stat))) {
+    return 'stats';
+  }
   return null;
 }
 
@@ -136,6 +141,8 @@ export class MarchFields {
   readonly withKind = input(true);
   /** the screenshots of the form */
   readonly shotKinds = input<ShotKind[]>(SHOT_KINDS);
+  /** an empty All DMG is saved as 0 – the field shows it as its placeholder */
+  readonly damageDefaultsToZero = input(false);
   readonly error = input<ArmyError | null>(null);
   readonly uploadError = input<{ kind: ShotKind; error: UploadError } | null>(null);
   /** what is filled in ("2. march"), above the picker's title */

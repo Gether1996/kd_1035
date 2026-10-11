@@ -116,7 +116,9 @@ export class Marches {
     if (!draft || this.busy()) return;
     const missing = armyError(draft, { kind: true, shots: MARCH_SHOTS, stats: true });
     if (missing) return this.draftError.set(missing);
-    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, ...draft.stats };
+    // All DMG is optional: empty = 0 (Gether 11. 10. 2026)
+    const stats = { ...draft.stats, damage: draft.stats.damage ?? 0 };
+    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, ...stats };
     await this.run(async () => {
       let march = draft.id === null ? await this.api.add(change) : await this.api.update(draft.id, change);
       for (const image of draft.removed) await this.api.removeImage(image.id);

@@ -351,7 +351,7 @@ export const cs: Dict = {
       primary: 'Vyber primárního commandera.',
       equipment: 'Přidej screenshot výbavy.',
       armaments: 'Přidej screenshot armamentů.',
-      stats: 'Vyplň bonusy armamentů a počet inscriptions (i 0).',
+      stats: 'Vyplň ATK, DEF, HP a počet inscriptions (i 0).',
     },
     search: 'Hledat commandera',
     clear: 'Bez commandera',

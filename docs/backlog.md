@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.15.3:** pri marchi je All DMG nepovinné – prázdne políčko sa uloží ako 0.
 - **11. 10. 2026 – v1.15.2:** portréty commanderov v editore marchu a prihlášky sa v Safari na iPhone už nenaťahujú do výšky (screenshoty aj vo WebKite: `BROWSER=webkit` pri `shoot.sh`).
 - **11. 10. 2026 – v1.15.1:** march už nemá screenshot armamentov – nahrádzajú ho povinné políčka bonusov armamentov a počtu inscriptions; screenshot armamentov ostáva len pri prihláške na KvK.
 - **11. 10. 2026 – v1.15.0:** **prihláška na KvK** sa vypĺňa ako march – výber primárneho a sekundárneho commandera z hláv, screenshot výbavy a armamentov s ukážkou, bonusy armamentov a inscriptions; všetko sa uloží naraz tlačidlom „Prihlásiť sa“. R4 vidí prihlášku ako riadok s hlavami commanderov.

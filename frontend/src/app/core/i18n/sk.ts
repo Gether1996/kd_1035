@@ -354,7 +354,7 @@ export const sk = {
       primary: 'Vyber primárneho commandera.',
       equipment: 'Pridaj screenshot výbavy.',
       armaments: 'Pridaj screenshot armamentov.',
-      stats: 'Vyplň bonusy armamentov a počet inscriptions (aj 0).',
+      stats: 'Vyplň ATK, DEF, HP a počet inscriptions (aj 0).',
     },
     search: 'Hľadať commandera',
     clear: 'Bez commandera',

@@ -89,6 +89,7 @@
             maxlength="2"
             autocomplete="off"
             [value]="d.stats[stat] ?? ''"
+            [placeholder]="stat === 'damage' && damageDefaultsToZero() ? '0' : ''"
             (input)="setStat(stat, $event)"
           />
           <span class="stat-field__unit" aria-hidden="true">%</span>
