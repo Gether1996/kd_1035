@@ -833,9 +833,19 @@ class BackupTests(TransactionTestCase):
     def test_backup_prune_and_restore(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
-            with override_settings(MEDIA_ROOT=folder / 'media'):
+            private = folder / 'private'
+            (private / 'marches').mkdir(parents=True)
+            (private / 'marches' / 'abc.webp').write_bytes(b'shot')
+            with override_settings(MEDIA_ROOT=folder / 'media', PRIVATE_MEDIA_ROOT=private):
                 first = backups.create_backup(folder, keep=2)
                 self.assertTrue(first.name.endswith('.sqlite3.gz'))
+                # the players' screenshots go into their own archive of the same backup
+                screenshots = backups.private_archive(first)
+                self.assertTrue(screenshots.is_file())
+                (private / 'marches' / 'abc.webp').unlink()
+                self.assertEqual(backups.restore_private(screenshots), 1)
+                self.assertEqual((private / 'marches' / 'abc.webp').read_bytes(), b'shot')
+                self.assertEqual(backups.restore_private(screenshots), 0)  # nothing is overwritten
                 with gzip.open(first) as f, open(folder / 'check.sqlite3', 'wb') as out:
                     out.write(f.read())
                 tables = sqlite3.connect(folder / 'check.sqlite3').execute(
@@ -846,8 +856,10 @@ class BackupTests(TransactionTestCase):
                 self.assertFalse(backups.backup_due(folder, interval_days=7))
                 for i in range(3):
                     (folder / f'kd1035_2000-01-0{i + 1}_000000.sqlite3.gz').write_bytes(b'')
+                    (folder / f'kd1035_2000-01-0{i + 1}_000000_private.tar.gz').write_bytes(b'')
                 backups.prune(folder, keep=2)
                 self.assertEqual(len(list(folder.glob('kd1035_*.sqlite3.gz'))), 2)
+                self.assertEqual(len(list(folder.glob('kd1035_*_private.tar.gz'))), 2)
 
                 Alliance.objects.all().delete()
                 backups.restore_backup(first)

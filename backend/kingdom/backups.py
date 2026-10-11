@@ -1,4 +1,6 @@
-"""Consistent SQLite + uploads backups (safe while the site is running)."""
+"""Consistent backups of the SQLite database, the uploads and the players' private screenshots (safe while the site
+is running). Three files per backup: kd1035_<time>.sqlite3.gz, _uploads.tar.gz and _private.tar.gz (Gether 11. 10. 2026:
+the screenshots of marches and KvK sign-ups are backed up too); BACKUP_KEEP of each are kept."""
 
 import gzip
 import shutil
@@ -33,7 +35,8 @@ def backup_due(folder: Path, interval_days: int) -> bool:
 
 
 def create_backup(folder: Path, keep: int) -> Path:
-    """Writes kd1035_<time>.sqlite3.gz (+ _uploads.tar.gz when there are uploads) and prunes old ones."""
+    """Writes kd1035_<time>.sqlite3.gz (+ _uploads.tar.gz and _private.tar.gz when there are such files) and prunes
+    old ones."""
     folder.mkdir(parents=True, exist_ok=True)
     stamp = timezone.localtime().strftime('%Y-%m-%d_%H%M%S')
     raw = folder / f'{PREFIX}{stamp}.sqlite3'
@@ -57,14 +60,46 @@ def create_backup(folder: Path, keep: int) -> Path:
         with tarfile.open(folder / f'{PREFIX}{stamp}_uploads.tar.gz', 'w:gz') as tar:
             tar.add(media, arcname='uploads')
 
+    # the screenshots of marches and KvK sign-ups (already WebP – gzip gains little, but keeps one format)
+    private = Path(settings.PRIVATE_MEDIA_ROOT)
+    if private.is_dir() and any(private.rglob('*.webp')):
+        with tarfile.open(folder / f'{PREFIX}{stamp}_private.tar.gz', 'w:gz') as tar:
+            tar.add(private, arcname='private')
+
     prune(folder, keep)
     return archive
 
 
 def prune(folder: Path, keep: int) -> None:
-    for pattern in (f'{PREFIX}*.sqlite3.gz', f'{PREFIX}*_uploads.tar.gz'):
+    for pattern in (f'{PREFIX}*.sqlite3.gz', f'{PREFIX}*_uploads.tar.gz', f'{PREFIX}*_private.tar.gz'):
         for old in sorted(folder.glob(pattern))[:-keep]:
             old.unlink()
+
+
+def private_archive(archive: Path) -> Path:
+    """kd1035_<time>.sqlite3.gz → kd1035_<time>_private.tar.gz of the same backup"""
+    return archive.with_name(archive.name.removesuffix('.sqlite3.gz') + '_private.tar.gz')
+
+
+def restore_private(archive: Path) -> int:
+    """Puts the screenshots of a _private.tar.gz back next to the database. Files are added (their names are random),
+    nothing is overwritten; the daily sweep_files removes the ones no row points to. Returns the number of files."""
+    root = Path(settings.PRIVATE_MEDIA_ROOT)
+    root.mkdir(parents=True, exist_ok=True)
+    count = 0
+    with tarfile.open(archive, 'r:gz') as tar:
+        for member in tar.getmembers():
+            name = Path(member.name)
+            if not member.isfile() or name.parts[:1] != ('private',) or '..' in name.parts:
+                continue
+            target = root.joinpath(*name.parts[1:])
+            if target.exists():
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with tar.extractfile(member) as src, target.open('wb') as dst:
+                shutil.copyfileobj(src, dst)
+            count += 1
+    return count
 
 
 def restore_backup(archive: Path) -> None:

@@ -749,8 +749,8 @@ export const sk = {
         text: 'Údaje o účte ostanú, kým ho nezmažeš.',
         list: [
           'Záznam odoslaných pripomienok mažeme po 30 dňoch a výber eventu, ktorý sa už nebude opakovať, najneskôr na druhý deň. Odoslaný budík zmažeme do dvoch dní.',
-          'Prihlášky na KvK aj so screenshotmi uchovávame, kým ich nezrušíš ty alebo superadmin (platia na ďalšie KvK), alebo kým nezmažeš účet. Screenshoty nie sú v zálohách databázy – zmazaný screenshot zmizne hneď.',
-          'Zálohy databázy na serveri vznikajú raz týždenne a necháva sa posledných 8, takže zmazané údaje zmiznú aj zo záloh do 8 týždňov.',
+          'Prihlášky na KvK aj so screenshotmi uchovávame, kým ich nezrušíš ty alebo superadmin (platia na ďalšie KvK), alebo kým nezmažeš účet. Zmazaný screenshot zmizne z webu hneď, zo záloh do 8 týždňov.',
+          'Zálohy databázy a screenshotov na serveri vznikajú raz týždenne a necháva sa posledných 8, takže zmazané údaje zmiznú aj zo záloh do 8 týždňov.',
           'Na limit pokusov o prihlásenie používame IP adresu iba v pamäti servera – do databázy ani do záznamov ju pritom neukladáme.',
           'Záznamy servera o návštevách sú bez IP adries. Technické chybové záznamy ju výnimočne obsahovať môžu; všetky záznamy majú pevne obmedzenú veľkosť (3 × 10 MB na službu) a staršie sa prepisujú.',
         ],

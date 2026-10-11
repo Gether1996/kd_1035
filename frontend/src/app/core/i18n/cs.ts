@@ -744,8 +744,8 @@ export const cs: Dict = {
         text: 'Údaje o účtu zůstanou, dokud ho nesmažeš.',
         list: [
           'Záznam odeslaných připomínek mažeme po 30 dnech a výběr eventu, který se už nebude opakovat, nejpozději druhý den. Odeslaný budík smažeme do dvou dnů.',
-          'Přihlášky na KvK i se screenshoty uchováváme, dokud je nezrušíš ty nebo superadmin (platí i na další KvK), nebo dokud nesmažeš účet. Screenshoty nejsou v zálohách databáze – smazaný screenshot zmizí hned.',
-          'Zálohy databáze na serveru vznikají jednou týdně a ponechává se posledních 8, takže smazané údaje zmizí i ze záloh do 8 týdnů.',
+          'Přihlášky na KvK i se screenshoty uchováváme, dokud je nezrušíš ty nebo superadmin (platí i na další KvK), nebo dokud nesmažeš účet. Smazaný screenshot zmizí z webu hned, ze záloh do 8 týdnů.',
+          'Zálohy databáze a screenshotů na serveru vznikají jednou týdně a ponechává se posledních 8, takže smazané údaje zmizí i ze záloh do 8 týdnů.',
           'Pro limit pokusů o přihlášení používáme IP adresu jen v paměti serveru – do databáze ani do záznamů ji přitom neukládáme.',
           'Záznamy serveru o návštěvách jsou bez IP adres. Technické chybové záznamy ji výjimečně obsahovat mohou; všechny záznamy mají pevně omezenou velikost (3 × 10 MB na službu) a starší se přepisují.',
         ],

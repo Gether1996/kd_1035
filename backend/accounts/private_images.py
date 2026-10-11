@@ -3,8 +3,8 @@
 Seen only by the player, the reviewers (Player.kvk_reviewer, e.g. R4) and the superuser. Every upload is decoded and
 saved again as WebP: no EXIF/GPS, XMP or ICC data survives, and a file that is not a real image is refused. The files
 live under PRIVATE_MEDIA_ROOT (next to the database, never under the public /uploads/) and go out only through API
-views that check who asks. They are not in the database backups; a daily sweep deletes files no row points to (after
-restore_db, import_snapshot or a failed upload).
+views that check who asks. The weekly backup has them as kd1035_<time>_private.tar.gz (restore_db puts them back);
+a daily sweep deletes files no row points to (after restore_db, import_snapshot or a failed upload).
 """
 
 import secrets
