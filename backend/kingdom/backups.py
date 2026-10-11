@@ -104,8 +104,9 @@ def prune(folder: Path, keep: int) -> None:
         for archive in folder.glob(f'{PREFIX}*{suffix}'):
             if archive.name.removesuffix(suffix) not in kept:
                 archive.unlink()
-    # a safety copy from restore_db lives as long as a backup does (keep × interval, the privacy page)
-    oldest = timezone.now() - timedelta(days=max(keep, 1) * settings.BACKUP_INTERVAL_DAYS)
+    # a safety copy from restore_db never outlives the backups (the privacy page: gone within keep × interval) –
+    # pruning runs once per interval, so the copy goes one interval early
+    oldest = timezone.now() - timedelta(days=max(keep - 1, 1) * settings.BACKUP_INTERVAL_DAYS)
     for copy in folder.glob(f'{PRE_RESTORE}*.sqlite3.gz'):
         if datetime.fromtimestamp(copy.stat().st_mtime, tz=timezone.get_current_timezone()) < oldest:
             copy.unlink()

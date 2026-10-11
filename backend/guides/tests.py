@@ -567,6 +567,8 @@ class GuideApiTests(TestCase):
         self.assertEqual(clean_html('<img srcset="/static/a.webp 1x, https://evil.example/b 2x">'), '<img>')
         self.assertEqual(clean_html('<p style="background: URL( https://evil.example/p.gif )">x</p>'), '<p>x</p>')
         self.assertEqual(clean_html('<p style="color: red">x</p>'), '<p style="color: red">x</p>')
+        for hidden in ('background-image: image-set("https://evil.example/a.png" 1x)', 'background: u' + '\\' + 'rl(x)'):
+            self.assertEqual(clean_html(f"<p style='{hidden}'>x</p>"), '<p>x</p>', hidden)
 
     def test_list_hides_unpublished_and_has_no_html(self):
         data = self.client.get('/api/guides/').json()

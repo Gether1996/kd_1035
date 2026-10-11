@@ -55,7 +55,7 @@ export const sk = {
     },
   },
   // a newer version of the site is deployed than the one open in the tab
-  update: { text: 'Web má novú verziu.', reload: 'Načítať' },
+  update: { text: 'Web má novú verziu.', reload: 'Načítať', close: 'Zavrieť' },
   nav: {
     home: 'Domov',
     breadcrumb: 'Navigačná cesta',

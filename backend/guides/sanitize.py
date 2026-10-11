@@ -48,8 +48,8 @@ def _filter(tag: str, attr: str, value: str) -> str | None:
     if tag in ('img', 'source') and attr == 'srcset':
         urls = [candidate.strip().split()[0] for candidate in value.split(',') if candidate.strip()]
         return value if urls and all(_local(url) for url in urls) else None
-    # url() in a style loads an outside picture the same way
-    if attr == 'style' and 'url(' in value.lower().replace(' ', ''):
+    # url() or image-set() in a style loads an outside picture the same way; a backslash escape could hide either
+    if attr == 'style' and any(part in value.lower() for part in ('url', 'image', '\\')):
         return None
     if tag == 'iframe' and attr == 'src':
         if not value.startswith(EMBEDS):

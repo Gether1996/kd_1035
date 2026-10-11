@@ -230,6 +230,12 @@ class RemindersApiTests(ApiTestCase):
         self.assertEqual(self.send('patch', self.url, {'lang': 'sk'}).json(), {'discord': False, 'lang': 'sk'})
         self.assertEqual(self.send('patch', self.url, {'lang': 'en'}).status_code, 400)
         self.assertEqual(self.send('patch', self.url, {'discord': 'maybe'}).status_code, 400)
+        # switching the DMs back on: send times before it were never due (not logged as missed)
+        reminder = EventReminder.objects.create(player=self.player, event=make_event(), offsets=[10])
+        EventReminder.objects.filter(pk=reminder.pk).update(updated_at=utc(2026, 1, 1))
+        self.assertEqual(self.send('patch', self.url, {'discord': True}).status_code, 200)
+        reminder.refresh_from_db()
+        self.assertGreater(reminder.updated_at, utc(2026, 1, 1))
         self.player.refresh_from_db()
         self.assertEqual(self.player.lang, 'sk')
 
@@ -484,6 +490,9 @@ class SendRemindersTests(TestCase):
         self.player = make_player()
         self.event = make_event()
         self.reminder = EventReminder.objects.create(player=self.player, event=self.event, offsets=[60, 10])
+        # set up well before the send times below (a reminder picked after its send time was never due)
+        EventReminder.objects.filter(pk=self.reminder.pk).update(updated_at=utc(2026, 10, 1))
+        KingdomEvent.objects.filter(pk=self.event.pk).update(updated_at=utc(2026, 10, 1))
         self.dm = self.patch('accounts.discord_bot.send_dm')
 
     def patch(self, target, **kwargs):
@@ -518,6 +527,17 @@ class SendRemindersTests(TestCase):
         self.assertEqual(self.sent(), [(10, Channel.DISCORD, True), (60, Channel.DISCORD, False)])
         self.assertEqual(SentReminder.objects.get(offset=60).error, reminders.MISSED_MESSAGE)
         self.assertEqual(self.dm.call_count, 1)
+
+    def test_a_send_time_before_the_choice_or_the_date_is_not_missed(self):
+        # picked "1 h before" at 17:30 for an 18:00 start: never due, nothing logged
+        EventReminder.objects.filter(pk=self.reminder.pk).update(updated_at=utc(2026, 10, 10, 17, 30))
+        self.assertEqual(self.run_at(2026, 10, 10, 17, 30, 30), 0)
+        self.assertEqual(self.sent(), [])
+        # the same for an event whose date was set (or changed) after the send time
+        EventReminder.objects.filter(pk=self.reminder.pk).update(updated_at=utc(2026, 10, 1))
+        KingdomEvent.objects.filter(pk=self.event.pk).update(updated_at=utc(2026, 10, 10, 17, 30))
+        self.assertEqual(self.run_at(2026, 10, 10, 17, 30, 30), 0)
+        self.assertEqual(self.sent(), [])
 
     def test_weekly_occurrences_utc_and_local(self):
         # the week after the end of summer time: UTC events stay at 18:00 UTC, local ones at 20:00 Bratislava

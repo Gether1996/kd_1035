@@ -22,6 +22,8 @@ const RETRY_KEY = 'kd1035.reloaded';
 export class SiteUpdate {
   /** a newer build is deployed than the one running in this tab */
   readonly available = signal(false);
+  /** the visitor closed the bar (the next page change still loads fresh) */
+  readonly dismissed = signal(false);
 
   private readonly doc = inject(DOCUMENT);
   private readonly router = inject(Router);
@@ -37,12 +39,13 @@ export class SiteUpdate {
 
     this.router.events.subscribe((e) => {
       if (e instanceof NavigationStart && e.navigationTrigger === 'imperative' && this.available()) {
-        // a newer build: load the target page from the server instead of the old bundle
-        location.assign(e.url);
+        // a newer build: another page loads from the server instead of the old bundle; a query change on the same
+        // page (guide search typed letter by letter, the commander finder) stays, nothing typed is lost
+        if (pathOf(e.url) !== pathOf(this.router.url)) this.go(e.url);
       } else if (e instanceof NavigationStart) {
         this.check();
       } else if (e instanceof NavigationError && chunkMissing(e.error)) {
-        this.reloadOnce(e.url);
+        this.afterMissingChunk(e.url);
       }
     });
     this.doc.addEventListener('visibilitychange', () => {
@@ -71,6 +74,12 @@ export class SiteUpdate {
     location.reload();
   }
 
+  /** a lazy page failed to load: a deploy removed its chunk – or the visitor is offline (then they stay put) */
+  private async afterMissingChunk(url: string): Promise<void> {
+    await this.check(true);
+    if (this.available()) this.reloadOnce(url);
+  }
+
   private reloadOnce(url: string): void {
     try {
       const [at, previous] = (sessionStorage.getItem(RETRY_KEY) ?? '').split(' ');
@@ -79,11 +88,20 @@ export class SiteUpdate {
     } catch {
       // storage blocked – load it fresh anyway (a loop needs the chunk missing in the new build too)
     }
+    this.go(url);
+  }
+
+  /** a full page load (a method, so the tests can watch it) */
+  protected go(url: string): void {
     location.assign(url);
   }
 }
 
-/** the bundle of a lazy page is gone (Chrome, Firefox, Safari wording) */
+function pathOf(url: string): string {
+  return url.split(/[?#]/)[0];
+}
+
+/** the bundle of a lazy page is gone or could not be fetched (Chrome, Firefox, Safari wording) */
 function chunkMissing(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /dynamically imported module|Importing a module script failed|Loading chunk/i.test(message);

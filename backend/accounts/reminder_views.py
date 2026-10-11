@@ -130,7 +130,11 @@ def reminders(request):
     if request.method == 'PATCH':
         form = ReminderSettingsSerializer(player, data=request.data, partial=True)
         form.is_valid(raise_exception=True)
+        switched_on = form.validated_data.get('remind_discord') and not player.remind_discord
         form.save()
+        if switched_on:
+            # send times before this moment were never due for this player – not logged as missed (reminders.py)
+            EventReminder.objects.filter(player=player).update(updated_at=timezone.now())
         return Response({'discord': player.remind_discord, 'lang': player.lang})
 
     now = timezone.now()

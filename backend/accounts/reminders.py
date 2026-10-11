@@ -152,7 +152,10 @@ def send_personal_reminders(now=None) -> int:
                 if (player.pk, event.pk, start, offset) in done:
                     continue
                 if send_time(start, offset) <= now - WINDOW:
-                    record_missed(player, event, start, offset)
+                    # only one that really was due: the reminder, the event's date and the player's switch were set
+                    # before its send time (a reminder picked 30 min before a "1 h before" was never due)
+                    if send_time(start, offset) > max(reminder.updated_at, event.updated_at):
+                        record_missed(player, event, start, offset)
                     continue
                 try:
                     attempted += deliver(player, event, start, offset)

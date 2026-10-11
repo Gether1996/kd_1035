@@ -18,6 +18,10 @@ GOLD = 0xF5C451
 MAX_DELAY = timedelta(hours=6)
 
 
+# no answer after the message was sent: it may or may not be in the channel (never sent again)
+UNCERTAIN = 'Discord neodpovedal – správa mohla, ale nemusela prísť'
+
+
 class DiscordError(Exception):
     """`temporary`: Discord is down, slow or busy (timeout, 5xx, 429) – the notification is tried again on the next tick
     (until MAX_DELAY); otherwise (deleted webhook, bad payload) it is marked failed."""
@@ -81,9 +85,12 @@ def send(payload: dict, url: str) -> None:
         body = exc.read()[:300].decode(errors='replace')
         raise DiscordError(f'Discord odpovedal {exc.code}: {body}', temporary=exc.code >= 500 or exc.code == 429) from exc
     except urllib.error.URLError as exc:
+        # urllib wraps only errors before the request was sent: safe to try again
         raise DiscordError(f'Discord je nedostupný: {exc.reason}', temporary=True) from exc
-    except TimeoutError as exc:
-        raise DiscordError('Discord neodpovedal včas', temporary=True) from exc
+    except OSError as exc:
+        # timeout or a dropped connection while waiting for the answer: the message may have been posted – a retry
+        # could ping the channel twice
+        raise DiscordError(f'{UNCERTAIN} ({exc.__class__.__name__})') from exc
 
 
 def post(notification: EventNotification) -> None:

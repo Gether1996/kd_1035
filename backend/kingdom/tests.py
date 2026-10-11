@@ -102,6 +102,20 @@ class DiscordTests(TestCase):
         late.refresh_from_db()
         self.assertEqual((late.status, late.error), (EventNotification.Status.FAILED, 'Zmeškaná – Discord odpovedal 502'))
 
+    def test_no_answer_after_sending_is_never_retried(self):
+        import urllib.error
+
+        with mock.patch('urllib.request.urlopen', side_effect=urllib.error.URLError('refused')):
+            with self.assertRaises(discord.DiscordError) as before:
+                discord.send({}, 'https://discord.test/hook')
+        self.assertTrue(before.exception.temporary)  # nothing was sent: try again
+        for error in (TimeoutError('read timed out'), ConnectionResetError()):
+            with mock.patch('urllib.request.urlopen', side_effect=error):
+                with self.assertRaises(discord.DiscordError) as after:
+                    discord.send({}, 'https://discord.test/hook')
+            self.assertFalse(after.exception.temporary)  # it may be in the channel: no second ping
+            self.assertIn(discord.UNCERTAIN, str(after.exception))
+
     def test_a_row_sent_or_deleted_meanwhile_is_not_sent_again(self):
         n = self.make()
         EventNotification.objects.filter(pk=n.pk).update(status=EventNotification.Status.SENT)

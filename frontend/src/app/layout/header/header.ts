@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DOCUMENT,
+  DestroyRef,
   ElementRef,
   PLATFORM_ID,
   computed,
@@ -79,6 +80,14 @@ export class Header {
       // the page under the open mobile menu is out of reach for Tab and screen readers
       if (browser) for (const el of doc.querySelectorAll('main, app-footer')) el.toggleAttribute('inert', open);
     });
+    // the mobile menu is hidden from 900 px (header.scss): a tablet turned to landscape or a widened window closes
+    // it, or the page under it would stay inert and unscrollable
+    if (browser && typeof matchMedia === 'function') {
+      const wide = matchMedia('(min-width: 900px)');
+      const onChange = () => wide.matches && this.close();
+      wide.addEventListener?.('change', onChange);
+      inject(DestroyRef).onDestroy(() => wide.removeEventListener?.('change', onChange));
+    }
   }
 
   protected toggle(): void {

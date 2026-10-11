@@ -6,11 +6,12 @@ import { Seo } from './core/seo';
 import { SiteUpdate } from './core/site-update';
 import { Footer } from './layout/footer/footer';
 import { Header } from './layout/header/header';
+import { Icon } from './shared/icon';
 import { ScrollFx } from './shared/scroll-fx';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Footer, ScrollFx],
+  imports: [RouterOutlet, Header, Footer, Icon, ScrollFx],
   template: `
     <a class="skip-link" href="#main">{{ i18n.t().nav.skip }}</a>
     <app-header />
@@ -26,10 +27,13 @@ import { ScrollFx } from './shared/scroll-fx';
       </div>
     </div>
     <app-footer />
-    @if (update.available()) {
+    @if (update.available() && !update.dismissed()) {
       <div class="update-bar" role="status">
         <span>{{ i18n.t().update.text }}</span>
         <button type="button" class="pill-btn" (click)="update.reload()">{{ i18n.t().update.reload }}</button>
+        <button type="button" class="update-bar__close" [attr.aria-label]="i18n.t().update.close" (click)="update.dismissed.set(true)">
+          <svg appIcon="x"></svg>
+        </button>
       </div>
     }
   `,

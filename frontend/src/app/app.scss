@@ -82,6 +82,30 @@ app-footer {
   }
 }
 
+// closes the bar – it would cover the footer's last row at the end of the page
+.update-bar__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 @keyframes update-in {
   from {
     opacity: 0;

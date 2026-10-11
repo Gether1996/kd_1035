@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SiteUpdate } from './site-update';
 
@@ -43,4 +43,18 @@ describe('SiteUpdate', () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(update.available()).toBe(false);
   });
+
+  it('after a deploy another page loads fresh, a query change on the same page does not', async () => {
+    const { update } = setup('main-OLD123.js', 'main-NEW456.js');
+    const router = TestBed.inject(Router);
+    router.resetConfig([{ path: '**', children: [] }]);
+    await router.navigateByUrl('/navody');
+    await update.check(true);
+    const go = vi.spyOn(update as unknown as { go(url: string): void }, 'go').mockImplementation(() => {});
+    await router.navigateByUrl('/navody?q=sun');
+    expect(go).not.toHaveBeenCalled();
+    await router.navigateByUrl('/kalendar');
+    expect(go).toHaveBeenCalledWith('/kalendar');
+  });
 });
+
