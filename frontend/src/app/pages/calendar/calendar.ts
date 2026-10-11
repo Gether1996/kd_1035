@@ -242,12 +242,24 @@ export class Calendar {
 
   protected close(): void {
     this.selected.set(null);
-    this.trigger?.focus();
+    this.returnFocus();
+  }
+
+  /** the editor or the date dialog closed: the focus goes back to what opened it (the event bar, the day's "+") */
+  protected closeManage(): void {
+    this.editing.set(null);
+    this.dating.set(null);
+    this.returnFocus();
+  }
+
+  private returnFocus(): void {
+    if (this.trigger?.isConnected) this.trigger.focus();
     this.trigger = null;
   }
 
   /** "+" on a day: a date for an irregular event (the common case), or straight a new event when there is none */
-  protected addOn(day: string): void {
+  protected addOn(day: string, event?: Event): void {
+    this.trigger = (event?.currentTarget as HTMLElement | undefined) ?? null;
     const irregular = this.manageData()?.events.some((e) => e.irregular && e.is_active);
     if (irregular) this.dating.set({ id: null, day });
     else this.editing.set({ event: null, day });
@@ -256,11 +268,15 @@ export class Calendar {
   protected editEvent(id: number | null): void {
     const event = id === null ? null : (this.manageData()?.events.find((e) => e.id === id) ?? null);
     if (id !== null && !event) return; // not loaded yet
+    // from the event dialog the focus goes back to the event bar, from the events panel to its button
+    this.trigger ??= document.activeElement as HTMLElement | null;
     this.selected.set(null);
     this.editing.set({ event, day: null });
   }
 
   protected scheduleEvent(id: number | null): void {
+    // from the event dialog the focus goes back to the event bar, from the events panel to its button
+    this.trigger ??= document.activeElement as HTMLElement | null;
     this.selected.set(null);
     this.dating.set({ id, day: null });
   }

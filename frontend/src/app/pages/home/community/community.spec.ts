@@ -37,4 +37,18 @@ describe('Community (home)', () => {
     expect(link?.getAttribute('href')).toBe(href);
     expect(link?.textContent?.trim()).toBe(text);
   });
+
+  it('shows the cards while loading, a link the API gave, and nothing for a missing one or an API failure', async () => {
+    const fixture = TestBed.createComponent(Community);
+    fixture.detectChanges();
+    TestBed.tick();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelectorAll('.link.is-pending').length).toBe(2);
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/links/').flush([{ platform: 'discord', url: 'https://discord.gg/x' }]);
+    http.match(() => true).forEach((req) => req.flush([]));
+    await fixture.whenStable();
+    expect([...el.querySelectorAll('.link')].map((a) => a.getAttribute('href'))).toEqual(['https://discord.gg/x']);
+    expect(el.textContent).not.toContain('Čoskoro');
+  });
 });

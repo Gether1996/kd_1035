@@ -120,6 +120,19 @@ describe('Reminders on /pripomienky', () => {
     expect(text(mine(el)[0].querySelector('.mine__when'))).toBe('Prebieha · do po 12. 10.');
   });
 
+  it('the dialog knows when the event ends – also while an irregular one is running', async () => {
+    const running = event(4, { next_start: null, running_until: '2026-10-12T09:00:00Z', irregular: true, duration_minutes: 60 });
+    const { fixture } = await render({ ...SETTINGS, events: [event(1, {}), running] });
+    const page = fixture.componentInstance as unknown as {
+      selectedId: { set(id: number): void };
+      dialogItem(): { start?: string; end?: string | null };
+    };
+    page.selectedId.set(1);
+    expect(page.dialogItem()).toMatchObject({ start: '2026-10-10T18:00:00Z', end: '2026-10-12T18:00:00.000Z' });
+    page.selectedId.set(4);
+    expect(page.dialogItem()).toMatchObject({ start: '2026-10-12T08:00:00.000Z', end: '2026-10-12T09:00:00Z' });
+  });
+
   it('the clock only for a short irregular event, not for one running for days', async () => {
     const dated = (id: number, duration_minutes: number) =>
       event(id, { irregular: true, repeat_days: 0, duration_minutes, offsets: [15] });

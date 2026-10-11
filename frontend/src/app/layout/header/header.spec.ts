@@ -41,6 +41,27 @@ describe('Header account slot', () => {
     expect(links[0].textContent?.trim()).toBe('Kalendár');
   });
 
+  it('the open mobile menu shuts the page behind it; Escape closes it and focuses its button', () => {
+    const main = document.body.appendChild(document.createElement('main'));
+    try {
+      const burger = el().querySelector<HTMLButtonElement>('.burger')!;
+      document.body.appendChild(el());
+      burger.click();
+      fixture.detectChanges();
+      TestBed.tick();
+      expect(main.hasAttribute('inert')).toBe(true);
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      fixture.detectChanges();
+      TestBed.tick();
+      expect(main.hasAttribute('inert')).toBe(false);
+      expect(burger.getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(burger);
+    } finally {
+      main.remove();
+      el().remove();
+    }
+  });
+
   it('keeps an empty slot while the API has not answered', () => {
     const slot = el().querySelector('.account');
     expect(slot).not.toBeNull();

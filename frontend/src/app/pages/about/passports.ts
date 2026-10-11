@@ -30,12 +30,17 @@ export const PASSPORTS: [number, number][] = [
 ];
 /** alliance credits per Passport Page in the alliance shop (same three sources) */
 export const PAGE_PRICE = 600_000;
-/** power of one wounded troop in the hospital – it does not count for the passports */
+/** power of one troop the player still sends to the hospital – wounded troops do not count (the power shown in the
+ * game already leaves out the ones there now) */
 const HOSPITAL_POWER = { t4: 4, t5: 10 };
 
-/** Power as typed: "42.5" or "42,5" = millions, a big number ("42 500 000") = the power itself. */
+/** Power as typed: "42.5" or "42,5" = millions, a big number ("42 500 000", "42,500,000", "42.500.000") = the power
+ * itself. */
 export function parsePower(text: string): number | null {
-  const clean = text.replace(/[\s ]/g, '').replace(',', '.');
+  const plain = text.replace(/[\s ]/g, '');
+  // thousands separators as the game shows them – two or more groups of three digits
+  const grouped = /^\d{1,3}([.,])\d{3}(\1\d{3})+$/.test(plain);
+  const clean = grouped ? plain.replace(/[.,]/g, '') : plain.replace(',', '.');
   if (!/^\d+(\.\d+)?$/.test(clean)) return null;
   const value = Number(clean);
   if (!value) return null;
@@ -43,7 +48,7 @@ export function parsePower(text: string): number | null {
 }
 
 export interface PassportResult {
-  /** power that counts, after the troops in the hospital */
+  /** power that counts, after the troops the player still sends to the hospital */
   power: number;
   pages: number;
   credits: number;
@@ -94,7 +99,8 @@ export class Passports {
   });
 
   protected count(value: string): number {
-    const n = Math.floor(Number(value.replace(/[\s ]/g, '')));
+    // whole troops: "1 000 000", "1,000,000" and "1.000.000" are the same
+    const n = Number(value.replace(/[\s .,]/g, ''));
     return Number.isFinite(n) && n > 0 ? n : 0;
   }
 

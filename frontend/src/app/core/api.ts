@@ -53,6 +53,8 @@ export class KingdomApi {
     const links = this.linksRes.hasValue() ? this.linksRes.value() : [];
     return Object.fromEntries(links.map((l) => [l.platform, l.url])) as Partial<Record<Platform, string>>;
   });
+  /** the links are still loading (or the page is being prerendered) – false once they came or the API failed */
+  readonly linksPending = computed(() => !this.linksRes.hasValue() && !this.linksRes.error());
   /** Footer "information updated on" – null while loading, during prerendering and when the API failed. */
   readonly updated = computed(() => (this.statusRes.hasValue() ? this.statusRes.value().updated : null));
 }

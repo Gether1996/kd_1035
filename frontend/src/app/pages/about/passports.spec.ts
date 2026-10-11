@@ -8,6 +8,9 @@ describe('passports', () => {
     expect(parsePower('42.5')).toBe(42_500_000);
     expect(parsePower('42 500 000')).toBe(42_500_000);
     expect(parsePower('9')).toBe(9_000_000);
+    expect(parsePower('42,500,000')).toBe(42_500_000);
+    expect(parsePower('42.500.000')).toBe(42_500_000);
+    expect(parsePower('42,500')).toBe(42_500_000); // one group = a decimal comma (42,5 mil.)
     for (const bad of ['', '0', 'abc', '-5', '1,2,3']) expect(parsePower(bad), bad).toBeNull();
   });
 

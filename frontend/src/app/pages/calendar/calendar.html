@@ -88,7 +88,7 @@
                     [style.grid-column]="col + 1"
                     [attr.aria-label]="addLabel(key)"
                     [title]="addLabel(key)"
-                    (click)="addOn(key)"
+                    (click)="addOn(key, $event)"
                   >
                     <svg appIcon="plus"></svg>
                   </button>
@@ -248,7 +248,7 @@
         [data]="data"
         [event]="e.event"
         [day]="e.day"
-        (closed)="editing.set(null)"
+        (closed)="closeManage()"
         (changed)="refresh()"
       />
     }
@@ -257,7 +257,7 @@
         [data]="data"
         [day]="d.day"
         [eventId]="d.id"
-        (closed)="dating.set(null)"
+        (closed)="closeManage()"
         (changed)="refresh()"
         (create)="createOn($event)"
       />

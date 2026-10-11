@@ -66,7 +66,8 @@ export class App {
         changed = rest !== previous;
         previous = rest;
         const anchor = e.urlAfterRedirects.includes('#');
-        if (changed && !popstate && !anchor) scroller.scrollToPosition([0, 0]);
+        // the first navigation is the prerendered page itself – a visitor may have scrolled before the app started
+        if (changed && !popstate && !anchor && e.id > 1) scroller.scrollToPosition([0, 0], { behavior: 'instant' });
       } else if (e instanceof Scroll && popstate) {
         // the router saved the position when the visitor left the page; after a reload it has none
         if (e.position) restoring = restore(scroller, e.position);

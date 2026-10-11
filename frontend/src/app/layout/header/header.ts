@@ -1,4 +1,16 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, computed, effect, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DOCUMENT,
+  ElementRef,
+  PLATFORM_ID,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
@@ -22,7 +34,7 @@ interface NavItem {
   styleUrl: './header.scss',
   host: {
     '[class.is-solid]': 'scroll.scrolled() || menuOpen()',
-    '(document:keydown.escape)': 'close()',
+    '(document:keydown.escape)': 'escape()',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -31,6 +43,7 @@ export class Header {
   protected readonly scroll = inject(Scroll);
   protected readonly auth = inject(Auth);
   protected readonly menuOpen = signal(false);
+  private readonly burger = viewChild<ElementRef<HTMLButtonElement>>('burger');
   /** Escape in the account menu hides it until the pointer or the focus leaves */
   protected readonly menuClosed = signal(false);
 
@@ -59,8 +72,12 @@ export class Header {
 
   constructor() {
     const doc = inject(DOCUMENT);
+    const browser = isPlatformBrowser(inject(PLATFORM_ID));
     effect(() => {
-      doc.body.style.overflow = this.menuOpen() ? 'hidden' : '';
+      const open = this.menuOpen();
+      doc.body.style.overflow = open ? 'hidden' : '';
+      // the page under the open mobile menu is out of reach for Tab and screen readers
+      if (browser) for (const el of doc.querySelectorAll('main, app-footer')) el.toggleAttribute('inert', open);
     });
   }
 
@@ -70,6 +87,13 @@ export class Header {
 
   protected close(): void {
     this.menuOpen.set(false);
+  }
+
+  /** Escape closes the mobile menu and puts the focus back on its button (it was inside the menu) */
+  protected escape(): void {
+    if (!this.menuOpen()) return;
+    this.close();
+    this.burger()?.nativeElement.focus();
   }
 
   protected closeMenu(event: Event): void {

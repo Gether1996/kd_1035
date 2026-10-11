@@ -101,11 +101,14 @@ export class Reminders {
       offered: event.offered,
       guide: null,
     };
-    if (!event.next_start) return base;
+    // a running irregular event (no next date yet) shows its current run, "Prebieha" like in the calendar
+    const minutes = event.duration_minutes * 60_000;
+    const start = event.next_start ?? (event.running_until && shift(event.running_until, -minutes));
+    if (!start) return base;
     return {
       ...base,
-      start: event.next_start,
-      end: null,
+      start,
+      end: minutes ? (event.running_until ?? shift(start, minutes)) : null,
       repeat_days: event.repeat_days,
       irregular: event.irregular,
     };
@@ -279,4 +282,9 @@ export class Reminders {
       this.discordState.set('failed');
     }
   }
+}
+
+/** an ISO time moved by `ms` milliseconds, as ISO again */
+function shift(iso: string, ms: number): string {
+  return new Date(Date.parse(iso) + ms).toISOString();
 }

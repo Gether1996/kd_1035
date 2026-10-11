@@ -40,14 +40,14 @@ import { ScrollFx } from '../../../shared/scroll-fx';
                 </span>
                 <svg class="link__arrow" appIcon="arrow-right"></svg>
               </a>
-            } @else {
-              <div class="link link--{{ item.platform }} is-soon" [appReveal]="i * 120">
+            } @else if (api.linksPending()) {
+              <!-- the same card while the address loads; a link the API does not give (or an API failure) is left out -->
+              <div class="link link--{{ item.platform }} is-pending" aria-hidden="true" [appReveal]="i * 120">
                 <span class="link__icon"><svg [appIcon]="item.platform"></svg></span>
                 <span class="link__text">
                   <strong>{{ item.name }}</strong>
                   <small>{{ t().community[item.platform] }}</small>
                 </span>
-                <span class="tag">{{ t().community.soon }}</span>
               </div>
             }
           }
