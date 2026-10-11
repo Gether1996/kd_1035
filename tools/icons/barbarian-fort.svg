@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- The barbarian fort mark of the game's world map, redrawn as a vector after Gether's screenshot (11. 10. 2026):
+       a spire topped by a figure with raised arms, three curved ribs on each side. No level badge. -->
+  <defs>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f05a45"/>
+      <stop offset="1" stop-color="#c62f24"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#red)" stroke-linecap="round">
+    <!-- ribs, the lowest the widest -->
+    <path d="M41 40 Q33 37 30 28" stroke-width="5"/>
+    <path d="M59 40 Q67 37 70 28" stroke-width="5"/>
+    <path d="M39 53 Q26 50 21 37" stroke-width="5.5"/>
+    <path d="M61 53 Q74 50 79 37" stroke-width="5.5"/>
+    <path d="M37 67 Q19 64 12 46" stroke-width="6"/>
+    <path d="M63 67 Q81 64 88 46" stroke-width="6"/>
+  </g>
+  <!-- the spire -->
+  <path d="M50 26 L62 84 Q50 88 38 84 Z" fill="url(#red)"/>
+  <path d="M50 34 L53 80 L47 80 Z" fill="#a8241c" opacity="0.55"/>
+  <!-- the figure with raised arms -->
+  <circle cx="50" cy="13" r="4.2" fill="url(#red)"/>
+  <path d="M50 18 Q45 21 41 12 Q39 7 36 6 Q41 6 44 11 Q47 17 50 18 Q53 17 56 11 Q59 6 64 6 Q61 7 59 12 Q55 21 50 18 Z" fill="url(#red)"/>
+  <path d="M47 18 L53 18 L51.5 30 L48.5 30 Z" fill="url(#red)"/>
+</svg>
