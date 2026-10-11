@@ -56,17 +56,19 @@ export class SiteUpdate {
     setInterval(() => this.doc.visibilityState === 'visible' && this.check(true), EVERY_MS);
   }
 
-  /** asks the server for the deployed shell (at most once a minute unless `force`) */
-  async check(force = false): Promise<void> {
-    if (!this.running || this.available() || (!force && Date.now() - this.last < QUIET_MS)) return;
+  /** asks the server for the deployed shell (at most once a minute unless `force`); true when the server answered */
+  async check(force = false): Promise<boolean> {
+    if (!this.running || this.available() || (!force && Date.now() - this.last < QUIET_MS)) return this.available();
     this.last = Date.now();
     try {
       const response = await fetch(SHELL, { cache: 'no-store' });
-      if (!response.ok) return;
+      if (!response.ok) return false;
       const deployed = (await response.text()).match(MAIN)?.[0];
       if (deployed && deployed !== this.running) this.available.set(true);
+      return true;
     } catch {
       // offline or the server is restarting – the next check tries again
+      return false;
     }
   }
 
@@ -74,10 +76,10 @@ export class SiteUpdate {
     location.reload();
   }
 
-  /** a lazy page failed to load: a deploy removed its chunk – or the visitor is offline (then they stay put) */
+  /** a lazy page failed to load: a deploy removed its chunk or a request dropped – the page loads fresh (a browser
+   * may remember a failed chunk until then); offline (the server does not answer) the visitor stays put */
   private async afterMissingChunk(url: string): Promise<void> {
-    await this.check(true);
-    if (this.available()) this.reloadOnce(url);
+    if (await this.check(true)) this.reloadOnce(url);
   }
 
   private reloadOnce(url: string): void {

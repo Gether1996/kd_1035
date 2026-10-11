@@ -726,6 +726,14 @@ class DiscordBotTests(SimpleTestCase):
                 discord_bot.send_dm('80351110224678912', {'content': 'x'})
         self.assertEqual(str(ctx.exception), discord_bot.UNCERTAIN_MESSAGE)
         self.assertFalse(ctx.exception.temporary)
+        # an answer cut off while it was read (not an OSError) is the same
+        import http.client
+
+        answers = [self.response({'id': '1234567890123'}), http.client.IncompleteRead(b'')]
+        with mock.patch('urllib.request.urlopen', side_effect=answers):
+            with self.assertRaises(discord_bot.BotError) as ctx:
+                discord_bot.send_dm('80351110224678912', {'content': 'x'})
+        self.assertEqual(str(ctx.exception), discord_bot.UNCERTAIN_MESSAGE)
         # no answer while opening the channel: nothing was sent, so it is tried again
         with mock.patch('urllib.request.urlopen', side_effect=TimeoutError('timed out')):
             with self.assertRaises(discord_bot.BotError) as ctx:

@@ -50,8 +50,9 @@ export class AlarmsApi {
     try {
       await firstValueFrom(this.http.delete(`${URL}${id}/`));
       return true;
-    } catch {
-      return false;
+    } catch (error) {
+      // 404: already sent (or cancelled elsewhere) – gone either way
+      return error instanceof HttpErrorResponse && error.status === 404;
     }
   }
 }

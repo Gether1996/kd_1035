@@ -109,7 +109,9 @@ class DiscordTests(TestCase):
             with self.assertRaises(discord.DiscordError) as before:
                 discord.send({}, 'https://discord.test/hook')
         self.assertTrue(before.exception.temporary)  # nothing was sent: try again
-        for error in (TimeoutError('read timed out'), ConnectionResetError()):
+        import http.client
+
+        for error in (TimeoutError('read timed out'), ConnectionResetError(), http.client.IncompleteRead(b'')):
             with mock.patch('urllib.request.urlopen', side_effect=error):
                 with self.assertRaises(discord.DiscordError) as after:
                     discord.send({}, 'https://discord.test/hook')

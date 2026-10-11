@@ -18,11 +18,31 @@ describe('alarm time', () => {
 
 describe('Alarms', () => {
   beforeEach(() => {
+    // the listed alarms wait until 19:15 UTC on 11. 10. – a fixed clock, so they stay waiting
+    vi.useFakeTimers({ now: NOW, toFake: ['Date'] });
     TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     });
   });
-  afterEach(() => TestBed.inject(HttpTestingController).verify());
+  afterEach(() => {
+    TestBed.inject(HttpTestingController).verify();
+    vi.useRealTimers();
+  });
+
+  it('an alarm that already went out leaves the list; cancelling one sent meanwhile (404) removes it', async () => {
+    const sent = { id: 2, note: 'Hotové', target: '2026-10-11T11:50:00Z', remind_at: '2026-10-11T11:45:00Z' };
+    const { fixture, el, http } = await render([
+      { id: 1, note: 'Končí mi štít', target: '2026-10-11T19:30:00Z', remind_at: '2026-10-11T19:15:00Z' },
+      sent,
+    ]);
+    expect([...el.querySelectorAll('.alarm__note')].map((n) => n.textContent)).toEqual(['Končí mi štít']);
+    expect(el.querySelector('.alarms__count')?.textContent).toBe('1/5');
+    el.querySelector<HTMLButtonElement>('.alarm .icon-btn')!.click();
+    http.expectOne('/api/me/alarms/1/').flush(null, { status: 404, statusText: 'Not Found' });
+    await fixture.whenStable();
+    await fixture.whenStable();
+    expect(el.querySelector('.alarm')).toBeNull();
+  });
 
   async function render(alarms = [{ id: 1, note: 'Končí mi štít', target: '2026-10-11T19:30:00Z', remind_at: '2026-10-11T19:15:00Z' }]) {
     const fixture = TestBed.createComponent(Alarms);

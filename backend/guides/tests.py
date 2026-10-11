@@ -561,7 +561,7 @@ class GuideApiTests(TestCase):
         from .sanitize import clean_html
 
         self.assertEqual(clean_html('<img src="/uploads/a.webp" alt="a">'), '<img src="/uploads/a.webp" alt="a">')
-        for outside in ('https://evil.example/p.gif', '//evil.example/p.gif', 'data:image/png;base64,AA'):
+        for outside in ('https://evil.example/p.gif', '//evil.example/p.gif', 'data:image/png;base64,AA', '/&#9;/evil.example/p.gif', '/&#10;/evil.example/p.gif'):
             self.assertEqual(clean_html(f'<img src="{outside}" alt="a">'), '<img alt="a">', outside)
         self.assertEqual(clean_html('<img srcset="/static/a.webp 1x, /static/b.webp 2x">'), '<img srcset="/static/a.webp 1x, /static/b.webp 2x">')
         self.assertEqual(clean_html('<img srcset="/static/a.webp 1x, https://evil.example/b 2x">'), '<img>')

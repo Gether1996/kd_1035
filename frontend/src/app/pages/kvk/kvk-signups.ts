@@ -56,7 +56,8 @@ export class KvkSignups {
   protected readonly troops = signal<MarchKind | 'all'>('all');
   protected readonly troopKinds = KVK_KINDS;
   protected readonly icon = marchIcon;
-  protected readonly all = computed(() => this.data().value()?.signups ?? []);
+  // value() throws while the resource is in an error state – the list then shows its error text
+  protected readonly all = computed(() => (this.data().hasValue() ? this.data().value()!.signups : []));
   /** the sign-up whose withdraw waits for the second click */
   protected readonly armed = signal<number | null>(null);
   protected readonly failed = signal(false);

@@ -207,6 +207,18 @@ describe('KvkForm', () => {
 });
 
 describe('KvkSignups', () => {
+  it('a failed list shows its error text instead of breaking', async () => {
+    const http = setup();
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
+    const fixture = TestBed.createComponent(KvkSignups);
+    fixture.componentRef.setInput('data', data);
+    fixture.detectChanges();
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush(null, { status: 502, statusText: 'Bad Gateway' });
+    http.match('/api/commanders/marches/').forEach((req) => req.flush([]));
+    await flushAll(fixture);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.is-error')?.textContent).toBeTruthy();
+  });
+
   it('lists every sign-up, filters by role, opens a screenshot and lets the superuser withdraw one', async () => {
     const http = setup();
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {

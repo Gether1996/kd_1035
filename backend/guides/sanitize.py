@@ -36,8 +36,9 @@ YOUTUBE_NOCOOKIE = 'https://www.youtube-nocookie.com/embed/'
 
 
 def _local(url: str) -> bool:
-    """an address on this site (/uploads/…, /static/…) – not //host/… and no scheme"""
-    return url.startswith('/') and not url.startswith('//') and '\\' not in url
+    """an address on this site (/uploads/…, /static/…) – not //host/… and no scheme; browsers drop tabs and line
+    breaks from addresses (/<tab>/host = //host), so none may be in it"""
+    return url.startswith('/') and not url.startswith('//') and not any(c in url for c in '\\\t\n\r')
 
 
 def _filter(tag: str, attr: str, value: str) -> str | None:

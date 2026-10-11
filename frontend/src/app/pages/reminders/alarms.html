@@ -3,7 +3,7 @@
 <section class="alarms" id="budiky" aria-labelledby="alarms-title">
   <div class="alarms__head">
     <h2 class="alarms__title" id="alarms-title">
-      {{ a.title }} <span class="alarms__count">{{ alarms().length }}/{{ max() }}</span>
+      {{ a.title }} <span class="alarms__count">{{ waiting().length }}/{{ max() }}</span>
     </h2>
     @if (!open()) {
       <button type="button" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="full() || null" (click)="!full() && toggle()">
@@ -16,9 +16,9 @@
     <p class="alarms__warn">{{ a.off }}</p>
   }
 
-  @if (alarms().length) {
+  @if (waiting().length) {
     <ul class="alarms__list">
-      @for (alarm of alarms(); track alarm.id) {
+      @for (alarm of waiting(); track alarm.id) {
         <li class="alarm">
           <svg class="alarm__icon" appIcon="clock"></svg>
           <span class="alarm__body">

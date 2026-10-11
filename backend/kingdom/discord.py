@@ -1,5 +1,6 @@
 """Posting event notifications to a Discord channel through a webhook (no bot, no OAuth)."""
 
+import http.client
 import json
 import logging
 import urllib.error
@@ -87,7 +88,7 @@ def send(payload: dict, url: str) -> None:
     except urllib.error.URLError as exc:
         # urllib wraps only errors before the request was sent: safe to try again
         raise DiscordError(f'Discord je nedostupný: {exc.reason}', temporary=True) from exc
-    except OSError as exc:
+    except (OSError, http.client.HTTPException) as exc:
         # timeout or a dropped connection while waiting for the answer: the message may have been posted – a retry
         # could ping the channel twice
         raise DiscordError(f'{UNCERTAIN} ({exc.__class__.__name__})') from exc

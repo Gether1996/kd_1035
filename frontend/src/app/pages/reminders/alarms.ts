@@ -56,7 +56,9 @@ export class Alarms {
   protected readonly data = this.api.list();
   protected readonly alarms = linkedSignal<Alarm[]>(() => (this.data.hasValue() ? this.data.value().alarms : []));
   protected readonly max = computed(() => (this.data.hasValue() ? this.data.value().max : 5));
-  protected readonly full = computed(() => this.alarms().length >= this.max());
+  /** the waiting ones – a sent alarm leaves the list when its time comes (the server lists only unsent ones) */
+  protected readonly waiting = computed(() => this.alarms().filter((a) => Date.parse(a.remind_at) > this.now().getTime()));
+  protected readonly full = computed(() => this.waiting().length >= this.max());
 
   protected readonly now = signal(new Date());
   protected readonly open = signal(false);

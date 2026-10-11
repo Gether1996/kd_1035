@@ -4,6 +4,7 @@ The bot is the same Discord application as the sign-in, with a bot user added (D
 a player only when they share a server with it and allow direct messages from that server's members.
 """
 
+import http.client
 import json
 import urllib.error
 import urllib.request
@@ -56,8 +57,8 @@ def _post(path: str, payload: dict) -> dict:
             data = json.load(response)
     except urllib.error.HTTPError as exc:
         raise _error(exc) from exc
-    except OSError as exc:  # URLError, timeout, connection reset
-        raise BotError(f'Discord je nedostupný: {exc}', temporary=True, answered=False) from exc
+    except (OSError, http.client.HTTPException) as exc:  # URLError, timeout, reset, an answer cut off
+        raise BotError(f'Discord je nedostupný: {exc!r}', temporary=True, answered=False) from exc
     except ValueError as exc:
         raise BotError('Discord vrátil neplatnú odpoveď') from exc
     if not isinstance(data, dict):
