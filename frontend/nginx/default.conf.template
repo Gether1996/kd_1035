@@ -26,6 +26,33 @@ map "$kd_link_bot:$arg_event" $kd_event_preview {
     ~^1:[0-9]+$ 1;
 }
 
+# The real client address from the HTTPS proxy in front (Caddy on the host reaches the container through the Docker
+# bridge, so the source is a private address); the rate limits below count per visitor, not per proxy. The port is
+# published on 127.0.0.1 only (docker-compose.yml), so nobody else can send a forged X-Forwarded-For.
+set_real_ip_from 127.0.0.1;
+set_real_ip_from 10.0.0.0/8;
+set_real_ip_from 172.16.0.0/12;
+set_real_ip_from 192.168.0.0/16;
+real_ip_header X-Forwarded-For;
+real_ip_recursive on;
+
+# Rate limits per visitor (bots, floods): the API and Django in general, and the password login of the admin
+# (brute force). The addresses live only in nginx memory; the messages about refused requests are logged at "info",
+# below the error log level, so no IP lands in a log (the privacy page promises none).
+limit_req_zone $binary_remote_addr zone=kd_api:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=kd_login:10m rate=6r/m;
+limit_conn_zone $binary_remote_addr zone=kd_conn:10m;
+limit_req_status 429;
+limit_conn_status 429;
+limit_req_log_level info;
+limit_conn_log_level info;
+
+# HSTS only over HTTPS: browsers then never try the plain http:// address of the site again
+map $kd_proto $kd_hsts {
+    https   "max-age=31536000";
+    default "";
+}
+
 # Access log without the visitor's IP address (the privacy page promises it). Both servers below use it; the
 # image's default `main` format is replaced, not doubled, because access_log is set on the server level.
 log_format kd_noip '[$time_local] "$request" $status $body_bytes_sent "$http_user_agent" $request_time';
@@ -37,6 +64,12 @@ server {
     server_tokens off;
     absolute_redirect off;
     client_max_body_size 20m;
+    # slow clients that hold a connection open (slowloris) are cut off; at most 30 connections per visitor
+    client_header_timeout 15s;
+    client_body_timeout 30s;
+    send_timeout 30s;
+    keepalive_timeout 30s;
+    limit_conn kd_conn 30;
 
     access_log /var/log/nginx/access.log kd_noip;
     # probes for missing files would put the client IP into the error log
@@ -55,8 +88,20 @@ server {
 
     include /etc/nginx/snippets/security-headers.conf;
 
+    # the admin's password login and the start of the Discord sign-in: a few attempts a minute per visitor
+    location ~ ^/(admin/login/|api/auth/discord/login/) {
+        limit_req zone=kd_login burst=5 nodelay;
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $kd_proto;
+        proxy_read_timeout 60s;
+    }
+
     # Django: API, admin and its static files, sitemap with all guides
     location ~ ^/(api|admin|static)/|^/sitemap\.xml$ {
+        limit_req zone=kd_api burst=40 nodelay;
         proxy_pass http://backend:8000;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;

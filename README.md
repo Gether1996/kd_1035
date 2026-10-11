@@ -50,6 +50,7 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
        reverse_proxy 127.0.0.1:9005
    }
    ```
+   Web počúva iba na `127.0.0.1:9005` (`WEB_BIND` v `.env`), takže z internetu sa k nemu dá dostať len cez Caddy – port 9005 netreba ani otvárať vo firewalle. Ak proxy beží na inom stroji, nastav `WEB_BIND=0.0.0.0` a port vo firewalle povoľ len pre ňu.
    `www` presmeruje na `kd1035.eu` už nginx v kontajneri `web`. Proxy musí posielať hlavičku `X-Forwarded-Proto` (Caddy, Nginx Proxy Manager aj Traefik to robia samé).
 
    **Prístupové logy v proxy nezapínaj** (v Caddy žiadna direktíva `log`, v Nginx Proxy Manager / Traefik vypnutý access log). Stránka Ochrana údajov sľubuje, že IP adresy návštevníkov neukladáme – logy kontajnerov sú bez IP a majú najviac 3 × 10 MB na službu.

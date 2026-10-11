@@ -46,7 +46,10 @@ services:
     environment:
       SITE_URL: ${SITE_URL:-}
     ports:
-      - "${WEB_PORT:-9005}:80"
+      # only on the server itself: the HTTPS proxy (Caddy) is the only way in – a port open to the internet would skip
+      # HTTPS and the real client address the rate limits use (Docker publishes ports past ufw). WEB_BIND=0.0.0.0 only
+      # when the proxy runs on another machine.
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-9005}:80"
     volumes:
       - uploads:/srv/uploads:ro
     depends_on:
