@@ -332,7 +332,7 @@ class MetaSyncTests(TestCase):
             dict(Guide.objects.filter(is_published=True).exclude(specialty='').values_list('slug', 'specialty')),
             {
                 'pary-pre-jazdu': 'cavalry', 'pary-pre-pechotu': 'infantry', 'pary-pre-lukostrelcov': 'archer',
-                'pary-pre-garrison': 'garrison',
+                'pary-pre-siege': 'engineering', 'pary-pre-garrison': 'garrison',
                 'pary-pre-rally': 'conquering', 'pary-na-barbarov-a-pevnosti': 'peacekeeping',
                 'pary-na-zber-surovin': 'gathering', 'vybava-pre-jazdu': 'cavalry', 'vybava-pre-pechotu': 'infantry',
                 'vybava-pre-lukostrelcov': 'archer', 'vybava-pre-leadership': 'leadership',
@@ -344,8 +344,14 @@ class MetaSyncTests(TestCase):
         migration = importlib.import_module('guides.migrations.0007_guide_specialty')
         sync_guides()
         # the migration knows the specialties of the meta modules (and of guides dropped from them later)
-        # tips came later – their icon is set by the sync itself
-        meta = {g['slug']: g['specialty'] for g in rendered_guides() if g['specialty'] and g['category'] != 'tipy'}
+        # tips and the siege guide (11. 10. 2026) came later – their icon is set by the sync itself; a deployed
+        # migration is never edited
+        later = {'pary-pre-siege'}
+        meta = {
+            g['slug']: g['specialty']
+            for g in rendered_guides()
+            if g['specialty'] and g['category'] != 'tipy' and g['slug'] not in later
+        }
         self.assertEqual({slug: s for slug, s in migration.SPECIALTIES.items() if slug in meta}, meta)
         Guide.objects.update(specialty='')  # as before the migration
         Guide.objects.filter(slug='pary-pre-pechotu').update(specialty='archer')  # already set by hand

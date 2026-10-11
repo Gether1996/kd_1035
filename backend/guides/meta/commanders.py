@@ -2,7 +2,8 @@
 
 Write every text yourself in SK and CZ – facts from the sources listed in each guide, never copied prose.
 Field, garrison and rally pairs follow the YouTube creator WarDaddyChadski (Gether, 9. 10. 2026): his dated guides,
-read as transcripts (tools/youtube/transcripts.py). Websites stay the source for PvE, F2P, gathering and talent trees.
+read as transcripts (tools/youtube/transcripts.py). Siege (engineering) pairs follow Mr Siege (@MrSiegeOfficial,
+Gether 11. 10. 2026). Websites stay the source for PvE, F2P, gathering and talent trees.
 """
 
 from .render import t
@@ -42,6 +43,22 @@ CH_ARCH = chadski('The End Of Zhuge: Archer Guide (07/2026)', 'ycX5S_GcRmw')
 CH_ARCH_NEXT = chadski('Next Generation Archers (09/2026)', 'OCxCxzKX_hg')
 CH_GARRISON = chadski('Meta Garrison Guide (08/2026)', 'mkh_eDDCY3I')
 CH_SWARM = chadski('Swarm Meta Punishes (09/2026)', 'bur8GUukxQc')
+CH_FIELD = chadski('Ultimate Field March Guide: Best Line Ups (05/2026)', 'WYAjXB0PjDc')
+CH_INVEST_MAY = chadski('Commander Investment Tier List: Field Commanders (05/2026)', '7gihZTP8WsA')
+CH_CITY = chadski('City Garrison Guide (01/2026)', 'V9E77itNiPY')
+CH_TRAP = chadski('I Got Swarmed! Can The Trap City Hold Up? (09/2026)', 'tpKYvffPZw8')
+CH_WEDGE = chadski('God Tier Rally and Garrison: Wedge 2.0 Is Broken (04/2026)', '4uNR257mZS8')
+CH_SHAPUR = chadski('Shapur Testing Results (07/2025)', 'mDX9tokh7m4')
+
+
+def mr_siege(title, video):
+    return (f'Mr Siege: {title}', f'https://www.youtube.com/watch?v={video}')
+
+
+# siege (engineering) marches: the YouTube creator Mr Siege (Gether, 11. 10. 2026)
+MS_NOOBS = mr_siege('Engineering For Noobs 2026: Build Your First Siege March (09/2026)', 'vXhKxwAWdms')
+MS_TIERS = mr_siege('The New 2026 Siege Tier List (07/2026)', 'RI72lN9KqcA')
+MS_ELIZABETH = mr_siege('Elizabeth Exceeded Expectations: Best Pairings (06/2026)', 'I6WCc0Tpz8A')
 
 
 OPEN_FIELD = ['primary', 'secondary', 'why', 'talents']
@@ -123,6 +140,9 @@ GUIDES = [
                 {'primary': 'Achilles', 'secondary': 'William Marshal',
                  'why': t('Keď nemáš Ganga ani Attilu. Marshalovi stačí 5511: jeho combo zasahuje tri sekundy po sebe, takže stále spúšťa talenty na rage. S armádou Arthur + Ivan IV tvorí rovnako dobrú dvojicu ako ostatné.',
                           'Když nemáš Ganga ani Attilu. Marshalovi stačí 5511: jeho combo zasahuje tři sekundy po sobě, takže pořád spouští talenty na rage. S armádou Arthur + Ivan IV tvoří stejně dobrou dvojici jako ostatní.')},
+                {'primary': 'Ivan IV', 'secondary': 'Vercingetorix',
+                 'why': t('Tretia armáda, keď nemáš Hectora – namiesto Ivan IV + Hector.',
+                          'Třetí armáda, když nemáš Hectora – místo Ivan IV + Hector.')},
                 {'primary': 'Attila / Gang Gamchan', 'secondary': 'William Marshal',
                  'why': t('Tretia jazdecká armáda: Marshal dodá Attilovi rage, ktorý potrebuje. Funguje aj Gang Gamchan + Marshal, Achilles potom ide k Attilovi.',
                           'Třetí jízdní armáda: Marshal dodá Attilovi rage, který potřebuje. Funguje i Gang Gamchan + Marshal, Achilles pak jde k Attilovi.')},
@@ -176,6 +196,12 @@ GUIDES = [
                 {'primary': 'Scipio Africanus Prime', 'secondary': 'Liu Che',
                  'why': t('Tretia armáda. Úprava stromu Support a bonus z múzea vrátili Scipia do hry, no stále je podceňovaný.',
                           'Třetí armáda. Úprava stromu Support a bonus z muzea vrátily Scipia do hry, ale pořád je podceňovaný.')},
+                {'primary': 'Bai Qi', 'secondary': 'Vercingetorix',
+                 'why': t('Namiesto Bai Qi + Liu Che v zostave so Sun Tzu Prime + Ivar a Scipio Prime + Liu Che. Podľa dát RoKBattles má podobný trade, hrajú ho však hlavne hráči s top výbavou.',
+                          'Místo Bai Qi + Liu Che v sestavě se Sun Tzu Prime + Ivar a Scipio Prime + Liu Che. Podle dat RoKBattles má podobný trade, hrají ho ale hlavně hráči s top výbavou.')},
+                {'primary': 'Scipio Africanus Prime', 'secondary': 'Ragnar Lodbrok Prime',
+                 'why': t('Armáda na skill poškodenie pri troch alebo štyroch peších armádach. Scipiov strom Support a nápisy formácie Wedge pomáhajú ich plošnému poškodeniu.',
+                          'Armáda na skill poškození při třech nebo čtyřech pěších armádách. Scipiův strom Support a nápisy formace Wedge pomáhají jejich plošnému poškození.')},
             ]),
             ('h2', t('Zostavy', 'Sestavy')),
             ('lineups', [
@@ -189,8 +215,10 @@ GUIDES = [
                   'Sun Tzu Prime chce expertízu. Na 5511 má jen asi 70 % síly.'),
                 t('Do Williama Wallacea ani Vercingetorixa už neinvestuj. Wallace poslúži namiesto Ivara, ak ho už máš.',
                   'Do Williama Wallace ani Vercingetorixe už neinvestuj. Wallace poslouží místo Ivara, pokud ho už máš.'),
+                t('Ani Ragnar Lodbrok Prime sa už neoplatí kupovať – pechota na skill poškodenie zaostáva za smite pechotou.',
+                  'Ani Ragnar Lodbrok Prime se už nevyplatí kupovat – pěchota na skill poškození zaostává za smite pěchotou.'),
             ]),
-            ('sources', [CH_INF, CH_LINEUPS, CH_KP, CH_INF_NEXT, CH_INVEST, ('AllClash: Sun Tzu Prime Builds', 'https://www.allclash.com/best-sun-tzu-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/')]),
+            ('sources', [CH_INF, CH_LINEUPS, CH_FIELD, CH_KP, CH_INF_NEXT, CH_INVEST, CH_INVEST_MAY, ('AllClash: Sun Tzu Prime Builds', 'https://www.allclash.com/best-sun-tzu-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/')]),
         ],
     },
     {
@@ -219,6 +247,9 @@ GUIDES = [
                 {'primary': 'Zhuge Liang', 'secondary': 'Philip II',
                  'why': t('Len ako tretia lukostrelecká armáda. Philip pridá buffy a debuffy, armáda však má slabý trade (asi 64 %).',
                           'Jen jako třetí lučištnická armáda. Philip přidá buffy a debuffy, armáda ale má slabý trade (asi 64 %).')},
+                {'primary': 'Zhuge Liang', 'secondary': 'Ashurbanipal',
+                 'why': t('Tretia lukostrelecká armáda čisto na skill poškodenie – namiesto Philipa II.',
+                          'Třetí lučištnická armáda čistě na skill poškození – místo Philipa II.')},
             ]),
             ('h2', t('Tipy', 'Tipy')),
             ('ul', [
@@ -227,7 +258,48 @@ GUIDES = [
                 t('Do Alp Arslana nedávaj zlaté hlavy. Začiatkom roka 2027 sa čaká nový lukostrelecký commander s plošným útokom – šetri na neho.',
                   'Do Alp Arslana nedávej zlaté hlavy. Začátkem roku 2027 se čeká nový lučištnický commander s plošným útokem – šetři na něj.'),
             ]),
-            ('sources', [CH_ARCH, CH_ARCH_NEXT, CH_LINEUPS, CH_INVEST, CH_KP]),
+            ('sources', [CH_ARCH, CH_ARCH_NEXT, CH_LINEUPS, CH_FIELD, CH_INVEST, CH_KP]),
+        ],
+    },
+    {
+        'slug': 'pary-pre-siege',
+        'specialty': 'engineering',
+        'title': t('Páry commanderov pre siege', 'Páry commanderů pro siege'),
+        'blocks': [
+            ('p', t(
+                'Siege (obliehacie jednotky) na otvorené pole: útočia na diaľku a väčšine hráčov stačí jedna siege armáda.',
+                'Siege (obléhací jednotky) na otevřené pole: útočí na dálku a většině hráčů stačí jedna siege armáda.',
+            )),
+            ('note',),
+            ('pairs', OPEN_FIELD, [
+                {'primary': 'Gonzalo de Cordoba', 'secondary': 'Gajah Mada',
+                 'why': t('Najlepšia siege armáda. Legendárne nápisy formácie V zvyšujú poškodenie bežného útoku na diaľku, ktoré obom sedí. Na krátke bitky Gonzalo primárny, na dlhé (oltáre) Gajah Mada – viac lieči. Rage získava pomaly, potrebuje doplnky na rage.',
+                          'Nejlepší siege armáda. Legendární nápisy formace V zvyšují poškození běžného útoku na dálku, které oběma sedí. Na krátké bitvy Gonzalo primární, na dlouhé (oltáře) Gajah Mada – víc léčí. Rage získává pomalu, potřebuje doplňky na rage.')},
+                {'primary': 'Afonso de Albuquerque', 'secondary': 'Elizabeth I', 'talents': 'Engineering',
+                 'why': t('Najlepšia voľba bez legendárnych nápisov. Afonsov plošný útok na tri ciele drží armádu v boji a Elizabeth pridá toľko rage, že doplnky na rage netreba. Je aj výdržná.',
+                          'Nejlepší volba bez legendárních nápisů. Afonsův plošný útok na tři cíle drží armádu v boji a Elizabeth přidá tolik rage, že doplňky na rage nejsou potřeba. Je i výdržná.')},
+                {'primary': 'Elizabeth I', 'secondary': 'John Hunyadi / Babur',
+                 'why': t('Keď nemáš Afonsa – v testoch skoro rovnako dobré ako Afonso + Elizabeth. Elizabeth patrí na primárny slot.',
+                          'Když nemáš Afonsa – v testech skoro stejně dobré jako Afonso + Elizabeth. Elizabeth patří na primární slot.')},
+                {'primary': 'John Hunyadi', 'secondary': 'Stephen III', 'talents': 'Engineering',
+                 'why': t('Silná proti slabším armádam s nízkym zdravím, pri swarme však rýchlo padne. Stephen nepatrí na primárny slot.',
+                          'Silná proti slabším armádám s nízkým zdravím, při swarmu ale rychle padne. Stephen nepatří na primární slot.')},
+                {'primary': 'Margaret I', 'secondary': 'Babur', 'talents': 'Engineering',
+                 'why': t('O niečo výdržnejšia ako John + Stephen, v poradí hneď za ňou.',
+                          'O něco výdržnější než John + Stephen, v pořadí hned za ní.')},
+            ]),
+            ('h2', t('Tipy', 'Tipy')),
+            ('ul', [
+                t('Afonso, Margaret I a John Hunyadi dostávajú naplno strom Engineering, Gonzalo a Gajah Mada naplno talent Forbearance.',
+                  'Afonso, Margaret I a John Hunyadi dostávají naplno strom Engineering, Gonzalo a Gajah Mada naplno talent Forbearance.'),
+                t('Archimedes má zmysel až pri štyroch či piatich siege armádach – zvyšuje poškodenie bežného útoku na diaľku o 50 %.',
+                  'Archimedes má smysl až při čtyřech či pěti siege armádách – zvyšuje poškození běžného útoku na dálku o 50 %.'),
+                t('Epickí siege commanderi (Catherine de’ Medici, Narses) a staršie siege páry sa neoplatia.',
+                  'Epičtí siege commandeři (Catherine de’ Medici, Narses) a starší siege páry se nevyplatí.'),
+            ]),
+            ('sources', [MS_NOOBS, MS_TIERS, MS_ELIZABETH,
+                         ('AllClash: Elizabeth I Builds (08/2026)', 'https://www.allclash.com/best-elizabeth-i-builds-talent-tree-skill-order-best-pairing-in-rise-of-kingdoms/'),
+                         ('Rise of Kingdoms Guides: Gajah Mada', 'https://riseofkingdomsguides.com/gajah-mada-talent-tree-build-and-guide/')]),
         ],
     },
     {
@@ -256,6 +328,12 @@ GUIDES = [
                 {'primary': 'David IV', 'secondary': 'Hector', 'troops': CAV,
                  'why': t('Proti rally jeden na jedného, keď ti nehrozí swarm. David potrebuje sekundárneho s combo útokom.',
                           'Proti rally jeden na jednoho, když ti nehrozí swarm. David potřebuje sekundárního s combo útokem.')},
+                {'primary': 'Hayam Wuruk', 'secondary': 'Choe Yeong', 'troops': ARCH,
+                 'why': t('Choe Yeong lieči a pridá protiútok, takže armáda obstojí aj proti swarmu. S Hayam + Hector najlepší lukostrelecký garrison proti rally, jazdecký rally Subutai + William Marshal ho však rozbije.',
+                          'Choe Yeong léčí a přidá protiútok, takže armáda obstojí i proti swarmu. S Hayam + Hector nejlepší lučištnický garrison proti rally, jízdní rally Subutai + William Marshal ho ale rozbije.')},
+                {'primary': 'Heraclius', 'secondary': 'Matthias I', 'troops': t('zmiešané, iba mesto', 'smíšené, jen město'),
+                 'why': t('Najlepšia obrana mesta proti swarmu – v meste leadership skilly fungujú so zmiešanými jednotkami. Matthias patrí len do mesta, na vlajky, pevnosti ani priesmyky nie.',
+                          'Nejlepší obrana města proti swarmu – ve městě leadership skilly fungují se smíšenými jednotkami. Matthias patří jen do města, na vlajky, pevnosti ani průsmyky ne.')},
                 {'primary': 'Gorgo', 'secondary': 'Charles Martel', 'troops': INF,
                  'why': t('Trestá swarm silným protiútokom, proti rally však prehráva.',
                           'Trestá swarm silným protiútokem, proti rally ale prohrává.')},
@@ -264,14 +342,12 @@ GUIDES = [
             ('ul', [
                 t('Swarm = veľa samostatných armád naraz na jeden cieľ. Dnes ho používajú kráľovstvá vo všetkých seedoch, preto maj v zálohe aj pár proti swarmu.',
                   'Swarm = hodně samostatných armád najednou na jeden cíl. Dnes ho používají království ve všech seedech, proto měj v záloze i pár proti swarmu.'),
-                t('Alternatíva pre lukostrelcov: Hayam Wuruk + Choe Yeong lieči viac a obstojí aj proti swarmu.',
-                  'Alternativa pro lučištníky: Hayam Wuruk + Choe Yeong léčí víc a obstojí i proti swarmu.'),
-                t('Miešané garrisony (napríklad s Heracliom) dnes rýchlo padajú.',
-                  'Smíšené garrisony (například s Heracliem) dnes rychle padají.'),
+                t('Miešané garrisony na vlajkách a budovách (napríklad s Heracliom) dnes rýchlo padajú. Výnimkou je mesto s Matthiasom I.',
+                  'Smíšené garrisony na vlajkách a budovách (například s Heracliem) dnes rychle padají. Výjimkou je město s Matthiasem I.'),
                 t('V KvK s artefaktmi je najlepšia Gorgo + David IV s formáciou Arch.',
                   'V KvK s artefakty je nejlepší Gorgo + David IV s formací Arch.'),
             ]),
-            ('sources', [CH_SWARM, CH_GARRISON, CH_LEADERSHIP, CH_RALLY]),
+            ('sources', [CH_SWARM, CH_GARRISON, CH_LEADERSHIP, CH_RALLY, CH_TRAP, CH_CITY]),
         ],
     },
     {
@@ -297,6 +373,9 @@ GUIDES = [
                 {'primary': 'Ivar the Boneless', 'secondary': 'Bai Qi', 'troops': INF,
                  'why': t('Ivar má efekty proti combu a proti jazde, Bai Qi pridá plošné poškodenie. Funguje aj Sun Tzu Prime + Ivar.',
                           'Ivar má efekty proti combu a proti jízdě, Bai Qi přidá plošné poškození. Funguje i Sun Tzu Prime + Ivar.')},
+                {'primary': 'Shapur I', 'secondary': 'Ashurbanipal', 'troops': ARCH,
+                 'why': t('Meta lukostrelecký rally. Ashurbanipalova expertíza pri každom aktívnom skille spúšťa Shapurov rage a skill poškodenie. Proti garrisonom Gorgo s formáciou Pincer 2.0 už končí zhruba nerozhodne.',
+                          'Meta lučištnický rally. Ashurbanipalova expertíza při každém aktivním skillu spouští Shapurův rage a skill poškození. Proti garrisonům Gorgo s formací Pincer 2.0 už končí zhruba nastejno.')},
                 {'primary': 'Nebuchadnezzar II', 'secondary': 'Gilgamesh', 'troops': ARCH,
                  'why': t('Gilgamesh znižuje liečenie a obranu cieľa, takže rozbije garrison postavený na liečení.',
                           'Gilgamesh snižuje léčení a obranu cíle, takže rozbije garrison postavený na léčení.')},
@@ -310,7 +389,7 @@ GUIDES = [
                 t('Ivan IV sa na rally nehodí, všetky jeho skilly fungujú len v poli.',
                   'Ivan IV se na rally nehodí, všechny jeho skilly fungují jen v poli.'),
             ]),
-            ('sources', [CH_RALLY, CH_MARSHAL_RALLY, CH_IVAN, AC_TIERS, ('AllClash: William Marshal Builds (08/2026)', 'https://www.allclash.com/best-william-marshal-builds-talent-tree-skill-order-best-pairing-in-rise-of-kingdoms/')]),
+            ('sources', [CH_RALLY, CH_MARSHAL_RALLY, CH_WEDGE, CH_SWARM, CH_SHAPUR, CH_IVAN, AC_TIERS, ('AllClash: William Marshal Builds (08/2026)', 'https://www.allclash.com/best-william-marshal-builds-talent-tree-skill-order-best-pairing-in-rise-of-kingdoms/')]),
         ],
     },
     {

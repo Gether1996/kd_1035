@@ -56,7 +56,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 
 ## Návody (CMS)
 - Návody spravuje **iba superuser** v Django admine. HTML čistí **nh3** (`backend/guides/sanitize.py`), frontend ho vkladá cez `bypassSecurityTrustHtml`, vzhľad určuje `.prose` v `styles.scss`.
-- Automaticky aktualizované návody (commanderi, výbava, eventy) sú **dáta v kóde** `backend/guides/meta/*.py`; `sync_meta_guides` ich zapisuje do DB, mení iba `auto_update=True`. Nový obsah od Clauda patrí do `guides/meta`, fakty len z datovaných zdrojov uvedených pod návodom. Páry commanderov idú podľa **WarDaddyChadského** (prepisy videí cez `tools/youtube/transcripts.py`), mesačne ich obnovuje workflow `kd-meta-update`.
+- Automaticky aktualizované návody (commanderi, výbava, eventy) sú **dáta v kóde** `backend/guides/meta/*.py`; `sync_meta_guides` ich zapisuje do DB, mení iba `auto_update=True`. Nový obsah od Clauda patrí do `guides/meta`, fakty len z datovaných zdrojov uvedených pod návodom. Páry commanderov idú podľa **WarDaddyChadského**, siege páry podľa **Mr Siege** (`@MrSiegeOfficial`; prepisy videí cez `tools/youtube/transcripts.py`), mesačne ich obnovuje workflow `kd-meta-update`.
 - **Pred prácou na návodoch, meta moduloch, ikonách alebo mesačnej aktualizácii prečítaj [`docs/navody.md`](docs/navody.md).**
 
 ## Hráčske účty (prihlásenie cez Discord)
