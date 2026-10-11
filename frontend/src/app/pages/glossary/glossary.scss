@@ -1,0 +1,98 @@
+:host {
+  display: block;
+}
+
+.content {
+  padding-block: clamp(32px, 5vw, 56px) clamp(64px, 9vw, 112px);
+}
+
+.search {
+  position: relative;
+  max-width: 460px;
+
+  .input {
+    padding-left: 42px;
+  }
+}
+
+.search__icon {
+  position: absolute;
+  top: 24px;
+  left: 14px;
+  width: 17px;
+  height: 17px;
+  color: var(--text-mute);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.group {
+  margin-top: clamp(32px, 5vw, 48px);
+}
+
+.group__title {
+  font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.625rem);
+}
+
+.terms {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.term {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  // a jump to /slovnik#kvk stops under the fixed header
+  scroll-margin-top: calc(var(--header-h) + 16px);
+
+  &:target {
+    border-color: var(--line-strong);
+  }
+
+  dd {
+    margin: 6px 0 0;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+}
+
+// Barlow, not Cinzel: Cinzel has no lowercase and AoO, KvK or SoC would lose their case
+.term__name {
+  font: 700 1.125rem/1.25 var(--font-body);
+  color: var(--gold-100);
+}
+
+.term__full {
+  margin-left: 8px;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.term__guide {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  color: var(--gold-300);
+  font-weight: 600;
+  white-space: nowrap;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    transition: translate 0.2s var(--ease-out);
+  }
+
+  &:hover .icon {
+    translate: 3px 0;
+  }
+}
+
+.empty {
+  margin-top: 24px;
+  color: var(--text-dim);
+}

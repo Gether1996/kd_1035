@@ -17,6 +17,7 @@ const pages = (): Routes => [
   { path: 'ochrana-udajov', component: Privacy },
   { path: 'ucet', component: Account },
   { path: 'pripomienky', component: RemindersPage },
+  { path: 'slovnik', loadComponent: () => import('./pages/glossary/glossary').then((m) => m.Glossary) },
   // guides are loaded on demand: the initial bundle stays within its 600 kB budget (angular.json)
   { path: 'navody', loadComponent: () => import('./pages/guides/guide-hub').then((m) => m.GuideHub) },
   { path: 'navody/:category', loadComponent: () => import('./pages/guides/guide-list').then((m) => m.GuideList) },

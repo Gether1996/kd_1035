@@ -1,0 +1,49 @@
+@let g = t();
+
+<app-page-header [crumbs]="crumbs()" [eyebrow]="g.eyebrow" [title]="g.title" [intro]="g.intro" />
+
+<div class="container content">
+  <div class="search">
+    <label class="sr-only" for="glossary-search">{{ g.search }}</label>
+    <svg class="search__icon" appIcon="search"></svg>
+    <input
+      #field
+      id="glossary-search"
+      class="input"
+      type="search"
+      autocomplete="off"
+      spellcheck="false"
+      [placeholder]="g.search"
+      [value]="query()"
+      (input)="query.set(field.value)"
+    />
+  </div>
+
+  @for (group of groups(); track group.group) {
+    <section class="group" [attr.aria-labelledby]="'glossary-' + group.group">
+      <h2 class="group__title" [id]="'glossary-' + group.group">{{ g.groups[group.group] }}</h2>
+      <dl class="terms">
+        @for (term of group.terms; track term.id) {
+          <div class="term" [id]="term.id">
+            <dt>
+              <strong class="term__name">{{ name(term) }}</strong>
+              @if (term.full) {
+                <span class="term__full">{{ term.full }}</span>
+              }
+            </dt>
+            <dd>
+              {{ text(term) }}
+              @if (term.guide; as guide) {
+                <a class="term__guide" [routerLink]="i18n.guidePath(guide.category, guide.slug)">
+                  {{ g.guide }} <svg appIcon="arrow-right"></svg>
+                </a>
+              }
+            </dd>
+          </div>
+        }
+      </dl>
+    </section>
+  } @empty {
+    <p class="empty" role="status">{{ g.empty }}</p>
+  }
+</div>

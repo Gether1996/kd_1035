@@ -143,6 +143,34 @@
 
 // ---------------------------------------------------------------- hub (/navody)
 
+.glossary-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  margin: -12px 0 24px;
+  color: var(--text-dim);
+
+  .icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: var(--gold-400);
+  }
+
+  a {
+    color: var(--gold-300);
+    text-decoration: underline;
+    text-decoration-color: rgba(245, 196, 81, 0.35);
+    text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
 // the height of the commander finder before its chunk loads (the guide list below does not jump)
 .finder-placeholder {
   height: 206px;

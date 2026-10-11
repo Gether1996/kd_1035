@@ -18,6 +18,11 @@
     }
   </nav>
 
+  <p class="glossary-link">
+    <svg appIcon="lightbulb"></svg>
+    <a [routerLink]="i18n.path('glossary')">{{ t.glossary.link }}</a>
+  </p>
+
   <!-- its own chunk (bundle budget); a shared link with ?commander= loads it right away -->
   @defer (on viewport; when !!commander()) {
     <app-commander-finder [commander]="commander()" />

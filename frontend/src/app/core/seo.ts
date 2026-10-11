@@ -46,7 +46,8 @@ export class Seo {
         page === 'calendar' ||
         page === 'terms' ||
         page === 'privacy' ||
-        page === 'guideHub'
+        page === 'guideHub' ||
+        page === 'glossary'
           ? t.seo[page]
           : null;
       const current: PageMeta = this.override() ?? fixed ?? t.seo.home;

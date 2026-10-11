@@ -35,6 +35,11 @@ export const sk = {
       title: 'Pripomienky eventov na Discorde | KD 1035',
       description: 'Vyber si eventy kráľovstva KD 1035 a náš Discord bot ti pred začiatkom pošle súkromnú správu.',
     },
+    glossary: {
+      title: 'Slovník pojmov Rise of Kingdoms – KvK, MGE, KP, rally · KD 1035',
+      description:
+        'Čo znamená KvK, MGE, KP, DKP, rally či garrison? Skratky a pojmy z Rise of Kingdoms po slovensky od hráčov slovensko-českého kráľovstva KD 1035.',
+    },
     guideHub: {
       title: 'Návody pre Rise of Kingdoms · KD 1035 CZ/SK',
       description:
@@ -176,6 +181,21 @@ export const sk = {
     },
     anyone: 'ktokoľvek',
     count: { one: 'odporúčanie', few: 'odporúčania', other: 'odporúčaní' },
+  },
+  glossary: {
+    eyebrow: 'Návody',
+    title: 'Slovník pojmov',
+    intro: 'Skratky a slang z Rise of Kingdoms, ktoré uvidíš v chate aj v návodoch.',
+    search: 'Hľadať pojem',
+    empty: 'Taký pojem v slovníku nemáme.',
+    guide: 'Návod',
+    link: 'Nevieš, čo znamená KP alebo rally? Pozri slovník pojmov.',
+    groups: {
+      kingdom: 'Kráľovstvo a eventy',
+      battle: 'Boj',
+      account: 'Účet a commanderi',
+      alliance: 'Aliancia a mapa',
+    },
   },
   builder: {
     title: 'Čo môžem postaviť',
