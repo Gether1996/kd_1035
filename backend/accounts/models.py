@@ -228,14 +228,17 @@ class ArmyFields(models.Model):
 
 
 class KvkSignup(ArmyFields):
-    """A player's sign-up for a KvK: role, commander pair, armament bonuses, note and one screenshot of the equipment
-    and one of the armaments (KvkImage) – like a march. Seen only by the player, the players with Player.kvk_reviewer
-    and the superuser."""
+    """A player's sign-up for a KvK as rally or garrison: commander pair, armament bonuses, note and one screenshot of
+    the equipment and one of the armaments (KvkImage) – like a march. A player may sign up for both, each with its own
+    army (Gether 11. 10. 2026). Seen only by the player, the players with Player.kvk_reviewer and the superuser."""
+
+    class Role(models.TextChoices):
+        RALLY = 'rally', 'rally'
+        GARRISON = 'garrison', 'garrison'
 
     round = models.ForeignKey(KvkRound, on_delete=models.CASCADE, related_name='signups', verbose_name='KvK')
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kvk_signups', verbose_name='hráč')
-    rally = models.BooleanField('rally', default=False)
-    garrison = models.BooleanField('garrison', default=False)
+    role = models.CharField('rola', max_length=8, choices=Role.choices)
     note = models.CharField('poznámka', max_length=500, blank=True)
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
@@ -244,10 +247,12 @@ class KvkSignup(ArmyFields):
         ordering = ['-updated_at']
         verbose_name = 'KvK prihláška'
         verbose_name_plural = 'KvK prihlášky'
-        constraints = [models.UniqueConstraint(fields=['round', 'player'], name='one_kvk_signup_per_player')]
+        constraints = [
+            models.UniqueConstraint(fields=['round', 'player', 'role'], name='one_kvk_signup_per_player_and_role')
+        ]
 
     def __str__(self):
-        return f'{self.player} · {self.round}'
+        return f'{self.player} · {self.round} · {self.get_role_display()}'
 
 
 class KvkImage(models.Model):

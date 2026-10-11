@@ -1,5 +1,5 @@
-"""KvK sign-ups (/api/kvk/…): players sign up for rally / garrison filled in like a march (Gether 11. 10. 2026) –
-commander pair, armament bonuses and one screenshot of the equipment and one of the armaments; reviewers (Player.kvk_reviewer, e.g. R4) and the superuser see every sign-up together
+"""KvK sign-ups (/api/kvk/…): players sign up for rally and / or garrison, each filled in like a march (Gether
+11. 10. 2026) – commander pair, armament bonuses and one screenshot of the equipment and one of the armaments; reviewers (Player.kvk_reviewer, e.g. R4) and the superuser see every sign-up together
 with the player's marches (/ucet); the superuser opens and closes the rounds and picks the reviewers. Session + CSRF
 like the rest of the player API. Closed rounds are deleted KVK_KEEP_DAYS later (cleanup.py).
 """
@@ -27,6 +27,7 @@ from .views import player_of
 
 log = logging.getLogger(__name__)
 KINDS = [kind for kind, _ in KvkImage.Kind.choices]
+ROLES = [role for role, _ in KvkSignup.Role.choices]
 # one screenshot of the equipment and one of the armaments, like a march
 MAX_IMAGES_PER_KIND = 1
 
@@ -96,8 +97,7 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
     data = {
         'id': signup.pk,
         'round': signup.round_id,
-        'rally': signup.rally,
-        'garrison': signup.garrison,
+        'role': signup.role,
         **army_data(signup),
         'note': signup.note,
         'updated_at': iso(signup.updated_at),
@@ -137,13 +137,10 @@ def signups_of(player: Player) -> list[KvkSignup]:
 
 class SignupSerializer(ArmySerializer):
     ingame_name = serializers.CharField(max_length=32, trim_whitespace=True)
-    rally = serializers.BooleanField(default=False)
-    garrison = serializers.BooleanField(default=False)
+    role = serializers.ChoiceField(choices=KvkSignup.Role.choices)
     note = serializers.CharField(max_length=500, allow_blank=True, default='', trim_whitespace=True)
 
     def validate(self, data):
-        if not (data['rally'] or data['garrison']):
-            raise serializers.ValidationError({'role': 'required'})
         # the primary commander is required, like in a march
         if not data.get('primary'):
             raise serializers.ValidationError({'primary': 'required'})
@@ -153,19 +150,19 @@ class SignupSerializer(ArmySerializer):
 @never_cache
 @api_view(['GET'])
 def state(request):
-    """The open round, the player's sign-up and what the visitor may do. Anyone may ask (anonymous visitors get the
-    round only, to see whether sign-ups are open)."""
+    """The open round, the player's rally and garrison sign-ups and what the visitor may do. Anyone may ask
+    (anonymous visitors get the round only, to see whether sign-ups are open)."""
     player = player_of(request.user)
     current = open_round()
     mine = signups_of(player) if player else []
-    signup = next((s for s in mine if current and s.round_id == current.pk), None)
+    now = [s for s in mine if current and s.round_id == current.pk]
     return Response(
         {
             'round': round_data(current),
-            'signup': signup_data(signup) if signup else None,
+            'signups': {role: next((signup_data(s) for s in now if s.role == role), None) for role in ROLES},
             # sign-ups in closed rounds: the reviewers still see them until the round is deleted (60 days), so the
             # player sees them too and may withdraw them or delete their screenshots
-            'older': [{'round': round_data(s.round), 'signup': signup_data(s)} for s in mine if s is not signup],
+            'older': [{'round': round_data(s.round), 'signup': signup_data(s)} for s in mine if s not in now],
             'player': bool(player),
             'ingame_name': player.ingame_name if player else '',
             'reviewer': private_images.can_review(request.user),
@@ -179,16 +176,20 @@ def state(request):
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def signup(request):
-    """PUT: sign up for the open round or change the sign-up (the in-game name is saved on the player too).
-    DELETE [?round=<id>]: withdraw the player's sign-up of that round (default: the open one), screenshots included."""
+    """PUT {role, …}: sign up for the open round as rally or garrison, or change that sign-up (the in-game name is
+    saved on the player too). DELETE ?role=<rally|garrison>[&round=<id>]: withdraw that sign-up of the round (default:
+    the open one), screenshots included."""
     player = request.user.player
     current = open_round()
     if request.method == 'DELETE':
         round_id = request.query_params.get('round')
+        role = request.query_params.get('role')
         if round_id is not None and not round_id.isdigit():
             return Response({'round': 'invalid'}, status=400)
+        if role not in ROLES:
+            return Response({'role': 'invalid'}, status=400)
         target = int(round_id) if round_id else (current.pk if current else None)
-        KvkSignup.objects.filter(player=player, round_id=target).delete()
+        KvkSignup.objects.filter(player=player, round_id=target, role=role).delete()
         return Response(status=204)
     if not current:
         return Response({'detail': 'closed'}, status=409)
@@ -198,7 +199,7 @@ def signup(request):
     with transaction.atomic():
         player.ingame_name = data.pop('ingame_name')
         player.save(update_fields=['ingame_name'])
-        mine, _ = KvkSignup.objects.update_or_create(round=current, player=player, defaults=data)
+        mine, _ = KvkSignup.objects.update_or_create(round=current, player=player, role=data.pop('role'), defaults=data)
     return Response(signup_data(mine))
 
 
@@ -218,10 +219,12 @@ def store_image(model, upload_file, folder: str, **fields):
 @permission_classes([IsPlayer])
 @throttle_classes([UploadThrottle])
 def upload(request):
-    """POST multipart {kind: equipment|armaments, file}: the screenshot for the player's sign-up in the open round."""
+    """POST multipart {role: rally|garrison, kind: equipment|armaments, file}: the screenshot for that sign-up of the
+    player in the open round."""
     player = request.user.player
     current = open_round()
-    mine = current and KvkSignup.objects.filter(round=current, player=player).first()
+    role = request.data.get('role')
+    mine = current and KvkSignup.objects.filter(round=current, player=player, role=role).first()
     if not mine:
         return Response({'detail': 'no_signup'}, status=409)
     kind = request.data.get('kind')
@@ -277,7 +280,7 @@ def round_signups(request, round_id):
     )
     rows = sorted(
         (signup_data(s, with_player=True) for s in signups),
-        key=lambda s: (s['player']['ingame_name'] or s['player']['name']).casefold(),
+        key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role']),
     )
     return Response({'round': round_data(kvk_round), 'signups': rows})
 

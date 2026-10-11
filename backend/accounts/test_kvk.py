@@ -55,18 +55,19 @@ class KvkTestCase(TestCase):
         return getattr(client, method)(url, body, content_type='application/json', HTTP_X_CSRFTOKEN=client.token, **extra)
 
     def sign_up(self, client=None, **data):
-        body = {'ingame_name': 'Nelly', 'rally': True, 'garrison': False, 'primary': 'Attila', **data}
+        body = {'ingame_name': 'Nelly', 'role': 'rally', 'primary': 'Attila', **data}
         return self.call('put', '/api/kvk/signup/', body, client)
 
-    def upload(self, kind='equipment', file=None, client=None):
-        return self.call('post_file', '/api/kvk/signup/images/', {'kind': kind, 'file': file or picture()}, client)
+    def upload(self, kind='equipment', file=None, client=None, role='rally'):
+        body = {'role': role, 'kind': kind, 'file': file or picture()}
+        return self.call('post_file', '/api/kvk/signup/images/', body, client)
 
 
 class SignupTests(KvkTestCase):
     def test_state_signup_and_withdraw(self):
         state = self.client.get('/api/kvk/').json()
         self.assertEqual(state['round']['title_sk'], 'KvK 3')
-        self.assertIsNone(state['signup'])
+        self.assertEqual(state['signups'], {'rally': None, 'garrison': None})
         self.assertFalse(state['reviewer'])
 
         res = self.sign_up(note=' prvý rally ')
@@ -75,12 +76,27 @@ class SignupTests(KvkTestCase):
         self.assertEqual(self.player.ingame_name, 'Nelly')
         self.assertEqual(res.json()['note'], 'prvý rally')
         self.assertFalse(res.json()['complete'])
-        # a second PUT changes the same sign-up
-        self.sign_up(garrison=True)
-        self.assertEqual(KvkSignup.objects.get().garrison, True)
+        # a second PUT of the same role changes it
+        self.sign_up(secondary='Takeda Shingen')
+        self.assertEqual(KvkSignup.objects.get().secondary, 'Takeda Shingen')
 
-        self.assertEqual(self.call('delete', '/api/kvk/signup/').status_code, 204)
+        self.assertEqual(self.call('delete', '/api/kvk/signup/').status_code, 400)
+        self.assertEqual(self.call('delete', '/api/kvk/signup/?role=rally').status_code, 204)
         self.assertFalse(KvkSignup.objects.exists())
+
+    def test_rally_and_garrison_are_two_sign_ups_with_their_own_army(self):
+        self.sign_up(primary='Attila')
+        self.sign_up(role='garrison', primary='Takeda Shingen', note='mesto')
+        self.upload(kind='armaments', role='garrison')
+        signups = self.client.get('/api/kvk/').json()['signups']
+        self.assertEqual((signups['rally']['primary'], signups['garrison']['primary']), ('Attila', 'Takeda Shingen'))
+        self.assertEqual([i['kind'] for i in signups['garrison']['images']], ['armaments'])
+        self.assertEqual(signups['rally']['images'], [])
+        # a screenshot needs one of the player's sign-ups of the open round
+        self.assertEqual(self.upload(role='nothing').status_code, 409)
+        # withdrawing the garrison keeps the rally
+        self.assertEqual(self.call('delete', '/api/kvk/signup/?role=garrison').status_code, 204)
+        self.assertEqual(list(KvkSignup.objects.values_list('role', flat=True)), ['rally'])
 
     def test_filled_in_like_a_march(self):
         res = self.sign_up(secondary='Takeda Shingen', attack=12, gold=3)
@@ -93,13 +109,14 @@ class SignupTests(KvkTestCase):
         self.assertEqual(self.sign_up(attack=100).status_code, 400)
         # a screenshot of the equipment and of the armaments makes it complete
         self.upload()
-        self.assertFalse(self.client.get('/api/kvk/').json()['signup']['complete'])
+        self.assertFalse(self.client.get('/api/kvk/').json()['signups']['rally']['complete'])
         self.upload(kind='armaments')
-        self.assertTrue(self.client.get('/api/kvk/').json()['signup']['complete'])
+        self.assertTrue(self.client.get('/api/kvk/').json()['signups']['rally']['complete'])
         self.assertEqual(self.upload(kind='vip').status_code, 400)
 
     def test_needs_a_role_a_name_and_an_open_round(self):
-        self.assertEqual(self.sign_up(rally=False).status_code, 400)
+        self.assertEqual(self.sign_up(role='').status_code, 400)
+        self.assertEqual(self.sign_up(role='both').status_code, 400)
         self.assertEqual(self.sign_up(ingame_name='').status_code, 400)
         self.round.is_open = False
         self.round.save()
@@ -264,7 +281,7 @@ class RetentionTests(KvkTestCase):
         self.round.save()
         state = self.client.get('/api/kvk/').json()
         self.assertIsNone(state['round'])
-        self.assertIsNone(state['signup'])
+        self.assertEqual(state['signups'], {'rally': None, 'garrison': None})
         self.assertEqual(state['older'][0]['round']['title_sk'], 'KvK 3')
         # the player may still delete a screenshot of the closed round
         image = KvkImage.objects.get()
@@ -282,16 +299,16 @@ class RetentionTests(KvkTestCase):
         new = KvkRound.objects.create(title_sk='KvK 4')
         self.sign_up()
         state = self.client.get('/api/kvk/').json()
-        self.assertEqual(state['signup']['round'], new.pk)
+        self.assertEqual(state['signups']['rally']['round'], new.pk)
         self.assertEqual([o['round']['id'] for o in state['older']], [self.round.pk])
 
-        self.assertEqual(self.call('delete', '/api/kvk/signup/?round=x').status_code, 400)
-        self.assertEqual(self.call('delete', f'/api/kvk/signup/?round={self.round.pk}').status_code, 204)
+        self.assertEqual(self.call('delete', '/api/kvk/signup/?role=rally&round=x').status_code, 400)
+        self.assertEqual(self.call('delete', f'/api/kvk/signup/?role=rally&round={self.round.pk}').status_code, 204)
         self.assertEqual(list(KvkSignup.objects.values_list('round_id', flat=True)), [new.pk])
         # someone else's round id deletes nothing of theirs
         other = make_player('42')
-        KvkSignup.objects.create(round=self.round, player=other, rally=True)
-        self.assertEqual(self.call('delete', f'/api/kvk/signup/?round={self.round.pk}').status_code, 204)
+        KvkSignup.objects.create(round=self.round, player=other, role='rally')
+        self.assertEqual(self.call('delete', f'/api/kvk/signup/?role=rally&round={self.round.pk}').status_code, 204)
         self.assertTrue(KvkSignup.objects.filter(player=other).exists())
 
     def test_sweep_deletes_only_old_orphans(self):

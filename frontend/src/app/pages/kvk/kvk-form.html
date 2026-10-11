@@ -40,19 +40,20 @@
         />
       </div>
 
-      <fieldset class="field">
-        <legend class="field__label">{{ k.role }}</legend>
-        <div class="chips">
-          <label class="chip">
-            <input type="checkbox" [checked]="rally()" (change)="rally.set(!rally())" />
-            <span><svg appIcon="swords"></svg>Rally</span>
-          </label>
-          <label class="chip">
-            <input type="checkbox" [checked]="garrison()" (change)="garrison.set(!garrison())" />
-            <span><svg appIcon="shield"></svg>Garrison</span>
-          </label>
+      <!-- rally and garrison are two sign-ups, each with its own army (Gether 11. 10. 2026) -->
+      <div class="field">
+        <span class="field__label" id="kvk-role">{{ k.role }}</span>
+        <div class="segmented role-tabs" role="group" aria-labelledby="kvk-role">
+          @for (r of roles; track r) {
+            <button type="button" [attr.aria-pressed]="role() === r" (click)="showRole(r)">
+              <svg [appIcon]="r === 'rally' ? 'swords' : 'shield'"></svg>{{ r === 'rally' ? 'Rally' : 'Garrison' }}
+              @if (signups()[r]) {
+                <svg class="role-tabs__done" appIcon="check"></svg><span class="sr-only">· {{ k.signedUp }}</span>
+              }
+            </button>
+          }
         </div>
-      </fieldset>
+      </div>
 
       <!-- the army like in a march: commander pair, screenshots of the equipment and the armaments, bonuses -->
       <app-march-fields
@@ -62,8 +63,8 @@
         [withKind]="false"
         [error]="armyProblem()"
         [uploadError]="uploadError()"
-        [heading]="title()"
-        idPrefix="kvk"
+        [heading]="title() + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
+        [idPrefix]="'kvk-' + role()"
       />
 
       <div class="field">
@@ -76,7 +77,7 @@
           maxlength="500"
           [placeholder]="k.notePlaceholder"
           [value]="note()"
-          (input)="note.set(noteInput.value)"
+          (input)="setNote(noteInput.value)"
         ></textarea>
       </div>
 
@@ -102,22 +103,24 @@
 
   @if (signup()) {
     <div class="withdraw">
-      @if (confirmWithdraw() === 'open') {
+      @if (confirmWithdraw() === role()) {
         <p>{{ k.withdrawConfirm }}</p>
-        <button type="button" class="danger" (click)="withdraw()">{{ k.withdrawYes }}</button>
+        <button type="button" class="danger" (click)="withdraw(role())">{{ k.withdrawYes }}</button>
         <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
       } @else {
-        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set('open')">{{ k.withdraw }}</button>
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(role())">
+          {{ k.withdraw }} · {{ role() === 'rally' ? 'Rally' : 'Garrison' }}
+        </button>
       }
     </div>
   }
 }
 
 <!-- sign-ups of closed rounds: the reviewers still see them until the round is deleted (60 days after closing) -->
-@for (o of older(); track o.round.id) {
-  <section class="panel" [attr.aria-labelledby]="'kvk-old-' + o.round.id">
-    <p class="panel__eyebrow">{{ k.signupEyebrow }}</p>
-    <h2 class="panel__title panel__title--small" [id]="'kvk-old-' + o.round.id">{{ roundTitle(o.round) }}</h2>
+@for (o of older(); track o.signup.id) {
+  <section class="panel" [attr.aria-labelledby]="'kvk-old-' + o.signup.id">
+    <p class="panel__eyebrow">{{ k.signupEyebrow }} · {{ o.signup.role === 'rally' ? 'Rally' : 'Garrison' }}</p>
+    <h2 class="panel__title panel__title--small" [id]="'kvk-old-' + o.signup.id">{{ roundTitle(o.round) }}</h2>
     <p class="panel__lead">{{ k.closedSignup }}</p>
     <ul class="thumbs">
       @for (image of ordered(o.signup); track image.id) {
@@ -135,12 +138,12 @@
       }
     </ul>
     <div class="withdraw">
-      @if (confirmWithdraw() === o.round.id) {
+      @if (confirmWithdraw() === o.signup.id) {
         <p>{{ k.withdrawConfirm }}</p>
-        <button type="button" class="danger" (click)="withdraw(o.round.id)">{{ k.withdrawYes }}</button>
+        <button type="button" class="danger" (click)="withdrawOlder(o.signup)">{{ k.withdrawYes }}</button>
         <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
       } @else {
-        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(o.round.id)">{{ k.withdraw }}</button>
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(o.signup.id)">{{ k.withdraw }}</button>
       }
     </div>
   </section>

@@ -63,10 +63,9 @@
               }
             </div>
             <p class="signup__roles">
-              @if (s.rally) {
+              @if (s.role === 'rally') {
                 <span class="tag"><svg appIcon="swords"></svg>Rally</span>
-              }
-              @if (s.garrison) {
+              } @else {
                 <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
               }
               @if (!s.complete) {

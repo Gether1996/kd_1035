@@ -3,6 +3,10 @@ import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/htt
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
+/** a player signs up for rally and garrison separately, each with its own army (Gether 11. 10. 2026) */
+export type KvkRole = 'rally' | 'garrison';
+export const KVK_ROLES: KvkRole[] = ['rally', 'garrison'];
+
 /** one screenshot of each, like a march (Gether 11. 10. 2026) */
 export type ImageKind = 'equipment' | 'armaments';
 export const IMAGE_KINDS: ImageKind[] = ['equipment', 'armaments'];
@@ -32,8 +36,7 @@ export interface KvkImage {
 export interface KvkSignup extends Partial<Record<MarchStat, number | null>> {
   id: number;
   round: number;
-  rally: boolean;
-  garrison: boolean;
+  role: KvkRole;
   primary: string;
   secondary: string;
   note: string;
@@ -98,8 +101,8 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
 export interface KvkState {
   /** the open round, null = sign-ups closed */
   round: KvkRound | null;
-  /** the player's sign-up in the open round */
-  signup: KvkSignup | null;
+  /** the player's rally and garrison sign-ups in the open round */
+  signups: Record<KvkRole, KvkSignup | null>;
   /** the player's sign-ups in closed rounds (deleted 60 days after closing) – may be withdrawn */
   older: { round: KvkRound; signup: KvkSignup }[];
   /** signed in with Discord */
@@ -111,8 +114,7 @@ export interface KvkState {
 
 export interface SignupForm extends Partial<Record<MarchStat, number | null>> {
   ingame_name: string;
-  rally: boolean;
-  garrison: boolean;
+  role: KvkRole;
   primary: string;
   secondary: string;
   note: string;
@@ -152,13 +154,14 @@ export class KvkApi {
     return firstValueFrom(this.http.put<KvkSignup>('/api/kvk/signup/', form));
   }
 
-  /** the sign-up of that round (default: the open one) */
-  withdraw(round?: number): Promise<unknown> {
-    return firstValueFrom(this.http.delete('/api/kvk/signup/', round ? { params: { round } } : {}));
+  /** that sign-up of the round (default: the open one) */
+  withdraw(role: KvkRole, round?: number): Promise<unknown> {
+    return firstValueFrom(this.http.delete('/api/kvk/signup/', { params: round ? { role, round } : { role } }));
   }
 
-  async upload(kind: ImageKind, file: File): Promise<KvkImage | UploadError> {
+  async upload(role: KvkRole, kind: ImageKind, file: File): Promise<KvkImage | UploadError> {
     const body = new FormData();
+    body.append('role', role);
     body.append('kind', kind);
     body.append('file', file);
     try {

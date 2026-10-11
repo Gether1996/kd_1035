@@ -16,7 +16,7 @@ const ROUND: KvkRound = {
 };
 const STATE: KvkState = {
   round: ROUND,
-  signup: null,
+  signups: { rally: null, garrison: null },
   older: [],
   player: true,
   ingame_name: 'Nelly',
@@ -26,8 +26,7 @@ const STATE: KvkState = {
 const SIGNUP: KvkSignup = {
   id: 9,
   round: 3,
-  rally: true,
-  garrison: false,
+  role: 'rally',
   primary: 'Attila',
   secondary: 'Takeda Shingen',
   note: '',
@@ -65,7 +64,7 @@ describe('KvkForm', () => {
     };
   });
 
-  it('is filled in like a march: role, commanders and both screenshots, sent only with "Prihlásiť sa"', async () => {
+  it('is filled in like a march: commanders and both screenshots, sent only with "Prihlásiť sa"', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
     fixture.componentRef.setInput('state', STATE);
@@ -80,10 +79,8 @@ describe('KvkForm', () => {
     expect(el.querySelector('.kind-picker')).toBeNull();
     expect(el.querySelector('.stat-field__label')?.textContent?.trim()).toBe('ATK');
 
-    submit();
-    await fixture.whenStable();
-    expect(state()).toContain('Vyber rally');
-    el.querySelector<HTMLInputElement>('.chip input')!.click();
+    // rally first; garrison is a second sign-up with its own army
+    expect([...el.querySelectorAll('.role-tabs button')].map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false']);
     submit();
     await fixture.whenStable();
     expect(state()).toContain('Vyber primárneho commandera.');
@@ -113,8 +110,7 @@ describe('KvkForm', () => {
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual({
       ingame_name: 'Nelly',
-      rally: true,
-      garrison: false,
+      role: 'rally',
       primary: 'Attila',
       secondary: '',
       attack: 9,
@@ -132,22 +128,30 @@ describe('KvkForm', () => {
     await flushAll(fixture);
     const second = http.expectOne('/api/kvk/signup/images/');
     expect((second.request.body as FormData).get('kind')).toBe('armaments');
+    expect((second.request.body as FormData).get('role')).toBe('rally');
     second.flush(image(8, 'armaments'));
     await flushAll(fixture);
     expect(el.querySelector('.badge')?.textContent).toContain('Kompletná');
     expect(state()).toContain('Uložené');
+    // the rally tab is marked as sent; the garrison tab starts empty
+    expect(el.querySelector('.role-tabs button .role-tabs__done')).not.toBeNull();
+    el.querySelectorAll<HTMLButtonElement>('.role-tabs button')[1].click();
+    await fixture.whenStable();
+    expect(el.querySelector('.tile__caption')?.textContent?.trim()).toBe('Primárny');
+    expect(el.querySelector('.badge')).toBeNull();
     http.verify();
   });
 
   it('says why an upload was refused and keeps the chosen file', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
-    fixture.componentRef.setInput('state', { ...STATE, signup: SIGNUP });
+    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: null, garrison: { ...SIGNUP, role: 'garrison' } } });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    // the saved sign-up fills the form: its commanders and its equipment screenshot
+    // the saved garrison sign-up opens its tab and fills the form: its commanders and its equipment screenshot
+    expect(el.querySelector('.role-tabs button[aria-pressed="true"]')?.textContent).toContain('Garrison');
     expect([...el.querySelectorAll('.tile__caption')].map((c) => c.textContent?.trim()).slice(0, 2)).toEqual(['Attila', 'Takeda Shingen']);
     expect(el.querySelectorAll('.tile__box--shot img').length).toBe(1);
 
@@ -179,7 +183,7 @@ describe('KvkForm', () => {
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     const el = fixture.nativeElement as HTMLElement;
     // the new form starts empty, the old sign-up has its own panel
-    expect(el.querySelector('.chip input:checked')).toBeNull();
+    expect(el.querySelector('.role-tabs__done')).toBeNull();
     expect(el.textContent).toContain('Prihlasovanie je uzavreté, vedenie tvoju prihlášku stále vidí');
 
     const buttons = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.withdraw button'));
@@ -188,6 +192,7 @@ describe('KvkForm', () => {
     buttons()[0].click();
     const req = http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/kvk/signup/');
     expect(req.request.params.get('round')).toBe('3');
+    expect(req.request.params.get('role')).toBe('rally');
     req.flush(null, { status: 204, statusText: '' });
     await flushAll(fixture);
     expect(el.querySelector('.thumb')).toBeNull();
@@ -209,7 +214,7 @@ describe('KvkSignups', () => {
       round: ROUND,
       signups: [
         { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', images: [], attack: 12 }] },
-        { ...SIGNUP, id: 10, rally: false, garrison: true, player: { ...player, id: 2, ingame_name: 'Bob' } },
+        { ...SIGNUP, id: 10, role: 'garrison', player: { ...player, id: 2, ingame_name: 'Bob' } },
       ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);

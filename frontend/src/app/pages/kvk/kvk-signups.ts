@@ -57,7 +57,7 @@ export class KvkSignups {
   protected readonly all = computed(() => (this.data.hasValue() ? this.data.value().signups : []));
   protected readonly shown = computed(() => {
     const role = this.role();
-    return this.all().filter((s) => role === 'all' || s[role]);
+    return this.all().filter((s) => role === 'all' || s.role === role);
   });
   /** each sign-up as a row like a march (no type, no number) */
   protected readonly armies = computed(
@@ -71,8 +71,8 @@ export class KvkSignups {
   );
   protected readonly counts = computed(() => ({
     all: this.all().length,
-    rally: this.all().filter((s) => s.rally).length,
-    garrison: this.all().filter((s) => s.garrison).length,
+    rally: this.all().filter((s) => s.role === 'rally').length,
+    garrison: this.all().filter((s) => s.role === 'garrison').length,
   }));
 
   protected readonly viewing = signal<{ signup: KvkSignup; image: KvkImage } | null>(null);

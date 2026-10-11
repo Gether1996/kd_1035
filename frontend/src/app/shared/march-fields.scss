@@ -205,6 +205,11 @@ img.tile__box {
     color: var(--text);
     font-weight: 600;
   }
+
+  // "Armamenty" stays one word on the narrowest phones
+  @media (max-width: 340px) {
+    font-size: 0.625rem;
+  }
 }
 
 .tile__example {
