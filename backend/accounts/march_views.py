@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import F, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
-from guides.commander_index import commander_index
+from guides.roster import march_commanders
 from rest_framework import serializers
 from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
 from rest_framework.parsers import MultiPartParser
@@ -36,8 +36,9 @@ class MarchSerializer(serializers.Serializer):
             for field in ('kind', 'primary'):
                 if not data.get(field):
                     raise serializers.ValidationError({field: 'required'})
-        # only commanders of our guides – the web shows their portraits
-        known = {c['name'] for c in commander_index()}
+        # only commanders with a portrait: guides/roster.py and our guides (a march saved before a commander was
+        # excluded can still be edited)
+        known = {c['name'] for c in march_commanders()}
         for field in ('primary', 'secondary'):
             if data.get(field) and data[field] not in known:
                 raise serializers.ValidationError({field: 'unknown'})

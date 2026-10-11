@@ -17,13 +17,12 @@ import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { March, MarchImage, marchIcon } from '../../core/kvk-api';
-import { MarchesApi, PlayerMarches } from '../../core/marches-api';
+import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
-import { CommanderRef } from '../guides/commander-finder';
 
 /**
  * /marche – two tabs (Gether 11. 10. 2026): "Marche hráčov" = the marches of the players who made them public ("aby to
@@ -51,7 +50,7 @@ export class PlayersMarches {
 
   protected readonly data = inject(MarchesApi).players(() => !!this.auth.user());
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private readonly commanderData = httpResource<CommanderRef[]>(() => (this.isBrowser ? '/api/commanders/' : undefined));
+  private readonly commanderData = httpResource<MarchCommander[]>(() => (this.isBrowser ? marchCommandersUrl : undefined));
   private readonly portraits = computed(
     () => new Map((this.commanderData.hasValue() ? this.commanderData.value() : []).map((c) => [c.name, c.icon])),
   );

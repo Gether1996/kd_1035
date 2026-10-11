@@ -8,8 +8,10 @@ import { PlayersAdmin } from './players-admin';
 
 const MARCH: March = { id: 1, position: 1, kind: '', primary: '', secondary: '', images: [] };
 const COMMANDERS = [
-  { name: 'Attila', icon: '/static/guides/commanders/attila.webp', entries: [] },
-  { name: 'Takeda Shingen', icon: '/static/guides/commanders/takeda-shingen.webp', entries: [] },
+  { name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true },
+  // a golden-key commander: only for the portrait of an old march, not offered
+  { name: 'Cao Cao', icon: '/static/guides/commanders/cao-cao.webp', pick: false },
+  { name: 'Takeda Shingen', icon: '/static/guides/commanders/takeda-shingen.webp', pick: true },
 ];
 
 function setup() {
@@ -42,7 +44,7 @@ describe('Marches', () => {
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
     http.expectOne('/api/me/marches/').flush({ marches: [], max: 7 });
-    http.expectOne('/api/commanders/').flush(COMMANDERS);
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.add-march')?.textContent).toContain('Pridať prvý march');
@@ -107,7 +109,7 @@ describe('Marches', () => {
     fixture.detectChanges();
     const seven = Array.from({ length: 7 }, (_, i) => ({ ...MARCH, id: i + 1, position: i + 1 }));
     http.expectOne('/api/me/marches/').flush({ marches: seven, max: 7 });
-    http.expectOne('/api/commanders/').flush(COMMANDERS);
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.add-march')).toBeNull();
@@ -170,7 +172,7 @@ describe('Marches visibility', () => {
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
     http.expectOne('/api/me/marches/').flush({ marches: [], max: 7, public: false });
-    http.expectOne('/api/commanders/').flush(COMMANDERS);
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     const [r4, all] = Array.from(el.querySelectorAll<HTMLButtonElement>('.visibility button'));

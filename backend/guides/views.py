@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from . import meta
 from .commander_index import commander_index
 from .models import Guide
+from .roster import march_commanders
 from .serializers import GuideDetailSerializer, GuideListSerializer
 
 # Pages of the Angular app (Slovak paths; the Czech version lives under /cz)
@@ -89,6 +90,15 @@ class CommanderIndex(APIView):
     def get(self, request):
         response = Response(commander_index())
         # changes with the monthly meta update or when a guide is hidden in the admin – an hour late is fine
+        response['Cache-Control'] = 'public, max-age=3600'
+        return response
+
+
+class MarchCommanders(APIView):
+    """The commanders a march may name (guides/roster.py) with their portraits; pick=False are no longer offered."""
+
+    def get(self, request):
+        response = Response(march_commanders())
         response['Cache-Control'] = 'public, max-age=3600'
         return response
 

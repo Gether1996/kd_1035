@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from PIL import Image
 
 from guides.meta.render import COMMANDER_DIR, slug
+from guides.roster import ROSTER, missing_portraits, portrait_name
 
 from .fetch_gear_icons import SIZE, fetch
 
@@ -35,18 +36,28 @@ class Command(BaseCommand):
     help = 'Downloads commander portraits for the commander guides into guides/static/guides/commanders (96×96 webp).'
 
     def add_arguments(self, parser):
-        parser.add_argument('names', nargs='+', help='commander names as written in guides/meta/commanders.py')
+        parser.add_argument('names', nargs='*', help='commander names as written in guides/meta/commanders.py')
+        parser.add_argument(
+            '--roster', action='store_true', help='also every commander of guides/roster.py without a portrait yet'
+        )
 
-    def handle(self, *args, names, **options):
+    def handle(self, *args, names, roster, **options):
         heroes = {key: hero for hero, key in re.findall(r'"heroId":(\d+),"slug":"([a-z0-9-]+)"', fetch(PAGE).decode())}
         COMMANDER_DIR.mkdir(parents=True, exist_ok=True)
+        # (name, rokstats slug, file name)
+        wanted = [(name, ALIASES.get(name, slug(name)), slug(name)) for name in names]
+        if roster:
+            keys = dict(ROSTER)
+            wanted += [(name, keys[name], portrait_name(name)) for name in missing_portraits()]
+        if not wanted:
+            raise CommandError('Name the commanders or use --roster.')
         missing = []
-        for name in names:
-            hero = heroes.get(ALIASES.get(name, slug(name)))
+        for name, key, file in wanted:
+            hero = heroes.get(key)
             if not hero:
                 missing.append(name)
                 continue
-            path = COMMANDER_DIR / f'{slug(name)}.webp'
+            path = COMMANDER_DIR / f'{file}.webp'
             portrait(fetch(f'{SOURCE}/img/commanders/{hero}/portrait')).save(path, 'WEBP', quality=88, method=6)
             self.stdout.write(f'{name} → {path.name}')
         if missing:

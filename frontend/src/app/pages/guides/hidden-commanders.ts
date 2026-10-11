@@ -1,8 +1,6 @@
 /**
- * Commanders left out of every commander choice – "Nájdi pár pre commandera" and "Čo môžem postaviť" (/navody), the
- * marches (/ucet) – Gether
- * 11. 10. 2026: only the meta – no gatherers, no KvK1 / KvK2 commanders, no epic (purple) or elite ones and none from
- * the golden keys. Their guides still show them.
+ * Commanders left out of "Nájdi pár pre commandera" and "Čo môžem postaviť" (/navody) – Gether 11. 10. 2026: only
+ * the meta – no gatherers, no KvK1 / KvK2 commanders, no epic (purple) or elite ones and none from the golden keys. Their guides still show them.
  * - gatherers and KvK1 / KvK2: our guides "Páry commanderov na zber surovín" and the line-ups of "Páry pre F2P a
  *   začiatok" (backend/guides/meta/commanders.py)
  * - rarity and golden keys: app.rokstats.online (data from the game client, 26. 9. 2026), cross-checked with the

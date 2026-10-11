@@ -6,6 +6,17 @@ import { March, MarchImage, MarchKind, UploadError, uploadError } from './kvk-ap
 
 export type MarchChange = Partial<{ kind: MarchKind | ''; primary: string; secondary: string }>;
 
+/** /api/commanders/marches/ – every commander a march may name (backend/guides/roster.py) */
+export const marchCommandersUrl = '/api/commanders/marches/';
+
+export interface MarchCommander {
+  name: string;
+  /** the portrait, /static/guides/commanders/<file>.webp */
+  icon: string;
+  /** offered in the picker; false = left out (golden keys, gatherers, epic), listed for the portrait of old marches */
+  pick: boolean;
+}
+
 export interface PlayerMarches {
   id: number;
   name: string;

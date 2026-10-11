@@ -55,7 +55,7 @@ describe('PlayersMarches', () => {
         { id: 2, name: 'bob', ingame_name: '', avatar_url: '', public: true, me: false, marches: [MARCH] },
       ],
     });
-    http.expectOne('/api/commanders/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', entries: [] }]);
+    http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
     await tick(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['Nelly', 'bob']);

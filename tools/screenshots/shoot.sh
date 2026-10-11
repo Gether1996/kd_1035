@@ -3,6 +3,7 @@
 #   tools/screenshots/shoot.sh [--player | --superuser] [NAME=value …]
 #   e.g. tools/screenshots/shoot.sh PAGES=/,/cz/kalendar SIZES=360x780,1280x800
 #        tools/screenshots/shoot.sh --player PAGES=/ucet,/pripomienky
+#        tools/screenshots/shoot.sh --player --marches PAGES=/marche,/marche?tab=moje   (seven sample marches)
 #        tools/screenshots/shoot.sh --player SHOT=0 PAGES=/,/cz SIZES=900x800,1024x800,1280x800 MEASURE=.nav,.account
 # NAME=value pairs are the variables described in shoot.mjs (PAGES, SIZES, FULL, SELECTOR, MEASURE, SHOT, SESSION…).
 # --player / --superuser: signed in as a temporary test player (manage.py test_session), deleted again at the end.
@@ -12,14 +13,16 @@ export MSYS_NO_PATHCONV=1  # Git Bash on Windows would rewrite /work and /app
 ROOT="$(pwd -W 2>/dev/null || pwd)"
 
 role=''
+seed=''
 envs=()
 for arg in "$@"; do
   case "$arg" in
     --player) role=player ;;
     --superuser) role=superuser ;;
+    --marches) seed=--marches ;;
     *=*) envs+=(-e "$arg") ;;
     *)
-      echo "usage: tools/screenshots/shoot.sh [--player | --superuser] [NAME=value …]" >&2
+      echo "usage: tools/screenshots/shoot.sh [--player | --superuser] [--marches] [NAME=value …]" >&2
       exit 2
       ;;
   esac
@@ -29,7 +32,7 @@ manage() { docker compose -f docker-compose.dev.yml exec -T backend python manag
 if [ -n "$role" ]; then
   flag=''
   [ "$role" = superuser ] && flag=--superuser
-  session="$(manage test_session $flag)"
+  session="$(manage test_session $flag $seed)"
   trap 'manage test_session --delete' EXIT
   envs+=(-e "SESSION=$session")
 fi

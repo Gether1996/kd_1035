@@ -10,7 +10,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from kingdom.models import KingdomEvent
 
-from . import commander_index
+from . import commander_index, roster
+from .meta import render as render_module
 from .meta import LAST_UPDATE, MODULES
 from .meta.render import (
     COMMANDER_DIR, GEAR_DIR, SPECIALTY_DIR, commander_icons, gear_icons, render, slug, specialty_icon, verified_note,
@@ -497,6 +498,51 @@ class CommanderIndexTests(TestCase):
         guide = {'slug': 'x', 'title': {'sk': 'X', 'cs': 'X'}, 'blocks': [('pairs', ['primary', 'why'], [row])]}
         with self.assertRaisesMessage(ValueError, 'x: pair row without secondary'):
             commander_index.build_index([guide])
+
+
+class MarchCommanderTests(TestCase):
+    """guides/roster.py: the commanders a march may name (Gether 11. 10. 2026: older ones too, no golden keys or
+    gathering)."""
+
+    def setUp(self):
+        Guide.objects.all().delete()
+        sync_guides()
+        commander_index._cache.clear()
+
+    def test_every_roster_commander_has_a_portrait_and_a_unique_name(self):
+        self.assertEqual(roster.missing_portraits(), [])
+        names = [name for name, _ in roster.ROSTER]
+        self.assertEqual(len(names), len(set(names)))
+        self.assertFalse(set(names) & roster.EXCLUDED)
+
+    def test_api_offers_older_commanders_but_not_golden_keys_or_gatherers(self):
+        response = self.client.get('/api/commanders/marches/')
+        self.assertEqual(response.status_code, 200)
+        items = {item['name']: item for item in response.json()}
+        # asked for by players: not in the meta, not in the golden keys
+        for name in ('Yi Seong-Gye', 'Alexander Nevsky', 'Joan of Arc Prime', 'Richard', 'Saladin'):
+            self.assertTrue(items[name]['pick'], name)
+        self.assertEqual(items['Jan Žižka']['icon'], '/static/guides/commanders/jan-zizka.webp')
+        # golden keys, gathering and epic commanders of our guides: listed for their portraits, not offered
+        for name in ('Cao Cao', 'Seondeok', 'Constance', 'Sun Tzu', 'Joan of Arc'):
+            self.assertFalse(items[name]['pick'], name)
+        # not in our guides and from the golden keys or gathering: not listed at all
+        for name in ('Mulan', 'Julius Caesar', 'Cleopatra VII'):
+            self.assertNotIn(name, items)
+        # every commander of our guides is listed (Gonzalo de Cordoba is missing on rokstats)
+        self.assertLessEqual({c['name'] for c in commander_index.commander_index()}, set(items))
+        self.assertTrue(items['Gonzalo de Cordoba']['pick'])
+
+    def test_march_portraits_do_not_change_the_guides(self):
+        # a new portrait in the folder would put an icon into every guide cell naming that commander
+        roster_only = {roster.portrait_name(name) for name, _ in roster.ROSTER} - {
+            Path(c['icon']).stem for c in commander_index.build_index()
+        }
+        before = list(rendered_guides())
+        with mock.patch.dict(
+            render_module.ICONS, {'commanders': [i for i in render_module.ICONS['commanders'] if i not in roster_only]}
+        ):
+            self.assertEqual(list(rendered_guides()), before)
 
 
 class GuideApiTests(TestCase):

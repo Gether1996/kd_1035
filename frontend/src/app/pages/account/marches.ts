@@ -17,8 +17,7 @@ import { MARCH_KINDS, March, MarchImage, MarchKind, UploadError, marchIcon } fro
 import { MarchesApi } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
-import { CommanderRef } from '../guides/commander-finder';
-import { shownCommander } from '../guides/hidden-commanders';
+import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 
 type Slot = 'primary' | 'secondary';
 type ImageKind = MarchImage['kind'];
@@ -76,12 +75,12 @@ export class Marches {
   protected readonly visibilityFailed = signal(false);
 
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  /** the commanders of our guides with their portraits (the same list as "Nájdi pár pre commandera") */
-  private readonly commanderData = httpResource<CommanderRef[]>(() => (this.isBrowser ? '/api/commanders/' : undefined));
+  /** every commander a march may name with its portrait (backend/guides/roster.py) */
+  private readonly commanderData = httpResource<MarchCommander[]>(() => (this.isBrowser ? marchCommandersUrl : undefined));
   private readonly allCommanders = computed(() => (this.commanderData.hasValue() ? this.commanderData.value() : []));
-  /** the meta commanders to pick from (hidden-commanders.ts) */
-  protected readonly commanders = computed(() => this.allCommanders().filter((c) => shownCommander(c.name)));
-  // every portrait – a march saved before a commander was hidden keeps its picture
+  /** the commanders to pick from – no golden keys, gatherers, epic or elite ones (Gether 11. 10. 2026) */
+  protected readonly commanders = computed(() => this.allCommanders().filter((c) => c.pick));
+  // every portrait – a march saved before a commander was left out keeps its picture
   private readonly portraits = computed(() => new Map(this.allCommanders().map((c) => [c.name, c.icon])));
 
   protected readonly draft = signal<Draft | null>(null);

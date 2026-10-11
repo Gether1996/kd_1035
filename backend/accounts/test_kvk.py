@@ -305,7 +305,7 @@ class MarchTests(KvkTestCase):
         from unittest import mock
 
         patcher = mock.patch(
-            'accounts.march_views.commander_index',
+            'accounts.march_views.march_commanders',
             return_value=[{'name': 'Attila'}, {'name': 'Takeda Shingen'}, {'name': 'Scipio Africanus'}],
         )
         patcher.start()
