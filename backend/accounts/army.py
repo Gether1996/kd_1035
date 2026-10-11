@@ -24,10 +24,13 @@ class ArmySerializer(serializers.Serializer):
     gold = stat_field()
 
     def validate(self, data):
-        # only commanders with a portrait: guides/roster.py and our guides (a march saved before a commander was
-        # excluded can still be edited)
-        known = {c['name'] for c in march_commanders()}
+        """Only the commanders offered in the picker (guides/roster.py, pick=True). One left out later (golden keys,
+        gatherers, epic) stays allowed where it is already saved – context['current'] = {'primary': …, 'secondary': …}
+        of the march or sign-up being changed."""
+        offered = {c['name'] for c in march_commanders() if c['pick']}
+        current = self.context.get('current') or {}
         for field in ('primary', 'secondary'):
-            if data.get(field) and data[field] not in known:
+            name = data.get(field)
+            if name and name not in offered and name != current.get(field):
                 raise serializers.ValidationError({field: 'unknown'})
         return data

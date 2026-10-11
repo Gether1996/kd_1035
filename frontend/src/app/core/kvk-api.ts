@@ -141,9 +141,10 @@ export class KvkApi {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  /** must run in an injection context; `version` asks again after a change */
-  state(version: () => number) {
-    return httpResource<KvkState>(() => (this.isBrowser ? { url: '/api/kvk/', params: { v: version() } } : undefined));
+  /** must run in an injection context; asked only for a signed-in player – `.reload()` after a change keeps the shown
+   * value while it loads (a changed request would drop it and the page would remount its forms) */
+  state(signedIn: () => boolean) {
+    return httpResource<KvkState>(() => (this.isBrowser && signedIn() ? '/api/kvk/' : undefined));
   }
 
   saveSignup(form: SignupForm): Promise<KvkSignup> {
@@ -171,11 +172,9 @@ export class KvkApi {
     return firstValueFrom(this.http.delete(`/api/kvk/signup/images/${id}/`));
   }
 
-  /** every sign-up (reviewers and the superuser); must run in an injection context */
-  signups(when: () => boolean, version: () => number) {
-    return httpResource<{ signups: KvkSignup[] }>(() =>
-      this.isBrowser && when() ? { url: '/api/kvk/signups/', params: { v: version() } } : undefined,
-    );
+  /** every sign-up (reviewers and the superuser); must run in an injection context – `.reload()` after a change */
+  signups(when: () => boolean) {
+    return httpResource<{ signups: KvkSignup[] }>(() => (this.isBrowser && when() ? '/api/kvk/signups/' : undefined));
   }
 
   /** the superuser withdraws someone's sign-up */

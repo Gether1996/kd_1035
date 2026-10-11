@@ -859,7 +859,12 @@ class BackupTests(TransactionTestCase):
                     (folder / f'kd1035_2000-01-0{i + 1}_000000_private.tar.gz').write_bytes(b'')
                 backups.prune(folder, keep=2)
                 self.assertEqual(len(list(folder.glob('kd1035_*.sqlite3.gz'))), 2)
-                self.assertEqual(len(list(folder.glob('kd1035_*_private.tar.gz'))), 2)
+                # the archives go with their database backup (the 2 newest: 2000-01-03 and the real one)
+                self.assertEqual(
+                    sorted(p.name for p in folder.glob('kd1035_*_private.tar.gz')),
+                    sorted(['kd1035_2000-01-03_000000_private.tar.gz', first.name.removesuffix('.sqlite3.gz') + '_private.tar.gz']),
+                )
+
 
                 Alliance.objects.all().delete()
                 backups.restore_backup(first)

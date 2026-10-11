@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.18.2:** opravy po druhej kontrole kritika: prihláška na KvK po prvom uložení už neznovunačíta celú záložku (ostane hláška aj rozpracovaná druhá rola), nový screenshot nahradí starý až po úspešnom nahratí, staré archívy screenshotov sa zo záloh mažú načas, prázdne meno v hre sa neodošle.
 - **11. 10. 2026 – v1.18.1:** opravy po kontrole agentov: portréty a ikony nenarazia na limit požiadaviek (na serveri by sa nenačítali), počty vo filtroch prihlášok počítajú hráčov, výkričník zmizne hneď po uložení mena v prihláške, meno v hre sa nedá zmazať, tlačidlo Zrušiť prihlášku sa po 5 s vráti, čítačka obrazovky pri menu ohlási chýbajúce meno.
 - **11. 10. 2026 – v1.18.0:** meno v hre je povinné – po prvom prihlásení cez Discord ťa web pošle nastaviť si ho a potom pokračuje, kam si išiel; kým chýba, svieti pri účte červený výkričník s položkou „Doplň meno v hre“.
 - **11. 10. 2026 – v1.17.3:** v zozname prihlášok na KvK má hráč s prihláškou na rally aj garrison jednu kartu (meno, kontakt a marche raz, pod tým obe prihlášky).

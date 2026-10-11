@@ -56,7 +56,7 @@
             class="ingame__state"
             id="ingame-state"
             role="status"
-            [class.is-error]="nameState() === 'failed'"
+            [class.is-error]="nameState() === 'failed' || nameState() === 'required'"
           >
             @if (nameState(); as state) {
               {{ a.ingame[state] }}

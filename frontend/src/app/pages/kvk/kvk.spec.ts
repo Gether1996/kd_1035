@@ -1,9 +1,13 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { KvkApi, KvkSignup, KvkState } from '../../core/kvk-api';
+import { Scroll } from '../../core/scroll';
 import { KvkForm } from './kvk-form';
+import { KvkPage } from './kvk-page';
 import { KvkSignups } from './kvk-signups';
 
 const STATE: KvkState = {
@@ -208,7 +212,7 @@ describe('KvkSignups', () => {
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
       this.setAttribute('open', '');
     };
-    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true, () => 0));
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
     const fixture = TestBed.createComponent(KvkSignups);
     fixture.componentRef.setInput('data', data);
     fixture.componentRef.setInput('superuser', true);
@@ -272,7 +276,7 @@ describe('KvkSignups', () => {
 
   it('shows a player signed up for rally and garrison as one card with both sign-ups', async () => {
     const http = setup();
-    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true, () => 0));
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
     const fixture = TestBed.createComponent(KvkSignups);
     fixture.componentRef.setInput('data', data);
     fixture.detectChanges();
@@ -300,5 +304,52 @@ describe('KvkSignups', () => {
     await fixture.whenStable();
     expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Garrison']);
     http.verify();
+  });
+});
+
+describe('KvkPage', () => {
+  it('keeps the form on screen after a sign-up changes (no reload of the whole tab)', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        // no parallax in the page header
+        { provide: Scroll, useValue: { scrolled: signal(false), reducedMotion: true } },
+      ],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(KvkPage);
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', is_staff: false, is_superuser: false };
+    const answers: Record<string, unknown> = {
+      '/api/auth/me/': { login_enabled: true, user },
+      '/api/kvk/': { ...STATE, reviewer: true },
+      '/api/kvk/signups/': { signups: [] },
+      '/api/commanders/marches/': COMMANDERS,
+    };
+    const requested: string[] = [];
+    // answers every pending request (several rounds: a request can start once another one is answered)
+    const settle = async () => {
+      for (let round = 0; round < 5; round++) {
+        fixture.detectChanges();
+        TestBed.tick();
+        for (const req of http.match(() => true)) {
+          requested.push(req.request.url);
+          req.flush(answers[req.request.url] ?? []);
+        }
+        await new Promise((resolve) => setTimeout(resolve));
+      }
+    };
+    await settle();
+    const form = fixture.debugElement.query(By.directive(KvkForm));
+    expect(form).not.toBeNull();
+    expect(requested.filter((url) => url === '/api/kvk/').length).toBe(1);
+
+    // the first sign-up: only the reviewers' list asks again, the form stays the same instance
+    requested.length = 0;
+    form.componentInstance.changed.emit();
+    await settle();
+    expect(requested).toEqual(['/api/kvk/signups/']);
+    expect(fixture.debugElement.query(By.directive(KvkForm)).componentInstance).toBe(form.componentInstance);
   });
 });

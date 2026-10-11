@@ -700,7 +700,7 @@ export const cs: Dict = {
         list: [
           'Discord ID, uživatelské a zobrazované jméno.',
           'Avatar – uložíme jen jeho kód, obrázek se načte přímo z Discordu.',
-          'Jméno ve hře, pokud ho vyplníš.',
+          'Jméno ve hře – vyplníš ho po prvním přihlášení.',
           'Čas registrace a posledního přihlášení.',
           'Cookie sessionid – udrží tě přihlášeného 2 týdny, nastaví se už na začátku přihlášení.',
         ],
@@ -775,7 +775,7 @@ export const cs: Dict = {
     title: 'Můj účet',
     loginTitle: 'Přihlas se přes Discord',
     stored:
-      'Uložíme jen tvoje Discord ID, jméno a avatar (a jméno ve hře či připomínky eventů, pokud si je nastavíš). E-mail ani tvoje servery nevidíme.',
+      'Uložíme jen tvoje Discord ID, jméno a avatar, jméno ve hře (vyplníš ho po prvním přihlášení) a připomínky eventů, pokud si je nastavíš. E-mail ani tvoje servery nevidíme.',
     privacy: 'Co o tobě ukládáme',
     login: 'Přihlásit přes Discord',
     disabled: 'Přihlášení zatím není zapnuté.',

@@ -163,7 +163,9 @@ def signup(request):
             return Response({'role': 'invalid'}, status=400)
         KvkSignup.objects.filter(player=player, role=role).delete()
         return Response(status=204)
-    form = SignupSerializer(data=request.data)
+    saved = KvkSignup.objects.filter(player=player, role=request.data.get('role')).first()
+    current = {'primary': saved.primary, 'secondary': saved.secondary} if saved else {}
+    form = SignupSerializer(data=request.data, context={'current': current})
     form.is_valid(raise_exception=True)
     data = form.validated_data
     with transaction.atomic():
@@ -198,12 +200,14 @@ def upload(request):
     upload_file = request.FILES.get('file')
     if kind not in KINDS or not upload_file:
         return Response({'detail': 'bad_request'}, status=400)
-    if mine.images.filter(kind=kind).count() >= MAX_IMAGES_PER_KIND:
-        return Response({'detail': 'limit'}, status=400)
+    # a new screenshot replaces the old one of that kind – only once it is stored, so a refused upload loses nothing
+    old = list(mine.images.filter(kind=kind))
     try:
         picture = store_image(KvkImage, upload_file, 'kvk', signup=mine, kind=kind)
     except private_images.BadImage as exc:
         return Response({'detail': exc.code}, status=400)
+    for image in old[: len(old) - MAX_IMAGES_PER_KIND + 1]:
+        image.delete()
     mine.save(update_fields=['updated_at'])
     return Response(image_data(picture, '/api/kvk/images/'), status=201)
 

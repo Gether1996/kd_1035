@@ -130,8 +130,10 @@ export class KvkForm {
         ...army.stats,
         note: this.note().trim(),
       });
-      for (const image of army.removed) await this.api.removeImage(image.id);
-      signup = { ...signup, images: signup.images.filter((i) => !army.removed.some((r) => r.id === i.id)) };
+      // a screenshot replaced by a new one goes on the server only once the new one is stored (a refused upload keeps it)
+      const removed = army.removed.filter((image) => !army.chosen[image.kind]);
+      for (const image of removed) await this.api.removeImage(image.id);
+      signup = { ...signup, images: signup.images.filter((i) => !removed.some((r) => r.id === i.id)) };
       // the sign-up exists now: a failed upload keeps the chosen file, the player only picks that one again
       let current: ArmyDraft = { ...army, removed: [] };
       for (const kind of SHOT_KINDS) {
@@ -143,7 +145,7 @@ export class KvkForm {
           break;
         }
         URL.revokeObjectURL(chosen.preview);
-        signup = { ...signup, images: [...signup.images, result] };
+        signup = { ...signup, images: [...signup.images.filter((i) => i.kind !== kind), result] };
         current = { ...current, keep: { ...current.keep, [kind]: result }, chosen: { ...current.chosen, [kind]: undefined } };
       }
       signup = { ...signup, complete: IMAGE_KINDS.every((kind) => signup.images.some((i) => i.kind === kind)) };

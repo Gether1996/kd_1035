@@ -71,9 +71,17 @@ def create_backup(folder: Path, keep: int) -> Path:
 
 
 def prune(folder: Path, keep: int) -> None:
-    for pattern in (f'{PREFIX}*.sqlite3.gz', f'{PREFIX}*_uploads.tar.gz', f'{PREFIX}*_private.tar.gz'):
-        for old in sorted(folder.glob(pattern))[:-keep]:
-            old.unlink()
+    """The last `keep` database backups stay, with the uploads and screenshots archives of the same time; an archive
+    of an older backup goes even when no newer archive was written (no screenshots left), so deleted data leaves the
+    backups within keep × interval (the privacy page)."""
+    databases = sorted(folder.glob(f'{PREFIX}*.sqlite3.gz'))
+    for old in databases[:-keep]:
+        old.unlink()
+    kept = {path.name.removesuffix('.sqlite3.gz') for path in databases[-keep:]} if keep else set()
+    for suffix in ('_uploads.tar.gz', '_private.tar.gz'):
+        for archive in folder.glob(f'{PREFIX}*{suffix}'):
+            if archive.name.removesuffix(suffix) not in kept:
+                archive.unlink()
 
 
 def private_archive(archive: Path) -> Path:

@@ -75,4 +75,16 @@ describe('Account', () => {
     await new Promise((resolve) => setTimeout(resolve));
     expect(navigate).toHaveBeenCalledWith('/kalendar');
   });
+
+  it('does not send an empty in-game name – it can be changed, not cleared', async () => {
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', is_staff: false, is_superuser: false };
+    const el = await render({ login_enabled: true, user });
+    const input = el.querySelector<HTMLInputElement>('#ingame-name')!;
+    input.value = '  ';
+    el.querySelector<HTMLFormElement>('form.ingame')!.dispatchEvent(new Event('submit'));
+    TestBed.inject(HttpTestingController).expectNone((r) => r.method === 'PATCH');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(input.value).toBe('Nelly');
+    expect(el.querySelector('#ingame-state')?.textContent).toContain('Najprv si nastav meno v hre');
+  });
 });

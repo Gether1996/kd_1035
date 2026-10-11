@@ -121,8 +121,10 @@ export class Marches {
     const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, ...stats };
     await this.run(async () => {
       let march = draft.id === null ? await this.api.add(change) : await this.api.update(draft.id, change);
-      for (const image of draft.removed) await this.api.removeImage(image.id);
-      march = { ...march, images: march.images.filter((i) => !draft.removed.some((r) => r.id === i.id)) };
+      // a screenshot replaced by a new one goes on the server only once the new one is stored (a refused upload keeps it)
+      const removed = draft.removed.filter((image) => !draft.chosen[image.kind]);
+      for (const image of removed) await this.api.removeImage(image.id);
+      march = { ...march, images: march.images.filter((i) => !removed.some((r) => r.id === i.id)) };
       // the march exists now: a failed upload keeps the editor open on it, the player only picks that file again
       let current: Draft = { ...draft, id: march.id, removed: [] };
       for (const kind of MARCH_SHOTS) {
@@ -134,7 +136,7 @@ export class Marches {
           break;
         }
         URL.revokeObjectURL(chosen.preview);
-        march = { ...march, images: [...march.images, result] };
+        march = { ...march, images: [...march.images.filter((i) => i.kind !== kind), result] };
         current = { ...current, keep: { ...current.keep, [kind]: result }, chosen: { ...current.chosen, [kind]: undefined } };
       }
       this.store(march);

@@ -66,13 +66,13 @@ type Tab = 'mine' | 'list' | 'settings';
         }
         @switch (s.player || tab() !== 'mine' ? tab() : 'list') {
           @case ('mine') {
-            <app-kvk-form [state]="s" (changed)="reload()" />
+            <app-kvk-form [state]="s" (changed)="reloadSignups()" />
           }
           @case ('list') {
-            <app-kvk-signups [data]="signups" [superuser]="s.superuser" (changed)="reload()" />
+            <app-kvk-signups [data]="signups" [superuser]="s.superuser" (changed)="reloadSignups()" />
           }
           @case ('settings') {
-            <app-kvk-settings [heading]="s" (changed)="reload()" />
+            <app-kvk-settings [heading]="s" (changed)="reloadState()" />
           }
         }
       } @else {
@@ -92,13 +92,14 @@ export class KvkPage {
   private readonly api = inject(KvkApi);
   protected readonly t = this.i18n.t;
 
-  private readonly version = signal(0);
-  protected readonly state = this.api.state(() => (this.auth.user() ? this.version() : -1));
+  // a boolean: a new user object (the in-game name saved) must not ask again
+  private readonly signedIn = computed(() => !!this.auth.user());
+  protected readonly state = this.api.state(() => this.signedIn());
   private readonly canReview = computed(() => {
     const s = this.state.hasValue() ? this.state.value() : null;
     return !!s && (s.reviewer || s.superuser);
   });
-  protected readonly signups = this.api.signups(() => this.canReview(), () => this.version());
+  protected readonly signups = this.api.signups(() => this.canReview());
   protected readonly tab = signal<Tab>('mine');
 
   protected readonly crumbs = computed(() => [
@@ -119,7 +120,13 @@ export class KvkPage {
     inject(DestroyRef).onDestroy(() => seo.set(null));
   }
 
-  protected reload(): void {
-    this.version.update((v) => v + 1);
+  /** a sign-up changed: the reviewers' list asks again (the form keeps its own state) */
+  protected reloadSignups(): void {
+    if (this.canReview()) this.signups.reload();
+  }
+
+  /** the heading changed */
+  protected reloadState(): void {
+    this.state.reload();
   }
 }

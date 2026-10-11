@@ -47,7 +47,7 @@ export class Account {
   protected readonly busy = signal(false);
   protected readonly result = signal<'deleted' | 'failed' | null>(null);
   protected readonly saving = signal(false);
-  protected readonly nameState = signal<'saved' | 'failed' | null>(null);
+  protected readonly nameState = signal<'saved' | 'failed' | 'required' | null>(null);
 
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
@@ -94,7 +94,10 @@ export class Account {
     try {
       // the field shows what was saved, also when only spaces around the name changed
       input.value = input.value.trim();
-      if (!input.value && this.auth.needsName()) {
+      // required (Gether 11. 10. 2026): it can be changed, not cleared – the server refuses an empty one too
+      if (!input.value) {
+        input.value = this.auth.user()?.ingame_name ?? '';
+        this.nameState.set('required');
         input.focus();
         return;
       }

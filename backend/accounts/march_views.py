@@ -84,7 +84,9 @@ def march(request, march_id):
             mine.delete()
             player.marches.filter(position__gt=position).update(position=F('position') - 1)
         return Response(status=204)
-    form = MarchSerializer(data=request.data, partial=True)
+    form = MarchSerializer(
+        data=request.data, partial=True, context={'current': {'primary': mine.primary, 'secondary': mine.secondary}}
+    )
     form.is_valid(raise_exception=True)
     for field, value in form.validated_data.items():
         setattr(mine, field, value)
@@ -98,18 +100,20 @@ def march(request, march_id):
 @permission_classes([IsPlayer])
 @throttle_classes([UploadThrottle])
 def upload(request, march_id):
-    """POST multipart {kind: equipment, file}: the screenshot of the march's equipment (one)."""
+    """POST multipart {kind: equipment, file}: the screenshot of the march's equipment (one – a new one replaces it)."""
     mine = get_object_or_404(March, pk=march_id, player=request.user.player)
     kind = request.data.get('kind')
     upload_file = request.FILES.get('file')
     if kind not in IMAGE_KINDS or not upload_file:
         return Response({'detail': 'bad_request'}, status=400)
-    if mine.images.filter(kind=kind).count() >= MAX_IMAGES_PER_KIND:
-        return Response({'detail': 'limit'}, status=400)
+    # a new screenshot replaces the old one of that kind – only once it is stored, so a refused upload loses nothing
+    old = list(mine.images.filter(kind=kind))
     try:
         picture = store_image(MarchImage, upload_file, 'marches', march=mine, kind=kind)
     except private_images.BadImage as exc:
         return Response({'detail': exc.code}, status=400)
+    for image in old[: len(old) - MAX_IMAGES_PER_KIND + 1]:
+        image.delete()
     mine.save(update_fields=['updated_at'])
     return Response(image_data(picture, '/api/marches/images/'), status=201)
 

@@ -705,7 +705,7 @@ export const sk = {
         list: [
           'Discord ID, používateľské a zobrazované meno.',
           'Avatar – uložíme iba jeho kód, obrázok sa načíta priamo z Discordu.',
-          'Meno v hre, ak si ho vyplníš.',
+          'Meno v hre – vyplníš ho po prvom prihlásení.',
           'Čas registrácie a posledného prihlásenia.',
           'Cookie sessionid – udrží ťa prihláseného 2 týždne, nastaví sa už na začiatku prihlásenia.',
         ],
@@ -781,7 +781,7 @@ export const sk = {
     title: 'Môj účet',
     loginTitle: 'Prihlás sa cez Discord',
     stored:
-      'Uložíme iba tvoje Discord ID, meno a avatar (a meno v hre či pripomienky eventov, ak si ich nastavíš). E-mail ani tvoje servery nevidíme.',
+      'Uložíme iba tvoje Discord ID, meno a avatar, meno v hre (vyplníš ho po prvom prihlásení) a pripomienky eventov, ak si ich nastavíš. E-mail ani tvoje servery nevidíme.',
     privacy: 'Čo o tebe ukladáme',
     login: 'Prihlásiť cez Discord',
     disabled: 'Prihlásenie zatiaľ nie je zapnuté.',

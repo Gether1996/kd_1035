@@ -163,8 +163,14 @@ class ImageTests(KvkTestCase):
             self.assertEqual(self.upload().json()['detail'], 'too_big')
         finally:
             private_images.MAX_BYTES = original
-        self.assertEqual(self.upload(kind='equipment', file=picture('PNG', (800, 600), exif=False)).status_code, 201)
-        self.assertEqual(self.upload(kind='equipment').json()['detail'], 'limit')
+        first = self.upload(kind='equipment', file=picture('PNG', (800, 600), exif=False))
+        self.assertEqual(first.status_code, 201)
+        # a second one of the same kind replaces the first – a refused one keeps it
+        self.assertEqual(self.upload(kind='equipment', file=fake).status_code, 400)
+        self.assertEqual(list(KvkImage.objects.values_list('pk', flat=True)), [first.json()['id']])
+        second = self.upload(kind='equipment')
+        self.assertEqual(second.status_code, 201)
+        self.assertEqual(list(KvkImage.objects.values_list('pk', flat=True)), [second.json()['id']])
 
     def test_only_owner_reviewers_and_superuser_see_the_file(self):
         url = self.upload().json()['url']
@@ -279,7 +285,13 @@ class MarchTests(KvkTestCase):
 
         patcher = mock.patch(
             'accounts.army.march_commanders',
-            return_value=[{'name': 'Attila'}, {'name': 'Takeda Shingen'}, {'name': 'Scipio Africanus'}],
+            return_value=[
+                {'name': 'Attila', 'pick': True},
+                {'name': 'Takeda Shingen', 'pick': True},
+                {'name': 'Scipio Africanus', 'pick': True},
+                # left out of the picker (a golden key)
+                {'name': 'Cao Cao', 'pick': False},
+            ],
         )
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -304,6 +316,15 @@ class MarchTests(KvkTestCase):
         self.assertEqual(self.call('delete', f'/api/me/marches/{first}/').status_code, 204)
         positions = [m['position'] for m in self.client.get('/api/me/marches/').json()['marches']]
         self.assertEqual(positions, [1, 2, 3, 4, 5, 6])
+
+    def test_a_commander_left_out_of_the_picker_stays_only_where_it_is_saved(self):
+        self.assertEqual(self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Cao Cao'}).json()['primary'], ['unknown'])
+        march = March.objects.create(player=self.player, position=1, kind='cavalry', primary='Cao Cao')
+        url = f'/api/me/marches/{march.pk}/'
+        # a march saved with him can still be edited
+        self.assertEqual(self.call('patch', url, {'primary': 'Cao Cao', 'attack': 10}).status_code, 200)
+        # but he can not be put into another slot or march
+        self.assertEqual(self.call('patch', url, {'secondary': 'Cao Cao'}).status_code, 400)
 
     def test_armament_bonuses_and_inscriptions_are_whole_numbers_up_to_99(self):
         march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', 'attack': 12, 'gold': 3})
@@ -332,8 +353,13 @@ class MarchTests(KvkTestCase):
         self.assertEqual(self.call('post_file', upload_url, {'kind': 'vip', 'file': picture()}).status_code, 400)
         # the armaments of a march are typed in, no screenshot (only the KvK sign-up has one)
         self.assertEqual(self.call('post_file', upload_url, {'kind': 'armaments', 'file': picture()}).status_code, 400)
-        # one screenshot of each kind
-        self.assertEqual(self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()}).json()['detail'], 'limit')
+        # a new equipment screenshot replaces the old one (its files go after the commit)
+        with self.captureOnCommitCallbacks(execute=True):
+            res = self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()})
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(MarchImage.objects.count(), 1)
+        self.assertEqual(self.client.get(url).status_code, 404)  # the replaced one is gone
+        url = res.json()['url']
 
         reviewer = make_player('43')
         reviewer.kvk_reviewer = True
