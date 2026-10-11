@@ -16,6 +16,7 @@ import { Router, RouterLink } from '@angular/router';
 import { GuideCategory, I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
+import { shownCommander } from './hidden-commanders';
 
 export interface CommanderRef {
   name: string;
@@ -84,7 +85,10 @@ export class CommanderFinder {
   protected readonly roles = ROLES;
 
   protected readonly data = httpResource<IndexedCommander[]>(() => (this.isBrowser ? '/api/commanders/' : undefined));
-  private readonly all = computed(() => (this.data.hasValue() ? this.data.value() : []));
+  /** only the meta commanders to choose from (hidden-commanders.ts) – a guide may still name the others as partners */
+  private readonly all = computed(() =>
+    this.data.hasValue() ? this.data.value().filter((c) => shownCommander(c.name)) : [],
+  );
 
   protected readonly selected = computed(() => {
     const key = this.commander();

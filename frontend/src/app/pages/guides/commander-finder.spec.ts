@@ -27,6 +27,8 @@ const INDEX: IndexedCommander[] = [
       entry('pary-pre-rally', 'secondary', ['Subutai'], 'jazda'),
     ],
   },
+  { ...pic('Sun Quan'), entries: [entry('pary-pre-f2p-a-zaciatok', 'solo', [], 'KvK1')] },
+  // epic and KvK1 – never offered (hidden-commanders.ts)
   { ...pic('Sun Tzu'), entries: [entry('pary-pre-f2p-a-zaciatok', 'solo', [], 'KvK1')] },
   { ...pic('Sun Tzu Prime'), entries: [entry('pary-pre-pechotu', 'primary', [])] },
 ];
@@ -68,7 +70,8 @@ describe('CommanderFinder', () => {
     input!.dispatchEvent(new Event('input'));
     await fixture.whenStable();
     expect(input!.getAttribute('aria-expanded')).toBe('true');
-    expect(options(el)).toEqual(['Sun Tzu', 'Sun Tzu Prime']);
+    // Sun Tzu (epic, KvK1) is not offered – only the meta commanders (hidden-commanders.ts)
+    expect(options(el)).toEqual(['Sun Quan', 'Sun Tzu Prime']);
     expect(input!.getAttribute('aria-activedescendant')).toBe('finder-option-0');
 
     press(input!, 'ArrowDown');
@@ -140,7 +143,7 @@ describe('CommanderFinder', () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
-    const { el } = await render('sun-tzu');
+    const { el } = await render('sun-quan');
     expect(el.querySelector('.result__role')?.textContent).toContain('Na koho sa sústrediť');
     expect(el.querySelector('.card__guide')?.textContent).toContain('KvK1');
   });

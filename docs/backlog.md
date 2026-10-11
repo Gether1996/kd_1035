@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.11.5:** aj „Nájdi pár pre commandera“ ponúka len meta commanderov – bez epických, elitných, zo zlatých kľúčov, zberačov a KvK1/KvK2 (rovnako ako „Čo môžem postaviť“ a výber pri marchoch).
 - **11. 10. 2026 – v1.11.4:** march sa uloží len so screenshotom výbavy aj armamentov (vyberajú sa pred uložením), ukážka v okne; typy marchov bez zberu a barbarov, pribudol siege.
 - **11. 10. 2026 – v1.11.3:** pri marchoch na `/ucet` výrazné upozornenie, že marche a screenshoty uvidia iba poverení R4 kráľovstva a superadmin.
 - **11. 10. 2026 – v1.11.2:** „Čo môžem postaviť“ a výber commanderov pri marchoch ukazujú len meta – bez epických (fialových), elitných a legendárnych zo zlatých kľúčov (overené na rokstats, dáta z hry).
