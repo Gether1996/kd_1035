@@ -72,12 +72,11 @@ describe('Header account slot', () => {
     expect(links[0].textContent).toContain('Prihlásiť');
   });
 
-  it('has the bell to the event reminders next to the player, also before signing in', async () => {
+  it('has no bell any more – a visitor sees only the sign-in', async () => {
     await answer({ login_enabled: true, user: null });
-    const bell = el().querySelector<HTMLAnchorElement>('.account__bell');
-    expect(bell?.getAttribute('href')).toBe('/pripomienky');
-    expect(bell?.getAttribute('aria-label')).toBe('Pripomienky eventov');
-    expect(el().querySelector('.drawer__reminders')?.getAttribute('href')).toBe('/pripomienky');
+    expect(el().querySelector('[href="/pripomienky"]')).toBeNull();
+    expect(el().querySelector('.account__dropdown')).toBeNull();
+    expect(loginLinks().length).toBeGreaterThan(0);
   });
 
   it('shows the signed-in player linking to the account page', async () => {
@@ -93,11 +92,27 @@ describe('Header account slot', () => {
       },
     });
     expect(loginLinks().length).toBe(0);
-    const link = el().querySelector<HTMLAnchorElement>('.account__link:not(.account__bell)');
+    const link = el().querySelector<HTMLAnchorElement>('.account__link');
     expect(link?.getAttribute('href')).toBe('/ucet');
     expect(link?.textContent).toContain('Nelly');
     expect(link?.querySelector('img')?.getAttribute('alt')).toBe('');
+    // the player's pages: in the menu of the pill (hover / focus) and in the mobile menu
+    const menu = Array.from(el().querySelectorAll<HTMLAnchorElement>('.account__dropdown a'), (a) => [
+      a.getAttribute('href'),
+      a.textContent?.trim(),
+    ]);
+    expect(menu).toEqual([
+      ['/ucet', 'Môj účet'],
+      ['/marche', 'Marche hráčov'],
+      ['/pripomienky', 'Pripomienky eventov'],
+      ['/kvk', 'Prihláška na KvK'],
+    ]);
     expect(el().querySelector('.drawer__user')?.textContent).toContain('Nelly');
+    expect(Array.from(el().querySelectorAll('.drawer__page'), (a) => a.getAttribute('href'))).toEqual([
+      '/marche',
+      '/pripomienky',
+      '/kvk',
+    ]);
   });
 });
 

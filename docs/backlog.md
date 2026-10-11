@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.12.1:** v hlavičke menu hráča – po prejdení myšou na účet Môj účet, Marche hráčov, Pripomienky eventov a Prihláška na KvK; zvonček zrušený.
 - **11. 10. 2026 – v1.12.0:** hráč si pri marchoch vyberie, či ich uvidí len R4 alebo všetci prihlásení hráči; nová stránka **Marche hráčov** (`/marche`, len pre prihlásených) na porovnanie a motiváciu.
 - **11. 10. 2026 – v1.11.5:** aj „Nájdi pár pre commandera“ ponúka len meta commanderov – bez epických, elitných, zo zlatých kľúčov, zberačov a KvK1/KvK2 (rovnako ako „Čo môžem postaviť“ a výber pri marchoch).
 - **11. 10. 2026 – v1.11.4:** march sa uloží len so screenshotom výbavy aj armamentov (vyberajú sa pred uložením), ukážka v okne; typy marchov bez zberu a barbarov, pribudol siege.

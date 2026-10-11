@@ -3,7 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { Scroll } from '../../core/scroll';
-import { Icon } from '../../shared/icon';
+import { Icon, IconName } from '../../shared/icon';
 import { Logo } from '../../shared/logo';
 import { LangSwitch } from '../lang-switch/lang-switch';
 
@@ -31,6 +31,19 @@ export class Header {
   protected readonly scroll = inject(Scroll);
   protected readonly auth = inject(Auth);
   protected readonly menuOpen = signal(false);
+  /** Escape in the account menu hides it until the pointer or the focus leaves */
+  protected readonly menuClosed = signal(false);
+
+  /** the signed-in player's pages: the account menu (desktop) and the mobile menu */
+  protected readonly accountItems = computed<{ label: string; link: string; icon: IconName }[]>(() => {
+    const t = this.i18n.t().nav;
+    return [
+      { label: t.account, link: this.i18n.path('account'), icon: 'users' },
+      { label: t.marches, link: this.i18n.path('playersMarches'), icon: 'shield' },
+      { label: t.reminders, link: this.i18n.path('reminders'), icon: 'bell' },
+      { label: t.kvk, link: this.i18n.path('kvk'), icon: 'swords' },
+    ];
+  });
 
   protected readonly items = computed<NavItem[]>(() => {
     const t = this.i18n.t().nav;
@@ -57,5 +70,11 @@ export class Header {
 
   protected close(): void {
     this.menuOpen.set(false);
+  }
+
+  protected closeMenu(event: Event): void {
+    this.menuClosed.set(true);
+    // back on the pill, so the keyboard user does not lose the place
+    ((event.currentTarget as HTMLElement).previousElementSibling as HTMLElement | null)?.focus();
   }
 }

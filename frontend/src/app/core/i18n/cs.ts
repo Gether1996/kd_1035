@@ -74,6 +74,9 @@ export const cs: Dict = {
     login: 'Přihlásit',
     account: 'Můj účet',
     reminders: 'Připomínky eventů',
+    marches: 'Marche hráčů',
+    kvk: 'Přihláška na KvK',
+    accountMenu: 'Stránky hráče',
   },
   hero: {
     tagline: 'Jediné čistě česko-slovenské království ve hře.',

@@ -72,6 +72,9 @@ export const sk = {
     login: 'Prihlásiť',
     account: 'Môj účet',
     reminders: 'Pripomienky eventov',
+    marches: 'Marche hráčov',
+    kvk: 'Prihláška na KvK',
+    accountMenu: 'Stránky hráča',
   },
   hero: {
     tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',

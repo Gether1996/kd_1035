@@ -104,7 +104,7 @@
 // The slot has a fixed width in every state – empty while /api/auth/me/ loads or when login is off,
 // and a long player name is cut inside it – so the nav and the language switch never move.
 
-// the bell (event reminders) and the player / "Prihlásiť"
+// the player (with the menu of the player's pages) or "Prihlásiť"
 .account {
   display: none;
   flex: none;
@@ -144,8 +144,83 @@
   }
 }
 
-.account__bell .icon {
-  color: var(--gold-300);
+// ---------------------------------------------------------------- the player's menu (hover / keyboard focus)
+
+.account__menu {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.account__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 30;
+  min-width: 230px;
+  // the gap is padding, so the pointer can travel from the pill to the menu without closing it
+  padding-top: 10px;
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 -4px;
+  transition:
+    opacity 0.18s var(--ease-out),
+    translate 0.18s var(--ease-out),
+    visibility 0s linear 0.18s;
+
+  ul {
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-raised);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 8px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+
+    .icon {
+      width: 17px;
+      height: 17px;
+      color: var(--gold-400);
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(245, 196, 81, 0.1);
+      color: var(--gold-100);
+    }
+
+    &.is-active {
+      color: var(--gold-300);
+    }
+  }
+
+  .account__menu:hover:not(.is-closed) &,
+  .account__menu:focus-within:not(.is-closed) & {
+    opacity: 1;
+    visibility: visible;
+    translate: none;
+    transition:
+      opacity 0.18s var(--ease-out),
+      translate 0.18s var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    translate: none;
+  }
 }
 
 .account__avatar {
@@ -267,11 +342,18 @@
   width: 100%;
 }
 
-.drawer__reminders {
+.drawer__pages {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drawer__page {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
   padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -345,14 +427,14 @@
 // wide desktops: the pill shows "Prihlásiť" or the player's name (cut with … to the slot, full name in the title)
 @media (min-width: 1100px) {
   .account {
-    width: 180px; // the bell (40) + gap (8) + the pill (132)
+    width: 180px; // the slot keeps its width (the bell is gone) – the pill may use all of it
   }
 
-  .account__link:not(.account__bell) {
+  .account__link {
     flex: 0 1 auto;
     width: auto;
     min-width: 0;
-    max-width: 132px;
+    max-width: 180px;
     padding: 0 16px 0 12px;
 
     &:has(.account__avatar) {

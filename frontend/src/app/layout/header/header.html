@@ -29,28 +29,33 @@
     <!-- desktop: fixed-width slot in every state (loading, login off, API down), so the bar never moves -->
     <div class="account">
       @if (auth.enabled()) {
-        <!-- event reminders: for everyone, the page asks a visitor to sign in -->
-        <a
-          class="account__link account__bell"
-          [routerLink]="i18n.path('reminders')"
-          routerLinkActive="is-active"
-          ariaCurrentWhenActive="page"
-          [attr.aria-label]="t.reminders"
-          [title]="t.reminders"
-        >
-          <svg appIcon="bell"></svg>
-        </a>
         @if (auth.user(); as user) {
-          <a
-            class="account__link"
-            [routerLink]="i18n.path('account')"
-            routerLinkActive="is-active"
-            ariaCurrentWhenActive="page"
-            [title]="user.name"
-          >
-            <img class="account__avatar" [src]="user.avatar_url" alt="" width="28" height="28" />
-            <span class="account__label">{{ user.name }}</span>
-          </a>
+          <!-- the player's pages open on hover or keyboard focus (Gether 11. 10. 2026); a click goes to the account -->
+          <div class="account__menu" [class.is-closed]="menuClosed()" (mouseleave)="menuClosed.set(false)" (focusout)="menuClosed.set(false)">
+            <a
+              class="account__link"
+              [routerLink]="i18n.path('account')"
+              routerLinkActive="is-active"
+              ariaCurrentWhenActive="page"
+              aria-describedby="account-menu-label"
+              [title]="user.name"
+            >
+              <img class="account__avatar" [src]="user.avatar_url" alt="" width="28" height="28" />
+              <span class="account__label">{{ user.name }}</span>
+            </a>
+            <nav class="account__dropdown" aria-labelledby="account-menu-label" (keydown.escape)="closeMenu($event)">
+              <span class="sr-only" id="account-menu-label">{{ t.accountMenu }}</span>
+              <ul>
+                @for (item of accountItems(); track item.link) {
+                  <li>
+                    <a [routerLink]="item.link" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+                      <svg [appIcon]="item.icon"></svg>{{ item.label }}
+                    </a>
+                  </li>
+                }
+              </ul>
+            </nav>
+          </div>
         } @else {
           <a class="account__link" [href]="auth.loginUrl()">
             <svg appIcon="discord"></svg>
@@ -93,11 +98,6 @@
 
   @if (auth.enabled()) {
     <div class="drawer__account" [style.--i]="items().length">
-      <a class="drawer__reminders" [routerLink]="i18n.path('reminders')" (click)="close()">
-        <svg appIcon="bell"></svg>
-        <span>{{ t.reminders }}</span>
-        <svg appIcon="chevron-right"></svg>
-      </a>
       @if (auth.user(); as user) {
         <a class="drawer__user" [routerLink]="i18n.path('account')" (click)="close()">
           <img [src]="user.avatar_url" alt="" width="44" height="44" />
@@ -107,6 +107,17 @@
           </span>
           <svg appIcon="chevron-right"></svg>
         </a>
+        <ul class="drawer__pages">
+          @for (item of accountItems().slice(1); track item.link) {
+            <li>
+              <a class="drawer__page" [routerLink]="item.link" (click)="close()">
+                <svg [appIcon]="item.icon"></svg>
+                <span>{{ item.label }}</span>
+                <svg appIcon="chevron-right"></svg>
+              </a>
+            </li>
+          }
+        </ul>
       } @else {
         <a class="btn btn--gold drawer__login" [href]="auth.loginUrl()">
           <svg appIcon="discord"></svg> {{ t.login }}
