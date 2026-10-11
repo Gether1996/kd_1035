@@ -114,13 +114,3 @@
   padding-top: 10px;
   border-top: 1px solid var(--line);
 }
-
-.viewer-image {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  max-height: 70dvh;
-  margin: 0 auto;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
-}

@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild } from '@angular/core';
 import { ARMAMENT_STATS, INSCRIPTIONS, March, MarchImage, MarchKind, marchIcon } from '../core/kvk-api';
 import { Dict } from '../core/i18n/sk';
 import { I18n } from '../core/i18n/i18n';
 import { Icon } from './icon';
+import { ImageViewer } from './image-viewer';
 
 
 /** "Cav ATK" for a cavalry march (Gether 11. 10. 2026); plain "ATK" when the type names no troop (rally, garrison, mix) */
@@ -16,11 +17,11 @@ export function statLabel(t: Dict['marches'], kind: MarchKind | '', stat: (typeo
  * One march in a compact row (Gether 11. 10. 2026: "stačia len hlavy commanderov bez popisov"): number, type icon,
  * the commanders' portraits (names in alt and title), the two screenshots and below them the armament bonuses and
  * inscriptions. Used on /marche (players and own marches) and next to the KvK sign-ups; buttons of the own marches
- * are projected into the second line.
+ * are projected into the second line. A thumbnail opens its screenshot in a dialog (ImageViewer), never a new page.
  */
 @Component({
   selector: 'app-march-row',
-  imports: [Icon],
+  imports: [Icon, ImageViewer],
   host: { '[class.is-numbered]': 'numbered()' },
   templateUrl: './march-row.html',
   styleUrl: './march-row.scss',
@@ -32,15 +33,13 @@ export class MarchRow {
   readonly portraits = input<ReadonlyMap<string, string>>(new Map());
   /** whose march it is, for the screen reader labels of the screenshots ("Gether, 2. march") */
   readonly owner = input('');
-  /** the screenshots open in a new tab; otherwise `shot` asks the page to show them */
-  readonly links = input(false);
   /** a missing screenshot is marked (the player's own marches) */
   readonly showMissing = input(false);
   /** the screenshots it has: a march only the equipment, a KvK sign-up the armaments too */
   readonly shotKinds = input<MarchImage['kind'][]>(['equipment']);
   /** the march number in front; a KvK sign-up has none */
   readonly numbered = input(true);
-  readonly shot = output<{ image: MarchImage; event: Event }>();
+  private readonly viewer = viewChild.required(ImageViewer);
 
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
@@ -66,6 +65,21 @@ export class MarchRow {
 
   protected imageOf(kind: MarchImage['kind']): MarchImage | undefined {
     return this.march().images.find((image) => image.kind === kind);
+  }
+
+  /** the screenshots of the march in the order of the thumbnails, from the clicked one on */
+  protected show(image: MarchImage, event: Event): void {
+    const images = this.shotKinds()
+      .map((kind) => this.imageOf(kind))
+      .filter((i): i is MarchImage => !!i);
+    const where = this.numbered() ? this.t().march.replace('{n}', String(this.march().position)) : '';
+    const title = [this.owner(), where].filter(Boolean).join(' · ');
+    this.viewer().open(
+      title,
+      images.map((i) => ({ url: i.url, width: i.width, height: i.height, label: this.t().images[i.kind] })),
+      images.indexOf(image),
+      event,
+    );
   }
 
   protected shotLabel(kind: MarchImage['kind']): string {

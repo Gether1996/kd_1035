@@ -136,6 +136,11 @@ describe('Marches', () => {
     expect(el.querySelector('.march--editing')).toBeNull();
     expect(el.querySelector('.mrow__head')?.getAttribute('alt')).toBe('Attila');
     expect(el.querySelectorAll('.mrow__shot img').length).toBe(1);
+    // the thumbnail opens the screenshot in a dialog on the page, not a new page
+    el.querySelector<HTMLButtonElement>('.mrow__shot')!.click();
+    await fixture.whenStable();
+    expect(el.querySelector('dialog[open] .viewer__img')?.getAttribute('src')).toBe('/api/marches/images/7/');
+    expect(el.querySelector('dialog[open] .modal__title')?.textContent).toContain('1. march');
     // short labels next to the type icon, the full "Cav ATK" in the title (and for screen readers)
     const stats = Array.from(el.querySelectorAll<HTMLElement>('.mrow__stat'));
     expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'All DMG', 'Zlaté']);

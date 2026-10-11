@@ -4,19 +4,16 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  ElementRef,
   PLATFORM_ID,
   computed,
   effect,
   inject,
   input,
   signal,
-  viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
-import { March, MarchImage } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
@@ -67,11 +64,6 @@ export class PlayersMarches {
     { label: this.t().playersMarches.title, link: this.i18n.path('playersMarches') },
   ]);
 
-  // ---------------------------------------------------------------- screenshot dialog
-  protected readonly viewing = signal<{ player: PlayerMarches; march: March; image: MarchImage } | null>(null);
-  private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('viewer');
-  private opener: HTMLElement | null = null;
-
   constructor() {
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.playersMarches, noindex: true }));
@@ -84,20 +76,5 @@ export class PlayersMarches {
 
   protected name(player: PlayerMarches): string {
     return player.ingame_name || player.name;
-  }
-
-  protected open(player: PlayerMarches, march: March, image: MarchImage, event: Event): void {
-    this.opener = event.currentTarget as HTMLElement;
-    this.viewing.set({ player, march, image });
-    this.dialog()?.nativeElement.showModal();
-  }
-
-  protected close(): void {
-    this.dialog()?.nativeElement.close();
-  }
-
-  protected closed(): void {
-    this.viewing.set(null);
-    this.opener?.focus();
   }
 }

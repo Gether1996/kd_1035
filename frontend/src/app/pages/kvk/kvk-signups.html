@@ -83,7 +83,6 @@
             [numbered]="false"
             [shotKinds]="['equipment', 'armaments']"
             [showMissing]="true"
-            (shot)="open(s, $event.image, $event.event)"
           />
           @if (s.note) {
             <p class="signup__line signup__note">{{ s.note }}</p>
@@ -94,7 +93,7 @@
               <ol class="mini-marches">
                 @for (march of s.marches; track march.id) {
                   <li class="mini-march">
-                    <app-march-row [march]="march" [portraits]="portraits()" [owner]="s.player?.ingame_name || s.player?.name || ''" [links]="true" />
+                    <app-march-row [march]="march" [portraits]="portraits()" [owner]="s.player?.ingame_name || s.player?.name || ''" />
                   </li>
                 }
               </ol>
@@ -108,32 +107,3 @@
     <p class="form__state is-error" role="alert">{{ k.errors.failed }}</p>
   }
 </section>
-
-<dialog #viewer class="modal modal--wide viewer" (close)="closed()" (keydown)="key($event)" aria-labelledby="kvk-viewer-title">
-  @if (viewing(); as v) {
-    <div class="modal__body">
-      <header class="modal__head">
-        <div class="modal__heading">
-          <h2 class="modal__title" id="kvk-viewer-title">{{ name(v.signup) }}</h2>
-          <p class="modal__eyebrow">{{ i18n.t().marches.images[v.image.kind] }}</p>
-        </div>
-        <button type="button" class="modal__close" [attr.aria-label]="k.close" (click)="close()">
-          <svg appIcon="x"></svg>
-        </button>
-      </header>
-      <a class="viewer__image" [href]="v.image.url" target="_blank" rel="noopener">
-        <img [src]="v.image.url" [alt]="i18n.t().marches.images[v.image.kind] + ' – ' + name(v.signup)" [width]="v.image.width" [height]="v.image.height" />
-      </a>
-      @if (v.signup.images.length > 1) {
-        <div class="viewer__nav">
-          <button type="button" class="pill-btn pill-btn--quiet" (click)="step(-1)">
-            <svg appIcon="arrow-left"></svg>{{ k.prev }}
-          </button>
-          <button type="button" class="pill-btn pill-btn--quiet" (click)="step(1)">
-            {{ k.next }}<svg appIcon="arrow-right"></svg>
-          </button>
-        </div>
-      }
-    </div>
-  }
-</dialog>

@@ -1,5 +1,4 @@
 @let p = t().playersMarches;
-@let mk = t().marches;
 
 <app-page-header [crumbs]="crumbs()" [eyebrow]="p.eyebrow" [title]="p.title" [intro]="p.intro" />
 
@@ -70,7 +69,7 @@
           <ol class="player__marches">
             @for (march of player.marches; track march.id) {
               <li class="row">
-                <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" (shot)="open(player, march, $event.image, $event.event)" />
+                <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" />
               </li>
             }
           </ol>
@@ -82,20 +81,3 @@
     }
   }
 </div>
-
-<dialog #viewer class="modal modal--wide" (close)="closed()" aria-labelledby="players-marches-viewer">
-  @if (viewing(); as v) {
-    <div class="modal__body">
-      <header class="modal__head">
-        <div class="modal__heading">
-          <h2 class="modal__title" id="players-marches-viewer">{{ name(v.player) }}</h2>
-          <p class="modal__eyebrow">{{ mk.march.replace('{n}', '' + v.march.position) }} · {{ mk.images[v.image.kind] }}</p>
-        </div>
-        <button type="button" class="modal__close" [attr.aria-label]="t().kvk.close" (click)="close()">
-          <svg appIcon="x"></svg>
-        </button>
-      </header>
-      <img class="viewer-image" [src]="v.image.url" [alt]="mk.images[v.image.kind] + ' – ' + name(v.player)" [width]="v.image.width" [height]="v.image.height" />
-    </div>
-  }
-</dialog>

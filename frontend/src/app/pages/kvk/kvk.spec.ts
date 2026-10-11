@@ -252,7 +252,8 @@ describe('KvkSignups', () => {
     expect(el.querySelector('.signup__army .mrow__stats')?.textContent).toContain('Arch ATK 8%');
     el.querySelector<HTMLButtonElement>('.signup__army .mrow__shot')!.click();
     await fixture.whenStable();
-    expect(el.querySelector('.viewer__image img')?.getAttribute('src')).toBe('/api/kvk/images/1/');
+    // it opens in a dialog on the page, not a new page
+    expect(el.querySelector('dialog[open] .viewer__img')?.getAttribute('src')).toBe('/api/kvk/images/1/');
 
     // the superuser withdraws it on the second click
     const remove = () => el.querySelector<HTMLButtonElement>('.signup__remove')!;

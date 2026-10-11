@@ -76,7 +76,7 @@ describe('PlayersMarches', () => {
 
     el.querySelector<HTMLButtonElement>('.mrow__shot')!.click();
     await tick(fixture);
-    expect(el.querySelector('.viewer-image')?.getAttribute('src')).toBe('/api/marches/images/7/');
+    expect(el.querySelector('dialog[open] .viewer__img')?.getAttribute('src')).toBe('/api/marches/images/7/');
     http.match(() => true).forEach((r) => r.flush({}));
   });
 });

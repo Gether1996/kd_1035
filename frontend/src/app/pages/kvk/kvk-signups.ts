@@ -3,17 +3,15 @@ import { HttpResourceRef, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   PLATFORM_ID,
   computed,
   inject,
   input,
   output,
   signal,
-  viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { IMAGE_KINDS, KVK_KINDS, KvkApi, KvkImage, KvkSignup, MARCH_STATS, March, MarchKind, marchIcon } from '../../core/kvk-api';
+import { KVK_KINDS, KvkApi, KvkSignup, MARCH_STATS, March, MarchKind, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { MarchRow } from '../../shared/march-row';
@@ -22,7 +20,7 @@ type Role = 'all' | 'rally' | 'garrison';
 
 /**
  * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: every sign-up with the player, role, the army as a
- * march row and the note; a click opens the screenshot in a dialog. The superuser may withdraw a sign-up.
+ * march row (a thumbnail opens its screenshot in a dialog) and the note. The superuser may withdraw a sign-up.
  */
 @Component({
   selector: 'app-kvk-signups',
@@ -87,9 +85,6 @@ export class KvkSignups {
     return counts;
   });
 
-  protected readonly viewing = signal<{ signup: KvkSignup; image: KvkImage } | null>(null);
-  private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('viewer');
-  private opener: HTMLElement | null = null;
 
   protected async remove(signup: KvkSignup): Promise<void> {
     if (this.armed() !== signup.id) {
@@ -106,10 +101,6 @@ export class KvkSignups {
     }
   }
 
-  protected imagesOf(signup: KvkSignup, kind: string): KvkImage[] {
-    return signup.images.filter((image) => image.kind === kind);
-  }
-
   protected name(signup: KvkSignup): string {
     return signup.player?.ingame_name || signup.player?.name || '';
   }
@@ -121,34 +112,5 @@ export class KvkSignups {
       hour: '2-digit',
       minute: '2-digit',
     }).format(new Date(iso));
-  }
-
-  protected open(signup: KvkSignup, image: KvkImage, event: Event): void {
-    this.opener = event.currentTarget as HTMLElement;
-    this.viewing.set({ signup, image });
-    this.dialog()?.nativeElement.showModal();
-  }
-
-  /** ← → between the player's screenshots */
-  protected step(by: number): void {
-    const current = this.viewing();
-    if (!current) return;
-    const images = IMAGE_KINDS.flatMap((kind) => this.imagesOf(current.signup, kind));
-    const index = images.findIndex((i) => i.id === current.image.id);
-    this.viewing.set({ signup: current.signup, image: images[(index + by + images.length) % images.length] });
-  }
-
-  protected key(event: KeyboardEvent): void {
-    if (event.key === 'ArrowRight') this.step(1);
-    if (event.key === 'ArrowLeft') this.step(-1);
-  }
-
-  protected close(): void {
-    this.dialog()?.nativeElement.close();
-  }
-
-  protected closed(): void {
-    this.viewing.set(null);
-    this.opener?.focus();
   }
 }
