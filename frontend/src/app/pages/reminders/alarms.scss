@@ -1,0 +1,210 @@
+// .unit* come from reminder-picker.scss; the rest mirrors "Moje pripomienky" (reminders.scss)
+:host {
+  display: block;
+  // a jump to /pripomienky#budiky (the link in the bot's message) stops under the header
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+.alarms__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+
+  .pill-btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.alarms__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+}
+
+.alarms__count {
+  display: inline-grid;
+  place-items: center;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--gold-300);
+  font: 600 0.8125rem/1 var(--font-body);
+}
+
+.alarms__lead {
+  margin-top: 6px;
+  color: var(--text-dim);
+}
+
+.alarms__warn {
+  margin-top: 8px;
+  color: var(--red-300);
+}
+
+.alarms__empty {
+  margin-top: 12px;
+  font-size: 0.9375rem;
+  color: var(--text-mute);
+}
+
+.alarms__list {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+}
+
+.alarm {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px 10px 14px;
+
+  & + & {
+    border-top: 1px solid var(--line);
+  }
+}
+
+.alarm__icon {
+  width: 20px;
+  height: 20px;
+  color: var(--gold-400);
+}
+
+.alarm__body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.alarm__note {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.alarm__when {
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-mute);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    color 0.2s;
+
+  .icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--red-500) 55%, transparent);
+    background-color: color-mix(in srgb, var(--red-500) 14%, transparent);
+    color: var(--red-300);
+  }
+
+  &:focus-visible {
+    border-radius: 50%;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: progress;
+  }
+}
+
+// ---------------------------------------------------------------- the form
+
+.alarm-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+}
+
+.alarm-form__ideas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.idea {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  background: var(--field-bg);
+  color: var(--text-dim);
+  font: 600 0.875rem/1 var(--font-body);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+
+  &:hover {
+    border-color: var(--field-line-hover);
+    color: var(--text);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--gold-400);
+    color: var(--gold-100);
+  }
+}
+
+.alarm-form__units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alarm-form__at {
+  max-width: 280px;
+  color-scheme: dark;
+}
+
+.alarm-form__summary {
+  min-height: 1.5em;
+  color: var(--gold-300);
+
+  &.is-error {
+    color: var(--red-300);
+  }
+}
+
+.alarm-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// the field is a grid – the switch keeps its own width (full width only on phones, styles.scss)
+.alarm-form .segmented {
+  justify-self: start;
+
+  @media (max-width: 420px) {
+    justify-self: stretch;
+  }
+}

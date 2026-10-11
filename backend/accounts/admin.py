@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import EventReminder, Player, SentReminder
+from .models import Alarm, EventReminder, Player, SentReminder
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -132,3 +132,26 @@ class EventReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     @admin.display(description='pripomenúť pred začiatkom')
     def times(self, obj):
         return ', '.join(REMINDER_LABELS.get(minutes) or duration(minutes, 'sk') for minutes in obj.offsets)
+
+
+@admin.register(Alarm)
+class AlarmAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """Players' one-off alarms – read only, for a failed delivery; sent ones are deleted a day later."""
+
+    list_display = ['remind_at', 'player_name', 'note', 'target_at', 'sent_at', 'ok', 'error']
+    list_filter = ['ok']
+    list_select_related = ['player']
+    search_fields = ['player__username', 'player__global_name', 'player__ingame_name']
+    fields = ['player', 'note', 'target_at', 'remind_at', 'created_at', 'sent_at', 'ok', 'error']
+    readonly_fields = fields
+
+    def has_add_permission(self, request):
+        return False
+
+    # delete stays allowed, as for the reminders (cascades from a deleted player)
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='hráč', ordering='player__global_name')
+    def player_name(self, obj):
+        return obj.player.ingame_name or obj.player.name

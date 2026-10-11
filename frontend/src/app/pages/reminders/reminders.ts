@@ -17,6 +17,7 @@ import { showsClock } from '../../shared/event-time';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
 import { EventDialog, RemindState } from '../calendar/event-dialog';
+import { Alarms } from './alarms';
 import { EVENING_BEFORE, duration, plural, repeatLabel } from './format';
 
 type Filter = 'all' | 'regular' | 'irregular';
@@ -31,7 +32,7 @@ const PAGE = 12;
  */
 @Component({
   selector: 'app-reminders',
-  imports: [Icon, EventIcon, RouterLink, EventDialog],
+  imports: [Icon, EventIcon, RouterLink, EventDialog, Alarms],
   templateUrl: './reminders.html',
   styleUrl: './reminders.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

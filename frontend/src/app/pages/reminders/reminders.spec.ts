@@ -67,6 +67,16 @@ describe('Reminders on /pripomienky', () => {
     const fixture = TestBed.createComponent(Reminders);
     fixture.detectChanges(); // the settings are asked in the first change detection
     http.expectOne('/api/me/reminders/').flush(settings);
+    // the alarms block (alarms.spec.ts) appears with the settings and asks for its list
+    for (let i = 0; i < 20; i++) {
+      const asked = http.match('/api/me/alarms/');
+      if (asked.length) {
+        asked.forEach((req) => req.flush({ alarms: [], max: 5 }));
+        break;
+      }
+      fixture.detectChanges();
+      await new Promise((resolve) => setTimeout(resolve));
+    }
     await fixture.whenStable();
     return { fixture, el: fixture.nativeElement as HTMLElement };
   }

@@ -7,6 +7,7 @@
 //   MEASURE=.brand,.nav,.account  print each element's box (x, width, right) and whether its content overflows
 //   SHOT=0                      no images, only MEASURE and the overflow check (fast)
 //   SESSION=<sessionid>         signed in as that user (shoot.sh --player / --superuser makes a test player)
+//   CLICK=.alarms__head .pill-btn  click these elements (comma separated, in order) before the shot – open a form
 //   STORAGE='{"key":"value"}'    localStorage entries set before the page loads (e.g. kd1035.commanders)
 // Every page also reports OVERFLOW when it scrolls sideways.
 // Output: tools/screenshots/out/<page>[-<selector>]-<width>x<height>.png  (git-ignored)
@@ -23,6 +24,7 @@ const SHOT = process.env.SHOT !== '0';
 const SELECTOR = process.env.SELECTOR;
 const MEASURE = process.env.MEASURE ? process.env.MEASURE.split(',') : [];
 const SESSION = process.env.SESSION;
+const CLICK = process.env.CLICK ? process.env.CLICK.split(',') : [];
 const STORAGE = process.env.STORAGE ? JSON.parse(process.env.STORAGE) : null;
 
 mkdirSync('out', { recursive: true });
@@ -50,6 +52,11 @@ for (const path of PAGES) {
         scrollTo({ top: 0, behavior: 'instant' });
         await new Promise((r) => setTimeout(r, 2200));
       });
+    }
+
+    for (const selector of CLICK) {
+      await page.locator(selector).first().click({ timeout: 5000 });
+      await page.waitForTimeout(400);
     }
 
     const where = `${path} ${width}x${height}`;

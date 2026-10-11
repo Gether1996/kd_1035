@@ -148,6 +148,8 @@
           <p class="group__error" role="alert">{{ r.failed }}</p>
         }
       </section>
+
+      <app-alarms [off]="s.discord_available && !discord()" />
     </div>
 
     <section class="all" aria-labelledby="all-title">

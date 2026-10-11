@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import reminder_views, views
+from . import alarm_views, reminder_views, views
 
 urlpatterns = [
     path('auth/discord/login/', views.discord_login),
@@ -10,4 +10,6 @@ urlpatterns = [
     path('me/reminders/', reminder_views.reminders),
     path('me/reminders/test/', reminder_views.test_dm),
     path('me/reminders/<int:event_id>/', reminder_views.event_reminder),
+    path('me/alarms/', alarm_views.alarms),
+    path('me/alarms/<int:alarm_id>/', alarm_views.alarm),
 ]

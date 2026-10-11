@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.9.0:** **budíky** na `/pripomienky` – jednorazová súkromná správa od bota („o 7 h 30 min mi končí štít, pripomeň 15 min vopred“), max. 5 naraz, do 14 dní; kalendár, účet a pripomienky sa načítajú až pri otvorení (úvodný balík 490 kB).
 - **11. 10. 2026 – v1.8.0:** nová stránka **Slovník pojmov** (`/slovnik`, `/cz/slovnik`) – skratky a slang z hry (KvK, MGE, KP, DKP, rally, garrison…) v SK/CZ s hľadaním a odkazmi na návody; odkaz z `/navody`.
 - **11. 10. 2026 – v1.7.0:** na `/navody` blok „Čo môžem postaviť“ – hráč označí commanderov, ktorých má, a uvidí páry z našich návodov, ktoré vie postaviť, aj ktorý commander mu pridá najviac párov (výber iba v prehliadači).
 - **11. 10. 2026 – v1.6.4:** herné hodiny nad kalendárom – herný čas UTC a odpočet do denného resetu (00:00 UTC) aj s časom resetu v pásme návštevníka.

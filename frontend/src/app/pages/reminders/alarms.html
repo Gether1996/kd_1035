@@ -1,0 +1,164 @@
+@let a = t();
+@let r = i18n.t().reminders;
+<section class="alarms" id="budiky" aria-labelledby="alarms-title">
+  <div class="alarms__head">
+    <h2 class="alarms__title" id="alarms-title">
+      {{ a.title }} <span class="alarms__count">{{ alarms().length }}/{{ max() }}</span>
+    </h2>
+    @if (!open()) {
+      <button type="button" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="full() || null" (click)="!full() && toggle()">
+        <svg appIcon="plus"></svg>{{ a.add }}
+      </button>
+    }
+  </div>
+  <p class="alarms__lead">{{ a.lead }}</p>
+  @if (off()) {
+    <p class="alarms__warn">{{ a.off }}</p>
+  }
+
+  @if (alarms().length) {
+    <ul class="alarms__list">
+      @for (alarm of alarms(); track alarm.id) {
+        <li class="alarm">
+          <svg class="alarm__icon" appIcon="clock"></svg>
+          <span class="alarm__body">
+            <strong class="alarm__note">{{ alarm.note || a.title }}</strong>
+            <span class="alarm__when">{{ when(alarm.remind_at) }} · {{ left(alarm) }}</span>
+          </span>
+          <button
+            type="button"
+            class="icon-btn icon-btn--stop"
+            [attr.aria-label]="a.cancel + ': ' + (alarm.note || a.title)"
+            [title]="a.cancel"
+            [disabled]="removing().has(alarm.id)"
+            (click)="remove(alarm)"
+          >
+            <svg appIcon="x"></svg>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else if (data.hasValue() && !open()) {
+    <p class="alarms__empty">{{ a.empty }}</p>
+  }
+  @if (full()) {
+    <p class="alarms__empty">{{ a.full }}</p>
+  }
+
+  @if (open()) {
+    <form class="alarm-form" (submit)="save($event)" novalidate>
+      <div class="field">
+        <label class="field__label" for="alarm-note">{{ a.note }}</label>
+        <input
+          #noteInput
+          id="alarm-note"
+          class="input"
+          type="text"
+          maxlength="100"
+          autocomplete="off"
+          [placeholder]="a.notePlaceholder"
+          [value]="note()"
+          (input)="note.set(noteInput.value)"
+        />
+        <div class="alarm-form__ideas">
+          @for (idea of a.ideas; track idea) {
+            <button type="button" class="idea" [attr.aria-pressed]="note() === idea" (click)="note.set(idea)">{{ idea }}</button>
+          }
+        </div>
+      </div>
+
+      <fieldset class="field">
+        <legend class="field__label">{{ a.when }}</legend>
+        <div class="segmented" role="group" [attr.aria-label]="a.when">
+          <button type="button" [attr.aria-pressed]="mode() === 'in'" (click)="mode.set('in')">{{ a.modeIn }}</button>
+          <button type="button" [attr.aria-pressed]="mode() === 'at'" (click)="mode.set('at')">{{ a.modeAt }}</button>
+        </div>
+        @if (mode() === 'in') {
+          <div class="alarm-form__units">
+            <label class="unit">
+              <span class="sr-only">{{ a.inLabel }}</span>
+              <input
+                #d
+                class="input unit__input"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                max="14"
+                placeholder="0"
+                [value]="days() || ''"
+                [attr.aria-invalid]="error() === 'empty' || null"
+                (input)="days.set(number(d.value, 14)); error.set(null)"
+              />
+              <span class="unit__name">{{ r.units.days }}</span>
+            </label>
+            <label class="unit">
+              <span class="sr-only">{{ a.inLabel }}</span>
+              <input
+                #h
+                class="input unit__input"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                max="23"
+                placeholder="0"
+                [value]="hours() || ''"
+                [attr.aria-invalid]="error() === 'empty' || null"
+                (input)="hours.set(number(h.value, 23)); error.set(null)"
+              />
+              <span class="unit__name">{{ r.units.hours }}</span>
+            </label>
+            <label class="unit unit--wide">
+              <span class="sr-only">{{ a.inLabel }}</span>
+              <input
+                #m
+                class="input unit__input"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                max="59"
+                placeholder="0"
+                [value]="minutes() || ''"
+                [attr.aria-invalid]="error() === 'empty' || null"
+                (input)="minutes.set(number(m.value, 59)); error.set(null)"
+              />
+              <span class="unit__name">{{ r.units.minutes }}</span>
+            </label>
+          </div>
+        } @else {
+          <label class="sr-only" for="alarm-at">{{ a.atLabel }}</label>
+          <input
+            #at
+            id="alarm-at"
+            class="input alarm-form__at"
+            type="datetime-local"
+            [value]="local()"
+            [attr.aria-invalid]="error() === 'empty' || null"
+            (input)="local.set(at.value); error.set(null)"
+          />
+        }
+      </fieldset>
+
+      <div class="field">
+        <label class="field__label" for="alarm-lead">{{ a.remind }}</label>
+        <select #leadSelect id="alarm-lead" class="select" (change)="lead.set(+leadSelect.value)">
+          @for (minutes of leads; track minutes) {
+            <option [value]="minutes" [selected]="minutes === lead()">{{ leadLabel(minutes) }}</option>
+          }
+        </select>
+      </div>
+
+      <p class="alarm-form__summary" role="status" [class.is-error]="!!error()">
+        @if (error(); as e) {
+          {{ a.errors[e] }}
+        } @else {
+          {{ summary() }}
+        }
+      </p>
+
+      <div class="alarm-form__actions">
+        <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">{{ a.save }}</button>
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="toggle()">{{ a.close }}</button>
+      </div>
+    </form>
+  }
+</section>

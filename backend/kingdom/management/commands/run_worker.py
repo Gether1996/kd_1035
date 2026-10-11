@@ -7,7 +7,8 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
-from accounts.reminders import prune_sent, send_personal_reminders
+from accounts.alarms import prune_alarms, send_alarms
+from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
 from kingdom.backups import backup_due, create_backup
 from kingdom.discord import send_due
 from kingdom.events import plan_reminders
@@ -53,6 +54,13 @@ class Command(BaseCommand):
             except Exception:
                 log.exception('Sending personal reminders failed')
 
+            try:
+                send_alarms()
+            except DiscordPaused:
+                pass  # the rest waits for the next tick
+            except Exception:
+                log.exception('Sending alarms failed')
+
             if time.monotonic() >= next_backup_check:
                 next_backup_check = time.monotonic() + BACKUP_CHECK_SECONDS
                 try:
@@ -72,6 +80,7 @@ class Command(BaseCommand):
                     log.exception('Clearing expired sessions failed')
                 try:
                     prune_sent()
+                    prune_alarms()
                 except Exception:
                     log.exception('Pruning sent reminders failed')
 

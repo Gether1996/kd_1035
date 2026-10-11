@@ -77,6 +77,7 @@ class Player(models.Model):
             type(self.user): [self.user.pk],
             Player: [self.pk],
             EventReminder: self.event_reminders.values_list('pk', flat=True),
+            Alarm: self.alarms.values_list('pk', flat=True),
             SentReminder: SentReminder.objects.filter(player=self).values_list('pk', flat=True),
         }
         for model, pks in about.items():
@@ -137,3 +138,32 @@ class SentReminder(models.Model):
 
     def __str__(self):
         return f'{self.player} · {self.event} · {self.get_channel_display()}'
+
+
+MAX_ALARMS = 5
+# how far ahead an alarm may ring (a peace shield, a pass opening in KvK…)
+MAX_ALARM_DAYS = 14
+
+
+class Alarm(models.Model):
+    """A one-off alarm the player sets on /pripomienky ("my shield ends in 7 h 30 min, remind me 15 min before"):
+    the bot sends a DM at remind_at. Deleted a day after it went out (prune_alarms)."""
+
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='alarms', verbose_name='hráč')
+    note = models.CharField('text', max_length=100, blank=True)
+    target_at = models.DateTimeField('čas udalosti')
+    remind_at = models.DateTimeField('poslať')
+    created_at = models.DateTimeField('vytvorené', auto_now_add=True)
+    # set when the worker takes the alarm (also a missed one); empty = waiting
+    sent_at = models.DateTimeField('odoslané', null=True, blank=True)
+    ok = models.BooleanField('doručené', default=False)
+    error = models.CharField('chyba', max_length=300, blank=True)
+
+    class Meta:
+        ordering = ['remind_at']
+        verbose_name = 'budík hráča'
+        verbose_name_plural = 'budíky hráčov'
+        indexes = [models.Index(fields=['sent_at', 'remind_at'], name='alarm_due')]
+
+    def __str__(self):
+        return f'{self.player} · {self.note or "budík"}'

@@ -182,6 +182,36 @@ export const sk = {
     anyone: 'ktokoľvek',
     count: { one: 'odporúčanie', few: 'odporúčania', other: 'odporúčaní' },
   },
+  alarms: {
+    title: 'Budíky',
+    add: 'Nový budík',
+    lead: 'Jednorazová správa od bota – keď ti končí štít, otvára sa pass alebo čakáš na rally.',
+    off: 'Správy od bota máš vypnuté, budík ti nepríde.',
+    empty: 'Zatiaľ nemáš žiadny budík.',
+    full: 'Naraz môžeš mať najviac 5 budíkov.',
+    cancel: 'Zrušiť budík',
+    note: 'Čo ti má bot pripomenúť',
+    notePlaceholder: 'Napr. Končí mi štít',
+    ideas: ['Končí mi štít', 'Otvára sa pass', 'Rally', 'Plné AP'],
+    when: 'Kedy',
+    modeIn: 'O koľko',
+    modeAt: 'Presný čas',
+    inLabel: 'O koľko',
+    atLabel: 'Dátum a čas',
+    remind: 'Pripomenúť',
+    atTime: 'presne vtedy',
+    summary: 'Bot ti napíše {time}.',
+    in: 'o {time}',
+    save: 'Nastaviť budík',
+    close: 'Zrušiť',
+    errors: {
+      empty: 'Zadaj, o koľko alebo kedy.',
+      too_soon: 'Tento čas už je preč – bot musí písať aspoň o minútu.',
+      too_far: 'Budík sa dá nastaviť najviac 14 dní dopredu.',
+      limit: 'Naraz môžeš mať najviac 5 budíkov.',
+      failed: 'Budík sa nepodarilo uložiť. Skús to znova.',
+    },
+  },
   glossary: {
     eyebrow: 'Návody',
     title: 'Slovník pojmov',
@@ -476,6 +506,7 @@ export const sk = {
         list: [
           'Vybrané eventy, časy pripomienok, jazyk správ a či ich chceš dostávať na Discorde.',
           'Záznam odoslaných pripomienok na 30 dní, aby žiadna neprišla dvakrát.',
+          'Budíky – tvoj text, čas a kedy ti má bot napísať.',
         ],
       },
       {
@@ -499,7 +530,7 @@ export const sk = {
         title: 'Ako dlho',
         text: 'Údaje o účte ostanú, kým ho nezmažeš.',
         list: [
-          'Záznam odoslaných pripomienok mažeme po 30 dňoch a výber eventu, ktorý sa už nebude opakovať, najneskôr na druhý deň.',
+          'Záznam odoslaných pripomienok mažeme po 30 dňoch a výber eventu, ktorý sa už nebude opakovať, najneskôr na druhý deň. Odoslaný budík zmažeme do dvoch dní.',
           'Zálohy databázy na serveri vznikajú raz týždenne a necháva sa posledných 8, takže zmazané údaje zmiznú aj zo záloh do 8 týždňov.',
           'Na limit pokusov o prihlásenie používame IP adresu iba v pamäti servera – do databázy ani do záznamov ju pritom neukladáme.',
           'Záznamy servera o návštevách sú bez IP adries. Technické chybové záznamy ju výnimočne obsahovať môžu; všetky záznamy majú pevne obmedzenú veľkosť (3 × 10 MB na službu) a staršie sa prepisujú.',
@@ -507,7 +538,7 @@ export const sk = {
       },
       {
         title: 'Tvoje možnosti',
-        text: 'Meno v hre zmeníš na stránke Môj účet, pripomienky na stránke Pripomienky eventov.',
+        text: 'Meno v hre zmeníš na stránke Môj účet, pripomienky a budíky na stránke Pripomienky eventov.',
         list: [
           'Tlačidlo Zmazať účet hneď zmaže všetky údaje o tebe uvedené vyššie, zo záloh zmiznú do 8 týždňov. Účty vedenia maže správca.',
           'O kópiu alebo opravu svojich údajov požiadaj vedenie na Discorde.',
