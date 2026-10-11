@@ -1,6 +1,6 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 6 hotové, v1.6.3. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 6 hotové, v1.6.3. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md). Návrhy nových funkcií pre hráčov (11. 10. 2026, Gether vyberie): [`navrhy.md`](navrhy.md).
 
 ## Hotové
 
