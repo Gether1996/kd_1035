@@ -10,11 +10,12 @@
 //   CLICK=.alarms__head .pill-btn  click these elements (comma separated, in order) before the shot – open a form
 //   HOVER=.account__menu         move the pointer over this element before the shot (a hover menu)
 //   FILL='#passports-power=42,5'  type a value into a field before the shot (selector=value, several separated by |)
+//   BROWSER=webkit              the Safari engine instead of Chromium (iPhone)
 //   STORAGE='{"key":"value"}'    localStorage entries set before the page loads (e.g. kd1035.commanders)
 // Every page also reports OVERFLOW when it scrolls sideways.
 // Output: tools/screenshots/out/<page>[-<selector>]-<width>x<height>.png  (git-ignored)
 import { mkdirSync } from 'node:fs';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 
 const BASE = process.env.BASE_URL ?? 'http://host.docker.internal:4200';
 const PAGES = (process.env.PAGES ?? '/,/cz/o-nas').split(',');
@@ -32,7 +33,8 @@ const FILL = process.env.FILL ? process.env.FILL.split('|').map((pair) => pair.s
 const STORAGE = process.env.STORAGE ? JSON.parse(process.env.STORAGE) : null;
 
 mkdirSync('out', { recursive: true });
-const browser = await chromium.launch();
+// BROWSER=webkit: Safari engine – iPhone bugs (Chrome on iOS renders with WebKit too)
+const browser = await (process.env.BROWSER === 'webkit' ? webkit : chromium).launch();
 
 for (const path of PAGES) {
   for (const [width, height] of SIZES) {

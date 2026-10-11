@@ -147,6 +147,7 @@ docker compose -f docker-compose.dev.yml run --rm backend python manage.py <prí
 tools/test.sh [--ref <commit>] [backend [label…] | frontend [args…] | build | all]
 
 # screenshoty na viacerých rozlíšeniach (beží dev server) → tools/screenshots/out/; premenné v shoot.mjs
+# BROWSER=webkit = Safari engine (iPhone – aj Chrome na iOS); pri obrázkoch v gride/flexe ho over, Safari ich naťahuje
 tools/screenshots/shoot.sh [--player | --superuser] [PAGES=/,/cz/kalendar] [SIZES=…] [SELECTOR=…] [MEASURE=…]
 
 # audit prístupnosti (axe, WCAG 2.1 A/AA) všetkých stránok na 360 a 1280 vrátane dialógu eventu, hľadania commandera a mobilného menu;

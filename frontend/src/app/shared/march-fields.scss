@@ -141,6 +141,13 @@
   }
 }
 
+// a portrait: Safari (WebKit) stretched the img to the grid row with its height attribute – a fixed square, cropped
+img.tile__box {
+  align-self: start;
+  height: auto;
+  object-fit: cover;
+}
+
 .tile__box--empty {
   border-style: dashed;
   background: var(--field-bg);
