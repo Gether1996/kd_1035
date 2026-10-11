@@ -315,53 +315,18 @@
   }
 }
 
-// ---------------------------------------------------------------- closed
-
-.closed {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: clamp(28px, 6vw, 44px) 20px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card-bg);
-  text-align: center;
-}
-
-.closed__badge {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid var(--line-strong);
-  border-radius: 50%;
-  color: var(--gold-400);
-
-  .icon {
-    width: 24px;
-    height: 24px;
-  }
-}
-
-.closed__title {
-  margin-top: 16px;
-  font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.5rem);
-}
-
-.closed__text {
-  margin-top: 8px;
-  max-width: 440px;
-  color: var(--text-dim);
-}
-
 // ---------------------------------------------------------------- reviewers: the sign-ups
-
-.list__round {
-  min-width: min(100%, 260px);
-}
 
 .list__filter {
   margin-top: 16px;
+}
+
+// the superuser withdraws a sign-up
+.signup__remove {
+  min-height: 30px;
+  margin-left: auto;
+  padding: 0 12px;
+  font-size: 0.75rem;
 }
 
 .list__loading {
@@ -420,6 +385,7 @@
 .signup__roles {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
   margin-top: 10px;
 }
@@ -562,46 +528,14 @@
   }
 }
 
-// ---------------------------------------------------------------- superuser: rounds and reviewers
+// ---------------------------------------------------------------- superuser: reviewers
 
-.rounds,
 .reviewers {
   display: grid;
   gap: 8px;
   margin: 18px 0 0;
   padding: 0;
   list-style: none;
-}
-
-.round {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-}
-
-.round__body {
-  display: grid;
-  gap: 4px;
-}
-
-.round__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--text-dim);
-}
-
-.round__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .reviewers__search {

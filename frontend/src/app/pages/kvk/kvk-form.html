@@ -1,150 +1,109 @@
 @let k = t();
-@if (!state().round) {
-  <div class="closed">
-    <span class="closed__badge"><svg appIcon="swords"></svg></span>
-    <h2 class="closed__title">{{ k.closedTitle }}</h2>
-    <p class="closed__text">{{ k.closedText }}</p>
-  </div>
-} @else {
-  <section class="panel" aria-labelledby="kvk-form-title">
-    <header class="panel__head">
-      <div>
-        <p class="panel__eyebrow">{{ k.signupEyebrow }}</p>
-        <h2 class="panel__title" id="kvk-form-title">{{ title() }}</h2>
-      </div>
-      @if (signup(); as s) {
-        <span class="badge" [class.badge--done]="s.complete">
-          @if (s.complete) {
-            <svg appIcon="check"></svg>
-          }
-          {{ s.complete ? k.statusDone : k.statusIncomplete }}
-        </span>
-      }
-    </header>
-    <p class="panel__lead">{{ k.lead }}</p>
+<section class="panel" aria-labelledby="kvk-form-title">
+  <header class="panel__head">
+    <div>
+      <p class="panel__eyebrow">{{ k.signupEyebrow }}</p>
+      <h2 class="panel__title" id="kvk-form-title">{{ title() || k.title }}</h2>
+    </div>
+    @if (signup(); as s) {
+      <span class="badge" [class.badge--done]="s.complete">
+        @if (s.complete) {
+          <svg appIcon="check"></svg>
+        }
+        {{ s.complete ? k.statusDone : k.statusIncomplete }}
+      </span>
+    }
+  </header>
+  <p class="panel__lead">{{ k.lead }}</p>
 
-    <form class="form" (submit)="save($event)" novalidate>
-      <div class="field">
-        <label class="field__label" for="kvk-name">{{ k.ingameName }}</label>
-        <input
-          #nameInput
-          id="kvk-name"
-          class="input"
-          type="text"
-          maxlength="32"
-          autocomplete="off"
-          required
-          [value]="ingameName()"
-          [attr.aria-invalid]="formError() === 'name' || null"
-          (input)="ingameName.set(nameInput.value)"
-        />
-      </div>
-
-      <!-- rally and garrison are two sign-ups, each with its own army (Gether 11. 10. 2026) -->
-      <div class="field">
-        <span class="field__label" id="kvk-role">{{ k.role }}</span>
-        <div class="segmented role-tabs" role="group" aria-labelledby="kvk-role">
-          @for (r of roles; track r) {
-            <button type="button" [attr.aria-pressed]="role() === r" (click)="showRole(r)">
-              <svg [appIcon]="r === 'rally' ? 'swords' : 'shield'"></svg>{{ r === 'rally' ? 'Rally' : 'Garrison' }}
-              @if (signups()[r]) {
-                <svg class="role-tabs__done" appIcon="check"></svg><span class="sr-only">· {{ k.signedUp }}</span>
-              }
-            </button>
-          }
-        </div>
-      </div>
-
-      <!-- the army like in a march: commander pair, screenshots of the equipment and the armaments, bonuses -->
-      <app-march-fields
-        [value]="army()"
-        (valueChange)="setArmy($event)"
-        [commanders]="commanders()"
-        [withKind]="false"
-        [error]="armyProblem()"
-        [uploadError]="uploadError()"
-        [heading]="title() + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
-        [idPrefix]="'kvk-' + role()"
+  <form class="form" (submit)="save($event)" novalidate>
+    <div class="field">
+      <label class="field__label" for="kvk-name">{{ k.ingameName }}</label>
+      <input
+        #nameInput
+        id="kvk-name"
+        class="input"
+        type="text"
+        maxlength="32"
+        autocomplete="off"
+        required
+        [value]="ingameName()"
+        [attr.aria-invalid]="formError() === 'name' || null"
+        (input)="ingameName.set(nameInput.value)"
       />
-
-      <div class="field">
-        <label class="field__label" for="kvk-note">{{ k.note }}</label>
-        <textarea
-          #noteInput
-          id="kvk-note"
-          class="input textarea"
-          rows="3"
-          maxlength="500"
-          [placeholder]="k.notePlaceholder"
-          [value]="note()"
-          (input)="setNote(noteInput.value)"
-        ></textarea>
-      </div>
-
-      <div class="form__actions">
-        <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">
-          {{ saving() ? k.saving : signup() ? k.save : k.submit }}
-        </button>
-        <p class="form__state" role="status" [class.is-error]="!!formError() || !!armyProblem()">
-          @if (formError(); as e) {
-            {{ k.errors[e] }}
-          } @else if (armyProblem(); as e) {
-            {{ i18n.t().marches.required[e] }}
-          } @else if (saved()) {
-            {{ k.saved }}
-          }
-        </p>
-      </div>
-    </form>
-    <p class="panel__privacy">
-      {{ k.privacy }} <a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a>
-    </p>
-  </section>
-
-  @if (signup()) {
-    <div class="withdraw">
-      @if (confirmWithdraw() === role()) {
-        <p>{{ k.withdrawConfirm }}</p>
-        <button type="button" class="danger" (click)="withdraw(role())">{{ k.withdrawYes }}</button>
-        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
-      } @else {
-        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(role())">
-          {{ k.withdraw }} · {{ role() === 'rally' ? 'Rally' : 'Garrison' }}
-        </button>
-      }
     </div>
-  }
-}
 
-<!-- sign-ups of closed rounds: the reviewers still see them until the round is deleted (60 days after closing) -->
-@for (o of older(); track o.signup.id) {
-  <section class="panel" [attr.aria-labelledby]="'kvk-old-' + o.signup.id">
-    <p class="panel__eyebrow">{{ k.signupEyebrow }} · {{ o.signup.role === 'rally' ? 'Rally' : 'Garrison' }}</p>
-    <h2 class="panel__title panel__title--small" [id]="'kvk-old-' + o.signup.id">{{ roundTitle(o.round) }}</h2>
-    <p class="panel__lead">{{ k.closedSignup }}</p>
-    <ul class="thumbs">
-      @for (image of ordered(o.signup); track image.id) {
-        <li class="thumb">
-          <img [src]="image.thumb" [alt]="i18n.t().marches.images[image.kind]" loading="lazy" />
-          <button
-            type="button"
-            class="thumb__remove"
-            [attr.aria-label]="k.removeImage + ': ' + i18n.t().marches.images[image.kind]"
-            (click)="remove(image)"
-          >
-            <svg appIcon="x"></svg>
+    <!-- rally and garrison are two sign-ups, each with its own army (Gether 11. 10. 2026) -->
+    <div class="field">
+      <span class="field__label" id="kvk-role">{{ k.role }}</span>
+      <div class="segmented role-tabs" role="group" aria-labelledby="kvk-role">
+        @for (r of roles; track r) {
+          <button type="button" [attr.aria-pressed]="role() === r" (click)="showRole(r)">
+            <svg [appIcon]="r === 'rally' ? 'swords' : 'shield'"></svg>{{ r === 'rally' ? 'Rally' : 'Garrison' }}
+            @if (signups()[r]) {
+              <svg class="role-tabs__done" appIcon="check"></svg><span class="sr-only">· {{ k.signedUp }}</span>
+            }
           </button>
-        </li>
-      }
-    </ul>
-    <div class="withdraw">
-      @if (confirmWithdraw() === o.signup.id) {
-        <p>{{ k.withdrawConfirm }}</p>
-        <button type="button" class="danger" (click)="withdrawOlder(o.signup)">{{ k.withdrawYes }}</button>
-        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
-      } @else {
-        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(o.signup.id)">{{ k.withdraw }}</button>
-      }
+        }
+      </div>
     </div>
-  </section>
+
+    <!-- the army like in a march: commander pair, screenshots of the equipment and the armaments, bonuses -->
+    <app-march-fields
+      [value]="army()"
+      (valueChange)="setArmy($event)"
+      [commanders]="commanders()"
+      [kinds]="kinds"
+      [error]="armyProblem()"
+      [uploadError]="uploadError()"
+      [heading]="(title() || k.title) + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
+      [idPrefix]="'kvk-' + role()"
+    />
+
+    <div class="field">
+      <label class="field__label" for="kvk-note">{{ k.note }}</label>
+      <textarea
+        #noteInput
+        id="kvk-note"
+        class="input textarea"
+        rows="3"
+        maxlength="500"
+        [placeholder]="k.notePlaceholder"
+        [value]="note()"
+        (input)="setNote(noteInput.value)"
+      ></textarea>
+    </div>
+
+    <div class="form__actions">
+      <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">
+        {{ saving() ? k.saving : signup() ? k.save : k.submit }}
+      </button>
+      <p class="form__state" role="status" [class.is-error]="!!formError() || !!armyProblem()">
+        @if (formError(); as e) {
+          {{ k.errors[e] }}
+        } @else if (armyProblem(); as e) {
+          {{ i18n.t().marches.required[e] }}
+        } @else if (saved()) {
+          {{ k.saved }}
+        }
+      </p>
+    </div>
+  </form>
+  <p class="panel__privacy">
+    {{ k.privacy }} <a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a>
+  </p>
+</section>
+
+@if (signup()) {
+  <div class="withdraw">
+    @if (confirmWithdraw() === role()) {
+      <p>{{ k.withdrawConfirm }}</p>
+      <button type="button" class="danger" (click)="withdraw(role())">{{ k.withdrawYes }}</button>
+      <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
+    } @else {
+      <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(role())">
+        {{ k.withdraw }} · {{ role() === 'rally' ? 'Rally' : 'Garrison' }}
+      </button>
+    }
+  </div>
 }

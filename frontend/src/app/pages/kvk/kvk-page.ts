@@ -13,8 +13,9 @@ import { KvkSignups } from './kvk-signups';
 type Tab = 'mine' | 'list' | 'settings';
 
 /**
- * /kvk – KvK sign-ups for rally and garrison (Gether 11. 10. 2026). A player signs up with screenshots; the reviewers
- * he picks (R4) and the superuser see every sign-up; the superuser manages rounds and reviewers. A prerendered shell,
+ * /kvk – KvK sign-ups for rally and garrison (Gether 11. 10. 2026). A player signs up with screenshots; the sign-ups
+ * stay until withdrawn (no rounds). The reviewers (R4) and the superuser see every sign-up; the superuser sets the
+ * heading (the date of the next KvK), withdraws sign-ups and picks the reviewers. A prerendered shell,
  * not indexed, not in the sitemap.
  */
 @Component({
@@ -68,14 +69,10 @@ type Tab = 'mine' | 'list' | 'settings';
             <app-kvk-form [state]="s" (changed)="reload()" />
           }
           @case ('list') {
-            @if (rounds.hasValue()) {
-              <app-kvk-signups [rounds]="rounds.value().rounds" />
-            }
+            <app-kvk-signups [data]="signups" [superuser]="s.superuser" (changed)="reload()" />
           }
           @case ('settings') {
-            @if (rounds.hasValue()) {
-              <app-kvk-settings [rounds]="rounds.value().rounds" (changed)="reload()" />
-            }
+            <app-kvk-settings [heading]="s" (changed)="reload()" />
           }
         }
       } @else {
@@ -101,7 +98,7 @@ export class KvkPage {
     const s = this.state.hasValue() ? this.state.value() : null;
     return !!s && (s.reviewer || s.superuser);
   });
-  protected readonly rounds = this.api.rounds(() => this.canReview(), () => this.version());
+  protected readonly signups = this.api.signups(() => this.canReview(), () => this.version());
   protected readonly tab = signal<Tab>('mine');
 
   protected readonly crumbs = computed(() => [

@@ -6,21 +6,18 @@ import { firstValueFrom } from 'rxjs';
 /** a player signs up for rally and garrison separately, each with its own army (Gether 11. 10. 2026) */
 export type KvkRole = 'rally' | 'garrison';
 export const KVK_ROLES: KvkRole[] = ['rally', 'garrison'];
+/** the troops of a sign-up's army – its bonuses are read as theirs (Gether 11. 10. 2026) */
+export const KVK_KINDS: MarchKind[] = ['infantry', 'cavalry', 'archer'];
 
 /** one screenshot of each, like a march (Gether 11. 10. 2026) */
 export type ImageKind = 'equipment' | 'armaments';
 export const IMAGE_KINDS: ImageKind[] = ['equipment', 'armaments'];
 
-export interface KvkRound {
-  id: number;
+/** the heading of the sign-ups – the superuser writes the date of the next KvK into it; '' = the page's own title */
+export interface KvkHeading {
   title_sk: string;
   /** '' = the Slovak title */
   title_cs: string;
-  is_open: boolean;
-  created_at: string;
-  closed_at: string | null;
-  /** number of sign-ups – in the rounds list only */
-  signups?: number;
 }
 
 export interface KvkImage {
@@ -35,8 +32,9 @@ export interface KvkImage {
 /** filled in like a march: commander pair (backend guides/roster.py) and armament bonuses, null = not filled in */
 export interface KvkSignup extends Partial<Record<MarchStat, number | null>> {
   id: number;
-  round: number;
   role: KvkRole;
+  /** cavalry, infantry or archers; '' = saved before it was asked for */
+  kind: MarchKind | '';
   primary: string;
   secondary: string;
   note: string;
@@ -98,13 +96,10 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   images: MarchImage[];
 }
 
-export interface KvkState {
-  /** the open round, null = sign-ups closed */
-  round: KvkRound | null;
-  /** the player's rally and garrison sign-ups in the open round */
+/** No rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026). */
+export interface KvkState extends KvkHeading {
+  /** the player's rally and garrison sign-ups */
   signups: Record<KvkRole, KvkSignup | null>;
-  /** the player's sign-ups in closed rounds (deleted 60 days after closing) – may be withdrawn */
-  older: { round: KvkRound; signup: KvkSignup }[];
   /** signed in with Discord */
   player: boolean;
   ingame_name: string;
@@ -115,6 +110,7 @@ export interface KvkState {
 export interface SignupForm extends Partial<Record<MarchStat, number | null>> {
   ingame_name: string;
   role: KvkRole;
+  kind: MarchKind | '';
   primary: string;
   secondary: string;
   note: string;
@@ -154,9 +150,9 @@ export class KvkApi {
     return firstValueFrom(this.http.put<KvkSignup>('/api/kvk/signup/', form));
   }
 
-  /** that sign-up of the round (default: the open one) */
-  withdraw(role: KvkRole, round?: number): Promise<unknown> {
-    return firstValueFrom(this.http.delete('/api/kvk/signup/', { params: round ? { role, round } : { role } }));
+  /** the player's sign-up of that role */
+  withdraw(role: KvkRole): Promise<unknown> {
+    return firstValueFrom(this.http.delete('/api/kvk/signup/', { params: { role } }));
   }
 
   async upload(role: KvkRole, kind: ImageKind, file: File): Promise<KvkImage | UploadError> {
@@ -175,29 +171,20 @@ export class KvkApi {
     return firstValueFrom(this.http.delete(`/api/kvk/signup/images/${id}/`));
   }
 
-  rounds(when: () => boolean, version: () => number) {
-    return httpResource<{ rounds: KvkRound[] }>(() =>
-      this.isBrowser && when() ? { url: '/api/kvk/rounds/', params: { v: version() } } : undefined,
+  /** every sign-up (reviewers and the superuser); must run in an injection context */
+  signups(when: () => boolean, version: () => number) {
+    return httpResource<{ signups: KvkSignup[] }>(() =>
+      this.isBrowser && when() ? { url: '/api/kvk/signups/', params: { v: version() } } : undefined,
     );
   }
 
-  signups(round: () => number | null) {
-    return httpResource<{ round: KvkRound; signups: KvkSignup[] }>(() => {
-      const id = round();
-      return this.isBrowser && id ? `/api/kvk/rounds/${id}/signups/` : undefined;
-    });
+  /** the superuser withdraws someone's sign-up */
+  deleteSignup(id: number): Promise<unknown> {
+    return firstValueFrom(this.http.delete(`/api/kvk/signups/${id}/`));
   }
 
-  createRound(title_sk: string, title_cs: string): Promise<KvkRound> {
-    return firstValueFrom(this.http.post<KvkRound>('/api/kvk/rounds/', { title_sk, title_cs }));
-  }
-
-  updateRound(id: number, change: Partial<Pick<KvkRound, 'title_sk' | 'title_cs' | 'is_open'>>): Promise<KvkRound> {
-    return firstValueFrom(this.http.patch<KvkRound>(`/api/kvk/rounds/${id}/`, change));
-  }
-
-  deleteRound(id: number): Promise<unknown> {
-    return firstValueFrom(this.http.delete(`/api/kvk/rounds/${id}/`));
+  saveHeading(heading: KvkHeading): Promise<KvkHeading> {
+    return firstValueFrom(this.http.put<KvkHeading>('/api/kvk/settings/', heading));
   }
 
   reviewers(when: () => boolean) {

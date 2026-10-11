@@ -137,8 +137,10 @@ export class MarchFields {
   readonly valueChange = output<ArmyDraft>();
   /** every commander with a portrait; `pick` ones are offered */
   readonly commanders = input<MarchCommander[]>([]);
-  /** the march type is part of the form (a KvK sign-up has the role instead) */
+  /** the march type is part of the form */
   readonly withKind = input(true);
+  /** the types offered (a KvK sign-up: cavalry, infantry, archers) */
+  readonly kinds = input<MarchKind[]>(MARCH_KINDS);
   /** the screenshots of the form */
   readonly shotKinds = input<ShotKind[]>(SHOT_KINDS);
   /** an empty All DMG is saved as 0 – the field shows it as its placeholder */
@@ -152,7 +154,6 @@ export class MarchFields {
 
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
-  protected readonly kinds = MARCH_KINDS;
   protected readonly slots: Slot[] = ['primary', 'secondary'];
   protected readonly armamentStats = ARMAMENT_STATS;
   protected readonly inscriptionKinds = INSCRIPTIONS;

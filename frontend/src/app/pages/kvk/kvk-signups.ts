@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { httpResource } from '@angular/common/http';
+import { HttpResourceRef, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,12 +8,12 @@ import {
   computed,
   inject,
   input,
-  linkedSignal,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { IMAGE_KINDS, KvkApi, KvkImage, KvkRound, KvkSignup, MARCH_STATS, March } from '../../core/kvk-api';
+import { IMAGE_KINDS, KvkApi, KvkImage, KvkSignup, MARCH_STATS, March } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { MarchRow } from '../../shared/march-row';
@@ -21,8 +21,8 @@ import { MarchRow } from '../../shared/march-row';
 type Role = 'all' | 'rally' | 'garrison';
 
 /**
- * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: every sign-up of a round with the player, role,
- * commander pair, note and the screenshots by kind; a click opens the screenshot in a dialog.
+ * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: every sign-up with the player, role, the army as a
+ * march row and the note; a click opens the screenshot in a dialog. The superuser may withdraw a sign-up.
  */
 @Component({
   selector: 'app-kvk-signups',
@@ -32,7 +32,11 @@ type Role = 'all' | 'rally' | 'garrison';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KvkSignups {
-  readonly rounds = input.required<KvkRound[]>();
+  /** every sign-up – loaded by the page, which asks again after a change */
+  readonly data = input.required<HttpResourceRef<{ signups: KvkSignup[] } | undefined>>();
+  /** the superuser may withdraw a sign-up */
+  readonly superuser = input(false);
+  readonly changed = output<void>();
 
   private readonly api = inject(KvkApi);
   protected readonly i18n = inject(I18n);
@@ -44,17 +48,11 @@ export class KvkSignups {
     () => new Map((this.commanderData.hasValue() ? this.commanderData.value() : []).map((c) => [c.name, c.icon])),
   );
 
-  /** the open round, else the newest */
-  protected readonly roundId = linkedSignal<KvkRound[], number | null>({
-    source: () => this.rounds(),
-    computation: (rounds, previous) =>
-      (previous && rounds.some((r) => r.id === previous.value) ? previous.value : null) ??
-      (rounds.find((r) => r.is_open) ?? rounds[0])?.id ??
-      null,
-  });
-  protected readonly data = this.api.signups(() => this.roundId());
   protected readonly role = signal<Role>('all');
-  protected readonly all = computed(() => (this.data.hasValue() ? this.data.value().signups : []));
+  protected readonly all = computed(() => this.data().value()?.signups ?? []);
+  /** the sign-up whose withdraw waits for the second click */
+  protected readonly armed = signal<number | null>(null);
+  protected readonly failed = signal(false);
   protected readonly shown = computed(() => {
     const role = this.role();
     return this.all().filter((s) => role === 'all' || s.role === role);
@@ -65,7 +63,7 @@ export class KvkSignups {
       new Map(
         this.all().map((s): [number, March] => {
           const stats = Object.fromEntries(MARCH_STATS.map((stat) => [stat, s[stat] ?? null]));
-          return [s.id, { id: s.id, position: 0, kind: '', primary: s.primary, secondary: s.secondary, images: s.images, ...stats }];
+          return [s.id, { id: s.id, position: 0, kind: s.kind, primary: s.primary, secondary: s.secondary, images: s.images, ...stats }];
         }),
       ),
   );
@@ -79,8 +77,19 @@ export class KvkSignups {
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('viewer');
   private opener: HTMLElement | null = null;
 
-  protected roundTitle(round: KvkRound): string {
-    return (this.i18n.lang() === 'cs' && round.title_cs) || round.title_sk;
+  protected async remove(signup: KvkSignup): Promise<void> {
+    if (this.armed() !== signup.id) {
+      this.armed.set(signup.id);
+      return;
+    }
+    this.armed.set(null);
+    this.failed.set(false);
+    try {
+      await this.api.deleteSignup(signup.id);
+      this.changed.emit();
+    } catch {
+      this.failed.set(true);
+    }
   }
 
   protected imagesOf(signup: KvkSignup, kind: string): KvkImage[] {

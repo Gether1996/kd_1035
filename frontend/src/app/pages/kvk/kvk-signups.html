@@ -1,107 +1,97 @@
 @let k = t();
 <section class="panel" aria-labelledby="kvk-list-title">
-  <header class="panel__head">
-    <h2 class="panel__title panel__title--small" id="kvk-list-title">{{ k.listTitle }}</h2>
-    @if (rounds().length > 1) {
-      <div class="field list__round">
-        <label class="sr-only" for="kvk-round">{{ k.round }}</label>
-        <select #roundSelect id="kvk-round" class="select" (change)="roundId.set(+roundSelect.value)">
-          @for (round of rounds(); track round.id) {
-            <option [value]="round.id" [selected]="round.id === roundId()">
-              {{ roundTitle(round) }}{{ round.is_open ? '' : ' · ' + k.closed }}
-            </option>
-          }
-        </select>
-      </div>
-    }
-  </header>
+  <h2 class="panel__title panel__title--small" id="kvk-list-title">{{ k.listTitle }}</h2>
 
-  @if (!rounds().length) {
-    <p class="panel__lead">{{ k.noRounds }}</p>
+  <div class="segmented list__filter" role="group" [attr.aria-label]="k.role">
+    <button type="button" [attr.aria-pressed]="role() === 'all'" (click)="role.set('all')">
+      {{ k.all }} · {{ counts().all }}
+    </button>
+    <button type="button" [attr.aria-pressed]="role() === 'rally'" (click)="role.set('rally')">
+      Rally · {{ counts().rally }}
+    </button>
+    <button type="button" [attr.aria-pressed]="role() === 'garrison'" (click)="role.set('garrison')">
+      Garrison · {{ counts().garrison }}
+    </button>
+  </div>
+
+  @if (data().error()) {
+    <p class="panel__lead is-error">{{ k.loadError }}</p>
+  } @else if (!data().hasValue()) {
+    <div class="list__loading" aria-hidden="true"></div>
+  } @else if (!shown().length) {
+    <p class="panel__lead">{{ k.noSignups }}</p>
   } @else {
-    <div class="segmented list__filter" role="group" [attr.aria-label]="k.role">
-      <button type="button" [attr.aria-pressed]="role() === 'all'" (click)="role.set('all')">
-        {{ k.all }} · {{ counts().all }}
-      </button>
-      <button type="button" [attr.aria-pressed]="role() === 'rally'" (click)="role.set('rally')">
-        Rally · {{ counts().rally }}
-      </button>
-      <button type="button" [attr.aria-pressed]="role() === 'garrison'" (click)="role.set('garrison')">
-        Garrison · {{ counts().garrison }}
-      </button>
-    </div>
-
-    @if (data.error()) {
-      <p class="panel__lead is-error">{{ k.loadError }}</p>
-    } @else if (!data.hasValue()) {
-      <div class="list__loading" aria-hidden="true"></div>
-    } @else if (!shown().length) {
-      <p class="panel__lead">{{ k.noSignups }}</p>
-    } @else {
-      <ul class="signups">
-        @for (s of shown(); track s.id) {
-          <li class="signup">
-            <div class="signup__head">
-              @if (s.player; as p) {
-                <img class="signup__avatar" [src]="p.avatar_url" alt="" width="40" height="40" />
-              }
-              <div class="signup__who">
-                <strong class="signup__name">{{ name(s) }}</strong>
-                <span class="signup__meta">
-                  {{ s.player?.name }} · {{ k.updated }} {{ date(s.updated_at) }}
-                </span>
-              </div>
-              @if (s.player; as p) {
-                <a
-                  class="pill-btn pill-btn--quiet signup__contact"
-                  [href]="'https://discord.com/users/' + p.discord_id"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <svg appIcon="discord"></svg>{{ k.contact }}
-                </a>
-              }
+    <ul class="signups">
+      @for (s of shown(); track s.id) {
+        <li class="signup">
+          <div class="signup__head">
+            @if (s.player; as p) {
+              <img class="signup__avatar" [src]="p.avatar_url" alt="" width="40" height="40" />
+            }
+            <div class="signup__who">
+              <strong class="signup__name">{{ name(s) }}</strong>
+              <span class="signup__meta">
+                {{ s.player?.name }} · {{ k.updated }} {{ date(s.updated_at) }}
+              </span>
             </div>
-            <p class="signup__roles">
-              @if (s.role === 'rally') {
-                <span class="tag"><svg appIcon="swords"></svg>Rally</span>
-              } @else {
-                <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
-              }
-              @if (!s.complete) {
-                <span class="tag tag--warn">{{ k.statusIncomplete }}</span>
-              }
-            </p>
-            <!-- filled in like a march: commander heads, screenshots, armament bonuses -->
-            <app-march-row
-              class="signup__army"
-              [march]="armies().get(s.id)!"
-              [portraits]="portraits()"
-              [owner]="name(s)"
-              [numbered]="false"
-              [shotKinds]="['equipment', 'armaments']"
-              [showMissing]="true"
-              (shot)="open(s, $event.image, $event.event)"
-            />
-            @if (s.note) {
-              <p class="signup__line signup__note">{{ s.note }}</p>
+            @if (s.player; as p) {
+              <a
+                class="pill-btn pill-btn--quiet signup__contact"
+                [href]="'https://discord.com/users/' + p.discord_id"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg appIcon="discord"></svg>{{ k.contact }}
+              </a>
             }
-            @if (s.marches?.length) {
-              <details class="signup__marches">
-                <summary>{{ k.marches }} · {{ s.marches!.length }}</summary>
-                <ol class="mini-marches">
-                  @for (march of s.marches; track march.id) {
-                    <li class="mini-march">
-                      <app-march-row [march]="march" [portraits]="portraits()" [owner]="s.player?.ingame_name || s.player?.name || ''" [links]="true" />
-                    </li>
-                  }
-                </ol>
-              </details>
+          </div>
+          <p class="signup__roles">
+            @if (s.role === 'rally') {
+              <span class="tag"><svg appIcon="swords"></svg>Rally</span>
+            } @else {
+              <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
             }
-          </li>
-        }
-      </ul>
-    }
+            @if (!s.complete) {
+              <span class="tag tag--warn">{{ k.statusIncomplete }}</span>
+            }
+            @if (superuser()) {
+              <button type="button" class="danger signup__remove" [class.is-armed]="armed() === s.id" (click)="remove(s)">
+                <svg appIcon="trash-2"></svg>{{ armed() === s.id ? k.deleteConfirm : k.withdraw }}
+              </button>
+            }
+          </p>
+          <!-- filled in like a march: commander heads, screenshots, armament bonuses -->
+          <app-march-row
+            class="signup__army"
+            [march]="armies().get(s.id)!"
+            [portraits]="portraits()"
+            [owner]="name(s)"
+            [numbered]="false"
+            [shotKinds]="['equipment', 'armaments']"
+            [showMissing]="true"
+            (shot)="open(s, $event.image, $event.event)"
+          />
+          @if (s.note) {
+            <p class="signup__line signup__note">{{ s.note }}</p>
+          }
+          @if (s.marches?.length) {
+            <details class="signup__marches">
+              <summary>{{ k.marches }} · {{ s.marches!.length }}</summary>
+              <ol class="mini-marches">
+                @for (march of s.marches; track march.id) {
+                  <li class="mini-march">
+                    <app-march-row [march]="march" [portraits]="portraits()" [owner]="s.player?.ingame_name || s.player?.name || ''" [links]="true" />
+                  </li>
+                }
+              </ol>
+            </details>
+          }
+        </li>
+      }
+    </ul>
+  }
+  @if (failed()) {
+    <p class="form__state is-error" role="alert">{{ k.errors.failed }}</p>
   }
 </section>
 

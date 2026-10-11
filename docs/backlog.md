@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.17.0:** prihlášky na KvK **bez kôl** – platia na každé ďalšie KvK, kým ich hráč alebo superadmin nezruší (superadmin ich môže zmazať v zozname); superadmin nastavuje len nadpis s termínom; v prihláške sa vyberá **typ jednotiek** (jazda, pechota, lukostrelci) s ikonou, bonusy sa ukazujú ako „Cav ATK“…
 - **11. 10. 2026 – v1.16.0:** hráč sa môže na KvK prihlásiť na **rally aj garrison zvlášť** – dve záložky, každá s vlastnými commandermi, screenshotmi, bonusmi a poznámkou; R4 vidí obe prihlášky.
 - **11. 10. 2026 – v1.15.3:** pri marchi je All DMG nepovinné – prázdne políčko sa uloží ako 0.
 - **11. 10. 2026 – v1.15.2:** portréty commanderov v editore marchu a prihlášky sa v Safari na iPhone už nenaťahujú do výšky (screenshoty aj vo WebKite: `BROWSER=webkit` pri `shoot.sh`).

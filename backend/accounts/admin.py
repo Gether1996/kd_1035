@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import Alarm, EventReminder, KvkRound, KvkSignup, Player, SentReminder
+from .models import Alarm, EventReminder, KvkSettings, KvkSignup, Player, SentReminder
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -158,41 +158,30 @@ class AlarmAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         return obj.player.ingame_name or obj.player.name
 
 
-@admin.register(KvkRound)
-class KvkRoundAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
-    """KvK sign-up rounds – normally managed on /kvk (Nastavenia); deleting one deletes its sign-ups and screenshots."""
+@admin.register(KvkSettings)
+class KvkSettingsAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """The heading of the KvK sign-ups – normally set on /kvk (Nastavenia); one row."""
 
-    list_display = ['title_sk', 'is_open', 'signup_count', 'created_at']
-    fields = ['title_sk', 'title_cs', 'is_open', 'created_at', 'closed_at']
-    readonly_fields = ['created_at', 'closed_at']
+    fields = ['title_sk', 'title_cs']
 
-    def save_model(self, request, obj, form, change):
-        # one open round at a time, as on /kvk; the retention counts from the closing
-        from django.utils import timezone
+    def has_add_permission(self, request):
+        return super().has_add_permission(request) and not KvkSettings.objects.exists()
 
-        if obj.is_open:
-            KvkRound.objects.filter(is_open=True).exclude(pk=obj.pk).update(is_open=False, closed_at=timezone.now())
-            obj.closed_at = None
-        elif 'is_open' in form.changed_data:
-            obj.closed_at = timezone.now()
-        super().save_model(request, obj, form, change)
-
-    @admin.display(description='prihlášky')
-    def signup_count(self, obj):
-        return obj.signups.count()
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(KvkSignup)
 class KvkSignupAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     """Sign-ups read only (screenshots are on /kvk) – delete stays allowed for the cascades."""
 
-    list_display = ['player_name', 'round', 'role', 'primary', 'secondary', 'updated_at']
-    list_filter = ['round', 'role']
-    list_select_related = ['player', 'round']
+    list_display = ['player_name', 'role', 'kind', 'primary', 'secondary', 'updated_at']
+    list_filter = ['role']
+    list_select_related = ['player']
     fields = [
-        'round',
         'player',
         'role',
+        'kind',
         'primary',
         'secondary',
         'attack',

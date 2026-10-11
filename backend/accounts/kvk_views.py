@@ -1,16 +1,16 @@
 """KvK sign-ups (/api/kvk/…): players sign up for rally and / or garrison, each filled in like a march (Gether
-11. 10. 2026) – commander pair, armament bonuses and one screenshot of the equipment and one of the armaments; reviewers (Player.kvk_reviewer, e.g. R4) and the superuser see every sign-up together
-with the player's marches (/ucet); the superuser opens and closes the rounds and picks the reviewers. Session + CSRF
-like the rest of the player API. Closed rounds are deleted KVK_KEEP_DAYS later (cleanup.py).
+11. 10. 2026) – commander pair, armament bonuses and one screenshot of the equipment and one of the armaments. No rounds:
+a sign-up stays until the player or the superuser withdraws it; the superuser only sets the heading (KvkSettings, e.g.
+the date of the next KvK) and picks the reviewers. Reviewers (Player.kvk_reviewer, e.g. R4) and the superuser see every
+sign-up with the player's marches. Session + CSRF like the rest of the player API.
 """
 
 import logging
 
 from django.db import transaction
-from django.db.models import Count, Prefetch
+from django.db.models import Prefetch
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
 from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
@@ -21,7 +21,7 @@ from rest_framework.throttling import UserRateThrottle
 
 from . import private_images
 from .army import ArmySerializer
-from .models import MARCH_STATS, KvkImage, KvkRound, KvkSignup, March, Player
+from .models import MARCH_STATS, KvkImage, KvkSettings, KvkSignup, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import player_of
 
@@ -52,17 +52,9 @@ class UploadThrottle(UserRateThrottle):
 # ---------------------------------------------------------------- data
 
 
-def round_data(kvk_round: KvkRound | None) -> dict | None:
-    if not kvk_round:
-        return None
-    return {
-        'id': kvk_round.pk,
-        'title_sk': kvk_round.title_sk,
-        'title_cs': kvk_round.title_cs,
-        'is_open': kvk_round.is_open,
-        'created_at': iso(kvk_round.created_at),
-        'closed_at': iso(kvk_round.closed_at) if kvk_round.closed_at else None,
-    }
+def settings_data() -> dict:
+    heading = KvkSettings.load()
+    return {'title_sk': heading.title_sk, 'title_cs': heading.title_cs}
 
 
 def image_data(image, base: str) -> dict:
@@ -96,8 +88,8 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
     images = list(signup.images.all())
     data = {
         'id': signup.pk,
-        'round': signup.round_id,
         'role': signup.role,
+        'kind': signup.kind,
         **army_data(signup),
         'note': signup.note,
         'updated_at': iso(signup.updated_at),
@@ -118,18 +110,8 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
     return data
 
 
-def open_round() -> KvkRound | None:
-    return KvkRound.objects.filter(is_open=True).order_by('-created_at').first()
-
-
 def signups_of(player: Player) -> list[KvkSignup]:
-    """Every sign-up of the player, newest round first."""
-    return list(
-        KvkSignup.objects.filter(player=player)
-        .select_related('round')
-        .prefetch_related('images')
-        .order_by('-round__created_at')
-    )
+    return list(KvkSignup.objects.filter(player=player).prefetch_related('images'))
 
 
 # ---------------------------------------------------------------- the player
@@ -138,6 +120,7 @@ def signups_of(player: Player) -> list[KvkSignup]:
 class SignupSerializer(ArmySerializer):
     ingame_name = serializers.CharField(max_length=32, trim_whitespace=True)
     role = serializers.ChoiceField(choices=KvkSignup.Role.choices)
+    kind = serializers.ChoiceField(choices=KvkSignup.Kind.choices)
     note = serializers.CharField(max_length=500, allow_blank=True, default='', trim_whitespace=True)
 
     def validate(self, data):
@@ -150,19 +133,14 @@ class SignupSerializer(ArmySerializer):
 @never_cache
 @api_view(['GET'])
 def state(request):
-    """The open round, the player's rally and garrison sign-ups and what the visitor may do. Anyone may ask
-    (anonymous visitors get the round only, to see whether sign-ups are open)."""
+    """The heading, the player's rally and garrison sign-ups and what the visitor may do. Anyone may ask (anonymous
+    visitors get the heading only)."""
     player = player_of(request.user)
-    current = open_round()
     mine = signups_of(player) if player else []
-    now = [s for s in mine if current and s.round_id == current.pk]
     return Response(
         {
-            'round': round_data(current),
-            'signups': {role: next((signup_data(s) for s in now if s.role == role), None) for role in ROLES},
-            # sign-ups in closed rounds: the reviewers still see them until the round is deleted (60 days), so the
-            # player sees them too and may withdraw them or delete their screenshots
-            'older': [{'round': round_data(s.round), 'signup': signup_data(s)} for s in mine if s not in now],
+            **settings_data(),
+            'signups': {role: next((signup_data(s) for s in mine if s.role == role), None) for role in ROLES},
             'player': bool(player),
             'ingame_name': player.ingame_name if player else '',
             'reviewer': private_images.can_review(request.user),
@@ -176,30 +154,22 @@ def state(request):
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def signup(request):
-    """PUT {role, …}: sign up for the open round as rally or garrison, or change that sign-up (the in-game name is
-    saved on the player too). DELETE ?role=<rally|garrison>[&round=<id>]: withdraw that sign-up of the round (default:
-    the open one), screenshots included."""
+    """PUT {role, …}: sign up as rally or garrison, or change that sign-up (the in-game name is saved on the player
+    too). DELETE ?role=<rally|garrison>: withdraw that sign-up, screenshots included."""
     player = request.user.player
-    current = open_round()
     if request.method == 'DELETE':
-        round_id = request.query_params.get('round')
         role = request.query_params.get('role')
-        if round_id is not None and not round_id.isdigit():
-            return Response({'round': 'invalid'}, status=400)
         if role not in ROLES:
             return Response({'role': 'invalid'}, status=400)
-        target = int(round_id) if round_id else (current.pk if current else None)
-        KvkSignup.objects.filter(player=player, round_id=target, role=role).delete()
+        KvkSignup.objects.filter(player=player, role=role).delete()
         return Response(status=204)
-    if not current:
-        return Response({'detail': 'closed'}, status=409)
     form = SignupSerializer(data=request.data)
     form.is_valid(raise_exception=True)
     data = form.validated_data
     with transaction.atomic():
         player.ingame_name = data.pop('ingame_name')
         player.save(update_fields=['ingame_name'])
-        mine, _ = KvkSignup.objects.update_or_create(round=current, player=player, role=data.pop('role'), defaults=data)
+        mine, _ = KvkSignup.objects.update_or_create(player=player, role=data.pop('role'), defaults=data)
     return Response(signup_data(mine))
 
 
@@ -220,11 +190,8 @@ def store_image(model, upload_file, folder: str, **fields):
 @throttle_classes([UploadThrottle])
 def upload(request):
     """POST multipart {role: rally|garrison, kind: equipment|armaments, file}: the screenshot for that sign-up of the
-    player in the open round."""
-    player = request.user.player
-    current = open_round()
-    role = request.data.get('role')
-    mine = current and KvkSignup.objects.filter(round=current, player=player, role=role).first()
+    player."""
+    mine = KvkSignup.objects.filter(player=request.user.player, role=request.data.get('role')).first()
     if not mine:
         return Response({'detail': 'no_signup'}, status=409)
     kind = request.data.get('kind')
@@ -246,7 +213,7 @@ def upload(request):
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def delete_image(request, image_id):
-    """DELETE one of the player's own screenshots (also in a closed round)."""
+    """DELETE one of the player's own screenshots."""
     get_object_or_404(KvkImage, pk=image_id, signup__player=request.user.player).delete()
     return Response(status=204)
 
@@ -272,80 +239,43 @@ def image(request, image_id):
 @never_cache
 @api_view(['GET'])
 @permission_classes([IsReviewer])
-def round_signups(request, round_id):
-    """Every sign-up of a round with the player (name, in-game name, Discord ID for "Kontaktovať") and their marches."""
-    kvk_round = get_object_or_404(KvkRound, pk=round_id)
-    signups = KvkSignup.objects.filter(round=kvk_round).select_related('player').prefetch_related(
+def all_signups(request):
+    """Every sign-up with the player (name, in-game name, Discord ID for "Kontaktovať") and their marches."""
+    signups = KvkSignup.objects.select_related('player').prefetch_related(
         'images', Prefetch('player__marches', queryset=March.objects.prefetch_related('images'))
     )
     rows = sorted(
         (signup_data(s, with_player=True) for s in signups),
         key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role']),
     )
-    return Response({'round': round_data(kvk_round), 'signups': rows})
+    return Response({'signups': rows})
 
 
-class NewRoundSerializer(serializers.Serializer):
-    title_sk = serializers.CharField(max_length=80, trim_whitespace=True)
+@never_cache
+@api_view(['DELETE'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def delete_signup(request, signup_id):
+    """The superuser withdraws someone's sign-up, screenshots included."""
+    get_object_or_404(KvkSignup, pk=signup_id).delete()
+    return Response(status=204)
+
+
+class SettingsSerializer(serializers.Serializer):
+    title_sk = serializers.CharField(max_length=80, allow_blank=True, trim_whitespace=True)
     title_cs = serializers.CharField(max_length=80, allow_blank=True, default='', trim_whitespace=True)
 
 
-class RoundSerializer(NewRoundSerializer):
-    is_open = serializers.BooleanField(required=False)
-
-
-def close_others(keep: KvkRound | None = None) -> None:
-    others = KvkRound.objects.filter(is_open=True)
-    if keep:
-        others = others.exclude(pk=keep.pk)
-    others.update(is_open=False, closed_at=timezone.now())
-
-
 @never_cache
-@api_view(['GET', 'POST'])
-@permission_classes([IsReviewer])
-@throttle_classes([WriteThrottle])
-def rounds(request):
-    """GET (reviewers): every round with its number of sign-ups, newest first. POST (superuser): a new open round
-    {title_sk, title_cs?} – the other rounds close."""
-    if request.method == 'POST':
-        if not request.user.is_superuser:
-            return Response(status=403)
-        form = NewRoundSerializer(data=request.data)
-        form.is_valid(raise_exception=True)
-        with transaction.atomic():
-            close_others()
-            created = KvkRound.objects.create(**form.validated_data, is_open=True)
-        return Response(round_data(created) | {'signups': 0}, status=201)
-    rows = KvkRound.objects.annotate(count=Count('signups')).order_by('-created_at')
-    return Response({'rounds': [round_data(r) | {'signups': r.count} for r in rows]})
-
-
-@never_cache
-@api_view(['PATCH', 'DELETE'])
+@api_view(['PUT'])
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
-def round_detail(request, round_id):
-    """PATCH {title_sk?, title_cs?, is_open?} – opening one closes the others. DELETE: the round with every sign-up
-    and screenshot."""
-    kvk_round = get_object_or_404(KvkRound, pk=round_id)
-    if request.method == 'DELETE':
-        kvk_round.delete()
-        return Response(status=204)
-    form = RoundSerializer(data=request.data, partial=True)
+def settings(request):
+    """PUT {title_sk, title_cs?}: the heading of the sign-ups (e.g. the date of the next KvK)."""
+    form = SettingsSerializer(data=request.data)
     form.is_valid(raise_exception=True)
-    data = form.validated_data
-    with transaction.atomic():
-        opened = data.get('is_open')
-        if opened:
-            close_others(keep=kvk_round)
-        if opened is not None and opened != kvk_round.is_open:
-            # the retention counts from the last closing (cleanup.prune_kvk)
-            kvk_round.closed_at = None if opened else timezone.now()
-        for field, value in data.items():
-            setattr(kvk_round, field, value)
-        kvk_round.save()
-    return Response(round_data(kvk_round) | {'signups': kvk_round.signups.count()})
+    KvkSettings.objects.update_or_create(pk=1, defaults=form.validated_data)
+    return Response(settings_data())
 
 
 # ---------------------------------------------------------------- superuser: who sees the sign-ups

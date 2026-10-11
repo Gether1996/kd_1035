@@ -9,7 +9,7 @@
       }
     </legend>
     <div class="kind-picker" [class.is-invalid]="error() === 'kind'">
-      @for (kind of kinds; track kind) {
+      @for (kind of kinds(); track kind) {
         <button
           type="button"
           class="kind"

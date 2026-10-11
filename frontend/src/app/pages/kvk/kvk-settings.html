@@ -1,9 +1,9 @@
 @let k = t();
-<section class="panel" aria-labelledby="kvk-rounds-title">
-  <h2 class="panel__title panel__title--small" id="kvk-rounds-title">{{ k.roundsTitle }}</h2>
-  <p class="panel__lead">{{ k.roundsLead }}</p>
+<section class="panel" aria-labelledby="kvk-heading-title">
+  <h2 class="panel__title panel__title--small" id="kvk-heading-title">{{ k.headingTitle }}</h2>
+  <p class="panel__lead">{{ k.headingLead }}</p>
 
-  <form class="form form--inline" (submit)="create($event)">
+  <form class="form form--inline" (submit)="save($event)">
     <div class="field">
       <label class="field__label" for="kvk-title-sk">{{ k.titleSk }}</label>
       <input
@@ -21,37 +21,15 @@
       <label class="field__label" for="kvk-title-cs">{{ k.titleCs }}</label>
       <input #cs id="kvk-title-cs" class="input" type="text" maxlength="80" [value]="titleCs()" (input)="titleCs.set(cs.value)" />
     </div>
-    <button type="submit" class="pill-btn" [attr.aria-disabled]="busy() || !titleSk().trim() || null">
-      <svg appIcon="plus"></svg>{{ k.openRound }}
-    </button>
+    <button type="submit" class="pill-btn" [attr.aria-disabled]="busy() || null">{{ k.save }}</button>
   </form>
-
-  @if (rounds().length) {
-    <ul class="rounds">
-      @for (round of rounds(); track round.id) {
-        <li class="round">
-          <div class="round__body">
-            <strong>{{ title(round) }}</strong>
-            <span class="round__meta">
-              <span class="tag" [class.tag--live]="round.is_open">{{ round.is_open ? k.open : k.closed }}</span>
-              {{ count(round.signups ?? 0) }}
-            </span>
-          </div>
-          <div class="round__actions">
-            <button type="button" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="busy() || null" (click)="toggle(round)">
-              {{ round.is_open ? k.closeRound : k.reopen }}
-            </button>
-            <button type="button" class="danger" [class.is-armed]="armed() === round.id" (click)="remove(round)">
-              <svg appIcon="trash-2"></svg>{{ armed() === round.id ? k.deleteConfirm : k.delete }}
-            </button>
-          </div>
-        </li>
-      }
-    </ul>
-  }
-  @if (error()) {
-    <p class="form__state is-error" role="alert">{{ k.errors.failed }}</p>
-  }
+  <p class="form__state" role="status" [class.is-error]="state() === 'failed'">
+    @if (state() === 'saved') {
+      {{ k.saved }}
+    } @else if (state() === 'failed') {
+      {{ k.errors.failed }}
+    }
+  </p>
 </section>
 
 <section class="panel" aria-labelledby="kvk-reviewers-title">

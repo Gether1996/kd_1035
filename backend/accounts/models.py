@@ -182,23 +182,24 @@ class Alarm(models.Model):
         return f'{self.player} · {self.note or "budík"}'
 
 
-class KvkRound(models.Model):
-    """Sign-ups for one KvK (rally / garrison). Opened and closed by the superuser on /kvk; at most one is open."""
+class KvkSettings(models.Model):
+    """The heading of the KvK sign-ups (one row) – the superuser writes the date of the next KvK into it on /kvk. No
+    rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026: "nech to nemusia
+    rally a garrisoni vypĺňať každé jedno KvK")."""
 
-    title_sk = models.CharField('názov (SK)', max_length=80)
+    title_sk = models.CharField('názov (SK)', max_length=80, blank=True)
     title_cs = models.CharField('názov (CZ)', max_length=80, blank=True, help_text='Prázdne = slovenský názov.')
-    is_open = models.BooleanField('otvorené', default=True)
-    created_at = models.DateTimeField('vytvorené', auto_now_add=True)
-    # when the sign-ups closed; the worker deletes the round KVK_KEEP_DAYS later (privacy page)
-    closed_at = models.DateTimeField('uzavreté', null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
         verbose_name = 'KvK prihlasovanie'
-        verbose_name_plural = 'KvK prihlasovania'
+        verbose_name_plural = 'KvK prihlasovanie'
 
     def __str__(self):
-        return self.title_sk
+        return self.title_sk or 'KvK prihlasovanie'
+
+    @classmethod
+    def load(cls) -> 'KvkSettings':
+        return cls.objects.get_or_create(pk=1)[0]
 
 
 # armament bonuses and inscription counts: at most two digits
@@ -230,15 +231,25 @@ class ArmyFields(models.Model):
 class KvkSignup(ArmyFields):
     """A player's sign-up for a KvK as rally or garrison: commander pair, armament bonuses, note and one screenshot of
     the equipment and one of the armaments (KvkImage) – like a march. A player may sign up for both, each with its own
-    army (Gether 11. 10. 2026). Seen only by the player, the players with Player.kvk_reviewer and the superuser."""
+    army (Gether 11. 10. 2026). It stays until the player or the superuser withdraws it. Seen only by the player, the
+    players with Player.kvk_reviewer and the superuser."""
 
     class Role(models.TextChoices):
         RALLY = 'rally', 'rally'
         GARRISON = 'garrison', 'garrison'
 
-    round = models.ForeignKey(KvkRound, on_delete=models.CASCADE, related_name='signups', verbose_name='KvK')
+    class Kind(models.TextChoices):
+        """the troops of the army (Gether 11. 10. 2026) – its bonuses are read as theirs ("Cav ATK"); the values are the
+        march types"""
+
+        INFANTRY = 'infantry', 'pechota'
+        CAVALRY = 'cavalry', 'jazda'
+        ARCHER = 'archer', 'lukostrelci'
+
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kvk_signups', verbose_name='hráč')
     role = models.CharField('rola', max_length=8, choices=Role.choices)
+    # empty only for the sign-ups saved before the troops were asked for
+    kind = models.CharField('jednotky', max_length=12, choices=Kind.choices, blank=True)
     note = models.CharField('poznámka', max_length=500, blank=True)
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
@@ -247,12 +258,10 @@ class KvkSignup(ArmyFields):
         ordering = ['-updated_at']
         verbose_name = 'KvK prihláška'
         verbose_name_plural = 'KvK prihlášky'
-        constraints = [
-            models.UniqueConstraint(fields=['round', 'player', 'role'], name='one_kvk_signup_per_player_and_role')
-        ]
+        constraints = [models.UniqueConstraint(fields=['player', 'role'], name='one_kvk_signup_per_role')]
 
     def __str__(self):
-        return f'{self.player} · {self.round} · {self.get_role_display()}'
+        return f'{self.player} · {self.get_role_display()}'
 
 
 class KvkImage(models.Model):
