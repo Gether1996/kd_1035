@@ -18,6 +18,9 @@ import { MarchRow } from '../../shared/march-row';
 
 type Role = 'all' | 'rally' | 'garrison';
 
+/** how many players (cards) these sign-ups are */
+const players = (signups: KvkSignup[]) => new Set(signups.map((s) => s.player?.id ?? -s.id)).size;
+
 /**
  * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: one card per player (Gether 11. 10. 2026: a player
  * signed up for rally and garrison is one card, not two) with the name, contact and profile marches once and each of
@@ -89,21 +92,27 @@ export class KvkSignups {
         }),
       ),
   );
+  /** the numbers on the filters count players (one card each), like the list below */
   protected readonly counts = computed(() => ({
-    all: this.all().length,
-    rally: this.all().filter((s) => s.role === 'rally').length,
-    garrison: this.all().filter((s) => s.role === 'garrison').length,
+    all: players(this.all()),
+    rally: players(this.all().filter((s) => s.role === 'rally')),
+    garrison: players(this.all().filter((s) => s.role === 'garrison')),
   }));
   protected readonly troopCounts = computed(() => {
-    const counts: Record<string, number> = { all: this.ofRole().length };
-    for (const kind of KVK_KINDS) counts[kind] = this.ofRole().filter((s) => s.kind === kind).length;
+    const counts: Record<string, number> = { all: players(this.ofRole()) };
+    for (const kind of KVK_KINDS) counts[kind] = players(this.ofRole().filter((s) => s.kind === kind));
     return counts;
   });
 
 
+  private disarm?: ReturnType<typeof setTimeout>;
+
+  /** the first click arms "Zrušiť prihlášku" for a few seconds, the second withdraws someone else's sign-up */
   protected async remove(signup: KvkSignup): Promise<void> {
+    clearTimeout(this.disarm);
     if (this.armed() !== signup.id) {
       this.armed.set(signup.id);
+      this.disarm = setTimeout(() => this.armed.set(null), 5000);
       return;
     }
     this.armed.set(null);

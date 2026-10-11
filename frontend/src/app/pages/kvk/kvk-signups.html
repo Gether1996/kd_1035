@@ -4,23 +4,23 @@
 
   <div class="list__filters">
   <div class="segmented list__filter" role="group" [attr.aria-label]="k.role">
-    <button type="button" [attr.aria-pressed]="role() === 'all'" (click)="role.set('all')">
+    <button type="button" [attr.aria-pressed]="role() === 'all'" (click)="role.set('all'); armed.set(null)">
       {{ k.all }} · {{ counts().all }}
     </button>
-    <button type="button" [attr.aria-pressed]="role() === 'rally'" (click)="role.set('rally')">
+    <button type="button" [attr.aria-pressed]="role() === 'rally'" (click)="role.set('rally'); armed.set(null)">
       Rally · {{ counts().rally }}
     </button>
-    <button type="button" [attr.aria-pressed]="role() === 'garrison'" (click)="role.set('garrison')">
+    <button type="button" [attr.aria-pressed]="role() === 'garrison'" (click)="role.set('garrison'); armed.set(null)">
       Garrison · {{ counts().garrison }}
     </button>
   </div>
   <!-- the troops of the sign-ups, with the type icons of the game -->
   <div class="segmented list__filter list__filter--troops" role="group" [attr.aria-label]="i18n.t().marches.kind">
-    <button type="button" [attr.aria-pressed]="troops() === 'all'" (click)="troops.set('all')">
+    <button type="button" [attr.aria-pressed]="troops() === 'all'" (click)="troops.set('all'); armed.set(null)">
       {{ k.all }} · {{ troopCounts()['all'] }}
     </button>
     @for (kind of troopKinds; track kind) {
-      <button type="button" [attr.aria-pressed]="troops() === kind" [title]="i18n.t().marches.kinds[kind]" (click)="troops.set(kind)">
+      <button type="button" [attr.aria-pressed]="troops() === kind" [title]="i18n.t().marches.kinds[kind]" (click)="troops.set(kind); armed.set(null)">
         <img [src]="icon(kind)" alt="" width="96" height="96" /><span class="list__troop-name">{{ i18n.t().marches.kinds[kind] }}</span>
         · {{ troopCounts()[kind] }}
       </button>

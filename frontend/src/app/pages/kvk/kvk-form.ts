@@ -12,6 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import {
   IMAGE_KINDS,
@@ -51,6 +52,7 @@ export class KvkForm {
   readonly changed = output<void>();
 
   private readonly api = inject(KvkApi);
+  private readonly auth = inject(Auth);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().kvk);
   protected readonly roles = KVK_ROLES;
@@ -145,6 +147,8 @@ export class KvkForm {
         current = { ...current, keep: { ...current.keep, [kind]: result }, chosen: { ...current.chosen, [kind]: undefined } };
       }
       signup = { ...signup, complete: IMAGE_KINDS.every((kind) => signup.images.some((i) => i.kind === kind)) };
+      // the sign-up saved the in-game name on the player too: the header drops its red "!"
+      if (this.auth.needsName()) this.auth.reload();
       this.signups.update((all) => ({ ...all, [role]: signup }));
       this.armies.update((all) => ({ ...all, [role]: current }));
       if (!this.uploadError()) {

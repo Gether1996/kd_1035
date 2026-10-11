@@ -50,6 +50,11 @@ export class Auth {
     return '/api/auth/discord/login/?next=' + encodeURIComponent(next);
   }
 
+  /** ask the server again – e.g. the KvK sign-up saved the in-game name */
+  reload(): void {
+    this.me.reload();
+  }
+
   async logout(): Promise<void> {
     await firstValueFrom(this.http.post('/api/auth/logout/', null));
     this.me.reload();

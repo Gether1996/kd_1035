@@ -463,7 +463,7 @@ class IngameNameTests(TestCase):
     def token(self):
         return self.client.get('/api/auth/me/').cookies['csrftoken'].value
 
-    def test_player_saves_and_clears_the_name(self):
+    def test_player_saves_the_name_and_can_not_clear_it(self):
         player = make_player()
         self.client.force_login(player.user)
         token = self.token()
@@ -473,7 +473,11 @@ class IngameNameTests(TestCase):
         self.assertEqual(response.json()['user']['ingame_name'], 'GetheR')
         player.refresh_from_db()
         self.assertEqual(player.ingame_name, 'GetheR')
-        self.assertEqual(self.patch({'ingame_name': ''}, token).json()['user']['ingame_name'], '')
+        # required since 11. 10. 2026: it can be changed, not cleared
+        self.assertEqual(self.patch({'ingame_name': ''}, token).status_code, 400)
+        self.assertEqual(self.patch({'ingame_name': '   '}, token).status_code, 400)
+        player.refresh_from_db()
+        self.assertEqual(player.ingame_name, 'GetheR')
 
     def test_name_is_at_most_32_characters(self):
         player = make_player()

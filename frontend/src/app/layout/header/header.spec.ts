@@ -112,6 +112,7 @@ describe('Header account slot', () => {
     expect(link?.querySelector('.alert-badge')).not.toBeNull();
     expect(link?.textContent).toContain('Chýba ti meno v hre');
     expect(el().querySelector('.burger .alert-badge')).not.toBeNull();
+    expect(el().querySelector('.burger')?.getAttribute('aria-label')).toContain('Chýba ti meno v hre');
     expect(el().querySelector('.drawer__user')?.textContent).toContain('Nelly');
     expect(Array.from(el().querySelectorAll('.drawer__page'), (a) => a.getAttribute('href'))).toEqual([
       '/ucet#meno',

@@ -41,6 +41,8 @@ real_ip_recursive on;
 # below the error log level, so no IP lands in a log (the privacy page promises none).
 limit_req_zone $binary_remote_addr zone=kd_api:10m rate=10r/s;
 limit_req_zone $binary_remote_addr zone=kd_login:10m rate=6r/m;
+# the players' screenshots: a list of marches or sign-ups loads dozens of thumbnails at once
+limit_req_zone $binary_remote_addr zone=kd_images:10m rate=30r/s;
 limit_conn_zone $binary_remote_addr zone=kd_conn:10m;
 limit_req_status 429;
 limit_conn_status 429;
@@ -99,8 +101,30 @@ server {
         proxy_read_timeout 60s;
     }
 
-    # Django: API, admin and its static files, sitemap with all guides
-    location ~ ^/(api|admin|static)/|^/sitemap\.xml$ {
+    # Django's static files – commander portraits, item, event and type icons, the admin's CSS: no rate limit (the march
+    # picker alone shows 110 portraits at once); ^~ so neither the API rule nor the image rule below takes them over
+    location ^~ /static/ {
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $kd_proto;
+        proxy_read_timeout 60s;
+    }
+
+    # the players' screenshots (signed-in only): many thumbnails per page, so a looser limit than the API
+    location ~ ^/api/(kvk|marches)/images/ {
+        limit_req zone=kd_images burst=200 nodelay;
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $kd_proto;
+        proxy_read_timeout 60s;
+    }
+
+    # Django: API, admin, sitemap with all guides
+    location ~ ^/(api|admin)/|^/sitemap\.xml$ {
         limit_req zone=kd_api burst=40 nodelay;
         proxy_pass http://backend:8000;
         proxy_set_header Host $http_host;

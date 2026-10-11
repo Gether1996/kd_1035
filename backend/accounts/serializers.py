@@ -6,11 +6,13 @@ from .models import MAX_PLAYER_REMINDERS, Player
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    """What the player edits on /ucet: the in-game name (whitespace trimmed, empty clears it)."""
+    """What the player edits on /ucet: the in-game name (whitespace trimmed). Required since 11. 10. 2026 (Gether) –
+    it can be changed, not cleared."""
 
     class Meta:
         model = Player
         fields = ['ingame_name']
+        extra_kwargs = {'ingame_name': {'allow_blank': False}}
 
 
 class Minutes(serializers.IntegerField):

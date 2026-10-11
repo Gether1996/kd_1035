@@ -62,6 +62,7 @@ describe('KvkForm', () => {
     fixture.componentRef.setInput('state', STATE);
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
     await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     const submit = () => el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
@@ -149,6 +150,7 @@ describe('KvkForm', () => {
     fixture.componentRef.setInput('state', { ...STATE, signups: { rally: null, garrison: { ...SIGNUP, role: 'garrison' } } });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
     await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     // the saved garrison sign-up opens its tab and fills the form: its commanders and its equipment screenshot
@@ -181,6 +183,7 @@ describe('KvkForm', () => {
     });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
     await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.role-tabs__done').length).toBe(2);
@@ -286,6 +289,8 @@ describe('KvkSignups', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.signup').length).toBe(1);
     expect(el.querySelectorAll('.signup__contact').length).toBe(1);
+    // the filters count players (cards), not sign-ups
+    expect(el.querySelector('.list__filter button')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Všetci · 1');
     expect(el.querySelectorAll('.signup__marches').length).toBe(1);
     expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Rally', 'Garrison']);
     // the newest change of the two

@@ -80,7 +80,7 @@
       type="button"
       aria-controls="mobile-menu"
       [attr.aria-expanded]="menuOpen()"
-      [attr.aria-label]="menuOpen() ? t.close : t.menu"
+      [attr.aria-label]="(menuOpen() ? t.close : t.menu) + (auth.needsName() ? ' – ' + t.nameMissing : '')"
       (click)="toggle()"
     >
       <span></span><span></span>
