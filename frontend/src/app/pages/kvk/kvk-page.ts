@@ -6,6 +6,7 @@ import { KvkApi } from '../../core/kvk-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
+import { reloadOnReturn } from '../../shared/reload-on-return';
 import { KvkForm } from './kvk-form';
 import { KvkSettings } from './kvk-settings';
 import { KvkSignups } from './kvk-signups';
@@ -115,6 +116,10 @@ export class KvkPage {
   });
 
   constructor() {
+    // other players change their marches and sign-ups: the list asks again when the visitor comes back to the tab
+    reloadOnReturn(() => {
+      if (this.canReview() && this.signups.hasValue()) this.signups.reload();
+    });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.kvk, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));

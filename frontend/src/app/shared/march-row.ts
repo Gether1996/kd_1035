@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild } from '@angular/core';
-import { ARMAMENT_STATS, INSCRIPTIONS, March, MarchImage, MarchKind, marchIcon } from '../core/kvk-api';
+import { ARMAMENT_STATS, INSCRIPTIONS, March, MarchImage, MarchKind, REQUIRED_STATS, marchIcon } from '../core/kvk-api';
 import { Dict } from '../core/i18n/sk';
 import { I18n } from '../core/i18n/i18n';
 import { Icon } from './icon';
@@ -39,6 +39,8 @@ export class MarchRow {
   readonly shotKinds = input<MarchImage['kind'][]>(['equipment']);
   /** the march number in front; a KvK sign-up has none */
   readonly numbered = input(true);
+  /** a march (not a KvK sign-up): its bonuses are required – a march saved before says they are missing */
+  readonly statsRequired = input(false);
   private readonly viewer = viewChild.required(ImageViewer);
 
   protected readonly i18n = inject(I18n);
@@ -57,6 +59,11 @@ export class MarchRow {
       value: march[key]!,
     }));
   });
+
+  /** saved before the bonuses were required (v1.15.1): the row says so, the owner's row asks to fill them in */
+  protected readonly statsMissing = computed(
+    () => this.statsRequired() && REQUIRED_STATS.some((stat) => this.march()[stat] == null),
+  );
 
   protected readonly inscriptions = computed(() => {
     const march = this.march();

@@ -128,6 +128,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+// a march saved before the bonuses were required: a quiet note, red in the owner's own list
+.mrow__nostats {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--text-mute);
+
+  :host(.is-numbered) & {
+    padding-left: calc(1.4em + 8px);
+  }
+
+  &.is-own {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--red-300);
+  }
+}
+
 .mrow__stat {
   white-space: nowrap;
 }

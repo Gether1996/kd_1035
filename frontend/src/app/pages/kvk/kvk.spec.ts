@@ -222,7 +222,7 @@ describe('KvkSignups', () => {
     const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42' };
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
       signups: [
-        { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', images: [], attack: 12 }] },
+        { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', images: [], attack: 12, defense: 9, health: 8, damage: 0, gold: 1, blue: 2, white: 3 }] },
         { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer', attack: 8, player: { ...player, id: 2, ingame_name: 'Bob' } },
       ],
     });

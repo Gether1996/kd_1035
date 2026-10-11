@@ -124,6 +124,14 @@
   color: var(--text-dim);
 }
 
+.march-hint--alert {
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--red-500) 60%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--red-500) 12%, transparent);
+  color: var(--text);
+}
+
 .add-march {
   display: flex;
   align-items: center;

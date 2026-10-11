@@ -328,6 +328,10 @@ export const sk = {
       hint: 'V %, celé čísla – zaokrúhli nahor (9,5 → 10).',
     },
     inscriptions: { title: 'Inscriptions', white: 'Biele', blue: 'Modré', gold: 'Zlaté' },
+    // a march saved before the bonuses were required (v1.15.1)
+    statsMissing: 'Bonusy armamentov nevyplnené',
+    statsMissingOwn: 'Doplň bonusy armamentov',
+    statsMissingCount: 'Marche bez bonusov armamentov: {n} – doplň ich cez ceruzku.',
     choose: 'Vybrať',
     edit: 'Upraviť',
     save: 'Uložiť march',

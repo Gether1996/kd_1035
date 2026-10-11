@@ -17,6 +17,7 @@ import {
   MARCH_KINDS,
   MARCH_STATS,
   MarchKind,
+  OPTIONAL_STATS,
   MarchStat,
   STAT_MAX,
   UploadError,
@@ -74,8 +75,7 @@ export interface ArmyRules {
   stats: boolean;
 }
 
-/** All DMG may stay empty in a march: it is saved as 0 */
-export const OPTIONAL_STATS: MarchStat[] = ['damage'];
+export { OPTIONAL_STATS } from '../core/kvk-api';
 
 /** the draft of a saved march or sign-up (or an empty one) */
 export function armyDraft(

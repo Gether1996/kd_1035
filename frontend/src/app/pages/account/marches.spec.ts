@@ -125,7 +125,7 @@ describe('Marches', () => {
       blue: 2,
       white: 10,
     });
-    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, damage: 0, gold: 3 });
+    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, defense: 8, health: 0, damage: 0, gold: 3, blue: 2, white: 10 });
     await settle(fixture);
     const image = (id: number, kind: string) => ({ id, kind, url: `/api/marches/images/${id}/`, thumb: `/api/marches/images/${id}/?thumb=1`, width: 1, height: 1 });
     const equipment = http.expectOne('/api/me/marches/1/images/');
@@ -143,8 +143,8 @@ describe('Marches', () => {
     expect(el.querySelector('dialog[open] .modal__title')?.textContent).toContain('1. march');
     // short labels next to the type icon, the full "Cav ATK" in the title (and for screen readers)
     const stats = Array.from(el.querySelectorAll<HTMLElement>('.mrow__stat'));
-    expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'All DMG', 'Zlaté']);
-    expect(stats.map((s) => s.textContent?.match(/\d+%?/)?.[0])).toEqual(['12%', '0%', '3']);
+    expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'Cav DEF', 'Cav HP', 'All DMG', 'Zlaté', 'Modré', 'Biele']);
+    expect(stats.map((s) => s.textContent?.match(/\d+%?/)?.[0])).toEqual(['12%', '8%', '0%', '0%', '3', '2', '10']);
     expect(el.querySelector('.add-march')?.textContent).toContain('Pridať druhý march');
     http.verify();
   });

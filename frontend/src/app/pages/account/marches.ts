@@ -2,7 +2,7 @@ import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, linkedSignal, signal } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { March, UploadError } from '../../core/kvk-api';
+import { March, REQUIRED_STATS, UploadError } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { ArmyDraft, ArmyError, MARCH_SHOTS, MarchFields, ShotKind, armyDraft, armyError, releaseArmy } from '../../shared/march-fields';
@@ -53,6 +53,10 @@ export class Marches {
   protected readonly error = signal<string | null>(null);
   protected readonly uploadError = signal<{ kind: ShotKind; error: UploadError } | null>(null);
   protected readonly armed = signal<number | null>(null);
+  /** marches saved before the bonuses were required (v1.15.1) – the owner is asked to fill them in */
+  protected readonly withoutStats = computed(
+    () => this.marches().filter((m) => REQUIRED_STATS.some((stat) => m[stat] == null)).length,
+  );
   /** a new march can be added once nothing is being edited */
   protected readonly canAdd = computed(() => !this.draft() && this.marches().length < this.max());
 

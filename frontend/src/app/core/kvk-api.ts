@@ -74,6 +74,10 @@ export const ARMAMENT_STATS = ['attack', 'defense', 'health', 'damage'] as const
 export const INSCRIPTIONS = ['gold', 'blue', 'white'] as const;
 export type MarchStat = (typeof ARMAMENT_STATS)[number] | (typeof INSCRIPTIONS)[number];
 export const MARCH_STATS: MarchStat[] = [...ARMAMENT_STATS, ...INSCRIPTIONS];
+/** All DMG may stay empty in a march: it is saved as 0 (Gether 11. 10. 2026) */
+export const OPTIONAL_STATS: MarchStat[] = ['damage'];
+/** required in a march (0 counts) – marches saved before they were required may still lack them */
+export const REQUIRED_STATS: MarchStat[] = MARCH_STATS.filter((stat) => !OPTIONAL_STATS.includes(stat));
 /** at most two digits */
 export const STAT_MAX = 99;
 

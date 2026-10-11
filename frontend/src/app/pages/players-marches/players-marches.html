@@ -69,7 +69,7 @@
           <ol class="player__marches">
             @for (march of player.marches; track march.id) {
               <li class="row">
-                <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" />
+                <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" [statsRequired]="true" />
               </li>
             }
           </ol>

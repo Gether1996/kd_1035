@@ -21,6 +21,7 @@ from .reminder_views import IsPlayer, WriteThrottle
 from .views import player_of
 
 IMAGE_KINDS = [kind for kind, _ in MarchImage.Kind.choices]
+REQUIRED_STATS = ('attack', 'defense', 'health', 'white', 'blue', 'gold')
 # one screenshot of the equipment per march; the armaments are typed in (Gether 11. 10. 2026)
 MAX_IMAGES_PER_KIND = 1
 
@@ -34,7 +35,16 @@ class MarchSerializer(ArmySerializer):
             for field in ('kind', 'primary'):
                 if not data.get(field):
                     raise serializers.ValidationError({field: 'required'})
-        return super().validate(data)
+        data = super().validate(data)
+        # the armament bonuses and inscriptions are required (Gether 11. 10. 2026; 0 counts), All DMG may stay empty =
+        # 0. A new march brings them all; a change may not clear one. Marches saved before keep their empty ones until
+        # the player edits them.
+        for field in REQUIRED_STATS:
+            if (not self.partial and data.get(field) is None) or (field in data and data[field] is None):
+                raise serializers.ValidationError({field: 'required'})
+        if not self.partial and data.get('damage') is None:
+            data['damage'] = 0
+        return data
 
 
 def marches_of(player):

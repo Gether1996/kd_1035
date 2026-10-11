@@ -33,7 +33,9 @@
   </span>
 </div>
 <div class="mrow__foot">
-  @if (stats().length || inscriptions().length) {
+  @if (statsMissing()) {
+    <p class="mrow__nostats" [class.is-own]="showMissing()">{{ showMissing() ? k.statsMissingOwn : k.statsMissing }}</p>
+  } @else if (stats().length || inscriptions().length) {
     <ul class="mrow__stats" [attr.aria-label]="k.stats.title">
       @for (s of stats(); track s.key) {
         <li class="mrow__stat" [title]="s.full">

@@ -19,6 +19,7 @@ import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { MarchRow } from '../../shared/march-row';
 import { PageHeader } from '../../shared/page-header';
+import { reloadOnReturn } from '../../shared/reload-on-return';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
 
@@ -65,6 +66,10 @@ export class PlayersMarches {
   ]);
 
   constructor() {
+    // other players change their marches and sign-ups: the list asks again when the visitor comes back to the tab
+    reloadOnReturn(() => {
+      if (this.data.hasValue()) this.data.reload();
+    });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.playersMarches, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));

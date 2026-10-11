@@ -21,6 +21,9 @@
   @if (failed()) {
     <p class="panel__lead is-error">{{ m.loadError }}</p>
   } @else if (loaded()) {
+    @if (withoutStats(); as n) {
+      <p class="march-hint march-hint--alert" role="status">{{ m.statsMissingCount.replace('{n}', '' + n) }}</p>
+    }
     <ol class="march-list">
       @for (march of marches(); track march.id) {
         @if (draft()?.id === march.id) {
@@ -29,7 +32,7 @@
           </li>
         } @else {
           <li class="march">
-            <app-march-row [march]="march" [portraits]="portraits()" [showMissing]="true">
+            <app-march-row [march]="march" [portraits]="portraits()" [showMissing]="true" [statsRequired]="true">
               <!-- removing is in the editor: one button per row leaves the bonuses room on a phone -->
               <button
                 type="button"

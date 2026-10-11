@@ -98,7 +98,7 @@
               <ol class="mini-marches">
                 @for (march of s.marches; track march.id) {
                   <li class="mini-march">
-                    <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(s)" />
+                    <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(s)" [statsRequired]="true" />
                   </li>
                 }
               </ol>
