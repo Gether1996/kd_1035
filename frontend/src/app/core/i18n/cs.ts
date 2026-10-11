@@ -296,6 +296,9 @@ export const cs: Dict = {
     noMatch: 'Takového hráče tu nemáme.',
     you: 'Ty',
     r4Only: 'jen R4',
+    count: ['{n} march', '{n} marche', '{n} marchů'],
+    expandAll: 'Rozbalit všechny',
+    collapseAll: 'Sbalit všechny',
   },
   marches: {
     title: 'Moje marche',

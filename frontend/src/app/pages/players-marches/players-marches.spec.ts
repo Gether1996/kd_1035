@@ -60,6 +60,22 @@ describe('PlayersMarches', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['Nelly', 'bob']);
     expect(el.querySelector('.tag')?.textContent).toContain('Ty');
+    // closed at first: the count and the leading commanders; a click on the head opens the marches
+    expect(el.querySelector('.mrow')).toBeNull();
+    expect(el.querySelector('.player__count')?.textContent).toBe('1 march');
+    const heads = () => [...el.querySelectorAll<HTMLButtonElement>('.player__head')];
+    expect(heads()[0].getAttribute('aria-expanded')).toBe('false');
+    heads()[0].click();
+    await tick(fixture);
+    expect(heads()[0].getAttribute('aria-expanded')).toBe('true');
+    expect(el.querySelectorAll('.player__marches').length).toBe(1);
+    // "Rozbaliť všetky" opens the rest, then it closes them all
+    const all = el.querySelector<HTMLButtonElement>('.bar .pill-btn')!;
+    expect(all.textContent?.trim()).toBe('Rozbaliť všetky');
+    all.click();
+    await tick(fixture);
+    expect(el.querySelectorAll('.player__marches').length).toBe(2);
+    expect(all.textContent?.trim()).toBe('Zbaliť všetky');
     // only the heads, the name in alt and title
     const head = el.querySelector('.mrow__head')!;
     expect(head.getAttribute('src')).toBe('/static/guides/commanders/attila.webp');

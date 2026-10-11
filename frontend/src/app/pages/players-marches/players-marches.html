@@ -40,6 +40,11 @@
           (input)="search.set(q.value)"
         />
       </div>
+      @if (shown().length) {
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="toggleAll()">
+          <svg appIcon="chevron-down" [class.is-up]="allOpen()"></svg>{{ allOpen() ? p.collapseAll : p.expandAll }}
+        </button>
+      }
     </div>
 
     @if (!players().length) {
@@ -50,29 +55,51 @@
 
     <ul class="players">
       @for (player of shown(); track player.id) {
-        <li class="player">
-          <header class="player__head">
+        @let open = isOpen(player.id);
+        <li class="player" [class.is-open]="open">
+          <!-- the whole head opens and closes the player's marches (Gether 11. 10. 2026: "rozbaliť detail") -->
+          <button
+            type="button"
+            class="player__head"
+            [attr.aria-expanded]="open"
+            [attr.aria-controls]="'player-marches-' + player.id"
+            (click)="toggle(player.id)"
+          >
             <img class="player__avatar" [src]="player.avatar_url" alt="" width="40" height="40" />
-            <div class="player__who">
+            <span class="player__who">
               <strong class="player__name">{{ name(player) }}</strong>
               @if (player.ingame_name) {
                 <span class="player__discord">{{ player.name }}</span>
               }
-            </div>
+            </span>
             @if (player.me) {
               <span class="tag">{{ p.you }}</span>
             }
             @if (!player.public) {
               <span class="tag tag--private"><svg appIcon="eye-off"></svg>{{ p.r4Only }}</span>
             }
-          </header>
-          <ol class="player__marches">
-            @for (march of player.marches; track march.id) {
-              <li class="row">
-                <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" [statsRequired]="true" />
-              </li>
+            <svg class="player__chevron" appIcon="chevron-down"></svg>
+            @if (!open) {
+              <!-- closed: the count and the leading commander of each march -->
+              <span class="player__preview">
+                <span class="player__count">{{ count(player.marches.length) }}</span>
+                @for (march of player.marches; track march.id) {
+                  @if (portraits().get(march.primary); as src) {
+                    <img class="player__mini" [src]="src" alt="" width="64" height="64" loading="lazy" />
+                  }
+                }
+              </span>
             }
-          </ol>
+          </button>
+          @if (open) {
+            <ol class="player__marches" [id]="'player-marches-' + player.id">
+              @for (march of player.marches; track march.id) {
+                <li class="row">
+                  <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" [statsRequired]="true" />
+                </li>
+              }
+            </ol>
+          }
         </li>
       }
     </ul>

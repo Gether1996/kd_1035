@@ -300,6 +300,9 @@ export const sk = {
     noMatch: 'Takého hráča tu nemáme.',
     you: 'Ty',
     r4Only: 'len R4',
+    count: ['{n} march', '{n} marche', '{n} marchov'],
+    expandAll: 'Rozbaliť všetky',
+    collapseAll: 'Zbaliť všetky',
   },
   marches: {
     title: 'Moje marche',

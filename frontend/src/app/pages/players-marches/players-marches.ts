@@ -60,6 +60,13 @@ export class PlayersMarches {
     return this.players().filter((p) => !query || fold(`${p.ingame_name} ${p.name}`).includes(query));
   });
 
+  /** players whose marches are open – all closed at first, a list of names is quicker to scan */
+  protected readonly opened = signal<ReadonlySet<number>>(new Set());
+  protected readonly allOpen = computed(() => {
+    const opened = this.opened();
+    return this.shown().length > 0 && this.shown().every((p) => opened.has(p.id));
+  });
+
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
     { label: this.t().playersMarches.title, link: this.i18n.path('playersMarches') },
@@ -77,6 +84,29 @@ export class PlayersMarches {
 
   protected showMine(mine: boolean): void {
     void this.router.navigate([], { queryParams: { tab: mine ? 'moje' : null }, replaceUrl: true });
+  }
+
+  protected isOpen(id: number): boolean {
+    return this.opened().has(id);
+  }
+
+  protected toggle(id: number): void {
+    this.opened.update((opened) => {
+      const next = new Set(opened);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
+
+  /** "Rozbaliť všetky" / "Zbaliť všetky" – the players the search shows */
+  protected toggleAll(): void {
+    this.opened.set(this.allOpen() ? new Set() : new Set(this.shown().map((p) => p.id)));
+  }
+
+  /** "6 marchov" */
+  protected count(n: number): string {
+    const [one, few, many] = this.t().playersMarches.count;
+    return (n === 1 ? one : n >= 2 && n <= 4 ? few : many).replace('{n}', String(n));
   }
 
   protected name(player: PlayerMarches): string {
