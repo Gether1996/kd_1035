@@ -118,6 +118,30 @@ class DiscordTests(TestCase):
             self.assertFalse(after.exception.temporary)  # it may be in the channel: no second ping
             self.assertIn(discord.UNCERTAIN, str(after.exception))
 
+    def test_an_error_answer_that_cannot_be_read(self):
+        import io
+        import urllib.error
+
+        class Broken(io.BytesIO):
+            def read(self, *args):
+                raise TimeoutError('read timed out')
+
+        error = urllib.error.HTTPError('https://discord.test/hook', 502, 'Bad Gateway', {}, Broken())
+        n = self.make()
+        with override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook'):
+            with mock.patch('urllib.request.urlopen', side_effect=error):
+                discord.send_due()
+        n.refresh_from_db()
+        # the 502 still counts as temporary: back to pending for the next tick, never left as sent
+        self.assertEqual((n.status, n.sent_at), (EventNotification.Status.PENDING, None))
+        self.assertIn('502', n.error)
+        # anything unexpected while posting: failed, not sent
+        with mock.patch.object(discord, 'post', side_effect=RuntimeError('boom')):
+            with self.assertRaises(RuntimeError):
+                discord.deliver(n)
+        n.refresh_from_db()
+        self.assertEqual(n.status, EventNotification.Status.FAILED)
+
     def test_a_row_sent_or_deleted_meanwhile_is_not_sent_again(self):
         n = self.make()
         EventNotification.objects.filter(pk=n.pk).update(status=EventNotification.Status.SENT)

@@ -67,7 +67,10 @@ def _post(path: str, payload: dict) -> dict:
 
 
 def _error(exc: urllib.error.HTTPError) -> BotError:
-    raw = exc.read()[:300]
+    try:
+        raw = exc.read()[:300]
+    except (OSError, http.client.HTTPException):
+        raw = b''  # the answer broke off – the status code decides
     try:
         body = json.loads(raw)
     except ValueError:

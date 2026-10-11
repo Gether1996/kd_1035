@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.18.9:** opravy po 4. kole kritika: budíky pri chybe servera ukážu hlášku (nie „0/5“); zoznam prihlášok a marchov sa po neúspešnom načítaní skúsi znova pri návrate na kartu; notifikácia do Discord kanála, pri ktorej sa nedala prečítať chybová odpoveď, sa skúsi znova a neostane falošne „odoslaná“.
 - **11. 10. 2026 – v1.18.8:** Marche hráčov – karty hráčov sú zbalené (meno, počet marchov a hlavy prvých commanderov), klik rozbalí detail všetkých marchov; tlačidlo „Rozbaliť všetky / Zbaliť všetky“.
 - **11. 10. 2026 – v1.18.7:** opravy po 3. kole kritika: zoznam prihlášok na KvK pri chybe servera ukáže hlášku namiesto rozbitia; odoslaný budík zmizne zo zoznamu a nezaberá miesto; stránka, ktorej časť sa nenačítala (výpadok signálu), sa pri ďalšom kliku načíta nanovo; odpoveď Discordu prerušená pri čítaní nespôsobí chybu 500 ani dvojitú správu; v návodoch neprejde cudzí obrázok ani so skrytými znakmi v adrese.
 - **11. 10. 2026 – v1.18.6:** opravy po 2. kole kritika: po nasadení sa stránka neobnoví pri písaní do vyhľadávania či výbere commandera (len pri prechode na inú stránku), lišta s novou verziou sa dá zavrieť, offline návštevníka nevyhodí na chybovú stránku; mobilné menu sa zavrie pri otočení tabletu na šírku (stránka ostávala zablokovaná); pripomienka vybraná po čase odoslania sa nehlási ako neprišlá; pri timeoute Discordu sa správa do kanála nepošle dvakrát.

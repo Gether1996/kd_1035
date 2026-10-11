@@ -118,7 +118,8 @@ export class KvkPage {
   constructor() {
     // other players change their marches and sign-ups: the list asks again when the visitor comes back to the tab
     reloadOnReturn(() => {
-      if (this.canReview() && this.signups.hasValue()) this.signups.reload();
+      // also after a failed load (a phone back before its network) – the next return tries again
+      if (this.canReview() && !this.signups.isLoading()) this.signups.reload();
     });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.kvk, noindex: true }));

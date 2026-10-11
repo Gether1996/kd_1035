@@ -3,10 +3,18 @@
 <section class="alarms" id="budiky" aria-labelledby="alarms-title">
   <div class="alarms__head">
     <h2 class="alarms__title" id="alarms-title">
-      {{ a.title }} <span class="alarms__count">{{ waiting().length }}/{{ max() }}</span>
+      {{ a.title }}
+      @if (data.hasValue()) {
+        <span class="alarms__count">{{ waiting().length }}/{{ max() }}</span>
+      }
     </h2>
     @if (!open()) {
-      <button type="button" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="full() || null" (click)="!full() && toggle()">
+      <button
+        type="button"
+        class="pill-btn pill-btn--quiet"
+        [attr.aria-disabled]="full() || !data.hasValue() || null"
+        (click)="!full() && data.hasValue() && toggle()"
+      >
         <svg appIcon="plus"></svg>{{ a.add }}
       </button>
     }
@@ -38,6 +46,9 @@
         </li>
       }
     </ul>
+  } @else if (data.error()) {
+    <!-- without the list the player would think there are none and run into the limit -->
+    <p class="alarms__empty is-error">{{ a.loadError }}</p>
   } @else if (data.hasValue() && !open()) {
     <p class="alarms__empty">{{ a.empty }}</p>
   }

@@ -29,6 +29,17 @@ describe('Alarms', () => {
     vi.useRealTimers();
   });
 
+  it('a failed list says so, without a count, and the add button waits', async () => {
+    const fixture = TestBed.createComponent(Alarms);
+    fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne('/api/me/alarms/').flush(null, { status: 502, statusText: 'Bad Gateway' });
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.alarms__empty.is-error')?.textContent).toContain('nepodarilo');
+    expect(el.querySelector('.alarms__count')).toBeNull();
+    expect(el.querySelector('.alarms__head .pill-btn')?.getAttribute('aria-disabled')).toBe('true');
+  });
+
   it('an alarm that already went out leaves the list; cancelling one sent meanwhile (404) removes it', async () => {
     const sent = { id: 2, note: 'Hotové', target: '2026-10-11T11:50:00Z', remind_at: '2026-10-11T11:45:00Z' };
     const { fixture, el, http } = await render([

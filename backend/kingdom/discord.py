@@ -83,7 +83,7 @@ def send(payload: dict, url: str) -> None:
         with urllib.request.urlopen(request, timeout=8) as response:
             response.read()
     except urllib.error.HTTPError as exc:
-        body = exc.read()[:300].decode(errors='replace')
+        body = read_body(exc).decode(errors='replace')
         raise DiscordError(f'Discord odpovedal {exc.code}: {body}', temporary=exc.code >= 500 or exc.code == 429) from exc
     except urllib.error.URLError as exc:
         # urllib wraps only errors before the request was sent: safe to try again
@@ -92,6 +92,14 @@ def send(payload: dict, url: str) -> None:
         # timeout or a dropped connection while waiting for the answer: the message may have been posted – a retry
         # could ping the channel twice
         raise DiscordError(f'{UNCERTAIN} ({exc.__class__.__name__})') from exc
+
+
+def read_body(exc: urllib.error.HTTPError) -> bytes:
+    """The start of an error answer; empty when reading it fails too (Discord down) – the status code decides."""
+    try:
+        return exc.read()[:300]
+    except (OSError, http.client.HTTPException):
+        return b''
 
 
 def post(notification: EventNotification) -> None:
@@ -127,6 +135,10 @@ def deliver(notification: EventNotification, retry: bool = False) -> bool:
             raise Busy(str(exc)) from exc
         rows.update(status=EventNotification.Status.FAILED, sent_at=None, error=str(exc))
         return False
+    except Exception as exc:
+        # never left as sent without being sent
+        rows.update(status=EventNotification.Status.FAILED, sent_at=None, error=f'Neočakávaná chyba: {exc!r}'[:500])
+        raise
     return True
 
 

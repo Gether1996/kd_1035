@@ -371,6 +371,7 @@ export const cs: Dict = {
     lead: 'Jednorázová zpráva od bota – když ti končí štít, otevírá se pass nebo čekáš na rally.',
     off: 'Zprávy od bota máš vypnuté, budík ti nepřijde.',
     empty: 'Zatím nemáš žádný budík.',
+    loadError: 'Budíky se nepodařilo načíst. Zkus to znovu za chvíli.',
     full: 'Najednou můžeš mít nejvýš 5 budíků.',
     cancel: 'Zrušit budík',
     note: 'Co ti má bot připomenout',

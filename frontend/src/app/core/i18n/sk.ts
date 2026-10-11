@@ -377,6 +377,7 @@ export const sk = {
     lead: 'Jednorazová správa od bota – keď ti končí štít, otvára sa pass alebo čakáš na rally.',
     off: 'Správy od bota máš vypnuté, budík ti nepríde.',
     empty: 'Zatiaľ nemáš žiadny budík.',
+    loadError: 'Budíky sa nepodarilo načítať. Skús to znova o chvíľu.',
     full: 'Naraz môžeš mať najviac 5 budíkov.',
     cancel: 'Zrušiť budík',
     note: 'Čo ti má bot pripomenúť',

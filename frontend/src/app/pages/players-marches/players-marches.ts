@@ -75,7 +75,8 @@ export class PlayersMarches {
   constructor() {
     // other players change their marches and sign-ups: the list asks again when the visitor comes back to the tab
     reloadOnReturn(() => {
-      if (this.data.hasValue()) this.data.reload();
+      // also after a failed load (a phone back before its network) – the next return tries again
+      if (!this.data.isLoading() && (this.data.hasValue() || this.data.error())) this.data.reload();
     });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.playersMarches, noindex: true }));
