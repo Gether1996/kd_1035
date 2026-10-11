@@ -280,7 +280,7 @@ export const sk = {
   },
   marches: {
     title: 'Moji commanderi a výbava',
-    lead: 'Až 7 marchov – typ, commanderi a screenshoty výbavy a armamentov. Vedenie ich uvidí pri tvojej prihláške na KvK.',
+    lead: 'Až 7 marchov – typ, commanderi a screenshoty výbavy a armamentov. Pomôžu vedeniu zostaviť tímy na KvK.',
     loadError: 'Marche sa nepodarilo načítať.',
     march: '{n}. march',
     add: 'Pridať {n} march',
@@ -314,7 +314,7 @@ export const sk = {
     remove: 'Odstrániť',
     removeConfirm: 'Naozaj odstrániť?',
     failed: 'Nepodarilo sa uložiť. Skús to znova.',
-    privacy: 'Vidíš ich ty, vedenie, ktorému superadmin povolil prezeranie, a superadmin.',
+    privacy: 'Tvoje marche a screenshoty uvidia okrem teba iba poverení R4 kráľovstva a superadmin. Nikde inde sa nezobrazia.',
   },
   alarms: {
     title: 'Budíky',

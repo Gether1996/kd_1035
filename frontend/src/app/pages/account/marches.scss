@@ -4,6 +4,27 @@
   scroll-margin-top: calc(var(--header-h) + 16px);
 }
 
+.visibility {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--gold-400) 7%, transparent);
+  color: var(--text);
+  font-size: 0.9375rem;
+
+  .icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    color: var(--gold-400);
+  }
+}
+
 .march-list {
   display: grid;
   gap: 14px;

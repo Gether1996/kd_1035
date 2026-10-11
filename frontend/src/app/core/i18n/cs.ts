@@ -279,7 +279,7 @@ export const cs: Dict = {
   },
   marches: {
     title: 'Moji commandeři a výbava',
-    lead: 'Až 7 marchů – typ, commandeři a screenshoty výbavy a armamentů. Vedení je uvidí u tvé přihlášky na KvK.',
+    lead: 'Až 7 marchů – typ, commandeři a screenshoty výbavy a armamentů. Pomůžou vedení sestavit týmy na KvK.',
     loadError: 'Marche se nepodařilo načíst.',
     march: '{n}. march',
     add: 'Přidat {n} march',
@@ -313,7 +313,7 @@ export const cs: Dict = {
     remove: 'Odstranit',
     removeConfirm: 'Opravdu odstranit?',
     failed: 'Nepodařilo se uložit. Zkus to znovu.',
-    privacy: 'Vidíš je ty, vedení, kterému superadmin povolil prohlížení, a superadmin.',
+    privacy: 'Tvé marche a screenshoty uvidí kromě tebe jen pověření R4 království a superadmin. Nikde jinde se nezobrazí.',
   },
   alarms: {
     title: 'Budíky',

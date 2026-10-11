@@ -7,6 +7,8 @@
     }
   </h2>
   <p class="panel__lead">{{ m.lead }}</p>
+  <!-- who sees the screenshots – before anything is uploaded (Gether 11. 10. 2026) -->
+  <p class="visibility"><svg appIcon="eye-off"></svg>{{ m.privacy }}</p>
 
   @if (failed()) {
     <p class="panel__lead is-error">{{ m.loadError }}</p>
@@ -130,7 +132,6 @@
       <p class="march-hint">{{ m.saveFirst }}</p>
     }
     <p class="form__state is-error" role="status">{{ error() }}</p>
-    <p class="panel__privacy">{{ m.privacy }}</p>
   }
 </section>
 

@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.11.3:** pri marchoch na `/ucet` výrazné upozornenie, že marche a screenshoty uvidia iba poverení R4 kráľovstva a superadmin.
 - **11. 10. 2026 – v1.11.2:** „Čo môžem postaviť“ a výber commanderov pri marchoch ukazujú len meta – bez epických (fialových), elitných a legendárnych zo zlatých kľúčov (overené na rokstats, dáta z hry).
 - **11. 10. 2026 – v1.11.1:** marche na `/ucet` sa ukladajú tlačidlom „Uložiť march“ (ďalší až po uložení), jeden screenshot výbavy a jeden armamentov s ukážkou z hry; výber commandera bez vodorovného posúvania.
 - **11. 10. 2026 – v1.11.0:** **Prihláška na KvK** (`/kvk`: rally / garrison, commander pár a screenshoty VIP, výbavy, armamentov a commanderov; vidí ich len R4 a superadmin, uzavreté kolo sa zmaže po 60 dňoch), **Moji commanderi a výbava** na `/ucet` (1–7 marchov s typom, commandermi z návodov a screenshotmi), sekcia **Hráči** pre superadmina (zapína R4); „Čo môžem postaviť“ bez zberačov a commanderov KvK1/KvK2; ikony sa už nestratia po pridaní novej (verzia v adrese `icons.svg`).
