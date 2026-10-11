@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.14.0:** na `/navody` **vyhľadávanie** v návodoch (názov aj úvod, SK aj CZ, bez diakritiky) a **filter podľa typu** – čipy s hernými ikonami (jazda, pechota, garrison, rally, siege…); výsledky namiesto zvyšku rozcestníka, stav v adrese (`?q=`, `?typ=`).
 - **11. 10. 2026 – v1.13.0:** marche prerobené na kompaktné riadky (len hlavy commanderov, typ, screenshoty) na mobile aj desktope, jednoduchší editor a výber commandera ako mriežka hláv; nové polia na bonusy armamentov (ATK, DEF, HP, All DMG podľa typu marchu) a počet bielych, modrých a zlatých inscriptions.
 - **11. 10. 2026 – v1.12.3:** pri marchoch sa dá vybrať 90 legendárnych commanderov vrátane starších mimo mety (Yi Seong-Gye, Alexander Nevsky, Joan of Arc Prime, Jan Žižka…), bez commanderov zo zlatých kľúčov a zberačov.
 - **11. 10. 2026 – v1.12.2:** vlastné marche sa presunuli z Môjho účtu na stránku `/marche` ako druhá záložka „Moje marche“ (vedľa „Marche hráčov“).
@@ -54,7 +55,6 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Odložené
 
-- `guides-search` Vyhľadávanie a filter v návodoch – schválené, nezmestilo sa do kola 6. Čipy až po `guides.ready()` (skryť pri `failed()`), Esc len vymaže hľadanie, počet cez existujúce `guides.count`.
 - Zvyšok auditu prístupnosti (`tools/a11y/audit.sh`, 10. 10. 2026): moderate/minor nález žiadny. Ostáva: ~1 600 kontrastov, ktoré axe nevie posúdiť (text na prechodoch a SVG krajine – „incomplete“ v `tools/a11y/out`), ručne prejsť; dialógy superusera v kalendári (editor eventu, dátumy) zatiaľ nie sú v `STATE_LIST`; ručný test klávesnicou (poradie fokusu, pasca fokusu v dialógoch).
 - `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
 - Drobnosti z kola 5: portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.

@@ -10,6 +10,7 @@ export type GuideSpecialty =
   | 'infantry'
   | 'archer'
   | 'leadership'
+  | 'engineering'
   | 'garrison'
   | 'conquering'
   | 'peacekeeping'
@@ -28,6 +29,20 @@ export interface GuideSummary {
   excerpt_cs: string;
   updated_at: string;
 }
+
+/** the order of the specialty chips on /navody (backend Guide.Specialty) */
+export const GUIDE_SPECIALTIES: GuideSpecialty[] = [
+  'cavalry',
+  'infantry',
+  'archer',
+  'leadership',
+  'engineering',
+  'garrison',
+  'conquering',
+  'peacekeeping',
+  'gathering',
+  'barbarian-fort',
+];
 
 /** A kingdom event linked to the guide with its running or next run (the calendar's rule). */
 export interface GuideEvent {

@@ -18,40 +18,49 @@
     }
   </nav>
 
-  <p class="glossary-link">
-    <svg appIcon="lightbulb"></svg>
-    <a [routerLink]="i18n.path('glossary')">{{ t.glossary.link }}</a>
-  </p>
-
-  <!-- its own chunk (bundle budget); a shared link with ?commander= loads it right away -->
-  @defer (on viewport; when !!commander()) {
-    <app-commander-finder [commander]="commander()" />
-  } @placeholder {
-    <div class="finder-placeholder" aria-hidden="true"></div>
+  @let s = t.guides.search;
+  <!-- search and specialty chips (hidden when the list fails; the chips wait for the list) -->
+  @if (!guides.failed()) {
+    <div class="search" role="search">
+      <div class="search__field">
+        <svg class="search__icon" appIcon="search"></svg>
+        <label class="sr-only" for="guide-search">{{ s.label }}</label>
+        <input
+          #q
+          id="guide-search"
+          class="input search__input"
+          type="search"
+          autocomplete="off"
+          [placeholder]="s.placeholder"
+          [value]="query()"
+          (input)="setQuery(q.value)"
+          (keydown.escape)="setQuery('')"
+        />
+      </div>
+      @if (guides.ready() && specialties().length) {
+        <div class="chips search__chips" role="group" [attr.aria-label]="s.filter">
+          @for (sp of specialties(); track sp.key) {
+            <label class="chip">
+              <input type="checkbox" [checked]="chosen().has(sp.key)" (change)="toggle(sp.key)" />
+              <span><img class="chip__tag" [src]="sp.icon" alt="" width="96" height="96" />{{ s.specialties[sp.key] }}</span>
+            </label>
+          }
+        </div>
+      }
+    </div>
   }
 
-  @defer (on viewport) {
-    <app-my-commanders />
-  } @placeholder {
-    <div class="finder-placeholder finder-placeholder--builder" aria-hidden="true"></div>
-  }
-
-  @if (guides.failed()) {
-    <p class="state">{{ t.guides.error }}</p>
-  } @else if (groups().length) {
-    @for (group of groups(); track group.key) {
-      <section class="group" [attr.aria-labelledby]="'hub-' + group.key">
-        <header class="group__head">
-          <h2 class="group__title" [id]="'hub-' + group.key">{{ t.guides.categories[group.key].title }}</h2>
-          <a class="group__all" [routerLink]="i18n.guidePath(group.key)">
-            {{ t.guides.wholeCategory }} <svg appIcon="arrow-right"></svg>
-          </a>
-        </header>
+  @if (searching()) {
+    <section class="results" [attr.aria-label]="s.label">
+      @if (guides.ready()) {
+        <p class="results__count" role="status">
+          {{ results().length ? guides.count(results().length) : s.noMatch }}
+          <button type="button" class="results__clear" (click)="clear()">{{ s.clear }}</button>
+        </p>
         <ol class="list">
-          @for (g of group.items; track g.slug; let i = $index) {
-            <li [appReveal]="i * 40">
-              <a class="row row--compact" [routerLink]="i18n.guidePath(g.category, g.slug)">
-                <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
+          @for (g of results(); track g.slug) {
+            <li>
+              <a class="row row--compact row--result" [routerLink]="i18n.guidePath(g.category, g.slug)">
                 <span class="row__body">
                   <strong>
                     @if (g.specialty_icon) {
@@ -59,22 +68,80 @@
                     }
                     {{ guides.title(g) }}
                   </strong>
+                  <small class="row__category">{{ t.guides.categories[g.category].title }}</small>
                 </span>
-                <time class="row__date" [attr.datetime]="g.updated_at">{{ guides.date(g.updated_at) }}</time>
                 <svg class="row__arrow" appIcon="arrow-right"></svg>
               </a>
             </li>
           }
         </ol>
-      </section>
-    }
-  } @else if (!guides.ready()) {
-    <div class="list list--loading" aria-hidden="true">
-      @for (i of [1, 2, 3, 4, 5]; track i) {
-        <span class="row row--skeleton row--compact"></span>
+      } @else {
+        <div class="list list--loading" aria-hidden="true">
+          @for (i of [1, 2, 3]; track i) {
+            <span class="row row--skeleton row--compact"></span>
+          }
+        </div>
       }
-    </div>
+    </section>
   } @else {
-    <p class="state">{{ t.guides.empty }}</p>
+    <p class="glossary-link">
+      <svg appIcon="lightbulb"></svg>
+      <a [routerLink]="i18n.path('glossary')">{{ t.glossary.link }}</a>
+    </p>
+
+    <!-- its own chunk (bundle budget); a shared link with ?commander= loads it right away -->
+    @defer (on viewport; when !!commander()) {
+      <app-commander-finder [commander]="commander()" />
+    } @placeholder {
+      <div class="finder-placeholder" aria-hidden="true"></div>
+    }
+
+    @defer (on viewport) {
+      <app-my-commanders />
+    } @placeholder {
+      <div class="finder-placeholder finder-placeholder--builder" aria-hidden="true"></div>
+    }
+
+    @if (guides.failed()) {
+      <p class="state">{{ t.guides.error }}</p>
+    } @else if (groups().length) {
+      @for (group of groups(); track group.key) {
+        <section class="group" [attr.aria-labelledby]="'hub-' + group.key">
+          <header class="group__head">
+            <h2 class="group__title" [id]="'hub-' + group.key">{{ t.guides.categories[group.key].title }}</h2>
+            <a class="group__all" [routerLink]="i18n.guidePath(group.key)">
+              {{ t.guides.wholeCategory }} <svg appIcon="arrow-right"></svg>
+            </a>
+          </header>
+          <ol class="list">
+            @for (g of group.items; track g.slug; let i = $index) {
+              <li [appReveal]="i * 40">
+                <a class="row row--compact" [routerLink]="i18n.guidePath(g.category, g.slug)">
+                  <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
+                  <span class="row__body">
+                    <strong>
+                      @if (g.specialty_icon) {
+                        <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
+                      }
+                      {{ guides.title(g) }}
+                    </strong>
+                  </span>
+                  <time class="row__date" [attr.datetime]="g.updated_at">{{ guides.date(g.updated_at) }}</time>
+                  <svg class="row__arrow" appIcon="arrow-right"></svg>
+                </a>
+              </li>
+            }
+          </ol>
+        </section>
+      }
+    } @else if (!guides.ready()) {
+      <div class="list list--loading" aria-hidden="true">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <span class="row row--skeleton row--compact"></span>
+        }
+      </div>
+    } @else {
+      <p class="state">{{ t.guides.empty }}</p>
+    }
   }
 </div>

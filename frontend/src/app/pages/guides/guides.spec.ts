@@ -135,6 +135,47 @@ describe('Guide pages', () => {
       ]);
     });
 
+    it('searches titles and intros without diacritics and filters by specialty chips', async () => {
+      const guides = [
+        { ...summary('pary-pre-jazdu', 'commanderi'), title_sk: 'Páry pre jazdu', title_cs: 'Páry pro jízdu', specialty: 'cavalry', specialty_icon: '/static/guides/specialties/cavalry.webp' },
+        { ...summary('garrison', 'commanderi'), title_sk: 'Páry na garrison', specialty: 'garrison', specialty_icon: '/static/guides/specialties/garrison.webp' },
+        { ...summary('ark', 'eventy'), title_sk: 'Ark of Osiris', excerpt_sk: 'Bitka aliancií o artefakt.' },
+      ];
+      const fixture = TestBed.createComponent(GuideHub);
+      fixture.detectChanges();
+      TestBed.inject(HttpTestingController).expectOne('/api/guides/').flush(guides);
+      await settle(fixture);
+      const el = fixture.nativeElement as HTMLElement;
+      const found = () => [...el.querySelectorAll('.results a.row')].map((a) => a.getAttribute('href'));
+      // only the specialties some guide has, in the fixed order
+      expect([...el.querySelectorAll('.search__chips .chip')].map((c) => c.textContent?.trim())).toEqual(['Jazda', 'Garrison']);
+      expect(el.querySelector('.results')).toBeNull();
+
+      // the Czech title and the intro count, without diacritics; every word must match
+      fixture.componentRef.setInput('q', 'JIZDU');
+      await fixture.whenStable();
+      expect(found()).toEqual(['/navody/commanderi/pary-pre-jazdu']);
+      expect(el.querySelector('.group')).toBeNull();
+      expect(el.querySelector('.results__count')?.textContent).toContain('1 návod');
+      fixture.componentRef.setInput('q', 'bitka artefakt');
+      await fixture.whenStable();
+      expect(found()).toEqual(['/navody/eventy/ark']);
+      fixture.componentRef.setInput('q', 'nič také');
+      await fixture.whenStable();
+      expect(el.querySelector('.results__count')?.textContent).toContain('Nič sme nenašli.');
+
+      fixture.componentRef.setInput('q', undefined);
+      fixture.componentRef.setInput('typ', 'garrison,cavalry');
+      await fixture.whenStable();
+      expect(found()).toEqual(['/navody/commanderi/pary-pre-jazdu', '/navody/commanderi/garrison']);
+      expect([...el.querySelectorAll<HTMLInputElement>('.search__chips input')].map((i) => i.checked)).toEqual([true, true]);
+    });
+
+    it('hides the search when the API fails', async () => {
+      const el = await open((req) => req.flush('x', { status: 500, statusText: 'Server Error' }));
+      expect(el.querySelector('.search')).toBeNull();
+    });
+
     it('shows the error text when the API fails', async () => {
       const el = await open((req) => req.flush('down', { status: 502, statusText: 'Bad Gateway' }));
       expect(el.querySelector('.state')?.textContent).toContain('Návody sa nepodarilo načítať');

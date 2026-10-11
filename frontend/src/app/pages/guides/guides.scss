@@ -143,6 +143,100 @@
 
 // ---------------------------------------------------------------- hub (/navody)
 
+// search and specialty chips above the guides; while set, a flat list of matches replaces the rest of the hub
+.search {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 clamp(24px, 4vw, 32px);
+}
+
+.search__field {
+  position: relative;
+}
+
+.search__icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  translate: 0 -50%;
+  color: var(--text-mute);
+  pointer-events: none;
+}
+
+.search__input {
+  padding-left: 44px;
+}
+
+.search__chips {
+  gap: 6px;
+
+  .chip > span {
+    gap: 5px;
+    min-height: 38px;
+    padding: 0 14px 0 8px;
+    font-size: 0.875rem;
+  }
+
+  // ten chips in three rows on a phone
+  @media (max-width: 600px) {
+    gap: 5px;
+
+    .chip > span {
+      gap: 4px;
+      min-height: 34px;
+      padding: 0 10px 0 6px;
+      font-size: 0.8125rem;
+    }
+
+    .chip__tag {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// the game's tag of the specialty, like in the guide list
+.chip__tag {
+  width: 24px;
+  height: 24px;
+}
+
+.results__count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+  color: var(--text-dim);
+}
+
+.results__clear {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--gold-300);
+  font: 600 0.8125rem/1 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--gold-100);
+  }
+}
+
+.row--result {
+  grid-template-columns: 1fr auto;
+}
+
+.row__body .row__category {
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
 .glossary-link {
   display: flex;
   align-items: center;

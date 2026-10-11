@@ -162,6 +162,26 @@ export const sk = {
     back: 'Späť na zoznam',
     notFound: 'Tento návod neexistuje alebo už nie je zverejnený.',
     error: 'Návody sa nepodarilo načítať. Skús to znova o chvíľu.',
+    // search and specialty filter on /navody (guide-hub.ts)
+    search: {
+      label: 'Hľadať v návodoch',
+      placeholder: 'Hľadať návod – napr. garrison, MGE, Ark',
+      filter: 'Typ',
+      noMatch: 'Nič sme nenašli.',
+      clear: 'Zrušiť hľadanie',
+      specialties: {
+        cavalry: 'Jazda',
+        infantry: 'Pechota',
+        archer: 'Lukostrelci',
+        leadership: 'Leadership',
+        engineering: 'Siege',
+        garrison: 'Garrison',
+        conquering: 'Rally',
+        peacekeeping: 'Barbari',
+        gathering: 'Zber',
+        'barbarian-fort': 'Forty',
+      },
+    },
     // the next runs of the events linked to a guide (guide-events.ts)
     inCalendar: {
       title: 'V kalendári',
