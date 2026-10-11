@@ -5,6 +5,8 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
+import { Marches } from './marches';
+import { PlayersAdmin } from './players-admin';
 
 /**
  * /ucet – the player's own account: sign in with Discord, in-game name, sign out, delete; a link to the event
@@ -13,7 +15,7 @@ import { PageHeader } from '../../shared/page-header';
  */
 @Component({
   selector: 'app-account',
-  imports: [RouterLink, Icon, PageHeader],
+  imports: [RouterLink, Icon, PageHeader, Marches, PlayersAdmin],
   templateUrl: './account.html',
   styleUrl: './account.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

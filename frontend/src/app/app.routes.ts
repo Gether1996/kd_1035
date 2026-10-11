@@ -19,6 +19,7 @@ const pages = (): Routes => [
     path: 'pripomienky',
     loadComponent: () => import('./pages/reminders/reminders-page').then((m) => m.RemindersPage),
   },
+  { path: 'kvk', loadComponent: () => import('./pages/kvk/kvk-page').then((m) => m.KvkPage) },
   { path: 'slovnik', loadComponent: () => import('./pages/glossary/glossary').then((m) => m.Glossary) },
   // guides too
   { path: 'navody', loadComponent: () => import('./pages/guides/guide-hub').then((m) => m.GuideHub) },

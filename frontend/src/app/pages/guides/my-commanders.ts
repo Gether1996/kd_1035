@@ -14,6 +14,7 @@ import { GuideCategory, I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
 import { CommanderRef, IndexedCommander, commanderKey } from './commander-finder';
+import { shownCommander } from './hidden-commanders';
 
 /** The owned commanders (their keys) – only in this browser, never sent anywhere (privacy page). */
 export const OWNED_KEY = 'kd1035.commanders';
@@ -101,8 +102,14 @@ export class MyCommanders {
   protected readonly t = computed(() => this.i18n.t().builder);
 
   protected readonly data = httpResource<IndexedCommander[]>(() => (this.isBrowser ? '/api/commanders/' : undefined));
-  protected readonly commanders = computed(() => (this.data.hasValue() ? this.data.value() : []));
-  private readonly pairs = computed(() => pairsOf(this.commanders()));
+  /** without the gatherers and the KvK1 / KvK2 commanders (hidden-commanders.ts) */
+  protected readonly commanders = computed(() =>
+    this.data.hasValue() ? this.data.value().filter((c) => shownCommander(c.name)) : [],
+  );
+  /** pairs of the shown commanders only – a hidden one could never be ticked */
+  private readonly pairs = computed(() =>
+    pairsOf(this.commanders()).filter((p) => !p.secondary || shownCommander(p.secondary.name)),
+  );
 
   protected readonly owned = signal<ReadonlySet<string>>(new Set());
   protected readonly filter = signal('');

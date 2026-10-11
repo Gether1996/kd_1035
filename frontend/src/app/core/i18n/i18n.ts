@@ -17,6 +17,7 @@ export type Page =
   | 'reminders'
   | 'guideHub'
   | 'glossary'
+  | 'kvk'
   | 'guides'
   | 'guide';
 export type GuideCategory = 'commanderi' | 'vybava' | 'eventy' | 'tipy';
@@ -39,6 +40,7 @@ const FIXED_PATHS = {
   reminders: '/pripomienky',
   guideHub: '/navody',
   glossary: '/slovnik',
+  kvk: '/kvk',
 } satisfies Partial<Record<Page, string>>;
 type FixedPage = keyof typeof FIXED_PATHS;
 

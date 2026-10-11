@@ -79,6 +79,9 @@ SNAPSHOT_PATH = BASE_DIR / 'snapshot' / 'db.sqlite3'
 SNAPSHOT_BASE_PATH = SQLITE_PATH.parent / 'snapshot_base'
 # heartbeat of the worker for the admin overview – a file, not a DB row, so the snapshot stays unchanged
 WORKER_STATUS_PATH = SQLITE_PATH.parent / 'worker_status.json'
+# players' private screenshots (KvK sign-ups, marches – accounts/private_images.py): next to the database, never under
+# MEDIA_ROOT (nginx serves /uploads/ to anyone); fixed on purpose, no env variable that could point it elsewhere
+PRIVATE_MEDIA_ROOT = SQLITE_PATH.parent / 'private'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

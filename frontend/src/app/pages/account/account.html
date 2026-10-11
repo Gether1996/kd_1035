@@ -2,7 +2,7 @@
 
 <app-page-header [crumbs]="crumbs()" [eyebrow]="a.eyebrow" [title]="a.title" />
 
-<div class="container content">
+<div class="container content" [class.is-wide]="!!auth.user()">
   <div role="status">
     @if (notice(); as n) {
       <p class="notice" [class.notice--error]="n.error">{{ n.text }}</p>
@@ -108,6 +108,31 @@
         </span>
         <span class="shortcut__go">{{ a.reminders.link }}<svg appIcon="chevron-right"></svg></span>
       </a>
+      <a class="shortcut" [routerLink]="i18n.path('kvk')">
+        <span class="shortcut__icon"><svg appIcon="swords"></svg></span>
+        <span class="shortcut__body">
+          <strong>{{ a.kvk.title }}</strong>
+          <small>{{ a.kvk.text }}</small>
+        </span>
+        <span class="shortcut__go">{{ a.kvk.link }}<svg appIcon="chevron-right"></svg></span>
+      </a>
+
+      @defer (on viewport) {
+        <app-marches />
+      } @placeholder {
+        <div class="marches-placeholder" aria-hidden="true"></div>
+      }
+
+      @if (user.is_superuser) {
+        <!-- superadmin: who sees the KvK sign-ups (R4); the anchor (/ucet#hraci from /kvk) stays outside the deferred block -->
+        <div id="hraci" class="anchor">
+          @defer (on viewport) {
+            <app-players-admin />
+          } @placeholder {
+            <div class="marches-placeholder" aria-hidden="true"></div>
+          }
+        </div>
+      }
     </div>
   } @else {
     <section class="card" aria-labelledby="account-login">

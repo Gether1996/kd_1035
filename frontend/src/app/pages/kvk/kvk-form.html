@@ -1,0 +1,207 @@
+@let k = t();
+@if (!state().round) {
+  <div class="closed">
+    <span class="closed__badge"><svg appIcon="swords"></svg></span>
+    <h2 class="closed__title">{{ k.closedTitle }}</h2>
+    <p class="closed__text">{{ k.closedText }}</p>
+  </div>
+} @else {
+  <section class="panel" aria-labelledby="kvk-form-title">
+    <header class="panel__head">
+      <div>
+        <p class="panel__eyebrow">{{ k.signupEyebrow }}</p>
+        <h2 class="panel__title" id="kvk-form-title">{{ title() }}</h2>
+      </div>
+      @if (signup(); as s) {
+        <span class="badge" [class.badge--done]="!missing().length">
+          @if (!missing().length) {
+            <svg appIcon="check"></svg>
+          }
+          {{ missing().length ? k.statusIncomplete : k.statusDone }}
+        </span>
+      }
+    </header>
+    <p class="panel__lead">{{ k.lead }}</p>
+
+    <form class="form" (submit)="save($event)" novalidate>
+      <div class="field">
+        <label class="field__label" for="kvk-name">{{ k.ingameName }}</label>
+        <input
+          #nameInput
+          id="kvk-name"
+          class="input"
+          type="text"
+          maxlength="32"
+          autocomplete="off"
+          required
+          [value]="ingameName()"
+          [attr.aria-invalid]="formError() === 'name' || null"
+          (input)="ingameName.set(nameInput.value)"
+        />
+      </div>
+
+      <fieldset class="field">
+        <legend class="field__label">{{ k.role }}</legend>
+        <div class="chips">
+          <label class="chip">
+            <input type="checkbox" [checked]="rally()" (change)="rally.set(!rally())" />
+            <span><svg appIcon="swords"></svg>Rally</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" [checked]="garrison()" (change)="garrison.set(!garrison())" />
+            <span><svg appIcon="shield"></svg>Garrison</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label class="field__label" for="kvk-commanders">{{ k.commanders }}</label>
+        <input
+          #commandersInput
+          id="kvk-commanders"
+          class="input"
+          type="text"
+          maxlength="120"
+          autocomplete="off"
+          [placeholder]="k.commandersPlaceholder"
+          [value]="commanders()"
+          (input)="commanders.set(commandersInput.value)"
+        />
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="kvk-note">{{ k.note }}</label>
+        <textarea
+          #noteInput
+          id="kvk-note"
+          class="input textarea"
+          rows="3"
+          maxlength="500"
+          [placeholder]="k.notePlaceholder"
+          [value]="note()"
+          (input)="note.set(noteInput.value)"
+        ></textarea>
+      </div>
+
+      <div class="form__actions">
+        <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">
+          {{ signup() ? k.save : k.submit }}
+        </button>
+        <p class="form__state" role="status" [class.is-error]="!!formError()">
+          @if (formError(); as e) {
+            {{ k.errors[e] }}
+          } @else if (saved()) {
+            {{ k.saved }}
+          }
+        </p>
+      </div>
+    </form>
+  </section>
+
+  @if (signup(); as s) {
+    <section class="panel" aria-labelledby="kvk-shots-title">
+      <h2 class="panel__title panel__title--small" id="kvk-shots-title">{{ k.shotsTitle }}</h2>
+      <p class="panel__lead">{{ k.shotsLead }}</p>
+
+      <div class="shots">
+        @for (kind of kinds; track kind) {
+          <div class="shot-group" [attr.aria-labelledby]="'kvk-kind-' + kind" role="group">
+            <div class="shot-group__head">
+              <h3 class="shot-group__title" [id]="'kvk-kind-' + kind">
+                @if (imagesOf(kind).length) {
+                  <svg class="shot-group__ok" appIcon="check"></svg>
+                }
+                {{ k.kinds[kind].title }}
+              </h3>
+              <span class="shot-group__count">{{ imagesOf(kind).length }}/{{ maxPerKind }}</span>
+            </div>
+            <p class="shot-group__hint">{{ k.kinds[kind].hint }}</p>
+            <ul class="thumbs">
+              @for (image of imagesOf(kind); track image.id) {
+                <li class="thumb">
+                  <img [src]="image.thumb" [alt]="k.kinds[kind].title" loading="lazy" />
+                  <button
+                    type="button"
+                    class="thumb__remove"
+                    [attr.aria-label]="k.removeImage + ': ' + k.kinds[kind].title"
+                    (click)="remove(image)"
+                  >
+                    <svg appIcon="x"></svg>
+                  </button>
+                </li>
+              }
+              @if (imagesOf(kind).length < maxPerKind) {
+                <li>
+                  <label class="thumb thumb--add" [class.is-busy]="uploading().has(kind)">
+                    <input
+                      #file
+                      class="sr-only"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      multiple
+                      [disabled]="uploading().has(kind)"
+                      (change)="upload(kind, file)"
+                    />
+                    <svg appIcon="plus"></svg>
+                    <span>{{ uploading().has(kind) ? k.uploading : k.addImage }}</span>
+                  </label>
+                </li>
+              }
+            </ul>
+            @if (uploadError(); as u) {
+              @if (u.kind === kind) {
+                <p class="shot-group__error" role="alert">{{ k.uploadErrors[u.error] }}</p>
+              }
+            }
+          </div>
+        }
+      </div>
+      <p class="panel__privacy">
+        {{ k.privacy }} <a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a>
+      </p>
+    </section>
+
+    <div class="withdraw">
+      @if (confirmWithdraw() === 'open') {
+        <p>{{ k.withdrawConfirm }}</p>
+        <button type="button" class="danger" (click)="withdraw()">{{ k.withdrawYes }}</button>
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
+      } @else {
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set('open')">{{ k.withdraw }}</button>
+      }
+    </div>
+  }
+}
+
+<!-- sign-ups of closed rounds: the reviewers still see them until the round is deleted (60 days after closing) -->
+@for (o of older(); track o.round.id) {
+  <section class="panel" [attr.aria-labelledby]="'kvk-old-' + o.round.id">
+    <p class="panel__eyebrow">{{ k.signupEyebrow }}</p>
+    <h2 class="panel__title panel__title--small" [id]="'kvk-old-' + o.round.id">{{ roundTitle(o.round) }}</h2>
+    <p class="panel__lead">{{ k.closedSignup }}</p>
+    <ul class="thumbs">
+      @for (image of ordered(o.signup); track image.id) {
+        <li class="thumb">
+          <img [src]="image.thumb" [alt]="k.kinds[image.kind].title" loading="lazy" />
+          <button
+            type="button"
+            class="thumb__remove"
+            [attr.aria-label]="k.removeImage + ': ' + k.kinds[image.kind].title"
+            (click)="remove(image)"
+          >
+            <svg appIcon="x"></svg>
+          </button>
+        </li>
+      }
+    </ul>
+    <div class="withdraw">
+      @if (confirmWithdraw() === o.round.id) {
+        <p>{{ k.withdrawConfirm }}</p>
+        <button type="button" class="danger" (click)="withdraw(o.round.id)">{{ k.withdrawYes }}</button>
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
+      } @else {
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(o.round.id)">{{ k.withdraw }}</button>
+      }
+    </div>
+  </section>
+}

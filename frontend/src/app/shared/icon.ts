@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ICONS_VERSION } from './icons-version';
 
 export type IconName =
   | 'arrow-left'
@@ -47,5 +48,6 @@ export type IconName =
 })
 export class Icon {
   readonly appIcon = input.required<IconName>();
-  protected readonly href = computed(() => `/icons.svg#${this.appIcon()}`);
+  // ?v= changes with the sprite, so a cached old icons.svg never hides a new icon
+  protected readonly href = computed(() => `/icons.svg?v=${ICONS_VERSION}#${this.appIcon()}`);
 }

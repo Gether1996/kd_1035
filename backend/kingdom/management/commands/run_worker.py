@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
 from accounts.alarms import prune_alarms, send_alarms
+from accounts.cleanup import prune_kvk, sweep_files
 from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
 from kingdom.backups import backup_due, create_backup
 from kingdom.discord import send_due
@@ -83,6 +84,12 @@ class Command(BaseCommand):
                     prune_alarms()
                 except Exception:
                     log.exception('Pruning sent reminders failed')
+                try:
+                    # closed KvK rounds after 60 days, screenshot files without a row (privacy page)
+                    prune_kvk()
+                    sweep_files()
+                except Exception:
+                    log.exception('Pruning KvK sign-ups failed')
 
             heartbeat.tick()  # a file for the admin overview, never a DB write
             time.sleep(TICK_SECONDS)

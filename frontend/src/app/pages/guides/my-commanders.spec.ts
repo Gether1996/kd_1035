@@ -83,6 +83,10 @@ describe('MyCommanders', () => {
   it('toggles owned commanders, shows the pairs to field and remembers the choice in this browser', async () => {
     const { fixture, el } = await render();
     expect(el.textContent).toContain('Začni tým');
+    // no gatherers and no KvK1 / KvK2 commanders (Sun Tzu) in the grid
+    const names = Array.from(el.querySelectorAll('.tile__name'), (n) => n.textContent);
+    expect(names).not.toContain('Sun Tzu');
+    expect(names).toContain('Sun Tzu Prime');
 
     tile(el, 'Attila').click();
     tile(el, 'Achilles').click();

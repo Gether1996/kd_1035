@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import Alarm, EventReminder, Player, SentReminder
+from .models import Alarm, EventReminder, KvkRound, KvkSignup, Player, SentReminder
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -16,9 +16,9 @@ REMINDER_LABELS = dict(REMINDER_CHOICES)
 @admin.register(Player)
 class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     """Players appear by signing in with Discord; their Discord data is refreshed on every sign-in. Only the in-game
-    name (typed by the player) can be corrected here."""
+    name (typed by the player) and the KvK reviewer flag can be changed here."""
 
-    list_display = ['thumbnail', 'name', 'ingame_name', 'discord_id', 'created_at', 'last_login']
+    list_display = ['thumbnail', 'name', 'ingame_name', 'kvk_reviewer', 'discord_id', 'created_at', 'last_login']
     list_display_links = ['name']
     list_select_related = ['user']
     search_fields = ['username', 'global_name', 'ingame_name', 'discord_id']
@@ -27,6 +27,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'global_name',
         'username',
         'ingame_name',
+        'kvk_reviewer',
         'discord_id',
         'avatar',
         'remind_discord',
@@ -35,7 +36,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'created_at',
         'last_login',
     ]
-    readonly_fields = [f for f in fields if f != 'ingame_name']
+    readonly_fields = [f for f in fields if f not in ('ingame_name', 'kvk_reviewer')]
 
     def has_add_permission(self, request):
         return False
@@ -153,5 +154,50 @@ class AlarmAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         return False
 
     @admin.display(description='hráč', ordering='player__global_name')
+    def player_name(self, obj):
+        return obj.player.ingame_name or obj.player.name
+
+
+@admin.register(KvkRound)
+class KvkRoundAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """KvK sign-up rounds – normally managed on /kvk (Nastavenia); deleting one deletes its sign-ups and screenshots."""
+
+    list_display = ['title_sk', 'is_open', 'signup_count', 'created_at']
+    fields = ['title_sk', 'title_cs', 'is_open', 'created_at', 'closed_at']
+    readonly_fields = ['created_at', 'closed_at']
+
+    def save_model(self, request, obj, form, change):
+        # one open round at a time, as on /kvk; the retention counts from the closing
+        from django.utils import timezone
+
+        if obj.is_open:
+            KvkRound.objects.filter(is_open=True).exclude(pk=obj.pk).update(is_open=False, closed_at=timezone.now())
+            obj.closed_at = None
+        elif 'is_open' in form.changed_data:
+            obj.closed_at = timezone.now()
+        super().save_model(request, obj, form, change)
+
+    @admin.display(description='prihlášky')
+    def signup_count(self, obj):
+        return obj.signups.count()
+
+
+@admin.register(KvkSignup)
+class KvkSignupAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """Sign-ups read only (screenshots are on /kvk) – delete stays allowed for the cascades."""
+
+    list_display = ['player_name', 'round', 'rally', 'garrison', 'commanders', 'updated_at']
+    list_filter = ['round', 'rally', 'garrison']
+    list_select_related = ['player', 'round']
+    fields = ['round', 'player', 'rally', 'garrison', 'commanders', 'note', 'created_at', 'updated_at']
+    readonly_fields = fields
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='hráč', ordering='player__ingame_name')
     def player_name(self, obj):
         return obj.player.ingame_name or obj.player.name

@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **11. 10. 2026 – v1.11.0:** **Prihláška na KvK** (`/kvk`: rally / garrison, commander pár a screenshoty VIP, výbavy, armamentov a commanderov; vidí ich len R4 a superadmin, uzavreté kolo sa zmaže po 60 dňoch), **Moji commanderi a výbava** na `/ucet` (1–7 marchov s typom, commandermi z návodov a screenshotmi), sekcia **Hráči** pre superadmina (zapína R4); „Čo môžem postaviť“ bez zberačov a commanderov KvK1/KvK2; ikony sa už nestratia po pridaní novej (verzia v adrese `icons.svg`).
 - **11. 10. 2026 – v1.10.0:** na `/o-nas` v bloku Migrácia **kalkulačka pasov** – sila účtu → počet pasov a aliančné kredity, odpočet ranených v nemocnici, celá tabuľka a podmienky migrácie so zdrojmi.
 - **11. 10. 2026 – v1.9.0:** **budíky** na `/pripomienky` – jednorazová súkromná správa od bota („o 7 h 30 min mi končí štít, pripomeň 15 min vopred“), max. 5 naraz, do 14 dní; kalendár, účet a pripomienky sa načítajú až pri otvorení (úvodný balík 490 kB).
 - **11. 10. 2026 – v1.8.0:** nová stránka **Slovník pojmov** (`/slovnik`, `/cz/slovnik`) – skratky a slang z hry (KvK, MGE, KP, DKP, rally, garrison…) v SK/CZ s hľadaním a odkazmi na návody; odkaz z `/navody`.
