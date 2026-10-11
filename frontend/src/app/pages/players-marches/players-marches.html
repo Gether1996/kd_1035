@@ -17,9 +17,16 @@
       <p class="login__text">{{ p.loginText }}</p>
       <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ t().account.login }}</a>
     </section>
-  } @else if (data.error()) {
-    <p class="state">{{ p.error }}</p>
-  } @else if (data.hasValue()) {
+  } @else {
+    <div class="segmented tabs" role="group" [attr.aria-label]="p.title">
+      <button type="button" [attr.aria-pressed]="!mine()" (click)="showMine(false)">{{ p.tabs.all }}</button>
+      <button type="button" [attr.aria-pressed]="mine()" (click)="showMine(true)">{{ p.tabs.mine }}</button>
+    </div>
+    @if (mine()) {
+      <app-marches class="mine" />
+    } @else if (data.error()) {
+      <p class="state">{{ p.error }}</p>
+    } @else if (data.hasValue()) {
     <div class="bar">
       <div class="field bar__search">
         <label class="sr-only" for="marches-search">{{ p.search }}</label>
@@ -34,7 +41,6 @@
           (input)="search.set(q.value)"
         />
       </div>
-      <a class="pill-btn pill-btn--quiet" [routerLink]="i18n.path('account')" fragment="marche">{{ p.mine }}</a>
     </div>
 
     @if (!players().length) {
@@ -98,8 +104,9 @@
         </li>
       }
     </ul>
-  } @else {
-    <div class="placeholder" aria-hidden="true"></div>
+    } @else {
+      <div class="placeholder" aria-hidden="true"></div>
+    }
   }
 </div>
 

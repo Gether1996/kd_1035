@@ -9,10 +9,11 @@ import {
   computed,
   effect,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { March, MarchImage, marchIcon } from '../../core/kvk-api';
@@ -21,22 +22,29 @@ import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { fold } from '../../shared/search';
+import { Marches } from '../account/marches';
 import { CommanderRef } from '../guides/commander-finder';
 
 /**
- * /marche – the marches of the players who made them public (Gether 11. 10. 2026: "aby to mali ako motiváciu");
- * R4 and the superuser see every player's. Signed-in players only; a prerendered shell, not indexed, not in the
+ * /marche – two tabs (Gether 11. 10. 2026): "Marche hráčov" = the marches of the players who made them public ("aby to
+ * mali ako motiváciu"; R4 and the superuser see every player's), "Moje marche" (?tab=moje) = the player's own marches
+ * (the Marches component, formerly on /ucet). Signed-in players only; a prerendered shell, not indexed, not in the
  * sitemap.
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [RouterLink, Icon, PageHeader],
+  imports: [Icon, PageHeader, Marches],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayersMarches {
+  /** ?tab=moje – the player's own marches */
+  readonly tab = input<string>();
+
   protected readonly i18n = inject(I18n);
+  private readonly router = inject(Router);
+  protected readonly mine = computed(() => this.tab() === 'moje');
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
   protected readonly icon = marchIcon;
@@ -69,6 +77,10 @@ export class PlayersMarches {
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.playersMarches, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
+  }
+
+  protected showMine(mine: boolean): void {
+    void this.router.navigate([], { queryParams: { tab: mine ? 'moje' : null }, replaceUrl: true });
   }
 
   protected name(player: PlayerMarches): string {

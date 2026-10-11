@@ -1,4 +1,14 @@
 // .content, .login, .placeholder and .state come from ../reminders/reminders-page.scss
+.tabs {
+  margin-bottom: 20px;
+}
+
+// the player's own marches keep the width of a form
+.mine {
+  display: block;
+  max-width: 760px;
+}
+
 .bar {
   display: flex;
   flex-wrap: wrap;

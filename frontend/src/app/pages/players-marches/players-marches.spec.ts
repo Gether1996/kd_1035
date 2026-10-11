@@ -68,6 +68,9 @@ describe('PlayersMarches', () => {
     await tick(fixture);
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['bob']);
 
+    // two tabs: the players' marches and the player's own
+    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Marche hráčov', 'Moje marche']);
+
     el.querySelector<HTMLButtonElement>('.row__shot')!.click();
     await tick(fixture);
     expect(el.querySelector('.viewer-image')?.getAttribute('src')).toBe('/api/marches/images/7/');

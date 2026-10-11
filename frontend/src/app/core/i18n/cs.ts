@@ -74,7 +74,7 @@ export const cs: Dict = {
     login: 'Přihlásit',
     account: 'Můj účet',
     reminders: 'Připomínky eventů',
-    marches: 'Marche hráčů',
+    marches: 'Marche',
     kvk: 'Přihláška na KvK',
     accountMenu: 'Stránky hráče',
   },
@@ -292,7 +292,7 @@ export const cs: Dict = {
     loginText: 'Marche hráčů vidí jen hráči přihlášení na webu.',
     error: 'Marche se nepodařilo načíst. Zkus to znovu za chvíli.',
     search: 'Hledat hráče',
-    mine: 'Moje marche',
+    tabs: { all: 'Marche hráčů', mine: 'Moje marche' },
     empty: 'Zatím je nikdo neukazuje všem.',
     noMatch: 'Takového hráče tu nemáme.',
     you: 'Ty',
@@ -794,6 +794,11 @@ export const cs: Dict = {
     kvk: {
       title: 'Přihláška na KvK',
       text: 'Rally nebo garrison se screenshoty pro vedení.',
+      link: 'Otevřít',
+    },
+    marches: {
+      title: 'Moje marche',
+      text: 'Commandeři, výbava a armamenty tvých marchí.',
       link: 'Otevřít',
     },
     ingame: {

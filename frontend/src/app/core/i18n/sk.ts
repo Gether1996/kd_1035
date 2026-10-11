@@ -72,7 +72,7 @@ export const sk = {
     login: 'Prihlásiť',
     account: 'Môj účet',
     reminders: 'Pripomienky eventov',
-    marches: 'Marche hráčov',
+    marches: 'Marche',
     kvk: 'Prihláška na KvK',
     accountMenu: 'Stránky hráča',
   },
@@ -293,7 +293,7 @@ export const sk = {
     loginText: 'Marche hráčov vidia iba hráči prihlásení na webe.',
     error: 'Marche sa nepodarilo načítať. Skús to znova o chvíľu.',
     search: 'Hľadať hráča',
-    mine: 'Moje marche',
+    tabs: { all: 'Marche hráčov', mine: 'Moje marche' },
     empty: 'Zatiaľ ich nikto neukazuje všetkým.',
     noMatch: 'Takého hráča tu nemáme.',
     you: 'Ty',
@@ -797,6 +797,11 @@ export const sk = {
     kvk: {
       title: 'Prihláška na KvK',
       text: 'Rally alebo garrison so screenshotmi pre vedenie.',
+      link: 'Otvoriť',
+    },
+    marches: {
+      title: 'Moje marche',
+      text: 'Commanderi, výbava a armamenty tvojich marchov.',
       link: 'Otvoriť',
     },
     ingame: {

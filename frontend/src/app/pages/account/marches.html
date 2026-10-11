@@ -18,7 +18,7 @@
       <p class="visibility__hint" role="status" [class.is-error]="visibilityFailed()">
         {{ visibilityFailed() ? m.failed : isPublic() ? m.visibility.allHint : m.visibility.r4Hint }}
       </p>
-      <a class="visibility__link" [routerLink]="i18n.path('playersMarches')">
+      <a class="visibility__link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: null }">
         {{ m.visibility.others }}<svg appIcon="arrow-right"></svg>
       </a>
     </div>

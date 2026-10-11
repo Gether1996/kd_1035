@@ -6,7 +6,7 @@
   max-width: 560px;
   padding-bottom: clamp(80px, 12vw, 140px);
 
-  // signed in: the marches need room for two screenshot groups side by side
+  // signed in: room for the players section of the superuser
   &.is-wide {
     max-width: 760px;
   }

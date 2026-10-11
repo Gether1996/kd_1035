@@ -5,7 +5,6 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
-import { Marches } from './marches';
 import { PlayersAdmin } from './players-admin';
 
 /**
@@ -15,7 +14,7 @@ import { PlayersAdmin } from './players-admin';
  */
 @Component({
   selector: 'app-account',
-  imports: [RouterLink, Icon, PageHeader, Marches, PlayersAdmin],
+  imports: [RouterLink, Icon, PageHeader, PlayersAdmin],
   templateUrl: './account.html',
   styleUrl: './account.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

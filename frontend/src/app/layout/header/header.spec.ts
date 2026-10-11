@@ -103,7 +103,7 @@ describe('Header account slot', () => {
     ]);
     expect(menu).toEqual([
       ['/ucet', 'Môj účet'],
-      ['/marche', 'Marche hráčov'],
+      ['/marche', 'Marche'],
       ['/pripomienky', 'Pripomienky eventov'],
       ['/kvk', 'Prihláška na KvK'],
     ]);

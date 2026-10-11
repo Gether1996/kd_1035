@@ -117,11 +117,14 @@
         <span class="shortcut__go">{{ a.kvk.link }}<svg appIcon="chevron-right"></svg></span>
       </a>
 
-      @defer (on viewport) {
-        <app-marches />
-      } @placeholder {
-        <div class="marches-placeholder" aria-hidden="true"></div>
-      }
+      <a class="shortcut" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'moje' }">
+        <span class="shortcut__icon"><svg appIcon="shield"></svg></span>
+        <span class="shortcut__body">
+          <strong>{{ a.marches.title }}</strong>
+          <small>{{ a.marches.text }}</small>
+        </span>
+        <span class="shortcut__go">{{ a.marches.link }}<svg appIcon="chevron-right"></svg></span>
+      </a>
 
       @if (user.is_superuser) {
         <!-- superadmin: who sees the KvK sign-ups (R4); the anchor (/ucet#hraci from /kvk) stays outside the deferred block -->
