@@ -922,10 +922,10 @@ class EventTemplateTests(TestCase):
         self.assertEqual((am.irregular, am.time_basis, am.duration_minutes), (True, 'utc', 7 * 24 * 60))
         self.assertEqual((am.reminders, am.player_reminders), ([EVENING_BEFORE], [EVENING_BEFORE, 180]))
         karuak = KingdomEvent.objects.get(name_sk='Karuak Ceremony')
-        self.assertEqual((karuak.irregular, karuak.duration_minutes, karuak.icon), (True, 3 * 24 * 60, 'ceroli'))
+        self.assertEqual((karuak.irregular, karuak.duration_minutes, karuak.icon), (True, 3 * 24 * 60, 'karuak'))
         self.assertEqual(karuak.reminders, [EVENING_BEFORE])
         # every template with game art gets its icon, and the icon file exists
-        self.assertEqual(KingdomEvent.objects.get(name_sk='Karuak Boss').icon, 'ceroli')
+        self.assertEqual(KingdomEvent.objects.get(name_sk='Karuak Boss').icon, 'karuak')
         self.assertEqual(KingdomEvent.objects.get(name_sk='20 GH').icon, 'gold-head')
         for event in KingdomEvent.objects.exclude(icon=''):
             self.assertIsNotNone(event_icons.icon_url(event.icon), event.icon)

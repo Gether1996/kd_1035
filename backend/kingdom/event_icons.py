@@ -1,8 +1,8 @@
 """Event icons: game art from the event calendar of codexhelper.com (used with Gether's consent, 8. 10. 2026).
 
 `manage.py fetch_event_icons` downloads them into kingdom/static/kingdom/events/<slug>.webp (96×96). Events the
-calendar there does not have (Alliance Mobilization, Shadow Legion, Silk Road) got their icons cut out of Gether's
-screenshots of the game. A KingdomEvent keeps the slug in `icon`; a new event gets one guessed from its name. An
+calendar there does not have (Alliance Mobilization, Shadow Legion, Silk Road, Karuak) got their icons cut out
+of Gether's screenshots of the game. A KingdomEvent keeps the slug in `icon`; a new event gets one guessed from its name. An
 event without an icon shows a monogram on the website.
 """
 
@@ -17,6 +17,8 @@ ICONS = {
     'alliance-mobilization': (None, 'Alliance Mobilization'),
     'shadow-legion': (None, 'Shadow Legion'),
     'silk-road': (None, 'Silk Road'),
+    # the masked Ceroli shaman of Karuak Ceremony and Karuak Boss in the game (Gether 11. 10. 2026)
+    'karuak': (None, 'Karuak (Ceremony, Boss)'),
     'mge': ('mge_icon', 'MGE'),
     'ark': ('ark', 'Ark of Osiris'),
     'wheel': ('wheel', 'Wheel of Fortune'),
@@ -49,8 +51,7 @@ GUESSES = [
     ('20 gh', 'gold-head'),
     ('gold head', 'gold-head'),
     ('golden kingdom', 'golden-kingdom'),
-    # Kau Karuak leads the Ceroli (Ceroli Crisis is the old Karuak Ceremony)
-    ('karuak', 'ceroli'),
+    ('karuak', 'karuak'),
     ('ceroli', 'ceroli'),
     ('realm of mystique', 'realm-of-mystique'),
     ('armament', 'armament'),

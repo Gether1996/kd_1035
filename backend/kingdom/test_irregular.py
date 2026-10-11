@@ -228,7 +228,7 @@ class EventIconTests(TestCase):
             ('Hunt for History', 'hammer'),
             ("Holy Knight's Treasure", 'egg'),
             ('20 GH', 'gold-head'),
-            ('Karuak Boss', 'ceroli'),
+            ('Karuak Boss', 'karuak'),
             ('Silk Road', 'silk-road'),
             ('Shadow Legion', 'shadow-legion'),
             ('Alliance Mobilization', 'alliance-mobilization'),
