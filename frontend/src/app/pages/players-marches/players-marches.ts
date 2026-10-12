@@ -14,6 +14,7 @@ import {
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
+import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { MARCH_KINDS, MarchKind } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
@@ -150,9 +151,15 @@ export class PlayersMarches {
     this.kind.set(value as MarchKind | '');
   }
 
-  /** "upravené 12. 10." – when one of the player's marches changed last */
+  /** "upravené 12. 10. 14:32" – when one of the player's marches changed last, in the kingdom's time (Gether 12. 10. 2026) */
   protected updated(iso: string): string {
-    const date = new Intl.DateTimeFormat(this.i18n.locale(), { day: 'numeric', month: 'numeric' }).format(new Date(iso));
+    const date = new Intl.DateTimeFormat(this.i18n.locale(), {
+      day: 'numeric',
+      month: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: KINGDOM_ZONE,
+    }).format(new Date(iso));
     return this.t().playersMarches.updated.replace('{date}', date);
   }
 }

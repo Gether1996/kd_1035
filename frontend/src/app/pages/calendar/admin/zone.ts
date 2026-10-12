@@ -1,7 +1,8 @@
 import { TimeBasis } from '../../../core/events-admin-api';
+import { KINGDOM_ZONE } from '../../../core/kingdom-zone';
 
-/** "Náš čas" of the events (the server's 'local' time basis), whatever zone the browser is in */
-export const KINGDOM_ZONE = 'Europe/Bratislava';
+// "Náš čas" of the events (the server's 'local' time basis), whatever zone the browser is in
+export { KINGDOM_ZONE };
 
 export function zoneOf(basis: TimeBasis): string {
   return basis === 'utc' ? 'UTC' : KINGDOM_ZONE;

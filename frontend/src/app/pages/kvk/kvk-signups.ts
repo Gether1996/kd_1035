@@ -11,6 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
+import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
@@ -129,6 +130,7 @@ export class KvkSignups {
       month: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: KINGDOM_ZONE,
     }).format(new Date(iso));
   }
 }

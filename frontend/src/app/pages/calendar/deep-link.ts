@@ -1,8 +1,8 @@
 import { Occurrence, PublicEvent } from '../../core/events-api';
+import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { DayKey, dayKey, keyDate } from './month';
 
-/** The kingdom's days – `on` in a calendar link is a day here, like the days of /api/events/. */
-export const KINGDOM_ZONE = 'Europe/Bratislava';
+export { KINGDOM_ZONE };
 
 /** Query of a link that opens the calendar on an event's dialog: /kalendar?event=<id>&on=<YYYY-MM-DD>.
  * `on` is the day the run is shown for (its first day, or today while it runs), so the calendar opens that month –

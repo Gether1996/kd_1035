@@ -79,8 +79,8 @@ describe('PlayersMarches', () => {
     const names = () => Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent);
     // the most recently changed first, with the date in the head
     expect(names()).toEqual(['bob', 'Nelly']);
-    expect(el.querySelector('.player__discord')?.textContent?.trim()).toBe('upravené 12. 10.');
-    expect(el.querySelectorAll('.player__discord')[1].textContent?.trim()).toBe('nelly · upravené 10. 10.');
+    expect(el.querySelector('.player__discord')?.textContent?.trim()).toBe('upravené 12. 10. 14:00');
+    expect(el.querySelectorAll('.player__discord')[1].textContent?.trim()).toBe('nelly · upravené 10. 10. 14:00');
     expect(el.querySelector('.tag')?.textContent).toContain('Ty');
     const sort = el.querySelector<HTMLSelectElement>('#marches-sort')!;
     sort.value = 'count';

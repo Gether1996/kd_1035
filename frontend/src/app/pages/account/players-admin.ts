@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
+import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { KvkApi, ReviewerRow } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
 
@@ -183,7 +184,12 @@ export class PlayersAdmin {
 
   /** "od 12. 10. 2026" – the first sign-in */
   protected since(iso: string): string {
-    const date = new Intl.DateTimeFormat(this.i18n.locale(), { day: 'numeric', month: 'numeric', year: 'numeric' });
+    const date = new Intl.DateTimeFormat(this.i18n.locale(), {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      timeZone: KINGDOM_ZONE,
+    });
     return this.t().since.replace('{date}', date.format(new Date(iso)));
   }
 
