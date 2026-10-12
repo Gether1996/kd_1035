@@ -185,7 +185,7 @@ class LoginFlowTests(TestCase):
         self.assertFalse(self.client.get('/api/auth/me/').json()['user']['approved'])
 
     def test_auto_approve_lets_a_new_player_in_without_a_message(self):
-        PlayerSettings.objects.create(pk=1, auto_approve=True)
+        PlayerSettings.objects.update_or_create(pk=1, defaults={'auto_approve': True})
         self.callback(state=self.start(), code='abc')
         player = User.objects.get().player
         self.assertEqual((player.approved, player.announced), (True, True))
@@ -194,7 +194,7 @@ class LoginFlowTests(TestCase):
     def test_auto_approve_does_not_approve_a_returning_player(self):
         # un-approved by the superadmin: signing in again while the door is open keeps them out
         self.callback(state=self.start(), code='abc')
-        PlayerSettings.objects.create(pk=1, auto_approve=True)
+        PlayerSettings.objects.update_or_create(pk=1, defaults={'auto_approve': True})
         self.callback(state=self.start(), code='abc')
         self.assertFalse(User.objects.get().player.approved)
 
