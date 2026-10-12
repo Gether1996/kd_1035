@@ -1,4 +1,5 @@
-// Eight square tiles, two rows of four; the frame takes the rarity colour of the item.
+// The equipment screen of the game: diamonds on a lattice of 4 × 8 half-diamond units, each diamond 2 × 2 units, so the
+// neighbours share their edges – helmet on top, then chest, weapon and gloves, legs, the accessories and boots.
 :host {
   display: block;
   min-width: 0;
@@ -7,31 +8,76 @@
 .gear {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  width: 100%;
+  aspect-ratio: 1 / 2;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .gear__cell {
+  position: relative;
   min-width: 0;
 }
 
+// rows / columns of the lattice (row-start / column-start / row-end / column-end)
+.gear__cell--helmet {
+  grid-area: 1 / 2 / 3 / 4;
+}
+
+.gear__cell--chest {
+  grid-area: 3 / 2 / 5 / 4;
+}
+
+.gear__cell--weapon {
+  grid-area: 4 / 1 / 6 / 3;
+}
+
+.gear__cell--gloves {
+  grid-area: 4 / 3 / 6 / 5;
+}
+
+.gear__cell--legs {
+  grid-area: 5 / 2 / 7 / 4;
+}
+
+.gear__cell--accessory1 {
+  grid-area: 6 / 1 / 8 / 3;
+}
+
+.gear__cell--accessory2 {
+  grid-area: 6 / 3 / 8 / 5;
+}
+
+.gear__cell--boots {
+  grid-area: 7 / 2 / 9 / 4;
+}
+
+// the diamond: the outer shape is the frame in the rarity colour, ::before the dark inside; clipped, so a click or a
+// hover never reaches into the neighbour's square
 .gear__tile {
   --tone: var(--field-line);
-  position: relative;
+  --frame: 3px;
+  position: absolute;
+  inset: 3%;
   display: grid;
   place-items: center;
-  width: 100%;
-  aspect-ratio: 1;
   padding: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--tone) 70%, transparent);
-  border-radius: 10px;
-  // the rarity tint rises from the bottom, like the item frames in the game
-  background: linear-gradient(180deg, var(--bg-raised) 35%, color-mix(in srgb, var(--tone) 22%, var(--bg-raised)));
+  border: 0;
+  background: color-mix(in srgb, var(--tone) 80%, transparent);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   color: var(--text-mute);
   font: inherit;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: var(--frame);
+    // the rarity tint rises from the bottom, like the item frames in the game
+    background: linear-gradient(180deg, var(--bg-raised) 30%, color-mix(in srgb, var(--tone) 34%, var(--bg-raised)));
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
 }
 
 .gear__tile--legendary {
@@ -55,73 +101,115 @@
 }
 
 .gear__tile--none {
-  border-style: dashed;
-  background: var(--field-bg);
+  background: var(--field-line);
+
+  &::before {
+    background: var(--field-bg);
+  }
 }
 
 button.gear__tile {
   cursor: pointer;
-  transition:
-    border-color 0.2s,
-    transform 0.2s var(--ease-out);
+  transition: background-color 0.2s;
 
   &:hover {
-    border-color: var(--tone);
+    background: var(--tone);
   }
 
   &.gear__tile--none:hover {
-    border-color: var(--field-line-hover);
+    background: var(--field-line-hover);
+  }
+
+  // the focus ring would be clipped: the frame itself turns gold and thick
+  &:focus-visible {
+    outline: none;
+    --frame: 4px;
+    background: var(--gold-300);
   }
 
   &.is-selected {
-    border: 2px solid var(--gold-300);
-    transform: translateY(-2px);
+    --frame: 4px;
+    background: var(--gold-300);
   }
 }
 
 .gear__icon {
-  width: 86%;
-  height: 86%;
+  position: relative;
+  width: 56%;
+  height: 56%;
   object-fit: contain;
 }
 
 .gear__slot {
-  padding: 0 4px;
+  position: relative;
+  max-width: 62%;
   overflow: hidden;
-  font-size: clamp(0.625rem, 0.55rem + 0.3vw, 0.75rem);
-  line-height: 1.15;
+  font-size: clamp(0.5625rem, 0.5rem + 0.25vw, 0.6875rem);
+  line-height: 1.1;
   text-align: center;
   text-overflow: ellipsis;
 }
 
-// crit: a red corner
+// crit: a red badge with the talent mark on the item's lower right, like in the game
 .gear__crit {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 30%;
-  height: 30%;
-  background: var(--red-500);
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  right: 24%;
+  bottom: 24%;
+  width: 20%;
+  height: 20%;
+
+  rect {
+    fill: var(--red-500);
+    stroke: var(--text);
+    stroke-width: 1.2;
+  }
+
+  path {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 }
 
+// iconic: the numeral in an ornament on the bottom tip of the diamond
 .gear__iconic {
   position: absolute;
-  bottom: 3px;
-  left: 3px;
-  padding: 1px 4px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  bottom: -2%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 46%;
+  aspect-ratio: 40 / 16;
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  path {
+    fill: var(--bg);
+    stroke: var(--gold-400);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+}
+
+.gear__iconic-level {
+  position: relative;
+  margin-top: -12%;
   color: var(--gold-300);
-  font: 700 0.625rem/1.2 var(--font-display);
+  font: 700 clamp(0.5rem, 0.45rem + 0.25vw, 0.625rem) / 1 var(--font-display);
 }
 
 @media (prefers-reduced-motion: reduce) {
   button.gear__tile {
     transition: none;
-
-    &.is-selected {
-      transform: none;
-    }
   }
 }

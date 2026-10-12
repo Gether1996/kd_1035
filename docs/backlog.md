@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.20.1:** výbava marchu je rozmiestnená ako v hre (kosoštvorce: prilba, hruď, zbraň a rukavice, nohavice, doplnky, topánky); crit je červený odznak vpravo dole a iconic rímska číslica v ozdobe na spodnom hrote ako v hre.
 - **12. 10. 2026 – v1.20.0:** „Moje marche“ sú zlúčené do záložky „Prehľad marchov“ a všetky marche (aj ostatných hráčov) sú karty s naklikanou výbavou a armamentmi; screenshot výbavy pri marchi je zrušený, počty inscriptions sa počítajú z naklikaných; nový march = typ + commanderi a hneď sa otvorí editor, kde sa vypĺňajú aj ATK, DEF, HP a All DMG (záložka Armamenty); prehľadnejšie karty (nadpisy Výbava / Armamenty, typ v rohu portrétu, klikateľné sloty) a editor (na mobile na celú šírku, Uložiť vždy dole).
 - **12. 10. 2026 – v1.19.1:** iconic úroveň (I–V) sa dá nastaviť pri každom legendárnom predmete vrátane doplnkov; v editore armamentov je pri každom riadku inscriptions názov armamentu (Emblem, Flag, Instrument, Scroll) a z každého sa dajú vybrať najviac 2 inscriptions.
 - **12. 10. 2026 – v1.19.0:** výbava a armamenty marchu sa dajú naklikať – všetky predmety (crit, iconic), formácie s ikonou a ich inscriptions; nová záložka „Prehľad marchov“ ukáže každý march ako kartu s výbavou, jej bonusmi, ikonou formácie a inscriptions; pri marchoch ostatných hráčov ich otvorí zlatá dlaždica. Screenshoty a zadané bonusy ostávajú.

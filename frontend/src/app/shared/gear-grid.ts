@@ -4,9 +4,11 @@ import { ArmoryIndex, GEAR_SLOTS, Gear, GearSlot, roman } from '../core/armory';
 import { I18n } from '../core/i18n/i18n';
 
 /**
- * The eight equipment slots of a march as square tiles in two rows of four – the frame in the item's rarity colour, a
- * red corner for a crit, the iconic level in the corner. Read-only on the card; in the editor (`pickable`) every tile is
- * a button choosing the slot to fill.
+ * The eight equipment slots of a march laid out like the equipment screen of the game (Gether 12. 10. 2026: "rozmiestnenie
+ * ako v hre"): diamonds in a column – helmet, chest, weapon and gloves either side, legs, the two accessories either side,
+ * boots. The frame takes the item's rarity colour, a crit is a red badge with the talent mark on the item's lower right,
+ * the iconic level a numeral in an ornament on the bottom tip. Read-only on the card; `pickable` makes every diamond a
+ * button choosing the slot (the editor, the own march's card).
  */
 @Component({
   selector: 'app-gear-grid',
@@ -14,7 +16,7 @@ import { I18n } from '../core/i18n/i18n';
     @let b = t();
     <ul class="gear" [attr.aria-label]="b.gear">
       @for (tile of tiles(); track tile.slot) {
-        <li class="gear__cell">
+        <li class="gear__cell gear__cell--{{ tile.slot }}">
           @if (pickable()) {
             <button
               type="button"
@@ -32,17 +34,25 @@ import { I18n } from '../core/i18n/i18n';
               <ng-container *ngTemplateOutlet="inside; context: { $implicit: tile }" />
             </span>
           }
+          <!-- the iconic level in an ornament on the bottom tip, outside the clipped diamond -->
+          @if (tile.iconic) {
+            <span class="gear__iconic" aria-hidden="true">
+              <svg viewBox="0 0 40 16"><path d="M1.5 1.5h37l-6.5 7.5-12 6-12-6z" /></svg>
+              <span class="gear__iconic-level">{{ tile.iconic }}</span>
+            </span>
+          }
         </li>
       }
     </ul>
     <ng-template #inside let-tile>
       @if (tile.item) {
         <img class="gear__icon" [src]="tile.item.icon" alt="" width="96" height="96" />
+        <!-- like in the game: a crit is a red badge with the talent mark on the item's lower right -->
         @if (tile.crit) {
-          <span class="gear__crit" aria-hidden="true"></span>
-        }
-        @if (tile.iconic) {
-          <span class="gear__iconic" aria-hidden="true">{{ tile.iconic }}</span>
+          <svg class="gear__crit" viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="1" y="1" width="14" height="14" rx="3.5" />
+            <path d="M5.2 11.6c0-3.4 5.8-3 5.8-5.6 0-1.9-2.9-2.4-4.4-.9" />
+          </svg>
         }
       } @else {
         <span class="gear__slot" aria-hidden="true">{{ tile.slotName }}</span>

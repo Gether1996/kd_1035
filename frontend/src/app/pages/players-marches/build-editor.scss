@@ -31,6 +31,17 @@
   display: grid;
   gap: 10px;
 
+  // the game's column of diamonds: narrower on a phone, where the item list follows below
+  app-gear-grid {
+    justify-self: center;
+    width: 100%;
+    max-width: 240px;
+
+    @media (max-width: 719px) {
+      max-width: 190px;
+    }
+  }
+
   @media (min-width: 720px) {
     position: sticky;
     top: 0;
