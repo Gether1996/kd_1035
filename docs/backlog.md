@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.23.0:** nového hráča z Discordu musí schváliť superadmin, až potom pridá marche a prihlášku na KvK (existujúci hráči sú schválení); o každom novom hráčovi príde Getherovi správa od bota na Discord. Sekcia Hráči má prepínač Schválený, filtre R4 a schválenia a čakajúcich hore. Marche hráčov sa dajú zoradiť (najnovšie, počet marchov, meno) a filtrovať podľa typu, pri hráčovi je dátum poslednej úpravy.
 - **12. 10. 2026 – v1.22.0:** prihláška na KvK sa vypĺňa presne ako march – typ, commanderi so skillmi, naklikaná výbava, formácia, inscriptions a bonusy armamentov, k tomu poznámka; screenshoty sú zrušené (staré sa zmažú). Prihláška je karta ako march, R4 vidí rally a garrison hráča vedľa seba a jeho marche ako karty.
 - **12. 10. 2026 – v1.21.4:** hráč môže mať až 10 marchov (predtým 7); na veľkej obrazovke je „Pridať march“ prázdna karta v mriežke rovnako vysoká ako karty v riadku.
 - **12. 10. 2026 – v1.21.3:** hľadanie predmetu v editore výbavy na mobile – pole sa posunie na vrch okna a nájdené predmety nezakryje klávesnica ani pás s tlačidlami.

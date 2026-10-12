@@ -18,8 +18,8 @@ from . import private_images
 from .army import BuildSerializer, current_of
 from .kvk_views import march_data
 from .models import MAX_MARCHES, March, Player
-from .reminder_views import IsPlayer, WriteThrottle
-from .views import player_of
+from .reminder_views import IsPlayer, WriteThrottle, iso
+from .views import not_approved, player_of
 
 
 class MarchSerializer(BuildSerializer):
@@ -54,6 +54,8 @@ def marches(request):
         player.save(update_fields=['marches_public'])
         return Response({'public': public})
     if request.method == 'POST':
+        if not player.may_post:
+            return not_approved()
         form = MarchSerializer(data=request.data)
         form.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -82,6 +84,8 @@ def march(request, march_id):
             mine.delete()
             player.marches.filter(position__gt=position).update(position=F('position') - 1)
         return Response(status=204)
+    if not player.may_post:
+        return not_approved()
     form = MarchSerializer(data=request.data, partial=True, context={'current': current_of(mine)})
     form.is_valid(raise_exception=True)
     for field, value in form.validated_data.items():
@@ -102,12 +106,16 @@ class CanSeeMarches(BasePermission):
 @permission_classes([CanSeeMarches])
 def players_marches(request):
     """/marche: the marches of every player who made them public – for R4 and the superuser of every player – with
-    the player's in-game name, Discord name and avatar. Players without a march are left out."""
+    the player's in-game name, Discord name, avatar and when a march changed last. Players without a march are left
+    out. A player the superadmin has not approved yet sees only their own (Gether 12. 10. 2026), and others see only
+    approved players' marches."""
     reviewer = private_images.can_review(request.user)
     me = player_of(request.user)
     players = Player.objects.filter(user__is_active=True, marches__isnull=False).distinct()
     if not reviewer:
-        players = players.filter(Q(marches_public=True) | Q(pk=me.pk if me else None))
+        approved = Q(marches_public=True) & (Q(approved=True) | Q(user__is_superuser=True))
+        mine = Q(pk=me.pk if me else None)
+        players = players.filter(approved | mine if me and me.may_post else mine)
     players = players.prefetch_related('marches')
     rows = sorted(
         (
@@ -119,6 +127,7 @@ def players_marches(request):
                 'public': p.marches_public,
                 'me': bool(me and p.pk == me.pk),
                 'marches': [march_data(m) for m in p.marches.all()],
+                'updated_at': iso(max(m.updated_at for m in p.marches.all())),
             }
             for p in players
         ),

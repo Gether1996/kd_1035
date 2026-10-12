@@ -7,6 +7,7 @@
 #        tools/screenshots/shoot.sh --player SHOT=0 PAGES=/,/cz SIZES=900x800,1024x800,1280x800 MEASURE=.nav,.account
 # NAME=value pairs are the variables described in shoot.mjs (PAGES, SIZES, FULL, SELECTOR, MEASURE, SHOT, SESSION…).
 # --player / --superuser: signed in as a temporary test player (manage.py test_session), deleted again at the end.
+# --new: the test player is new – not approved by the superadmin yet (no marches or KvK sign-ups).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 export MSYS_NO_PATHCONV=1  # Git Bash on Windows would rewrite /work and /app
@@ -19,10 +20,11 @@ for arg in "$@"; do
   case "$arg" in
     --player) role=player ;;
     --superuser) role=superuser ;;
-    --marches) seed=--marches ;;
+    --marches) seed="$seed --marches" ;;
+    --new) seed="$seed --new" ;;
     *=*) envs+=(-e "$arg") ;;
     *)
-      echo "usage: tools/screenshots/shoot.sh [--player | --superuser] [--marches] [NAME=value …]" >&2
+      echo "usage: tools/screenshots/shoot.sh [--player | --superuser] [--marches] [--new] [NAME=value …]" >&2
       exit 2
       ;;
   esac

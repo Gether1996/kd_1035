@@ -321,6 +321,17 @@
     color: var(--red-300);
   }
 
+  // a new player waiting for the superadmin
+  &--pending {
+    min-height: 22px;
+    margin-left: 6px;
+    padding: 0 8px;
+    border-color: color-mix(in srgb, var(--gold-400) 55%, transparent);
+    color: var(--gold-300);
+    font-size: 0.75rem;
+    vertical-align: 2px;
+  }
+
   &--live {
     border-color: var(--line-strong);
     color: var(--gold-100);
@@ -375,7 +386,19 @@
   list-style: none;
 }
 
+.players-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0 16px;
+
+  .list__filters {
+    margin-top: 14px;
+  }
+}
+
 .reviewers__search {
+  flex: 1 1 240px;
   max-width: 360px;
   margin-top: 14px;
 }
@@ -387,19 +410,39 @@
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+
+  &.is-pending {
+    border-color: color-mix(in srgb, var(--gold-400) 40%, transparent);
+  }
+}
+
+// "Schválený" and "R4", each a small caption with its switch; on a phone under the name
+.reviewer__switches {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.reviewer__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  cursor: pointer;
 }
 
 .reviewer__name {
   display: grid;
-  flex: 1;
+  flex: 1 1 180px;
   min-width: 0;
-  cursor: pointer;
 
   strong {
     overflow-wrap: anywhere;
   }
 
-  span {
+  > span {
     font-size: 0.875rem;
     color: var(--text-mute);
   }

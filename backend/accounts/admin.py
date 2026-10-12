@@ -16,10 +16,13 @@ REMINDER_LABELS = dict(REMINDER_CHOICES)
 @admin.register(Player)
 class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     """Players appear by signing in with Discord; their Discord data is refreshed on every sign-in. Only the in-game
-    name (typed by the player) and the KvK reviewer flag can be changed here."""
+    name (typed by the player), the KvK reviewer flag and the approval (marches, KvK sign-ups) can be changed here."""
 
-    list_display = ['thumbnail', 'name', 'ingame_name', 'kvk_reviewer', 'discord_id', 'created_at', 'last_login']
+    list_display = [
+        'thumbnail', 'name', 'ingame_name', 'approved', 'kvk_reviewer', 'discord_id', 'created_at', 'last_login'
+    ]
     list_display_links = ['name']
+    list_filter = ['approved', 'kvk_reviewer']
     list_select_related = ['user']
     search_fields = ['username', 'global_name', 'ingame_name', 'discord_id']
     fields = [
@@ -27,6 +30,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'global_name',
         'username',
         'ingame_name',
+        'approved',
         'kvk_reviewer',
         'discord_id',
         'avatar',
@@ -36,7 +40,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'created_at',
         'last_login',
     ]
-    readonly_fields = [f for f in fields if f not in ('ingame_name', 'kvk_reviewer')]
+    readonly_fields = [f for f in fields if f not in ('ingame_name', 'approved', 'kvk_reviewer')]
 
     def has_add_permission(self, request):
         return False

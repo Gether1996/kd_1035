@@ -63,6 +63,9 @@ class Command(BaseCommand):
         parser.add_argument(
             '--marches', action='store_true', help='Seven public marches and two KvK sign-ups (/marche, /kvk).'
         )
+        parser.add_argument(
+            '--new', action='store_true', help='A new player the superadmin has not approved yet (no marches or sign-ups).'
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
@@ -87,7 +90,13 @@ class Command(BaseCommand):
         user.save()
         player, _ = Player.objects.update_or_create(
             user=user,
-            defaults={'discord_id': DISCORD_ID, 'username': 'testplayer', 'global_name': 'Test Player'},
+            defaults={
+                'discord_id': DISCORD_ID,
+                'username': 'testplayer',
+                'global_name': 'Test Player',
+                'approved': not options['new'],
+                'announced': True,
+            },
         )
         if options['marches']:
             self.seed_marches(player)

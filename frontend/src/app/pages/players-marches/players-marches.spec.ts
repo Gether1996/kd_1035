@@ -25,44 +25,76 @@ const tick = async (fixture: { detectChanges(): void }) => {
   fixture.detectChanges();
 };
 
-describe('PlayersMarches', () => {
-  it('lists the public marches as cards with their equipment and filters by name', async () => {
-    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
-      this.setAttribute('open', '');
-    };
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: Scroll, useValue: { scrolled: signal(false), reducedMotion: true, onFrame: () => () => {} } },
-        {
-          provide: Auth,
-          useValue: {
-            ready: signal(true),
-            failed: signal(false),
-            enabled: signal(true),
-            user: signal({ name: 'Nelly' }),
-            loginUrl: () => '/api/auth/discord/login/',
-          },
+function setup(user: object) {
+  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  };
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      { provide: Scroll, useValue: { scrolled: signal(false), reducedMotion: true, onFrame: () => () => {} } },
+      {
+        provide: Auth,
+        useValue: {
+          ready: signal(true),
+          failed: signal(false),
+          enabled: signal(true),
+          user: signal(user),
+          loginUrl: () => '/api/auth/discord/login/',
         },
-      ],
-    });
-    const http = TestBed.inject(HttpTestingController);
+      },
+    ],
+  });
+  return TestBed.inject(HttpTestingController);
+}
+
+describe('PlayersMarches', () => {
+  it('lists the public marches as cards with their equipment, sorts and filters them', async () => {
+    const http = setup({ name: 'Nelly', approved: true });
     const fixture = TestBed.createComponent(PlayersMarches);
     fixture.detectChanges();
     http.expectOne('/api/marches/').flush({
       reviewer: false,
       players: [
-        { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', public: true, me: true, marches: [MARCH] },
-        { id: 2, name: 'bob', ingame_name: '', avatar_url: '', public: true, me: false, marches: [MARCH] },
+        {
+          id: 1,
+          name: 'nelly',
+          ingame_name: 'Nelly',
+          avatar_url: '',
+          public: true,
+          me: true,
+          marches: [MARCH, { ...MARCH, id: 3, position: 2, kind: 'archer' }],
+          updated_at: '2026-10-10T12:00:00Z',
+        },
+        { id: 2, name: 'bob', ingame_name: '', avatar_url: '', public: true, me: false, marches: [MARCH], updated_at: '2026-10-12T12:00:00Z' },
       ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
     await tick(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['Nelly', 'bob']);
+    const names = () => Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent);
+    // the most recently changed first, with the date in the head
+    expect(names()).toEqual(['bob', 'Nelly']);
+    expect(el.querySelector('.player__discord')?.textContent?.trim()).toBe('upravené 12. 10.');
+    expect(el.querySelectorAll('.player__discord')[1].textContent?.trim()).toBe('nelly · upravené 10. 10.');
     expect(el.querySelector('.tag')?.textContent).toContain('Ty');
+    const sort = el.querySelector<HTMLSelectElement>('#marches-sort')!;
+    sort.value = 'count';
+    sort.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    expect(names()).toEqual(['Nelly', 'bob']);
+    const kind = el.querySelector<HTMLSelectElement>('#marches-kind')!;
+    kind.value = 'archer';
+    kind.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    expect(names()).toEqual(['Nelly']);
+    kind.value = '';
+    kind.dispatchEvent(new Event('change'));
+    sort.value = 'updated';
+    sort.dispatchEvent(new Event('change'));
+    await tick(fixture);
     // closed at first: the count and the leading commanders; a click on the head opens the marches
     expect(el.querySelector('.mrow')).toBeNull();
     expect(el.querySelector('.player__count')?.textContent).toBe('1 march');
@@ -97,5 +129,17 @@ describe('PlayersMarches', () => {
     // two tabs: the players' marches and the player's own ("Moje marche" merged into the overview)
     expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Marche hráčov', 'Prehľad marchov']);
     http.match(() => true).forEach((r) => r.flush({}));
+  });
+
+  it('a new player waits for the superadmin instead of the list', async () => {
+    const http = setup({ name: 'Nova', approved: false });
+    const fixture = TestBed.createComponent(PlayersMarches);
+    fixture.detectChanges();
+    await tick(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('app-pending-approval')?.textContent).toContain('Čakáš na schválenie');
+    expect(el.querySelector('.tabs')).toBeNull();
+    http.expectNone('/api/marches/');
+    http.match(() => true).forEach((r) => r.flush([]));
   });
 });

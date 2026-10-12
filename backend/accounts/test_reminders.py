@@ -34,9 +34,11 @@ def utc(*args):
     return datetime(*args, tzinfo=UTC)
 
 
-def make_player(discord_id='80351110224678912', **kwargs):
+def make_player(discord_id='80351110224678912', approved=True, **kwargs):
     user = User.objects.create_user(f'discord_{discord_id}', **kwargs)
-    return Player.objects.create(user=user, discord_id=discord_id, username='nelly', global_name='Nelly')
+    return Player.objects.create(
+        user=user, discord_id=discord_id, username='nelly', global_name='Nelly', approved=approved, announced=True
+    )
 
 
 def make_event(**kwargs):

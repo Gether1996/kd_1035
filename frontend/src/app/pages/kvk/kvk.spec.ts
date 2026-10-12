@@ -17,6 +17,7 @@ const STATE: KvkState = {
   signups: { rally: null, garrison: null },
   player: true,
   ingame_name: 'Nelly',
+  approved: true,
   reviewer: false,
   superuser: false,
 };
@@ -345,7 +346,7 @@ describe('KvkPage', () => {
     });
     const http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(KvkPage);
-    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', is_staff: false, is_superuser: false };
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, is_staff: false, is_superuser: false };
     const answers: Record<string, unknown> = {
       '/api/auth/me/': { login_enabled: true, user },
       '/api/kvk/': { ...STATE, reviewer: true },

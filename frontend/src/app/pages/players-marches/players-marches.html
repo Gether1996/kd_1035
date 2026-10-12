@@ -16,6 +16,9 @@
       <p class="login__text">{{ p.loginText }}</p>
       <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ t().account.login }}</a>
     </section>
+  } @else if (!auth.user()!.approved) {
+    <!-- a new player waits for the superadmin (Gether 12. 10. 2026) -->
+    <app-pending-approval />
   } @else {
     <div class="segmented tabs" role="group" [attr.aria-label]="p.title">
       <button type="button" [attr.aria-pressed]="!mine()" (click)="showTab(null)">{{ p.tabs.all }}</button>
@@ -39,6 +42,24 @@
           [value]="search()"
           (input)="search.set(q.value)"
         />
+      </div>
+      <!-- the most recently changed first (Gether 12. 10. 2026); the type: e.g. who has a cavalry march -->
+      <div class="field bar__select">
+        <label class="sr-only" for="marches-sort">{{ p.sort }}</label>
+        <select #sortBy id="marches-sort" class="select" (change)="setSort(sortBy.value)">
+          @for (s of sorts; track s) {
+            <option [value]="s" [selected]="sort() === s">{{ p.sorts[s] }}</option>
+          }
+        </select>
+      </div>
+      <div class="field bar__select">
+        <label class="sr-only" for="marches-kind">{{ p.kindFilter }}</label>
+        <select #kindBy id="marches-kind" class="select" (change)="setKind(kindBy.value)">
+          <option value="" [selected]="!kind()">{{ p.allKinds }}</option>
+          @for (k of kinds; track k) {
+            <option [value]="k" [selected]="kind() === k">{{ t().marches.kinds[k] }}</option>
+          }
+        </select>
       </div>
       @if (shown().length) {
         <button type="button" class="pill-btn pill-btn--quiet" (click)="toggleAll()">
@@ -68,9 +89,7 @@
             <img class="player__avatar" [src]="player.avatar_url" alt="" width="40" height="40" />
             <span class="player__who">
               <strong class="player__name">{{ name(player) }}</strong>
-              @if (player.ingame_name) {
-                <span class="player__discord">{{ player.name }}</span>
-              }
+              <span class="player__discord">{{ player.ingame_name ? player.name + ' · ' : '' }}{{ updated(player.updated_at) }}</span>
             </span>
             @if (player.me) {
               <span class="tag">{{ p.you }}</span>

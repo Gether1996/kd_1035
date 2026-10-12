@@ -10,6 +10,8 @@ export interface Player {
   avatar_url: string;
   /** typed by the player on /ucet, '' until then */
   ingame_name: string;
+  /** adds marches and KvK sign-ups – a new player waits for the superadmin (Gether 12. 10. 2026) */
+  approved: boolean;
   is_staff: boolean;
   /** manages events (the admin, and in the calendar) */
   is_superuser: boolean;

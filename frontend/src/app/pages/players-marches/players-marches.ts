@@ -14,14 +14,18 @@ import {
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
+import { MARCH_KINDS, MarchKind } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { MarchBuild } from '../../shared/march-build';
 import { PageHeader } from '../../shared/page-header';
+import { PendingApproval } from '../../shared/pending-approval';
 import { reloadOnReturn } from '../../shared/reload-on-return';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
+
+type Sort = 'updated' | 'count' | 'name';
 
 /**
  * /marche – two tabs (Gether 11. 10. 2026): "Marche hráčov" = the marches of the players who made them public ("aby to
@@ -32,7 +36,7 @@ import { Marches } from '../account/marches';
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [Icon, PageHeader, Marches, MarchBuild],
+  imports: [Icon, PageHeader, Marches, MarchBuild, PendingApproval],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,7 +52,7 @@ export class PlayersMarches {
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
 
-  protected readonly data = inject(MarchesApi).players(() => !!this.auth.user());
+  protected readonly data = inject(MarchesApi).players(() => !!this.auth.user()?.approved);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly commanderData = httpResource<MarchCommander[]>(() => (this.isBrowser ? marchCommandersUrl : undefined));
   protected readonly portraits = computed(
@@ -56,10 +60,26 @@ export class PlayersMarches {
   );
 
   protected readonly search = signal('');
+  /** the most recently changed first (Gether 12. 10. 2026), the most marches, or the name */
+  protected readonly sorts: Sort[] = ['updated', 'count', 'name'];
+  protected readonly sort = signal<Sort>('updated');
+  /** only the players with a march of this type ('' = all) */
+  protected readonly kinds = MARCH_KINDS;
+  protected readonly kind = signal<MarchKind | ''>('');
   protected readonly players = computed(() => (this.data.hasValue() ? this.data.value().players : []));
   protected readonly shown = computed(() => {
     const query = fold(this.search());
-    return this.players().filter((p) => !query || fold(`${p.ingame_name} ${p.name}`).includes(query));
+    const kind = this.kind();
+    const byName = (a: PlayerMarches, b: PlayerMarches) => this.name(a).localeCompare(this.name(b), this.i18n.locale());
+    const order: Record<Sort, (a: PlayerMarches, b: PlayerMarches) => number> = {
+      updated: (a, b) => b.updated_at.localeCompare(a.updated_at) || byName(a, b),
+      count: (a, b) => b.marches.length - a.marches.length || byName(a, b),
+      name: byName,
+    };
+    return this.players()
+      .filter((p) => !query || fold(`${p.ingame_name} ${p.name}`).includes(query))
+      .filter((p) => !kind || p.marches.some((m) => m.kind === kind))
+      .sort(order[this.sort()]);
   });
 
   /** players whose marches are open – all closed at first, a list of names is quicker to scan */
@@ -120,5 +140,19 @@ export class PlayersMarches {
 
   protected name(player: PlayerMarches): string {
     return player.ingame_name || player.name;
+  }
+
+  protected setSort(value: string): void {
+    this.sort.set(value as Sort);
+  }
+
+  protected setKind(value: string): void {
+    this.kind.set(value as MarchKind | '');
+  }
+
+  /** "upravené 12. 10." – when one of the player's marches changed last */
+  protected updated(iso: string): string {
+    const date = new Intl.DateTimeFormat(this.i18n.locale(), { day: 'numeric', month: 'numeric' }).format(new Date(iso));
+    return this.t().playersMarches.updated.replace('{date}', date);
   }
 }

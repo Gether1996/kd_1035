@@ -9,6 +9,7 @@ from django.db import close_old_connections
 
 from accounts.alarms import prune_alarms, send_alarms
 from accounts.cleanup import sweep_files
+from accounts.newcomers import announce_new_players
 from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
 from kingdom.backups import backup_due, create_backup
 from kingdom.discord import send_due
@@ -26,8 +27,8 @@ SESSION_CLEANUP_SECONDS = 24 * 3600
 class Command(BaseCommand):
     help = (
         'Background loop: plans reminders of recurring kingdom events, sends due Discord notifications and the '
-        "players' personal reminders, backs up the database every BACKUP_INTERVAL_DAYS and deletes expired "
-        'sessions and old reminder logs once a day.'
+        "players' personal reminders, tells the superadmin about new players, backs up the database every "
+        'BACKUP_INTERVAL_DAYS and deletes expired sessions and old reminder logs once a day.'
     )
 
     def handle(self, *args, **options):
@@ -61,6 +62,14 @@ class Command(BaseCommand):
                 pass  # the rest waits for the next tick
             except Exception:
                 log.exception('Sending alarms failed')
+
+            try:
+                # a player signing in for the first time waits for the superadmin – who gets a Discord DM about it
+                announce_new_players()
+            except DiscordPaused:
+                pass
+            except Exception:
+                log.exception('Announcing new players failed')
 
             if time.monotonic() >= next_backup_check:
                 next_backup_check = time.monotonic() + BACKUP_CHECK_SECONDS

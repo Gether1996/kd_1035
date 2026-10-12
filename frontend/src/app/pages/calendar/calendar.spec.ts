@@ -59,6 +59,7 @@ const PLAYER: Me = {
     name: 'Nelly',
     avatar_url: '',
     ingame_name: '',
+    approved: true,
     is_staff: false,
     is_superuser: false,
   },

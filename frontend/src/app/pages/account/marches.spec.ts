@@ -295,32 +295,64 @@ describe('Marches', () => {
 });
 
 describe('PlayersAdmin', () => {
-  it('switches R4 for a player and puts the switch back when it fails', async () => {
+  it('approves a new player and switches R4, filters both and puts a switch back when saving fails', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(PlayersAdmin);
     fixture.detectChanges();
+    const player = { avatar_url: '', reviewer: false, approved: true, superuser: false, created_at: '2026-10-01T12:00:00Z' };
     http.expectOne('/api/kvk/reviewers/').flush({
       players: [
-        { id: 1, name: 'gether', ingame_name: 'Gether', avatar_url: '', reviewer: false, superuser: true },
-        { id: 2, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', reviewer: false, superuser: false },
+        { ...player, id: 1, name: 'gether', ingame_name: 'Gether', superuser: true },
+        { ...player, id: 2, name: 'nelly', ingame_name: 'Nelly' },
+        { ...player, id: 3, name: 'nova', ingame_name: '', approved: false, created_at: '2026-10-12T12:00:00Z' },
       ],
     });
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    const switches = el.querySelectorAll<HTMLInputElement>('.switch');
-    expect(switches.length).toBe(1); // the superuser has no switch
-
-    switches[0].click();
-    const req = http.expectOne('/api/kvk/reviewers/2/');
-    expect(req.request.body).toEqual({ reviewer: true });
-    req.flush({ id: 2, reviewer: true });
+    const names = () => Array.from(el.querySelectorAll('.reviewer__name strong'), (n) => n.childNodes[0].textContent?.trim());
+    // the new player waits on top; the superuser has no switches
+    expect(names()).toEqual(['nova', 'Gether', 'Nelly']);
+    expect(el.querySelector('.reviewer.is-pending .tag--pending')?.textContent).toBe('Čaká');
+    expect(el.querySelector('.reviewer__name > span')?.textContent?.trim()).toBe('od 12. 10. 2026');
+    expect(el.querySelectorAll('.switch').length).toBe(4);
+    const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
+    expect(filters().map((b) => b.textContent?.trim())).toEqual([
+      'Všetci · 3',
+      'Čakajú · 1',
+      'Schválení · 2',
+      'Všetci · 3',
+      'R4 · 0',
+      'Bez R4 · 3',
+    ]);
+    filters()[1].click();
     await settle(fixture);
-    expect(el.textContent).toContain('R4 · vidí prihlášky');
+    expect(names()).toEqual(['nova']);
 
+    // approve: the row stays where it is until the filter is changed
     el.querySelector<HTMLInputElement>('.switch')!.click();
+    const req = http.expectOne('/api/kvk/reviewers/3/');
+    expect(req.request.body).toEqual({ approved: true });
+    req.flush({ id: 3, reviewer: false, approved: true });
+    await settle(fixture);
+    expect(names()).toEqual([]);
+    filters()[0].click();
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Gether', 'Nelly']);
+    expect(el.querySelector('.tag--pending')).toBeNull();
+
+    // R4 of Nelly; the filter R4 shows only her
+    const r4 = () => el.querySelectorAll<HTMLInputElement>('.switch')[3];
+    r4().click();
+    http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, reviewer: true, approved: true });
+    await settle(fixture);
+    filters()[4].click();
+    await settle(fixture);
+    expect(names()).toEqual(['Nelly']);
+
+    el.querySelectorAll<HTMLInputElement>('.switch')[1].click();
     http.expectOne('/api/kvk/reviewers/2/').flush('x', { status: 500, statusText: 'Server Error' });
     await settle(fixture);
-    expect(el.querySelector<HTMLInputElement>('.switch')!.checked).toBe(true);
+    expect(el.querySelectorAll<HTMLInputElement>('.switch')[1].checked).toBe(true);
     expect(el.querySelector('.form__state')?.textContent).toContain('nepodarilo');
     http.verify();
   });

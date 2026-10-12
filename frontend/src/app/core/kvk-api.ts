@@ -89,6 +89,8 @@ export interface KvkState extends KvkHeading {
   /** signed in with Discord */
   player: boolean;
   ingame_name: string;
+  /** may sign up – a new player waits for the superadmin */
+  approved: boolean;
   reviewer: boolean;
   superuser: boolean;
 }
@@ -110,8 +112,13 @@ export interface ReviewerRow {
   name: string;
   ingame_name: string;
   avatar_url: string;
+  /** R4: sees every KvK sign-up and every player's marches */
   reviewer: boolean;
+  /** adds marches and KvK sign-ups */
+  approved: boolean;
   superuser: boolean;
+  /** the first sign-in */
+  created_at: string;
 }
 
 /** KvK sign-ups (backend accounts/kvk_views.py); browser only, session + CSRF. */
@@ -158,7 +165,13 @@ export class KvkApi {
     return httpResource<{ players: ReviewerRow[] }>(() => (this.isBrowser && when() ? '/api/kvk/reviewers/' : undefined));
   }
 
-  setReviewer(id: number, reviewer: boolean): Promise<{ id: number; reviewer: boolean }> {
-    return firstValueFrom(this.http.patch<{ id: number; reviewer: boolean }>(`/api/kvk/reviewers/${id}/`, { reviewer }));
+  /** R4 and / or the approval of a player (superuser) */
+  setPlayer(
+    id: number,
+    change: Partial<Pick<ReviewerRow, 'reviewer' | 'approved'>>,
+  ): Promise<{ id: number; reviewer: boolean; approved: boolean }> {
+    return firstValueFrom(
+      this.http.patch<{ id: number; reviewer: boolean; approved: boolean }>(`/api/kvk/reviewers/${id}/`, change),
+    );
   }
 }

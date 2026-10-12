@@ -32,6 +32,8 @@ export interface PlayerMarches {
   /** the visitor's own marches */
   me: boolean;
   marches: March[];
+  /** the last change of one of the marches (ISO) */
+  updated_at: string;
 }
 
 /** The player's marches on /ucet (backend accounts/march_views.py); browser only, session + CSRF. */

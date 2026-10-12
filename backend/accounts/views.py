@@ -103,11 +103,13 @@ def save_player(profile: dict) -> User:
         user, created = User.objects.get_or_create(username=f'discord_{discord_id}')
         if created:
             user.set_unusable_password()
+        # a new player waits for the superadmin's approval; the worker tells the superadmin (newcomers.py)
         player = Player(user=user, discord_id=discord_id)
     if discord_id in settings.DISCORD_ADMIN_IDS:
         # the superadmin signs in with Discord too (.env DISCORD_ADMIN_IDS) – on any database, also after a snapshot
         # import that leaves Discord accounts out
         user.is_staff = user.is_superuser = True
+        player.approved = player.announced = True
     user.first_name = (global_name or username)[:150]  # readable in the Users admin
     user.save()
     player.username, player.global_name, player.avatar = username, global_name, avatar
@@ -172,6 +174,11 @@ def player_of(user) -> Player | None:
     return getattr(user, 'player', None) if user.is_authenticated else None
 
 
+def not_approved() -> Response:
+    """A new player adds marches and KvK sign-ups only once the superadmin approves them (Gether 12. 10. 2026)."""
+    return Response({'detail': 'not_approved'}, status=403)
+
+
 @never_cache
 @ensure_csrf_cookie
 @api_view(['GET', 'PATCH', 'DELETE'])
@@ -194,6 +201,8 @@ def signed_in(request) -> dict | None:
         'name': player.name,
         'avatar_url': player.avatar_url,
         'ingame_name': player.ingame_name,
+        # adds marches and KvK sign-ups (a new player waits for the superadmin, Gether 12. 10. 2026)
+        'approved': player.may_post,
         'is_staff': request.user.is_staff,
         # manages events (admin, irregular dates in the calendar)
         'is_superuser': request.user.is_superuser,

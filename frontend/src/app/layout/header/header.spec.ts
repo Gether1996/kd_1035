@@ -108,6 +108,7 @@ describe('Header account slot', () => {
         name: 'Nelly',
         avatar_url: 'https://cdn.discordapp.com/a.png',
         ingame_name: '',
+        approved: true,
         is_staff: false,
         is_superuser: false,
       },
@@ -146,7 +147,7 @@ describe('Header account slot', () => {
   it('has no "!" once the player has an in-game name', async () => {
     await answer({
       login_enabled: true,
-      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', is_staff: false, is_superuser: false },
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, is_staff: false, is_superuser: false },
     });
     expect(el().querySelector('.alert-badge')).toBeNull();
     expect(el().querySelector('.is-alert')).toBeNull();

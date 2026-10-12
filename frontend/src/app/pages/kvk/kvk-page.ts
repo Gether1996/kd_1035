@@ -6,6 +6,7 @@ import { KvkApi } from '../../core/kvk-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
+import { PendingApproval } from '../../shared/pending-approval';
 import { reloadOnReturn } from '../../shared/reload-on-return';
 import { KvkForm } from './kvk-form';
 import { KvkSettings } from './kvk-settings';
@@ -21,7 +22,7 @@ type Tab = 'mine' | 'list' | 'settings';
  */
 @Component({
   selector: 'app-kvk-page',
-  imports: [RouterLink, Icon, PageHeader, KvkForm, KvkSignups, KvkSettings],
+  imports: [RouterLink, Icon, PageHeader, KvkForm, KvkSignups, KvkSettings, PendingApproval],
   template: `
     @let k = t().kvk;
 
@@ -67,7 +68,12 @@ type Tab = 'mine' | 'list' | 'settings';
         }
         @switch (s.player || tab() !== 'mine' ? tab() : 'list') {
           @case ('mine') {
-            <app-kvk-form [state]="s" (changed)="reloadSignups()" />
+            @if (s.approved) {
+              <app-kvk-form [state]="s" (changed)="reloadSignups()" />
+            } @else {
+              <!-- a new player waits for the superadmin (Gether 12. 10. 2026) -->
+              <app-pending-approval />
+            }
           }
           @case ('list') {
             <app-kvk-signups [data]="signups" [superuser]="s.superuser" (changed)="reloadSignups()" />

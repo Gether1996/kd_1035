@@ -51,12 +51,23 @@ class Player(models.Model):
     marches_public = models.BooleanField(
         'marche vidia všetci',
         default=False,
-        help_text='Hráč povolil, aby jeho marche a screenshoty videli všetci hráči prihlásení na webe (inak len R4).',
+        help_text='Hráč povolil, aby jeho marche videli všetci schválení hráči prihlásení na webe (inak len R4).',
     )
     kvk_reviewer = models.BooleanField(
         'vidí KvK prihlášky',
         default=False,
-        help_text='Hráč (napr. R4) vidí všetky prihlášky na KvK aj so screenshotmi. Nastavuje superadmin.',
+        help_text='Hráč (napr. R4) vidí všetky prihlášky na KvK a marche všetkých hráčov. Nastavuje superadmin.',
+    )
+    approved = models.BooleanField(
+        'schválený',
+        default=False,
+        help_text='Môže pridávať marche a prihlášky na KvK a vidí marche ostatných hráčov. Nového hráča schvaľuje '
+        'superadmin (hráči z čias pred schvaľovaním sú schválení).',
+    )
+    announced = models.BooleanField(
+        'superadmin upozornený',
+        default=False,
+        help_text='Worker poslal superadminovi na Discord, že sa prihlásil nový hráč.',
     )
 
     class Meta:
@@ -70,6 +81,11 @@ class Player(models.Model):
     @property
     def name(self) -> str:
         return self.global_name or self.username
+
+    @property
+    def may_post(self) -> bool:
+        """Adds and changes marches and KvK sign-ups: approved by the superadmin, or the superadmin themself."""
+        return self.approved or self.user.is_superuser
 
     @property
     def avatar_url(self) -> str:

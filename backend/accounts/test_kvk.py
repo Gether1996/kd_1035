@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import time
 from pathlib import Path
+from unittest import mock
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -11,8 +12,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from PIL import Image
 
-from . import cleanup, private_images
-from .models import MAX_MARCHES, KvkSettings, KvkSignup, March
+from . import cleanup, discord_bot, private_images
+from .models import MAX_MARCHES, KvkSettings, KvkSignup, March, Player
+from .newcomers import announce_new_players
+from .reminder_views import iso
+from .reminders import DiscordPaused
 from .test_reminders import make_player
 
 
@@ -388,3 +392,101 @@ class MarchTests(KvkTestCase):
         data = self.login(reviewer.user).get('/api/marches/').json()
         self.assertTrue(data['reviewer'])
         self.assertEqual(len(data['players']), 1)
+
+
+class ApprovalTests(KvkTestCase):
+    """A new player waits for the superadmin before adding marches and KvK sign-ups (Gether 12. 10. 2026)."""
+
+    def setUp(self):
+        super().setUp()
+        self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
+        self.call('patch', '/api/me/marches/', {'public': True})
+        self.newbie = make_player('42', approved=False)
+        self.new = self.login(self.newbie.user)
+
+    def test_a_new_player_adds_nothing_and_sees_no_marches_of_others(self):
+        self.assertFalse(self.new.get('/api/auth/me/').json()['user']['approved'])
+        self.assertFalse(self.new.get('/api/kvk/').json()['approved'])
+        res = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}, self.new)
+        self.assertEqual((res.status_code, res.json()), (403, {'detail': 'not_approved'}))
+        res = self.sign_up(self.new)
+        self.assertEqual((res.status_code, res.json()), (403, {'detail': 'not_approved'}))
+        self.assertEqual(self.new.get('/api/marches/').json()['players'], [])
+
+        # a march from before the approval was taken away: deleting works, changing does not
+        march = March.objects.create(player=self.newbie, position=1, kind='archer', primary='Attila')
+        self.newbie.marches_public = True
+        self.newbie.save()
+        self.assertEqual(self.call('patch', f'/api/me/marches/{march.pk}/', {'kind': 'cavalry'}, self.new).status_code, 403)
+        # … others do not see it, the player sees only their own
+        self.assertEqual([p['me'] for p in self.client.get('/api/marches/').json()['players']], [True])
+        self.assertEqual([p['me'] for p in self.new.get('/api/marches/').json()['players']], [True])
+        self.assertEqual(self.call('delete', f'/api/me/marches/{march.pk}/', client=self.new).status_code, 204)
+
+    def test_the_superuser_approves_and_filters(self):
+        admin_player = make_player('245662824171438090')
+        admin_player.user.is_superuser = True
+        admin_player.user.save()
+        admin = self.login(admin_player.user)
+        rows = {p['id']: p for p in admin.get('/api/kvk/reviewers/').json()['players']}
+        self.assertEqual((rows[self.newbie.pk]['approved'], rows[self.player.pk]['approved']), (False, True))
+        self.assertIn('created_at', rows[self.newbie.pk])
+
+        url = f'/api/kvk/reviewers/{self.newbie.pk}/'
+        self.assertEqual(self.call('patch', url, {}, admin).status_code, 400)
+        self.assertEqual(self.call('patch', url, {'approved': 'yes'}, admin).status_code, 400)
+        self.assertEqual(self.call('patch', url, {'approved': True}, self.client).status_code, 403)
+        res = self.call('patch', url, {'approved': True}, admin)
+        self.assertEqual(res.json(), {'id': self.newbie.pk, 'reviewer': False, 'approved': True})
+        self.assertEqual(self.sign_up(self.new).status_code, 200)
+        self.assertEqual(len(self.new.get('/api/marches/').json()['players']), 1)
+        # the superuser needs no approval
+        admin_player.approved = False
+        admin_player.save()
+        self.assertTrue(admin.get('/api/auth/me/').json()['user']['approved'])
+        self.assertEqual(self.sign_up(admin).status_code, 200)
+
+    def test_the_marches_list_says_when_they_changed(self):
+        player = self.client.get('/api/marches/').json()['players'][0]
+        self.assertEqual(player['updated_at'], iso(March.objects.get(player=self.player).updated_at))
+
+
+@override_settings(DISCORD_ADMIN_IDS=['245662824171438090'], DISCORD_BOT_TOKEN='bot', SITE_URL='https://kd1035.eu')
+class NewcomerTests(TestCase):
+    def setUp(self):
+        patcher = mock.patch('accounts.discord_bot.send_dm')
+        self.send = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_the_superadmin_hears_about_each_new_player_once(self):
+        make_player('41')  # from before the approval
+        newbie = make_player('42', approved=False)
+        Player.objects.filter(pk=newbie.pk).update(announced=False)
+        self.assertEqual(announce_new_players(), 1)
+        target, message = self.send.call_args.args
+        self.assertEqual(target, '245662824171438090')
+        embed = message['embeds'][0]
+        self.assertEqual(embed['title'], 'Nový hráč na webe: Nelly')
+        self.assertIn('<@42>', embed['description'])
+        self.assertIn('https://kd1035.eu/ucet#hraci', embed['description'])
+        self.assertEqual(announce_new_players(), 0)
+        self.assertEqual(self.send.call_count, 1)
+
+    def test_discord_down_keeps_the_news_for_the_next_tick(self):
+        newbie = make_player('42', approved=False)
+        Player.objects.filter(pk=newbie.pk).update(announced=False)
+        self.send.side_effect = discord_bot.BotError('429', temporary=True)
+        with self.assertRaises(DiscordPaused):
+            announce_new_players()
+        self.assertFalse(Player.objects.get(pk=newbie.pk).announced)
+        self.send.side_effect = discord_bot.BotError('blocked', blocked=True)
+        self.assertEqual(announce_new_players(), 1)
+        self.assertTrue(Player.objects.get(pk=newbie.pk).announced)
+
+    @override_settings(DISCORD_BOT_TOKEN='')
+    def test_without_a_bot_nothing_piles_up(self):
+        newbie = make_player('42', approved=False)
+        Player.objects.filter(pk=newbie.pk).update(announced=False)
+        announce_new_players()
+        self.send.assert_not_called()
+        self.assertTrue(Player.objects.get(pk=newbie.pk).announced)

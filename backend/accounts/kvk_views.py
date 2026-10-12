@@ -21,7 +21,7 @@ from . import private_images
 from .army import BuildSerializer, current_of
 from .models import MARCH_STATS, KvkSettings, KvkSignup, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
-from .views import player_of
+from .views import not_approved, player_of
 
 log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
@@ -123,6 +123,7 @@ def state(request):
             'signups': {role: next((signup_data(s) for s in mine if s.role == role), None) for role in ROLES},
             'player': bool(player),
             'ingame_name': player.ingame_name if player else '',
+            'approved': bool(player and player.may_post),
             'reviewer': private_images.can_review(request.user),
             'superuser': bool(request.user.is_authenticated and request.user.is_superuser),
         }
@@ -145,6 +146,8 @@ def signup(request):
             return Response({'role': 'invalid'}, status=400)
         KvkSignup.objects.filter(player=player, role=role).delete()
         return Response(status=204)
+    if not player.may_post:
+        return not_approved()
     body = request.data if isinstance(request.data, dict) else {}
     role = body.get('role')
     saved = KvkSignup.objects.filter(player=player, role=role).first() if role in ROLES else None
@@ -220,7 +223,8 @@ def settings(request):
 @api_view(['GET'])
 @permission_classes([IsSuperuser])
 def reviewers(request):
-    """Every active player signed in with Discord, with the reviewer flag."""
+    """Every active player signed in with Discord: the reviewer flag (R4), the approval for marches and KvK sign-ups
+    and when they first signed in."""
     players = Player.objects.filter(user__is_active=True).select_related('user')
     rows = sorted(
         (
@@ -230,6 +234,8 @@ def reviewers(request):
                 'ingame_name': p.ingame_name,
                 'avatar_url': p.avatar_url,
                 'reviewer': p.kvk_reviewer,
+                'approved': p.approved,
+                'created_at': iso(p.created_at),
                 'superuser': p.user.is_superuser,
             }
             for p in players
@@ -244,12 +250,17 @@ def reviewers(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def reviewer(request, player_id):
-    """PATCH {reviewer: bool}."""
+    """PATCH {reviewer?: bool, approved?: bool} – R4 (sees the sign-ups), approved (adds marches and sign-ups)."""
     player = get_object_or_404(Player, pk=player_id)
-    value = request.data.get('reviewer')
-    if type(value) is not bool:
-        return Response({'reviewer': 'bool'}, status=400)
-    player.kvk_reviewer = value
-    player.save(update_fields=['kvk_reviewer'])
-    log.info('KvK reviewer %s for player %s', value, player.pk)
-    return Response({'id': player.pk, 'reviewer': player.kvk_reviewer})
+    body = request.data if isinstance(request.data, dict) else {}
+    fields = {'reviewer': 'kvk_reviewer', 'approved': 'approved'}
+    changes = {name: body[name] for name in fields if name in body}
+    if not changes:
+        return Response({'detail': 'reviewer or approved'}, status=400)
+    for name, value in changes.items():
+        if type(value) is not bool:
+            return Response({name: 'bool'}, status=400)
+        setattr(player, fields[name], value)
+    player.save(update_fields=[fields[name] for name in changes])
+    log.info('Player %s: %s', player.pk, changes)
+    return Response({'id': player.pk, 'reviewer': player.kvk_reviewer, 'approved': player.approved})

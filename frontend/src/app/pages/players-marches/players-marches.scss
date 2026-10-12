@@ -31,7 +31,6 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 10px 16px;
   margin-bottom: 18px;
 }
@@ -39,6 +38,19 @@
 .bar__search {
   flex: 1 1 260px;
   max-width: 420px;
+}
+
+// sort and type: side by side, on a phone each half of the row
+.bar__select {
+  flex: 0 1 200px;
+
+  @media (max-width: 560px) {
+    flex: 1 1 140px;
+  }
+}
+
+.bar > .pill-btn {
+  margin-left: auto;
 }
 
 .players {

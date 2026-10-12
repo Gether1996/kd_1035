@@ -39,7 +39,7 @@ PLAIN_STATIC = {
 def make_player(discord_id='80351110224678912', ingame_name='', **kwargs):
     user = User.objects.create_user(f'discord_{discord_id}', **kwargs)
     return Player.objects.create(
-        user=user, discord_id=discord_id, username='nelly', global_name='Nelly', ingame_name=ingame_name
+        user=user, discord_id=discord_id, username='nelly', global_name='Nelly', ingame_name=ingame_name, announced=True
     )
 
 
@@ -180,6 +180,9 @@ class LoginFlowTests(TestCase):
         )
         self.assertTrue(self.logged_in())
         self.assertEqual(self.client.get('/api/auth/me/').json()['user']['name'], 'Nelly')
+        # a new player waits for the superadmin, who hears about them from the worker
+        self.assertEqual((user.player.approved, user.player.announced), (False, False))
+        self.assertFalse(self.client.get('/api/auth/me/').json()['user']['approved'])
 
     @override_settings(DISCORD_ADMIN_IDS=['80351110224678912'])
     def test_admin_ids_sign_in_as_superusers(self):
@@ -188,12 +191,15 @@ class LoginFlowTests(TestCase):
         self.assertTrue(user.is_staff and user.is_superuser)
         self.assertFalse(user.has_usable_password())
         self.assertTrue(self.client.get('/api/auth/me/').json()['user']['is_staff'])
+        # the superadmin needs no approval and no message about themself
+        self.assertEqual((user.player.approved, user.player.announced), (True, True))
 
     def test_second_login_updates_without_duplicating(self):
         self.callback(state=self.start(), code='abc')
         user = User.objects.get()
         user.is_staff = True  # granted by leadership in the admin – a sign-in must not take it away
         user.save()
+        Player.objects.update(approved=True)  # the superadmin approved them
         self.client.logout()
         self.fetch.return_value = {**PROFILE, 'global_name': None, 'username': 'nelly2', 'avatar': None}
         response = self.callback(state=self.start(), code='def')
@@ -205,6 +211,7 @@ class LoginFlowTests(TestCase):
         self.assertEqual(player.user.first_name, 'nelly2')
         self.assertTrue(player.user.is_staff)
         self.assertTrue(self.logged_in())
+        self.assertTrue(player.approved)
 
     def test_a_player_with_an_in_game_name_goes_straight_on(self):
         player = make_player()
@@ -347,6 +354,7 @@ class MeTests(TestCase):
                     'name': 'Nelly',
                     'avatar_url': 'https://cdn.discordapp.com/embed/avatars/5.png',
                     'ingame_name': '',
+                    'approved': False,
                     'is_staff': False,
                     'is_superuser': False,
                 },
