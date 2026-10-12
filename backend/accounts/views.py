@@ -24,7 +24,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 
 from . import discord_oauth, guard
-from .models import TERMS_VERSION, Player
+from .models import TERMS_VERSION, Player, PlayerSettings
 from .serializers import ProfileSerializer
 
 log = logging.getLogger(__name__)
@@ -104,8 +104,11 @@ def save_player(profile: dict) -> User:
         user, created = User.objects.get_or_create(username=f'discord_{discord_id}')
         if created:
             user.set_unusable_password()
-        # a new player waits for the superadmin's approval; the worker tells the superadmin (newcomers.py)
+        # a new player waits for the superadmin's approval and the worker tells the superadmin (newcomers.py) –
+        # unless the superadmin lets everyone in for now (PlayerSettings.auto_approve): approved, nobody is told
         player = Player(user=user, discord_id=discord_id)
+        if PlayerSettings.load().auto_approve:
+            player.approved = player.announced = True
     if discord_id in settings.DISCORD_ADMIN_IDS:
         # the superadmin signs in with Discord too (.env DISCORD_ADMIN_IDS) – on any database, also after a snapshot
         # import that leaves Discord accounts out

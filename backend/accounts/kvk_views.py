@@ -19,7 +19,7 @@ from rest_framework.response import Response
 
 from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
-from .models import APPROVED, MARCH_STATS, KvkSettings, KvkSignup, March, Player
+from .models import APPROVED, MARCH_STATS, KvkSettings, KvkSignup, March, Player, PlayerSettings
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
 
@@ -246,7 +246,21 @@ def reviewers(request):
         ),
         key=lambda p: (p['ingame_name'] or p['name']).casefold(),
     )
-    return Response({'players': rows})
+    return Response({'players': rows, 'auto_approve': PlayerSettings.load().auto_approve})
+
+
+@never_cache
+@api_view(['PUT'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def auto_approve(request):
+    """PUT {auto_approve: bool} – new players approved at their first sign-in, no Discord message (PlayerSettings)."""
+    value = request.data.get('auto_approve') if isinstance(request.data, dict) else None
+    if type(value) is not bool:
+        return Response({'auto_approve': 'bool'}, status=400)
+    PlayerSettings.objects.update_or_create(pk=1, defaults={'auto_approve': value})
+    log.info('Auto-approve of new players: %s', value)
+    return Response({'auto_approve': value})
 
 
 @never_cache

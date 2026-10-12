@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import Alarm, EventReminder, KvkSettings, KvkSignup, Player, SentReminder
+from .models import Alarm, EventReminder, KvkSettings, KvkSignup, Player, PlayerSettings, SentReminder
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -172,6 +172,19 @@ class KvkSettingsAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return super().has_add_permission(request) and not KvkSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PlayerSettings)
+class PlayerSettingsAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """Auto-approve of new players – normally switched in the Hráči list on /ucet; one row."""
+
+    fields = ['auto_approve']
+
+    def has_add_permission(self, request):
+        return super().has_add_permission(request) and not PlayerSettings.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
         return False

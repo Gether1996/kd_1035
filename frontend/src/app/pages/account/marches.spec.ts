@@ -306,6 +306,7 @@ describe('PlayersAdmin', () => {
         { ...player, id: 2, name: 'nelly', ingame_name: 'Nelly' },
         { ...player, id: 3, name: 'nova', ingame_name: '', approved: false, created_at: '2026-10-12T12:00:00Z' },
       ],
+      auto_approve: false,
     });
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
@@ -314,7 +315,7 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova', 'Gether', 'Nelly']);
     expect(el.querySelector('.reviewer.is-pending .tag--pending')?.textContent).toBe('Čaká');
     expect(el.querySelector('.reviewer__name > span')?.textContent?.trim()).toBe('od 12. 10. 2026');
-    expect(el.querySelectorAll('.switch').length).toBe(4);
+    expect(el.querySelectorAll('.reviewer .switch').length).toBe(4);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
     expect(filters().map((b) => b.textContent?.trim())).toEqual([
       'Všetci · 3',
@@ -329,7 +330,7 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova']);
 
     // approve: the row stays until another filter is picked, the counts follow at once
-    el.querySelector<HTMLInputElement>('.switch')!.click();
+    el.querySelector<HTMLInputElement>('.reviewer .switch')!.click();
     const req = http.expectOne('/api/kvk/reviewers/3/');
     expect(req.request.body).toEqual({ approved: true });
     req.flush({ id: 3, reviewer: false, approved: true });
@@ -342,7 +343,7 @@ describe('PlayersAdmin', () => {
     expect(el.querySelector('.tag--pending')).toBeNull();
 
     // R4 of Nelly; the filter R4 shows only her
-    const r4 = () => el.querySelectorAll<HTMLInputElement>('.switch')[3];
+    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[3];
     r4().click();
     http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, reviewer: true, approved: true });
     await settle(fixture);
@@ -350,11 +351,28 @@ describe('PlayersAdmin', () => {
     await settle(fixture);
     expect(names()).toEqual(['Nelly']);
 
-    el.querySelectorAll<HTMLInputElement>('.switch')[1].click();
+    el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[1].click();
     http.expectOne('/api/kvk/reviewers/2/').flush('x', { status: 500, statusText: 'Server Error' });
     await settle(fixture);
-    expect(el.querySelectorAll<HTMLInputElement>('.switch')[1].checked).toBe(true);
+    expect(el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[1].checked).toBe(true);
     expect(el.querySelector('.form__state')?.textContent).toContain('nepodarilo');
+
+    // auto-approve of new players: on, the hint follows; a failed save puts the switch back
+    const auto = () => el.querySelector<HTMLInputElement>('.auto-approve .switch')!;
+    const hint = () => el.querySelector('#auto-approve-hint')?.textContent;
+    expect(auto().checked).toBe(false);
+    expect(hint()).toContain('príde správa');
+    auto().click();
+    const on = http.expectOne('/api/kvk/reviewers/auto-approve/');
+    expect([on.request.method, on.request.body]).toEqual(['PUT', { auto_approve: true }]);
+    on.flush({ auto_approve: true });
+    await settle(fixture);
+    expect(auto().checked).toBe(true);
+    expect(hint()).toContain('schválený hneď');
+    auto().click();
+    http.expectOne('/api/kvk/reviewers/auto-approve/').flush('x', { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+    expect(auto().checked).toBe(true);
     http.verify();
   });
 });

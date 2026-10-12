@@ -435,6 +435,35 @@
   list-style: none;
 }
 
+// "Schvaľovať automaticky": one row with its switch above the search
+.auto-approve {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 640px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+
+  .switch {
+    flex: none;
+    margin-left: auto;
+  }
+}
+
+.auto-approve__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+
+  > span {
+    font-size: 0.875rem;
+    color: var(--text-mute);
+  }
+}
+
 .players-bar {
   display: flex;
   flex-wrap: wrap;

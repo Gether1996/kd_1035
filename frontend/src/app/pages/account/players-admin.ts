@@ -12,7 +12,8 @@ type ApprovalFilter = 'all' | 'approved' | 'pending';
  * "Hráči" on /ucet – superuser only (Gether 11. and 12. 10. 2026): every player signed in with Discord with two
  * switches – "Schválený" (a new player adds marches and KvK sign-ups only once approved; the superadmin gets a Discord
  * message about each new one) and "R4" (sees every KvK sign-up and every player's marches). Filters for R4 and the
- * approval; the players waiting for it come first.
+ * approval; the players waiting for it come first. "Schvaľovať automaticky" lets every new player in at once, without
+ * the Discord message.
  */
 @Component({
   selector: 'app-players-admin',
@@ -23,6 +24,24 @@ type ApprovalFilter = 'all' | 'approved' | 'pending';
         {{ k.title }} <span class="count">{{ players().length }}</span>
       </h2>
       <p class="panel__lead">{{ k.lead }}</p>
+      @if (data.hasValue()) {
+        <label class="auto-approve">
+          <span class="auto-approve__text">
+            <strong id="auto-approve-label">{{ k.auto }}</strong>
+            <span id="auto-approve-hint">{{ autoApprove() ? k.autoOn : k.autoOff }}</span>
+          </span>
+          <input
+            #auto
+            class="switch"
+            type="checkbox"
+            role="switch"
+            aria-labelledby="auto-approve-label"
+            aria-describedby="auto-approve-hint"
+            [checked]="autoApprove()"
+            (change)="setAuto(auto)"
+          />
+        </label>
+      }
       <div class="players-bar">
         <div class="field reviewers__search">
           <label class="sr-only" for="players-search">{{ k.search }}</label>
@@ -122,6 +141,8 @@ export class PlayersAdmin {
 
   protected readonly data = this.api.reviewers(() => true);
   protected readonly players = linkedSignal<ReviewerRow[]>(() => (this.data.hasValue() ? this.data.value().players : []));
+  /** new players approved at once, no Discord message (Gether 12. 10. 2026: open for now, closed later) */
+  protected readonly autoApprove = linkedSignal(() => this.data.hasValue() && this.data.value().auto_approve);
   protected readonly search = signal('');
   protected readonly role = signal<RoleFilter>('all');
   protected readonly approval = signal<ApprovalFilter>('all');
@@ -191,6 +212,17 @@ export class PlayersAdmin {
       timeZone: KINGDOM_ZONE,
     });
     return this.t().since.replace('{date}', date.format(new Date(iso)));
+  }
+
+  protected async setAuto(box: HTMLInputElement): Promise<void> {
+    const value = box.checked;
+    this.failed.set(false);
+    try {
+      this.autoApprove.set((await this.api.setAutoApprove(value)).auto_approve);
+    } catch {
+      this.failed.set(true);
+      box.checked = !value; // the switch goes back
+    }
   }
 
   protected async set(player: ReviewerRow, flag: Flag, box: HTMLInputElement): Promise<void> {

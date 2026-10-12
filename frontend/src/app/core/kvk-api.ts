@@ -163,7 +163,16 @@ export class KvkApi {
   }
 
   reviewers(when: () => boolean) {
-    return httpResource<{ players: ReviewerRow[] }>(() => (this.isBrowser && when() ? '/api/kvk/reviewers/' : undefined));
+    return httpResource<{ players: ReviewerRow[]; auto_approve: boolean }>(() =>
+      this.isBrowser && when() ? '/api/kvk/reviewers/' : undefined,
+    );
+  }
+
+  /** new players approved at their first sign-in, no Discord message to the superuser (superuser) */
+  setAutoApprove(value: boolean): Promise<{ auto_approve: boolean }> {
+    return firstValueFrom(
+      this.http.put<{ auto_approve: boolean }>('/api/kvk/reviewers/auto-approve/', { auto_approve: value }),
+    );
   }
 
   /** R4 and / or the approval of a player (superuser) */

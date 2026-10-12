@@ -238,6 +238,29 @@ class KvkSettings(models.Model):
         return cls.objects.get_or_create(pk=1)[0]
 
 
+class PlayerSettings(models.Model):
+    """How new players get in (one row) – the superadmin switches it in the Hráči list on /ucet (Gether 12. 10. 2026:
+    "dočasne to chcem nechať otvorené a časom zavriem")."""
+
+    auto_approve = models.BooleanField(
+        'schvaľovať automaticky',
+        default=False,
+        help_text='Nový hráč je schválený hneď pri prvom prihlásení a superadmin nedostane správu na Discord. '
+        'Hráčov, ktorí už čakajú, to neschváli.',
+    )
+
+    class Meta:
+        verbose_name = 'schvaľovanie hráčov'
+        verbose_name_plural = 'schvaľovanie hráčov'
+
+    def __str__(self):
+        return 'Schvaľovanie hráčov'
+
+    @classmethod
+    def load(cls) -> 'PlayerSettings':
+        return cls.objects.get_or_create(pk=1)[0]
+
+
 # inscription counts: at most two digits
 STAT_MAX = 99
 STAT_LIMIT = [MaxValueValidator(STAT_MAX)]

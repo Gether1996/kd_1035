@@ -14,7 +14,7 @@ from django.test import Client, TestCase, override_settings
 from PIL import Image
 
 from . import cleanup, discord_bot, private_images
-from .models import MAX_MARCHES, TERMS_VERSION, KvkSettings, KvkSignup, March, Player
+from .models import MAX_MARCHES, TERMS_VERSION, KvkSettings, KvkSignup, March, Player, PlayerSettings
 from .newcomers import NAME_GRACE, announce_new_players
 from .reminder_views import iso
 from .reminders import DiscordPaused
@@ -446,6 +446,22 @@ class ApprovalTests(KvkTestCase):
         admin_player.save()
         self.assertTrue(admin.get('/api/auth/me/').json()['user']['approved'])
         self.assertEqual(self.sign_up(admin).status_code, 200)
+
+    def test_the_superuser_switches_auto_approve(self):
+        admin_player = make_player('245662824171438090')
+        admin_player.user.is_superuser = True
+        admin_player.user.save()
+        admin = self.login(admin_player.user)
+        url = '/api/kvk/reviewers/auto-approve/'
+        self.assertFalse(admin.get('/api/kvk/reviewers/').json()['auto_approve'])
+        self.assertEqual(self.call('put', url, {'auto_approve': True}, self.client).status_code, 403)
+        self.assertEqual(self.call('put', url, {'auto_approve': 'yes'}, admin).status_code, 400)
+        self.assertEqual(self.call('put', url, {'auto_approve': True}, admin).json(), {'auto_approve': True})
+        self.assertTrue(admin.get('/api/kvk/reviewers/').json()['auto_approve'])
+        # the players already waiting stay waiting
+        self.assertFalse(Player.objects.get(pk=self.newbie.pk).approved)
+        self.assertEqual(self.call('put', url, {'auto_approve': False}, admin).json(), {'auto_approve': False})
+        self.assertFalse(PlayerSettings.load().auto_approve)
 
     def test_the_marches_list_says_when_they_changed(self):
         player = self.client.get('/api/marches/').json()['players'][0]

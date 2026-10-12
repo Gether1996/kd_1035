@@ -20,6 +20,7 @@ urlpatterns = [
     path('kvk/signups/<int:signup_id>/', kvk_views.delete_signup),
     path('kvk/reviewers/', kvk_views.reviewers),
     path('kvk/reviewers/<int:player_id>/', kvk_views.reviewer),
+    path('kvk/reviewers/auto-approve/', kvk_views.auto_approve),
     path('me/marches/', march_views.marches),
     path('me/marches/<int:march_id>/', march_views.march),
     path('marches/', march_views.players_marches),
