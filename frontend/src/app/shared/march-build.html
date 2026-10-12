@@ -32,7 +32,7 @@
 <div class="mb__body">
   @if (own() || !empty()) {
     <section class="mb__part" [attr.aria-labelledby]="id + '-gear'">
-      <h4 class="mb__label" [id]="id + '-gear'">{{ b.gear }}</h4>
+      <h3 class="mb__label" [id]="id + '-gear'">{{ b.gear }}</h3>
       @if (index(); as ix) {
         <!-- the own march: a tile opens the editor on its slot -->
         <app-gear-grid [gear]="build().gear" [index]="ix" [pickable]="own()" (pick)="slotPick.emit($event)" />
@@ -53,7 +53,7 @@
 
   <!-- the formation as its icon, the inscriptions gold first – no armament names (Gether 12. 10. 2026: "čo najmenej textu") -->
   <section class="mb__part" [attr.aria-labelledby]="id + '-arm'">
-    <h4 class="mb__label" [id]="id + '-arm'">{{ b.armaments }}</h4>
+    <h3 class="mb__label" [id]="id + '-arm'">{{ b.armaments }}</h3>
     @if (formation() || inscriptions().length) {
       <div class="mb__arm">
         @if (formation(); as f) {
@@ -68,15 +68,25 @@
     }
     <!-- the armament bonuses typed in (and the inscription counts of a march saved before they were clicked together) -->
     @if (statsMissing()) {
-      <p class="mb__missing" [class.is-own]="own()">{{ own() ? k.statsMissingOwn : k.statsMissing }}</p>
+      @if (own()) {
+        <!-- the own march: straight to the bonuses in the editor -->
+        <button type="button" class="mb__missing is-own" (click)="armamentsPick.emit()">{{ k.statsMissingOwn }}</button>
+      } @else {
+        <p class="mb__missing">{{ k.statsMissing }}</p>
+      }
     } @else if (armamentStats().length || counts().length) {
       <ul class="mb__stats" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
         @for (s of armamentStats(); track s.key) {
           <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ s.value }}%</li>
         }
-        @for (c of counts(); track c.key) {
-          <li class="mb__count" [title]="k.inscriptions[c.key]">
-            <span class="mb__dot mb__dot--{{ c.key }}" aria-hidden="true"></span><span class="sr-only">{{ k.inscriptions[c.key] }}:</span> {{ c.value }}
+        @if (counts().length) {
+          <!-- the dots stay together on one line -->
+          <li class="mb__counts">
+            @for (c of counts(); track c.key) {
+              <span class="mb__count" [title]="k.inscriptions[c.key]">
+                <span class="mb__dot mb__dot--{{ c.key }}" aria-hidden="true"></span><span class="sr-only">{{ k.inscriptions[c.key] }}:</span> {{ c.value }}
+              </span>
+            }
           </li>
         }
       </ul>

@@ -336,7 +336,7 @@ export const sk = {
     // a march saved before the bonuses were required (v1.15.1)
     statsMissing: 'Bonusy armamentov nevyplnené',
     statsMissingOwn: 'Doplň bonusy armamentov',
-    statsMissingCount: 'Marche bez bonusov armamentov: {n} – doplň ich cez ceruzku.',
+    statsMissingCount: 'Marche bez bonusov armamentov: {n} – doplň ich červeným odkazom pri marchi.',
     choose: 'Vybrať',
     edit: 'Upraviť',
     editMarch: 'Upraviť typ a commanderov',

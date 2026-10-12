@@ -248,6 +248,13 @@ describe('Marches', () => {
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.add-march')).toBeNull();
+    // a march without its bonuses: the red link opens the editor on the Armamenty tab
+    expect(el.textContent).toContain('Marche bez bonusov armamentov: 7');
+    el.querySelector<HTMLButtonElement>('button.mb__missing')!.click();
+    await tick(fixture);
+    expect(el.querySelector('dialog.be .be__tabs button[aria-pressed="true"]')?.textContent).toContain('Armamenty');
+    el.querySelector<HTMLButtonElement>('dialog.be .be__actions .pill-btn--quiet')!.click();
+    await tick(fixture);
 
     // removing is in the editor of the march
     el.querySelector<HTMLButtonElement>('.march__edit')!.click();

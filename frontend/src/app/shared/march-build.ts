@@ -43,6 +43,8 @@ export class MarchBuild {
   readonly statsRequired = input(false);
   /** a tile of the own march clicked: the editor opens on that slot */
   readonly slotPick = output<GearSlot>();
+  /** "Doplň bonusy armamentov" of the own march: the editor opens on its Armamenty tab */
+  readonly armamentsPick = output<void>();
   protected readonly id = `march-build-${++nextId}`;
 
   private readonly armory = inject(ArmoryApi);

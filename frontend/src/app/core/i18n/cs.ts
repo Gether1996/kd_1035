@@ -330,7 +330,7 @@ export const cs: Dict = {
     inscriptions: { title: 'Inscriptions', white: 'Bílé', blue: 'Modré', gold: 'Zlaté' },
     statsMissing: 'Bonusy armamentů nevyplněné',
     statsMissingOwn: 'Doplň bonusy armamentů',
-    statsMissingCount: 'Marche bez bonusů armamentů: {n} – doplň je přes tužku.',
+    statsMissingCount: 'Marche bez bonusů armamentů: {n} – doplň je červeným odkazem u marche.',
     choose: 'Vybrat',
     edit: 'Upravit',
     editMarch: 'Upravit typ a commandery',

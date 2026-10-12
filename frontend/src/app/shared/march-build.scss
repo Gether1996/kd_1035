@@ -187,13 +187,28 @@
 }
 
 .mb__missing {
+  justify-self: start;
   margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
   font-size: 0.875rem;
   color: var(--text-mute);
 
+  // the own march: a link-like button to the bonuses in the editor
   &.is-own {
     color: var(--red-300);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
   }
+}
+
+.mb__counts {
+  display: inline-flex;
+  gap: 10px;
+  white-space: nowrap;
 }
 
 .mb__count {

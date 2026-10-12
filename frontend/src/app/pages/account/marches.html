@@ -39,6 +39,7 @@
               [statsRequired]="true"
               [attr.data-march]="march.id"
               (slotPick)="draft() ? null : builds.open(march, null, $event)"
+              (armamentsPick)="draft() ? null : builds.open(march, null, undefined, 'armaments')"
             >
               <button
                 type="button"
