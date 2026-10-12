@@ -188,9 +188,16 @@ class EventIcsTests(TestCase):
                     self.assertNotIn(name, response.content.decode())
         self.assertEqual(self.get(visible.pk, on='2026-10-10').status_code, 200)
 
-    def test_only_get(self, _now):
+    def test_only_get_and_head(self, _now):
         event = make_event()
-        self.assertEqual(self.client.post(f'/api/events/{event.pk}/ics?on=2026-10-10').status_code, 405)
+        url = f'/api/events/{event.pk}/ics?on=2026-10-10'
+        self.assertEqual(self.client.post(url).status_code, 405)
+        # calendar apps may check the link with HEAD first: the same headers, no body
+        response = self.client.head(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], self.client.get(url)['Content-Type'])
+        self.assertEqual(response['Content-Type'], 'text/calendar; charset=utf-8')
+        self.assertEqual(response.content, b'')
 
 
 def vevents(text: str) -> list[dict[str, str]]:

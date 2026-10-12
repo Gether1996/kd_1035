@@ -5,7 +5,7 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
 from django.utils import timezone
 from django.utils.text import slugify
-from django.views.decorators.http import require_GET, require_safe
+from django.views.decorators.http import require_safe
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
@@ -165,7 +165,8 @@ def run_data(event: KingdomEvent, begin: datetime, day: date, origin: str, cs: b
     }
 
 
-@require_GET
+# GET and HEAD, like the subscription (calendar_feed): some calendar apps check a link with HEAD first
+@require_safe
 def event_ics(request, pk):
     """GET /api/events/<id>/ics?on=YYYY-MM-DD[&lang=cs] – the run of a public event shown on that day
     (Europe/Bratislava, normally its first day) as an .ics file for the visitor's own calendar.
