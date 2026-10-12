@@ -69,8 +69,9 @@ def event_preview(request, cz=None):
 
     `on` (a day in Europe/Bratislava) picks the run like the .ics download (events.run_on()). Without it, or when the
     event has no run that day (an irregular event moved to a new date), the card shows the event's next or running
-    run, and an event without one says that the next date will be announced. An unknown, hidden or inactive event and
-    a malformed id or day are a 404 with the calendar's generic meta – the name of a hidden event never leaks.
+    run. A run that is over (a one-off event after its only run, or an old `on`) says that it ended; any other event
+    without a run says that the next date will be announced. An unknown, hidden or inactive event and a malformed id or day are a 404 with the
+    calendar's generic meta – the name of a hidden event never leaks.
     """
     lang = 'cs' if cz else 'sk'
     origin = site_origin(request)
@@ -89,13 +90,18 @@ def event_preview(request, cz=None):
         return preview_page(request, lang, origin, 404, title=title, description=description, url=calendar_url)
 
     name = (cz and event.name_cs) or event.name_sk
-    begin = (day and events.run_on(event, day)) or next(events.overlapping(event, timezone.now()), None)
-    dated, undated = EVENT_META[lang]
+    now = timezone.now()
+    begin = (day and events.run_on(event, day)) or next(events.overlapping(event, now), None)
+    if not begin and not event.irregular and not event.repeat_days:
+        # a one-off event has only one run: none now or ahead means it is over (an irregular one waits for a date)
+        begin = event.starts_at
+    dated, undated, ended = EVENT_META[lang]
     if not begin:
         title, description, query = name, undated, f'?event={event.pk}'
     else:
         first_day = begin.astimezone(events.LOCAL_TZ).date()
-        title, description = run_title(event, name, begin), dated
+        over = begin + timedelta(minutes=event.duration_minutes) <= now
+        title, description = run_title(event, name, begin), ended if over else dated
         query = f'?event={event.pk}&on={first_day.isoformat()}'
     return preview_page(
         request,

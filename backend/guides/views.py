@@ -49,16 +49,19 @@ CALENDAR_META = {
         'v herním čase UTC.',
     ),
 }
-# Description of an event's preview (kingdom.preview): a run with its date / an event without one. Only here – the
-# web says the same with calendar.intro and calendar.irregularText in sk.ts and cs.ts; keep the tone in sync.
+# Description of an event's preview (kingdom.preview): a run with its date / an event without one / a one-off event
+# that is over. Only here – the web says the same with calendar.intro and calendar.irregularText in sk.ts and cs.ts;
+# keep the tone in sync.
 EVENT_META = {
     'sk': (
         'Kalendár eventov KD 1035 – termín v tvojom čase a pripomienka na Discorde.',
         'Ďalší termín oznámime v kalendári KD 1035.',
+        'Event skončil.',
     ),
     'cs': (
         'Kalendář eventů KD 1035 – termín ve tvém čase a připomínka na Discordu.',
         'Další termín oznámíme v kalendáři KD 1035.',
+        'Event skončil.',
     ),
 }
 

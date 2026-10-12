@@ -118,6 +118,28 @@ class EventPreviewTests(TestCase):
         self.assertTitle(html, 'Ruiny · 10. 10. 2026')
         self.assertIn(f'content="https://kd1035.test/kalendar?event={ruins.pk}&amp;on=2026-10-10"', html)
 
+    def test_one_off_event_that_is_over(self, _now):
+        # Shadow Legion once, Thursday 8 October 20:00 UTC for an hour: no next date to announce, it ended
+        legion = make_event(name_sk='Shadow Legion', repeat_days=0, starts_at=utc(2026, 10, 8, 20))
+        response, html = self.preview(event=legion.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertTitle(html, 'Shadow Legion · 8. 10. 2026')
+        self.assertIn('<meta property="og:description" content="Event skončil.">', html)
+        self.assertIn(f'content="https://kd1035.test/kalendar?event={legion.pk}&amp;on=2026-10-08"', html)
+        self.assertNotIn('oznámime', html)
+        _, html = self.preview('cz/kalendar', event=legion.pk)
+        self.assertIn('<meta property="og:description" content="Event skončil.">', html)
+        # a link to a past run of a repeating event says the same
+        ruins = make_event(name_sk='Ruiny', starts_at=utc(2026, 10, 3, 18))
+        _, html = self.preview(event=ruins.pk, on='2026-10-03')
+        self.assertTitle(html, 'Ruiny · 3. 10. 2026')
+        self.assertIn('content="Event skončil."', html)
+        # a one-off event ahead or running keeps the usual text
+        ahead = make_event(name_sk='Turnaj', repeat_days=0, starts_at=utc(2026, 10, 20))
+        _, html = self.preview(event=ahead.pk)
+        self.assertTitle(html, 'Turnaj · 20. 10. 2026')
+        self.assertIn(f'content="{DATED_SK}"', html)
+
     def test_irregular_event_without_a_date(self, _now):
         # an old start is only a placeholder of an irregular event without a date
         boss = make_event(name_sk='Karuak Boss', irregular=True, repeat_days=0, starts_at=utc(2026, 9, 1, 18))
