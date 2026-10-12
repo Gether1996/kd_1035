@@ -412,9 +412,10 @@ img.tile__box {
   min-height: 44px;
 }
 
+// the switch right after the name, not at the far end of a wide form
 .skills__name {
-  flex: 1 1 140px;
-  min-width: 0;
+  flex: 0 1 auto;
+  min-width: 9em;
   color: var(--gold-100);
   font: 700 0.9375rem/1.25 var(--font-display);
 }

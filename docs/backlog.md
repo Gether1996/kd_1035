@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.21.2:** formulár marchu na veľkej obrazovke už nie je roztiahnutý cez celý riadok – ostáva široký ako karta, prepínač Expertise je hneď pri mene commandera.
 - **12. 10. 2026 – v1.21.1:** užšie karty marchov – inscriptions pod sebou vedľa výbavy, bonusy v mriežke 2 × 2, iconic bez krídel; vedľa seba sa zmestí viac marchov (1920 px: 4) a obsah nie je roztiahnutý na celú obrazovku.
 - **12. 10. 2026 – v1.21.0:** skilly commanderov pri marchi (predvolene expertise, inak napr. 5111); bonusy armamentov s jedným desatinným miestom; crit ikony podľa typu marchu (aj pri doplnkoch); pri výbere výbavy najprv predmety najlepšie pre jednotky marchu; marche v stĺpcoch podľa šírky obrazovky (na ultrawide až 5), menej textu na kartách, na mobile výbava v strede.
 - **12. 10. 2026 – v1.20.1:** výbava marchu je rozmiestnená ako v hre (kosoštvorce: prilba, hruď, zbraň a rukavice, nohavice, doplnky, topánky); crit je malá ikona typu jednotiek vpravo dole a iconic okrídlený zlatý štvorček s číslom na spodku predmetu ako v hre; pod výbavou sa vypíšu dosiahnuté setové bonusy; v editore sú záložky Výbava / Armamenty veľké tlačidlá s ikonou a počtom.
