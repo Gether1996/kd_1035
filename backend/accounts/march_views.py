@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from . import private_images
 from .army import BuildSerializer, current_of
 from .kvk_views import march_data
-from .models import MAX_MARCHES, March, Player
+from .models import APPROVED, MAX_MARCHES, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import not_approved, player_of
 
@@ -107,16 +107,17 @@ class CanSeeMarches(BasePermission):
 def players_marches(request):
     """/marche: the marches of every player who made them public – for R4 and the superuser of every player – with
     the player's in-game name, Discord name, avatar and when a march changed last. Players without a march are left
-    out. A player the superadmin has not approved yet sees only their own (Gether 12. 10. 2026), and others see only
-    approved players' marches."""
+    out. A player the superadmin has not approved yet sees only their own (Gether 12. 10. 2026), and the others – R4
+    too – see only approved players' marches; the superuser sees everyone's, the hidden ones marked."""
     reviewer = private_images.can_review(request.user)
     me = player_of(request.user)
     players = Player.objects.filter(user__is_active=True, marches__isnull=False).distinct()
+    mine = Q(pk=me.pk if me else None)
     if not reviewer:
-        approved = Q(marches_public=True) & (Q(approved=True) | Q(user__is_superuser=True))
-        mine = Q(pk=me.pk if me else None)
-        players = players.filter(approved | mine if me and me.may_post else mine)
-    players = players.prefetch_related('marches')
+        players = players.filter((Q(marches_public=True) & APPROVED) | mine if me and me.may_post else mine)
+    elif not request.user.is_superuser:
+        players = players.filter(APPROVED)
+    players = players.select_related('user').prefetch_related('marches')
     rows = sorted(
         (
             {
@@ -125,6 +126,8 @@ def players_marches(request):
                 'ingame_name': p.ingame_name,
                 'avatar_url': p.avatar_url,
                 'public': p.marches_public,
+                # false: hidden from everyone but the superuser
+                'approved': p.may_post,
                 'me': bool(me and p.pk == me.pk),
                 'marches': [march_data(m) for m in p.marches.all()],
                 'updated_at': iso(max(m.updated_at for m in p.marches.all())),

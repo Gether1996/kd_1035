@@ -20,6 +20,11 @@ def validate_offsets(value):
         )
 
 
+# players whose marches and KvK sign-ups the web shows to others: approved, or the superadmin themself. A player
+# the superadmin un-approves keeps everything in the database, only the superadmin still sees it (Gether 12. 10. 2026).
+APPROVED = models.Q(approved=True) | models.Q(user__is_superuser=True)
+
+
 class Player(models.Model):
     """A member signed in with Discord. Scope identify only: ID, name and avatar – no e-mail, no servers. The player
     adds their in-game name on /ucet themselves, so leadership recognises them.

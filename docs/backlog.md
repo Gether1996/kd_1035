@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.23.2:** keď superadmin hráčovi zruší schválenie, jeho marche a prihlášky na KvK ostanú uložené, ale na webe ich vidí už iba superadmin (označené „neschválený“) – R4 ani ostatní hráči nie.
 - **12. 10. 2026 – v1.23.1:** opravy po kontrole kritika: schválený hráč uvidí marche hneď po návrate na kartu (bez F5), text „Čakáš na schválenie“ už nesľubuje správu, ktorá nemusela prísť, schválenie pod filtrom „Čakajú“ riadok hneď neodsunie, uloženie výbavy prihlášky mení len výbavu a bonusy, pri viacerých superadminoch nepríde upozornenie dvakrát; drobnosti na mobile a v popisoch pre čítačky.
 - **12. 10. 2026 – v1.23.0:** nového hráča z Discordu musí schváliť superadmin, až potom pridá marche a prihlášku na KvK (existujúci hráči sú schválení); o každom novom hráčovi príde Getherovi správa od bota na Discord. Sekcia Hráči má prepínač Schválený, filtre R4 a schválenia a čakajúcich hore. Marche hráčov sa dajú zoradiť (najnovšie, počet marchov, meno) a filtrovať podľa typu, pri hráčovi je dátum poslednej úpravy.
 - **12. 10. 2026 – v1.22.0:** prihláška na KvK sa vypĺňa presne ako march – typ, commanderi so skillmi, naklikaná výbava, formácia, inscriptions a bonusy armamentov, k tomu poznámka; screenshoty sú zrušené (staré sa zmažú). Prihláška je karta ako march, R4 vidí rally a garrison hráča vedľa seba a jeho marche ako karty.

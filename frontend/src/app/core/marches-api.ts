@@ -31,6 +31,8 @@ export interface PlayerMarches {
   public: boolean;
   /** the visitor's own marches */
   me: boolean;
+  /** false: not approved – hidden from everyone but the superuser */
+  approved: boolean;
   marches: March[];
   /** the last change of one of the marches (ISO) */
   updated_at: string;

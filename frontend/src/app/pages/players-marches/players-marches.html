@@ -94,7 +94,9 @@
             @if (player.me) {
               <span class="tag">{{ p.you }}</span>
             }
-            @if (!player.public) {
+            @if (!player.approved) {
+              <span class="tag tag--private" [title]="p.hiddenHint"><svg appIcon="eye-off"></svg>{{ p.hidden }}<span class="sr-only"> – {{ p.hiddenHint }}</span></span>
+            } @else if (!player.public) {
               <span class="tag tag--private"><svg appIcon="eye-off"></svg>{{ p.r4Only }}</span>
             }
             <svg class="player__chevron" appIcon="chevron-down"></svg>

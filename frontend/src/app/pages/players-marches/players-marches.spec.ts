@@ -65,11 +65,12 @@ describe('PlayersMarches', () => {
           ingame_name: 'Nelly',
           avatar_url: '',
           public: true,
+          approved: true,
           me: true,
           marches: [MARCH, { ...MARCH, id: 3, position: 2, kind: 'archer' }],
           updated_at: '2026-10-10T12:00:00Z',
         },
-        { id: 2, name: 'bob', ingame_name: '', avatar_url: '', public: true, me: false, marches: [MARCH], updated_at: '2026-10-12T12:00:00Z' },
+        { id: 2, name: 'bob', ingame_name: '', avatar_url: '', public: true, approved: true, me: false, marches: [MARCH], updated_at: '2026-10-12T12:00:00Z' },
       ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);

@@ -302,6 +302,9 @@ export const sk = {
     noMatch: 'Takého hráča tu nemáme.',
     you: 'Ty',
     r4Only: 'len R4',
+    // a player the superadmin has not approved (or un-approved) – only the superadmin sees their things
+    hidden: 'neschválený',
+    hiddenHint: 'Hráč nie je schválený – jeho marche a prihlášky vidíš iba ty.',
     count: ['{n} march', '{n} marche', '{n} marchov'],
     expandAll: 'Rozbaliť všetky',
     collapseAll: 'Zbaliť všetky',
@@ -793,6 +796,7 @@ export const sk = {
           'Údaje vidí správca webu (Gether) v administrácii. Keď sa prihlásiš prvýkrát, bot mu pošle na Discord tvoje meno a ID, aby ťa mohol schváliť.',
           'Prihlášky na KvK a tvoje marche vidí aj vedenie, ktorému správca povolí prezeranie (R4) – spolu s tvojím menom v hre, Discord menom, avatarom a ID.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
+          'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

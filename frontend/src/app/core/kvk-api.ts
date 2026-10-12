@@ -24,7 +24,8 @@ export interface KvkSignup extends Omit<March, 'position'> {
   note: string;
   updated_at: string;
   /** for reviewers */
-  player?: { id: number; name: string; ingame_name: string; avatar_url: string; discord_id: string };
+  /** approved false: hidden from everyone but the superuser */
+  player?: { id: number; name: string; ingame_name: string; avatar_url: string; discord_id: string; approved: boolean };
   /** for reviewers: the player's marches from /ucet */
   marches?: March[];
 }

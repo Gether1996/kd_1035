@@ -49,6 +49,9 @@
                 {{ s.player?.name }} · {{ k.updated }} {{ date(g.updated) }}
               </span>
             </div>
+            @if (s.player?.approved === false) {
+              <span class="tag tag--pending" [title]="i18n.t().playersMarches.hiddenHint"><svg appIcon="eye-off"></svg>{{ i18n.t().playersMarches.hidden }}<span class="sr-only"> – {{ i18n.t().playersMarches.hiddenHint }}</span></span>
+            }
             @if (s.player; as p) {
               <a
                 class="pill-btn pill-btn--quiet signup__contact"
