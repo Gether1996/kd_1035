@@ -21,8 +21,8 @@
   @if (failed()) {
     <p class="panel__lead is-error">{{ m.loadError }}</p>
   } @else if (loaded()) {
-    @if (withoutStats(); as n) {
-      <p class="march-hint march-hint--alert" role="status">{{ m.statsMissingCount.replace('{n}', '' + n) }}</p>
+    @if (incomplete(); as n) {
+      <p class="march-hint march-hint--alert" role="status">{{ m.incompleteCount.replace('{n}', '' + n) }}</p>
     }
     <ol class="march-list">
       @for (march of marches(); track march.id) {

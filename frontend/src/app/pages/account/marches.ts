@@ -13,7 +13,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { hasBuild } from '../../core/armory';
+import { emptyParts, hasBuild } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { March, REQUIRED_STATS } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
@@ -70,9 +70,16 @@ export class Marches {
   protected readonly error = signal<string | null>(null);
   protected readonly armed = signal<number | null>(null);
   private readonly buildEditor = viewChild.required(BuildEditor);
-  /** marches saved before the bonuses were required (v1.15.1) – the owner is asked to fill them in */
-  protected readonly withoutStats = computed(
-    () => this.marches().filter((m) => REQUIRED_STATS.some((stat) => m[stat] == null)).length,
+  /**
+   * marches with something red: the bonuses missing (saved before they were required, v1.15.1), no item or no armament
+   * at all (Gether 12. 10. 2026) – the owner is asked to fill them in
+   */
+  protected readonly incomplete = computed(
+    () =>
+      this.marches().filter((m) => {
+        const empty = emptyParts(m);
+        return empty.gear || empty.armaments || REQUIRED_STATS.some((stat) => m[stat] == null);
+      }).length,
   );
   /** a new march can be added once nothing is being edited */
   protected readonly canAdd = computed(() => !this.draft() && this.marches().length < this.max());

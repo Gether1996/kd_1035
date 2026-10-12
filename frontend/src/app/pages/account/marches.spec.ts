@@ -162,6 +162,7 @@ describe('Marches', () => {
     expect(el.querySelector('.mb__primary')?.textContent?.trim()).toBe('Attila');
     // an own march without equipment shows its empty slots as buttons – a tile opens the editor on its slot
     expect(el.querySelectorAll('app-march-build button.gear__tile').length).toBe(8);
+    expect(el.querySelectorAll('app-march-build button.mb__missing').length).toBe(2);
 
     el.querySelector<HTMLButtonElement>('.march__build')!.click();
     await tick(fixture);
@@ -248,6 +249,9 @@ describe('Marches', () => {
     expect([...el.querySelectorAll('.mb__inscs .insc')].map((i) => i.textContent?.trim())).toEqual(['Toppler', 'Patronage']);
     expect(el.querySelector('app-march-build .gear__iconic')?.textContent).toBe('III');
     expect(el.querySelector('app-march-build .gear__crit')).not.toBeNull();
+    // nothing empty any more: no red link, no hint
+    expect(el.querySelector('app-march-build button.mb__missing')).toBeNull();
+    expect(el.querySelector('.march-hint--alert')).toBeNull();
     http.verify();
   });
 
@@ -256,6 +260,8 @@ describe('Marches', () => {
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
     const seven = Array.from({ length: 7 }, (_, i) => ({ ...MARCH, id: i + 1, position: i + 1 }));
+    // the second one has its formation, only the bonuses are missing
+    seven[1] = { ...seven[1], formation: 'pincer' };
     http.expectOne('/api/me/marches/').flush({ marches: seven, max: 7 });
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     await tick(fixture);
@@ -263,13 +269,34 @@ describe('Marches', () => {
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.add-march')).toBeNull();
-    // a march without its bonuses: the red link opens the editor on the Armamenty tab
-    expect(el.textContent).toContain('Marche bez bonusov armamentov: 7');
-    el.querySelector<HTMLButtonElement>('button.mb__missing')!.click();
+    // empty equipment, empty armaments or missing bonuses: red links, each opens the editor on its tab
+    expect(el.textContent).toContain('Neúplné marche: 7');
+    const links = (card: number) => [...el.querySelectorAll('app-march-build')[card].querySelectorAll<HTMLButtonElement>('button.mb__missing')];
+    expect(links(0).map((b) => b.textContent?.trim())).toEqual(['Doplň výbavu', 'Doplň armamenty']);
+    expect(links(1).map((b) => b.textContent?.trim())).toEqual(['Doplň výbavu', 'Doplň bonusy armamentov']);
+    const pressedTab = () => el.querySelector('dialog.be .be__tabs button[aria-pressed="true"]');
+    const closeEditor = async () => {
+      el.querySelector<HTMLButtonElement>('dialog.be .be__actions .pill-btn--quiet')!.click();
+      await tick(fixture);
+    };
+    links(0)[1].click();
     await tick(fixture);
-    expect(el.querySelector('dialog.be .be__tabs button[aria-pressed="true"]')?.textContent).toContain('Armamenty');
-    el.querySelector<HTMLButtonElement>('dialog.be .be__actions .pill-btn--quiet')!.click();
+    expect(pressedTab()?.textContent).toContain('Armamenty');
+    // both tabs red while empty
+    expect([...el.querySelectorAll('dialog.be .be__tab.is-empty')].length).toBe(2);
+    await closeEditor();
+    links(0)[0].click();
     await tick(fixture);
+    expect(pressedTab()?.textContent).toContain('Výbava');
+    await closeEditor();
+    links(1)[1].click();
+    await tick(fixture);
+    expect(pressedTab()?.textContent).toContain('Armamenty');
+    // the formation is there: only the Výbava tab is red
+    const red = [...el.querySelectorAll('dialog.be .be__tab.is-empty')];
+    expect(red.length).toBe(1);
+    expect(red[0].textContent).toContain('Výbava');
+    await closeEditor();
 
     // removing is in the editor of the march
     el.querySelector<HTMLButtonElement>('.march__edit')!.click();

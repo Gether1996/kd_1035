@@ -12,6 +12,7 @@ import {
   MAX_PER_PIECE,
   TROOP_STATS,
   buildOf,
+  emptyParts,
   gearTotals,
   itemScore,
   itemSlot,
@@ -228,6 +229,9 @@ export class BuildEditor {
 
   /** the slots filled, on the Výbava tab */
   protected readonly gearCount = computed(() => Object.keys(this.draft().gear).length);
+
+  /** no formation and no inscription – the Armamenty tab is red, like the empty Výbava */
+  protected readonly armamentsEmpty = computed(() => emptyParts({ ...this.march(), ...this.draft() }).armaments);
 
   // ---------------------------------------------------------------- armaments
 

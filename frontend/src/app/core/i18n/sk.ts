@@ -375,7 +375,10 @@ export const sk = {
     // a march saved before the bonuses were required (v1.15.1)
     statsMissing: 'Bonusy armamentov nevyplnené',
     statsMissingOwn: 'Doplň bonusy armamentov',
-    statsMissingCount: 'Marche bez bonusov armamentov: {n} – doplň ich červeným odkazom pri marchi.',
+    // the own march with no item or no armament at all (Gether 12. 10. 2026)
+    gearMissingOwn: 'Doplň výbavu',
+    armamentsMissingOwn: 'Doplň armamenty',
+    incompleteCount: 'Neúplné marche: {n} – doplň, čo je pri nich červené.',
     choose: 'Vybrať',
     edit: 'Upraviť',
     editMarch: 'Upraviť typ a commanderov',

@@ -7,6 +7,7 @@ import {
   Inscription,
   TROOP_STATS,
   buildOf,
+  emptyParts,
   gearTotals,
   troopOf,
   troopStat,
@@ -118,6 +119,12 @@ export class MarchBuild {
       full: statLabel(this.t(), march.kind, key),
       value: march[key]!,
     }));
+  });
+
+  /** the own march with no item or no armament at all: a red link opens the editor on that tab */
+  protected readonly missing = computed(() => {
+    const parts = emptyParts(this.march());
+    return { gear: this.own() && parts.gear, armaments: this.own() && parts.armaments };
   });
 
   protected readonly statsMissing = computed(

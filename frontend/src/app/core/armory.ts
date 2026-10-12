@@ -94,6 +94,22 @@ export function hasBuild(march: Pick<March, 'gear' | 'formation' | 'inscriptions
   return Object.keys(build.gear).length > 0 || !!build.formation || build.inscriptions.length > 0;
 }
 
+/**
+ * The parts of a march left completely empty – red on the own march and in the editor (Gether 12. 10. 2026): no item
+ * at all, or no formation and no inscription (the counts typed in before the inscriptions were clicked count too).
+ */
+export function emptyParts(march: Pick<March, 'gear' | 'formation' | 'inscriptions' | 'gold' | 'blue' | 'white'>): {
+  gear: boolean;
+  armaments: boolean;
+} {
+  const build = buildOf(march);
+  const counted = [march.gold, march.blue, march.white].some((n) => (n ?? 0) > 0);
+  return {
+    gear: !Object.keys(build.gear).length,
+    armaments: !build.formation && !build.inscriptions.length && !counted,
+  };
+}
+
 export function itemSlot(slot: GearSlot): ItemSlot {
   return slot.startsWith('accessory') ? 'accessory' : (slot as ItemSlot);
 }

@@ -56,6 +56,10 @@
       } @else {
         <div class="mb__loading" aria-hidden="true"></div>
       }
+      @if (missing().gear) {
+        <!-- the own march without a single item: red, straight to the editor -->
+        <button type="button" class="mb__missing is-own" (click)="slotPick.emit('weapon')">{{ k.gearMissingOwn }}</button>
+      }
     </section>
   }
 
@@ -73,8 +77,12 @@
         </ul>
       </div>
     }
+    @if (missing().armaments) {
+      <!-- the own march without a formation and an inscription: red, straight to the Armamenty tab -->
+      <button type="button" class="mb__missing is-own" (click)="armamentsPick.emit()">{{ k.armamentsMissingOwn }}</button>
+    }
     <!-- the armament bonuses typed in (and the inscription counts of a march saved before they were clicked together) -->
-    @if (statsMissing()) {
+    @if (statsMissing() && !missing().armaments) {
       @if (own()) {
         <!-- the own march: straight to the bonuses in the editor -->
         <button type="button" class="mb__missing is-own" (click)="armamentsPick.emit()">{{ k.statsMissingOwn }}</button>

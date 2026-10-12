@@ -66,6 +66,25 @@
       opacity: 1;
     }
   }
+
+  // nothing filled in on this tab yet (Gether 12. 10. 2026)
+  &.is-empty {
+    border-color: color-mix(in srgb, var(--red-500) 70%, transparent);
+    color: var(--red-300);
+
+    &::after {
+      background: var(--red-500);
+    }
+
+    &[aria-pressed='true'] {
+      border-color: var(--red-500);
+      background: color-mix(in srgb, var(--red-500) 14%, var(--field-bg));
+    }
+
+    .be__count {
+      color: var(--red-300);
+    }
+  }
 }
 
 .be__count {
