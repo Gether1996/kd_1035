@@ -204,7 +204,7 @@
   border: 0;
 }
 
-// the four armaments without their names: a row each, a thin line between them
+// the four armaments, each with its name (Gether 12. 10. 2026: "nech vieme, ku čomu patria tie inscriptions")
 .be__piece + .be__piece {
   padding-top: 10px;
   border-top: 1px dashed var(--line);
@@ -253,10 +253,11 @@
   cursor: not-allowed;
 }
 
-.be__counter {
-  margin: 0;
-  color: var(--text-dim);
-  font-size: 0.875rem;
+.be__piece-count {
+  margin-left: 8px;
+  color: var(--text-mute);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
 
   &.is-full {
     color: var(--gold-300);

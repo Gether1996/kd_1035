@@ -3,6 +3,8 @@ army (commander pair, armament bonuses and inscriptions – army.py) and a scree
 reviewers and the superuser see them next to the player's KvK sign-up. Session + CSRF, players signed in with Discord.
 """
 
+from collections import Counter
+
 from django.db import transaction
 from django.db.models import F, Prefetch, Q
 from django.shortcuts import get_object_or_404
@@ -80,6 +82,9 @@ class MarchSerializer(ArmySerializer):
             allowed = armory.formations().get(formation, set()) | armory.common_inscriptions()
             if len(set(chosen)) != len(chosen) or not set(chosen) <= allowed:
                 raise serializers.ValidationError({'inscriptions': 'unknown'})
+            pieces = Counter(armory.inscription_pieces()[i] for i in chosen)
+            if any(count > armory.MAX_PER_PIECE for count in pieces.values()):
+                raise serializers.ValidationError({'inscriptions': 'per_piece'})
         # the armament bonuses and inscriptions are required (Gether 11. 10. 2026; 0 counts), All DMG may stay empty =
         # 0. A new march brings them all; a change may not clear one. Marches saved before keep their empty ones until
         # the player edits them.

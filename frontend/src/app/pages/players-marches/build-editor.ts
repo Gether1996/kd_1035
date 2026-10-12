@@ -9,7 +9,7 @@ import {
   ICONIC_MAX,
   ITEM_RARITIES,
   Inscription,
-  MAX_INSCRIPTIONS,
+  MAX_PER_PIECE,
   TROOP_STATS,
   buildOf,
   gearTotals,
@@ -53,7 +53,7 @@ export class BuildEditor {
   protected readonly index = this.armory.index;
   protected readonly failed = this.armory.failed;
   protected readonly pieces = ARMAMENT_PIECES;
-  protected readonly maxInscriptions = MAX_INSCRIPTIONS;
+  protected readonly maxPerPiece = MAX_PER_PIECE;
   protected readonly iconicLevels = Array.from({ length: ICONIC_MAX + 1 }, (_, i) => i);
   protected readonly roman = roman;
 
@@ -174,18 +174,22 @@ export class BuildEditor {
 
   protected readonly formations = computed(() => this.index()?.data.formations ?? []);
 
-  /** each armament: the formation's own inscriptions (gold, blue) and the common ones */
+  /** each armament: the formation's own inscriptions (gold, blue) and the common ones, how many are chosen (max. 2) */
   protected readonly armaments = computed(() => {
     const index = this.index();
     if (!index) return [];
     const own = index.formations.get(this.draft().formation)?.inscriptions ?? [];
-    return ARMAMENT_PIECES.map((piece) => ({
-      piece,
-      inscriptions: [...own.filter((i) => i.piece === piece), ...index.data.common.filter((i) => i.piece === piece)],
-    }));
+    const chosen = this.draft().inscriptions.map((id) => index.inscriptions.get(id)?.piece);
+    return ARMAMENT_PIECES.map((piece) => {
+      const count = chosen.filter((p) => p === piece).length;
+      return {
+        piece,
+        count,
+        full: count >= MAX_PER_PIECE,
+        inscriptions: [...own.filter((i) => i.piece === piece), ...index.data.common.filter((i) => i.piece === piece)],
+      };
+    });
   });
-
-  protected readonly full = computed(() => this.draft().inscriptions.length >= MAX_INSCRIPTIONS);
 
   protected setFormation(id: string): void {
     const index = this.index();
@@ -202,7 +206,8 @@ export class BuildEditor {
   }
 
   protected toggle(inscription: Inscription): void {
-    if (!this.chosen(inscription) && this.full()) return;
+    const piece = this.armaments().find((a) => a.piece === inscription.piece);
+    if (!this.chosen(inscription) && piece?.full) return;
     this.draft.update((d) => ({
       ...d,
       inscriptions: this.chosen(inscription)

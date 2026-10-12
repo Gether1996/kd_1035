@@ -394,8 +394,6 @@ export const cs: Dict = {
       stats: { attack: 'ATK', defense: 'DEF', health: 'HP', march_speed: 'Rychlost' },
       pieces: { emblem: 'Emblem', flag: 'Flag', instrument: 'Instrument', scroll: 'Scroll' },
       rarity: { special: 'zlatá', rare: 'modrá', common: 'bílá' },
-      count: '{n} z {max}',
-      limit: 'Nejvýše {max} inscriptions.',
       pickFormation: 'Vyber formaci – pod ní se ukážou její zlaté a modré inscriptions.',
       search: 'Hledat předmět',
       weaker: 'I slabší (Elite, Advanced, Common)',

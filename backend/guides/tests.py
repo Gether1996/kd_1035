@@ -822,6 +822,9 @@ class ArmoryTests(TestCase):
             self.assertTrue((GEAR_DIR / f'{item["id"]}.webp').exists(), item['name'])
             # a crit raises the stats, never drops one
             self.assertLessEqual(set(item['stats']), set(item['crit']), item['name'])
+            # every legendary item has iconic levels, accessories too (Gether 12. 10. 2026)
+            if item['rarity'] == 'legendary':
+                self.assertTrue(item.get('iconic'), item['name'])
         ids = armory.items()
         for item_set in data['sets']:
             self.assertTrue(item_set['pieces'])

@@ -400,8 +400,6 @@ export const sk = {
       stats: { attack: 'ATK', defense: 'DEF', health: 'HP', march_speed: 'Rýchlosť' },
       pieces: { emblem: 'Emblem', flag: 'Flag', instrument: 'Instrument', scroll: 'Scroll' },
       rarity: { special: 'zlatá', rare: 'modrá', common: 'biela' },
-      count: '{n} z {max}',
-      limit: 'Najviac {max} inscriptions.',
       pickFormation: 'Vyber formáciu – pod ňou sa ukážu jej zlaté a modré inscriptions.',
       search: 'Hľadať predmet',
       weaker: 'Aj slabšie (Elite, Advanced, Common)',

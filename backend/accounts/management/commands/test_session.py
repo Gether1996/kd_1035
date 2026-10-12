@@ -40,7 +40,7 @@ SAMPLE_BUILDS = [
         'formation': 'delta',
         'inscriptions': [
             'delta-scroll-thrasher', 'delta-instrument-causative', 'delta-flag-steelskin', 'delta-emblem-relentless',
-            'u-instrument-patronage', 'u-emblem-enduring', 'u-emblem-watchmen',
+            'u-instrument-patronage', 'u-flag-striker',
         ],
     },
     {

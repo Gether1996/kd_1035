@@ -115,23 +115,19 @@
             }
           </fieldset>
 
-          <p class="be__counter" [class.is-full]="full()" role="status">
-            {{ b.count.replace('{n}', '' + draft().inscriptions.length).replace('{max}', '' + maxInscriptions) }}
-            @if (full()) {
-              · {{ b.limit.replace('{max}', '' + maxInscriptions) }}
-            }
-          </p>
-
           @for (a of armaments(); track a.piece) {
             <fieldset class="be__piece">
-              <legend class="sr-only">{{ b.pieces[a.piece] }}</legend>
+              <legend class="field__label">
+                {{ b.pieces[a.piece] }}
+                <span class="be__piece-count" [class.is-full]="a.full">{{ a.count }}/{{ maxPerPiece }}</span>
+              </legend>
               <div class="be__chips">
                 @for (i of a.inscriptions; track i.id) {
                   <button
                     type="button"
                     class="insc insc--{{ i.rarity }}"
                     [attr.aria-pressed]="chosen(i)"
-                    [attr.aria-disabled]="(full() && !chosen(i)) || null"
+                    [attr.aria-disabled]="(a.full && !chosen(i)) || null"
                     [title]="b.rarity[i.rarity]"
                     (click)="toggle(i)"
                   >

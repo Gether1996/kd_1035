@@ -70,5 +70,9 @@ export const ARMORY: ArmoryData = {
       inscriptions: [{ id: 'pincer-scroll-toppler', name: 'Toppler', rarity: 'special', piece: 'scroll' }],
     },
   ],
-  common: [{ id: 'u-instrument-patronage', name: 'Patronage', rarity: 'common', piece: 'instrument' }],
+  common: [
+    { id: 'u-emblem-enduring', name: 'Enduring', rarity: 'common', piece: 'emblem' },
+    { id: 'u-emblem-watchmen', name: 'Watchmen', rarity: 'common', piece: 'emblem' },
+    { id: 'u-instrument-patronage', name: 'Patronage', rarity: 'common', piece: 'instrument' },
+  ],
 };

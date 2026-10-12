@@ -358,7 +358,7 @@ class MarchTests(KvkTestCase):
         gear = {
             'weapon': {'item': 'sacred-dominion', 'crit': True, 'iconic': 3},
             'accessory1': {'item': 'ring-of-doom'},
-            'accessory2': {'item': 'concealed-dagger', 'crit': False},
+            'accessory2': {'item': 'karuaks-war-drums', 'iconic': 5},
         }
         build = {'gear': gear, 'formation': 'delta', 'inscriptions': ['delta-scroll-thrasher', 'u-instrument-patronage']}
         res = self.call('patch', url, build)
@@ -386,7 +386,9 @@ class MarchTests(KvkTestCase):
             {'formation': 'pincer'},
             {'formation': 'pincer', 'inscriptions': ['delta-scroll-thrasher']},
             {'inscriptions': ['delta-scroll-thrasher', 'delta-scroll-thrasher']},
-            {'inscriptions': ['u-scroll-warcry'] * 13},
+            {'inscriptions': ['u-scroll-warcry'] * 9},
+            # two of each armament at most
+            {'inscriptions': ['u-scroll-warcry', 'u-scroll-ward', 'u-scroll-calm']},
         ):
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
         res = self.call('patch', url, {'formation': 'pincer', 'inscriptions': ['pincer-scroll-toppler', 'u-scroll-warcry']})

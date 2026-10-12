@@ -10,7 +10,8 @@ export type ItemSlot = Exclude<GearSlot, 'accessory1' | 'accessory2'> | 'accesso
 export const ITEM_RARITIES = ['legendary', 'epic', 'elite', 'advanced', 'common'] as const;
 export type ItemRarity = (typeof ITEM_RARITIES)[number];
 export const ICONIC_MAX = 5;
-export const MAX_INSCRIPTIONS = 12;
+/** at most two inscriptions of each armament (Gether 12. 10. 2026) */
+export const MAX_PER_PIECE = 2;
 
 export const ARMAMENT_PIECES = ['emblem', 'flag', 'instrument', 'scroll'] as const;
 export type ArmamentPiece = (typeof ARMAMENT_PIECES)[number];

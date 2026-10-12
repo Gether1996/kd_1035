@@ -80,12 +80,23 @@ describe('MarchBuilds', () => {
     const formations = () => [...dialog.querySelectorAll<HTMLButtonElement>('.be__formation')];
     const inscriptions = () => [...dialog.querySelectorAll<HTMLButtonElement>('button.insc')];
     // without a formation only the common ones
-    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Patronage']);
+    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Enduring', 'Watchmen', 'Patronage']);
     formations()[0].click();
     await tick(fixture);
-    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Relentless', 'Patronage', 'Thrasher']);
-    inscriptions()[2].click();
+    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Relentless', 'Enduring', 'Watchmen', 'Patronage', 'Thrasher']);
+    // two of each armament at most: the third emblem one is blocked
+    inscriptions()[0].click();
     inscriptions()[1].click();
+    await tick(fixture);
+    expect(dialog.querySelector('.be__piece-count')?.textContent).toBe('2/2');
+    expect(inscriptions()[2].getAttribute('aria-disabled')).toBe('true');
+    inscriptions()[2].click();
+    await tick(fixture);
+    expect(inscriptions()[2].getAttribute('aria-pressed')).toBe('false');
+    inscriptions()[0].click();
+    inscriptions()[1].click();
+    inscriptions()[4].click();
+    inscriptions()[3].click();
     await tick(fixture);
     // another formation: its own inscriptions instead, the common one stays
     formations()[1].click();

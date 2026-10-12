@@ -73,7 +73,8 @@ def equipment(page):
         raise CommandError('two items with the same name')
     iconic = js_value(page, 'iconicData')
     for item in items:
-        if item['name'] in iconic:
+        # every legendary item can be awakened, accessories too (Gether 12. 10. 2026) – codexhelper lists only some
+        if item['name'] in iconic or item['rarity'] == 'legendary':
             item['iconic'] = True
     sets = [
         {

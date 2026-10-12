@@ -19,8 +19,9 @@ SLOTS = ('weapon', 'helmet', 'chest', 'gloves', 'legs', 'boots', 'accessory')
 MARCH_SLOTS = ('weapon', 'helmet', 'chest', 'gloves', 'legs', 'boots', 'accessory1', 'accessory2')
 # iconic (awakening) level of an item: 0 = none, I–V
 ICONIC_MAX = 5
-# inscriptions of the four armaments together
-MAX_INSCRIPTIONS = 12
+# at most two inscriptions of each of the four armaments (Gether 12. 10. 2026)
+MAX_PER_PIECE = 2
+MAX_INSCRIPTIONS = 4 * MAX_PER_PIECE
 
 
 @cache
@@ -53,6 +54,13 @@ def formations():
 @cache
 def common_inscriptions():
     return {i['id'] for i in armory()['common']}
+
+
+@cache
+def inscription_pieces():
+    """inscription id → its armament (emblem, flag, instrument, scroll)"""
+    data = armory()
+    return {i['id']: i['piece'] for i in [*data['common'], *(i for f in data['formations'] for i in f['inscriptions'])]}
 
 
 def slot_of(march_slot):

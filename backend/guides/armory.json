@@ -118,7 +118,8 @@
     "cavalry_defense": 19.5,
     "infantry_health": 6.5,
     "archer_attack": 6.5
-   }
+   },
+   "iconic": true
   },
   {
    "id": "twilight-epiphany",
@@ -2076,7 +2077,8 @@
    ],
    "extra_crit": [
     "10% Chance to gain a Shield (Damage Factor 650)"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "karuaks-war-drums",
@@ -2090,7 +2092,8 @@
    ],
    "extra_crit": [
     "10% Chance to grant 65 Extra Rage for itself & up to 2 allies."
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "pendant-of-eternal-night",
@@ -2104,7 +2107,8 @@
    ],
    "extra_crit": [
     "Skill Damage 6.5%"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "ring-of-doom",
@@ -2118,7 +2122,8 @@
    ],
    "extra_crit": [
     "10% Chance to gain 65% Bonus Damage"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "greatest-glory",
@@ -2132,7 +2137,8 @@
    ],
    "extra_crit": [
     "Normal Damage 6.5%"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "horn-of-fury",
@@ -2146,7 +2152,8 @@
    ],
    "extra_crit": [
     "30% Chance to gain 65 Extra Rage"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "concealed-dagger",
@@ -2160,7 +2167,8 @@
    ],
    "extra_crit": [
     "30% Chance to reduce target Health 6.5%"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "moras-web",
@@ -2174,7 +2182,8 @@
    ],
    "extra_crit": [
     "30% Chance to reduce target Defence 5.5% and cavalry March Speed 10.5%"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "vengeance",
@@ -2188,7 +2197,8 @@
    ],
    "extra_crit": [
     "Counterattack Damage 10.5%"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "seths-call",
@@ -2202,7 +2212,8 @@
    ],
    "extra_crit": [
     "10% Chance to grant 13% Attack Bonus"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "immolating-plume",
@@ -2231,7 +2242,8 @@
    ],
    "extra_crit": [
     "50% Chance 4% Combo Attack"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "saddle-of-a-thousand-blessings",
@@ -2245,7 +2257,8 @@
    ],
    "extra_crit": [
     "Smite Damage 4%, 50% Chance to heal 6.5% of slight wounds dealt by smite damage"
-   ]
+   ],
+   "iconic": true
   },
   {
    "id": "timeless-amber",
