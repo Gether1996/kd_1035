@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import close_old_connections
+from django.utils import timezone
 
 from accounts.alarms import prune_alarms, send_alarms
 from accounts.cleanup import sweep_files
@@ -65,7 +66,7 @@ class Command(BaseCommand):
 
             try:
                 # a player signing in for the first time waits for the superadmin – who gets a Discord DM about it
-                announce_new_players()
+                announce_new_players(timezone.now())
             except DiscordPaused:
                 pass
             except Exception:

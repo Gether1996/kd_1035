@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import time
+from datetime import timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -14,7 +15,7 @@ from PIL import Image
 
 from . import cleanup, discord_bot, private_images
 from .models import MAX_MARCHES, TERMS_VERSION, KvkSettings, KvkSignup, March, Player
-from .newcomers import announce_new_players
+from .newcomers import NAME_GRACE, announce_new_players
 from .reminder_views import iso
 from .reminders import DiscordPaused
 from .test_reminders import make_player
@@ -458,23 +459,55 @@ class NewcomerTests(TestCase):
         self.send = patcher.start()
         self.addCleanup(patcher.stop)
 
+    def newbie(self, **fields) -> Player:
+        player = make_player('42', approved=False)
+        Player.objects.filter(pk=player.pk).update(announced=False, **fields)
+        return Player.objects.get(pk=player.pk)
+
     def test_the_superadmin_hears_about_each_new_player_once(self):
         make_player('41')  # from before the approval
-        newbie = make_player('42', approved=False)
-        Player.objects.filter(pk=newbie.pk).update(announced=False)
+        self.newbie(ingame_name='Nelly1035', lang='cs')
         self.assertEqual(announce_new_players(), 1)
         target, message = self.send.call_args.args
         self.assertEqual(target, '245662824171438090')
         embed = message['embeds'][0]
-        self.assertEqual(embed['title'], 'Nový hráč na webe: Nelly')
-        self.assertIn('<@42>', embed['description'])
+        self.assertEqual(embed['title'], 'Nový hráč na webe: Nelly1035')
+        self.assertIn('Meno v hre: **Nelly1035**', embed['description'])
+        self.assertIn('<@42> · nelly', embed['description'])
+        self.assertIn('Web: CZ', embed['description'])
         self.assertIn('https://kd1035.eu/ucet#hraci', embed['description'])
         self.assertEqual(announce_new_players(), 0)
         self.assertEqual(self.send.call_count, 1)
 
+    def test_the_message_waits_for_the_ingame_name(self):
+        newbie = self.newbie()
+        now = newbie.created_at + timedelta(minutes=1)
+        self.assertEqual(announce_new_players(now), 0)
+        self.send.assert_not_called()
+        self.assertFalse(Player.objects.get(pk=newbie.pk).announced)
+        Player.objects.filter(pk=newbie.pk).update(ingame_name='Nelly1035')
+        self.assertEqual(announce_new_players(now + timedelta(seconds=30)), 1)
+        self.assertEqual(self.send.call_args.args[1]['embeds'][0]['title'], 'Nový hráč na webe: Nelly1035')
+
+    def test_without_an_ingame_name_the_message_goes_after_the_grace(self):
+        newbie = self.newbie()
+        self.assertEqual(announce_new_players(newbie.created_at + NAME_GRACE - timedelta(seconds=1)), 0)
+        self.assertEqual(announce_new_players(newbie.created_at + NAME_GRACE), 1)
+        embed = self.send.call_args.args[1]['embeds'][0]
+        self.assertEqual(embed['title'], 'Nový hráč na webe: Nelly')
+        self.assertIn('Meno v hre: zatiaľ nevyplnené', embed['description'])
+        self.assertIn('Web: SK', embed['description'])
+
+    def test_the_players_own_texts_are_not_markdown(self):
+        self.newbie(ingame_name='*[x](https://evil.example)*', username='the_nelly')
+        announce_new_players()
+        description = self.send.call_args.args[1]['embeds'][0]['description']
+        self.assertIn(r'Meno v hre: **\*\[x\]\(https\://evil.example\)\***', description)
+        self.assertIn(r'· the\_nelly', description)
+        self.assertNotIn('](https://evil', description)
+
     def test_discord_down_keeps_the_news_for_the_next_tick(self):
-        newbie = make_player('42', approved=False)
-        Player.objects.filter(pk=newbie.pk).update(announced=False)
+        newbie = self.newbie(ingame_name='Nelly1035')
         self.send.side_effect = discord_bot.BotError('429', temporary=True)
         with self.assertRaises(DiscordPaused):
             announce_new_players()
@@ -485,16 +518,14 @@ class NewcomerTests(TestCase):
 
     @override_settings(DISCORD_BOT_TOKEN='')
     def test_without_a_bot_nothing_piles_up(self):
-        newbie = make_player('42', approved=False)
-        Player.objects.filter(pk=newbie.pk).update(announced=False)
-        announce_new_players()
+        newbie = self.newbie()  # just signed in without an in-game name: no waiting without a bot
+        self.assertEqual(announce_new_players(), 1)
         self.send.assert_not_called()
         self.assertTrue(Player.objects.get(pk=newbie.pk).announced)
 
     @override_settings(DISCORD_ADMIN_IDS=['1', '2'])
     def test_an_admin_who_got_it_does_not_get_it_again(self):
-        newbie = make_player('42', approved=False)
-        Player.objects.filter(pk=newbie.pk).update(announced=False)
+        self.newbie(ingame_name='Nelly1035')
         self.send.side_effect = [None, discord_bot.BotError('429', temporary=True)]
         self.assertEqual(announce_new_players(), 1)
         self.assertEqual(announce_new_players(), 0)
