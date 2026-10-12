@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, login, logout
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -23,7 +24,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 
 from . import discord_oauth
-from .models import Player
+from .models import TERMS_VERSION, Player
 from .serializers import ProfileSerializer
 
 log = logging.getLogger(__name__)
@@ -179,6 +180,15 @@ def not_approved() -> Response:
     return Response({'detail': 'not_approved'}, status=403)
 
 
+def cannot_post(player: Player) -> Response | None:
+    """Marches and KvK sign-ups: only an approved player who agreed to the current terms of use."""
+    if not player.may_post:
+        return not_approved()
+    if not player.terms_accepted:
+        return Response({'detail': 'terms'}, status=403)
+    return None
+
+
 @never_cache
 @ensure_csrf_cookie
 @api_view(['GET', 'PATCH', 'DELETE'])
@@ -203,6 +213,8 @@ def signed_in(request) -> dict | None:
         'ingame_name': player.ingame_name,
         # adds marches and KvK sign-ups (a new player waits for the superadmin, Gether 12. 10. 2026)
         'approved': player.may_post,
+        # agreed to the current terms of use – else the web asks first (Gether 12. 10. 2026)
+        'terms_accepted': player.terms_accepted,
         'is_staff': request.user.is_staff,
         # manages events (admin, irregular dates in the calendar)
         'is_superuser': request.user.is_superuser,
@@ -230,6 +242,19 @@ def delete_account(request):
     logout(request)
     player.delete_account()
     return Response(status=204)
+
+
+@never_cache
+@api_view(['POST'])
+def accept_terms(request):
+    """The player agrees to the current terms of use: the version and the time are saved (the privacy page says so)."""
+    player = player_of(request.user)
+    if not player:
+        raise PermissionDenied() if request.user.is_authenticated else NotAuthenticated()
+    player.terms_version = TERMS_VERSION
+    player.terms_accepted_at = timezone.now()
+    player.save(update_fields=['terms_version', 'terms_accepted_at'])
+    return Response({'login_enabled': discord_oauth.login_enabled(), 'user': signed_in(request)})
 
 
 @api_view(['POST'])

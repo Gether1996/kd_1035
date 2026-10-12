@@ -45,7 +45,7 @@ describe('Account', () => {
   it('links the signed-in card to the privacy page', async () => {
     const el = await render({
       login_enabled: true,
-      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', approved: true, is_staff: false, is_superuser: false },
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', approved: true, terms_accepted: true, is_staff: false, is_superuser: false },
     });
     expect(el.querySelector('#account-name')?.textContent).toContain('Nelly');
     expect(privacyLink(el)?.getAttribute('href')).toBe('/ochrana-udajov');
@@ -55,7 +55,7 @@ describe('Account', () => {
 
   it('asks for the in-game name first and then goes on to the page the player came for', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', approved: true, is_staff: false, is_superuser: false };
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: '', approved: true, terms_accepted: true, is_staff: false, is_superuser: false };
     const el = await render({ login_enabled: true, user }, '/kalendar');
     const input = el.querySelector<HTMLInputElement>('#ingame-name')!;
     expect(el.querySelector('.ingame__ask')?.textContent).toContain('Najprv si nastav meno v hre');
@@ -77,7 +77,7 @@ describe('Account', () => {
   });
 
   it('does not send an empty in-game name – it can be changed, not cleared', async () => {
-    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, is_staff: false, is_superuser: false };
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, terms_accepted: true, is_staff: false, is_superuser: false };
     const el = await render({ login_enabled: true, user });
     const input = el.querySelector<HTMLInputElement>('#ingame-name')!;
     input.value = '  ';

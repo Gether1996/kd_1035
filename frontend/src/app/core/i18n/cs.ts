@@ -57,6 +57,15 @@ export const cs: Dict = {
     },
   },
   update: { text: 'Web má novou verzi.', reload: 'Načíst', close: 'Zavřít' },
+  termsGate: {
+    eyebrow: 'Než budeš pokračovat',
+    title: 'Podmínky používání',
+    text: 'Potvrď, že souhlasíš s podmínkami používání – platí pro marche, přihlášky na KvK i vše, co na web zadáš. Co o tobě ukládáme, najdeš v ochraně údajů.',
+    cookies: 'Používáme jen nezbytné cookies pro přihlášení a ochranu formulářů – žádnou analytiku ani reklamy.',
+    accept: 'Souhlasím',
+    logout: 'Odhlásit se',
+    failed: 'Souhlas se nepodařilo uložit. Zkus to znovu.',
+  },
   nav: {
     home: 'Domů',
     breadcrumb: 'Drobečková navigace',
@@ -719,6 +728,15 @@ export const cs: Dict = {
         list: [],
       },
       {
+        title: 'Účet a obsah od hráčů',
+        text: 'Přihlásit se dá jen přes Discord. Za to, co na web zadáš (jméno ve hře, marche, přihlášky na KvK, poznámky), odpovídáš ty.',
+        list: [
+          'Nepiš urážky, spam ani cizí osobní údaje.',
+          'Nového hráče schvaluje superadmin. Obsah, který porušuje tyto podmínky, může skrýt nebo smazat a účet zablokovat.',
+          'Web nemá zaručenou nepřetržitou dostupnost – může být dočasně mimo provoz.',
+        ],
+      },
+      {
         title: 'Externí odkazy',
         text: 'Discord, Facebook a zdroje pod návody vedou na stránky třetích stran. Za jejich obsah neodpovídáme.',
         list: [],
@@ -759,6 +777,7 @@ export const cs: Dict = {
           'Avatar – uložíme jen jeho kód, obrázek se načte přímo z Discordu.',
           'Jméno ve hře – vyplníš ho po prvním přihlášení.',
           'Čas registrace a posledního přihlášení.',
+          'Kdy jsi souhlasil s podmínkami používání a s kterou jejich verzí.',
           'Zda tě správce schválil – nový hráč přidá marche a přihlášku na KvK až po schválení.',
           'Cookie sessionid – udrží tě přihlášeného 2 týdny, nastaví se už na začátku přihlášení.',
         ],

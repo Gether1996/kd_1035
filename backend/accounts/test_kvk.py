@@ -13,7 +13,7 @@ from django.test import Client, TestCase, override_settings
 from PIL import Image
 
 from . import cleanup, discord_bot, private_images
-from .models import MAX_MARCHES, KvkSettings, KvkSignup, March, Player
+from .models import MAX_MARCHES, TERMS_VERSION, KvkSettings, KvkSignup, March, Player
 from .newcomers import announce_new_players
 from .reminder_views import iso
 from .reminders import DiscordPaused
@@ -545,3 +545,27 @@ class UnapprovedTests(KvkTestCase):
         Player.objects.filter(pk=self.player.pk).update(approved=True)
         self.assertEqual(len(r4.get('/api/kvk/signups/').json()['signups']), 1)
         self.assertEqual(len(other.get('/api/marches/').json()['players']), 1)
+
+
+class TermsTests(KvkTestCase):
+    """A player agrees to the terms of use before adding marches and sign-ups; the version and the time are saved."""
+
+    def test_the_player_agrees_first(self):
+        newbie = make_player('42', terms=False)
+        client = self.login(newbie.user)
+        self.assertFalse(client.get('/api/auth/me/').json()['user']['terms_accepted'])
+        res = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}, client)
+        self.assertEqual((res.status_code, res.json()), (403, {'detail': 'terms'}))
+        self.assertEqual(self.sign_up(client).json(), {'detail': 'terms'})
+
+        self.assertEqual(Client(enforce_csrf_checks=True).post('/api/auth/terms/').status_code, 403)
+        res = self.call('post', '/api/auth/terms/', client=client)
+        self.assertTrue(res.json()['user']['terms_accepted'])
+        newbie.refresh_from_db()
+        self.assertEqual(newbie.terms_version, TERMS_VERSION)
+        self.assertIsNotNone(newbie.terms_accepted_at)
+        self.assertEqual(self.sign_up(client).status_code, 200)
+
+        # new terms: asked again
+        Player.objects.filter(pk=newbie.pk).update(terms_version='2026-01-01')
+        self.assertFalse(client.get('/api/auth/me/').json()['user']['terms_accepted'])

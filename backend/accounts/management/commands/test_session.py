@@ -5,7 +5,7 @@ from django.contrib.auth import BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_K
 from django.contrib.sessions.models import Session
 from django.core.management.base import BaseCommand, CommandError
 
-from accounts.models import MARCH_STATS, KvkSignup, March, Player
+from accounts.models import MARCH_STATS, TERMS_VERSION, KvkSignup, March, Player
 
 # a made-up Discord ID: the snapshot leaves discord_* users and every accounts_* row out (kingdom/snapshot.py)
 DISCORD_ID = '999000111'
@@ -64,7 +64,7 @@ class Command(BaseCommand):
             '--marches', action='store_true', help='Seven public marches and two KvK sign-ups (/marche, /kvk).'
         )
         parser.add_argument(
-            '--new', action='store_true', help='A new player the superadmin has not approved yet (no marches or sign-ups).'
+            '--new', action='store_true', help='A new player: not approved yet and not agreed to the terms of use.'
         )
 
     def handle(self, *args, **options):
@@ -96,6 +96,7 @@ class Command(BaseCommand):
                 'global_name': 'Test Player',
                 'approved': not options['new'],
                 'announced': True,
+                'terms_version': '' if options['new'] else TERMS_VERSION,
             },
         )
         if options['marches']:

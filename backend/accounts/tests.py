@@ -355,6 +355,7 @@ class MeTests(TestCase):
                     'avatar_url': 'https://cdn.discordapp.com/embed/avatars/5.png',
                     'ingame_name': '',
                     'approved': False,
+                    'terms_accepted': False,
                     'is_staff': False,
                     'is_superuser': False,
                 },

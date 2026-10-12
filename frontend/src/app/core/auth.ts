@@ -12,6 +12,8 @@ export interface Player {
   ingame_name: string;
   /** adds marches and KvK sign-ups – a new player waits for the superadmin (Gether 12. 10. 2026) */
   approved: boolean;
+  /** agreed to the current terms of use – else the terms gate asks first */
+  terms_accepted: boolean;
   is_staff: boolean;
   /** manages events (the admin, and in the calendar) */
   is_superuser: boolean;
@@ -65,6 +67,11 @@ export class Auth {
   /** The player's name in Rise of Kingdoms, so leadership recognises them ('' clears it). */
   async saveIngameName(name: string): Promise<void> {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { ingame_name: name })));
+  }
+
+  /** The player agrees to the current terms of use (the server saves the version and the time). */
+  async acceptTerms(): Promise<void> {
+    this.me.set(await firstValueFrom(this.http.post<Me>('/api/auth/terms/', null)));
   }
 
   /** Deletes the player's account on the website (their Discord account is not touched). */

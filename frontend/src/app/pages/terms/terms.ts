@@ -20,6 +20,7 @@ export class Terms {
     { label: this.t().nav.home, link: this.i18n.path('home') },
     { label: this.t().nav.terms, link: this.i18n.path('terms') },
   ]);
-  // same date format in Slovak and Czech; change both when the terms change
-  protected readonly validFrom = { iso: '2026-10-08', text: '8. 10. 2026' };
+  // same date format in Slovak and Czech; change both when the terms change – and TERMS_VERSION in
+  // backend/accounts/models.py, so every signed-in player agrees to the new terms (shared/terms-gate.ts)
+  protected readonly validFrom = { iso: '2026-10-12', text: '12. 10. 2026' };
 }

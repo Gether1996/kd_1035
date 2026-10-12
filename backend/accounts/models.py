@@ -20,6 +20,10 @@ def validate_offsets(value):
         )
 
 
+# the terms of use the players agree to after signing in (Gether 12. 10. 2026): the date "Platné od" of the terms page
+# (frontend pages/terms/terms.ts validFrom) – change both together, every player is then asked again
+TERMS_VERSION = '2026-10-12'
+
 # players whose marches and KvK sign-ups the web shows to others: approved, or the superadmin themself. A player
 # the superadmin un-approves keeps everything in the database, only the superadmin still sees it (Gether 12. 10. 2026).
 APPROVED = models.Q(approved=True) | models.Q(user__is_superuser=True)
@@ -74,6 +78,10 @@ class Player(models.Model):
         default=False,
         help_text='Worker poslal superadminovi na Discord, že sa prihlásil nový hráč.',
     )
+    terms_version = models.CharField(
+        'verzia podmienok', max_length=10, blank=True, help_text='Dátum podmienok používania, s ktorými hráč súhlasil.'
+    )
+    terms_accepted_at = models.DateTimeField('súhlas s podmienkami', null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -86,6 +94,11 @@ class Player(models.Model):
     @property
     def name(self) -> str:
         return self.global_name or self.username
+
+    @property
+    def terms_accepted(self) -> bool:
+        """Agreed to the current terms of use (TERMS_VERSION) – asked again when they change."""
+        return self.terms_version == TERMS_VERSION
 
     @property
     def may_post(self) -> bool:

@@ -60,6 +60,7 @@ const PLAYER: Me = {
     avatar_url: '',
     ingame_name: '',
     approved: true,
+    terms_accepted: true,
     is_staff: false,
     is_superuser: false,
   },

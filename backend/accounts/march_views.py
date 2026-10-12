@@ -19,7 +19,7 @@ from .army import BuildSerializer, current_of
 from .kvk_views import march_data
 from .models import APPROVED, MAX_MARCHES, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
-from .views import not_approved, player_of
+from .views import cannot_post, player_of
 
 
 class MarchSerializer(BuildSerializer):
@@ -54,8 +54,8 @@ def marches(request):
         player.save(update_fields=['marches_public'])
         return Response({'public': public})
     if request.method == 'POST':
-        if not player.may_post:
-            return not_approved()
+        if blocked := cannot_post(player):
+            return blocked
         form = MarchSerializer(data=request.data)
         form.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -84,8 +84,8 @@ def march(request, march_id):
             mine.delete()
             player.marches.filter(position__gt=position).update(position=F('position') - 1)
         return Response(status=204)
-    if not player.may_post:
-        return not_approved()
+    if blocked := cannot_post(player):
+        return blocked
     form = MarchSerializer(data=request.data, partial=True, context={'current': current_of(mine)})
     form.is_valid(raise_exception=True)
     for field, value in form.validated_data.items():

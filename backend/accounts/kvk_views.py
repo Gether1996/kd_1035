@@ -21,7 +21,7 @@ from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
 from .models import APPROVED, MARCH_STATS, KvkSettings, KvkSignup, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
-from .views import not_approved, player_of
+from .views import cannot_post, player_of
 
 log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
@@ -147,8 +147,8 @@ def signup(request):
             return Response({'role': 'invalid'}, status=400)
         KvkSignup.objects.filter(player=player, role=role).delete()
         return Response(status=204)
-    if not player.may_post:
-        return not_approved()
+    if blocked := cannot_post(player):
+        return blocked
     body = request.data if isinstance(request.data, dict) else {}
     role = body.get('role')
     saved = KvkSignup.objects.filter(player=player, role=role).first() if role in ROLES else None

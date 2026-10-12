@@ -13,6 +13,7 @@ const PLAYER: Me = {
     avatar_url: 'https://cdn.discordapp.com/x.png',
     ingame_name: '',
     approved: true,
+    terms_accepted: true,
     is_staff: false,
     is_superuser: false,
   },

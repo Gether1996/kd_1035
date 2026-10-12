@@ -32,6 +32,8 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'ingame_name',
         'approved',
         'kvk_reviewer',
+        'terms_version',
+        'terms_accepted_at',
         'discord_id',
         'avatar',
         'remind_discord',

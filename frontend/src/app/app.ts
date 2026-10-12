@@ -8,10 +8,11 @@ import { Footer } from './layout/footer/footer';
 import { Header } from './layout/header/header';
 import { Icon } from './shared/icon';
 import { ScrollFx } from './shared/scroll-fx';
+import { TermsGate } from './shared/terms-gate';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Footer, Icon, ScrollFx],
+  imports: [RouterOutlet, Header, Footer, Icon, ScrollFx, TermsGate],
   template: `
     <a class="skip-link" href="#main">{{ i18n.t().nav.skip }}</a>
     <app-header />
@@ -27,6 +28,7 @@ import { ScrollFx } from './shared/scroll-fx';
       </div>
     </div>
     <app-footer />
+    <app-terms-gate />
     @if (update.available() && !update.dismissed()) {
       <div class="update-bar" role="status">
         <span>{{ i18n.t().update.text }}</span>

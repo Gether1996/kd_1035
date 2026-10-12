@@ -56,6 +56,16 @@ export const sk = {
   },
   // a newer version of the site is deployed than the one open in the tab
   update: { text: 'Web má novú verziu.', reload: 'Načítať', close: 'Zavrieť' },
+  // after signing in, once per version of the terms (shared/terms-gate.ts)
+  termsGate: {
+    eyebrow: 'Pred pokračovaním',
+    title: 'Podmienky používania',
+    text: 'Potvrď, že súhlasíš s podmienkami používania – platia pre marche, prihlášky na KvK aj všetko, čo na web zadáš. Čo o tebe ukladáme, nájdeš v ochrane údajov.',
+    cookies: 'Používame iba nevyhnutné cookies na prihlásenie a ochranu formulárov – žiadnu analytiku ani reklamy.',
+    accept: 'Súhlasím',
+    logout: 'Odhlásiť sa',
+    failed: 'Súhlas sa nepodarilo uložiť. Skús to znova.',
+  },
   nav: {
     home: 'Domov',
     breadcrumb: 'Navigačná cesta',
@@ -726,6 +736,15 @@ export const sk = {
         list: [],
       },
       {
+        title: 'Účet a obsah od hráčov',
+        text: 'Prihlásiť sa dá iba cez Discord. Za to, čo na web zadáš (meno v hre, marche, prihlášky na KvK, poznámky), zodpovedáš ty.',
+        list: [
+          'Nepíš urážky, spam ani cudzie osobné údaje.',
+          'Nového hráča schvaľuje superadmin. Obsah, ktorý porušuje tieto podmienky, môže skryť alebo zmazať a účet zablokovať.',
+          'Web nemá zaručenú nepretržitú dostupnosť – môže byť dočasne mimo prevádzky.',
+        ],
+      },
+      {
         title: 'Externé odkazy',
         text: 'Discord, Facebook a zdroje pod návodmi vedú na stránky tretích strán. Za ich obsah nezodpovedáme.',
         list: [],
@@ -767,6 +786,7 @@ export const sk = {
           'Avatar – uložíme iba jeho kód, obrázok sa načíta priamo z Discordu.',
           'Meno v hre – vyplníš ho po prvom prihlásení.',
           'Čas registrácie a posledného prihlásenia.',
+          'Kedy si súhlasil s podmienkami používania a s ktorou ich verziou.',
           'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení.',
           'Cookie sessionid – udrží ťa prihláseného 2 týždne, nastaví sa už na začiatku prihlásenia.',
         ],

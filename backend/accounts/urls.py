@@ -7,6 +7,7 @@ urlpatterns = [
     path('auth/discord/callback/', views.discord_callback),
     path('auth/me/', views.me),
     path('auth/logout/', views.sign_out),
+    path('auth/terms/', views.accept_terms),
     path('me/reminders/', reminder_views.reminders),
     path('me/reminders/test/', reminder_views.test_dm),
     path('me/reminders/<int:event_id>/', reminder_views.event_reminder),

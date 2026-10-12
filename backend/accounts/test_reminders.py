@@ -18,7 +18,7 @@ from kingdom import snapshot
 from kingdom.models import EVENING_BEFORE, KingdomEvent
 
 from . import discord_bot, reminders
-from .models import EventReminder, Player, SentReminder, validate_offsets
+from .models import TERMS_VERSION, EventReminder, Player, SentReminder, validate_offsets
 from .reminder_views import TestMessageThrottle, WriteThrottle, last_delivery
 
 BOT = {'DISCORD_BOT_TOKEN': 'bot-secret-token'}
@@ -34,10 +34,16 @@ def utc(*args):
     return datetime(*args, tzinfo=UTC)
 
 
-def make_player(discord_id='80351110224678912', approved=True, **kwargs):
+def make_player(discord_id='80351110224678912', approved=True, terms=True, **kwargs):
     user = User.objects.create_user(f'discord_{discord_id}', **kwargs)
     return Player.objects.create(
-        user=user, discord_id=discord_id, username='nelly', global_name='Nelly', approved=approved, announced=True
+        user=user,
+        discord_id=discord_id,
+        username='nelly',
+        global_name='Nelly',
+        approved=approved,
+        announced=True,
+        terms_version=TERMS_VERSION if terms else '',
     )
 
 

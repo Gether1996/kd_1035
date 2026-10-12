@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.24.0:** prihlásený hráč raz potvrdí podmienky používania v okne (uloží sa verzia a čas súhlasu, bez neho nepridá marche ani prihlášku na KvK); podmienky majú nový blok o účte a obsahu od hráčov, okno spomína, že web používa iba nevyhnutné cookies.
 - **12. 10. 2026 – v1.23.3:** na Marche hráčov je pri hráčovi dátum aj čas poslednej úpravy („upravené 12. 10. 15:18“); časy pri marchoch, prihláškach na KvK a v zozname Hráči sú vždy v našom pásme (Europe/Bratislava).
 - **12. 10. 2026 – v1.23.2:** keď superadmin hráčovi zruší schválenie, jeho marche a prihlášky na KvK ostanú uložené, ale na webe ich vidí už iba superadmin (označené „neschválený“) – R4 ani ostatní hráči nie.
 - **12. 10. 2026 – v1.23.1:** opravy po kontrole kritika: schválený hráč uvidí marche hneď po návrate na kartu (bez F5), text „Čakáš na schválenie“ už nesľubuje správu, ktorá nemusela prísť, schválenie pod filtrom „Čakajú“ riadok hneď neodsunie, uloženie výbavy prihlášky mení len výbavu a bonusy, pri viacerých superadminoch nepríde upozornenie dvakrát; drobnosti na mobile a v popisoch pre čítačky.
