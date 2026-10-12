@@ -1,4 +1,4 @@
-import { copyLink } from './copy-link';
+import { copyLink, copyText } from './copy-link';
 
 describe('copyLink', () => {
   const url = 'https://kd1035.eu/navody/commanderi/pary-pre-jazdu';
@@ -72,5 +72,28 @@ describe('copyLink', () => {
 
     expect(await copyLink(url)).toBe('failed');
     expect(share).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('copyText', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('copies to the clipboard synchronously and never opens the share sheet', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const share = vi.fn();
+    vi.stubGlobal('navigator', { clipboard: { writeText }, share });
+    const copied = copyText('**Rally (1)**');
+    expect(writeText).toHaveBeenCalledWith('**Rally (1)**');
+    expect(await copied).toBe(true);
+    expect(share).not.toHaveBeenCalled();
+  });
+
+  it('reports a denied or missing clipboard (the caller shows the text to copy by hand)', async () => {
+    const share = vi.fn();
+    vi.stubGlobal('navigator', { clipboard: { writeText: () => Promise.reject(new DOMException('denied', 'NotAllowedError')) }, share });
+    expect(await copyText('x')).toBe(false);
+    vi.stubGlobal('navigator', { share });
+    expect(await copyText('x')).toBe(false);
+    expect(share).not.toHaveBeenCalled();
   });
 });
