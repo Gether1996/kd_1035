@@ -1,7 +1,8 @@
-"""The player's marches on /marche ("Moje marche", Gether 11. 10. 2026): up to MAX_MARCHES, each with a type, the
-army (commander pair, armament bonuses and inscription counts – army.py) and the build clicked together (equipment,
-formation, inscriptions – guides/armory.py; no screenshot since 12. 10. 2026). The player edits them; the reviewers and
-the superuser see them next to the player's KvK sign-up. Session + CSRF, players signed in with Discord.
+"""The player's marches on /marche ("Prehľad marchov", Gether 11. and 12. 10. 2026): up to MAX_MARCHES, each with a
+type, the commander pair (army.py), the build clicked together (equipment, formation, inscriptions – guides/armory.py)
+and the armament bonuses typed in its editor; the inscription counts follow from the inscriptions. No screenshot since
+12. 10. 2026. The player edits them; the reviewers and the superuser see them next to the player's KvK sign-up.
+Session + CSRF, players signed in with Discord.
 """
 
 from collections import Counter
@@ -66,6 +67,12 @@ class MarchSerializer(ArmySerializer):
             raise serializers.ValidationError('unknown')
         return value
 
+    def to_internal_value(self, data):
+        # a march counts its inscriptions clicked together – counts sent along are ignored, valid or not
+        if isinstance(data, dict):
+            data = {key: value for key, value in data.items() if key not in COUNTED}
+        return super().to_internal_value(data)
+
     def validate(self, data):
         # a new march is saved with its type and primary commander (the web asks for both)
         if not self.partial:
@@ -73,9 +80,9 @@ class MarchSerializer(ArmySerializer):
                 if not data.get(field):
                     raise serializers.ValidationError({field: 'required'})
         data = super().validate(data)
-        # the inscriptions of the formation (its own ones) and the common ones, each once
+        current = self.context.get('current') or {}
+        # the inscriptions of the formation (its own ones) and the common ones, each once, two of each armament
         if 'formation' in data or 'inscriptions' in data:
-            current = self.context.get('current') or {}
             formation = data.get('formation', current.get('formation', ''))
             chosen = data.get('inscriptions', current.get('inscriptions', []))
             allowed = armory.formations().get(formation, set()) | armory.common_inscriptions()
@@ -84,17 +91,20 @@ class MarchSerializer(ArmySerializer):
             pieces = Counter(armory.inscription_pieces()[i] for i in chosen)
             if any(count > armory.MAX_PER_PIECE for count in pieces.values()):
                 raise serializers.ValidationError({'inscriptions': 'per_piece'})
-        # the counts by colour of the inscriptions clicked together; a new march starts at 0
-        for field in COUNTED:
-            data.pop(field, None)
-        if not self.partial or 'inscriptions' in data:
+        # the counts by colour follow the inscriptions clicked together: a new march starts at 0, a change of the
+        # inscriptions counts them again; a march saved before keeps its typed counts until its inscriptions change
+        if not self.partial:
             data.update(armory.counts(data.get('inscriptions', [])))
-        # ATK, DEF and HP are required (Gether 11. 10. 2026; 0 counts), All DMG may stay empty = 0. A new march brings
-        # them all; a change may not clear one. Marches saved before keep their empty ones until the player edits them.
+        elif 'inscriptions' in data and data['inscriptions'] != current.get('inscriptions', []):
+            data.update(armory.counts(data['inscriptions']))
+        # ATK, DEF and HP (Gether 11. 10. 2026; 0 counts) are typed in the build editor (its Armamenty tab) – a new
+        # march comes without them and its editor opens right away. Saving the build needs them, a change may not
+        # clear one; All DMG may stay empty = 0.
+        building = bool({'gear', 'formation', 'inscriptions'} & data.keys())
         for field in REQUIRED_STATS:
-            if (not self.partial and data.get(field) is None) or (field in data and data[field] is None):
+            if (field in data and data[field] is None) or (building and data.get(field, current.get(field)) is None):
                 raise serializers.ValidationError({field: 'required'})
-        if not self.partial and data.get('damage') is None:
+        if building and data.get('damage', current.get('damage')) is None:
             data['damage'] = 0
         return data
 
@@ -154,6 +164,7 @@ def march(request, march_id):
                 'secondary': mine.secondary,
                 'formation': mine.formation,
                 'inscriptions': mine.inscriptions,
+                **{field: getattr(mine, field) for field in (*REQUIRED_STATS, 'damage')},
             }
         }
     )
@@ -162,7 +173,6 @@ def march(request, march_id):
         setattr(mine, field, value)
     mine.save()
     return Response(march_data(mine))
-
 
 
 class CanSeeMarches(BasePermission):

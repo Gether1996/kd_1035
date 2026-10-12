@@ -32,7 +32,14 @@
           </li>
         } @else {
           <li class="march">
-            <app-march-build [march]="march" [portraits]="portraits()" [own]="true" [statsRequired]="true">
+            <app-march-build
+              [march]="march"
+              [portraits]="portraits()"
+              [own]="true"
+              [statsRequired]="true"
+              [attr.data-march]="march.id"
+              (slotPick)="draft() ? null : builds.open(march, null, $event)"
+            >
               <button
                 type="button"
                 class="pill-btn march__build"
@@ -44,8 +51,8 @@
               <button
                 type="button"
                 class="icon-btn march__edit"
-                [attr.aria-label]="m.edit + ': ' + m.march.replace('{n}', '' + march.position)"
-                [title]="m.edit"
+                [attr.aria-label]="m.editMarch + ': ' + m.march.replace('{n}', '' + march.position)"
+                [title]="m.editMarch"
                 [attr.aria-disabled]="!!draft() || null"
                 (click)="edit(march)"
               >
@@ -87,6 +94,7 @@
       [commanders]="allCommanders()"
       [shotKinds]="[]"
       [withCounts]="false"
+      [withStats]="false"
       [damageDefaultsToZero]="true"
       [error]="draftError()"
       [heading]="m.march.replace('{n}', '' + draftPosition())"

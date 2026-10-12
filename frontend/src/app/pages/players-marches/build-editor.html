@@ -101,8 +101,41 @@
             </div>
           </div>
         } @else {
+          <!-- the armament bonuses, like the game's Armament Info: the march's troops, whole percent rounded up -->
+          <fieldset class="be__bonuses" [class.is-invalid]="statsMissing()">
+            <legend class="field__label">{{ k.stats.title }}</legend>
+            <div class="be__stat-grid">
+              @for (stat of armamentStats; track stat) {
+                <label class="be__stat">
+                  <span class="be__stat-label">{{ statLabel(stat) }}</span>
+                  <span class="be__stat-box">
+                    <input
+                      class="input be__stat-input"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      maxlength="2"
+                      autocomplete="off"
+                      [value]="draft().stats[stat] ?? ''"
+                      [placeholder]="stat === 'damage' ? '0' : ''"
+                      [attr.aria-invalid]="(statsMissing() && stat !== 'damage' && draft().stats[stat] === null) || null"
+                      (input)="setStat(stat, $event)"
+                    />
+                    <span class="be__stat-unit" aria-hidden="true">%</span>
+                  </span>
+                </label>
+              }
+            </div>
+            <p class="field__hint">{{ k.stats.hint }}</p>
+          </fieldset>
+
           <fieldset class="be__formations">
-            <legend class="field__label">{{ b.formation }}</legend>
+            <legend class="field__label">
+              {{ b.formation }}
+              @if (formationName(); as name) {
+                <span class="be__formation-name">{{ name }}</span>
+              }
+            </legend>
             <div class="be__chips">
               @for (f of formations(); track f.id) {
                 <button type="button" class="be__formation" [attr.aria-pressed]="draft().formation === f.id" (click)="setFormation(f.id)">

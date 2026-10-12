@@ -19,20 +19,25 @@ import {
   troopStat,
 } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
-import { March } from '../../core/kvk-api';
+import { ARMAMENT_STATS, March, REQUIRED_STATS, STAT_MAX } from '../../core/kvk-api';
 import { MarchesApi } from '../../core/marches-api';
 import { FormationIcon } from '../../shared/formation-icon';
 import { GearGrid } from '../../shared/gear-grid';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
+import { statLabel } from '../../shared/stat-label';
+
+type ArmamentStat = (typeof ARMAMENT_STATS)[number];
+/** the build and the armament bonuses typed in (null = empty field) */
+type Draft = Build & { stats: Record<ArmamentStat, number | null> };
 
 let nextId = 0;
 
 /**
  * The build of one march clicked together (Gether 12. 10. 2026): the eight equipment slots – pick a tile, then the
- * item of that slot, its crit and iconic level – and the formation with the inscriptions of each armament (its own
- * gold and blue ones and the common white ones). Nothing is sent before "Uložiť"; the march's commanders, type,
- * screenshot and typed armament bonuses stay as they are.
+ * item of that slot, its crit and iconic level – and the armaments: ATK, DEF, HP and All DMG typed in, the formation
+ * and the inscriptions of each armament (its own gold and blue ones and the common white ones, two of each armament).
+ * Nothing is sent before "Uložiť"; the march's type and commanders are edited on the card (pencil).
  */
 @Component({
   selector: 'app-build-editor',
@@ -61,7 +66,13 @@ export class BuildEditor {
   private opener: HTMLElement | null = null;
 
   protected readonly march = signal<March | null>(null);
-  protected readonly draft = signal<Build>({ gear: {}, formation: '', inscriptions: [] });
+  protected readonly draft = signal<Draft>({
+    gear: {},
+    formation: '',
+    inscriptions: [],
+    stats: { attack: null, defense: null, health: null, damage: null },
+  });
+  protected readonly armamentStats = ARMAMENT_STATS;
   protected readonly tab = signal<'gear' | 'armaments'>('gear');
   protected readonly slot = signal<GearSlot>('weapon');
   protected readonly search = signal('');
@@ -69,16 +80,24 @@ export class BuildEditor {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  open(march: March, event?: Event): void {
+  /**
+   * `opener` gets the focus back on close (the clicked button, or the new card's after a new march); `slot` opens
+   * the equipment on that slot (a tile clicked on the card), else on the first empty one
+   */
+  open(march: March, opener?: Event | HTMLElement | null, slot?: GearSlot): void {
     this.armory.load();
-    this.opener = (event?.currentTarget as HTMLElement | null) ?? null;
+    // without one the focused element (a tile of the card) gets the focus back
+    const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    this.opener = opener instanceof Event ? (opener.currentTarget as HTMLElement | null) : (opener ?? focused);
     this.march.set(march);
-    this.draft.set(structuredClone(buildOf(march)));
+    const stats = Object.fromEntries(ARMAMENT_STATS.map((stat) => [stat, march[stat] ?? null])) as Draft['stats'];
+    this.draft.set({ ...structuredClone(buildOf(march)), stats });
     this.tab.set('gear');
-    this.slot.set(GEAR_SLOTS.find((s) => !march.gear?.[s]) ?? 'weapon');
+    this.slot.set(slot ?? GEAR_SLOTS.find((s) => !march.gear?.[s]) ?? 'weapon');
     this.search.set('');
     this.weaker.set(false);
     this.error.set(null);
+    this.statsMissing.set(false);
     this.dialog().nativeElement.showModal();
   }
 
@@ -172,7 +191,28 @@ export class BuildEditor {
 
   // ---------------------------------------------------------------- armaments
 
+  /** the required bonuses are still empty after "Uložiť" – their fields are marked */
+  protected readonly statsMissing = signal(false);
+
+  /** "Cav ATK" for a cavalry march */
+  protected statLabel(stat: ArmamentStat): string {
+    return statLabel(this.t(), this.march()?.kind ?? '', stat);
+  }
+
+  /** whole numbers of at most two digits; anything else typed is dropped at once (rounded up) */
+  protected setStat(stat: ArmamentStat, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 2);
+    if (input.value !== digits) input.value = digits;
+    const value = digits === '' ? null : Math.min(Number(digits), STAT_MAX);
+    this.draft.update((d) => ({ ...d, stats: { ...d.stats, [stat]: value } }));
+    this.statsMissing.set(false);
+    this.error.set(null);
+  }
+
   protected readonly formations = computed(() => this.index()?.data.formations ?? []);
+  /** the chosen formation's name next to the heading – the picker shows only icons */
+  protected readonly formationName = computed(() => this.index()?.formations.get(this.draft().formation)?.name ?? '');
 
   /** each armament: the formation's own inscriptions (gold, blue) and the common ones, how many are chosen (max. 2) */
   protected readonly armaments = computed(() => {
@@ -219,14 +259,16 @@ export class BuildEditor {
 
   // ---------------------------------------------------------------- saving
 
-  /** the draft without ids the catalog no longer knows (a later fetch_armory may drop one) – they would block saving */
+  /** the build without ids the catalog no longer knows (a later fetch_armory may drop one) – they would block saving */
   private known(): Build {
     const index = this.index();
-    const draft = this.draft();
-    if (!index) return draft;
-    const gear = Object.fromEntries(Object.entries(draft.gear).filter(([, piece]) => piece && index.items.has(piece.item)));
-    const formation = index.formations.has(draft.formation) ? draft.formation : '';
-    return { gear, formation, inscriptions: draft.inscriptions.filter((id) => index.inscriptions.has(id)) };
+    const { gear, formation, inscriptions } = this.draft();
+    if (!index) return { gear, formation, inscriptions };
+    return {
+      gear: Object.fromEntries(Object.entries(gear).filter(([, piece]) => piece && index.items.has(piece.item))),
+      formation: index.formations.has(formation) ? formation : '',
+      inscriptions: inscriptions.filter((id) => index.inscriptions.has(id)),
+    };
   }
 
   /** "stav k októbru 2026" */
@@ -235,13 +277,21 @@ export class BuildEditor {
     return `${this.t().build.months[month - 1] ?? ''} ${year}`.trim();
   }
 
+  /** ATK, DEF and HP are required (0 counts), an empty All DMG is saved as 0 */
   protected async save(): Promise<void> {
     const march = this.march();
     if (!march || this.busy()) return;
+    const stats = this.draft().stats;
+    if (REQUIRED_STATS.some((stat) => stats[stat as ArmamentStat] === null)) {
+      this.tab.set('armaments');
+      this.statsMissing.set(true);
+      this.error.set(this.t().required.statsMarch);
+      return;
+    }
     this.busy.set(true);
     this.error.set(null);
     try {
-      const updated = await this.api.update(march.id, this.known());
+      const updated = await this.api.update(march.id, { ...this.known(), ...stats, damage: stats.damage ?? 0 });
       this.saved.emit(updated);
       this.close();
     } catch {

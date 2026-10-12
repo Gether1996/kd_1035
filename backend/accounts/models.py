@@ -295,7 +295,7 @@ MAX_MARCHES = 7
 
 
 class March(ArmyFields):
-    """One of the player's marches on /marche ("Moje marche"): its type, the army (ArmyFields) and the equipment and
+    """One of the player's marches on /marche ("Prehľad marchov"): its type, the army (ArmyFields) and the equipment and
     armaments clicked together (gear, formation, inscriptions; the screenshot of the equipment is gone, Gether
     12. 10. 2026). Seen by the player, the reviewers and the superuser – and every signed-in
     player when the player makes the marches public."""

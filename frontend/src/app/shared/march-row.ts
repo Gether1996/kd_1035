@@ -70,7 +70,8 @@ export class MarchRow {
 
   protected readonly inscriptions = computed(() => {
     const march = this.march();
-    return INSCRIPTIONS.filter((key) => march[key] != null).map((key) => ({ key, value: march[key]! }));
+    // a 0 says nothing (a new march has no inscriptions clicked yet)
+    return INSCRIPTIONS.filter((key) => (march[key] ?? 0) > 0).map((key) => ({ key, value: march[key]! }));
   });
 
   protected imageOf(kind: MarchImage['kind']): MarchImage | undefined {

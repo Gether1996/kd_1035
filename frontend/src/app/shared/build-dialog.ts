@@ -31,8 +31,11 @@ let nextId = 0;
     </dialog>
   `,
   styles: `
-    .build-dialog {
-      width: min(900px, 100% - 32px);
+    // wide from 600 px; below it the bottom sheet of every .modal
+    @media (min-width: 600px) {
+      .build-dialog {
+        width: min(900px, 100% - 32px);
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

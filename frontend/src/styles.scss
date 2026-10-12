@@ -1323,8 +1323,10 @@ button.insc {
     border-color: color-mix(in srgb, var(--tone) 70%, transparent);
   }
 
+  // chosen: filled with its colour, so it stands out among the many offered
   &[aria-pressed='true'] {
     border-color: var(--tone);
-    background: color-mix(in srgb, var(--tone) 20%, transparent);
+    background: var(--tone);
+    color: var(--bg);
   }
 }

@@ -74,51 +74,53 @@
 }
 
 <!-- armament bonuses of the march's troop type and inscriptions: whole numbers, at most two digits -->
-<fieldset class="block">
-  <legend class="block__label">{{ m.stats.title }}</legend>
-  <div class="stat-grid" [class.is-invalid]="error() === 'stats'">
-    @for (stat of armamentStats; track stat) {
-      <label class="stat-field">
-        <span class="stat-field__label">{{ statLabel(stat) }}</span>
-        <span class="stat-field__box">
-          <input
-            class="stat-field__input"
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            maxlength="2"
-            autocomplete="off"
-            [value]="d.stats[stat] ?? ''"
-            [placeholder]="stat === 'damage' && damageDefaultsToZero() ? '0' : ''"
-            (input)="setStat(stat, $event)"
-          />
-          <span class="stat-field__unit" aria-hidden="true">%</span>
-        </span>
-      </label>
-    }
-    @for (stat of withCounts() ? inscriptionKinds : []; track stat) {
-      <label class="stat-field">
-        <span class="stat-field__label">
-          <span class="dot dot--{{ stat }}" aria-hidden="true"></span>{{ m.inscriptions[stat] }}
-          <span class="sr-only">{{ m.inscriptions.title }}</span>
-        </span>
-        <span class="stat-field__box">
-          <input
-            class="stat-field__input"
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            maxlength="2"
-            autocomplete="off"
-            [value]="d.stats[stat] ?? ''"
-            (input)="setStat(stat, $event)"
-          />
-        </span>
-      </label>
-    }
-  </div>
-  <p class="block__hint">{{ m.stats.hint }}</p>
-</fieldset>
+@if (withStats()) {
+  <fieldset class="block">
+    <legend class="block__label">{{ m.stats.title }}</legend>
+    <div class="stat-grid" [class.is-invalid]="error() === 'stats'">
+      @for (stat of armamentStats; track stat) {
+        <label class="stat-field">
+          <span class="stat-field__label">{{ statLabel(stat) }}</span>
+          <span class="stat-field__box">
+            <input
+              class="stat-field__input"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="2"
+              autocomplete="off"
+              [value]="d.stats[stat] ?? ''"
+              [placeholder]="stat === 'damage' && damageDefaultsToZero() ? '0' : ''"
+              (input)="setStat(stat, $event)"
+            />
+            <span class="stat-field__unit" aria-hidden="true">%</span>
+          </span>
+        </label>
+      }
+      @for (stat of withCounts() ? inscriptionKinds : []; track stat) {
+        <label class="stat-field">
+          <span class="stat-field__label">
+            <span class="dot dot--{{ stat }}" aria-hidden="true"></span>{{ m.inscriptions[stat] }}
+            <span class="sr-only">{{ m.inscriptions.title }}</span>
+          </span>
+          <span class="stat-field__box">
+            <input
+              class="stat-field__input"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="2"
+              autocomplete="off"
+              [value]="d.stats[stat] ?? ''"
+              (input)="setStat(stat, $event)"
+            />
+          </span>
+        </label>
+      }
+    </div>
+    <p class="block__hint">{{ m.stats.hint }}</p>
+  </fieldset>
+}
 
 <dialog #picker class="modal modal--wide" (close)="pickerClosed()" [attr.aria-labelledby]="idPrefix() + '-picker-title'">
   @if (picking(); as slot) {

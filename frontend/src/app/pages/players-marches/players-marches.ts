@@ -80,6 +80,10 @@ export class PlayersMarches {
       // also after a failed load (a phone back before its network) – the next return tries again
       if (!this.data.isLoading() && (this.data.hasValue() || this.data.error())) this.data.reload();
     });
+    // the old address of the own marches (?tab=moje) shows the overview's
+    effect(() => {
+      if (this.tab() === 'moje') this.showTab('prehlad');
+    });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.playersMarches, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));

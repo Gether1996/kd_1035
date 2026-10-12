@@ -184,6 +184,7 @@ class ImageTests(KvkTestCase):
         self.assertEqual(self.client.get(url)['Cache-Control'], 'private, max-age=600')
         other = self.login(make_player('42').user)
         self.assertEqual(other.get(url).status_code, 404)
+        self.assertEqual(Client().get(url).status_code, 404)
 
         reviewer = make_player('43')
         reviewer.kvk_reviewer = True
@@ -329,19 +330,19 @@ class MarchTests(KvkTestCase):
         self.assertEqual(self.call('patch', url, {'secondary': 'Cao Cao'}).status_code, 400)
 
     def test_armament_bonuses_are_whole_numbers_up_to_99_and_inscriptions_counted(self):
-        # ATK, DEF and HP are required for a new march, All DMG may stay empty = 0
-        for missing in ('attack', 'defense', 'health'):
-            body = {'kind': 'cavalry', 'primary': 'Attila', **STATS}
-            del body[missing]
-            self.assertEqual(self.call('post', '/api/me/marches/', body).json()[missing], ['required'], missing)
-        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS, 'attack': 12})
+        # a new march comes with its type and commanders only – its bonuses are typed in the build editor right after
+        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', 'gold': 'x', 'white': 5})
         self.assertEqual(march.status_code, 201, march.content)
-        # typed counts are ignored: a march counts the inscriptions clicked together (Gether 12. 10. 2026)
-        self.assertEqual([march.json()[f] for f in ('attack', 'defense', 'damage', 'gold', 'blue', 'white')], [12, 9, 0, 0, 0, 0])
+        # counts sent along are ignored: a march counts the inscriptions clicked together (Gether 12. 10. 2026)
+        self.assertEqual([march.json()[f] for f in ('attack', 'gold', 'blue', 'white')], [None, 0, 0, 0])
         url = f'/api/me/marches/{march.json()["id"]}/'
-        res = self.call('patch', url, {'defense': 8, 'health': 0, 'damage': 99, 'white': 10})
+        # saving the build needs ATK, DEF and HP; All DMG may stay empty = 0
+        self.assertEqual(self.call('patch', url, {'gear': {}, 'inscriptions': []}).json()['attack'], ['required'])
+        res = self.call('patch', url, {'gear': {}, 'formation': '', 'inscriptions': [], **STATS, 'attack': 12})
         self.assertEqual(res.status_code, 200, res.content)
-        self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage', 'white')], [12, 8, 0, 99, 0])
+        self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage')], [12, 9, 8, 0])
+        res = self.call('patch', url, {'defense': 8, 'health': 0, 'damage': 99})
+        self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage')], [12, 8, 0, 99])
         res = self.call('patch', url, {'formation': 'delta', 'inscriptions': ['delta-scroll-thrasher', 'delta-emblem-relentless', 'u-scroll-warcry']})
         self.assertEqual([res.json()[f] for f in ('gold', 'blue', 'white')], [1, 1, 1])
         # a change may not clear a required one (All DMG may)
@@ -350,6 +351,15 @@ class MarchTests(KvkTestCase):
         for bad in ({'attack': 100}, {'defense': -1}, {'health': 9.5}, {'attack': 'x'}):
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
         self.assertEqual(self.client.get('/api/me/marches/').json()['marches'][0]['gold'], 1)
+
+    def test_typed_counts_stay_until_the_inscriptions_change(self):
+        march = March.objects.create(player=self.player, position=1, kind='cavalry', primary='Attila', attack=1, defense=1, health=1, gold=1, blue=3, white=6)
+        url = f'/api/me/marches/{march.pk}/'
+        # only the equipment: the counts typed in before stay
+        res = self.call('patch', url, {'gear': {'weapon': {'item': 'sacred-dominion'}}, 'formation': '', 'inscriptions': []})
+        self.assertEqual([res.json()[f] for f in ('gold', 'blue', 'white')], [1, 3, 6])
+        res = self.call('patch', url, {'inscriptions': ['u-scroll-warcry']})
+        self.assertEqual([res.json()[f] for f in ('gold', 'blue', 'white')], [0, 0, 1])
 
     def test_build_clicked_together(self):
         march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}).json()

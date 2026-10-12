@@ -333,6 +333,7 @@ export const cs: Dict = {
     statsMissingCount: 'Marche bez bonusů armamentů: {n} – doplň je přes tužku.',
     choose: 'Vybrat',
     edit: 'Upravit',
+    editMarch: 'Upravit typ a commandery',
     save: 'Uložit march',
     saveNew: 'Uložit a naklikat výbavu',
     cancel: 'Zrušit',

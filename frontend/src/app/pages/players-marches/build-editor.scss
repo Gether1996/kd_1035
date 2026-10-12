@@ -1,7 +1,10 @@
 // The build editor: a wide dialog (a bottom sheet on a phone like every .modal). Equipment: the slot tiles on the left,
 // the items of the chosen slot on the right (stacked below 720 px); armaments: formation chips and four inscription groups.
+// wide from 600 px; below it the bottom sheet of every .modal (full width)
 .be {
-  width: min(980px, 100% - 32px);
+  @media (min-width: 600px) {
+    width: min(980px, 100% - 32px);
+  }
 }
 
 .be__tabs {
@@ -264,13 +267,19 @@
   }
 }
 
+// "Uložiť" stays in reach at the bottom of the dialog while the lists scroll
 .be__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 16px;
-  padding-top: 4px;
+  gap: 8px 16px;
+  margin: 0 calc(-1 * clamp(20px, 4vw, 28px));
+  padding: 12px clamp(20px, 4vw, 28px) calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
+  background: var(--bg-raised);
 }
 
 .form__state {
@@ -299,4 +308,67 @@
   .be__formation {
     transition: none;
   }
+}
+
+// ---------------------------------------------------------------- armament bonuses (Armamenty tab)
+
+.be__bonuses {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.be__stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 120px));
+  gap: 10px;
+
+  @media (max-width: 420px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.be__stat {
+  display: grid;
+  gap: 6px;
+}
+
+.be__stat-label {
+  color: var(--text-dim);
+  font: 600 0.8125rem/1.2 var(--font-body);
+}
+
+.be__stat-box {
+  position: relative;
+  display: block;
+}
+
+.be__stat-input {
+  width: 100%;
+  padding-right: 30px;
+  font-variant-numeric: tabular-nums;
+
+  &[aria-invalid='true'] {
+    border-color: var(--red-300);
+  }
+}
+
+.be__stat-unit {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  color: var(--text-mute);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.be__formation-name {
+  margin-left: 8px;
+  color: var(--gold-300);
+  font: 700 0.9375rem/1 var(--font-display);
+  letter-spacing: 0.02em;
+  text-transform: none;
 }

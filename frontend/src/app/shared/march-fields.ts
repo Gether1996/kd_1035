@@ -32,7 +32,7 @@ export type ShotKind = 'equipment' | 'armaments';
 export const SHOT_KINDS: ShotKind[] = ['equipment', 'armaments'];
 type Slot = 'primary' | 'secondary';
 
-/** a screenshot already on the server (MarchImage, KvkImage) */
+/** a screenshot already on the server (KvkImage – a march has no screenshot since 12. 10. 2026) */
 export interface SavedShot {
   id: number;
   kind: ShotKind;
@@ -124,8 +124,9 @@ export function releaseArmy(draft: ArmyDraft | null): void {
 /**
  * The fields of a march (Gether 11. 10. 2026): the type as icons (optional), two commander tiles and the screenshots
  * as square tiles with an example (only the KvK sign-up – a march clicks its equipment together since 12. 10. 2026),
- * the armament bonuses and the inscription counts (two digits, rounded up; a march counts its clicked inscriptions).
- * The commander picker and the example are dialogs. Used by "Moje marche" (/marche) and the KvK sign-up (/kvk).
+ * the armament bonuses and the inscription counts (two digits, rounded up) – a march types its bonuses in the build
+ * editor and counts its clicked inscriptions (`withStats`, `withCounts`).
+ * The commander picker and the example are dialogs. Used by "Prehľad marchov" (/marche) and the KvK sign-up (/kvk).
  */
 @Component({
   selector: 'app-march-fields',
@@ -147,6 +148,8 @@ export class MarchFields {
   readonly shotKinds = input<ShotKind[]>(SHOT_KINDS);
   /** the inscription counts are typed in (a KvK sign-up); a march counts the inscriptions clicked together */
   readonly withCounts = input(true);
+  /** the armament bonuses are part of the form (a KvK sign-up); a march types them in its build editor */
+  readonly withStats = input(true);
   /** an empty All DMG is saved as 0 – the field shows it as its placeholder */
   readonly damageDefaultsToZero = input(false);
   readonly error = input<ArmyError | null>(null);

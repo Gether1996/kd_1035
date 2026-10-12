@@ -95,7 +95,7 @@
             <ol class="player__marches" [id]="'player-marches-' + player.id">
               @for (march of player.marches; track march.id) {
                 <li>
-                  <app-march-build [march]="march" [portraits]="portraits()" [statsRequired]="true" />
+                  <app-march-build class="is-flat" [march]="march" [portraits]="portraits()" [statsRequired]="true" />
                 </li>
               }
             </ol>

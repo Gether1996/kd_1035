@@ -339,6 +339,7 @@ export const sk = {
     statsMissingCount: 'Marche bez bonusov armamentov: {n} – doplň ich cez ceruzku.',
     choose: 'Vybrať',
     edit: 'Upraviť',
+    editMarch: 'Upraviť typ a commanderov',
     save: 'Uložiť march',
     saveNew: 'Uložiť a naklikať výbavu',
     cancel: 'Zrušiť',

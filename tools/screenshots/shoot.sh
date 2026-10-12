@@ -3,7 +3,7 @@
 #   tools/screenshots/shoot.sh [--player | --superuser] [NAME=value …]
 #   e.g. tools/screenshots/shoot.sh PAGES=/,/cz/kalendar SIZES=360x780,1280x800
 #        tools/screenshots/shoot.sh --player PAGES=/ucet,/pripomienky
-#        tools/screenshots/shoot.sh --player --marches PAGES=/marche,/marche?tab=moje   (seven sample marches)
+#        tools/screenshots/shoot.sh --player --marches PAGES=/marche,/marche?tab=prehlad   (seven sample marches)
 #        tools/screenshots/shoot.sh --player SHOT=0 PAGES=/,/cz SIZES=900x800,1024x800,1280x800 MEASURE=.nav,.account
 # NAME=value pairs are the variables described in shoot.mjs (PAGES, SIZES, FULL, SELECTOR, MEASURE, SHOT, SESSION…).
 # --player / --superuser: signed in as a temporary test player (manage.py test_session), deleted again at the end.

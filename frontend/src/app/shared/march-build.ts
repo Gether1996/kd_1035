@@ -1,7 +1,7 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import {
   ArmoryApi,
+  GearSlot,
   INSCRIPTION_RARITIES,
   Inscription,
   TROOP_STATS,
@@ -16,16 +16,18 @@ import { FormationIcon } from './formation-icon';
 import { GearGrid } from './gear-grid';
 import { statLabel } from './stat-label';
 
+let nextId = 0;
+
 /**
- * One march with its build on /marche (Gether 12. 10. 2026: "prehľad mojich marchov", our own layout, not a copy of
- * meta-rok): the commanders on top; the equipment as tiles with the bonuses it gives to the march's troops (set bonuses
- * included); the formation as its icon with the inscriptions, gold first, and the armament bonuses typed in – as little
- * text as possible (Gether 12. 10. 2026). The catalog (core/armory.ts) loads with
- * the first card. Buttons of the own marches are projected into the head.
+ * One march with its build on /marche (Gether 12. 10. 2026: our own layout, not a copy of meta-rok, as little text as
+ * possible): the commanders on top with the march type as a badge; a small heading over each column – the equipment
+ * as tiles with the bonuses it gives to the march's troops (set bonuses included), the armaments as the formation icon,
+ * the inscriptions (gold first) and the bonuses typed in. A tile of the own march opens the editor on its slot. The
+ * catalog (core/armory.ts) loads with the first card. Buttons of the own marches are projected into the head.
  */
 @Component({
   selector: 'app-march-build',
-  imports: [FormationIcon, GearGrid, NgTemplateOutlet],
+  imports: [FormationIcon, GearGrid],
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,11 +36,14 @@ export class MarchBuild {
   readonly march = input.required<March>();
   /** commander name → portrait */
   readonly portraits = input<ReadonlyMap<string, string>>(new Map());
-  /** the player's own march: an empty build invites to fill it */
+  /** the player's own march: its tiles are buttons, an empty equipment shows its empty slots */
   readonly own = input(false);
   readonly numbered = input(true);
   /** a march saved before ATK, DEF and HP were required says they are missing */
   readonly statsRequired = input(false);
+  /** a tile of the own march clicked: the editor opens on that slot */
+  readonly slotPick = output<GearSlot>();
+  protected readonly id = `march-build-${++nextId}`;
 
   private readonly armory = inject(ArmoryApi);
   protected readonly i18n = inject(I18n);
@@ -62,18 +67,15 @@ export class MarchBuild {
     return index ? gearTotals(index, this.build().gear) : null;
   });
 
-  /** "ATK 61.5%" … of the march's troops, with whose they are */
+  /** "ATK 61.5%" … of the march's troops (whose in the title); a 0 is left out */
   protected readonly gearStats = computed(() => {
     const totals = this.totals();
-    if (!totals || !Object.keys(this.build().gear).length) return null;
+    if (!totals) return null;
     const troop = troopOf(this.march().kind, totals.stats);
     const b = this.t().build;
-    return {
-      title: b.gearStats.replace('{troop}', b.troops[troop]),
-      values: TROOP_STATS.map((stat) => ({ stat, label: b.stats[stat], value: troopStat(totals.stats, troop, stat) })).filter(
-        (s) => s.value > 0 || s.stat !== 'march_speed',
-      ),
-    };
+    const values = TROOP_STATS.map((stat) => ({ stat, label: b.stats[stat], value: troopStat(totals.stats, troop, stat) }));
+    const shown = values.filter((s) => s.value > 0);
+    return shown.length ? { title: b.gearStats.replace('{troop}', b.troops[troop]), values: shown } : null;
   });
 
   protected readonly formation = computed(() => this.index()?.formations.get(this.build().formation) ?? null);

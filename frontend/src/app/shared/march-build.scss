@@ -1,5 +1,5 @@
-// One march with its build: a head line (commanders, type, buttons), below it the equipment and the armaments side by
-// side from 560 px of card width, stacked on a phone.
+// One march with its build: a head line (portraits with the type badge, names, buttons), below it the equipment and
+// the armaments side by side from 560 px of card width, stacked on a phone; the buttons take their own row below 420 px.
 :host {
   display: grid;
   gap: 16px;
@@ -9,6 +9,11 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--card-bg);
+}
+
+// inside a player's card on Marche hráčov: no second background, a card in a card would weigh too much
+:host(.is-flat) {
+  background: none;
 }
 
 .mb__head {
@@ -25,6 +30,7 @@
 }
 
 .mb__heads {
+  position: relative;
   display: flex;
   flex-shrink: 0;
 }
@@ -61,26 +67,26 @@
   min-width: 0;
 }
 
+// long names wrap instead of being cut ("K'inich Janaab' Pakal", "Gonzalo de Cordoba")
 .mb__primary {
-  overflow: hidden;
+  overflow-wrap: anywhere;
   font: 700 1.0625rem/1.25 var(--font-display);
   color: var(--gold-100);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .mb__secondary {
-  overflow: hidden;
+  overflow-wrap: anywhere;
   font-size: 0.875rem;
   color: var(--text-dim);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
+// the march type as a badge on the primary's lower left corner
 .mb__kind {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  width: 24px;
+  height: 24px;
 }
 
 .mb__actions {
@@ -90,6 +96,11 @@
 
   &:empty {
     display: none;
+  }
+
+  @container (max-width: 419px) {
+    flex-basis: 100%;
+    margin-left: 0;
   }
 }
 
@@ -112,6 +123,11 @@
   @container (min-width: 560px) {
     grid-template-columns: minmax(220px, 300px) 1fr;
     gap: 24px;
+  }
+
+  // someone else's march without equipment: only the armaments
+  &:has(> :only-child) {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -142,13 +158,6 @@
   list-style: none;
   font-weight: 600;
   color: var(--text);
-}
-
-.mb__stats--quiet {
-  padding-top: 8px;
-  border-top: 1px dashed var(--line);
-  font-weight: 500;
-  color: var(--text-dim);
 }
 
 .mb__stat-label {
@@ -209,4 +218,13 @@
 
 .mb__dot--white {
   background: var(--insc-white);
+}
+
+// one small heading per column – which bonuses are the equipment's and which the armaments'
+.mb__label {
+  margin: 0;
+  font: 600 0.6875rem/1.2 var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
 }

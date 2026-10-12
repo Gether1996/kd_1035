@@ -1,6 +1,18 @@
 import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  PLATFORM_ID,
+  afterNextRender,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { hasBuild } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { March, REQUIRED_STATS } from '../../core/kvk-api';
@@ -30,6 +42,8 @@ type Draft = ArmyDraft & { id: number | null };
 })
 export class Marches {
   private readonly api = inject(MarchesApi);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
 
@@ -112,20 +126,26 @@ export class Marches {
     this.draftError.set(null);
   }
 
-  /** type, commanders and ATK / DEF / HP / All DMG; a new march goes on to its equipment and armaments right away */
+  /** type and commanders; a new march goes on to its equipment and armaments (with ATK, DEF, HP) right away */
   protected async save(): Promise<void> {
     const draft = this.draft();
     if (!draft || this.busy()) return;
-    const missing = armyError(draft, { kind: true, shots: [], stats: true, counts: false });
+    const missing = armyError(draft, { kind: true, shots: [], stats: false });
     if (missing) return this.draftError.set(missing);
-    const { attack, defense, health, damage } = draft.stats;
-    // All DMG is optional: empty = 0 (Gether 11. 10. 2026); the inscription counts come from the build
-    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, attack, defense, health, damage: damage ?? 0 };
+    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary };
     await this.run(async () => {
       const march = draft.id === null ? await this.api.add(change) : await this.api.update(draft.id, change);
       this.store(march);
       this.draft.set(null);
-      if (draft.id === null) this.buildEditor().open(march);
+      if (draft.id !== null) return;
+      // once the new card is there: its build button gets the focus back when the editor closes
+      afterNextRender(
+        () => {
+          const button = this.host.nativeElement.querySelector<HTMLElement>(`[data-march="${march.id}"] .march__build`);
+          this.buildEditor().open(march, button);
+        },
+        { injector: this.injector },
+      );
     });
   }
 

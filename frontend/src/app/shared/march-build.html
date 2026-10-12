@@ -5,6 +5,7 @@
   @if (numbered()) {
     <span class="mb__num">{{ m.position }}.</span>
   }
+  <!-- the portraits with the march type as a badge in the corner -->
   <span class="mb__heads">
     @for (c of commanders(); track $index) {
       @if (c.src) {
@@ -13,30 +14,28 @@
         <span class="mb__face mb__face--text" [class.mb__face--second]="$index" aria-hidden="true">{{ initials(c.name) }}</span>
       }
     }
+    @if (m.kind) {
+      <img class="mb__kind" [src]="icon(m.kind)" [alt]="k.kinds[m.kind]" [title]="k.kinds[m.kind]" width="96" height="96" />
+    }
   </span>
   <span class="mb__names">
     @for (c of commanders(); track $index) {
-      <span [class.mb__primary]="!$index" [class.mb__secondary]="$index" [title]="c.name">{{ c.name }}</span>
+      <span [class.mb__primary]="!$index" [class.mb__secondary]="$index">{{ c.name }}</span>
     } @empty {
       <span class="mb__secondary">–</span>
     }
   </span>
-  @if (m.kind) {
-    <img class="mb__kind" [src]="icon(m.kind)" [alt]="k.kinds[m.kind]" [title]="k.kinds[m.kind]" width="96" height="96" />
-  }
   <span class="mb__actions"><ng-content /></span>
 </header>
 
-@if (failed()) {
-  <p class="mb__note">{{ b.loadError }}</p>
-} @else if (index(); as ix) {
-  @if (empty()) {
-    <p class="mb__note">{{ own() ? b.emptyOwn : b.empty }}</p>
-    <ng-container *ngTemplateOutlet="armaments" />
-  } @else {
-    <div class="mb__body">
-      <section class="mb__part" [attr.aria-label]="b.gear">
-        <app-gear-grid [gear]="build().gear" [index]="ix" />
+<!-- one small heading per column tells the bonuses of the equipment from those of the armaments -->
+<div class="mb__body">
+  @if (own() || !empty()) {
+    <section class="mb__part" [attr.aria-labelledby]="id + '-gear'">
+      <h4 class="mb__label" [id]="id + '-gear'">{{ b.gear }}</h4>
+      @if (index(); as ix) {
+        <!-- the own march: a tile opens the editor on its slot -->
+        <app-gear-grid [gear]="build().gear" [index]="ix" [pickable]="own()" (pick)="slotPick.emit($event)" />
         @if (gearStats(); as g) {
           <ul class="mb__stats" [attr.aria-label]="g.title" [title]="g.title">
             @for (s of g.values; track s.stat) {
@@ -44,44 +43,43 @@
             }
           </ul>
         }
-      </section>
+      } @else if (failed()) {
+        <p class="mb__note">{{ b.loadError }}</p>
+      } @else {
+        <div class="mb__loading" aria-hidden="true"></div>
+      }
+    </section>
+  }
 
-      <!-- the formation as its icon, the inscriptions gold first – no labels (Gether 12. 10. 2026: "čo najmenej textu") -->
-      <section class="mb__part" [attr.aria-label]="b.armaments">
-        @if (formation() || inscriptions().length) {
-          <div class="mb__arm">
-            @if (formation(); as f) {
-              <app-formation-icon class="mb__formation" [formation]="f" />
-            }
-            <ul class="mb__inscs" [attr.aria-label]="k.inscriptions.title">
-              @for (i of inscriptions(); track i.id) {
-                <li class="insc insc--{{ i.rarity }}" [title]="b.pieces[i.piece] + ' · ' + b.rarity[i.rarity]">{{ i.name }}</li>
-              }
-            </ul>
-          </div>
+  <!-- the formation as its icon, the inscriptions gold first – no armament names (Gether 12. 10. 2026: "čo najmenej textu") -->
+  <section class="mb__part" [attr.aria-labelledby]="id + '-arm'">
+    <h4 class="mb__label" [id]="id + '-arm'">{{ b.armaments }}</h4>
+    @if (formation() || inscriptions().length) {
+      <div class="mb__arm">
+        @if (formation(); as f) {
+          <app-formation-icon class="mb__formation" [formation]="f" />
         }
-        <ng-container *ngTemplateOutlet="armaments" />
-      </section>
-    </div>
-  }
-} @else {
-  <div class="mb__loading" aria-hidden="true"></div>
-}
-
-<!-- the armament bonuses typed in (and the inscription counts of a march saved before they were clicked together) -->
-<ng-template #armaments>
-  @if (statsMissing()) {
-    <p class="mb__missing" [class.is-own]="own()">{{ own() ? k.statsMissingOwn : k.statsMissing }}</p>
-  } @else if (armamentStats().length || counts().length) {
-    <ul class="mb__stats mb__stats--quiet" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
-      @for (s of armamentStats(); track s.key) {
-        <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ s.value }}%</li>
-      }
-      @for (c of counts(); track c.key) {
-        <li class="mb__count" [title]="k.inscriptions[c.key]">
-          <span class="mb__dot mb__dot--{{ c.key }}" aria-hidden="true"></span><span class="sr-only">{{ k.inscriptions[c.key] }}:</span> {{ c.value }}
-        </li>
-      }
-    </ul>
-  }
-</ng-template>
+        <ul class="mb__inscs" [attr.aria-label]="k.inscriptions.title">
+          @for (i of inscriptions(); track i.id) {
+            <li class="insc insc--{{ i.rarity }}" [title]="b.pieces[i.piece] + ' · ' + b.rarity[i.rarity]">{{ i.name }}</li>
+          }
+        </ul>
+      </div>
+    }
+    <!-- the armament bonuses typed in (and the inscription counts of a march saved before they were clicked together) -->
+    @if (statsMissing()) {
+      <p class="mb__missing" [class.is-own]="own()">{{ own() ? k.statsMissingOwn : k.statsMissing }}</p>
+    } @else if (armamentStats().length || counts().length) {
+      <ul class="mb__stats" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
+        @for (s of armamentStats(); track s.key) {
+          <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ s.value }}%</li>
+        }
+        @for (c of counts(); track c.key) {
+          <li class="mb__count" [title]="k.inscriptions[c.key]">
+            <span class="mb__dot mb__dot--{{ c.key }}" aria-hidden="true"></span><span class="sr-only">{{ k.inscriptions[c.key] }}:</span> {{ c.value }}
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

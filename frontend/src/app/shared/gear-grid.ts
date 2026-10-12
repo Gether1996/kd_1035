@@ -20,7 +20,7 @@ import { I18n } from '../core/i18n/i18n';
               type="button"
               class="gear__tile gear__tile--{{ tile.item?.rarity ?? 'none' }}"
               [class.is-selected]="selected() === tile.slot"
-              [attr.aria-pressed]="selected() === tile.slot"
+              [attr.aria-pressed]="selected() === null ? null : selected() === tile.slot"
               [attr.aria-label]="tile.label"
               [title]="tile.label"
               (click)="pick.emit(tile.slot)"

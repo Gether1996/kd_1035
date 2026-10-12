@@ -2,7 +2,7 @@
 .tabs {
   margin-bottom: 20px;
 
-  // three equal parts on a phone; a long label takes two lines
+  // equal halves on a phone; a long label takes two lines
   @media (max-width: 480px) {
     display: flex;
     width: 100%;
@@ -36,8 +36,8 @@
 
 .players {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
-  align-items: start;
+  // one column: an open player's march cards need the width, and opening one never leaves holes in a grid
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   margin: 0;
   padding: 0;
@@ -48,11 +48,6 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--card-bg);
-}
-
-// an open player takes the whole row: the march cards need the width for equipment and armaments side by side
-.player.is-open {
-  grid-column: 1 / -1;
 }
 
 .player {
