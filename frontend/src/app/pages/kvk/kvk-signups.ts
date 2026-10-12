@@ -3,20 +3,28 @@ import { HttpResourceRef, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
   PLATFORM_ID,
+  afterNextRender,
   computed,
   inject,
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
+import { ArmoryApi } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
-import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
+import { KVK_KINDS, KvkApi, KvkHeading, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
+import { copyText } from '../../shared/copy-link';
 import { Icon } from '../../shared/icon';
 import { MarchBuild } from '../../shared/march-build';
+import { rosterText } from './roster-text';
 
 type Role = 'all' | 'rally' | 'garrison';
 
@@ -29,6 +37,7 @@ const players = (signups: KvkSignup[]) => new Set(signups.map((s) => s.player?.i
  * their sign-ups below – role, the army as the card of a march (equipment, armaments, bonuses – no screenshots since
  * 12. 10. 2026), note; the profile marches as cards too. The
  * filters (role, troops, commander) keep the sign-ups that match; the superuser may withdraw a sign-up.
+ * "Kopírovať pre Discord" copies what the filters show as a roster for the leadership's Discord (roster-text.ts).
  */
 @Component({
   selector: 'app-kvk-signups',
@@ -42,6 +51,8 @@ export class KvkSignups {
   readonly data = input.required<HttpResourceRef<{ signups: KvkSignup[] } | undefined>>();
   /** the superuser may withdraw a sign-up */
   readonly superuser = input(false);
+  /** the heading set by the superuser – the first line of the roster */
+  readonly heading = input<KvkHeading | null>(null);
   readonly changed = output<void>();
 
   private readonly api = inject(KvkApi);
@@ -109,6 +120,64 @@ export class KvkSignups {
   });
 
   private disarm?: ReturnType<typeof setTimeout>;
+
+  private readonly armory = inject(ArmoryApi);
+  private readonly injector = inject(Injector);
+  /** the shown sign-ups as Discord messages (one, or parts of at most 1900 characters) */
+  protected readonly roster = computed(() => {
+    const heading = this.heading();
+    const t = this.i18n.t();
+    const formations = this.armory.index()?.formations;
+    return rosterText(this.shown(), {
+      heading: (heading && ((this.i18n.lang() === 'cs' && heading.title_cs) || heading.title_sk)) || '',
+      kinds: t.marches.kinds,
+      noKind: t.kvk.roster.noKind,
+      formation: (id) => formations?.get(id)?.name ?? '',
+    });
+  });
+  /** the part just copied (its text, so a change of the filters hides the confirmation) */
+  protected readonly copied = signal<string | null>(null);
+  /** the part to copy by hand when the clipboard is denied */
+  protected readonly manual = signal('');
+  private readonly manualField = viewChild<ElementRef<HTMLTextAreaElement>>('manualField');
+  private copiedTimer?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      clearTimeout(this.copiedTimer);
+      clearTimeout(this.disarm);
+    });
+  }
+
+  /** No `await` before copyText(): the clipboard needs the click's user activation. */
+  protected copy(index: number): void {
+    const text = this.roster()[index];
+    if (!text) return;
+    copyText(text).then((done) => {
+      clearTimeout(this.copiedTimer);
+      this.copied.set(done ? text : null);
+      this.manual.set(done ? '' : text);
+      if (done) {
+        this.copiedTimer = setTimeout(() => this.copied.set(null), 4000);
+        return;
+      }
+      afterNextRender(
+        () => {
+          const field = this.manualField()?.nativeElement;
+          field?.focus();
+          field?.select();
+        },
+        { injector: this.injector },
+      );
+    });
+  }
+
+  /** the label of a part: "Časť 1/2" */
+  protected part(index: number): string {
+    return this.t()
+      .roster.part.replace('{i}', String(index + 1))
+      .replace('{n}', String(this.roster().length));
+  }
 
   /** the first click arms "Zrušiť prihlášku" for a few seconds, the second withdraws someone else's sign-up */
   protected async remove(signup: KvkSignup): Promise<void> {

@@ -273,6 +273,14 @@ export const sk = {
     reviewersTitle: 'Kto vidí prihlášky',
     reviewersLead: 'Hráčov z vedenia (R4), ktorí uvidia všetky prihlášky a marche, vyberieš na stránke Môj účet.',
     reviewersLink: 'Hráči',
+    // the roster of the shown sign-ups for the leadership's Discord (pages/kvk/roster-text.ts)
+    roster: {
+      copy: 'Kopírovať pre Discord',
+      part: 'Časť {i}/{n}',
+      copied: 'Skopírované – vlož to do Discordu.',
+      failed: 'Kopírovanie nefunguje. Označ text a skopíruj ho sám:',
+      noKind: 'Bez typu jednotiek',
+    },
   },
   players: {
     title: 'Hráči',
@@ -817,6 +825,7 @@ export const sk = {
         list: [
           'Údaje vidí správca webu (Gether) v administrácii. Keď sa prihlásiš prvýkrát, bot mu pošle na Discord tvoje meno a ID, aby ťa mohol schváliť.',
           'Prihlášky na KvK a tvoje marche vidí aj vedenie, ktorému správca povolí prezeranie (R4) – spolu s tvojím menom v hre, Discord menom, avatarom a ID.',
+          'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
@@ -826,7 +835,7 @@ export const sk = {
         title: 'Tretie strany',
         text: 'Pri týchto veciach sa tvoj prehliadač alebo náš server spája s cudzou službou:',
         list: [
-          'Discord – prihlásenie, súkromné správy od bota a obrázky avatarov.',
+          'Discord – prihlásenie, súkromné správy od bota, obrázky avatarov a zoznam prihlášok na KvK, ktorý tam vedenie skopíruje.',
           'YouTube v režime youtube-nocookie alebo Twitch – iba ak je v návode video.',
         ],
         link: { label: 'Ochrana súkromia na Discorde', href: 'https://discord.com/privacy' },

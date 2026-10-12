@@ -33,7 +33,29 @@
     [value]="commander()"
     (valueChange)="commander.set($event); armed.set(null)"
   />
+  <!-- what the filters show, as a message for the leadership's Discord; a long list in parts of 1900 characters -->
+  @if (shown().length) {
+    <div class="list__copy">
+      @for (text of roster(); track $index) {
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="copy($index)">
+          <svg appIcon="copy"></svg>{{ roster().length > 1 ? part($index) : k.roster.copy }}
+        </button>
+      }
+    </div>
+  }
   </div>
+  <!-- always in the DOM, so screen readers announce the change -->
+  <p class="list__copied" role="status">
+    @if (copied() && roster().includes(copied()!)) {
+      <svg appIcon="check"></svg>{{ roster().length > 1 ? part(roster().indexOf(copied()!)) + ' · ' : '' }}{{ k.roster.copied }}
+    }
+  </p>
+  @if (manual() && roster().includes(manual())) {
+    <label class="field list__manual">
+      <span class="field__label">{{ k.roster.failed }}</span>
+      <textarea #manualField id="kvk-roster-manual" class="input textarea" readonly rows="8" [value]="manual()" (focus)="manualField.select()"></textarea>
+    </label>
+  }
 
   @if (data().error()) {
     <p class="panel__lead is-error">{{ k.loadError }}</p>

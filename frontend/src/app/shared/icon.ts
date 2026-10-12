@@ -13,6 +13,7 @@ export type IconName =
   | 'chevron-down'
   | 'chevron-right'
   | 'clock'
+  | 'copy'
   | 'crown'
   | 'discord'
   | 'download'

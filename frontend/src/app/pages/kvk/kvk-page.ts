@@ -76,7 +76,7 @@ type Tab = 'mine' | 'list' | 'settings';
             }
           }
           @case ('list') {
-            <app-kvk-signups [data]="signups" [superuser]="s.superuser" (changed)="reloadSignups()" />
+            <app-kvk-signups [data]="signups" [superuser]="s.superuser" [heading]="s" (changed)="reloadSignups()" />
           }
           @case ('settings') {
             <app-kvk-settings [heading]="s" (changed)="reloadState()" />

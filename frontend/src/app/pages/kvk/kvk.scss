@@ -234,6 +234,46 @@
   font-size: 0.75rem;
 }
 
+// "Kopírovať pre Discord" (or its parts) at the end of the filter row; on a phone a row of its own
+.list__copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+
+  @media (max-width: 480px) {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+}
+
+.list__copied {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gold-300);
+
+  &:has(.icon) {
+    margin-top: 12px;
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+}
+
+.list__manual {
+  margin-top: 12px;
+
+  .textarea {
+    min-height: 180px;
+  }
+}
+
 .list__loading {
   min-height: 240px;
 }

@@ -378,6 +378,63 @@ describe('KvkSignups', () => {
     http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
     http.verify();
   });
+
+  it('copies exactly the filtered sign-ups as a Discord roster, and shows the text to copy by hand when the clipboard is denied', async () => {
+    const http = setup();
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
+    const fixture = TestBed.createComponent(KvkSignups);
+    fixture.componentRef.setInput('data', data);
+    fixture.componentRef.setInput('heading', { title_sk: '20.11. najbližšie KvK', title_cs: '' });
+    fixture.detectChanges();
+    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(900 + id), approved: true });
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
+      signups: [
+        { ...SIGNUP, player: player(1, 'Nelly'), note: 'večer online' },
+        { ...SIGNUP, id: 11, kind: 'infantry', primary: 'Gorgo', player: player(2, 'Bob') },
+        { ...SIGNUP, id: 12, role: 'garrison', kind: 'cavalry', player: player(3, 'Cara') },
+      ],
+    });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    try {
+      // Rally + Jazda
+      el.querySelectorAll<HTMLButtonElement>('.list__filter:not(.list__filter--troops) button')[1].click();
+      el.querySelectorAll<HTMLButtonElement>('.list__filter--troops button')[2].click();
+      await flushAll(fixture);
+      const copy = () => el.querySelector<HTMLButtonElement>('.list__copy button')!;
+      expect(el.querySelectorAll('.list__copy button').length).toBe(1);
+      expect(copy().textContent?.trim()).toBe('Kopírovať pre Discord');
+      copy().click();
+      expect(writeText).toHaveBeenCalledWith('**20.11. najbližšie KvK**\n\n**Rally (1)**\n__Jazda__\n• Nelly – Attila / Takeda Shingen');
+      await flushAll(fixture);
+      expect(el.querySelector('.list__copied[role="status"]')?.textContent?.trim()).toBe('Skopírované – vlož to do Discordu.');
+      expect(el.querySelector('.list__manual')).toBeNull();
+
+      // denied: the text in a readonly field with the focus
+      writeText.mockRejectedValue(new DOMException('denied', 'NotAllowedError'));
+      el.querySelectorAll<HTMLButtonElement>('.list__filter:not(.list__filter--troops) button')[0].click();
+      await flushAll(fixture);
+      copy().click();
+      await flushAll(fixture);
+      const field = el.querySelector<HTMLTextAreaElement>('.list__manual textarea')!;
+      expect(field.readOnly).toBe(true);
+      expect(field.value).toContain('**Rally (1)**\n__Jazda__\n• Nelly');
+      expect(field.value).toContain('**Garrison (1)**\n__Jazda__\n• Cara');
+      expect(field.value).not.toContain('Bob');
+      expect(field.value).not.toContain('večer');
+      expect(document.activeElement).toBe(field);
+      expect(el.querySelector('.list__copied')?.textContent?.trim()).toBe('');
+      expect(el.querySelector('.list__manual .field__label')?.textContent).toContain('Kopírovanie nefunguje');
+    } finally {
+      delete (navigator as { clipboard?: unknown }).clipboard;
+    }
+    http.verify();
+  });
 });
 
 describe('KvkPage', () => {
@@ -424,5 +481,56 @@ describe('KvkPage', () => {
     await settle();
     expect(requested).toEqual(['/api/kvk/signups/']);
     expect(fixture.debugElement.query(By.directive(KvkForm)).componentInstance).toBe(form.componentInstance);
+  });
+
+  it('offers "Kopírovať pre Discord" only on the list of the reviewers, never to a player', async () => {
+    const open = async (reviewer: boolean) => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([]),
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          { provide: Scroll, useValue: { scrolled: signal(false), reducedMotion: true } },
+        ],
+      });
+      const http = TestBed.inject(HttpTestingController);
+      const fixture = TestBed.createComponent(KvkPage);
+      const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, terms_accepted: true, is_staff: false, is_superuser: false };
+      const answers: Record<string, unknown> = {
+        '/api/auth/me/': { login_enabled: true, user },
+        '/api/kvk/': { ...STATE, reviewer },
+        '/api/kvk/signups/': { signups: [{ ...SIGNUP, player: { id: 2, name: 'bob', ingame_name: 'Bob', avatar_url: '', discord_id: '2', approved: true } }] },
+        '/api/commanders/marches/': COMMANDERS,
+        '/api/armory/': ARMORY,
+      };
+      const requested: string[] = [];
+      const settle = async () => {
+        for (let round = 0; round < 5; round++) {
+          fixture.detectChanges();
+          TestBed.tick();
+          for (const req of http.match(() => true)) {
+            requested.push(req.request.url);
+            req.flush(answers[req.request.url] ?? []);
+          }
+          await new Promise((resolve) => setTimeout(resolve));
+        }
+      };
+      await settle();
+      const el = fixture.nativeElement as HTMLElement;
+      // the reviewers open the list
+      el.querySelectorAll<HTMLButtonElement>('.kvk-tabs button')[1]?.click();
+      await settle();
+      return { el, requested };
+    };
+
+    const player = await open(false);
+    expect(player.el.querySelector('.kvk-tabs')).toBeNull();
+    expect(player.el.querySelector('app-kvk-signups')).toBeNull();
+    expect(player.el.querySelector('.list__copy')).toBeNull();
+    expect(player.requested).not.toContain('/api/kvk/signups/');
+
+    const r4 = await open(true);
+    expect(r4.el.querySelector('.list__copy button')?.textContent?.trim()).toBe('Kopírovať pre Discord');
   });
 });

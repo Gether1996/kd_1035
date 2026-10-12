@@ -268,6 +268,14 @@ export const cs: Dict = {
     reviewersTitle: 'Kdo vidí přihlášky',
     reviewersLead: 'Hráče z vedení (R4), kteří uvidí všechny přihlášky a marche, vybereš na stránce Můj účet.',
     reviewersLink: 'Hráči',
+    // the roster of the shown sign-ups for the leadership's Discord (pages/kvk/roster-text.ts)
+    roster: {
+      copy: 'Kopírovat pro Discord',
+      part: 'Část {i}/{n}',
+      copied: 'Zkopírováno – vlož to do Discordu.',
+      failed: 'Kopírování nefunguje. Označ text a zkopíruj ho sám:',
+      noKind: 'Bez typu jednotek',
+    },
   },
   players: {
     title: 'Hráči',
@@ -808,6 +816,7 @@ export const cs: Dict = {
         list: [
           'Údaje vidí správce webu (Gether) v administraci. Když se přihlásíš poprvé, bot mu pošle na Discord tvé jméno a ID, aby tě mohl schválit.',
           'Přihlášky na KvK a tvé marche vidí i vedení, kterému správce povolí prohlížení (R4) – spolu s tvým jménem ve hře, Discord jménem, avatarem a ID.',
+          'Vedení si může seznam přihlášek (jméno ve hře, role, jednotky, commandeři a formace) zkopírovat do Discordu, kde plánuje KvK.',
           'Pokud u marchí zvolíš „Všichni hráči“, uvidí tvé marche spolu se jménem ve hře, Discord jménem a avatarem i všichni schválení hráči přihlášení na webu (stránka Marche hráčů). Změnit to můžeš kdykoli.',
           'Dokud tě správce neschválí nebo pokud schválení zruší, tvé marche a přihlášky zůstanou uložené, ale vidí je jen on.',
           'Nic nezveřejňujeme, neprodáváme ani nepředáváme dál – kromě služeb v následujícím bodě.',
@@ -817,7 +826,7 @@ export const cs: Dict = {
         title: 'Třetí strany',
         text: 'U těchto věcí se tvůj prohlížeč nebo náš server spojuje s cizí službou:',
         list: [
-          'Discord – přihlášení, soukromé zprávy od bota a obrázky avatarů.',          'YouTube v režimu youtube-nocookie nebo Twitch – jen pokud je v návodu video.',
+          'Discord – přihlášení, soukromé zprávy od bota, obrázky avatarů a seznam přihlášek na KvK, který tam vedení zkopíruje.',          'YouTube v režimu youtube-nocookie nebo Twitch – jen pokud je v návodu video.',
         ],
         link: { label: 'Ochrana soukromí na Discordu', href: 'https://discord.com/privacy' },
       },
