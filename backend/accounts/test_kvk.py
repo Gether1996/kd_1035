@@ -351,6 +351,46 @@ class MarchTests(KvkTestCase):
         # R4 sees them next to the sign-up and on /marche
         self.assertEqual(self.client.get('/api/me/marches/').json()['marches'][0]['white'], 10)
 
+    def test_build_clicked_together(self):
+        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}).json()
+        self.assertEqual((march['gear'], march['formation'], march['inscriptions']), ({}, '', []))
+        url = f'/api/me/marches/{march["id"]}/'
+        gear = {
+            'weapon': {'item': 'sacred-dominion', 'crit': True, 'iconic': 3},
+            'accessory1': {'item': 'ring-of-doom'},
+            'accessory2': {'item': 'concealed-dagger', 'crit': False},
+        }
+        build = {'gear': gear, 'formation': 'delta', 'inscriptions': ['delta-scroll-thrasher', 'u-instrument-patronage']}
+        res = self.call('patch', url, build)
+        self.assertEqual(res.status_code, 200, res.content)
+        self.assertEqual(res.json()['gear']['accessory1'], {'item': 'ring-of-doom', 'crit': False, 'iconic': 0})
+        self.assertEqual(res.json()['inscriptions'], build['inscriptions'])
+        # the other players see it with the march
+        self.call('patch', '/api/me/marches/', {'public': True})
+        other = self.login(make_player('42').user)
+        self.assertEqual(other.get('/api/marches/').json()['players'][0]['marches'][0]['formation'], 'delta')
+
+        for bad in (
+            {'gear': {'weapon': {'item': 'ring-of-doom'}}},  # an accessory is no weapon
+            {'gear': {'shield': {'item': 'sacred-dominion'}}},
+            {'gear': {'weapon': {'item': 'nothing'}}},
+            {'gear': {'weapon': {'item': 'sacred-dominion', 'iconic': 6}}},
+            {'gear': {'weapon': {'item': 'sacred-dominion', 'crit': 'yes'}}},
+            {'gear': {'accessory1': {'item': 'ring-of-doom'}, 'accessory2': {'item': 'ring-of-doom'}}},
+            {'gear': []},
+            {'formation': 'square'},
+            # Thrasher is a Delta inscription
+            {'formation': 'pincer'},
+            {'formation': 'pincer', 'inscriptions': ['delta-scroll-thrasher']},
+            {'inscriptions': ['delta-scroll-thrasher', 'delta-scroll-thrasher']},
+            {'inscriptions': ['u-scroll-warcry'] * 13},
+        ):
+            self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
+        res = self.call('patch', url, {'formation': 'pincer', 'inscriptions': ['pincer-scroll-toppler', 'u-scroll-warcry']})
+        self.assertEqual(res.status_code, 200, res.content)
+        res = self.call('patch', url, {'gear': {}, 'formation': '', 'inscriptions': []})
+        self.assertEqual((res.json()['gear'], res.json()['formation']), ({}, ''))
+
     def test_screenshots_private_and_deleted_with_the_march(self):
         march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}).json()
         upload_url = f'/api/me/marches/{march["id"]}/images/'

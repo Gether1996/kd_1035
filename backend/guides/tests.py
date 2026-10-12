@@ -807,3 +807,46 @@ class LinkPreviewTests(TestCase):
         self.assertIn('<link rel="canonical" href="https://kd1035.test/cz/navody/commanderi/pary-pre-jazdu">', html)
         self.assertIn('<meta property="og:url" content="https://kd1035.test/cz/navody/commanderi/pary-pre-jazdu">', html)
         self.assertIn('<meta property="og:image" content="https://kd1035.test/og-image.jpg">', html)
+
+
+class ArmoryTests(TestCase):
+    """guides/armory.py: every item and inscription a march may name (Gether 12. 10. 2026)."""
+
+    def test_every_item_has_an_icon_a_slot_and_its_set(self):
+        from . import armory
+
+        data = armory.armory()
+        self.assertGreaterEqual(len(data['items']), 140)
+        for item in data['items']:
+            self.assertIn(item['slot'], armory.SLOTS, item['name'])
+            self.assertTrue((GEAR_DIR / f'{item["id"]}.webp').exists(), item['name'])
+            # a crit raises the stats, never drops one
+            self.assertLessEqual(set(item['stats']), set(item['crit']), item['name'])
+        ids = armory.items()
+        for item_set in data['sets']:
+            self.assertTrue(item_set['pieces'])
+            self.assertTrue(all(ids[piece].get('set') == item_set['id'] for piece in item_set['pieces']))
+
+    def test_formations_and_inscriptions(self):
+        from . import armory
+
+        data = armory.armory()
+        names = {f['name'] for f in data['formations']}
+        # only formations with an icon (Gether 12. 10. 2026)
+        for formation in data['formations']:
+            self.assertTrue((armory.FORMATION_DIR / f'{formation["id"]}.webp').exists(), formation['name'])
+        self.assertNotIn('Testudo', names)
+        self.assertLessEqual({'Arch', 'Delta', 'Hollow Square', 'Pincer', 'Wedge', 'V'}, names)
+        everything = [i['id'] for f in data['formations'] for i in f['inscriptions']] + [i['id'] for i in data['common']]
+        self.assertEqual(len(everything), len(set(everything)))
+        for formation in data['formations']:
+            # a special and a rare inscription on each of the four armaments
+            pieces = {(i['piece'], i['rarity']) for i in formation['inscriptions']}
+            self.assertEqual(len(pieces), 8, formation['name'])
+        self.assertTrue(all(i['rarity'] == 'common' for i in data['common']))
+
+    def test_api(self):
+        response = self.client.get('/api/armory/')
+        self.assertEqual(response['Cache-Control'], 'public, max-age=3600')
+        item = next(i for i in response.json()['items'] if i['id'] == 'sacred-dominion')
+        self.assertEqual((item['slot'], item['icon']), ('weapon', '/static/guides/gear/sacred-dominion.webp'))

@@ -1,0 +1,3842 @@
+{
+ "verified": "2026-10",
+ "sources": [
+  "https://codexhelper.com/tools/equipment/",
+  "https://meta-rok.com/profile/"
+ ],
+ "items": [
+  {
+   "id": "dragons-breath-bow",
+   "name": "Dragon's Breath Bow",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 5,
+    "infantry_health": 5,
+    "archer_defense": 20
+   },
+   "crit": {
+    "cavalry_health": 6.5,
+    "infantry_health": 6.5,
+    "archer_defense": 26
+   },
+   "iconic": true,
+   "set": "dragons-breath-set"
+  },
+  {
+   "id": "hammer-of-the-sun-and-moon",
+   "name": "Hammer of the Sun and Moon",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_attack": 25,
+    "archer_health": 5
+   },
+   "crit": {
+    "infantry_attack": 32.5,
+    "archer_health": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "lance-of-the-hellish-wasteland",
+   "name": "Lance of the Hellish Wasteland",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 20,
+    "infantry_health": 5,
+    "archer_attack": 5
+   },
+   "crit": {
+    "cavalry_attack": 26,
+    "infantry_health": 6.5,
+    "archer_attack": 6.5
+   },
+   "iconic": true,
+   "set": "hellish-wasteland-set"
+  },
+  {
+   "id": "sacred-dominion",
+   "name": "Sacred Dominion",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 25,
+    "archer_defense": 5
+   },
+   "crit": {
+    "cavalry_attack": 32.5,
+    "archer_defense": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "shield-of-the-eternal-empire",
+   "name": "Shield of the Eternal Empire",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 5,
+    "infantry_attack": 20,
+    "archer_attack": 5
+   },
+   "crit": {
+    "cavalry_attack": 6.5,
+    "infantry_attack": 26,
+    "archer_attack": 6.5
+   },
+   "iconic": true,
+   "set": "eternal-empire-set"
+  },
+  {
+   "id": "the-hydras-blast",
+   "name": "The Hydra's Blast",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 5,
+    "archer_defense": 25
+   },
+   "crit": {
+    "cavalry_defense": 6.5,
+    "archer_defense": 32.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "trial-of-the-lost-kingdom",
+   "name": "Trial of the Lost Kingdom",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 15,
+    "infantry_health": 5,
+    "archer_attack": 5
+   },
+   "crit": {
+    "cavalry_defense": 19.5,
+    "infantry_health": 6.5,
+    "archer_attack": 6.5
+   }
+  },
+  {
+   "id": "twilight-epiphany",
+   "name": "Twilight Epiphany",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "siege_attack": 25,
+    "siege_march_speed": 6
+   },
+   "crit": {
+    "siege_attack": 32.5,
+    "siege_march_speed": 8
+   },
+   "iconic": true
+  },
+  {
+   "id": "scepter-of-the-glorious-goddess",
+   "name": "Scepter of the Glorious Goddess",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_march_speed": 3,
+    "troop_attack": 15
+   },
+   "crit": {
+    "infantry_march_speed": 4,
+    "troop_attack": 19.5
+   },
+   "iconic": true,
+   "set": "garb-of-the-glorious-goddess"
+  },
+  {
+   "id": "witchs-feathered-staff",
+   "name": "Witch's Feathered Staff",
+   "slot": "weapon",
+   "rarity": "legendary",
+   "stats": {
+    "siege_defense": 6,
+    "siege_march_speed": 3
+   },
+   "crit": {
+    "siege_defense": 8,
+    "siege_march_speed": 4
+   },
+   "extra": [
+    "Gathering Speed 15%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 19.5%"
+   ],
+   "iconic": true,
+   "set": "witchs-wardrobe"
+  },
+  {
+   "id": "heart-of-the-saint",
+   "name": "Heart of the Saint",
+   "slot": "weapon",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_defense": 13,
+    "infantry_health": 4,
+    "archer_health": 6
+   },
+   "crit": {
+    "cavalry_defense": 17,
+    "infantry_health": 5.5,
+    "archer_health": 8
+   }
+  },
+  {
+   "id": "golden-age",
+   "name": "Golden Age",
+   "slot": "weapon",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 4,
+    "infantry_defense": 6,
+    "archer_defense": 13
+   },
+   "crit": {
+    "cavalry_attack": 5.5,
+    "infantry_defense": 8,
+    "archer_defense": 17
+   }
+  },
+  {
+   "id": "sakura-fubuki",
+   "name": "Sakura Fubuki",
+   "slot": "weapon",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_health": 6,
+    "infantry_attack": 13,
+    "archer_attack": 4
+   },
+   "crit": {
+    "cavalry_health": 8,
+    "infantry_attack": 17,
+    "archer_attack": 5.5
+   }
+  },
+  {
+   "id": "scepter-of-the-forest-guardian",
+   "name": "Scepter of the Forest Guardian",
+   "slot": "weapon",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 6,
+    "siege_defense": 6
+   },
+   "crit": {
+    "cavalry_attack": 8,
+    "siege_defense": 8
+   },
+   "extra": [
+    "Gathering Speed 10%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 13%"
+   ],
+   "set": "forest-guardian-set"
+  },
+  {
+   "id": "knights-oathsworn-bow",
+   "name": "Knight's Oathsworn Bow",
+   "slot": "weapon",
+   "rarity": "epic",
+   "stats": {
+    "siege_attack": 13,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_attack": 17,
+    "siege_march_speed": 3
+   }
+  },
+  {
+   "id": "blazing-axe",
+   "name": "Blazing Axe",
+   "slot": "weapon",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_attack": 8,
+    "infantry_attack": 3,
+    "archer_attack": 5
+   },
+   "crit": {
+    "cavalry_attack": 10.5,
+    "infantry_attack": 4,
+    "archer_attack": 6.5
+   }
+  },
+  {
+   "id": "gatekeepers-shield",
+   "name": "Gatekeeper's Shield",
+   "slot": "weapon",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_health": 5,
+    "infantry_health": 8
+   },
+   "crit": {
+    "cavalry_health": 6.5,
+    "infantry_health": 10.5
+   },
+   "extra": [
+    "Commander EXP Gain 3%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 4%"
+   ]
+  },
+  {
+   "id": "staff-of-the-lost",
+   "name": "Staff of the Lost",
+   "slot": "weapon",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_defense": 3,
+    "infantry_defense": 5,
+    "archer_defense": 8
+   },
+   "crit": {
+    "cavalry_defense": 4,
+    "infantry_defense": 6.5,
+    "archer_defense": 10.5
+   }
+  },
+  {
+   "id": "blessed-blade",
+   "name": "Blessed Blade",
+   "slot": "weapon",
+   "rarity": "advanced",
+   "stats": {
+    "infantry_health": 6,
+    "archer_attack": 4
+   },
+   "crit": {
+    "infantry_health": 8,
+    "archer_attack": 5.5
+   },
+   "extra": [
+    "Damage to Barbarians 3%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 4%"
+   ]
+  },
+  {
+   "id": "vanguard-halberd",
+   "name": "Vanguard Halberd",
+   "slot": "weapon",
+   "rarity": "advanced",
+   "stats": {
+    "cavalry_defense": 5,
+    "cavalry_health": 4
+   },
+   "crit": {
+    "cavalry_defense": 6.5,
+    "cavalry_health": 5.5
+   },
+   "set": "vanguard-set"
+  },
+  {
+   "id": "sharp-longsword",
+   "name": "Sharp Longsword",
+   "slot": "weapon",
+   "rarity": "common",
+   "stats": {
+    "cavalry_defense": 5
+   },
+   "crit": {
+    "cavalry_defense": 6.5
+   },
+   "extra": [
+    "Gathering Speed 2%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 3%"
+   ]
+  },
+  {
+   "id": "gold-helm-of-the-eternal-empire",
+   "name": "Gold Helm of the Eternal Empire",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 3,
+    "infantry_defense": 11,
+    "archer_health": 4
+   },
+   "crit": {
+    "cavalry_health": 4,
+    "infantry_defense": 14.5,
+    "archer_health": 5.5
+   },
+   "iconic": true,
+   "set": "eternal-empire-set"
+  },
+  {
+   "id": "dragons-breath-helm",
+   "name": "Dragon's Breath Helm",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 3,
+    "infantry_defense": 4,
+    "archer_attack": 11
+   },
+   "crit": {
+    "cavalry_attack": 4,
+    "infantry_defense": 5.5,
+    "archer_attack": 14.5
+   },
+   "iconic": true,
+   "set": "dragons-breath-set"
+  },
+  {
+   "id": "war-helm-of-the-hellish-wasteland",
+   "name": "War Helm of the Hellish Wasteland",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 11,
+    "infantry_attack": 4,
+    "archer_defense": 3
+   },
+   "crit": {
+    "cavalry_defense": 14.5,
+    "infantry_attack": 5.5,
+    "archer_defense": 4
+   },
+   "iconic": true,
+   "set": "hellish-wasteland-set"
+  },
+  {
+   "id": "pride-of-the-khan",
+   "name": "Pride of the Khan",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 15,
+    "archer_health": 8
+   },
+   "crit": {
+    "cavalry_defense": 19.5,
+    "archer_health": 10.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "helm-of-the-conqueror",
+   "name": "Helm of the Conqueror",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 8,
+    "infantry_defense": 15
+   },
+   "crit": {
+    "cavalry_health": 10.5,
+    "infantry_defense": 19.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "ancestral-mask-of-night",
+   "name": "Ancestral Mask of Night",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_attack": 8,
+    "archer_attack": 15
+   },
+   "crit": {
+    "infantry_attack": 10.5,
+    "archer_attack": 19.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "fierce-wolfs-helmet",
+   "name": "Fierce Wolf's Helmet",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "siege_attack": 14.5,
+    "siege_march_speed": 4
+   },
+   "crit": {
+    "siege_attack": 19,
+    "siege_march_speed": 5.5
+   },
+   "iconic": true,
+   "set": "lupine-vestments"
+  },
+  {
+   "id": "diadem-of-the-glorious-goddess",
+   "name": "Diadem of the Glorious Goddess",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_march_speed": 2,
+    "troop_attack": 8
+   },
+   "crit": {
+    "cavalry_march_speed": 3,
+    "troop_attack": 10.5
+   },
+   "iconic": true,
+   "set": "garb-of-the-glorious-goddess"
+  },
+  {
+   "id": "witchs-deadwood-crown",
+   "name": "Witch's Deadwood Crown",
+   "slot": "helmet",
+   "rarity": "legendary",
+   "stats": {
+    "siege_attack": 4,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_attack": 5.5,
+    "siege_march_speed": 3
+   },
+   "extra": [
+    "Gathering Speed 12%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 16%"
+   ],
+   "iconic": true,
+   "set": "witchs-wardrobe"
+  },
+  {
+   "id": "revival-helm",
+   "name": "Revival Helm",
+   "slot": "helmet",
+   "rarity": "epic",
+   "stats": {
+    "infantry_defense": 5,
+    "archer_defense": 7.5
+   },
+   "crit": {
+    "infantry_defense": 6.5,
+    "archer_defense": 10
+   },
+   "set": "revival-set"
+  },
+  {
+   "id": "witchs-lineage",
+   "name": "Witch's Lineage",
+   "slot": "helmet",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 3,
+    "infantry_attack": 8,
+    "archer_defense": 3
+   },
+   "crit": {
+    "cavalry_attack": 4,
+    "infantry_attack": 10.5,
+    "archer_defense": 4
+   }
+  },
+  {
+   "id": "abyssal-visage",
+   "name": "Abyssal Visage",
+   "slot": "helmet",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 8,
+    "infantry_attack": 3,
+    "archer_attack": 3
+   },
+   "crit": {
+    "cavalry_attack": 10.5,
+    "infantry_attack": 4,
+    "archer_attack": 4
+   }
+  },
+  {
+   "id": "mask-of-the-forest-guardian",
+   "name": "Mask of the Forest Guardian",
+   "slot": "helmet",
+   "rarity": "epic",
+   "stats": {
+    "infantry_attack": 4,
+    "siege_attack": 4
+   },
+   "crit": {
+    "infantry_attack": 5.5,
+    "siege_attack": 5.5
+   },
+   "extra": [
+    "Gathering Speed 8%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 10.5%"
+   ],
+   "set": "forest-guardian-set"
+  },
+  {
+   "id": "knights-steel-diadem",
+   "name": "Knight's Steel Diadem",
+   "slot": "helmet",
+   "rarity": "epic",
+   "stats": {
+    "siege_health": 8,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_health": 10.5,
+    "siege_march_speed": 3
+   }
+  },
+  {
+   "id": "harvesters-headscarf",
+   "name": "Harvester's Headscarf",
+   "slot": "helmet",
+   "rarity": "elite",
+   "stats": {
+    "siege_attack": 3,
+    "siege_defense": 3
+   },
+   "crit": {
+    "siege_attack": 4,
+    "siege_defense": 4
+   },
+   "extra": [
+    "Gathering Speed 5%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 6.5%"
+   ],
+   "set": "harvester-set"
+  },
+  {
+   "id": "expedition-war-helm",
+   "name": "Expedition War Helm",
+   "slot": "helmet",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_defense": 6,
+    "infantry_defense": 2
+   },
+   "crit": {
+    "cavalry_defense": 8,
+    "infantry_defense": 3
+   },
+   "extra": [
+    "Commander EXP Gain 3%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 4%"
+   ]
+  },
+  {
+   "id": "windswept-war-helm",
+   "name": "Windswept War Helm",
+   "slot": "helmet",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_attack": 4.5,
+    "infantry_attack": 4.5,
+    "troop_march_speed": 3
+   },
+   "crit": {
+    "cavalry_attack": 6,
+    "infantry_attack": 6,
+    "troop_march_speed": 4
+   },
+   "set": "windswept-set"
+  },
+  {
+   "id": "helm-of-fear",
+   "name": "Helm of Fear",
+   "slot": "helmet",
+   "rarity": "advanced",
+   "stats": {
+    "cavalry_attack": 4,
+    "infantry_defense": 2
+   },
+   "crit": {
+    "cavalry_attack": 5.5,
+    "infantry_defense": 3
+   },
+   "extra": [
+    "Damage to Barbarians 3%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 4%"
+   ]
+  },
+  {
+   "id": "helm-of-the-phoenix",
+   "name": "Helm of the Phoenix",
+   "slot": "helmet",
+   "rarity": "advanced",
+   "stats": {
+    "infantry_health": 2,
+    "archer_defense": 4
+   },
+   "crit": {
+    "infantry_health": 3,
+    "archer_defense": 5.5
+   },
+   "extra": [
+    "Damage to Barbarians 3%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 4%"
+   ]
+  },
+  {
+   "id": "iron-helm",
+   "name": "Iron Helm",
+   "slot": "helmet",
+   "rarity": "common",
+   "stats": {
+    "infantry_attack": 3
+   },
+   "crit": {
+    "infantry_attack": 4
+   }
+  },
+  {
+   "id": "shadow-legions-retribution",
+   "name": "Shadow Legion's Retribution",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 12,
+    "infantry_attack": 5,
+    "archer_attack": 5
+   },
+   "crit": {
+    "cavalry_attack": 16,
+    "infantry_attack": 6.5,
+    "archer_attack": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "the-milky-way",
+   "name": "The Milky Way",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 6,
+    "archer_health": 12
+   },
+   "crit": {
+    "cavalry_health": 8,
+    "archer_health": 16
+   },
+   "extra": [
+    "Commander EXP Gain 5%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 6.5%"
+   ],
+   "iconic": true
+  },
+  {
+   "id": "plate-of-the-eternal-empire",
+   "name": "Plate of the Eternal Empire",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_attack": 11,
+    "archer_defense": 5
+   },
+   "crit": {
+    "infantry_attack": 14.5,
+    "archer_defense": 6.5
+   },
+   "iconic": true,
+   "set": "eternal-empire-set"
+  },
+  {
+   "id": "hope-cloak",
+   "name": "Hope Cloak",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 5,
+    "infantry_defense": 12,
+    "archer_defense": 5
+   },
+   "crit": {
+    "cavalry_defense": 6.5,
+    "infantry_defense": 16,
+    "archer_defense": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "heavy-armor-of-the-hellish-wasteland",
+   "name": "Heavy Armor of the Hellish Wasteland",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 11,
+    "infantry_attack": 5
+   },
+   "crit": {
+    "cavalry_health": 14.5,
+    "infantry_attack": 6.5
+   },
+   "iconic": true,
+   "set": "hellish-wasteland-set"
+  },
+  {
+   "id": "dragons-breath-plate",
+   "name": "Dragon's Breath Plate",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 5,
+    "archer_health": 11
+   },
+   "crit": {
+    "cavalry_defense": 6.5,
+    "archer_health": 14.5
+   },
+   "iconic": true,
+   "set": "dragons-breath-set"
+  },
+  {
+   "id": "vigilant-wolfs-leather-armor",
+   "name": "Vigilant Wolf's Leather Armor",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "siege_attack": 14.5,
+    "siege_march_speed": 4
+   },
+   "crit": {
+    "siege_attack": 19,
+    "siege_march_speed": 5.5
+   },
+   "iconic": true,
+   "set": "lupine-vestments"
+  },
+  {
+   "id": "plate-of-the-glorious-goddess",
+   "name": "Plate of the Glorious Goddess",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_march_speed": 2,
+    "troop_defense": 8
+   },
+   "crit": {
+    "infantry_march_speed": 3,
+    "troop_defense": 10.5
+   },
+   "iconic": true,
+   "set": "garb-of-the-glorious-goddess"
+  },
+  {
+   "id": "witchs-hexed-cloak",
+   "name": "Witch's Hexed Cloak",
+   "slot": "chest",
+   "rarity": "legendary",
+   "stats": {
+    "siege_defense": 4,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_defense": 5.5,
+    "siege_march_speed": 3
+   },
+   "extra": [
+    "Gathering Speed 12%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 16%"
+   ],
+   "iconic": true,
+   "set": "witchs-wardrobe"
+  },
+  {
+   "id": "robe-of-the-forest-guardian",
+   "name": "Robe of the Forest Guardian",
+   "slot": "chest",
+   "rarity": "epic",
+   "stats": {
+    "archer_attack": 4,
+    "siege_attack": 4
+   },
+   "crit": {
+    "archer_attack": 5.5,
+    "siege_attack": 5.5
+   },
+   "extra": [
+    "Gathering Speed 8%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 10.5%"
+   ],
+   "set": "forest-guardian-set"
+  },
+  {
+   "id": "quinns-soul",
+   "name": "Quinn's Soul",
+   "slot": "chest",
+   "rarity": "epic",
+   "stats": {
+    "infantry_attack": 8,
+    "archer_health": 4
+   },
+   "crit": {
+    "infantry_attack": 10.5,
+    "archer_health": 5.5
+   },
+   "extra": [
+    "Damage to Barbarians 5%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 6.5%"
+   ]
+  },
+  {
+   "id": "dark-lords-blessing",
+   "name": "Dark Lord's Blessing",
+   "slot": "chest",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_defense": 8,
+    "archer_attack": 5
+   },
+   "crit": {
+    "cavalry_defense": 10.5,
+    "archer_attack": 6.5
+   }
+  },
+  {
+   "id": "revival-plate",
+   "name": "Revival Plate",
+   "slot": "chest",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_defense": 5,
+    "archer_attack": 7.5
+   },
+   "crit": {
+    "cavalry_defense": 6.5,
+    "archer_attack": 10
+   },
+   "set": "revival-set"
+  },
+  {
+   "id": "knights-valorous-cloak",
+   "name": "Knight's Valorous Cloak",
+   "slot": "chest",
+   "rarity": "epic",
+   "stats": {
+    "siege_attack": 8,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_attack": 10.5,
+    "siege_march_speed": 3
+   }
+  },
+  {
+   "id": "commanders-heavy-armor",
+   "name": "Commander's Heavy Armor",
+   "slot": "chest",
+   "rarity": "elite",
+   "stats": {
+    "infantry_attack": 3,
+    "archer_health": 6
+   },
+   "crit": {
+    "infantry_attack": 4,
+    "archer_health": 8
+   },
+   "extra": [
+    "Commander EXP Gain 3%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 4%"
+   ]
+  },
+  {
+   "id": "windswept-breastplate",
+   "name": "Windswept Breastplate",
+   "slot": "chest",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_defense": 4.5,
+    "infantry_defense": 4.5,
+    "troop_march_speed": 3
+   },
+   "crit": {
+    "cavalry_defense": 6,
+    "infantry_defense": 6,
+    "troop_march_speed": 4
+   },
+   "set": "windswept-set"
+  },
+  {
+   "id": "harvester-robes",
+   "name": "Harvester Robes",
+   "slot": "chest",
+   "rarity": "elite",
+   "stats": {
+    "siege_defense": 3,
+    "siege_health": 3
+   },
+   "crit": {
+    "siege_defense": 4,
+    "siege_health": 4
+   },
+   "extra": [
+    "Gathering Speed 5%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 6.5%"
+   ],
+   "set": "harvester-set"
+  },
+  {
+   "id": "infantry-breastplate",
+   "name": "Infantry Breastplate",
+   "slot": "chest",
+   "rarity": "advanced",
+   "stats": {
+    "cavalry_health": 2,
+    "infantry_defense": 4
+   },
+   "crit": {
+    "cavalry_health": 3,
+    "infantry_defense": 5.5
+   },
+   "extra": [
+    "Damage to Barbarians 3%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 4%"
+   ]
+  },
+  {
+   "id": "milanese-plate",
+   "name": "Milanese Plate",
+   "slot": "chest",
+   "rarity": "advanced",
+   "stats": {
+    "cavalry_defense": 4,
+    "archer_attack": 2
+   },
+   "crit": {
+    "cavalry_defense": 5.5,
+    "archer_attack": 3
+   }
+  },
+  {
+   "id": "chain-mail",
+   "name": "Chain Mail",
+   "slot": "chest",
+   "rarity": "common",
+   "stats": {
+    "archer_attack": 3
+   },
+   "crit": {
+    "archer_attack": 4
+   }
+  },
+  {
+   "id": "vambraces-of-the-eternal-empire",
+   "name": "Vambraces of the Eternal Empire",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 3,
+    "infantry_defense": 7.5
+   },
+   "crit": {
+    "cavalry_attack": 4,
+    "infantry_defense": 10
+   },
+   "iconic": true,
+   "set": "eternal-empire-set"
+  },
+  {
+   "id": "sacred-grips",
+   "name": "Sacred Grips",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_defense": 8,
+    "archer_attack": 5
+   },
+   "crit": {
+    "infantry_defense": 10.5,
+    "archer_attack": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "ians-choice",
+   "name": "Ian's Choice",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "archer_attack": 8
+   },
+   "crit": {
+    "archer_attack": 10.5
+   },
+   "extra": [
+    "Commander EXP Gain 5%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 6.5%"
+   ],
+   "iconic": true
+  },
+  {
+   "id": "navars-control",
+   "name": "Navar's Control",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 8,
+    "infantry_defense": 5
+   },
+   "crit": {
+    "cavalry_health": 10.5,
+    "infantry_defense": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "dragons-breath-vambraces",
+   "name": "Dragon's Breath Vambraces",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_attack": 3,
+    "archer_attack": 7.5
+   },
+   "crit": {
+    "infantry_attack": 4,
+    "archer_attack": 10
+   },
+   "iconic": true,
+   "set": "dragons-breath-set"
+  },
+  {
+   "id": "armband-of-the-hellish-wasteland",
+   "name": "Armband of the Hellish Wasteland",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 7.5,
+    "archer_health": 3
+   },
+   "crit": {
+    "cavalry_defense": 10,
+    "archer_health": 4
+   },
+   "iconic": true,
+   "set": "hellish-wasteland-set"
+  },
+  {
+   "id": "wailing-wolfs-gauntlets",
+   "name": "Wailing Wolf's Gauntlets",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "siege_defense": 10,
+    "siege_march_speed": 3
+   },
+   "crit": {
+    "siege_defense": 13,
+    "siege_march_speed": 4
+   },
+   "iconic": true,
+   "set": "lupine-vestments"
+  },
+  {
+   "id": "gauntlets-of-the-glorious-goddess",
+   "name": "Gauntlets of the Glorious Goddess",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "siege_march_speed": 2,
+    "troop_defense": 6
+   },
+   "crit": {
+    "siege_march_speed": 3,
+    "troop_defense": 8
+   },
+   "iconic": true,
+   "set": "garb-of-the-glorious-goddess"
+  },
+  {
+   "id": "witchs-crimson-bracers",
+   "name": "Witch's Crimson Bracers",
+   "slot": "gloves",
+   "rarity": "legendary",
+   "stats": {
+    "siege_health": 3,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_health": 4,
+    "siege_march_speed": 3
+   },
+   "extra": [
+    "Gathering Speed 8%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 10.5%"
+   ],
+   "iconic": true,
+   "set": "witchs-wardrobe"
+  },
+  {
+   "id": "isets-sufferance",
+   "name": "Iset's Sufferance",
+   "slot": "gloves",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 3,
+    "cavalry_health": 3
+   },
+   "crit": {
+    "cavalry_attack": 4,
+    "cavalry_health": 4
+   }
+  },
+  {
+   "id": "claws-of-the-forest-guardian",
+   "name": "Claws of the Forest Guardian",
+   "slot": "gloves",
+   "rarity": "epic",
+   "stats": {
+    "siege_attack": 2,
+    "siege_defense": 2
+   },
+   "crit": {
+    "siege_attack": 3,
+    "siege_defense": 3
+   },
+   "extra": [
+    "Gathering Speed 6%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 8%"
+   ],
+   "set": "forest-guardian-set"
+  },
+  {
+   "id": "seths-brutality",
+   "name": "Seth's Brutality",
+   "slot": "gloves",
+   "rarity": "epic",
+   "stats": {
+    "infantry_defense": 5.5,
+    "archer_defense": 2
+   },
+   "crit": {
+    "infantry_defense": 7.5,
+    "archer_defense": 3
+   },
+   "extra": [
+    "Damage to Barbarians 5%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 6.5%"
+   ]
+  },
+  {
+   "id": "revival-gauntlets",
+   "name": "Revival Gauntlets",
+   "slot": "gloves",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 3,
+    "infantry_attack": 3,
+    "archer_attack": 4.5
+   },
+   "crit": {
+    "cavalry_attack": 4,
+    "infantry_attack": 4,
+    "archer_attack": 6
+   },
+   "set": "revival-set"
+  },
+  {
+   "id": "knights-battleworn-gauntlets",
+   "name": "Knight's Battleworn Gauntlets",
+   "slot": "gloves",
+   "rarity": "epic",
+   "stats": {
+    "siege_defense": 5.5,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_defense": 7.5,
+    "siege_march_speed": 3
+   }
+  },
+  {
+   "id": "saints-song",
+   "name": "Saint's Song",
+   "slot": "gloves",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_attack": 2,
+    "archer_attack": 4
+   },
+   "crit": {
+    "cavalry_attack": 3,
+    "archer_attack": 5.5
+   },
+   "extra": [
+    "Commander EXP Gain 3%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 4%"
+   ]
+  },
+  {
+   "id": "windswept-bracers",
+   "name": "Windswept Bracers",
+   "slot": "gloves",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_health": 2.5,
+    "infantry_health": 2.5,
+    "troop_march_speed": 3
+   },
+   "crit": {
+    "cavalry_health": 3.5,
+    "infantry_health": 3.5,
+    "troop_march_speed": 4
+   },
+   "set": "windswept-set"
+  },
+  {
+   "id": "calvins-hand",
+   "name": "Calvin's Hand",
+   "slot": "gloves",
+   "rarity": "elite",
+   "stats": {
+    "infantry_attack": 4,
+    "infantry_health": 1,
+    "archer_attack": 1
+   },
+   "crit": {
+    "infantry_attack": 5.5,
+    "infantry_health": 1.5,
+    "archer_attack": 1.5
+   }
+  },
+  {
+   "id": "leather-gloves",
+   "name": "Leather Gloves",
+   "slot": "gloves",
+   "rarity": "advanced",
+   "stats": {
+    "infantry_defense": 1,
+    "archer_health": 2.5
+   },
+   "crit": {
+    "infantry_defense": 1.5,
+    "archer_health": 3.5
+   }
+  },
+  {
+   "id": "bronze-bracers",
+   "name": "Bronze Bracers",
+   "slot": "gloves",
+   "rarity": "advanced",
+   "stats": {
+    "cavalry_defense": 2.5,
+    "infantry_health": 1
+   },
+   "crit": {
+    "cavalry_defense": 3.5,
+    "infantry_health": 1.5
+   },
+   "extra": [
+    "Damage to Barbarians 3%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 4%"
+   ]
+  },
+  {
+   "id": "cloth-gloves",
+   "name": "Cloth Gloves",
+   "slot": "gloves",
+   "rarity": "common",
+   "stats": {
+    "infantry_defense": 2
+   },
+   "crit": {
+    "infantry_defense": 3
+   }
+  },
+  {
+   "id": "ash-of-the-dawn",
+   "name": "Ash of the Dawn",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 12,
+    "infantry_health": 5
+   },
+   "crit": {
+    "cavalry_health": 16,
+    "infantry_health": 6.5
+   },
+   "extra": [
+    "Commander EXP Gain 5%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 6.5%"
+   ],
+   "iconic": true
+  },
+  {
+   "id": "greaves-of-the-eternal-empire",
+   "name": "Greaves of the Eternal Empire",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_attack": 11,
+    "archer_defense": 5
+   },
+   "crit": {
+    "infantry_attack": 14.5,
+    "archer_defense": 6.5
+   },
+   "iconic": true,
+   "set": "eternal-empire-set"
+  },
+  {
+   "id": "tassets-of-the-war-god",
+   "name": "Tassets of the War God",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 5,
+    "infantry_attack": 5,
+    "archer_attack": 12
+   },
+   "crit": {
+    "cavalry_attack": 6.5,
+    "infantry_attack": 6.5,
+    "archer_attack": 16
+   },
+   "iconic": true
+  },
+  {
+   "id": "eternal-night",
+   "name": "Eternal Night",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 5,
+    "infantry_defense": 12,
+    "archer_defense": 5
+   },
+   "crit": {
+    "cavalry_defense": 6.5,
+    "infantry_defense": 16,
+    "archer_defense": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "dragons-breath-tassets",
+   "name": "Dragon's Breath Tassets",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 5,
+    "archer_attack": 11
+   },
+   "crit": {
+    "cavalry_attack": 6.5,
+    "archer_attack": 14.5
+   },
+   "iconic": true,
+   "set": "dragons-breath-set"
+  },
+  {
+   "id": "tassets-of-the-hellish-wasteland",
+   "name": "Tassets of the Hellish Wasteland",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 11,
+    "infantry_defense": 5
+   },
+   "crit": {
+    "cavalry_attack": 14.5,
+    "infantry_defense": 6.5
+   },
+   "iconic": true,
+   "set": "hellish-wasteland-set"
+  },
+  {
+   "id": "lone-wolfs-leather-tassets",
+   "name": "Lone Wolf's Leather Tassets",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "siege_health": 14.5,
+    "siege_march_speed": 4
+   },
+   "crit": {
+    "siege_health": 19,
+    "siege_march_speed": 5.5
+   },
+   "iconic": true,
+   "set": "lupine-vestments"
+  },
+  {
+   "id": "chausses-of-the-glorious-goddess",
+   "name": "Chausses of the Glorious Goddess",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "archer_march_speed": 2,
+    "troop_health": 8
+   },
+   "crit": {
+    "archer_march_speed": 3,
+    "troop_health": 10.5
+   },
+   "iconic": true,
+   "set": "garb-of-the-glorious-goddess"
+  },
+  {
+   "id": "witchs-ornamented-pants",
+   "name": "Witch's Ornamented Pants",
+   "slot": "legs",
+   "rarity": "legendary",
+   "stats": {
+    "siege_health": 4,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_health": 5.5,
+    "siege_march_speed": 3
+   },
+   "extra": [
+    "Gathering Speed 12%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 16%"
+   ],
+   "iconic": true,
+   "set": "witchs-wardrobe"
+  },
+  {
+   "id": "fanatics-tassets",
+   "name": "Fanatic's Tassets",
+   "slot": "legs",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_defense": 5,
+    "archer_defense": 8
+   },
+   "crit": {
+    "cavalry_defense": 6.5,
+    "archer_defense": 10.5
+   }
+  },
+  {
+   "id": "gladiator",
+   "name": "Gladiator",
+   "slot": "legs",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_health": 8,
+    "archer_defense": 4
+   },
+   "crit": {
+    "cavalry_health": 10.5,
+    "archer_defense": 5.5
+   },
+   "extra": [
+    "Damage to Barbarians 5%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 6.5%"
+   ]
+  },
+  {
+   "id": "karuaks-humility",
+   "name": "Karuak's Humility",
+   "slot": "legs",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 5,
+    "infantry_health": 8
+   },
+   "crit": {
+    "cavalry_attack": 6.5,
+    "infantry_health": 10.5
+   }
+  },
+  {
+   "id": "revival-greaves",
+   "name": "Revival Greaves",
+   "slot": "legs",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 5,
+    "archer_defense": 7.5
+   },
+   "crit": {
+    "cavalry_attack": 6.5,
+    "archer_defense": 10
+   },
+   "set": "revival-set"
+  },
+  {
+   "id": "knights-triumphant-tassets",
+   "name": "Knight's Triumphant Tassets",
+   "slot": "legs",
+   "rarity": "epic",
+   "stats": {
+    "siege_defense": 8
+   },
+   "crit": {
+    "siege_defense": 10.5
+   },
+   "extra": [
+    "Damage to Barbarians 5%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 6.5%"
+   ]
+  },
+  {
+   "id": "harvester-breeches",
+   "name": "Harvester Breeches",
+   "slot": "legs",
+   "rarity": "elite",
+   "stats": {
+    "siege_attack": 3,
+    "siege_defense": 3
+   },
+   "crit": {
+    "siege_attack": 4,
+    "siege_defense": 4
+   },
+   "extra": [
+    "Gathering Speed 5%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 6.5%"
+   ],
+   "set": "harvester-set"
+  },
+  {
+   "id": "greaves-of-the-exile",
+   "name": "Greaves of the Exile",
+   "slot": "legs",
+   "rarity": "elite",
+   "stats": {
+    "infantry_defense": 3,
+    "archer_defense": 6
+   },
+   "crit": {
+    "infantry_defense": 4,
+    "archer_defense": 8
+   },
+   "extra": [
+    "Commander EXP Gain 3%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 4%"
+   ]
+  },
+  {
+   "id": "sentry-breeches",
+   "name": "Sentry Breeches",
+   "slot": "legs",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_defense": 1,
+    "infantry_attack": 6,
+    "archer_attack": 3
+   },
+   "crit": {
+    "cavalry_defense": 1.5,
+    "infantry_attack": 8,
+    "archer_attack": 4
+   }
+  },
+  {
+   "id": "vanguard-greaves",
+   "name": "Vanguard Greaves",
+   "slot": "legs",
+   "rarity": "advanced",
+   "stats": {
+    "cavalry_attack": 4,
+    "cavalry_health": 1
+   },
+   "crit": {
+    "cavalry_attack": 5.5,
+    "cavalry_health": 1.5
+   },
+   "set": "vanguard-set"
+  },
+  {
+   "id": "ranger-trousers",
+   "name": "Ranger Trousers",
+   "slot": "legs",
+   "rarity": "advanced",
+   "stats": {
+    "infantry_attack": 4,
+    "archer_defense": 2
+   },
+   "crit": {
+    "infantry_attack": 5.5,
+    "archer_defense": 3
+   },
+   "extra": [
+    "Damage to Barbarians 3%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 4%"
+   ]
+  },
+  {
+   "id": "coarse-breeches",
+   "name": "Coarse Breeches",
+   "slot": "legs",
+   "rarity": "common",
+   "stats": {
+    "cavalry_attack": 3
+   },
+   "crit": {
+    "cavalry_attack": 4
+   },
+   "extra": [
+    "Gathering Speed 1%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 1.5%"
+   ]
+  },
+  {
+   "id": "shios-return",
+   "name": "Shio's Return",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_defense": 8,
+    "archer_health": 5
+   },
+   "crit": {
+    "infantry_defense": 10.5,
+    "archer_health": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "commanders-boots",
+   "name": "Commander's Boots",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "archer_attack": 8
+   },
+   "crit": {
+    "archer_attack": 10.5
+   },
+   "extra": [
+    "Commander EXP Gain 5%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 6.5%"
+   ],
+   "iconic": true
+  },
+  {
+   "id": "sturdy-boots-of-the-eternal-empire",
+   "name": "Sturdy Boots of the Eternal Empire",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_defense": 3,
+    "infantry_defense": 7.5
+   },
+   "crit": {
+    "cavalry_defense": 4,
+    "infantry_defense": 10
+   },
+   "iconic": true,
+   "set": "eternal-empire-set"
+  },
+  {
+   "id": "mountain-crushers",
+   "name": "Mountain Crushers",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_attack": 8,
+    "archer_attack": 5
+   },
+   "crit": {
+    "cavalry_attack": 10.5,
+    "archer_attack": 6.5
+   },
+   "iconic": true
+  },
+  {
+   "id": "boots-of-the-hellish-wasteland",
+   "name": "Boots of the Hellish Wasteland",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "cavalry_health": 7.5,
+    "archer_attack": 3
+   },
+   "crit": {
+    "cavalry_health": 10,
+    "archer_attack": 4
+   },
+   "iconic": true,
+   "set": "hellish-wasteland-set"
+  },
+  {
+   "id": "dragons-breath-boots",
+   "name": "Dragon's Breath Boots",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "infantry_defense": 3,
+    "archer_defense": 7.5
+   },
+   "crit": {
+    "infantry_defense": 4,
+    "archer_defense": 10
+   },
+   "iconic": true,
+   "set": "dragons-breath-set"
+  },
+  {
+   "id": "roaring-wolfs-claws",
+   "name": "Roaring Wolf's Claws",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "siege_defense": 10,
+    "siege_march_speed": 3
+   },
+   "crit": {
+    "siege_defense": 13,
+    "siege_march_speed": 4
+   },
+   "iconic": true,
+   "set": "lupine-vestments"
+  },
+  {
+   "id": "greaves-of-the-glorious-goddess",
+   "name": "Greaves of the Glorious Goddess",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "siege_march_speed": 2,
+    "troop_health": 6
+   },
+   "crit": {
+    "siege_march_speed": 3,
+    "troop_health": 8
+   },
+   "iconic": true,
+   "set": "garb-of-the-glorious-goddess"
+  },
+  {
+   "id": "witchs-mire-waders",
+   "name": "Witch's Mire-Waders",
+   "slot": "boots",
+   "rarity": "legendary",
+   "stats": {
+    "siege_attack": 3,
+    "siege_march_speed": 2
+   },
+   "crit": {
+    "siege_attack": 4,
+    "siege_march_speed": 3
+   },
+   "extra": [
+    "Gathering Speed 8%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 10.5%"
+   ],
+   "iconic": true,
+   "set": "witchs-wardrobe"
+  },
+  {
+   "id": "cloud-racers",
+   "name": "Cloud Racers",
+   "slot": "boots",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 5.5,
+    "archer_health": 2
+   },
+   "crit": {
+    "cavalry_attack": 7.5,
+    "archer_health": 3
+   },
+   "extra": [
+    "Gathering Speed 6%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 8%"
+   ]
+  },
+  {
+   "id": "flame-treads",
+   "name": "Flame Treads",
+   "slot": "boots",
+   "rarity": "epic",
+   "stats": {
+    "cavalry_attack": 3,
+    "archer_health": 5.5
+   },
+   "crit": {
+    "cavalry_attack": 4,
+    "archer_health": 7.5
+   }
+  },
+  {
+   "id": "frost-treads",
+   "name": "Frost Treads",
+   "slot": "boots",
+   "rarity": "epic",
+   "stats": {
+    "infantry_defense": 5.5
+   },
+   "crit": {
+    "infantry_defense": 7.5
+   },
+   "extra": [
+    "Damage to Barbarians 5%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 6.5%"
+   ]
+  },
+  {
+   "id": "knights-winter-sabatons",
+   "name": "Knight's Winter Sabatons",
+   "slot": "boots",
+   "rarity": "epic",
+   "stats": {
+    "siege_health": 5.5
+   },
+   "crit": {
+    "siege_health": 7.5
+   },
+   "extra": [
+    "Damage to Barbarians 5%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 6.5%"
+   ]
+  },
+  {
+   "id": "harvester-boots",
+   "name": "Harvester Boots",
+   "slot": "boots",
+   "rarity": "elite",
+   "stats": {
+    "siege_defense": 2,
+    "siege_health": 2
+   },
+   "crit": {
+    "siege_defense": 3,
+    "siege_health": 3
+   },
+   "extra": [
+    "Gathering Speed 5%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 6.5%"
+   ],
+   "set": "harvester-set"
+  },
+  {
+   "id": "the-scarlet-hounds",
+   "name": "The Scarlet Hounds",
+   "slot": "boots",
+   "rarity": "elite",
+   "stats": {
+    "infantry_health": 4
+   },
+   "crit": {
+    "infantry_health": 5.5
+   },
+   "extra": [
+    "Commander EXP Gain 3%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 4%"
+   ]
+  },
+  {
+   "id": "windswept-boots",
+   "name": "Windswept Boots",
+   "slot": "boots",
+   "rarity": "elite",
+   "stats": {
+    "cavalry_health": 2.5,
+    "infantry_defense": 2.5,
+    "troop_march_speed": 3
+   },
+   "crit": {
+    "cavalry_health": 3.5,
+    "infantry_defense": 3.5,
+    "troop_march_speed": 4
+   },
+   "set": "windswept-set"
+  },
+  {
+   "id": "edged-boots",
+   "name": "Edged Boots",
+   "slot": "boots",
+   "rarity": "advanced",
+   "stats": {
+    "cavalry_attack": 1,
+    "archer_attack": 2.5
+   },
+   "crit": {
+    "cavalry_attack": 1.5,
+    "archer_attack": 3.5
+   },
+   "extra": [
+    "Damage to Barbarians 3%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 4%"
+   ]
+  },
+  {
+   "id": "boots-of-reverence",
+   "name": "Boots of Reverence",
+   "slot": "boots",
+   "rarity": "advanced",
+   "stats": {
+    "infantry_attack": 2.5,
+    "archer_defense": 1
+   },
+   "crit": {
+    "infantry_attack": 3.5,
+    "archer_defense": 1.5
+   }
+  },
+  {
+   "id": "sturdy-boots",
+   "name": "Sturdy Boots",
+   "slot": "boots",
+   "rarity": "common",
+   "stats": {
+    "archer_defense": 2
+   },
+   "crit": {
+    "archer_defense": 3
+   },
+   "extra": [
+    "Gathering Speed 1%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 1.5%"
+   ]
+  },
+  {
+   "id": "scolas-lucky-coin",
+   "name": "Scolas' Lucky Coin",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "10% Chance to gain a Shield (Damage Factor 500)"
+   ],
+   "extra_crit": [
+    "10% Chance to gain a Shield (Damage Factor 650)"
+   ]
+  },
+  {
+   "id": "karuaks-war-drums",
+   "name": "Karuak's War Drums",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "10% Chance to grant 50 Extra Rage for itself & up to 2 allies."
+   ],
+   "extra_crit": [
+    "10% Chance to grant 65 Extra Rage for itself & up to 2 allies."
+   ]
+  },
+  {
+   "id": "pendant-of-eternal-night",
+   "name": "Pendant of Eternal Night",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Skill Damage 5%"
+   ],
+   "extra_crit": [
+    "Skill Damage 6.5%"
+   ]
+  },
+  {
+   "id": "ring-of-doom",
+   "name": "Ring of Doom",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "10% Chance to gain 50% Bonus Damage"
+   ],
+   "extra_crit": [
+    "10% Chance to gain 65% Bonus Damage"
+   ]
+  },
+  {
+   "id": "greatest-glory",
+   "name": "Greatest Glory",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Normal Damage 5%"
+   ],
+   "extra_crit": [
+    "Normal Damage 6.5%"
+   ]
+  },
+  {
+   "id": "horn-of-fury",
+   "name": "Horn of Fury",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "30% Chance to gain 50 Extra Rage"
+   ],
+   "extra_crit": [
+    "30% Chance to gain 65 Extra Rage"
+   ]
+  },
+  {
+   "id": "concealed-dagger",
+   "name": "Concealed Dagger",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "30% Chance to reduce target Health 5%"
+   ],
+   "extra_crit": [
+    "30% Chance to reduce target Health 6.5%"
+   ]
+  },
+  {
+   "id": "moras-web",
+   "name": "Mora's Web",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "30% Chance to reduce target Defence 4% and cavalry March Speed 8%"
+   ],
+   "extra_crit": [
+    "30% Chance to reduce target Defence 5.5% and cavalry March Speed 10.5%"
+   ]
+  },
+  {
+   "id": "vengeance",
+   "name": "Vengeance",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Counterattack Damage 8%"
+   ],
+   "extra_crit": [
+    "Counterattack Damage 10.5%"
+   ]
+  },
+  {
+   "id": "seths-call",
+   "name": "Seth's Call",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "10% Chance to grant 10% Attack Bonus"
+   ],
+   "extra_crit": [
+    "10% Chance to grant 13% Attack Bonus"
+   ]
+  },
+  {
+   "id": "immolating-plume",
+   "name": "Immolating Plume",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "50% Chance to increase 30% Damage"
+   ],
+   "extra_crit": [
+    "50% Chance to increase 39% Damage"
+   ],
+   "iconic": true
+  },
+  {
+   "id": "heros-hilt",
+   "name": "Hero's Hilt",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "50% Chance 3% Combo Attack"
+   ],
+   "extra_crit": [
+    "50% Chance 4% Combo Attack"
+   ]
+  },
+  {
+   "id": "saddle-of-a-thousand-blessings",
+   "name": "Saddle of a Thousand Blessings",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Smite Damage 3%, 50% Chance to heal 5% of slight wounds dealt by smite damage"
+   ],
+   "extra_crit": [
+    "Smite Damage 4%, 50% Chance to heal 6.5% of slight wounds dealt by smite damage"
+   ]
+  },
+  {
+   "id": "timeless-amber",
+   "name": "Timeless Amber",
+   "slot": "accessory",
+   "rarity": "legendary",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Gathering Speed 15%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 19.5%"
+   ],
+   "iconic": true
+  },
+  {
+   "id": "peters-sickle",
+   "name": "Peter's Sickle",
+   "slot": "accessory",
+   "rarity": "epic",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Gathering Speed 10%"
+   ],
+   "extra_crit": [
+    "Gathering Speed 13%"
+   ]
+  },
+  {
+   "id": "wind-scars",
+   "name": "Wind Scars",
+   "slot": "accessory",
+   "rarity": "epic",
+   "stats": {
+    "infantry_march_speed": 8
+   },
+   "crit": {
+    "infantry_march_speed": 10.5
+   }
+  },
+  {
+   "id": "delanes-amulet",
+   "name": "Delane's Amulet",
+   "slot": "accessory",
+   "rarity": "epic",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Less Counterattack Damage 5%"
+   ],
+   "extra_crit": [
+    "Less Counterattack Damage 6.5%"
+   ]
+  },
+  {
+   "id": "silent-trial",
+   "name": "Silent Trial",
+   "slot": "accessory",
+   "rarity": "epic",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Basic Attack, target loses 10 Rage"
+   ],
+   "extra_crit": [
+    "Basic Attack, target loses 13 Rage"
+   ]
+  },
+  {
+   "id": "the-bards-pendant",
+   "name": "The Bard's Pendant",
+   "slot": "accessory",
+   "rarity": "epic",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Extra RSS from Gathering 5%"
+   ],
+   "extra_crit": [
+    "Extra RSS from Gathering 6.5%"
+   ]
+  },
+  {
+   "id": "crimson-ring",
+   "name": "Crimson Ring",
+   "slot": "accessory",
+   "rarity": "epic",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Commander EXP Gain 15%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 19.5%"
+   ]
+  },
+  {
+   "id": "ancient-stratagems",
+   "name": "Ancient Stratagems",
+   "slot": "accessory",
+   "rarity": "epic",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Unit Capacity 3%"
+   ],
+   "extra_crit": [
+    "Unit Capacity 4%"
+   ]
+  },
+  {
+   "id": "savage-totem",
+   "name": "Savage Totem",
+   "slot": "accessory",
+   "rarity": "elite",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Damage to Barbarians 10%"
+   ],
+   "extra_crit": [
+    "Damage to Barbarians 13%"
+   ]
+  },
+  {
+   "id": "lohars-bone-necklace",
+   "name": "Lohar's Bone Necklace",
+   "slot": "accessory",
+   "rarity": "elite",
+   "stats": {},
+   "crit": {},
+   "extra": [
+    "Commander EXP Gain 10%"
+   ],
+   "extra_crit": [
+    "Commander EXP Gain 13%"
+   ]
+  },
+  {
+   "id": "call-of-the-loyal",
+   "name": "Call of the Loyal",
+   "slot": "accessory",
+   "rarity": "elite",
+   "stats": {
+    "troop_march_speed": 5
+   },
+   "crit": {
+    "troop_march_speed": 6.5
+   }
+  }
+ ],
+ "sets": [
+  {
+   "id": "lupine-vestments",
+   "name": "Lupine Vestments",
+   "pieces": [
+    "fierce-wolfs-helmet",
+    "vigilant-wolfs-leather-armor",
+    "wailing-wolfs-gauntlets",
+    "lone-wolfs-leather-tassets",
+    "roaring-wolfs-claws"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Siege Unit Defence +5%",
+     "stats": {
+      "siege_defense": 5
+     }
+    },
+    {
+     "count": 4,
+     "text": "Ranged Skill Damage +5%, Ranged Smite Damage +5%",
+     "stats": {
+      "ranged_skill_damage": 5,
+      "ranged_smite_damage": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "hellish-wasteland-set",
+   "name": "Hellish Wasteland Set",
+   "pieces": [
+    "lance-of-the-hellish-wasteland",
+    "war-helm-of-the-hellish-wasteland",
+    "heavy-armor-of-the-hellish-wasteland",
+    "armband-of-the-hellish-wasteland",
+    "tassets-of-the-hellish-wasteland",
+    "boots-of-the-hellish-wasteland"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Health +3%",
+     "stats": {
+      "troop_health": 3
+     }
+    },
+    {
+     "count": 4,
+     "text": "Counterattack Damage +3%",
+     "stats": {
+      "counterattack_damage": 3
+     }
+    },
+    {
+     "count": 6,
+     "text": "Cavalry Defense +5%",
+     "stats": {
+      "cavalry_defense": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "eternal-empire-set",
+   "name": "Eternal Empire Set",
+   "pieces": [
+    "shield-of-the-eternal-empire",
+    "gold-helm-of-the-eternal-empire",
+    "plate-of-the-eternal-empire",
+    "vambraces-of-the-eternal-empire",
+    "greaves-of-the-eternal-empire",
+    "sturdy-boots-of-the-eternal-empire"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Defence +3%",
+     "stats": {
+      "troop_defense": 3
+     }
+    },
+    {
+     "count": 4,
+     "text": "March Speed +10%",
+     "stats": {
+      "troop_march_speed": 10
+     }
+    },
+    {
+     "count": 6,
+     "text": "Infantry Attack +5%",
+     "stats": {
+      "infantry_attack": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "dragons-breath-set",
+   "name": "Dragon's Breath Set",
+   "pieces": [
+    "dragons-breath-bow",
+    "dragons-breath-helm",
+    "dragons-breath-plate",
+    "dragons-breath-vambraces",
+    "dragons-breath-tassets",
+    "dragons-breath-boots"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Attack 3%",
+     "stats": {
+      "troop_attack": 3
+     }
+    },
+    {
+     "count": 4,
+     "text": "Skill Damage 3%",
+     "stats": {
+      "skill_damage": 3
+     }
+    },
+    {
+     "count": 6,
+     "text": "Archer Health 5%",
+     "stats": {
+      "archer_health": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "garb-of-the-glorious-goddess",
+   "name": "Garb of the Glorious Goddess",
+   "pieces": [
+    "scepter-of-the-glorious-goddess",
+    "diadem-of-the-glorious-goddess",
+    "plate-of-the-glorious-goddess",
+    "gauntlets-of-the-glorious-goddess",
+    "chausses-of-the-glorious-goddess",
+    "greaves-of-the-glorious-goddess"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Defence 3%",
+     "stats": {
+      "troop_defense": 3
+     }
+    },
+    {
+     "count": 4,
+     "text": "Skill Damage Reduction 3%",
+     "stats": {
+      "skill_damage_reduction": 3
+     }
+    },
+    {
+     "count": 6,
+     "text": "Troop Health 5%",
+     "stats": {
+      "troop_health": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "witchs-wardrobe",
+   "name": "Witch's Wardrobe",
+   "pieces": [
+    "witchs-feathered-staff",
+    "witchs-deadwood-crown",
+    "witchs-hexed-cloak",
+    "witchs-crimson-bracers",
+    "witchs-ornamented-pants",
+    "witchs-mire-waders"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Load +25%",
+     "stats": {
+      "troop_load": 25
+     }
+    },
+    {
+     "count": 4,
+     "text": "Extra Resources +5%",
+     "stats": {
+      "extra_resources": 5
+     }
+    },
+    {
+     "count": 6,
+     "text": "March Speed +10%",
+     "stats": {
+      "troop_march_speed": 10
+     }
+    }
+   ]
+  },
+  {
+   "id": "revival-set",
+   "name": "Revival Set",
+   "pieces": [
+    "revival-helm",
+    "revival-plate",
+    "revival-gauntlets",
+    "revival-greaves"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Attack 3%",
+     "stats": {
+      "troop_attack": 3
+     }
+    },
+    {
+     "count": 4,
+     "text": "Troop Defence 3%",
+     "stats": {
+      "troop_defense": 3
+     }
+    }
+   ]
+  },
+  {
+   "id": "forest-guardian-set",
+   "name": "Forest Guardian Set",
+   "pieces": [
+    "scepter-of-the-forest-guardian",
+    "mask-of-the-forest-guardian",
+    "robe-of-the-forest-guardian",
+    "claws-of-the-forest-guardian"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Load +20%",
+     "stats": {
+      "troop_load": 20
+     }
+    },
+    {
+     "count": 4,
+     "text": "Extra Resources 5%",
+     "stats": {
+      "extra_resources": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "harvester-set",
+   "name": "Harvester Set",
+   "pieces": [
+    "harvester-robes",
+    "harvesters-headscarf",
+    "harvester-breeches",
+    "harvester-boots"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Gathering Speed +10%",
+     "stats": {
+      "gathering_speed": 10
+     }
+    },
+    {
+     "count": 4,
+     "text": "Troop Load +20%",
+     "stats": {
+      "troop_load": 20
+     }
+    }
+   ]
+  },
+  {
+   "id": "windswept-set",
+   "name": "Windswept Set",
+   "pieces": [
+    "windswept-war-helm",
+    "windswept-breastplate",
+    "windswept-bracers",
+    "windswept-boots"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Troop Attack 2%",
+     "stats": {
+      "troop_attack": 2
+     }
+    },
+    {
+     "count": 4,
+     "text": "March Speed 4%",
+     "stats": {
+      "troop_march_speed": 4
+     }
+    }
+   ]
+  },
+  {
+   "id": "vanguard-set",
+   "name": "Vanguard Set",
+   "pieces": [
+    "vanguard-halberd",
+    "vanguard-greaves"
+   ],
+   "bonuses": [
+    {
+     "count": 2,
+     "text": "Cavalry Attack 2%",
+     "stats": {
+      "cavalry_attack": 2
+     }
+    }
+   ]
+  }
+ ],
+ "formations": [
+  {
+   "id": "arch",
+   "name": "Arch",
+   "inscriptions": [
+    {
+     "id": "arch-emblem-fearless",
+     "name": "Fearless",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "arch-emblem-forceful",
+     "name": "Forceful",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "arch-flag-invincible",
+     "name": "Invincible",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "arch-flag-unswerving",
+     "name": "Unswerving",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "arch-instrument-straight-to-the-point",
+     "name": "Straight to the Point",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "arch-instrument-even-keeled",
+     "name": "Even-Keeled",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "arch-scroll-destructive",
+     "name": "Destructive",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "arch-scroll-battle-ready",
+     "name": "Battle-Ready",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "circle",
+   "name": "Circle",
+   "inscriptions": [
+    {
+     "id": "circle-emblem-panacea",
+     "name": "Panacea",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "circle-emblem-refreshing",
+     "name": "Refreshing",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "circle-flag-turn-the-corner",
+     "name": "Turn the Corner",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "circle-flag-rise-up",
+     "name": "Rise Up",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "circle-instrument-guarding-light",
+     "name": "Guarding Light",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "circle-instrument-medic",
+     "name": "Medic",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "circle-scroll-avenger",
+     "name": "Avenger",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "circle-scroll-back-in-action",
+     "name": "Back in Action",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "delta",
+   "name": "Delta",
+   "inscriptions": [
+    {
+     "id": "delta-emblem-flurry",
+     "name": "Flurry",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "delta-emblem-relentless",
+     "name": "Relentless",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "delta-flag-steelskin",
+     "name": "Steelskin",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "delta-flag-determined",
+     "name": "Determined",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "delta-instrument-butterfly-effect",
+     "name": "Butterfly Effect",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "delta-instrument-causative",
+     "name": "Causative",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "delta-scroll-thrasher",
+     "name": "Thrasher",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "delta-scroll-pummeler",
+     "name": "Pummeler",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "echelon",
+   "name": "Echelon",
+   "inscriptions": [
+    {
+     "id": "echelon-emblem-fixed",
+     "name": "Fixed",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "echelon-emblem-persevering",
+     "name": "Persevering",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "echelon-flag-civilized",
+     "name": "Civilized",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "echelon-flag-counter-parry",
+     "name": "Counter-Parry",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "echelon-instrument-loaded",
+     "name": "Loaded",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "echelon-instrument-nullify",
+     "name": "Nullify",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "echelon-scroll-influential-leader",
+     "name": "Influential Leader",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "echelon-scroll-drums-of-war",
+     "name": "Drums of War",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "hollow-square",
+   "name": "Hollow Square",
+   "inscriptions": [
+    {
+     "id": "hollow-square-emblem-rounded",
+     "name": "Rounded",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "hollow-square-emblem-tenacious",
+     "name": "Tenacious",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "hollow-square-flag-crowned",
+     "name": "Crowned",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "hollow-square-flag-reinforced",
+     "name": "Reinforced",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "hollow-square-instrument-inviolable",
+     "name": "Inviolable",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "hollow-square-instrument-aegis",
+     "name": "Aegis",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "hollow-square-scroll-cocoon",
+     "name": "Cocoon",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "hollow-square-scroll-self-defense",
+     "name": "Self-Defense",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "pincer",
+   "name": "Pincer",
+   "inscriptions": [
+    {
+     "id": "pincer-emblem-thundering",
+     "name": "Thundering",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "pincer-emblem-tidebreaker",
+     "name": "Tidebreaker",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "pincer-emblem-rattling",
+     "name": "Rattling",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "pincer-emblem-vigor",
+     "name": "Vigor",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "pincer-flag-airtight",
+     "name": "Airtight",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "pincer-flag-bulwark",
+     "name": "Bulwark",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "pincer-flag-hardheaded",
+     "name": "Hardheaded",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "pincer-flag-bolstered",
+     "name": "Bolstered",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "pincer-instrument-demolisher",
+     "name": "Demolisher",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "pincer-instrument-cleaver",
+     "name": "Cleaver",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "pincer-instrument-raider",
+     "name": "Raider",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "pincer-instrument-charge",
+     "name": "Charge",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "pincer-scroll-toppler",
+     "name": "Toppler",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "pincer-scroll-dominate",
+     "name": "Dominate",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "pincer-scroll-imploder",
+     "name": "Imploder",
+     "rarity": "rare",
+     "piece": "scroll"
+    },
+    {
+     "id": "pincer-scroll-bludgeon",
+     "name": "Bludgeon",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "tercio",
+   "name": "Tercio",
+   "inscriptions": [
+    {
+     "id": "tercio-emblem-steelheart",
+     "name": "Steelheart",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "tercio-emblem-ironsides",
+     "name": "Ironsides",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "tercio-flag-chokepoint",
+     "name": "Chokepoint",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "tercio-flag-precautions",
+     "name": "Precautions",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "tercio-instrument-fortified",
+     "name": "Fortified",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "tercio-instrument-resolute",
+     "name": "Resolute",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "tercio-scroll-battle-ready",
+     "name": "Battle Ready",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "tercio-scroll-vigilant",
+     "name": "Vigilant",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "triple-line",
+   "name": "Triple Line",
+   "inscriptions": [
+    {
+     "id": "triple-line-emblem-winged",
+     "name": "Winged",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "triple-line-emblem-strider",
+     "name": "Strider",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "triple-line-flag-unassailed",
+     "name": "Unassailed",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "triple-line-flag-sprinter",
+     "name": "Sprinter",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "triple-line-instrument-logistical",
+     "name": "Logistical",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "triple-line-instrument-arms-race",
+     "name": "Arms Race",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "triple-line-scroll-enmeshed",
+     "name": "Enmeshed",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "triple-line-scroll-entangling",
+     "name": "Entangling",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "v",
+   "name": "V",
+   "inscriptions": [
+    {
+     "id": "v-emblem-astute",
+     "name": "Astute",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "v-emblem-sharp-arrows",
+     "name": "Sharp Arrows",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "v-flag-merciless",
+     "name": "Merciless",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "v-flag-tempered",
+     "name": "Tempered",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "v-instrument-drilled",
+     "name": "Drilled",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "v-instrument-bloody-bolt",
+     "name": "Bloody Bolt",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "v-scroll-sharpshooter",
+     "name": "Sharpshooter",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "v-scroll-full-draw",
+     "name": "Full Draw",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  },
+  {
+   "id": "wedge",
+   "name": "Wedge",
+   "inscriptions": [
+    {
+     "id": "wedge-emblem-intrepid",
+     "name": "Intrepid",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "wedge-ii-emblem-horseback-action",
+     "name": "Horseback Action",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
+     "id": "wedge-emblem-focus-fire",
+     "name": "Focus Fire",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "wedge-ii-emblem-divine-staff",
+     "name": "Divine Staff",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "wedge-flag-balanced",
+     "name": "Balanced",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "wedge-ii-flag-maneuver-at-ease",
+     "name": "Maneuver at Ease",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
+     "id": "wedge-flag-defiant",
+     "name": "Defiant",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "wedge-ii-flag-ballista",
+     "name": "Ballista",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "wedge-instrument-unstoppable",
+     "name": "Unstoppable",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "wedge-ii-instrument-indomitable",
+     "name": "Indomitable",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
+     "id": "wedge-instrument-boiling-blood",
+     "name": "Boiling Blood",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "wedge-ii-instrument-soar",
+     "name": "Soar",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "wedge-scroll-hunter",
+     "name": "Hunter",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "wedge-ii-scroll-advantage-advanced",
+     "name": "Advantage Advanced",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
+     "id": "wedge-scroll-crazed",
+     "name": "Crazed",
+     "rarity": "rare",
+     "piece": "scroll"
+    },
+    {
+     "id": "wedge-ii-scroll-fury",
+     "name": "Fury",
+     "rarity": "rare",
+     "piece": "scroll"
+    }
+   ]
+  }
+ ],
+ "common": [
+  {
+   "id": "u-emblem-artisan",
+   "name": "Artisan",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-counterer",
+   "name": "Counterer",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-daring",
+   "name": "Daring",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-deflecter",
+   "name": "Deflecter",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-elite",
+   "name": "Elite",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-enduring",
+   "name": "Enduring",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-evasive",
+   "name": "Evasive",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-guardians",
+   "name": "Guardians",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-hardy",
+   "name": "Hardy",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-haste",
+   "name": "Haste",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-infamy",
+   "name": "Infamy",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-lineshot",
+   "name": "Lineshot",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-militant",
+   "name": "Militant",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-pacifier",
+   "name": "Pacifier",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-rapacious",
+   "name": "Rapacious",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-resistant",
+   "name": "Resistant",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-shielded",
+   "name": "Shielded",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-smite",
+   "name": "Smite",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-emblem-watchmen",
+   "name": "Watchmen",
+   "rarity": "common",
+   "piece": "emblem"
+  },
+  {
+   "id": "u-flag-assertive",
+   "name": "Assertive",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-ballistics",
+   "name": "Ballistics",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-brave",
+   "name": "Brave",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-brawler",
+   "name": "Brawler",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-cleanser",
+   "name": "Cleanser",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-cohesive",
+   "name": "Cohesive",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-desperado",
+   "name": "Desperado",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-eclipsed",
+   "name": "Eclipsed",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-galloping",
+   "name": "Galloping",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-metallics",
+   "name": "Metallics",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-pursuer",
+   "name": "Pursuer",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-rebuff",
+   "name": "Rebuff",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-sentries",
+   "name": "Sentries",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-siegework",
+   "name": "Siegework",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-spiked",
+   "name": "Spiked",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-strategic",
+   "name": "Strategic",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-striker",
+   "name": "Striker",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-vitality",
+   "name": "Vitality",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-warflames",
+   "name": "Warflames",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-flag-wary",
+   "name": "Wary",
+   "rarity": "common",
+   "piece": "flag"
+  },
+  {
+   "id": "u-instrument-alert",
+   "name": "Alert",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-annexer",
+   "name": "Annexer",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-armored",
+   "name": "Armored",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-bluster",
+   "name": "Bluster",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-brutal",
+   "name": "Brutal",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-devious",
+   "name": "Devious",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-embattled",
+   "name": "Embattled",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-evasive",
+   "name": "Evasive",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-fearsome",
+   "name": "Fearsome",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-fine-horse",
+   "name": "Fine Horse",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-fit",
+   "name": "Fit",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-guarded",
+   "name": "Guarded",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-patronage",
+   "name": "Patronage",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-primed",
+   "name": "Primed",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-requital",
+   "name": "Requital",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-respite",
+   "name": "Respite",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-spirited",
+   "name": "Spirited",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-uplifting",
+   "name": "Uplifting",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-vengeful",
+   "name": "Vengeful",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-instrument-warhunger",
+   "name": "Warhunger",
+   "rarity": "common",
+   "piece": "instrument"
+  },
+  {
+   "id": "u-scroll-bellicose",
+   "name": "Bellicose",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-breaker",
+   "name": "Breaker",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-calm",
+   "name": "Calm",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-enraged",
+   "name": "Enraged",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-furious",
+   "name": "Furious",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-hurried",
+   "name": "Hurried",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-iron-wall",
+   "name": "Iron Wall",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-loosed",
+   "name": "Loosed",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-onslaught",
+   "name": "Onslaught",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-payback",
+   "name": "Payback",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-phalanx",
+   "name": "Phalanx",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-pulverize",
+   "name": "Pulverize",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-retaliatory",
+   "name": "Retaliatory",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-robust",
+   "name": "Robust",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-swift",
+   "name": "Swift",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-tremors",
+   "name": "Tremors",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-valiant",
+   "name": "Valiant",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-warcry",
+   "name": "Warcry",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-ward",
+   "name": "Ward",
+   "rarity": "common",
+   "piece": "scroll"
+  },
+  {
+   "id": "u-scroll-well-clad",
+   "name": "Well Clad",
+   "rarity": "common",
+   "piece": "scroll"
+  }
+ ]
+}

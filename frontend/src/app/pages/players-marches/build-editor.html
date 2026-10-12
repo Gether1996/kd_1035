@@ -1,0 +1,161 @@
+<dialog #dialog class="modal be" (close)="closed()" [attr.aria-labelledby]="id">
+  @if (march(); as m) {
+    @let k = t();
+    @let b = k.build;
+    <div class="modal__body">
+      <header class="modal__head">
+        <div class="modal__heading">
+          <h2 class="modal__title" [id]="id">{{ b.title }}</h2>
+          <p class="modal__eyebrow">{{ k.march.replace('{n}', '' + m.position) }}@if (m.primary) { · {{ m.primary }}}</p>
+        </div>
+        <button type="button" class="modal__close" [attr.aria-label]="b.cancel" (click)="close()">
+          <svg appIcon="x"></svg>
+        </button>
+      </header>
+
+      @if (index(); as ix) {
+        <div class="segmented be__tabs" role="group" [attr.aria-label]="b.title">
+          <button type="button" [attr.aria-pressed]="tab() === 'gear'" (click)="tab.set('gear')">{{ b.gear }}</button>
+          <button type="button" [attr.aria-pressed]="tab() === 'armaments'" (click)="tab.set('armaments')">
+            {{ b.armaments }}
+            <span class="be__count">{{ draft().inscriptions.length }}</span>
+          </button>
+        </div>
+
+        @if (tab() === 'gear') {
+          <div class="be__gear">
+            <div class="be__slots">
+              <app-gear-grid [gear]="draft().gear" [index]="ix" [pickable]="true" [selected]="slot()" (pick)="pickSlot($event)" />
+              @if (gearStats(); as g) {
+                <ul class="be__stats" [attr.aria-label]="g.title" [title]="g.title">
+                  @for (s of g.values; track s.stat) {
+                    <li><span>{{ s.label }}</span> {{ s.value }}%</li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <div class="be__picker">
+              <h3 class="be__slot-title">{{ b.slots[slot()] }}</h3>
+              @if (current(); as c) {
+                <div class="be__current">
+                  <img [src]="c.item.icon" alt="" width="96" height="96" />
+                  <strong>{{ c.item.name }}</strong>
+                  <button type="button" class="pill-btn pill-btn--quiet be__clear" (click)="clearSlot()">
+                    <svg appIcon="x"></svg>{{ b.clearSlot }}
+                  </button>
+                  <label class="inline-switch be__crit" [title]="b.critHint">
+                    <input class="switch" type="checkbox" role="switch" [checked]="c.piece.crit" (change)="setCrit(!c.piece.crit)" />
+                    {{ b.crit }}
+                  </label>
+                  @if (c.item.iconic) {
+                    <div class="be__iconic" role="group" [attr.aria-label]="b.iconic">
+                      <span class="be__iconic-label" aria-hidden="true">{{ b.iconic }}</span>
+                      <div class="segmented segmented--small">
+                        @for (level of iconicLevels; track level) {
+                          <button type="button" [attr.aria-pressed]="c.piece.iconic === level" (click)="setIconic(level)">
+                            {{ level ? roman(level) : b.iconicNone }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <div class="be__filter">
+                <label class="sr-only" [for]="id + '-search'">{{ b.search }}</label>
+                <input
+                  #q
+                  class="input"
+                  type="search"
+                  autocomplete="off"
+                  [id]="id + '-search'"
+                  [placeholder]="b.search"
+                  [value]="search()"
+                  (input)="search.set(q.value)"
+                />
+                <label class="inline-switch">
+                  <input class="switch" type="checkbox" role="switch" [checked]="weaker()" (change)="weaker.set(!weaker())" />
+                  {{ b.weaker }}
+                </label>
+              </div>
+
+              <ul class="be__items">
+                @for (item of items(); track item.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="be__item be__item--{{ item.rarity }}"
+                      [attr.aria-pressed]="current()?.item?.id === item.id"
+                      (click)="choose(item); next()"
+                    >
+                      <img [src]="item.icon" alt="" width="96" height="96" loading="lazy" />
+                      <span>{{ item.name }}</span>
+                    </button>
+                  </li>
+                } @empty {
+                  <li class="be__none">{{ b.noMatch }}</li>
+                }
+              </ul>
+            </div>
+          </div>
+        } @else {
+          <fieldset class="be__formations">
+            <legend class="field__label">{{ b.formation }}</legend>
+            <div class="be__chips">
+              @for (f of formations(); track f.id) {
+                <button type="button" class="be__formation" [attr.aria-pressed]="draft().formation === f.id" (click)="setFormation(f.id)">
+                  <app-formation-icon [formation]="f" />
+                </button>
+              }
+            </div>
+            @if (!draft().formation) {
+              <p class="field__hint">{{ b.pickFormation }}</p>
+            }
+          </fieldset>
+
+          <p class="be__counter" [class.is-full]="full()" role="status">
+            {{ b.count.replace('{n}', '' + draft().inscriptions.length).replace('{max}', '' + maxInscriptions) }}
+            @if (full()) {
+              · {{ b.limit.replace('{max}', '' + maxInscriptions) }}
+            }
+          </p>
+
+          @for (a of armaments(); track a.piece) {
+            <fieldset class="be__piece">
+              <legend class="sr-only">{{ b.pieces[a.piece] }}</legend>
+              <div class="be__chips">
+                @for (i of a.inscriptions; track i.id) {
+                  <button
+                    type="button"
+                    class="insc insc--{{ i.rarity }}"
+                    [attr.aria-pressed]="chosen(i)"
+                    [attr.aria-disabled]="(full() && !chosen(i)) || null"
+                    [title]="b.rarity[i.rarity]"
+                    (click)="toggle(i)"
+                  >
+                    {{ i.name }}
+                  </button>
+                }
+              </div>
+            </fieldset>
+          }
+        }
+
+        <div class="form__actions be__actions">
+          <button type="button" class="pill-btn" [attr.aria-disabled]="busy() || null" (click)="save()">
+            {{ busy() ? b.saving : b.save }}
+          </button>
+          <button type="button" class="pill-btn pill-btn--quiet" (click)="close()">{{ b.cancel }}</button>
+          <p class="form__state is-error" role="status">{{ error() }}</p>
+        </div>
+        <p class="be__source">{{ b.source.replace('{date}', ix.data.verified) }}</p>
+      } @else if (failed()) {
+        <p class="form__state is-error">{{ b.loadError }}</p>
+      } @else {
+        <div class="be__loading" aria-hidden="true"></div>
+      }
+    </div>
+  }
+</dialog>

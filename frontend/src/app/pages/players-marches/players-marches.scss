@@ -2,14 +2,15 @@
 .tabs {
   margin-bottom: 20px;
 
-  // two equal halves on a phone, each label on one line
+  // three equal parts on a phone; a long label takes two lines
   @media (max-width: 480px) {
     display: flex;
     width: 100%;
 
     button {
       flex: 1;
-      white-space: nowrap;
+      padding: 4px 6px;
+      line-height: 1.15;
     }
   }
 }

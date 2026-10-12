@@ -22,6 +22,7 @@ import { PageHeader } from '../../shared/page-header';
 import { reloadOnReturn } from '../../shared/reload-on-return';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
+import { MarchBuilds } from './builds';
 
 /**
  * /marche – two tabs (Gether 11. 10. 2026): "Marche hráčov" = the marches of the players who made them public ("aby to
@@ -31,7 +32,7 @@ import { Marches } from '../account/marches';
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [Icon, PageHeader, Marches, MarchRow],
+  imports: [Icon, PageHeader, Marches, MarchBuilds, MarchRow],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +44,8 @@ export class PlayersMarches {
   protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
   protected readonly mine = computed(() => this.tab() === 'moje');
+  /** ?tab=prehlad – the player's marches with their equipment and armaments (Gether 12. 10. 2026) */
+  protected readonly overview = computed(() => this.tab() === 'prehlad');
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
 
@@ -83,8 +86,8 @@ export class PlayersMarches {
     inject(DestroyRef).onDestroy(() => seo.set(null));
   }
 
-  protected showMine(mine: boolean): void {
-    void this.router.navigate([], { queryParams: { tab: mine ? 'moje' : null }, replaceUrl: true });
+  protected showTab(tab: 'moje' | 'prehlad' | null): void {
+    void this.router.navigate([], { queryParams: { tab }, replaceUrl: true });
   }
 
   protected isOpen(id: number): boolean {

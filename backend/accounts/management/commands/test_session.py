@@ -24,6 +24,34 @@ SAMPLE_MARCHES = [
     ('garrison', "K'inich Janaab' Pakal", 'Nebuchadnezzar II'),
     ('engineering', 'Gonzalo de Cordoba', ''),
 ]
+# the equipment and armaments clicked together on the first two marches (/marche?tab=prehlad)
+SAMPLE_BUILDS = [
+    {
+        'gear': {
+            'weapon': {'item': 'sacred-dominion', 'crit': True, 'iconic': 4},
+            'helmet': {'item': 'pride-of-the-khan', 'crit': False, 'iconic': 2},
+            'chest': {'item': 'heavy-armor-of-the-hellish-wasteland', 'crit': True, 'iconic': 0},
+            'gloves': {'item': 'vambraces-of-the-eternal-empire', 'crit': False, 'iconic': 0},
+            'legs': {'item': 'tassets-of-the-hellish-wasteland', 'crit': False, 'iconic': 0},
+            'boots': {'item': 'boots-of-the-hellish-wasteland', 'crit': False, 'iconic': 0},
+            'accessory1': {'item': 'ring-of-doom', 'crit': False, 'iconic': 0},
+            'accessory2': {'item': 'concealed-dagger', 'crit': False, 'iconic': 0},
+        },
+        'formation': 'delta',
+        'inscriptions': [
+            'delta-scroll-thrasher', 'delta-instrument-causative', 'delta-flag-steelskin', 'delta-emblem-relentless',
+            'u-instrument-patronage', 'u-emblem-enduring', 'u-emblem-watchmen',
+        ],
+    },
+    {
+        'gear': {
+            'weapon': {'item': 'the-hydras-blast', 'crit': False, 'iconic': 1},
+            'chest': {'item': 'dragons-breath-plate', 'crit': False, 'iconic': 0},
+        },
+        'formation': 'wedge',
+        'inscriptions': ['wedge-ii-scroll-advantage-advanced', 'wedge-ii-emblem-divine-staff', 'u-flag-striker'],
+    },
+]
 
 
 class Command(BaseCommand):
@@ -87,8 +115,9 @@ class Command(BaseCommand):
         for position, (kind, primary, secondary) in enumerate(SAMPLE_MARCHES, start=1):
             # armament bonuses and inscriptions on all but the last march (the last one is not filled in)
             stats = dict(zip(MARCH_STATS, (12, 8, 10, 4, 6, 3, 1))) if position < len(SAMPLE_MARCHES) else {}
+            build = SAMPLE_BUILDS[position - 1] if position <= len(SAMPLE_BUILDS) else {}
             march = March.objects.create(
-                player=player, position=position, kind=kind, primary=primary, secondary=secondary, **stats
+                player=player, position=position, kind=kind, primary=primary, secondary=secondary, **stats, **build
             )
             upload = io.BytesIO()
             Image.new('RGB', (640, 400), (180, 140, 60)).save(upload, 'PNG')

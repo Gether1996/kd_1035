@@ -13,6 +13,8 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
+from guides import armory
+
 from . import private_images
 from .army import ArmySerializer
 from .kvk_views import UploadThrottle, image_data, march_data, owner_or_reviewer, store_image
@@ -28,6 +30,39 @@ MAX_IMAGES_PER_KIND = 1
 
 class MarchSerializer(ArmySerializer):
     kind = serializers.ChoiceField(choices=March.Kind.choices, allow_blank=True, required=False)
+    # the build clicked together (guides/armory.py), optional
+    gear = serializers.JSONField(required=False)
+    formation = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    inscriptions = serializers.ListField(
+        child=serializers.CharField(max_length=40), max_length=armory.MAX_INSCRIPTIONS, required=False
+    )
+
+    def validate_gear(self, value):
+        """{slot: {item, crit?, iconic?}} → the same with every key; an item fits its slot, two accessories differ."""
+        if not isinstance(value, dict) or set(value) - set(armory.MARCH_SLOTS):
+            raise serializers.ValidationError('slots')
+        items, gear = armory.items(), {}
+        for slot in armory.MARCH_SLOTS:
+            piece = value.get(slot)
+            if piece is None:
+                continue
+            item = items.get(piece.get('item')) if isinstance(piece, dict) else None
+            if not item or item['slot'] != armory.slot_of(slot):
+                raise serializers.ValidationError(slot)
+            crit, iconic = piece.get('crit', False), piece.get('iconic', 0)
+            if type(crit) is not bool or type(iconic) is not int or not 0 <= iconic <= armory.ICONIC_MAX:
+                raise serializers.ValidationError(slot)
+            if iconic and not item.get('iconic'):
+                raise serializers.ValidationError(slot)
+            gear[slot] = {'item': item['id'], 'crit': crit, 'iconic': iconic}
+        if 'accessory1' in gear and gear['accessory1']['item'] == gear.get('accessory2', {}).get('item'):
+            raise serializers.ValidationError('accessory2')
+        return gear
+
+    def validate_formation(self, value):
+        if value and value not in armory.formations():
+            raise serializers.ValidationError('unknown')
+        return value
 
     def validate(self, data):
         # a new march is saved with its type and primary commander (the web asks for both)
@@ -36,6 +71,14 @@ class MarchSerializer(ArmySerializer):
                 if not data.get(field):
                     raise serializers.ValidationError({field: 'required'})
         data = super().validate(data)
+        # the inscriptions of the formation (its own ones) and the common ones, each once
+        if 'formation' in data or 'inscriptions' in data:
+            current = self.context.get('current') or {}
+            formation = data.get('formation', current.get('formation', ''))
+            chosen = data.get('inscriptions', current.get('inscriptions', []))
+            allowed = armory.formations().get(formation, set()) | armory.common_inscriptions()
+            if len(set(chosen)) != len(chosen) or not set(chosen) <= allowed:
+                raise serializers.ValidationError({'inscriptions': 'unknown'})
         # the armament bonuses and inscriptions are required (Gether 11. 10. 2026; 0 counts), All DMG may stay empty =
         # 0. A new march brings them all; a change may not clear one. Marches saved before keep their empty ones until
         # the player edits them.
@@ -95,7 +138,14 @@ def march(request, march_id):
             player.marches.filter(position__gt=position).update(position=F('position') - 1)
         return Response(status=204)
     form = MarchSerializer(
-        data=request.data, partial=True, context={'current': {'primary': mine.primary, 'secondary': mine.secondary}}
+        data=request.data, partial=True, context={
+            'current': {
+                'primary': mine.primary,
+                'secondary': mine.secondary,
+                'formation': mine.formation,
+                'inscriptions': mine.inscriptions,
+            }
+        }
     )
     form.is_valid(raise_exception=True)
     for field, value in form.validated_data.items():

@@ -80,6 +80,9 @@ def march_data(march: March) -> dict:
         'position': march.position,
         'kind': march.kind,
         **army_data(march),
+        'gear': march.gear,
+        'formation': march.formation,
+        'inscriptions': march.inscriptions,
         'images': [image_data(image, '/api/marches/images/') for image in march.images.all()],
     }
 

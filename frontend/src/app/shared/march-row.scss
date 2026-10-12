@@ -181,3 +181,20 @@
     background: var(--insc-gold);
   }
 }
+
+// the equipment and armaments clicked together: a tile with the first item, framed in gold
+.mrow__build {
+  border-color: color-mix(in srgb, var(--gold-400) 45%, transparent);
+  background: linear-gradient(180deg, var(--bg-raised) 40%, color-mix(in srgb, var(--gold-400) 18%, var(--bg-raised)));
+  cursor: pointer;
+
+  img {
+    width: 84%;
+    height: 84%;
+    object-fit: contain;
+  }
+
+  .icon {
+    color: var(--gold-300);
+  }
+}

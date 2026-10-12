@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import type { Gear } from './armory';
 
 /** a player signs up for rally and garrison separately, each with its own army (Gether 11. 10. 2026) */
 export type KvkRole = 'rally' | 'garrison';
@@ -98,6 +99,10 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   primary: string;
   secondary: string;
   images: MarchImage[];
+  /** the build clicked together on /marche (core/armory.ts); missing in an older response */
+  gear?: Gear;
+  formation?: string;
+  inscriptions?: string[];
 }
 
 /** No rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026). */

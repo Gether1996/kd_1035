@@ -12,7 +12,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import meta
+from . import armory, meta
 from .commander_index import commander_index
 from .models import Guide
 from .roster import march_commanders
@@ -99,6 +99,15 @@ class MarchCommanders(APIView):
 
     def get(self, request):
         response = Response(march_commanders())
+        response['Cache-Control'] = 'public, max-age=3600'
+        return response
+
+
+class Armory(APIView):
+    """Every equipment item, set and armament inscription a march may name (guides/armory.py)."""
+
+    def get(self, request):
+        response = Response(armory.catalog())
         response['Cache-Control'] = 'public, max-age=3600'
         return response
 

@@ -312,6 +312,11 @@ class March(ArmyFields):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='marches', verbose_name='hráč')
     position = models.PositiveSmallIntegerField('poradie', default=1)
     kind = models.CharField('typ', max_length=12, choices=Kind.choices, blank=True)
+    # the build clicked together on /marche (Gether 12. 10. 2026; guides/armory.py): slot → {item, crit, iconic}, the
+    # formation and the ids of its inscriptions – optional, next to the screenshot
+    gear = models.JSONField('výbava', default=dict, blank=True)
+    formation = models.CharField('formácia', max_length=20, blank=True)
+    inscriptions = models.JSONField('inscriptions', default=list, blank=True)
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
 

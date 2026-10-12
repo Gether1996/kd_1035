@@ -87,8 +87,12 @@ describe('PlayersMarches', () => {
     await tick(fixture);
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['bob']);
 
-    // two tabs: the players' marches and the player's own
-    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Marche hráčov', 'Moje marche']);
+    // three tabs: the players' marches, the player's own and their overview with the builds
+    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual([
+      'Marche hráčov',
+      'Moje marche',
+      'Prehľad marchov',
+    ]);
 
     el.querySelector<HTMLButtonElement>('.mrow__shot')!.click();
     await tick(fixture);

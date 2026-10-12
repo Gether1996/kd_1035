@@ -1,17 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild } from '@angular/core';
-import { ARMAMENT_STATS, INSCRIPTIONS, March, MarchImage, MarchKind, REQUIRED_STATS, marchIcon } from '../core/kvk-api';
-import { Dict } from '../core/i18n/sk';
+import { ARMAMENT_STATS, INSCRIPTIONS, March, MarchImage, REQUIRED_STATS, marchIcon } from '../core/kvk-api';
 import { I18n } from '../core/i18n/i18n';
 import { Icon } from './icon';
+import { GEAR_SLOTS, hasBuild } from '../core/armory';
+import { BuildDialog } from './build-dialog';
 import { ImageViewer } from './image-viewer';
-
-
-/** "Cav ATK" for a cavalry march (Gether 11. 10. 2026); plain "ATK" when the type names no troop (rally, garrison, mix) */
-export function statLabel(t: Dict['marches'], kind: MarchKind | '', stat: (typeof ARMAMENT_STATS)[number]): string {
-  const troops: Partial<Record<MarchKind, string>> = t.troops;
-  const troop = kind ? troops[kind] : undefined;
-  return stat === 'damage' || !troop ? t.stats[stat] : `${troop} ${t.stats[stat]}`;
-}
+import { statLabel } from './stat-label';
 
 /**
  * One march in a compact row (Gether 11. 10. 2026: "stačia len hlavy commanderov bez popisov"): number, type icon,
@@ -21,7 +15,7 @@ export function statLabel(t: Dict['marches'], kind: MarchKind | '', stat: (typeo
  */
 @Component({
   selector: 'app-march-row',
-  imports: [Icon, ImageViewer],
+  imports: [BuildDialog, Icon, ImageViewer],
   host: { '[class.is-numbered]': 'numbered()' },
   templateUrl: './march-row.html',
   styleUrl: './march-row.scss',
@@ -42,10 +36,19 @@ export class MarchRow {
   /** a march (not a KvK sign-up): its bonuses are required – a march saved before says they are missing */
   readonly statsRequired = input(false);
   private readonly viewer = viewChild.required(ImageViewer);
+  private readonly buildDialog = viewChild.required(BuildDialog);
 
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
   protected readonly icon = marchIcon;
+
+  /** the equipment and armaments clicked together (core/armory.ts): a tile with the first item opens them */
+  protected readonly build = computed(() => {
+    const march = this.march();
+    if (!hasBuild(march)) return null;
+    const first = GEAR_SLOTS.map((slot) => march.gear?.[slot]).find(Boolean);
+    return { icon: first ? `/static/guides/gear/${first.item}.webp` : null };
+  });
 
   protected readonly names = computed(() => [this.march().primary, this.march().secondary].filter(Boolean));
 
@@ -87,6 +90,17 @@ export class MarchRow {
       images.indexOf(image),
       event,
     );
+  }
+
+  protected showBuild(event: Event): void {
+    const where = this.numbered() ? this.t().march.replace('{n}', String(this.march().position)) : '';
+    const title = [this.owner(), where].filter(Boolean).join(' · ');
+    this.buildDialog().open(this.march(), this.portraits(), title, this.numbered(), event);
+  }
+
+  protected buildLabel(): string {
+    const where = this.numbered() ? this.t().march.replace('{n}', String(this.march().position)) : '';
+    return [this.t().build.open, [this.owner(), where].filter(Boolean).join(', ')].filter(Boolean).join(' – ');
   }
 
   protected shotLabel(kind: MarchImage['kind']): string {

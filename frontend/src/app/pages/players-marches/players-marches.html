@@ -18,11 +18,14 @@
     </section>
   } @else {
     <div class="segmented tabs" role="group" [attr.aria-label]="p.title">
-      <button type="button" [attr.aria-pressed]="!mine()" (click)="showMine(false)">{{ p.tabs.all }}</button>
-      <button type="button" [attr.aria-pressed]="mine()" (click)="showMine(true)">{{ p.tabs.mine }}</button>
+      <button type="button" [attr.aria-pressed]="!mine() && !overview()" (click)="showTab(null)">{{ p.tabs.all }}</button>
+      <button type="button" [attr.aria-pressed]="mine()" (click)="showTab('moje')">{{ p.tabs.mine }}</button>
+      <button type="button" [attr.aria-pressed]="overview()" (click)="showTab('prehlad')">{{ p.tabs.overview }}</button>
     </div>
     @if (mine()) {
       <app-marches class="mine" />
+    } @else if (overview()) {
+      <app-march-builds />
     } @else if (data.error()) {
       <p class="state">{{ p.error }}</p>
     } @else if (data.hasValue()) {

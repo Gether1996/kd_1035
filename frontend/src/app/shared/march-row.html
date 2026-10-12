@@ -19,6 +19,15 @@
     }
   </span>
   <span class="mrow__shots">
+    @if (build(); as b) {
+      <button type="button" class="mrow__shot mrow__build" [attr.aria-label]="buildLabel()" [title]="k.build.open" (click)="showBuild($event)">
+        @if (b.icon) {
+          <img [src]="b.icon" alt="" loading="lazy" />
+        } @else {
+          <svg appIcon="shield"></svg>
+        }
+      </button>
+    }
     @for (kind of shotKinds(); track kind) {
       @if (imageOf(kind); as image) {
         <button type="button" class="mrow__shot" [attr.aria-label]="shotLabel(kind)" [title]="k.images[kind]" (click)="show(image, $event)">
@@ -54,3 +63,4 @@
   <ng-content />
 </div>
 <app-image-viewer />
+<app-build-dialog />

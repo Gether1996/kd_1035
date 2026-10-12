@@ -25,7 +25,7 @@ import {
 } from '../core/kvk-api';
 import { MarchCommander } from '../core/marches-api';
 import { Icon } from './icon';
-import { statLabel } from './march-row';
+import { statLabel } from './stat-label';
 import { fold } from './search';
 
 export type ShotKind = 'equipment' | 'armaments';

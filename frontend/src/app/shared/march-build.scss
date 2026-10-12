@@ -1,0 +1,178 @@
+// One march with its build: a head line (commanders, type, buttons), below it the equipment and the armaments side by
+// side from 560 px of card width, stacked on a phone.
+:host {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: clamp(14px, 3vw, 20px);
+  container-type: inline-size;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.mb__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.mb__num {
+  font: 700 1.125rem/1 var(--font-display);
+  color: var(--text-dim);
+}
+
+.mb__heads {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.mb__face {
+  width: 52px;
+  height: 52px;
+  padding: 1px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 40%, rgba(245, 196, 81, 0.12), var(--bg-raised) 75%);
+}
+
+// the secondary commander smaller, tucked under the primary's corner
+.mb__face--second {
+  align-self: flex-end;
+  width: 38px;
+  height: 38px;
+  margin-left: -10px;
+  border-color: var(--line);
+}
+
+.mb__face--text {
+  display: grid;
+  place-items: center;
+  color: var(--gold-100);
+  font: 700 0.875rem/1 var(--font-body);
+}
+
+.mb__names {
+  display: flex;
+  flex: 1 1 140px;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mb__primary {
+  overflow: hidden;
+  font: 700 1.0625rem/1.25 var(--font-display);
+  color: var(--gold-100);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mb__secondary {
+  overflow: hidden;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mb__kind {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+}
+
+.mb__actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.mb__note {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-mute);
+}
+
+.mb__loading {
+  height: 140px;
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+}
+
+.mb__body {
+  display: grid;
+  gap: 18px;
+
+  @container (min-width: 560px) {
+    grid-template-columns: minmax(220px, 300px) 1fr;
+    gap: 24px;
+  }
+}
+
+.mb__part {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+
+  app-gear-grid {
+    max-width: 340px;
+  }
+
+  & + & {
+    @container (min-width: 560px) {
+      padding-left: 24px;
+      border-left: 1px solid var(--line);
+    }
+  }
+}
+
+.mb__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mb__stats--quiet {
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-weight: 500;
+  color: var(--text-dim);
+}
+
+.mb__stat-label {
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
+.mb__arm {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mb__formation {
+  width: 52px;
+  height: 52px;
+}
+
+.mb__inscs {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
