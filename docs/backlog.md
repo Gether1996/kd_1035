@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.24.5:** prázdna výbava alebo armamenty sú načerveno – v editore záložka, na vlastných marchoch a KvK prihláške odkazy „Doplň výbavu“ / „Doplň armamenty“, nad marchmi hláška „Neúplné marche: N“.
 - **12. 10. 2026 – v1.24.4:** otvorený event v kalendári ostáva v adrese (`?event=&on=`), takže po prepnutí na CZ (alebo SK) sa otvorí ten istý dialóg; zatvorenie adresu vyčistí. Bez konzolovej chyby „Transition was skipped“. `.ics` jedného eventu odpovedá aj na HEAD, náhľad odkazu na skončený jednorazový event ukáže jeho dni a „Event skončil.“, opakované „Kopírovať odkaz“ čítačka oznámi znova a „termín oznámime“ má ikonu.
 - **12. 10. 2026 – v1.24.3:** superadmin môže v sekcii Hráči na `/ucet` zapnúť „Schvaľovať automaticky“ – nový hráč je schválený hneď pri prvom prihlásení a na Discord nepríde správa; čakajúcich hráčov ani tých so zrušeným schválením to nemení.
 - **12. 10. 2026 – bez verzie:** upozornenie superadminom na nového hráča počká na meno v hre (max. 15 min) a ukáže ho v nadpise, plus jazyk webu; texty hráča v správe sú bez markdownu a odkazov.

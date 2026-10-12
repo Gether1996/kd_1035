@@ -231,7 +231,7 @@ export class BuildEditor {
   protected readonly gearCount = computed(() => Object.keys(this.draft().gear).length);
 
   /** no formation and no inscription – the Armamenty tab is red, like the empty Výbava */
-  protected readonly armamentsEmpty = computed(() => emptyParts({ ...this.march(), ...this.draft() }).armaments);
+  protected readonly armamentsEmpty = computed(() => emptyParts(this.draft()).armaments);
 
   // ---------------------------------------------------------------- armaments
 
