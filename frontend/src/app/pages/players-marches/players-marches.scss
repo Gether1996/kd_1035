@@ -15,9 +15,10 @@
   }
 }
 
-// the march cards fill the screen: as many columns as fit, up to 5 on an ultrawide monitor (Gether 12. 10. 2026)
+// the march cards in as many columns as fit – not the whole screen (Gether 12. 10. 2026): 4 on a 1920 px monitor, 5 on
+// an ultrawide one
 .content.is-marches {
-  width: min(100% - 2 * var(--gutter), 2900px);
+  width: min(100% - 2 * var(--gutter), 92%, 2200px);
   max-width: none;
 }
 
@@ -191,7 +192,7 @@
   list-style: none;
 
   // as many march cards side by side as fit (one on a phone), like the own ones
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 540px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
   align-items: start;
 }
 

@@ -50,7 +50,7 @@
 
   // the cards are tall (the equipment like in the game): as many side by side as fit – one on a phone, two on a laptop,
   // up to five on an ultrawide monitor (Gether 12. 10. 2026)
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 540px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
   align-items: start;
 }
 

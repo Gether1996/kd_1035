@@ -7,7 +7,7 @@ import { I18n } from '../core/i18n/i18n';
  * The eight equipment slots of a march laid out like the equipment screen of the game (Gether 12. 10. 2026: "rozmiestnenie
  * ako v hre"): diamonds in a column – helmet, chest, weapon and gloves either side, legs, the two accessories either side,
  * boots. The frame takes the item's rarity colour, a crit is the small tag of the march's troops on the item's lower
- * right, the iconic level a numeral in a small winged diamond on the bottom tip – like in the game. Read-only on the
+ * right, the iconic level a numeral in a small gold diamond on the bottom tip – like in the game. Read-only on the
  * card; `pickable` makes every diamond a button choosing the slot (the editor, the own march's card).
  */
 @Component({
@@ -34,14 +34,10 @@ import { I18n } from '../core/i18n/i18n';
               <ng-container *ngTemplateOutlet="inside; context: { $implicit: tile }" />
             </span>
           }
-          <!-- like in the game: the iconic level in a small winged diamond on the bottom tip, outside the clipped diamond -->
+          <!-- like in the game: the iconic level in a small gold diamond on the bottom tip, outside the clipped diamond -->
           @if (tile.iconic) {
             <span class="gear__iconic" aria-hidden="true">
-              <svg viewBox="0 0 48 24">
-                <path class="gear__wing" d="M15 12C11 6.5 6 6 1 5c3.5 4.5 7 8 14 9z" />
-                <path class="gear__wing" d="M33 12c4-5.5 9-6 14-7-3.5 4.5-7 8-14 9z" />
-                <path class="gear__badge" d="M24 1.5 34.5 12 24 22.5 13.5 12z" />
-              </svg>
+              <svg viewBox="0 0 24 24"><path class="gear__badge" d="M12 1.5 22.5 12 12 22.5 1.5 12z" /></svg>
               <span class="gear__iconic-level">{{ tile.iconic }}</span>
             </span>
           }

@@ -160,16 +160,16 @@ button.gear__tile {
   object-fit: contain;
 }
 
-// iconic: a small winged gold diamond with the numeral on the bottom tip of the item, like in the game
+// iconic: a small gold diamond with the numeral on the bottom tip of the item (Gether 12. 10. 2026: without the wings)
 .gear__iconic {
   position: absolute;
-  bottom: -4%;
+  bottom: -5%;
   left: 50%;
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 56%;
-  aspect-ratio: 2;
+  width: 26%;
+  aspect-ratio: 1;
   transform: translateX(-50%);
   pointer-events: none;
 
@@ -179,10 +179,6 @@ button.gear__tile {
     width: 100%;
     height: 100%;
   }
-}
-
-.gear__wing {
-  fill: var(--gold-400);
 }
 
 .gear__badge {

@@ -120,9 +120,10 @@
   display: grid;
   gap: 18px;
 
-  @container (min-width: 440px) {
-    grid-template-columns: minmax(170px, 220px) 1fr;
-    gap: 20px;
+  // side by side from 360 px of card width: the equipment and a narrow column of armaments as tall as it
+  @container (min-width: 360px) {
+    grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
+    gap: 18px;
   }
 
   // someone else's march without equipment: only the armaments
@@ -143,24 +144,25 @@
     width: 100%;
     max-width: 190px;
 
-    @container (min-width: 440px) {
+    @container (min-width: 360px) {
       justify-self: start;
-      max-width: 220px;
+      max-width: 210px;
     }
   }
 
   & + & {
-    @container (min-width: 440px) {
-      padding-left: 20px;
+    @container (min-width: 360px) {
+      padding-left: 18px;
       border-left: 1px solid var(--line);
     }
   }
 }
 
+// the bonuses in a 2 × 2 grid – narrow (Gether 12. 10. 2026)
 .mb__stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 4px 16px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -173,10 +175,11 @@
   color: var(--text-mute);
 }
 
+// the formation icon on top, the inscriptions under each other (Gether 12. 10. 2026: narrow, as tall as the equipment)
 .mb__arm {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  display: grid;
+  justify-items: start;
+  gap: 10px;
 }
 
 .mb__formation {
@@ -192,6 +195,11 @@
   margin: 0;
   padding: 0;
   list-style: none;
+
+  @container (min-width: 360px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .mb__missing {
@@ -214,6 +222,7 @@
 }
 
 .mb__counts {
+  grid-column: 1 / -1;
   display: inline-flex;
   gap: 10px;
   white-space: nowrap;
