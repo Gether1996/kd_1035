@@ -100,7 +100,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - Týždenný prehľad eventov na Discorde – až po zapnutí rotácie a súhlase Gethera.
 - Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
 - `ui-polish-leftovers` Drobnosti z kola 4 (kritik: upraviť, až po funkciách; rgba v commander-finder vynechať – len ako rozhodnutie pre celý repo): spoločný štýl `.tag--live` (screenshoty pred/po na 5 šírkach), odkaz zlyhaných notifikácií len za 7 dní, naivný čas v `worker_status.json` (test spätne kompatibilného čítania), CZ „Kalendář“ na `/pripomienky` pretečie?, `#alliance` pri 360 px, nové screenshoty.
-- Drobnosti z kola 6: `.ics` jedného eventu odpovedá na HEAD 405 (odber `/api/calendar.ics` už HEAD vie); dialóg eventu sa pri prepnutí jazyka zatvorí (kalendár maže `?event=` z URL); konzolová chyba „Transition was skipped“ pri deep linku v kalendári; opakované „Kopírovať odkaz“ do 2,5 s čítačka neoznámi znova (návod aj dialóg); na desktop Chrome/Edge pri odmietnutí clipboardu otvorí systémové zdieľanie; náhľad skončeného jednorazového eventu bez `on` hovorí „ďalší termín oznámime“; „termín oznámime“ odlíšiť aj inak než kurzívou; release commit má byť posledný v úlohe.
+- Drobnosti z kola 6: na desktop Chrome/Edge pri odmietnutí clipboardu otvorí systémové zdieľanie.
 
 ## Zamietnuté
 
