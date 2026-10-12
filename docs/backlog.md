@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.24.4:** otvorený event v kalendári ostáva v adrese (`?event=&on=`), takže po prepnutí na CZ (alebo SK) sa otvorí ten istý dialóg; zatvorenie adresu vyčistí. Bez konzolovej chyby „Transition was skipped“. `.ics` jedného eventu odpovedá aj na HEAD, náhľad odkazu na skončený jednorazový event ukáže jeho dni a „Event skončil.“, opakované „Kopírovať odkaz“ čítačka oznámi znova a „termín oznámime“ má ikonu.
 - **12. 10. 2026 – v1.24.3:** superadmin môže v sekcii Hráči na `/ucet` zapnúť „Schvaľovať automaticky“ – nový hráč je schválený hneď pri prvom prihlásení a na Discord nepríde správa; čakajúcich hráčov ani tých so zrušeným schválením to nemení.
 - **12. 10. 2026 – v1.24.2:** Prihlášky na KvK (R4, superadmin): tlačidlo „Kopírovať pre Discord“ skopíruje vyfiltrované prihlášky ako prehľadný zoznam (rola → jednotky → hráč a commanderi), dlhý zoznam po častiach do 1900 znakov.
 - **12. 10. 2026 – v1.24.1:** Marche hráčov a Prihlášky na KvK sa dajú filtrovať podľa commandera (primárny aj sekundárny; s typom marchu platí pre ten istý march), na Marche hráčov ostane výber v adrese a karty zodpovedajúcich hráčov sa rozbalia; počty pri filtroch Prihlášok ho rešpektujú.
