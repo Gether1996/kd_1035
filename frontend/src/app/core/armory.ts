@@ -202,3 +202,20 @@ export function reachedSets(sets: ActiveSet[]): { id: string; name: string; coun
       bonuses: s.bonuses.map((b) => b.text),
     }));
 }
+
+/** the in-game tag of the troops an item is made for (its badge when crafted with a crit) */
+export type ItemTroop = 'infantry' | 'cavalry' | 'archer' | 'engineering' | 'leadership';
+
+/** whose stats the item raises most: infantry, cavalry, archers, siege – or every troop type (leadership tag) */
+export function itemTroop(item: ArmoryItem): ItemTroop {
+  const sums: Record<string, number> = {};
+  for (const [key, value] of Object.entries(item.stats)) {
+    const troop = key.split('_')[0];
+    sums[troop] = (sums[troop] ?? 0) + value;
+  }
+  const best = (['infantry', 'cavalry', 'archer', 'siege'] as const).reduce<string | null>(
+    (top, troop) => ((sums[troop] ?? 0) > (top ? sums[top] : 0) ? troop : top),
+    null,
+  );
+  return best === 'siege' ? 'engineering' : ((best as ItemTroop | null) ?? 'leadership');
+}

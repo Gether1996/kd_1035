@@ -1,5 +1,5 @@
 import { ARMORY } from './armory-testing';
-import { armoryIndex, gearTotals, hasBuild, reachedSets, troopOf, troopStat } from './armory';
+import { armoryIndex, gearTotals, hasBuild, itemTroop, reachedSets, troopOf, troopStat } from './armory';
 
 describe('armory', () => {
   const index = armoryIndex(ARMORY);
@@ -29,6 +29,14 @@ describe('armory', () => {
     expect(troopOf('engineering', stats)).toBe('siege');
     expect(troopOf('conquering', stats)).toBe('cavalry');
     expect(troopOf('', {})).toBe('infantry');
+  });
+
+  it('tags an item with the troops it is made for – its crit badge', () => {
+    const item = (id: string) => ARMORY.items.find((i) => i.id === id)!;
+    expect(itemTroop(item('sacred-dominion'))).toBe('cavalry');
+    // only troop_* stats: every troop type
+    expect(itemTroop(item('wasteland-boots'))).toBe('leadership');
+    expect(itemTroop({ ...item('heavy-armor'), stats: { siege_attack: 5 } })).toBe('engineering');
   });
 
   it('knows a march with a build', () => {

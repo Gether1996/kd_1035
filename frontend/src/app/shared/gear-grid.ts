@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { ArmoryIndex, GEAR_SLOTS, Gear, GearSlot, roman } from '../core/armory';
+import { ArmoryIndex, GEAR_SLOTS, Gear, GearSlot, itemTroop, roman } from '../core/armory';
 import { I18n } from '../core/i18n/i18n';
 
 /**
@@ -34,10 +34,14 @@ import { I18n } from '../core/i18n/i18n';
               <ng-container *ngTemplateOutlet="inside; context: { $implicit: tile }" />
             </span>
           }
-          <!-- the iconic level in an ornament on the bottom tip, outside the clipped diamond -->
+          <!-- like in the game: the iconic level in a small winged diamond on the bottom tip, outside the clipped diamond -->
           @if (tile.iconic) {
             <span class="gear__iconic" aria-hidden="true">
-              <svg viewBox="0 0 40 16"><path d="M1.5 1.5h37l-6.5 7.5-12 6-12-6z" /></svg>
+              <svg viewBox="0 0 48 24">
+                <path class="gear__wing" d="M15 12C11 6.5 6 6 1 5c3.5 4.5 7 8 14 9z" />
+                <path class="gear__wing" d="M33 12c4-5.5 9-6 14-7-3.5 4.5-7 8-14 9z" />
+                <path class="gear__badge" d="M24 1.5 34.5 12 24 22.5 13.5 12z" />
+              </svg>
               <span class="gear__iconic-level">{{ tile.iconic }}</span>
             </span>
           }
@@ -47,12 +51,9 @@ import { I18n } from '../core/i18n/i18n';
     <ng-template #inside let-tile>
       @if (tile.item) {
         <img class="gear__icon" [src]="tile.item.icon" alt="" width="96" height="96" />
-        <!-- like in the game: a crit is a red badge with the talent mark on the item's lower right -->
+        <!-- like in the game: a crit is the small tag of the item's troop type on its lower right -->
         @if (tile.crit) {
-          <svg class="gear__crit" viewBox="0 0 16 16" aria-hidden="true">
-            <rect x="1" y="1" width="14" height="14" rx="3.5" />
-            <path d="M5.2 11.6c0-3.4 5.8-3 5.8-5.6 0-1.9-2.9-2.4-4.4-.9" />
-          </svg>
+          <img class="gear__crit" [src]="tile.troopIcon" alt="" width="96" height="96" />
         }
       } @else {
         <span class="gear__slot" aria-hidden="true">{{ tile.slotName }}</span>
@@ -84,7 +85,8 @@ export class GearGrid {
             .filter(Boolean)
             .join(', ')
         : `${b.slots[slot]}: ${b.emptySlot}`;
-      return { slot, slotName: b.slots[slot], item, crit: !!(item && piece?.crit), iconic, label };
+      const troopIcon = item ? `/static/guides/specialties/${itemTroop(item)}.webp` : '';
+      return { slot, slotName: b.slots[slot], item, crit: !!(item && piece?.crit), troopIcon, iconic, label };
     });
   });
 }

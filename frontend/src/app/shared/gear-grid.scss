@@ -150,39 +150,26 @@ button.gear__tile {
   text-overflow: ellipsis;
 }
 
-// crit: a red badge with the talent mark on the item's lower right, like in the game
+// crit: the small tag of the item's troop type (red cavalry, …) on its lower right, like in the game
 .gear__crit {
   position: absolute;
-  right: 24%;
-  bottom: 24%;
-  width: 20%;
-  height: 20%;
-
-  rect {
-    fill: var(--red-500);
-    stroke: var(--text);
-    stroke-width: 1.2;
-  }
-
-  path {
-    fill: none;
-    stroke: var(--text);
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+  right: 25%;
+  bottom: 25%;
+  width: 16%;
+  height: 16%;
+  object-fit: contain;
 }
 
-// iconic: the numeral in an ornament on the bottom tip of the diamond
+// iconic: a small winged gold diamond with the numeral on the bottom tip of the item, like in the game
 .gear__iconic {
   position: absolute;
-  bottom: -2%;
+  bottom: -4%;
   left: 50%;
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 46%;
-  aspect-ratio: 40 / 16;
+  width: 56%;
+  aspect-ratio: 2;
   transform: translateX(-50%);
   pointer-events: none;
 
@@ -192,20 +179,23 @@ button.gear__tile {
     width: 100%;
     height: 100%;
   }
+}
 
-  path {
-    fill: var(--bg);
-    stroke: var(--gold-400);
-    stroke-width: 1.5;
-    stroke-linejoin: round;
-  }
+.gear__wing {
+  fill: var(--gold-400);
+}
+
+.gear__badge {
+  fill: var(--gold-300);
+  stroke: var(--gold-600);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
 }
 
 .gear__iconic-level {
   position: relative;
-  margin-top: -12%;
-  color: var(--gold-300);
-  font: 700 clamp(0.5rem, 0.45rem + 0.25vw, 0.625rem) / 1 var(--font-display);
+  color: var(--bg);
+  font: 700 clamp(0.4375rem, 0.4rem + 0.2vw, 0.5625rem) / 1 var(--font-display);
 }
 
 @media (prefers-reduced-motion: reduce) {
