@@ -8,7 +8,6 @@ sign-up with the player's marches. Session + CSRF like the rest of the player AP
 import logging
 
 from django.db import transaction
-from django.db.models import Prefetch
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
@@ -83,7 +82,6 @@ def march_data(march: March) -> dict:
         'gear': march.gear,
         'formation': march.formation,
         'inscriptions': march.inscriptions,
-        'images': [image_data(image, '/api/marches/images/') for image in march.images.all()],
     }
 
 
@@ -248,9 +246,7 @@ def image(request, image_id):
 @permission_classes([IsReviewer])
 def all_signups(request):
     """Every sign-up with the player (name, in-game name, Discord ID for "Kontaktovať") and their marches."""
-    signups = KvkSignup.objects.select_related('player').prefetch_related(
-        'images', Prefetch('player__marches', queryset=March.objects.prefetch_related('images'))
-    )
+    signups = KvkSignup.objects.select_related('player').prefetch_related('images', 'player__marches')
     rows = sorted(
         (signup_data(s, with_player=True) for s in signups),
         # by player, the rally sign-up before the garrison one (one card per player on /kvk)

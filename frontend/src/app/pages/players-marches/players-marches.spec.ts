@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { ARMORY } from '../../core/armory-testing';
 import { Auth } from '../../core/auth';
 import { Scroll } from '../../core/scroll';
 import { PlayersMarches } from './players-marches';
@@ -13,7 +14,9 @@ const MARCH = {
   kind: 'cavalry' as const,
   primary: 'Attila',
   secondary: 'Takeda Shingen',
-  images: [{ id: 7, kind: 'equipment' as const, url: '/api/marches/images/7/', thumb: '/api/marches/images/7/?thumb=1', width: 1, height: 1 }],
+  gear: { weapon: { item: 'sacred-dominion', crit: true, iconic: 2 } },
+  formation: 'delta',
+  inscriptions: ['delta-scroll-thrasher'],
 };
 
 // Seo and the page header keep tasks pending – render by hand instead of whenStable()
@@ -23,7 +26,7 @@ const tick = async (fixture: { detectChanges(): void }) => {
 };
 
 describe('PlayersMarches', () => {
-  it('lists the public marches with portraits, filters by name and opens a screenshot', async () => {
+  it('lists the public marches as cards with their equipment and filters by name', async () => {
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
       this.setAttribute('open', '');
     };
@@ -76,10 +79,14 @@ describe('PlayersMarches', () => {
     await tick(fixture);
     expect(el.querySelectorAll('.player__marches').length).toBe(2);
     expect(all.textContent?.trim()).toBe('Zbaliť všetky');
-    // only the heads, the name in alt and title
-    const head = el.querySelector('.mrow__head')!;
-    expect(head.getAttribute('src')).toBe('/static/guides/commanders/attila.webp');
-    expect(head.getAttribute('title')).toBe('Attila');
+    // each march as a card with its equipment and armaments
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await tick(fixture);
+    expect(el.querySelector('.mb__face')?.getAttribute('src')).toBe('/static/guides/commanders/attila.webp');
+    expect(el.querySelector('.mb__primary')?.textContent).toBe('Attila');
+    expect(el.querySelector('.gear__icon')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
+    expect(el.querySelector('.mb__formation img')?.getAttribute('alt')).toBe('Delta');
+    expect(el.querySelector('.mb__inscs .insc')?.textContent?.trim()).toBe('Thrasher');
 
     const search = el.querySelector<HTMLInputElement>('#marches-search')!;
     search.value = 'BOB';
@@ -87,16 +94,8 @@ describe('PlayersMarches', () => {
     await tick(fixture);
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['bob']);
 
-    // three tabs: the players' marches, the player's own and their overview with the builds
-    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual([
-      'Marche hráčov',
-      'Moje marche',
-      'Prehľad marchov',
-    ]);
-
-    el.querySelector<HTMLButtonElement>('.mrow__shot')!.click();
-    await tick(fixture);
-    expect(el.querySelector('dialog[open] .viewer__img')?.getAttribute('src')).toBe('/api/marches/images/7/');
+    // two tabs: the players' marches and the player's own ("Moje marche" merged into the overview)
+    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Marche hráčov', 'Prehľad marchov']);
     http.match(() => true).forEach((r) => r.flush({}));
   });
 });

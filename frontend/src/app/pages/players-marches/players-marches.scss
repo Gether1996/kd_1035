@@ -15,10 +15,9 @@
   }
 }
 
-// the player's own marches keep the width of a form
+// the player's own marches: cards as wide as the players' ones
 .mine {
   display: block;
-  max-width: 760px;
 }
 
 .bar {
@@ -49,6 +48,11 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--card-bg);
+}
+
+// an open player takes the whole row: the march cards need the width for equipment and armaments side by side
+.player.is-open {
+  grid-column: 1 / -1;
 }
 
 .player {
@@ -184,11 +188,6 @@
   margin: 0;
   padding: 0 16px 16px;
   list-style: none;
-}
-
-.row {
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
 }
 
 .bar .pill-btn .icon {

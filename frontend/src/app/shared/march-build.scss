@@ -176,3 +176,37 @@
   padding: 0;
   list-style: none;
 }
+
+.mb__missing {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+
+  &.is-own {
+    color: var(--red-300);
+  }
+}
+
+.mb__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mb__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.mb__dot--gold {
+  background: var(--insc-gold);
+}
+
+.mb__dot--blue {
+  background: var(--insc-blue);
+}
+
+.mb__dot--white {
+  background: var(--insc-white);
+}

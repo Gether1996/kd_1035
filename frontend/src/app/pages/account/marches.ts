@@ -1,26 +1,29 @@
 import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, linkedSignal, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, linkedSignal, signal, viewChild } from '@angular/core';
+import { hasBuild } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
-import { March, REQUIRED_STATS, UploadError } from '../../core/kvk-api';
+import { March, REQUIRED_STATS } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
-import { ArmyDraft, ArmyError, MARCH_SHOTS, MarchFields, ShotKind, armyDraft, armyError, releaseArmy } from '../../shared/march-fields';
-import { MarchRow } from '../../shared/march-row';
+import { ArmyDraft, ArmyError, MarchFields, armyDraft, armyError } from '../../shared/march-fields';
+import { MarchBuild } from '../../shared/march-build';
+import { BuildEditor } from '../players-marches/build-editor';
 
 /** The march being edited: a new one (id null) or a saved one; nothing is sent before "Uložiť". */
 type Draft = ArmyDraft & { id: number | null };
 
 /**
- * "Moje marche" on /marche?tab=moje (Gether 11. 10. 2026): up to 7 marches, each a compact row (MarchRow). A march is
- * filled in (MarchFields: type, commander pair, a screenshot of the equipment, the armament bonuses and inscriptions
- * typed in instead of an armaments screenshot – all required) and saved; only then the next one can be added.
+ * The player's marches on /marche?tab=prehlad – "Prehľad marchov" (Gether 12. 10. 2026: "Moje marche" merged into it,
+ * no equipment screenshot): up to 7 marches, each a card with its equipment and armaments (MarchBuild). A march is
+ * filled in (MarchFields: type, commander pair, ATK, DEF, HP, All DMG) and saved – a new one goes on to its equipment
+ * and armaments right away (BuildEditor, the inscription counts follow from it); only then the next one can be added.
  * Seen by the player, the reviewers (R4) and the superuser – and every signed-in player when the player makes them
  * public.
  */
 @Component({
   selector: 'app-marches',
-  imports: [Icon, MarchFields, MarchRow, NgTemplateOutlet],
+  imports: [BuildEditor, Icon, MarchBuild, MarchFields, NgTemplateOutlet],
   templateUrl: './marches.html',
   styleUrls: ['../kvk/kvk.scss', './marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,7 +32,6 @@ export class Marches {
   private readonly api = inject(MarchesApi);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
-  protected readonly marchShots = MARCH_SHOTS;
 
   private readonly data = this.api.list();
   protected readonly loaded = computed(() => this.data.hasValue());
@@ -51,8 +53,8 @@ export class Marches {
   protected readonly draftError = signal<ArmyError | null>(null);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly uploadError = signal<{ kind: ShotKind; error: UploadError } | null>(null);
   protected readonly armed = signal<number | null>(null);
+  private readonly buildEditor = viewChild.required(BuildEditor);
   /** marches saved before the bonuses were required (v1.15.1) – the owner is asked to fill them in */
   protected readonly withoutStats = computed(
     () => this.marches().filter((m) => REQUIRED_STATS.some((stat) => m[stat] == null)).length,
@@ -90,72 +92,56 @@ export class Marches {
     if (!this.canAdd()) return;
     this.draft.set({ id: null, ...armyDraft() });
     this.draftError.set(null);
-    this.uploadError.set(null);
   }
 
   protected edit(march: March): void {
     if (this.draft()) return;
     this.draft.set({ id: march.id, ...armyDraft(march) });
     this.draftError.set(null);
-    this.uploadError.set(null);
   }
 
   protected cancel(): void {
     this.armed.set(null);
-    releaseArmy(this.draft());
     this.draft.set(null);
     this.draftError.set(null);
-    this.uploadError.set(null);
   }
 
   /** a change in MarchFields */
   protected update(value: ArmyDraft): void {
     this.draft.update((d) => (d ? { ...d, ...value } : d));
     this.draftError.set(null);
-    this.uploadError.set(null);
   }
 
+  /** type, commanders and ATK / DEF / HP / All DMG; a new march goes on to its equipment and armaments right away */
   protected async save(): Promise<void> {
     const draft = this.draft();
     if (!draft || this.busy()) return;
-    const missing = armyError(draft, { kind: true, shots: MARCH_SHOTS, stats: true });
+    const missing = armyError(draft, { kind: true, shots: [], stats: true, counts: false });
     if (missing) return this.draftError.set(missing);
-    // All DMG is optional: empty = 0 (Gether 11. 10. 2026)
-    const stats = { ...draft.stats, damage: draft.stats.damage ?? 0 };
-    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, ...stats };
+    const { attack, defense, health, damage } = draft.stats;
+    // All DMG is optional: empty = 0 (Gether 11. 10. 2026); the inscription counts come from the build
+    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary, attack, defense, health, damage: damage ?? 0 };
     await this.run(async () => {
-      let march = draft.id === null ? await this.api.add(change) : await this.api.update(draft.id, change);
-      // a screenshot replaced by a new one goes on the server only once the new one is stored (a refused upload keeps it)
-      const removed = draft.removed.filter((image) => !draft.chosen[image.kind]);
-      for (const image of removed) await this.api.removeImage(image.id);
-      march = { ...march, images: march.images.filter((i) => !removed.some((r) => r.id === i.id)) };
-      // the march exists now: a failed upload keeps the editor open on it, the player only picks that file again
-      let current: Draft = { ...draft, id: march.id, removed: [] };
-      for (const kind of MARCH_SHOTS) {
-        const chosen = current.chosen[kind];
-        if (!chosen) continue;
-        const result = await this.api.upload(march.id, kind, chosen.file);
-        if (typeof result === 'string') {
-          this.uploadError.set({ kind, error: result });
-          break;
-        }
-        URL.revokeObjectURL(chosen.preview);
-        march = { ...march, images: [...march.images.filter((i) => i.kind !== kind), result] };
-        current = { ...current, keep: { ...current.keep, [kind]: result }, chosen: { ...current.chosen, [kind]: undefined } };
-      }
+      const march = draft.id === null ? await this.api.add(change) : await this.api.update(draft.id, change);
       this.store(march);
-      this.draft.set(this.uploadError() ? current : null);
+      this.draft.set(null);
+      if (draft.id === null) this.buildEditor().open(march);
     });
   }
 
+  /** the march has its equipment or armaments clicked together */
+  protected built(march: March): boolean {
+    return hasBuild(march);
+  }
+
   /** a new or changed march into the list */
-  private store(march: March): void {
+  protected store(march: March): void {
     this.marches.update((list) =>
       list.some((m) => m.id === march.id) ? list.map((m) => (m.id === march.id ? march : m)) : [...list, march],
     );
   }
 
-  /** "Odstrániť" in the editor of a saved march; the second click removes it with its screenshots */
+  /** "Odstrániť" in the editor of a saved march; the second click removes it */
   protected async removeDraft(): Promise<void> {
     const draft = this.draft();
     if (draft?.id == null || this.busy()) return;
@@ -167,7 +153,6 @@ export class Marches {
     this.armed.set(null);
     await this.run(async () => {
       await this.api.remove(id);
-      releaseArmy(draft);
       this.draft.set(null);
       // the later marches move up on the server too
       this.marches.update((list) => list.filter((m) => m.id !== id).map((m, i) => ({ ...m, position: i + 1 })));

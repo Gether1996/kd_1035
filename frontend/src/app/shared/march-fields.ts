@@ -30,8 +30,6 @@ import { fold } from './search';
 
 export type ShotKind = 'equipment' | 'armaments';
 export const SHOT_KINDS: ShotKind[] = ['equipment', 'armaments'];
-/** a march has only the equipment screenshot – its armaments are typed in (Gether 11. 10. 2026); the KvK sign-up both */
-export const MARCH_SHOTS: ShotKind[] = ['equipment'];
 type Slot = 'primary' | 'secondary';
 
 /** a screenshot already on the server (MarchImage, KvkImage) */
@@ -73,6 +71,8 @@ export interface ArmyRules {
   shots: ShotKind[];
   /** every bonus and inscription count (0 counts) – but All DMG, which is 0 when left empty (Gether 11. 10. 2026) */
   stats: boolean;
+  /** the inscription counts are typed in (a KvK sign-up); a march counts its inscriptions clicked together */
+  counts?: boolean;
 }
 
 export { OPTIONAL_STATS } from '../core/kvk-api';
@@ -109,7 +109,8 @@ export function armyError(draft: ArmyDraft, rules: ArmyRules): ArmyError | null 
   if (!draft.primary) return 'primary';
   const shot = rules.shots.find((kind) => !draft.keep[kind] && !draft.chosen[kind]);
   if (shot) return shot;
-  if (rules.stats && MARCH_STATS.some((stat) => draft.stats[stat] === null && !OPTIONAL_STATS.includes(stat))) {
+  const typed: readonly MarchStat[] = rules.counts === false ? ARMAMENT_STATS : MARCH_STATS;
+  if (rules.stats && typed.some((stat) => draft.stats[stat] === null && !OPTIONAL_STATS.includes(stat))) {
     return 'stats';
   }
   return null;
@@ -121,9 +122,10 @@ export function releaseArmy(draft: ArmyDraft | null): void {
 }
 
 /**
- * The fields of a march (Gether 11. 10. 2026): the type as icons (optional), two commander tiles and the two
- * screenshots as square tiles with an example, the armament bonuses and inscriptions (two digits, rounded up). The
- * commander picker and the example are dialogs. Used by "Moje marche" (/marche) and the KvK sign-up (/kvk).
+ * The fields of a march (Gether 11. 10. 2026): the type as icons (optional), two commander tiles and the screenshots
+ * as square tiles with an example (only the KvK sign-up – a march clicks its equipment together since 12. 10. 2026),
+ * the armament bonuses and the inscription counts (two digits, rounded up; a march counts its clicked inscriptions).
+ * The commander picker and the example are dialogs. Used by "Moje marche" (/marche) and the KvK sign-up (/kvk).
  */
 @Component({
   selector: 'app-march-fields',
@@ -141,8 +143,10 @@ export class MarchFields {
   readonly withKind = input(true);
   /** the types offered (a KvK sign-up: cavalry, infantry, archers) */
   readonly kinds = input<MarchKind[]>(MARCH_KINDS);
-  /** the screenshots of the form */
+  /** the screenshots of the form (a march has none since 12. 10. 2026 – its equipment is clicked together) */
   readonly shotKinds = input<ShotKind[]>(SHOT_KINDS);
+  /** the inscription counts are typed in (a KvK sign-up); a march counts the inscriptions clicked together */
+  readonly withCounts = input(true);
   /** an empty All DMG is saved as 0 – the field shows it as its placeholder */
   readonly damageDefaultsToZero = input(false);
   readonly error = input<ArmyError | null>(null);

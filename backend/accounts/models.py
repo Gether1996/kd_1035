@@ -295,8 +295,9 @@ MAX_MARCHES = 7
 
 
 class March(ArmyFields):
-    """One of the player's marches on /marche ("Moje marche"): its type, the army (ArmyFields) and screenshots of
-    the equipment (MarchImage). Seen by the player, the reviewers and the superuser – and every signed-in
+    """One of the player's marches on /marche ("Moje marche"): its type, the army (ArmyFields) and the equipment and
+    armaments clicked together (gear, formation, inscriptions; the screenshot of the equipment is gone, Gether
+    12. 10. 2026). Seen by the player, the reviewers and the superuser – and every signed-in
     player when the player makes the marches public."""
 
     class Kind(models.TextChoices):
@@ -327,27 +328,3 @@ class March(ArmyFields):
 
     def __str__(self):
         return f'{self.player} · {self.position}. march'
-
-
-class MarchImage(models.Model):
-    """A screenshot of a march's equipment, stored like KvkImage. The armaments are the bonuses and inscriptions typed
-    in (ArmyFields) – Gether 11. 10. 2026: no armaments screenshot in a march, only in the KvK sign-up."""
-
-    class Kind(models.TextChoices):
-        EQUIPMENT = 'equipment', 'výbava'
-
-    march = models.ForeignKey(March, on_delete=models.CASCADE, related_name='images', verbose_name='march')
-    kind = models.CharField('čo je na obrázku', max_length=12, choices=Kind.choices)
-    path = models.CharField('súbor', max_length=200)
-    thumb = models.CharField('náhľad', max_length=200)
-    width = models.PositiveIntegerField(default=0)
-    height = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField('nahrané', auto_now_add=True)
-
-    class Meta:
-        ordering = ['kind', 'created_at']
-        verbose_name = 'screenshot marchu'
-        verbose_name_plural = 'screenshoty marchov'
-
-    def __str__(self):
-        return f'{self.march} · {self.get_kind_display()}'

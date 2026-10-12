@@ -77,8 +77,9 @@ export type MarchStat = (typeof ARMAMENT_STATS)[number] | (typeof INSCRIPTIONS)[
 export const MARCH_STATS: MarchStat[] = [...ARMAMENT_STATS, ...INSCRIPTIONS];
 /** All DMG may stay empty in a march: it is saved as 0 (Gether 11. 10. 2026) */
 export const OPTIONAL_STATS: MarchStat[] = ['damage'];
-/** required in a march (0 counts) – marches saved before they were required may still lack them */
-export const REQUIRED_STATS: MarchStat[] = MARCH_STATS.filter((stat) => !OPTIONAL_STATS.includes(stat));
+/** required in a march (0 counts) – marches saved before they were required may still lack them; the inscription
+ * counts come from the inscriptions clicked together (Gether 12. 10. 2026) */
+export const REQUIRED_STATS: MarchStat[] = ['attack', 'defense', 'health'];
 /** at most two digits */
 export const STAT_MAX = 99;
 
@@ -98,7 +99,8 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   /** commander names (backend guides/roster.py), '' = not chosen; the stats are null when not filled in */
   primary: string;
   secondary: string;
-  images: MarchImage[];
+  /** screenshots: only the army of a KvK sign-up shown as a march row – a march has none since 12. 10. 2026 */
+  images?: MarchImage[];
   /** the build clicked together on /marche (core/armory.ts); missing in an older response */
   gear?: Gear;
   formation?: string;

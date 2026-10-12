@@ -3,7 +3,7 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Build } from './armory';
-import { March, MarchImage, MarchKind, MarchStat, UploadError, uploadError } from './kvk-api';
+import { March, MarchKind, MarchStat } from './kvk-api';
 
 export type MarchChange = Partial<
   { kind: MarchKind | ''; primary: string; secondary: string } & Record<MarchStat, number | null> & Build
@@ -68,20 +68,5 @@ export class MarchesApi {
 
   remove(id: number): Promise<unknown> {
     return firstValueFrom(this.http.delete(`/api/me/marches/${id}/`));
-  }
-
-  async upload(id: number, kind: MarchImage['kind'], file: File): Promise<MarchImage | UploadError> {
-    const body = new FormData();
-    body.append('kind', kind);
-    body.append('file', file);
-    try {
-      return await firstValueFrom(this.http.post<MarchImage>(`/api/me/marches/${id}/images/`, body));
-    } catch (e) {
-      return uploadError(e);
-    }
-  }
-
-  removeImage(id: number): Promise<unknown> {
-    return firstValueFrom(this.http.delete(`/api/me/marches/images/${id}/`));
   }
 }

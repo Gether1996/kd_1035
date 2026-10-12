@@ -1,17 +1,17 @@
 """The player's marches on /marche ("Moje marche", Gether 11. 10. 2026): up to MAX_MARCHES, each with a type, the
-army (commander pair, armament bonuses and inscriptions – army.py) and a screenshot of the equipment. The player edits them; the
-reviewers and the superuser see them next to the player's KvK sign-up. Session + CSRF, players signed in with Discord.
+army (commander pair, armament bonuses and inscription counts – army.py) and the build clicked together (equipment,
+formation, inscriptions – guides/armory.py; no screenshot since 12. 10. 2026). The player edits them; the reviewers and
+the superuser see them next to the player's KvK sign-up. Session + CSRF, players signed in with Discord.
 """
 
 from collections import Counter
 
 from django.db import transaction
-from django.db.models import F, Prefetch, Q
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
-from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
-from rest_framework.parsers import MultiPartParser
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
@@ -19,15 +19,14 @@ from guides import armory
 
 from . import private_images
 from .army import ArmySerializer
-from .kvk_views import UploadThrottle, image_data, march_data, owner_or_reviewer, store_image
-from .models import MAX_MARCHES, March, MarchImage, Player
+from .kvk_views import march_data
+from .models import MAX_MARCHES, March, Player
 from .reminder_views import IsPlayer, WriteThrottle
 from .views import player_of
 
-IMAGE_KINDS = [kind for kind, _ in MarchImage.Kind.choices]
-REQUIRED_STATS = ('attack', 'defense', 'health', 'white', 'blue', 'gold')
-# one screenshot of the equipment per march; the armaments are typed in (Gether 11. 10. 2026)
-MAX_IMAGES_PER_KIND = 1
+REQUIRED_STATS = ('attack', 'defense', 'health')
+# a march counts its inscriptions clicked together (Gether 12. 10. 2026) – typed counts are ignored
+COUNTED = ('gold', 'blue', 'white')
 
 
 class MarchSerializer(ArmySerializer):
@@ -85,9 +84,13 @@ class MarchSerializer(ArmySerializer):
             pieces = Counter(armory.inscription_pieces()[i] for i in chosen)
             if any(count > armory.MAX_PER_PIECE for count in pieces.values()):
                 raise serializers.ValidationError({'inscriptions': 'per_piece'})
-        # the armament bonuses and inscriptions are required (Gether 11. 10. 2026; 0 counts), All DMG may stay empty =
-        # 0. A new march brings them all; a change may not clear one. Marches saved before keep their empty ones until
-        # the player edits them.
+        # the counts by colour of the inscriptions clicked together; a new march starts at 0
+        for field in COUNTED:
+            data.pop(field, None)
+        if not self.partial or 'inscriptions' in data:
+            data.update(armory.counts(data.get('inscriptions', [])))
+        # ATK, DEF and HP are required (Gether 11. 10. 2026; 0 counts), All DMG may stay empty = 0. A new march brings
+        # them all; a change may not clear one. Marches saved before keep their empty ones until the player edits them.
         for field in REQUIRED_STATS:
             if (not self.partial and data.get(field) is None) or (field in data and data[field] is None):
                 raise serializers.ValidationError({field: 'required'})
@@ -97,7 +100,7 @@ class MarchSerializer(ArmySerializer):
 
 
 def marches_of(player):
-    return player.marches.prefetch_related('images')
+    return player.marches.all()
 
 
 @never_cache
@@ -134,7 +137,8 @@ def marches(request):
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def march(request, march_id):
-    """PATCH {kind?, primary?, secondary?, attack?, defense?, health?, damage?, white?, blue?, gold?}. DELETE: the march and its screenshots; the later ones move up."""
+    """PATCH {kind?, primary?, secondary?, attack?, defense?, health?, damage?, white?, blue?, gold?, gear?, formation?,
+    inscriptions?}. DELETE: the march; the later ones move up."""
     player = request.user.player
     mine = get_object_or_404(marches_of(player), pk=march_id)
     if request.method == 'DELETE':
@@ -160,49 +164,6 @@ def march(request, march_id):
     return Response(march_data(mine))
 
 
-@never_cache
-@api_view(['POST'])
-@parser_classes([MultiPartParser])
-@permission_classes([IsPlayer])
-@throttle_classes([UploadThrottle])
-def upload(request, march_id):
-    """POST multipart {kind: equipment, file}: the screenshot of the march's equipment (one – a new one replaces it)."""
-    mine = get_object_or_404(March, pk=march_id, player=request.user.player)
-    kind = request.data.get('kind')
-    upload_file = request.FILES.get('file')
-    if kind not in IMAGE_KINDS or not upload_file:
-        return Response({'detail': 'bad_request'}, status=400)
-    # a new screenshot replaces the old one of that kind – only once it is stored, so a refused upload loses nothing
-    old = list(mine.images.filter(kind=kind))
-    try:
-        picture = store_image(MarchImage, upload_file, 'marches', march=mine, kind=kind)
-    except private_images.BadImage as exc:
-        return Response({'detail': exc.code}, status=400)
-    for image in old[: len(old) - MAX_IMAGES_PER_KIND + 1]:
-        image.delete()
-    mine.save(update_fields=['updated_at'])
-    return Response(image_data(picture, '/api/marches/images/'), status=201)
-
-
-@never_cache
-@api_view(['DELETE'])
-@permission_classes([IsPlayer])
-@throttle_classes([WriteThrottle])
-def delete_image(request, image_id):
-    get_object_or_404(MarchImage, pk=image_id, march__player=request.user.player).delete()
-    return Response(status=204)
-
-
-@api_view(['GET'])
-def image(request, image_id):
-    """The file (?thumb=1 the thumbnail) for the player, the reviewers and the superuser – and for every signed-in
-    player when the owner made the marches public; 404 for anyone else."""
-    picture = get_object_or_404(MarchImage.objects.select_related('march__player'), pk=image_id)
-    # a player who made the marches public shows them to every signed-in player
-    if not (picture.march.player.marches_public and player_of(request.user)):
-        owner_or_reviewer(request, picture.march.player_id)
-    return private_images.serve(picture.thumb if request.query_params.get('thumb') == '1' else picture.path)
-
 
 class CanSeeMarches(BasePermission):
     """Signed in with Discord, or a reviewer / the superuser (an admin signed in with a password)."""
@@ -222,7 +183,7 @@ def players_marches(request):
     players = Player.objects.filter(user__is_active=True, marches__isnull=False).distinct()
     if not reviewer:
         players = players.filter(Q(marches_public=True) | Q(pk=me.pk if me else None))
-    players = players.prefetch_related(Prefetch('marches', queryset=March.objects.prefetch_related('images')))
+    players = players.prefetch_related('marches')
     rows = sorted(
         (
             {

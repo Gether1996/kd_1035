@@ -32,6 +32,7 @@
 } @else if (index(); as ix) {
   @if (empty()) {
     <p class="mb__note">{{ own() ? b.emptyOwn : b.empty }}</p>
+    <ng-container *ngTemplateOutlet="armaments" />
   } @else {
     <div class="mb__body">
       <section class="mb__part" [attr.aria-label]="b.gear">
@@ -59,16 +60,28 @@
             </ul>
           </div>
         }
-        @if (armamentStats().length) {
-          <ul class="mb__stats mb__stats--quiet" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
-            @for (s of armamentStats(); track s.key) {
-              <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ s.value }}%</li>
-            }
-          </ul>
-        }
+        <ng-container *ngTemplateOutlet="armaments" />
       </section>
     </div>
   }
 } @else {
   <div class="mb__loading" aria-hidden="true"></div>
 }
+
+<!-- the armament bonuses typed in (and the inscription counts of a march saved before they were clicked together) -->
+<ng-template #armaments>
+  @if (statsMissing()) {
+    <p class="mb__missing" [class.is-own]="own()">{{ own() ? k.statsMissingOwn : k.statsMissing }}</p>
+  } @else if (armamentStats().length || counts().length) {
+    <ul class="mb__stats mb__stats--quiet" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
+      @for (s of armamentStats(); track s.key) {
+        <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ s.value }}%</li>
+      }
+      @for (c of counts(); track c.key) {
+        <li class="mb__count" [title]="k.inscriptions[c.key]">
+          <span class="mb__dot mb__dot--{{ c.key }}" aria-hidden="true"></span><span class="sr-only">{{ k.inscriptions[c.key] }}:</span> {{ c.value }}
+        </li>
+      }
+    </ul>
+  }
+</ng-template>

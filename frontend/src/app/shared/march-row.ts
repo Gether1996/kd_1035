@@ -29,8 +29,8 @@ export class MarchRow {
   readonly owner = input('');
   /** a missing screenshot is marked (the player's own marches) */
   readonly showMissing = input(false);
-  /** the screenshots it has: a march only the equipment, a KvK sign-up the armaments too */
-  readonly shotKinds = input<MarchImage['kind'][]>(['equipment']);
+  /** the screenshots it has: only a KvK sign-up (equipment, armaments) – a march clicks its equipment together */
+  readonly shotKinds = input<MarchImage['kind'][]>([]);
   /** the march number in front; a KvK sign-up has none */
   readonly numbered = input(true);
   /** a march (not a KvK sign-up): its bonuses are required – a march saved before says they are missing */
@@ -74,7 +74,7 @@ export class MarchRow {
   });
 
   protected imageOf(kind: MarchImage['kind']): MarchImage | undefined {
-    return this.march().images.find((image) => image.kind === kind);
+    return this.march().images?.find((image) => image.kind === kind);
   }
 
   /** the screenshots of the march in the order of the thumbnails, from the clicked one on */

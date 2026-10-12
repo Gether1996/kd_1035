@@ -1,12 +1,12 @@
 @let m = t();
-<section class="panel marches" id="marche" aria-labelledby="marches-title">
+<section class="marches" id="marche" aria-labelledby="marches-title">
   <h2 class="panel__title panel__title--small" id="marches-title">
     {{ m.title }}
     @if (loaded()) {
       <span class="count">{{ marches().length }}/{{ max() }}</span>
     }
   </h2>
-  <!-- who sees the marches and screenshots: R4 only, or every signed-in player (Gether 11. 10. 2026) -->
+  <!-- who sees the marches: R4 only, or every signed-in player (Gether 11. 10. 2026) -->
   @if (loaded()) {
     <div class="visibility" role="group" aria-labelledby="marches-visibility">
       <span class="visibility__label" id="marches-visibility">{{ m.visibility.label }}</span>
@@ -32,8 +32,15 @@
           </li>
         } @else {
           <li class="march">
-            <app-march-row [march]="march" [portraits]="portraits()" [showMissing]="true" [statsRequired]="true">
-              <!-- removing is in the editor: one button per row leaves the bonuses room on a phone -->
+            <app-march-build [march]="march" [portraits]="portraits()" [own]="true" [statsRequired]="true">
+              <button
+                type="button"
+                class="pill-btn march__build"
+                [attr.aria-disabled]="!!draft() || null"
+                (click)="draft() ? null : builds.open(march, $event)"
+              >
+                <svg appIcon="swords"></svg>{{ built(march) ? m.build.change : m.build.edit }}
+              </button>
               <button
                 type="button"
                 class="icon-btn march__edit"
@@ -44,7 +51,7 @@
               >
                 <svg appIcon="pencil"></svg>
               </button>
-            </app-march-row>
+            </app-march-build>
           </li>
         }
       }
@@ -67,6 +74,8 @@
   }
 </section>
 
+<app-build-editor #builds (saved)="store($event)" />
+
 <!-- the march being edited (new or saved); nothing is sent before "Uložiť" -->
 <ng-template #editor>
   @if (draft(); as d) {
@@ -76,17 +85,17 @@
       [value]="d"
       (valueChange)="update($event)"
       [commanders]="allCommanders()"
-      [shotKinds]="marchShots"
+      [shotKinds]="[]"
+      [withCounts]="false"
       [damageDefaultsToZero]="true"
       [error]="draftError()"
-      [uploadError]="uploadError()"
       [heading]="m.march.replace('{n}', '' + draftPosition())"
       idPrefix="march"
     />
 
     <div class="form__actions">
       <button type="button" class="pill-btn" [attr.aria-disabled]="busy() || null" (click)="save()">
-        {{ busy() ? m.saving : m.save }}
+        {{ busy() ? m.saving : d.id === null ? m.saveNew : m.save }}
       </button>
       <button type="button" class="pill-btn pill-btn--quiet" (click)="cancel()">{{ m.cancel }}</button>
       @if (d.id !== null) {
@@ -96,7 +105,7 @@
       }
       <p class="form__state is-error" role="status">
         @if (draftError(); as e) {
-          {{ m.required[e] }}
+          {{ e === 'stats' ? m.required.statsMarch : m.required[e] }}
         }
       </p>
     </div>

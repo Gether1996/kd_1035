@@ -2,11 +2,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { ARMORY } from '../../core/armory-testing';
 import { March } from '../../core/kvk-api';
 import { Marches } from './marches';
 import { PlayersAdmin } from './players-admin';
 
-const MARCH: March = { id: 1, position: 1, kind: '', primary: '', secondary: '', images: [] };
+const MARCH: March = { id: 1, position: 1, kind: '', primary: '', secondary: '' };
 const COMMANDERS = [
   { name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true },
   // a golden-key commander: only for the portrait of an old march, not offered
@@ -26,6 +27,11 @@ const settle = async (fixture: { whenStable(): Promise<unknown> }) => {
   await fixture.whenStable();
 };
 
+const tick = async (fixture: { detectChanges(): void }) => {
+  await new Promise((resolve) => setTimeout(resolve));
+  fixture.detectChanges();
+};
+
 describe('Marches', () => {
   beforeEach(() => {
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
@@ -37,9 +43,7 @@ describe('Marches', () => {
     };
   });
 
-  it('saves a march only with its type, commander and both screenshots, then offers the next one', async () => {
-    URL.createObjectURL ??= () => 'blob:preview';
-    URL.revokeObjectURL ??= () => undefined;
+  it('saves a march with its type, commander and ATK, DEF, HP, then goes on to its equipment', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
@@ -55,19 +59,21 @@ describe('Marches', () => {
     expect(el.querySelector('.add-march')).toBeNull();
     expect(el.textContent).toContain('Ďalší march pridáš, keď tento uložíš.');
     const save = () => el.querySelector<HTMLButtonElement>('.march--editing .form__actions .pill-btn')!;
+    expect(save().textContent?.trim()).toBe('Uložiť a naklikať výbavu');
     save().click();
     await fixture.whenStable();
     expect(el.textContent).toContain('Vyber typ marchu.');
 
     el.querySelectorAll<HTMLButtonElement>('.kind')[1].click();
     await fixture.whenStable();
-    // the bonuses are read as those of the march's troop type
-    expect(Array.from(el.querySelectorAll('.stat-field__label'), (l) => l.textContent?.trim()).slice(0, 4)).toEqual([
+    // the bonuses are read as those of the march's troop type; no screenshot, no inscription counts (clicked together)
+    expect(Array.from(el.querySelectorAll('.stat-field__label'), (l) => l.textContent?.trim())).toEqual([
       'Cav ATK',
       'Cav DEF',
       'Cav HP',
       'All DMG',
     ]);
+    expect(el.querySelector('.march--editing input[type="file"]')).toBeNull();
     const stat = (i: number, value: string) => {
       const input = el.querySelectorAll<HTMLInputElement>('.stat-field__input')[i];
       input.value = value;
@@ -76,76 +82,145 @@ describe('Marches', () => {
     };
     // whole numbers of two digits: anything else is dropped as it is typed
     expect(stat(0, '12,5').value).toBe('12');
-    stat(4, '3');
     el.querySelector<HTMLButtonElement>('.tile')!.click();
     await fixture.whenStable();
     const tiles = Array.from(el.querySelectorAll<HTMLButtonElement>('.picker-tile'));
     expect(tiles.map((t) => t.textContent?.trim())).toEqual(['Attila', 'Takeda Shingen']);
     tiles[0].click();
     await fixture.whenStable();
-    // only the equipment screenshot (the armaments are typed in), with an example
-    expect(el.querySelectorAll('.tile__example').length).toBe(1);
     save().click();
     await fixture.whenStable();
-    expect(el.textContent).toContain('Pridaj screenshot výbavy.');
-    http.expectNone('/api/me/marches/');
-
-    const pickFile = async (name: string) => {
-      const input = el.querySelector<HTMLInputElement>('.march--editing input[type="file"]')!;
-      Object.defineProperty(input, 'files', { value: [new File(['x'], name, { type: 'image/png' })] });
-      input.dispatchEvent(new Event('change'));
-      await fixture.whenStable();
-    };
-    await pickFile('equipment.png');
-    expect(el.querySelectorAll('.march--editing .tile__box--shot img').length).toBe(1);
-    // every bonus and inscription count is required instead of the armaments screenshot (0 counts)
-    save().click();
-    await fixture.whenStable();
-    expect(el.textContent).toContain('Vyplň ATK, DEF, HP a počet inscriptions');
+    expect(el.textContent).toContain('Vyplň ATK, DEF a HP');
     expect(el.querySelector('.stat-grid')?.classList).toContain('is-invalid');
     http.expectNone('/api/me/marches/');
     stat(1, '8');
     stat(2, '0');
-    stat(5, '2');
-    stat(6, '10');
 
     // All DMG may stay empty: it is sent as 0
     expect(el.querySelectorAll<HTMLInputElement>('.stat-field__input')[3].placeholder).toBe('0');
     save().click();
     const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/me/marches/');
-    expect(req.request.body).toEqual({
-      kind: 'cavalry',
-      primary: 'Attila',
-      secondary: '',
-      attack: 12,
-      defense: 8,
-      health: 0,
-      damage: 0,
-      gold: 3,
-      blue: 2,
-      white: 10,
-    });
-    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, defense: 8, health: 0, damage: 0, gold: 3, blue: 2, white: 10 });
+    expect(req.request.body).toEqual({ kind: 'cavalry', primary: 'Attila', secondary: '', attack: 12, defense: 8, health: 0, damage: 0 });
+    req.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, defense: 8, health: 0, damage: 0, gold: 0, blue: 0, white: 0 });
+    // the card loads the catalog of items and inscriptions
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
     await settle(fixture);
-    const image = (id: number, kind: string) => ({ id, kind, url: `/api/marches/images/${id}/`, thumb: `/api/marches/images/${id}/?thumb=1`, width: 1, height: 1 });
-    const equipment = http.expectOne('/api/me/marches/1/images/');
-    expect((equipment.request.body as FormData).get('kind')).toBe('equipment');
-    equipment.flush(image(7, 'equipment'));
-    await settle(fixture);
-
+    // the new march is a card, its equipment and armaments open right away
     expect(el.querySelector('.march--editing')).toBeNull();
-    expect(el.querySelector('.mrow__head')?.getAttribute('alt')).toBe('Attila');
-    expect(el.querySelectorAll('.mrow__shot img').length).toBe(1);
-    // the thumbnail opens the screenshot in a dialog on the page, not a new page
-    el.querySelector<HTMLButtonElement>('.mrow__shot')!.click();
-    await fixture.whenStable();
-    expect(el.querySelector('dialog[open] .viewer__img')?.getAttribute('src')).toBe('/api/marches/images/7/');
-    expect(el.querySelector('dialog[open] .modal__title')?.textContent).toContain('1. march');
-    // short labels next to the type icon, the full "Cav ATK" in the title (and for screen readers)
-    const stats = Array.from(el.querySelectorAll<HTMLElement>('.mrow__stat'));
-    expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'Cav DEF', 'Cav HP', 'All DMG', 'Zlaté', 'Modré', 'Biele']);
-    expect(stats.map((s) => s.textContent?.match(/\d+%?/)?.[0])).toEqual(['12%', '8%', '0%', '0%', '3', '2', '10']);
+    expect(el.querySelector('.mb__primary')?.textContent).toBe('Attila');
+    expect(el.querySelector('dialog.be')?.hasAttribute('open')).toBe(true);
+    el.querySelector<HTMLButtonElement>('dialog.be .be__item')!.click();
+    await settle(fixture);
+    el.querySelector<HTMLButtonElement>('dialog.be .be__actions .pill-btn')!.click();
+    const build = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/me/marches/1/');
+    expect(build.request.body.gear).toEqual({ weapon: { item: 'sacred-dominion', crit: false, iconic: 0 } });
+    build.flush({ ...MARCH, kind: 'cavalry', primary: 'Attila', attack: 12, defense: 8, health: 0, damage: 0, ...build.request.body });
+    await settle(fixture);
+    expect(el.querySelector('app-march-build .gear__icon')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
+    // short labels, the full "Cav ATK" in the title
+    const stats = Array.from(el.querySelectorAll<HTMLElement>('.mb__stats--quiet li'));
+    expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'Cav DEF', 'Cav HP', 'All DMG']);
     expect(el.querySelector('.add-march')?.textContent).toContain('Pridať druhý march');
+    http.verify();
+  });
+
+  it('clicks the equipment and armaments of a march together and saves them', async () => {
+    const BUILT = { ...MARCH, id: 3, kind: 'cavalry' as const, primary: 'Attila', secondary: 'Takeda Shingen', attack: 12, defense: 8, health: 6, gear: {}, formation: '', inscriptions: [] };
+    const http = setup();
+    const fixture = TestBed.createComponent(Marches);
+    fixture.detectChanges();
+    http.expectOne('/api/me/marches/').flush({ marches: [BUILT], max: 7, public: false });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await tick(fixture);
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await tick(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.mb__primary')?.textContent).toBe('Attila');
+    expect(el.querySelector('.mb__note')?.textContent).toContain('Zatiaľ prázdne');
+
+    el.querySelector<HTMLButtonElement>('.march__build')!.click();
+    await tick(fixture);
+    const dialog = el.querySelector('dialog.be')!;
+    expect(dialog.hasAttribute('open')).toBe(true);
+    const tiles = () => [...dialog.querySelectorAll<HTMLButtonElement>('.gear__tile')];
+    expect(tiles()[0].getAttribute('aria-pressed')).toBe('true');
+    // only the weapons of the catalog
+    const items = () => [...dialog.querySelectorAll<HTMLButtonElement>('.be__item')];
+    expect(items().map((b) => b.textContent?.trim())).toEqual(['Sacred Dominion']);
+    items()[0].click();
+    await tick(fixture);
+    // the slot stays chosen (crit and iconic right below, the focus on the item), the tile shows its icon
+    expect(tiles()[0].getAttribute('aria-pressed')).toBe('true');
+    expect(items()[0].getAttribute('aria-pressed')).toBe('true');
+    expect(tiles()[0].querySelector('img')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
+    // Zrušiť leaves the march as it was, the next opening starts from it again
+    dialog.querySelector<HTMLButtonElement>('.be__actions .pill-btn--quiet')!.click();
+    await tick(fixture);
+    expect(el.querySelector('app-march-build .gear__icon')).toBeNull();
+    el.querySelector<HTMLButtonElement>('.march__build')!.click();
+    await tick(fixture);
+    expect(tiles()[0].querySelector('img')).toBeNull();
+    items()[0].click();
+    await tick(fixture);
+    dialog.querySelector<HTMLInputElement>('.be__crit input')!.click();
+    await tick(fixture);
+    [...dialog.querySelectorAll<HTMLButtonElement>('.be__iconic button')].find((b) => b.textContent?.trim() === 'III')!.click();
+    await tick(fixture);
+    // Cav ATK of the crit
+    expect(dialog.querySelector('.be__stats')?.textContent).toContain('32.5%');
+
+    dialog.querySelectorAll<HTMLButtonElement>('.be__tabs button')[1].click();
+    await tick(fixture);
+    const formations = () => [...dialog.querySelectorAll<HTMLButtonElement>('.be__formation')];
+    const inscriptions = () => [...dialog.querySelectorAll<HTMLButtonElement>('button.insc')];
+    // without a formation only the common ones
+    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Enduring', 'Watchmen', 'Patronage']);
+    formations()[0].click();
+    await tick(fixture);
+    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Relentless', 'Enduring', 'Watchmen', 'Patronage', 'Thrasher']);
+    // two of each armament at most: the third emblem one is blocked
+    inscriptions()[0].click();
+    inscriptions()[1].click();
+    await tick(fixture);
+    expect(dialog.querySelector('.be__piece-count')?.textContent).toBe('2/2');
+    expect(inscriptions()[2].getAttribute('aria-disabled')).toBe('true');
+    inscriptions()[2].click();
+    await tick(fixture);
+    expect(inscriptions()[2].getAttribute('aria-pressed')).toBe('false');
+    inscriptions()[0].click();
+    inscriptions()[1].click();
+    inscriptions()[4].click();
+    inscriptions()[3].click();
+    await tick(fixture);
+    // another formation: its own inscriptions instead, the common one stays
+    formations()[1].click();
+    await tick(fixture);
+    expect(inscriptions().filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.textContent?.trim())).toEqual([
+      'Patronage',
+    ]);
+    inscriptions().find((b) => b.textContent?.trim() === 'Toppler')!.click();
+    await tick(fixture);
+
+    dialog.querySelector<HTMLButtonElement>('.be__actions .pill-btn')!.click();
+    const saved = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/me/marches/3/');
+    expect(saved.request.method).toBe('PATCH');
+    expect(saved.request.body).toEqual({
+      gear: { weapon: { item: 'sacred-dominion', crit: true, iconic: 3 } },
+      formation: 'pincer',
+      inscriptions: ['u-instrument-patronage', 'pincer-scroll-toppler'],
+    });
+    saved.flush({ ...BUILT, ...saved.request.body });
+    await tick(fixture);
+    await tick(fixture);
+    expect(dialog.hasAttribute('open')).toBe(false);
+    // the card shows the build
+    // the formation as its icon only, the inscriptions gold first
+    expect(el.querySelector('.mb__formation img')?.getAttribute('alt')).toBe('Pincer');
+    expect([...el.querySelectorAll('.mb__inscs .insc')].map((i) => i.textContent?.trim())).toEqual(['Toppler', 'Patronage']);
+    expect(el.querySelector('app-march-build .gear__iconic')?.textContent).toBe('III');
+    expect(el.querySelector('app-march-build .gear__crit')).not.toBeNull();
     http.verify();
   });
 
@@ -156,6 +231,8 @@ describe('Marches', () => {
     const seven = Array.from({ length: 7 }, (_, i) => ({ ...MARCH, id: i + 1, position: i + 1 }));
     http.expectOne('/api/me/marches/').flush({ marches: seven, max: 7 });
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.add-march')).toBeNull();
@@ -170,7 +247,7 @@ describe('Marches', () => {
     remove().click();
     http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/me/marches/1/').flush(null, { status: 204, statusText: '' });
     await settle(fixture);
-    expect(Array.from(el.querySelectorAll('.mrow__num'), (t) => t.textContent?.trim())).toEqual([
+    expect(Array.from(el.querySelectorAll('.mb__num'), (t) => t.textContent?.trim())).toEqual([
       '1.',
       '2.',
       '3.',

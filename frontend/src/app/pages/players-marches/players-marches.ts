@@ -17,35 +17,34 @@ import { I18n } from '../../core/i18n/i18n';
 import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
-import { MarchRow } from '../../shared/march-row';
+import { MarchBuild } from '../../shared/march-build';
 import { PageHeader } from '../../shared/page-header';
 import { reloadOnReturn } from '../../shared/reload-on-return';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
-import { MarchBuilds } from './builds';
 
 /**
  * /marche – two tabs (Gether 11. 10. 2026): "Marche hráčov" = the marches of the players who made them public ("aby to
- * mali ako motiváciu"; R4 and the superuser see every player's), "Moje marche" (?tab=moje) = the player's own marches
- * (the Marches component, formerly on /ucet). Signed-in players only; a prerendered shell, not indexed, not in the
- * sitemap.
+ * mali ako motiváciu"; R4 and the superuser see every player's), "Prehľad marchov" (?tab=prehlad, the old ?tab=moje
+ * too) = the player's own marches (the Marches component; Gether 12. 10. 2026: "Moje marche" merged into it). Both
+ * show each march as a card with its equipment and armaments (MarchBuild). Signed-in players only; a prerendered shell,
+ * not indexed, not in the sitemap.
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [Icon, PageHeader, Marches, MarchBuilds, MarchRow],
+  imports: [Icon, PageHeader, Marches, MarchBuild],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayersMarches {
-  /** ?tab=moje – the player's own marches */
+  /** ?tab=prehlad – the player's own marches (the old ?tab=moje leads there too) */
   readonly tab = input<string>();
 
   protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
-  protected readonly mine = computed(() => this.tab() === 'moje');
-  /** ?tab=prehlad – the player's marches with their equipment and armaments (Gether 12. 10. 2026) */
-  protected readonly overview = computed(() => this.tab() === 'prehlad');
+  /** the player's marches with their equipment and armaments – "Moje marche" merged into it (Gether 12. 10. 2026) */
+  protected readonly mine = computed(() => this.tab() === 'prehlad' || this.tab() === 'moje');
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
 
@@ -86,9 +85,9 @@ export class PlayersMarches {
     inject(DestroyRef).onDestroy(() => seo.set(null));
   }
 
-  protected showTab(tab: 'moje' | 'prehlad' | null): void {
-    // back on the players' marches after editing the own ones or their builds: the list asks again
-    if (!tab && (this.mine() || this.overview()) && !this.data.isLoading()) this.data.reload();
+  protected showTab(tab: 'prehlad' | null): void {
+    // back on the players' marches after editing the own ones: the list asks again
+    if (!tab && this.mine() && !this.data.isLoading()) this.data.reload();
     void this.router.navigate([], { queryParams: { tab }, replaceUrl: true });
   }
 

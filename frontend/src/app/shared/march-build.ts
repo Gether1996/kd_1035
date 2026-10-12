@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import {
   ArmoryApi,
@@ -10,7 +11,7 @@ import {
   troopStat,
 } from '../core/armory';
 import { I18n } from '../core/i18n/i18n';
-import { ARMAMENT_STATS, March, marchIcon } from '../core/kvk-api';
+import { ARMAMENT_STATS, INSCRIPTIONS, March, REQUIRED_STATS, marchIcon } from '../core/kvk-api';
 import { FormationIcon } from './formation-icon';
 import { GearGrid } from './gear-grid';
 import { statLabel } from './stat-label';
@@ -24,7 +25,7 @@ import { statLabel } from './stat-label';
  */
 @Component({
   selector: 'app-march-build',
-  imports: [FormationIcon, GearGrid],
+  imports: [FormationIcon, GearGrid, NgTemplateOutlet],
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,8 @@ export class MarchBuild {
   /** the player's own march: an empty build invites to fill it */
   readonly own = input(false);
   readonly numbered = input(true);
+  /** a march saved before ATK, DEF and HP were required says they are missing */
+  readonly statsRequired = input(false);
 
   private readonly armory = inject(ArmoryApi);
   protected readonly i18n = inject(I18n);
@@ -94,6 +97,17 @@ export class MarchBuild {
       full: statLabel(this.t(), march.kind, key),
       value: march[key]!,
     }));
+  });
+
+  protected readonly statsMissing = computed(
+    () => this.statsRequired() && REQUIRED_STATS.some((stat) => this.march()[stat] == null),
+  );
+
+  /** a march saved before its inscriptions were clicked together keeps the counts typed in (gold, blue, white) */
+  protected readonly counts = computed(() => {
+    const march = this.march();
+    if (this.inscriptions().length) return [];
+    return INSCRIPTIONS.filter((key) => (march[key] ?? 0) > 0).map((key) => ({ key, value: march[key]! }));
   });
 
   constructor() {

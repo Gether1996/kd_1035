@@ -1,4 +1,4 @@
-"""Private screenshots of players – KvK sign-ups (KvkImage) and marches on /ucet (MarchImage).
+"""Private screenshots of players – KvK sign-ups (KvkImage).
 
 Seen only by the player, the reviewers (Player.kvk_reviewer, e.g. R4) and the superuser. Every upload is decoded and
 saved again as WebP: no EXIF/GPS, XMP or ICC data survives, and a file that is not a real image is refused. The files
@@ -23,6 +23,7 @@ MAX_PIXELS = 16_000_000
 MAX_SIDE = 2400
 THUMB_SIDE = 480
 FORMATS = {'JPEG', 'PNG', 'WEBP'}
+# 'marches' held the screenshots of marches until 12. 10. 2026 – the sweep removes what is left there
 FOLDERS = ('kvk', 'marches')
 # a file younger than this may belong to an upload whose row is not written yet
 SWEEP_GRACE_SECONDS = 3600

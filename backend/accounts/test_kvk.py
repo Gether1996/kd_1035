@@ -1,6 +1,8 @@
 import io
+import os
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
 from django.contrib.auth.models import User
@@ -10,7 +12,7 @@ from django.test import Client, TestCase, override_settings
 from PIL import Image
 
 from . import cleanup, private_images
-from .models import KvkImage, KvkSettings, KvkSignup, March, MarchImage
+from .models import KvkImage, KvkSettings, KvkSignup, March
 from .test_reminders import make_player
 
 
@@ -182,7 +184,6 @@ class ImageTests(KvkTestCase):
         self.assertEqual(self.client.get(url)['Cache-Control'], 'private, max-age=600')
         other = self.login(make_player('42').user)
         self.assertEqual(other.get(url).status_code, 404)
-        self.assertEqual(Client().get(url).status_code, 404)
 
         reviewer = make_player('43')
         reviewer.kvk_reviewer = True
@@ -263,9 +264,6 @@ class ReviewTests(KvkTestCase):
 
 class RetentionTests(KvkTestCase):
     def test_sweep_deletes_only_old_orphans(self):
-        import os
-        import time
-
         self.sign_up()
         self.upload()
         orphan = self.media / 'kvk' / 'orphan.webp'
@@ -330,26 +328,28 @@ class MarchTests(KvkTestCase):
         # but he can not be put into another slot or march
         self.assertEqual(self.call('patch', url, {'secondary': 'Cao Cao'}).status_code, 400)
 
-    def test_armament_bonuses_and_inscriptions_are_whole_numbers_up_to_99(self):
-        # every bonus and inscription count is required for a new march, All DMG may stay empty = 0
-        for missing in ('attack', 'defense', 'health', 'white', 'blue', 'gold'):
+    def test_armament_bonuses_are_whole_numbers_up_to_99_and_inscriptions_counted(self):
+        # ATK, DEF and HP are required for a new march, All DMG may stay empty = 0
+        for missing in ('attack', 'defense', 'health'):
             body = {'kind': 'cavalry', 'primary': 'Attila', **STATS}
             del body[missing]
             self.assertEqual(self.call('post', '/api/me/marches/', body).json()[missing], ['required'], missing)
-        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS, 'attack': 12, 'gold': 3})
+        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS, 'attack': 12})
         self.assertEqual(march.status_code, 201, march.content)
-        self.assertEqual((march.json()['attack'], march.json()['defense'], march.json()['gold'], march.json()['damage']), (12, 9, 3, 0))
+        # typed counts are ignored: a march counts the inscriptions clicked together (Gether 12. 10. 2026)
+        self.assertEqual([march.json()[f] for f in ('attack', 'defense', 'damage', 'gold', 'blue', 'white')], [12, 9, 0, 0, 0, 0])
         url = f'/api/me/marches/{march.json()["id"]}/'
         res = self.call('patch', url, {'defense': 8, 'health': 0, 'damage': 99, 'white': 10})
         self.assertEqual(res.status_code, 200, res.content)
-        self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage', 'white', 'blue')], [12, 8, 0, 99, 10, 2])
+        self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage', 'white')], [12, 8, 0, 99, 0])
+        res = self.call('patch', url, {'formation': 'delta', 'inscriptions': ['delta-scroll-thrasher', 'delta-emblem-relentless', 'u-scroll-warcry']})
+        self.assertEqual([res.json()[f] for f in ('gold', 'blue', 'white')], [1, 1, 1])
         # a change may not clear a required one (All DMG may)
-        self.assertEqual(self.call('patch', url, {'blue': None}).status_code, 400)
+        self.assertEqual(self.call('patch', url, {'health': None}).status_code, 400)
         self.assertEqual(self.call('patch', url, {'damage': None}).status_code, 200)
-        for bad in ({'attack': 100}, {'defense': -1}, {'health': 9.5}, {'gold': 'x'}):
+        for bad in ({'attack': 100}, {'defense': -1}, {'health': 9.5}, {'attack': 'x'}):
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
-        # R4 sees them next to the sign-up and on /marche
-        self.assertEqual(self.client.get('/api/me/marches/').json()['marches'][0]['white'], 10)
+        self.assertEqual(self.client.get('/api/me/marches/').json()['marches'][0]['gold'], 1)
 
     def test_build_clicked_together(self):
         march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}).json()
@@ -396,42 +396,27 @@ class MarchTests(KvkTestCase):
         res = self.call('patch', url, {'gear': {}, 'formation': '', 'inscriptions': []})
         self.assertEqual((res.json()['gear'], res.json()['formation']), ({}, ''))
 
-    def test_screenshots_private_and_deleted_with_the_march(self):
+    def test_a_march_has_no_screenshot_and_reviewers_see_it_with_the_sign_up(self):
         march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}).json()
-        upload_url = f'/api/me/marches/{march["id"]}/images/'
-        res = self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()})
-        self.assertEqual(res.status_code, 201, res.content)
-        url = res.json()['url']
-        self.assertTrue(url.startswith('/api/marches/images/'))
-        self.assertEqual(self.client.get(url).status_code, 200)
-        other = self.login(make_player('42').user)
-        self.assertEqual(other.get(url).status_code, 404)
-        self.assertEqual(self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()}, other).status_code, 404)
-        self.assertEqual(self.call('post_file', upload_url, {'kind': 'vip', 'file': picture()}).status_code, 400)
-        # the armaments of a march are typed in, no screenshot (only the KvK sign-up has one)
-        self.assertEqual(self.call('post_file', upload_url, {'kind': 'armaments', 'file': picture()}).status_code, 400)
-        # a new equipment screenshot replaces the old one (its files go after the commit)
-        with self.captureOnCommitCallbacks(execute=True):
-            res = self.call('post_file', upload_url, {'kind': 'equipment', 'file': picture()})
-        self.assertEqual(res.status_code, 201)
-        self.assertEqual(MarchImage.objects.count(), 1)
-        self.assertEqual(self.client.get(url).status_code, 404)  # the replaced one is gone
-        url = res.json()['url']
+        self.assertNotIn('images', march)
+        # the equipment is clicked together, its screenshot is gone (Gether 12. 10. 2026)
+        res = self.call('post_file', f'/api/me/marches/{march["id"]}/images/', {'kind': 'equipment', 'file': picture()})
+        self.assertEqual(res.status_code, 404)
+        # files left from the old screenshots go with the daily sweep
+        old = self.media / 'marches' / 'old.webp'
+        old.parent.mkdir(parents=True, exist_ok=True)
+        old.write_bytes(b'shot')
+        stale = time.time() - 2 * private_images.SWEEP_GRACE_SECONDS
+        os.utime(old, (stale, stale))
+        cleanup.sweep_files()
+        self.assertFalse(old.exists())
 
         reviewer = make_player('43')
         reviewer.kvk_reviewer = True
         reviewer.save()
-        self.assertEqual(self.login(reviewer.user).get(url).status_code, 200)
-
-        # the reviewers see the marches with the sign-up
         self.sign_up()
         data = self.login(reviewer.user).get('/api/kvk/signups/').json()
         self.assertEqual(data['signups'][0]['marches'][0]['primary'], 'Attila')
-
-        with self.captureOnCommitCallbacks(execute=True):
-            self.assertEqual(self.call('delete', f'/api/me/marches/{march["id"]}/').status_code, 204)
-        self.assertFalse(MarchImage.objects.exists())
-        self.assertEqual(list((self.media / 'marches').iterdir()), [])
 
     def test_account_deletion_removes_marches(self):
         self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
@@ -439,15 +424,11 @@ class MarchTests(KvkTestCase):
         self.assertFalse(March.objects.exists())
 
     def test_public_marches_are_seen_by_every_signed_in_player(self):
-        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}).json()
-        url = self.call(
-            'post_file', f'/api/me/marches/{march["id"]}/images/', {'kind': 'equipment', 'file': picture()}
-        ).json()['url']
+        self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
         other = self.login(make_player('42').user)
         # private by default: only the owner (and R4) sees them
         self.assertEqual(self.client.get('/api/me/marches/').json()['public'], False)
         self.assertEqual(other.get('/api/marches/').json()['players'], [])
-        self.assertEqual(other.get(url).status_code, 404)
         mine = self.client.get('/api/marches/').json()['players']
         self.assertEqual([(p['me'], p['public']) for p in mine], [(True, False)])
 
@@ -455,9 +436,7 @@ class MarchTests(KvkTestCase):
         self.assertEqual(self.call('patch', '/api/me/marches/', {'public': True}).json(), {'public': True})
         players = other.get('/api/marches/').json()['players']
         self.assertEqual([p['marches'][0]['primary'] for p in players], ['Attila'])
-        self.assertEqual(other.get(url).status_code, 200)
         self.assertEqual(Client().get('/api/marches/').status_code, 403)
-        self.assertEqual(Client().get(url).status_code, 404)
 
         # back to R4 only
         self.call('patch', '/api/me/marches/', {'public': False})

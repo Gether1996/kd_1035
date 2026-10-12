@@ -24,8 +24,5 @@ urlpatterns = [
     path('kvk/reviewers/<int:player_id>/', kvk_views.reviewer),
     path('me/marches/', march_views.marches),
     path('me/marches/<int:march_id>/', march_views.march),
-    path('me/marches/<int:march_id>/images/', march_views.upload),
-    path('me/marches/images/<int:image_id>/', march_views.delete_image),
-    path('marches/images/<int:image_id>/', march_views.image),
     path('marches/', march_views.players_marches),
 ]

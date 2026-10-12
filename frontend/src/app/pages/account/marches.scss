@@ -1,4 +1,5 @@
-// panel and form actions come from ../kvk/kvk.scss, the march row from shared/march-row
+// the title and form actions come from ../kvk/kvk.scss, the march card from shared/march-build (no panel around the
+// cards – a card in a card)
 :host {
   display: block;
   scroll-margin-top: calc(var(--header-h) + 16px);
@@ -38,22 +39,19 @@
   }
 }
 
-// ---------------------------------------------------------------- the list: rows divided by a line
+// ---------------------------------------------------------------- the list: one card per march
 
 .march-list {
   display: grid;
-  margin: 14px 0 0;
+  gap: 14px;
+  margin: 18px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.march {
-  padding: 12px 0;
-  border-top: 1px solid var(--line);
-
-  &:last-child {
-    border-bottom: 1px solid var(--line);
-  }
+.march__build .icon {
+  width: 15px;
+  height: 15px;
 }
 
 .march--editing {
@@ -64,11 +62,7 @@
   padding: clamp(12px, 3vw, 18px);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
-  background: rgba(4, 10, 23, 0.35);
-
-  & + .march {
-    border-top: 0;
-  }
+  background: var(--card-bg);
 }
 
 .march__title {

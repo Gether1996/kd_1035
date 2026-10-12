@@ -8,6 +8,7 @@ Item icons: guides/static/guides/gear/<id>.webp (game art from codexhelper.com, 
 """
 
 import json
+from collections import Counter
 from functools import cache
 from pathlib import Path
 
@@ -57,10 +58,25 @@ def common_inscriptions():
 
 
 @cache
+def inscriptions():
+    """inscription id → {id, name, rarity, piece}"""
+    data = armory()
+    return {i['id']: i for i in [*data['common'], *(i for f in data['formations'] for i in f['inscriptions'])]}
+
+
 def inscription_pieces():
     """inscription id → its armament (emblem, flag, instrument, scroll)"""
-    data = armory()
-    return {i['id']: i['piece'] for i in [*data['common'], *(i for f in data['formations'] for i in f['inscriptions'])]}
+    return {key: i['piece'] for key, i in inscriptions().items()}
+
+
+# the march's counts of inscriptions by colour (ArmyFields.gold, blue, white)
+COLOURS = {'special': 'gold', 'rare': 'blue', 'common': 'white'}
+
+
+def counts(chosen):
+    """{'gold': 1, 'blue': 2, 'white': 3} of the inscriptions clicked together"""
+    found = Counter(COLOURS[inscriptions()[i]['rarity']] for i in chosen)
+    return {colour: found[colour] for colour in COLOURS.values()}
 
 
 def slot_of(march_slot):

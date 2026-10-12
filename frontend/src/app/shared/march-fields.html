@@ -96,7 +96,7 @@
         </span>
       </label>
     }
-    @for (stat of inscriptionKinds; track stat) {
+    @for (stat of withCounts() ? inscriptionKinds : []; track stat) {
       <label class="stat-field">
         <span class="stat-field__label">
           <span class="dot dot--{{ stat }}" aria-hidden="true"></span>{{ m.inscriptions[stat] }}

@@ -18,14 +18,11 @@
     </section>
   } @else {
     <div class="segmented tabs" role="group" [attr.aria-label]="p.title">
-      <button type="button" [attr.aria-pressed]="!mine() && !overview()" (click)="showTab(null)">{{ p.tabs.all }}</button>
-      <button type="button" [attr.aria-pressed]="mine()" (click)="showTab('moje')">{{ p.tabs.mine }}</button>
-      <button type="button" [attr.aria-pressed]="overview()" (click)="showTab('prehlad')">{{ p.tabs.overview }}</button>
+      <button type="button" [attr.aria-pressed]="!mine()" (click)="showTab(null)">{{ p.tabs.all }}</button>
+      <button type="button" [attr.aria-pressed]="mine()" (click)="showTab('prehlad')">{{ p.tabs.overview }}</button>
     </div>
     @if (mine()) {
       <app-marches class="mine" />
-    } @else if (overview()) {
-      <app-march-builds />
     } @else if (data.error()) {
       <p class="state">{{ p.error }}</p>
     } @else if (data.hasValue()) {
@@ -97,8 +94,8 @@
           @if (open) {
             <ol class="player__marches" [id]="'player-marches-' + player.id">
               @for (march of player.marches; track march.id) {
-                <li class="row">
-                  <app-march-row [march]="march" [portraits]="portraits()" [owner]="name(player)" [statsRequired]="true" />
+                <li>
+                  <app-march-build [march]="march" [portraits]="portraits()" [statsRequired]="true" />
                 </li>
               }
             </ol>
