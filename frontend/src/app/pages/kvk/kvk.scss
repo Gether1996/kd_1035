@@ -193,6 +193,15 @@
 }
 
 // cavalry, infantry, archers with their type icons – on a phone only the icon and the count (the name in the title)
+// the commander next to the role and troops; on a phone the whole row
+.list__commander {
+  flex: 0 1 240px;
+
+  @media (max-width: 480px) {
+    flex: 1 1 100%;
+  }
+}
+
 .list__filter--troops {
   button {
     display: inline-flex;

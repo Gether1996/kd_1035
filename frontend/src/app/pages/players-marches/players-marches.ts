@@ -9,7 +9,9 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   signal,
+  untracked,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
@@ -18,6 +20,7 @@ import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { MARCH_KINDS, MarchKind } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
+import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
 import { Icon } from '../../shared/icon';
 import { MarchBuild } from '../../shared/march-build';
 import { PageHeader } from '../../shared/page-header';
@@ -37,7 +40,7 @@ type Sort = 'updated' | 'count' | 'name';
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [Icon, PageHeader, Marches, MarchBuild, PendingApproval],
+  imports: [Icon, PageHeader, Marches, MarchBuild, PendingApproval, CommanderFilter],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +48,8 @@ type Sort = 'updated' | 'count' | 'name';
 export class PlayersMarches {
   /** ?tab=prehlad – the player's own marches (the old ?tab=moje leads there too) */
   readonly tab = input<string>();
+  /** ?cmd=Attila – only the players with a march of this commander (a shareable link, kept across the tabs) */
+  readonly cmd = input<string>();
 
   protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
@@ -67,10 +72,17 @@ export class PlayersMarches {
   /** only the players with a march of this type ('' = all) */
   protected readonly kinds = MARCH_KINDS;
   protected readonly kind = signal<MarchKind | ''>('');
+  /** only the players with a march of this commander, primary or secondary ('' = all; "who has Attila for rally?") */
+  protected readonly commander = linkedSignal(() => this.cmd() ?? '');
   protected readonly players = computed(() => (this.data.hasValue() ? this.data.value().players : []));
+  protected readonly commanders = computed(() => marchCommanders(this.players().flatMap((p) => p.marches)));
   protected readonly shown = computed(() => {
     const query = fold(this.search());
     const kind = this.kind();
+    const commander = this.commander();
+    // the type and the commander of one and the same march: a cavalry march with Attila, not any cavalry and any Attila
+    const fits = (m: PlayerMarches['marches'][number]) =>
+      (!kind || m.kind === kind) && (!commander || m.primary === commander || m.secondary === commander);
     const byName = (a: PlayerMarches, b: PlayerMarches) => this.name(a).localeCompare(this.name(b), this.i18n.locale());
     const order: Record<Sort, (a: PlayerMarches, b: PlayerMarches) => number> = {
       updated: (a, b) => b.updated_at.localeCompare(a.updated_at) || byName(a, b),
@@ -79,7 +91,7 @@ export class PlayersMarches {
     };
     return this.players()
       .filter((p) => !query || fold(`${p.ingame_name} ${p.name}`).includes(query))
-      .filter((p) => !kind || p.marches.some((m) => m.kind === kind))
+      .filter((p) => (!kind && !commander) || p.marches.some(fits))
       .sort(order[this.sort()]);
   });
 
@@ -105,6 +117,15 @@ export class PlayersMarches {
     effect(() => {
       if (this.tab() === 'moje') this.showTab('prehlad');
     });
+    // a newly chosen commander opens the players who have them – once, a card closed by hand afterwards stays closed
+    // (a reload of the list on return keeps what the visitor opened and closed)
+    let expandedFor = '';
+    effect(() => {
+      const commander = this.commander();
+      if (!this.data.hasValue() || commander === expandedFor) return;
+      expandedFor = commander;
+      if (commander) this.opened.set(new Set(untracked(this.shown).map((p) => p.id)));
+    });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.playersMarches, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
@@ -113,7 +134,14 @@ export class PlayersMarches {
   protected showTab(tab: 'prehlad' | null): void {
     // back on the players' marches after editing the own ones: the list asks again
     if (!tab && this.mine() && !this.data.isLoading()) this.data.reload();
-    void this.router.navigate([], { queryParams: { tab }, replaceUrl: true });
+    // merged: the tabs keep ?cmd= and the commander keeps ?tab=
+    void this.router.navigate([], { queryParams: { tab }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  /** the commander filter in the address (?cmd=), so a reload or a shared link shows the same players */
+  protected setCommander(name: string): void {
+    this.commander.set(name);
+    void this.router.navigate([], { queryParams: { cmd: name || null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   protected isOpen(id: number): boolean {

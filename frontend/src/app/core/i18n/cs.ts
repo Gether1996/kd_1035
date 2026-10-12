@@ -294,6 +294,8 @@ export const cs: Dict = {
     loadError: 'Hráče se nepodařilo načíst.',
     failed: 'Změnu se nepodařilo uložit. Zkus to znovu.',
   },
+  // the commander filter of /marche and the KvK sign-ups (shared/commander-filter.ts)
+  marchFilters: { commander: 'Commander', any: 'Všichni commandeři' },
   playersMarches: {
     eyebrow: 'Hráči',
     title: 'Marche hráčů',

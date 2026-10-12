@@ -14,6 +14,7 @@ import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
+import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
 import { Icon } from '../../shared/icon';
 import { MarchBuild } from '../../shared/march-build';
 
@@ -27,11 +28,11 @@ const players = (signups: KvkSignup[]) => new Set(signups.map((s) => s.player?.i
  * signed up for rally and garrison is one card, not two) with the name, contact and profile marches once and each of
  * their sign-ups below – role, the army as the card of a march (equipment, armaments, bonuses – no screenshots since
  * 12. 10. 2026), note; the profile marches as cards too. The
- * filters keep the sign-ups that match; the superuser may withdraw a sign-up.
+ * filters (role, troops, commander) keep the sign-ups that match; the superuser may withdraw a sign-up.
  */
 @Component({
   selector: 'app-kvk-signups',
-  imports: [Icon, MarchBuild],
+  imports: [Icon, MarchBuild, CommanderFilter],
   templateUrl: './kvk-signups.html',
   styleUrl: './kvk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,10 +64,18 @@ export class KvkSignups {
   /** the sign-up whose withdraw waits for the second click */
   protected readonly armed = signal<number | null>(null);
   protected readonly failed = signal(false);
+  /** only the sign-ups with this commander, primary or secondary ('' = all; "who can garrison with Gorgo?") */
+  protected readonly commander = signal('');
+  protected readonly commanders = computed(() => marchCommanders(this.all()));
+  /** the sign-ups of the chosen commander – the role and troops counts are of these */
+  private readonly ofCommander = computed(() => {
+    const commander = this.commander();
+    return this.all().filter((s) => !commander || s.primary === commander || s.secondary === commander);
+  });
   /** the sign-ups of the chosen role – the troops counts are of these */
   private readonly ofRole = computed(() => {
     const role = this.role();
-    return this.all().filter((s) => role === 'all' || s.role === role);
+    return this.ofCommander().filter((s) => role === 'all' || s.role === role);
   });
   protected readonly shown = computed(() => {
     const troops = this.troops();
@@ -89,16 +98,15 @@ export class KvkSignups {
   protected readonly asMarch = asMarch;
   /** the numbers on the filters count players (one card each), like the list below */
   protected readonly counts = computed(() => ({
-    all: players(this.all()),
-    rally: players(this.all().filter((s) => s.role === 'rally')),
-    garrison: players(this.all().filter((s) => s.role === 'garrison')),
+    all: players(this.ofCommander()),
+    rally: players(this.ofCommander().filter((s) => s.role === 'rally')),
+    garrison: players(this.ofCommander().filter((s) => s.role === 'garrison')),
   }));
   protected readonly troopCounts = computed(() => {
     const counts: Record<string, number> = { all: players(this.ofRole()) };
     for (const kind of KVK_KINDS) counts[kind] = players(this.ofRole().filter((s) => s.kind === kind));
     return counts;
   });
-
 
   private disarm?: ReturnType<typeof setTimeout>;
 

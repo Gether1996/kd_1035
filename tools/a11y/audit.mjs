@@ -69,6 +69,17 @@ const STATE_LIST = [
     },
     scope: '#mobile-menu',
   },
+  {
+    // the sign-ups for R4 and the superuser (--superuser --marches): role, troops and commander filters, the cards
+    name: 'kvk-list',
+    when: async (path, page) => path.includes('kvk') && (await page.locator('.kvk-tabs').count()) > 0,
+    async open(page) {
+      await page.locator('.kvk-tabs button').nth(1).click();
+      await page.locator('.list__filters').waitFor();
+      await page.waitForTimeout(600);
+    },
+    scope: '.panel',
+  },
 ];
 
 mkdirSync('out', { recursive: true });

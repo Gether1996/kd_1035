@@ -333,6 +333,51 @@ describe('KvkSignups', () => {
     expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Garrison']);
     http.verify();
   });
+
+  it('filters by commander (primary or secondary) together with the role, and the counts follow it', async () => {
+    const http = setup();
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
+    const fixture = TestBed.createComponent(KvkSignups);
+    fixture.componentRef.setInput('data', data);
+    fixture.detectChanges();
+    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(id), approved: true });
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
+      signups: [
+        { ...SIGNUP, player: player(1, 'Nelly') },
+        { ...SIGNUP, id: 11, role: 'garrison', kind: 'infantry', primary: 'Gorgo', secondary: 'Constantine I', player: player(2, 'Bob') },
+        { ...SIGNUP, id: 12, kind: 'archer', primary: 'Yi Seong-Gye', secondary: 'Attila', player: player(3, 'Cara') },
+      ],
+    });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const text = (b: Element) => b.textContent?.replace(/\s+/g, ' ').trim();
+    const names = () => Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent);
+    const roles = () => [...el.querySelectorAll('.list__filter:not(.list__filter--troops) button')].map(text);
+    const troops = () => [...el.querySelectorAll('.list__filter--troops button')].map(text);
+    // only the commanders of the sign-ups are offered, alphabetically
+    const select = el.querySelector<HTMLSelectElement>('#kvk-commander')!;
+    expect(el.querySelector('label[for="kvk-commander"]')?.textContent).toBe('Commander');
+    expect([...select.options].map((o) => o.textContent)).toEqual(['Všetci commanderi', 'Attila', 'Constantine I', 'Gorgo', 'Takeda Shingen', 'Yi Seong-Gye']);
+    select.value = 'Attila';
+    select.dispatchEvent(new Event('change'));
+    await flushAll(fixture);
+    expect(names()).toEqual(['Nelly', 'Cara']);
+    expect(roles()).toEqual(['Všetci · 2', 'Rally · 2', 'Garrison · 0']);
+    expect(troops()).toEqual(['Všetci · 2', 'Pechota · 0', 'Jazda · 1', 'Lukostrelci · 1']);
+    // with the troops: an archer with Attila
+    el.querySelectorAll<HTMLButtonElement>('.list__filter--troops button')[3].click();
+    await flushAll(fixture);
+    expect(names()).toEqual(['Cara']);
+    select.value = '';
+    select.dispatchEvent(new Event('change'));
+    await flushAll(fixture);
+    expect(roles()).toEqual(['Všetci · 3', 'Rally · 2', 'Garrison · 1']);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    http.verify();
+  });
 });
 
 describe('KvkPage', () => {

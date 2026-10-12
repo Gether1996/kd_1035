@@ -299,6 +299,8 @@ export const sk = {
     loadError: 'Hráčov sa nepodarilo načítať.',
     failed: 'Zmenu sa nepodarilo uložiť. Skús to znova.',
   },
+  // the commander filter of /marche and the KvK sign-ups (shared/commander-filter.ts)
+  marchFilters: { commander: 'Commander', any: 'Všetci commanderi' },
   playersMarches: {
     eyebrow: 'Hráči',
     title: 'Marche hráčov',

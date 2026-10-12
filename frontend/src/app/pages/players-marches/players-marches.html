@@ -61,6 +61,14 @@
           }
         </select>
       </div>
+      <!-- "who has Attila?" – together with the type it is one march: a cavalry march with Attila -->
+      <app-commander-filter
+        class="bar__select"
+        selectId="marches-commander"
+        [options]="commanders()"
+        [value]="commander()"
+        (valueChange)="setCommander($event)"
+      />
       @if (shown().length) {
         <button type="button" class="pill-btn pill-btn--quiet" (click)="toggleAll()">
           <svg appIcon="chevron-down" [class.is-up]="allOpen()"></svg>{{ allOpen() ? p.collapseAll : p.expandAll }}

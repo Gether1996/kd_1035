@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
 import { Auth } from '../../core/auth';
 import { Scroll } from '../../core/scroll';
@@ -130,6 +130,100 @@ describe('PlayersMarches', () => {
 
     // two tabs: the players' marches and the player's own ("Moje marche" merged into the overview)
     expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Marche hráčov', 'Prehľad marchov']);
+    http.match(() => true).forEach((r) => r.flush({}));
+  });
+
+  it('filters by commander – with the type it is one march – opens the matches once and keeps ?cmd= in the address', async () => {
+    const http = setup({ name: 'Nelly', approved: true });
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?cmd=Attila');
+    const fixture = TestBed.createComponent(PlayersMarches);
+    // the router gives the page ?cmd= as an input
+    fixture.componentRef.setInput('cmd', 'Attila');
+    fixture.detectChanges();
+    const march = (id: number, kind: string, primary: string, secondary: string) => ({ ...MARCH, id, position: id, kind, primary, secondary });
+    const player = (id: number, name: string, updated_at: string, marches: object[]) =>
+      ({ id, name, ingame_name: '', avatar_url: '', public: true, approved: true, me: false, marches, updated_at });
+    http.expectOne('/api/marches/').flush({
+      reviewer: false,
+      players: [
+        player(1, 'nelly', '2026-10-10T12:00:00Z', [march(1, 'cavalry', 'Attila', 'Takeda Shingen'), march(2, 'archer', 'Yi Seong-Gye', 'Kusunoki Masashige')]),
+        player(2, 'bob', '2026-10-12T12:00:00Z', [march(3, 'cavalry', 'Attila', 'Takeda Shingen')]),
+        // Attila only as the secondary of an archer march, the cavalry march without him
+        player(3, 'cara', '2026-10-11T12:00:00Z', [march(4, 'archer', 'Yi Seong-Gye', 'Attila'), march(5, 'cavalry', 'Cao Cao', 'Minamoto no Yoshitsune')]),
+        player(4, 'dan', '2026-10-09T12:00:00Z', [march(6, 'infantry', 'Gorgo', 'Constantine I')]),
+      ],
+    });
+    http.match('/api/commanders/marches/').forEach((r) => r.flush([]));
+    await tick(fixture);
+    await tick(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const names = () => Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent);
+    const opened = () => Array.from(el.querySelectorAll('.player.is-open .player__name'), (n) => n.textContent);
+    const select = el.querySelector<HTMLSelectElement>('#marches-commander')!;
+    // the commanders of the loaded marches only, the one from the address chosen
+    expect([...select.options].map((o) => o.textContent)).toEqual([
+      'Všetci commanderi',
+      'Attila',
+      'Cao Cao',
+      'Constantine I',
+      'Gorgo',
+      'Kusunoki Masashige',
+      'Minamoto no Yoshitsune',
+      'Takeda Shingen',
+      'Yi Seong-Gye',
+    ]);
+    expect(select.value).toBe('Attila');
+    // primary or secondary; the matching players open
+    expect(names()).toEqual(['bob', 'cara', 'nelly']);
+    expect(opened()).toEqual(['bob', 'cara', 'nelly']);
+
+    // with the type it is one and the same march: cara's cavalry has no Attila, nelly's archers neither
+    const kind = el.querySelector<HTMLSelectElement>('#marches-kind')!;
+    kind.value = 'cavalry';
+    kind.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    expect(names()).toEqual(['bob', 'nelly']);
+    kind.value = 'archer';
+    kind.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    expect(names()).toEqual(['cara']);
+    kind.value = '';
+    kind.dispatchEvent(new Event('change'));
+    await tick(fixture);
+
+    // a card closed by hand stays closed – the filter opened the matches only once
+    el.querySelector<HTMLButtonElement>('.player__head')!.click();
+    await tick(fixture);
+    expect(opened()).toEqual(['cara', 'nelly']);
+    kind.value = 'cavalry';
+    kind.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    expect(opened()).toEqual(['nelly']);
+    kind.value = '';
+    kind.dispatchEvent(new Event('change'));
+
+    // another commander: in the address, its players open
+    select.value = 'Gorgo';
+    select.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    await tick(fixture);
+    expect(names()).toEqual(['dan']);
+    expect(opened()).toEqual(['dan']);
+    expect(router.url).toBe('/?cmd=Gorgo');
+    // the tabs and the commander keep each other in the address
+    el.querySelectorAll<HTMLButtonElement>('.tabs button')[1].click();
+    await tick(fixture);
+    expect(router.url).toBe('/?cmd=Gorgo&tab=prehlad');
+    el.querySelectorAll<HTMLButtonElement>('.tabs button')[0].click();
+    await tick(fixture);
+    expect(router.url).toBe('/?cmd=Gorgo');
+    // cleared: gone from the address, everyone again
+    select.value = '';
+    select.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    expect(router.url).toBe('/');
+    expect(names()).toEqual(['bob', 'cara', 'nelly', 'dan']);
     http.match(() => true).forEach((r) => r.flush({}));
   });
 

@@ -26,6 +26,13 @@
       </button>
     }
   </div>
+  <app-commander-filter
+    class="list__commander"
+    selectId="kvk-commander"
+    [options]="commanders()"
+    [value]="commander()"
+    (valueChange)="commander.set($event); armed.set(null)"
+  />
   </div>
 
   @if (data().error()) {
