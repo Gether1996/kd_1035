@@ -7,7 +7,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 ## Automatizácia agentmi
 - **Kolá agentov `kd-improve` sa už nespúšťajú** (Gether 10. 10. 2026: po 6. kole je web viac-menej hotový, ďalej pracujeme klasicky v konverzácii). Mesačná aktualizácia návodov (`kd-meta-update`) beží ďalej. História kôl: `docs/agenti.md`, `.claude/kd-agents.json`; čo je hotové a čo čaká: `docs/backlog.md`, odporúčania pre Gethera: `docs/odporucania.md`.
 - Keď Gether povie „pokračuj“ (aj na inom PC), prečítaj `docs/backlog.md` a `docs/odporucania.md`.
-- Opakované postupy sú skilly v `.claude/skills/` – `kd-verify` (testy + screenshoty), `kd-event-data` (zmena eventov), `kd-release` (nová verzia), `kd-review-branch` (vetva spolupracovníka); použi ich namiesto vymýšľania vlastných skriptov.
+- Opakované postupy sú skilly v `.claude/skills/` – `kd-verify` (testy + screenshoty), `kd-event-data` (zmena eventov), `kd-release` (nová verzia), `kd-review-branch` (vetva spolupracovníka), `kd-plan-feature` (návrh funkcie), `kd-fix-bug` (oprava chyby), `kd-migration` (migrácie), `kd-write-tests` (testy k existujúcemu kódu), `kd-done` (kontrola pred pushom), `kd-doc-budget` (veľkosť .md), `kd-docs-drift` (dokumentácia vs. kód); agenti `kd-smoke-test` (skúška na dev stacku) a `kd-docs-lookup` (dokumentácia knižníc). Použi ich namiesto vymýšľania vlastných skriptov. Prehľad pre vývojárov: `.claude/README.md`.
 
 ## Komunikácia
 - S používateľom (Gether) komunikuj po slovensky.
@@ -82,10 +82,10 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Stav workera** (9. 10. 2026): worker každý tik prepíše `/app/data/worker_status.json` (`WORKER_STATUS_PATH`, posledný tik + posledná záloha; atomicky, chyba zápisu worker nezastaví). Je to súbor, nie riadok v DB, aby sa snapshot v gite nemenil každých 30 s – do `export_snapshot` nikdy nepatrí. Číta ho panel **Prehľad** na úvode adminu (detail `docs/eventy.md`). Worker musí mať `/app/data` z toho istého volume ako backend (produkcia `db_data`, dev `backend_data`).
 - **Logy bez IP:** nginx v kontajneri `web` píše prístupový log vo formáte `kd_noip` (bez `$remote_addr`, v oboch `server` blokoch) a `log_not_found off`; gunicorn vidí iba adresu kontajnera `web`. Každá služba v oboch compose súboroch má `logging: *logging` (json-file, 3 × 10 MB). HTTPS proxy na serveri (Caddy) nesmie mať zapnutý prístupový log (`log`) – stránka Ochrana údajov sľubuje, že IP neukladáme. Nová služba v compose = aj `logging: *logging`.
 - Ručne: `docker compose exec -u app worker python manage.py backup_db` / `restore_db <súbor>` (najprv uloží živú DB ako `pre-restore_kd1035_<čas>.sqlite3.gz`, maže sa po 8 týždňoch ako zálohy; archívy záloh majú práva 0600). **Vždy s `-u app`** – ako root by vznikli súbory DB s iným vlastníkom a backend by nemohol zapisovať.
-- Migrácie nikdy needituj spätne po nasadení na server. Zatiaľ nič nie je nasadené.
+- Web beží na kd1035.eu (overené 12. 10. 2026): každá migrácia na `main` sa pri ďalšom nasadení spustí na produkčných dátach. Nikdy ju needituj spätne, opravuj novou migráciou (skill `kd-migration`).
 
 ## Synchronizácia databázy cez git (vývoj)
-- Celá dev databáza ide do gitu ako `backend/snapshot/db.sqlite3` (bez prihlasovacích session a bez hráčov z Discordu) a nahrané súbory ako `backend/media/` (v dev je to bind mount = živý MEDIA_ROOT). Repo je privátne, snapshot obsahuje aj hash hesla admina.
+- Celá dev databáza ide do gitu ako `backend/snapshot/db.sqlite3` (bez prihlasovacích session a bez hráčov z Discordu) a nahrané súbory ako `backend/media/` (v dev je to bind mount = živý MEDIA_ROOT). Repo je **verejné** (overené 12. 10. 2026; návrh vrátiť ho na privátne je v `docs/odporucania.md`) a snapshot obsahuje aj hash dev hesla admina – do gitu nikdy nič tajné.
 - Hooky v `.githooks/` (zapnúť raz na každom PC: `git config core.hooksPath .githooks`):
   - `pre-commit` → `export_snapshot` + `git add` snapshotu a `backend/media`. Ak sa dáta nezmenili, súbor ostane bajtovo rovnaký (žiadny šum v commitoch). Bez Dockera commit zlyhá; obísť: `git commit --no-verify`.
   - `post-merge` / `post-rewrite` (pull) → ak pull priniesol nový snapshot, `import_snapshot`: záloha starej DB do `./backups`, import, `migrate`, `ensure_superuser`.
