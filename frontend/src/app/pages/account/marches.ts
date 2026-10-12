@@ -132,7 +132,13 @@ export class Marches {
     if (!draft || this.busy()) return;
     const missing = armyError(draft, { kind: true, shots: [], stats: false });
     if (missing) return this.draftError.set(missing);
-    const change = { kind: draft.kind, primary: draft.primary, secondary: draft.secondary };
+    const change = {
+      kind: draft.kind,
+      primary: draft.primary,
+      secondary: draft.secondary,
+      primary_skills: draft.skills.primary,
+      secondary_skills: draft.skills.secondary,
+    };
     await this.run(async () => {
       const march = draft.id === null ? await this.api.add(change) : await this.api.update(draft.id, change);
       this.store(march);

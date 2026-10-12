@@ -29,11 +29,11 @@
         @if (tab() === 'gear') {
           <div class="be__gear">
             <div class="be__slots">
-              <app-gear-grid [gear]="draft().gear" [index]="ix" [pickable]="true" [selected]="slot()" (pick)="pickSlot($event)" />
+              <app-gear-grid [gear]="draft().gear" [index]="ix" [pickable]="true" [selected]="slot()" [critTroop]="critTroop()" [slotNames]="true" (pick)="pickSlot($event)" />
               @if (gearStats(); as g) {
                 <ul class="be__stats" [attr.aria-label]="g.title" [title]="g.title">
                   @for (s of g.values; track s.stat) {
-                    <li><span>{{ s.label }}</span> {{ s.value }}%</li>
+                    <li><span>{{ s.label }}</span> {{ bonus(s.value) }}%</li>
                   }
                 </ul>
               }
@@ -117,11 +117,10 @@
                     <input
                       class="input be__stat-input"
                       type="text"
-                      inputmode="numeric"
-                      pattern="[0-9]*"
-                      maxlength="2"
+                      inputmode="decimal"
+                      maxlength="4"
                       autocomplete="off"
-                      [value]="draft().stats[stat] ?? ''"
+                      [value]="bonus(draft().stats[stat])"
                       [placeholder]="stat === 'damage' ? '0' : ''"
                       [attr.aria-invalid]="(statsMissing() && stat !== 'damage' && draft().stats[stat] === null) || null"
                       (input)="setStat(stat, $event)"

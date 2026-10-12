@@ -32,6 +32,9 @@ COUNTED = ('gold', 'blue', 'white')
 
 class MarchSerializer(ArmySerializer):
     kind = serializers.ChoiceField(choices=March.Kind.choices, allow_blank=True, required=False)
+    # the commanders' skill levels, four digits 1–5 (5555 = expertise)
+    primary_skills = serializers.RegexField(r'^[1-5]{4}$', required=False)
+    secondary_skills = serializers.RegexField(r'^[1-5]{4}$', required=False)
     # the build clicked together (guides/armory.py), optional
     gear = serializers.JSONField(required=False)
     formation = serializers.CharField(max_length=20, allow_blank=True, required=False)

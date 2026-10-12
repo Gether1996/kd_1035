@@ -343,14 +343,26 @@ class MarchTests(KvkTestCase):
         self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage')], [12, 9, 8, 0])
         res = self.call('patch', url, {'defense': 8, 'health': 0, 'damage': 99})
         self.assertEqual([res.json()[f] for f in ('attack', 'defense', 'health', 'damage')], [12, 8, 0, 99])
+        # one decimal (Gether 12. 10. 2026)
+        res = self.call('patch', url, {'attack': 12.5, 'damage': '0.5'})
+        self.assertEqual((res.json()['attack'], res.json()['damage']), (12.5, 0.5))
+        self.assertEqual(self.call('patch', url, {'attack': 99.95}).status_code, 400)
         res = self.call('patch', url, {'formation': 'delta', 'inscriptions': ['delta-scroll-thrasher', 'delta-emblem-relentless', 'u-scroll-warcry']})
         self.assertEqual([res.json()[f] for f in ('gold', 'blue', 'white')], [1, 1, 1])
         # a change may not clear a required one (All DMG may)
         self.assertEqual(self.call('patch', url, {'health': None}).status_code, 400)
         self.assertEqual(self.call('patch', url, {'damage': None}).status_code, 200)
-        for bad in ({'attack': 100}, {'defense': -1}, {'health': 9.5}, {'attack': 'x'}):
+        for bad in ({'attack': 100}, {'defense': -1}, {'health': 9.55}, {'attack': 'x'}):
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
         self.assertEqual(self.client.get('/api/me/marches/').json()['marches'][0]['gold'], 1)
+
+    def test_commander_skills_default_to_expertise(self):
+        march = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila'}).json()
+        self.assertEqual((march['primary_skills'], march['secondary_skills']), ('5555', '5555'))
+        url = f'/api/me/marches/{march["id"]}/'
+        self.assertEqual(self.call('patch', url, {'primary_skills': '5111'}).json()['primary_skills'], '5111')
+        for bad in ('6111', '511', '51111', 'abcd', '0555'):
+            self.assertEqual(self.call('patch', url, {'secondary_skills': bad}).status_code, 400, bad)
 
     def test_typed_counts_stay_until_the_inscriptions_change(self):
         march = March.objects.create(player=self.player, position=1, kind='cavalry', primary='Attila', attack=1, defense=1, health=1, gold=1, blue=3, white=6)

@@ -73,6 +73,42 @@
   <p class="block__error" role="alert">{{ m.images[u.kind] }}: {{ i18n.t().kvk.uploadErrors[u.error] }}</p>
 }
 
+<!-- the commanders' skill levels (a march): expertise by default, else four levels 1–5 (Gether 12. 10. 2026) -->
+@if (withSkills() && (d.primary || d.secondary)) {
+  <fieldset class="block">
+    <legend class="block__label">{{ m.skills.title }}</legend>
+    <div class="skills">
+      @for (slot of slots; track slot) {
+        @if (d[slot]; as name) {
+          @let level = d.skills[slot];
+          <div class="skills__row">
+            <span class="skills__name">{{ name }}</span>
+            <label class="skills__expertise">
+              <input class="switch" type="checkbox" role="switch" [checked]="level === expertise" (change)="toggleExpertise(slot)" />
+              {{ m.skills.expertise }}
+            </label>
+            @if (level !== expertise) {
+              <span class="skills__levels">
+                @for (i of skillIndexes; track i) {
+                  <select
+                    class="select skills__level"
+                    [attr.aria-label]="name + ': ' + m.skills.skill.replace('{n}', '' + (i + 1))"
+                    (change)="setSkill(slot, i, $event)"
+                  >
+                    @for (n of skillLevels; track n) {
+                      <option [value]="n" [selected]="level[i] === n">{{ n }}</option>
+                    }
+                  </select>
+                }
+              </span>
+            }
+          </div>
+        }
+      }
+    </div>
+  </fieldset>
+}
+
 <!-- armament bonuses of the march's troop type and inscriptions: whole numbers, at most two digits -->
 @if (withStats()) {
   <fieldset class="block">
@@ -85,13 +121,12 @@
             <input
               class="stat-field__input"
               type="text"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              maxlength="2"
+              inputmode="decimal"
+              maxlength="4"
               autocomplete="off"
-              [value]="d.stats[stat] ?? ''"
+              [value]="bonus(d.stats[stat])"
               [placeholder]="stat === 'damage' && damageDefaultsToZero() ? '0' : ''"
-              (input)="setStat(stat, $event)"
+              (input)="setBonus(stat, $event)"
             />
             <span class="stat-field__unit" aria-hidden="true">%</span>
           </span>

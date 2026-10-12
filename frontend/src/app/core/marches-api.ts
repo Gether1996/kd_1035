@@ -6,7 +6,9 @@ import { Build } from './armory';
 import { March, MarchKind, MarchStat } from './kvk-api';
 
 export type MarchChange = Partial<
-  { kind: MarchKind | ''; primary: string; secondary: string } & Record<MarchStat, number | null> & Build
+  { kind: MarchKind | ''; primary: string; secondary: string; primary_skills: string; secondary_skills: string } &
+    Record<MarchStat, number | null> &
+    Build
 >;
 
 /** /api/commanders/marches/ – every commander a march may name (backend/guides/roster.py) */

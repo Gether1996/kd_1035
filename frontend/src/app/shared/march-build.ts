@@ -3,6 +3,7 @@ import {
   ArmoryApi,
   GearSlot,
   INSCRIPTION_RARITIES,
+  marchTroop,
   Inscription,
   TROOP_STATS,
   buildOf,
@@ -14,8 +15,9 @@ import { I18n } from '../core/i18n/i18n';
 import { ARMAMENT_STATS, INSCRIPTIONS, March, REQUIRED_STATS, marchIcon } from '../core/kvk-api';
 import { FormationIcon } from './formation-icon';
 import { GearGrid } from './gear-grid';
+import { Icon } from './icon';
 import { SetBonuses } from './set-bonuses';
-import { statLabel } from './stat-label';
+import { formatBonus, statLabel } from './stat-label';
 
 let nextId = 0;
 
@@ -28,7 +30,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-march-build',
-  imports: [FormationIcon, GearGrid, SetBonuses],
+  imports: [FormationIcon, GearGrid, Icon, SetBonuses],
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +56,7 @@ export class MarchBuild {
   protected readonly index = this.armory.index;
   protected readonly failed = this.armory.failed;
   protected readonly icon = marchIcon;
+  protected readonly bonus = formatBonus;
 
   protected readonly build = computed(() => buildOf(this.march()));
   protected readonly empty = computed(() => {
@@ -61,9 +64,16 @@ export class MarchBuild {
     return !Object.keys(b.gear).length && !b.formation && !b.inscriptions.length;
   });
 
-  protected readonly commanders = computed(() =>
-    [this.march().primary, this.march().secondary].filter(Boolean).map((name) => ({ name, src: this.portraits().get(name) })),
-  );
+  /** the commanders with their portraits and skill levels (5555 = expertise) */
+  protected readonly commanders = computed(() => {
+    const m = this.march();
+    return [
+      { name: m.primary, skills: m.primary_skills ?? '' },
+      { name: m.secondary, skills: m.secondary_skills ?? '' },
+    ]
+      .filter((c) => c.name)
+      .map((c) => ({ ...c, src: this.portraits().get(c.name) }));
+  });
 
   private readonly totals = computed(() => {
     const index = this.index();
@@ -80,6 +90,9 @@ export class MarchBuild {
     const shown = values.filter((s) => s.value > 0);
     return shown.length ? { title: b.gearStats.replace('{troop}', b.troops[troop]), values: shown } : null;
   });
+
+  /** the crit badge of every item: the march's troops */
+  protected readonly critTroop = computed(() => marchTroop(this.march().kind, this.totals()?.stats ?? {}));
 
   /** the sets worn – their bonuses reached are written under the equipment */
   protected readonly worn = computed(() => this.totals()?.sets ?? []);

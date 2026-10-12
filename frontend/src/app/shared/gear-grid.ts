@@ -1,14 +1,14 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { ArmoryIndex, GEAR_SLOTS, Gear, GearSlot, itemTroop, roman } from '../core/armory';
+import { ArmoryIndex, GEAR_SLOTS, Gear, GearSlot, ItemTroop, roman } from '../core/armory';
 import { I18n } from '../core/i18n/i18n';
 
 /**
  * The eight equipment slots of a march laid out like the equipment screen of the game (Gether 12. 10. 2026: "rozmiestnenie
  * ako v hre"): diamonds in a column – helmet, chest, weapon and gloves either side, legs, the two accessories either side,
- * boots. The frame takes the item's rarity colour, a crit is a red badge with the talent mark on the item's lower right,
- * the iconic level a numeral in an ornament on the bottom tip. Read-only on the card; `pickable` makes every diamond a
- * button choosing the slot (the editor, the own march's card).
+ * boots. The frame takes the item's rarity colour, a crit is the small tag of the march's troops on the item's lower
+ * right, the iconic level a numeral in a small winged diamond on the bottom tip – like in the game. Read-only on the
+ * card; `pickable` makes every diamond a button choosing the slot (the editor, the own march's card).
  */
 @Component({
   selector: 'app-gear-grid',
@@ -56,7 +56,9 @@ import { I18n } from '../core/i18n/i18n';
           <img class="gear__crit" [src]="tile.troopIcon" alt="" width="96" height="96" />
         }
       } @else {
+        @if (slotNames()) {
         <span class="gear__slot" aria-hidden="true">{{ tile.slotName }}</span>
+      }
       }
     </ng-template>
   `,
@@ -69,6 +71,10 @@ export class GearGrid {
   readonly index = input.required<ArmoryIndex>();
   readonly pickable = input(false);
   readonly selected = input<GearSlot | null>(null);
+  /** the crit badge of every item: the march's troops (marchTroop; Gether 12. 10. 2026) */
+  readonly critTroop = input<ItemTroop>('leadership');
+  /** the names of the empty slots (the editor); the card stays without text */
+  readonly slotNames = input(false);
   readonly pick = output<GearSlot>();
 
   private readonly i18n = inject(I18n);
@@ -85,7 +91,7 @@ export class GearGrid {
             .filter(Boolean)
             .join(', ')
         : `${b.slots[slot]}: ${b.emptySlot}`;
-      const troopIcon = item ? `/static/guides/specialties/${itemTroop(item)}.webp` : '';
+      const troopIcon = `/static/guides/specialties/${this.critTroop()}.webp`;
       return { slot, slotName: b.slots[slot], item, crit: !!(item && piece?.crit), troopIcon, iconic, label };
     });
   });

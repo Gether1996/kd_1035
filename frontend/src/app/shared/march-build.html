@@ -20,7 +20,15 @@
   </span>
   <span class="mb__names">
     @for (c of commanders(); track $index) {
-      <span [class.mb__primary]="!$index" [class.mb__secondary]="$index">{{ c.name }}</span>
+      <span [class.mb__primary]="!$index" [class.mb__secondary]="$index">
+        {{ c.name }}
+        <!-- expertise (5555) is a small crown, other skill levels their digits (5111) -->
+        @if (c.skills === '5555') {
+          <span class="mb__expertise" role="img" [attr.aria-label]="k.skills.expertise" [title]="k.skills.expertise"><svg appIcon="crown"></svg></span>
+        } @else if (c.skills) {
+          <span class="mb__skills" [title]="k.skills.title">{{ c.skills }}</span>
+        }
+      </span>
     } @empty {
       <span class="mb__secondary">–</span>
     }
@@ -28,18 +36,17 @@
   <span class="mb__actions"><ng-content /></span>
 </header>
 
-<!-- one small heading per column tells the bonuses of the equipment from those of the armaments -->
+<!-- no headings (Gether 12. 10. 2026: "čo najmenej textu") – the equipment's bonuses under its diamonds, the armaments' under the inscriptions -->
 <div class="mb__body">
   @if (own() || !empty()) {
-    <section class="mb__part" [attr.aria-labelledby]="id + '-gear'">
-      <h3 class="mb__label" [id]="id + '-gear'">{{ b.gear }}</h3>
+    <section class="mb__part mb__part--gear" [attr.aria-label]="b.gear">
       @if (index(); as ix) {
         <!-- the own march: a tile opens the editor on its slot -->
-        <app-gear-grid [gear]="build().gear" [index]="ix" [pickable]="own()" (pick)="slotPick.emit($event)" />
+        <app-gear-grid [gear]="build().gear" [index]="ix" [pickable]="own()" [critTroop]="critTroop()" (pick)="slotPick.emit($event)" />
         @if (gearStats(); as g) {
           <ul class="mb__stats" [attr.aria-label]="g.title" [title]="g.title">
             @for (s of g.values; track s.stat) {
-              <li><span class="mb__stat-label">{{ s.label }}</span> {{ s.value }}%</li>
+              <li><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
             }
           </ul>
         }
@@ -53,8 +60,7 @@
   }
 
   <!-- the formation as its icon, the inscriptions gold first – no armament names (Gether 12. 10. 2026: "čo najmenej textu") -->
-  <section class="mb__part" [attr.aria-labelledby]="id + '-arm'">
-    <h3 class="mb__label" [id]="id + '-arm'">{{ b.armaments }}</h3>
+  <section class="mb__part" [attr.aria-label]="b.armaments">
     @if (formation() || inscriptions().length) {
       <div class="mb__arm">
         @if (formation(); as f) {
@@ -78,7 +84,7 @@
     } @else if (armamentStats().length || counts().length) {
       <ul class="mb__stats" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
         @for (s of armamentStats(); track s.key) {
-          <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ s.value }}%</li>
+          <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
         }
         @if (counts().length) {
           <!-- the dots stay together on one line -->

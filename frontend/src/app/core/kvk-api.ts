@@ -99,6 +99,9 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   /** commander names (backend guides/roster.py), '' = not chosen; the stats are null when not filled in */
   primary: string;
   secondary: string;
+  /** the commanders' skill levels, four digits 1–5 (5555 = expertise) – a march only */
+  primary_skills?: string;
+  secondary_skills?: string;
   /** screenshots: only the army of a KvK sign-up shown as a march row – a march has none since 12. 10. 2026 */
   images?: MarchImage[];
   /** the build clicked together on /marche (core/armory.ts); missing in an older response */

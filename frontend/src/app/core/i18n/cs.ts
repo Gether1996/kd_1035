@@ -318,6 +318,8 @@ export const cs: Dict = {
     },
     slots: { primary: 'Primární commander', secondary: 'Sekundární commander' },
     slotsShort: { primary: 'Primární', secondary: 'Sekundární' },
+    // the commanders' skill levels of a march: expertise = 5555 (game term)
+    skills: { title: 'Skilly commanderů', expertise: 'Expertise', skill: 'Skill {n}' },
     troops: { infantry: 'Inf', cavalry: 'Cav', archer: 'Arch', engineering: 'Siege' },
     stats: {
       title: 'Bonusy armamentů',
@@ -325,7 +327,7 @@ export const cs: Dict = {
       defense: 'DEF',
       health: 'HP',
       damage: 'All DMG',
-      hint: 'V %, celá čísla – zaokrouhli nahoru (9,5 → 10).',
+      hint: 'V %, nejvýše jedno desetinné místo (např. 12,5).',
     },
     inscriptions: { title: 'Inscriptions', white: 'Bílé', blue: 'Modré', gold: 'Zlaté' },
     statsMissing: 'Bonusy armamentů nevyplněné',
@@ -774,7 +776,7 @@ export const cs: Dict = {
         text: 'Pokud je vyplníš, ukládáme:',
         list: [
           'Přihlášky na KvK – roli (rally, garrison), typ jednotek, commandery, bonusy armamentů, počet inscriptions, poznámku a screenshoty výbavy a armamentů.',
-          'Marche na stránce Marche – typ, commandery, bonusy armamentů a naklikanou výbavu, formaci a inscriptions.',
+          'Marche na stránce Marche – typ, commandery a jejich skilly, bonusy armamentů a naklikanou výbavu, formaci a inscriptions.',
           'Screenshoty uložíme jako nový obrázek bez údajů z telefonu (poloha, model apod.). Nejsou veřejné – zobrazí je jen web těm, kdo je smějí vidět.',
         ],
       },

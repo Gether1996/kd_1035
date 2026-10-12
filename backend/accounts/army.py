@@ -4,21 +4,28 @@ from rest_framework import serializers
 
 from guides.roster import march_commanders
 
-from .models import STAT_MAX
+from .models import BONUS_MAX, STAT_MAX
 
 
 def stat_field():
-    """Whole percent rounded up, or a number of inscriptions: two digits at most; null = not filled in."""
+    """A number of inscriptions: two digits at most; null = not filled in."""
     return serializers.IntegerField(min_value=0, max_value=STAT_MAX, allow_null=True, required=False)
+
+
+def bonus_field():
+    """An armament bonus in percent with one decimal at most (12.5); null = not filled in."""
+    return serializers.DecimalField(
+        max_digits=3, decimal_places=1, min_value=0, max_value=BONUS_MAX, allow_null=True, required=False, coerce_to_string=False
+    )
 
 
 class ArmySerializer(serializers.Serializer):
     primary = serializers.CharField(max_length=40, allow_blank=True, required=False)
     secondary = serializers.CharField(max_length=40, allow_blank=True, required=False)
-    attack = stat_field()
-    defense = stat_field()
-    health = stat_field()
-    damage = stat_field()
+    attack = bonus_field()
+    defense = bonus_field()
+    health = bonus_field()
+    damage = bonus_field()
     white = stat_field()
     blue = stat_field()
     gold = stat_field()

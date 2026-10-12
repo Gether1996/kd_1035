@@ -48,7 +48,7 @@
     <ul class="mrow__stats" [attr.aria-label]="k.stats.title">
       @for (s of stats(); track s.key) {
         <li class="mrow__stat" [title]="s.full">
-          <span class="mrow__stat-label" aria-hidden="true">{{ s.label }}</span><span class="sr-only">{{ s.full }}</span> {{ s.value }}%
+          <span class="mrow__stat-label" aria-hidden="true">{{ s.label }}</span><span class="sr-only">{{ s.full }}</span> {{ bonus(s.value) }}%
         </li>
       }
       @for (i of inscriptions(); track i.key) {

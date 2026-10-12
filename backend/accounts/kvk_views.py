@@ -6,6 +6,7 @@ sign-up with the player's marches. Session + CSRF like the rest of the player AP
 """
 
 import logging
+from decimal import Decimal
 
 from django.db import transaction
 from django.http import Http404
@@ -69,8 +70,10 @@ def image_data(image, base: str) -> dict:
 
 
 def army_data(army) -> dict:
-    """The commander pair and the armament bonuses of a march or a sign-up (ArmyFields)."""
-    return {'primary': army.primary, 'secondary': army.secondary, **{field: getattr(army, field) for field in MARCH_STATS}}
+    """The commander pair, the armament bonuses (numbers with one decimal) and inscription counts (ArmyFields)."""
+    values = {field: getattr(army, field) for field in MARCH_STATS}
+    values = {field: float(value) if isinstance(value, Decimal) else value for field, value in values.items()}
+    return {'primary': army.primary, 'secondary': army.secondary, **values}
 
 
 def march_data(march: March) -> dict:
@@ -78,6 +81,8 @@ def march_data(march: March) -> dict:
         'id': march.pk,
         'position': march.position,
         'kind': march.kind,
+        'primary_skills': march.primary_skills,
+        'secondary_skills': march.secondary_skills,
         **army_data(march),
         'gear': march.gear,
         'formation': march.formation,

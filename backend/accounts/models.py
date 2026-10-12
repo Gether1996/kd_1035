@@ -1,6 +1,8 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models, transaction
 from django.utils import timezone
 
@@ -202,9 +204,21 @@ class KvkSettings(models.Model):
         return cls.objects.get_or_create(pk=1)[0]
 
 
-# armament bonuses and inscription counts: at most two digits
+# inscription counts: at most two digits
 STAT_MAX = 99
 STAT_LIMIT = [MaxValueValidator(STAT_MAX)]
+# armament bonuses in percent with one decimal (Gether 12. 10. 2026: "povoľme aj desatinné čísla")
+BONUS_MAX = Decimal('99.9')
+BONUS_LIMIT = [MinValueValidator(0), MaxValueValidator(BONUS_MAX)]
+
+
+def bonus_field(label):
+    return models.DecimalField(label, max_digits=3, decimal_places=1, null=True, blank=True, validators=BONUS_LIMIT)
+
+
+# the commander's skill levels: four digits 1–5, 5555 = expertise (Gether 12. 10. 2026)
+EXPERTISE = '5555'
+SKILLS_LIMIT = [RegexValidator(r'^[1-5]{4}$')]
 MARCH_STATS = ('attack', 'defense', 'health', 'damage', 'white', 'blue', 'gold')
 
 
@@ -216,10 +230,10 @@ class ArmyFields(models.Model):
 
     primary = models.CharField('primárny commander', max_length=40, blank=True)
     secondary = models.CharField('sekundárny commander', max_length=40, blank=True)
-    attack = models.PositiveSmallIntegerField('ATK %', null=True, blank=True, validators=STAT_LIMIT)
-    defense = models.PositiveSmallIntegerField('DEF %', null=True, blank=True, validators=STAT_LIMIT)
-    health = models.PositiveSmallIntegerField('HP %', null=True, blank=True, validators=STAT_LIMIT)
-    damage = models.PositiveSmallIntegerField('All DMG %', null=True, blank=True, validators=STAT_LIMIT)
+    attack = bonus_field('ATK %')
+    defense = bonus_field('DEF %')
+    health = bonus_field('HP %')
+    damage = bonus_field('All DMG %')
     white = models.PositiveSmallIntegerField('biele inscriptions', null=True, blank=True, validators=STAT_LIMIT)
     blue = models.PositiveSmallIntegerField('modré inscriptions', null=True, blank=True, validators=STAT_LIMIT)
     gold = models.PositiveSmallIntegerField('zlaté inscriptions', null=True, blank=True, validators=STAT_LIMIT)
@@ -313,6 +327,9 @@ class March(ArmyFields):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='marches', verbose_name='hráč')
     position = models.PositiveSmallIntegerField('poradie', default=1)
     kind = models.CharField('typ', max_length=12, choices=Kind.choices, blank=True)
+    # skill levels of the commanders, 5555 = expertise (the default)
+    primary_skills = models.CharField('skilly primárneho', max_length=4, default=EXPERTISE, validators=SKILLS_LIMIT)
+    secondary_skills = models.CharField('skilly sekundárneho', max_length=4, default=EXPERTISE, validators=SKILLS_LIMIT)
     # the build clicked together on /marche (Gether 12. 10. 2026; guides/armory.py): slot → {item, crit, iconic}, the
     # formation and the ids of its inscriptions – optional, next to the screenshot
     gear = models.JSONField('výbava', default=dict, blank=True)

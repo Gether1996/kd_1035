@@ -203,19 +203,22 @@ export function reachedSets(sets: ActiveSet[]): { id: string; name: string; coun
     }));
 }
 
-/** the in-game tag of the troops an item is made for (its badge when crafted with a crit) */
+/** the in-game tag of a march's troops – the crit badge of its items */
 export type ItemTroop = 'infantry' | 'cavalry' | 'archer' | 'engineering' | 'leadership';
 
-/** whose stats the item raises most: infantry, cavalry, archers, siege – or every troop type (leadership tag) */
-export function itemTroop(item: ArmoryItem): ItemTroop {
-  const sums: Record<string, number> = {};
-  for (const [key, value] of Object.entries(item.stats)) {
-    const troop = key.split('_')[0];
-    sums[troop] = (sums[troop] ?? 0) + value;
+/**
+ * The crit badge of the march's items: the tag of its troops (Gether 12. 10. 2026: "krity podľa typu marchu"); a rally
+ * or garrison the troops its equipment raises most, a leadership march its own tag.
+ */
+export function marchTroop(kind: MarchKind | '', stats: Record<string, number>): ItemTroop {
+  if (kind === 'infantry' || kind === 'cavalry' || kind === 'archer' || kind === 'engineering' || kind === 'leadership') {
+    return kind;
   }
-  const best = (['infantry', 'cavalry', 'archer', 'siege'] as const).reduce<string | null>(
-    (top, troop) => ((sums[troop] ?? 0) > (top ? sums[top] : 0) ? troop : top),
-    null,
-  );
-  return best === 'siege' ? 'engineering' : ((best as ItemTroop | null) ?? 'leadership');
+  const troop = troopOf(kind, stats);
+  return troop === 'siege' ? 'engineering' : troop;
+}
+
+/** how much an item gives one troop type: its ATK, DEF and HP for it (with the troop_* ones) – the picker's order */
+export function itemScore(item: ArmoryItem, troop: Troop): number {
+  return troopStat(item.stats, troop, 'attack') + troopStat(item.stats, troop, 'defense') + troopStat(item.stats, troop, 'health');
 }

@@ -1,5 +1,5 @@
 import { ARMORY } from './armory-testing';
-import { armoryIndex, gearTotals, hasBuild, itemTroop, reachedSets, troopOf, troopStat } from './armory';
+import { armoryIndex, gearTotals, hasBuild, reachedSets, troopOf, troopStat } from './armory';
 
 describe('armory', () => {
   const index = armoryIndex(ARMORY);
@@ -31,17 +31,23 @@ describe('armory', () => {
     expect(troopOf('', {})).toBe('infantry');
   });
 
-  it('tags an item with the troops it is made for – its crit badge', () => {
-    const item = (id: string) => ARMORY.items.find((i) => i.id === id)!;
-    expect(itemTroop(item('sacred-dominion'))).toBe('cavalry');
-    // only troop_* stats: every troop type
-    expect(itemTroop(item('wasteland-boots'))).toBe('leadership');
-    expect(itemTroop({ ...item('heavy-armor'), stats: { siege_attack: 5 } })).toBe('engineering');
-  });
-
   it('knows a march with a build', () => {
     expect(hasBuild({})).toBe(false);
     expect(hasBuild({ gear: {}, formation: '', inscriptions: [] })).toBe(false);
     expect(hasBuild({ formation: 'delta' })).toBe(true);
+  });
+});
+
+describe('march troops', () => {
+  it('gives every crit the badge of the march type and orders the picker by what an item gives', async () => {
+    const { marchTroop, itemScore } = await import('./armory');
+    expect(marchTroop('cavalry', {})).toBe('cavalry');
+    expect(marchTroop('engineering', {})).toBe('engineering');
+    expect(marchTroop('leadership', {})).toBe('leadership');
+    // a rally: the troops its equipment raises most
+    expect(marchTroop('conquering', { archer_attack: 20 })).toBe('archer');
+    const dominion = ARMORY.items.find((i) => i.id === 'sacred-dominion')!;
+    expect(itemScore(dominion, 'cavalry')).toBe(25);
+    expect(itemScore(dominion, 'infantry')).toBe(0);
   });
 });

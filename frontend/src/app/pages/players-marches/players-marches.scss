@@ -15,6 +15,12 @@
   }
 }
 
+// the march cards fill the screen: as many columns as fit, up to 5 on an ultrawide monitor (Gether 12. 10. 2026)
+.content.is-marches {
+  width: min(100% - 2 * var(--gutter), 2900px);
+  max-width: none;
+}
+
 // the player's own marches: cards as wide as the players' ones
 .mine {
   display: block;
@@ -183,6 +189,10 @@
   margin: 0;
   padding: 0 16px 16px;
   list-style: none;
+
+  // as many march cards side by side as fit (one on a phone), like the own ones
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 540px), 1fr));
+  align-items: start;
 }
 
 .bar .pill-btn .icon {

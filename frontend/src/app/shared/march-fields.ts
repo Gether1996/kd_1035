@@ -25,12 +25,16 @@ import {
 } from '../core/kvk-api';
 import { MarchCommander } from '../core/marches-api';
 import { Icon } from './icon';
-import { statLabel } from './stat-label';
+import { formatBonus, readBonus, statLabel } from './stat-label';
 import { fold } from './search';
 
 export type ShotKind = 'equipment' | 'armaments';
 export const SHOT_KINDS: ShotKind[] = ['equipment', 'armaments'];
 type Slot = 'primary' | 'secondary';
+/** all four skills at level 5 */
+export const EXPERTISE = '5555';
+/** a commander who is not expertise starts at 5111 (Gether 12. 10. 2026) */
+const NOT_EXPERTISE = '5111';
 
 /** a screenshot already on the server (KvkImage – a march has no screenshot since 12. 10. 2026) */
 export interface SavedShot {
@@ -55,6 +59,8 @@ export interface ArmyDraft {
   secondary: string;
   /** armament bonuses and inscriptions, null = empty field */
   stats: Record<MarchStat, number | null>;
+  /** the commanders' skill levels, four digits 1–5 (5555 = expertise, the default) */
+  skills: Record<Slot, string>;
   keep: Partial<Record<ShotKind, SavedShot>>;
   chosen: Partial<Record<ShotKind, ChosenShot>>;
   /** saved screenshots the player removed – deleted when the page saves */
@@ -84,6 +90,8 @@ export function armyDraft(
     primary?: string;
     secondary?: string;
     images?: { id: number; kind: string; thumb: string }[];
+    primary_skills?: string;
+    secondary_skills?: string;
   } | null,
 ): ArmyDraft {
   const stats = Object.fromEntries(MARCH_STATS.map((stat) => [stat, source?.[stat] ?? null])) as ArmyDraft['stats'];
@@ -97,6 +105,7 @@ export function armyDraft(
     primary: source?.primary ?? '',
     secondary: source?.secondary ?? '',
     stats,
+    skills: { primary: source?.primary_skills ?? EXPERTISE, secondary: source?.secondary_skills ?? EXPERTISE },
     keep,
     chosen: {},
     removed: [],
@@ -150,6 +159,8 @@ export class MarchFields {
   readonly withCounts = input(true);
   /** the armament bonuses are part of the form (a KvK sign-up); a march types them in its build editor */
   readonly withStats = input(true);
+  /** the commanders' skill levels (a march; Gether 12. 10. 2026: expertise by default, else e.g. 5111) */
+  readonly withSkills = input(false);
   /** an empty All DMG is saved as 0 – the field shows it as its placeholder */
   readonly damageDefaultsToZero = input(false);
   readonly error = input<ArmyError | null>(null);
@@ -190,13 +201,40 @@ export class MarchFields {
     return statLabel(this.t(), this.withKind() ? this.current().kind : '', stat);
   }
 
-  /** whole numbers of at most two digits; anything else typed is dropped at once (no decimals – rounded up) */
+  /** an armament bonus: one decimal at most (Gether 12. 10. 2026), anything else typed is dropped at once */
+  protected setBonus(stat: MarchStat, event: Event): void {
+    this.patch({ stats: { ...this.current().stats, [stat]: readBonus(event.target as HTMLInputElement) } });
+  }
+
+  protected readonly bonus = formatBonus;
+
+  /** an inscription count: a whole number of at most two digits; anything else typed is dropped at once */
   protected setStat(stat: MarchStat, event: Event): void {
     const input = event.target as HTMLInputElement;
     const digits = input.value.replace(/\D/g, '').slice(0, 2);
     if (input.value !== digits) input.value = digits;
     const value = digits === '' ? null : Math.min(Number(digits), STAT_MAX);
     this.patch({ stats: { ...this.current().stats, [stat]: value } });
+  }
+
+  // ---------------------------------------------------------------- commander skills
+
+  protected readonly skillIndexes = [0, 1, 2, 3];
+  protected readonly skillLevels = ['1', '2', '3', '4', '5'];
+  protected readonly expertise = EXPERTISE;
+
+  /** expertise on = 5555, off = 5111 to start from */
+  protected toggleExpertise(slot: Slot): void {
+    const skills = this.current().skills;
+    this.patch({ skills: { ...skills, [slot]: skills[slot] === EXPERTISE ? NOT_EXPERTISE : EXPERTISE } });
+  }
+
+  /** one skill 1–5; four fives make the commander expertise again */
+  protected setSkill(slot: Slot, index: number, event: Event): void {
+    const level = (event.target as HTMLSelectElement).value;
+    const skills = this.current().skills;
+    const next = skills[slot].slice(0, index) + level + skills[slot].slice(index + 1);
+    this.patch({ skills: { ...skills, [slot]: next } });
   }
 
   // ---------------------------------------------------------------- screenshots

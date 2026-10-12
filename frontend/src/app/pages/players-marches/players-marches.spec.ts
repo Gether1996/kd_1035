@@ -83,7 +83,7 @@ describe('PlayersMarches', () => {
     http.expectOne('/api/armory/').flush(ARMORY);
     await tick(fixture);
     expect(el.querySelector('.mb__face')?.getAttribute('src')).toBe('/static/guides/commanders/attila.webp');
-    expect(el.querySelector('.mb__primary')?.textContent).toBe('Attila');
+    expect(el.querySelector('.mb__primary')?.textContent?.trim()).toBe('Attila');
     expect(el.querySelector('.gear__icon')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
     expect(el.querySelector('.mb__formation img')?.getAttribute('alt')).toBe('Delta');
     expect(el.querySelector('.mb__inscs .insc')?.textContent?.trim()).toBe('Thrasher');

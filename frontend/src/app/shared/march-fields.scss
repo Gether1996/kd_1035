@@ -396,3 +396,45 @@ img.tile__box {
   margin: 0 auto;
   border-radius: var(--radius-sm);
 }
+
+// ---------------------------------------------------------------- commander skills (a march)
+
+.skills {
+  display: grid;
+  gap: 10px;
+}
+
+.skills__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-height: 44px;
+}
+
+.skills__name {
+  flex: 1 1 140px;
+  min-width: 0;
+  color: var(--gold-100);
+  font: 700 0.9375rem/1.25 var(--font-display);
+}
+
+.skills__expertise {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-dim);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.skills__levels {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.skills__level {
+  width: 64px;
+  min-width: 0;
+  padding: 0 26px 0 14px;
+}

@@ -2,7 +2,7 @@
 
 <app-page-header [crumbs]="crumbs()" [eyebrow]="p.eyebrow" [title]="p.title" [intro]="p.intro" />
 
-<div class="container content is-wide">
+<div class="container content is-wide is-marches">
   @if (!auth.ready()) {
     <div class="placeholder" aria-hidden="true"></div>
   } @else if (auth.failed()) {

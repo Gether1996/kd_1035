@@ -47,6 +47,11 @@
   margin: 18px 0 0;
   padding: 0;
   list-style: none;
+
+  // the cards are tall (the equipment like in the game): as many side by side as fit – one on a phone, two on a laptop,
+  // up to five on an ultrawide monitor (Gether 12. 10. 2026)
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 540px), 1fr));
+  align-items: start;
 }
 
 .march__build .icon {
@@ -55,6 +60,7 @@
 }
 
 .march--editing {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;

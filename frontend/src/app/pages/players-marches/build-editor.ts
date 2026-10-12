@@ -13,20 +13,22 @@ import {
   TROOP_STATS,
   buildOf,
   gearTotals,
+  itemScore,
   itemSlot,
+  marchTroop,
   roman,
   troopOf,
   troopStat,
 } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
-import { ARMAMENT_STATS, March, REQUIRED_STATS, STAT_MAX } from '../../core/kvk-api';
+import { ARMAMENT_STATS, March, REQUIRED_STATS } from '../../core/kvk-api';
 import { MarchesApi } from '../../core/marches-api';
 import { FormationIcon } from '../../shared/formation-icon';
 import { GearGrid } from '../../shared/gear-grid';
 import { SetBonuses } from '../../shared/set-bonuses';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
-import { statLabel } from '../../shared/stat-label';
+import { formatBonus, readBonus, statLabel } from '../../shared/stat-label';
 
 type ArmamentStat = (typeof ARMAMENT_STATS)[number];
 /** the build and the armament bonuses typed in (null = empty field) */
@@ -74,6 +76,7 @@ export class BuildEditor {
     stats: { attack: null, defense: null, health: null, damage: null },
   });
   protected readonly armamentStats = ARMAMENT_STATS;
+  protected readonly bonus = formatBonus;
   protected readonly tab = signal<'gear' | 'armaments'>('gear');
   protected readonly slot = signal<GearSlot>('weapon');
   protected readonly search = signal('');
@@ -120,7 +123,10 @@ export class BuildEditor {
     return piece && item ? { piece, item } : null;
   });
 
-  /** the items of the selected slot: legendary and epic, the weaker ones on request; by the search (no diacritics) */
+  /**
+   * the items of the selected slot: legendary and epic, the weaker ones on request; by the search (no diacritics). The
+   * ones giving the march's troops the most come first (Gether 12. 10. 2026), then by rarity and name.
+   */
   protected readonly items = computed(() => {
     const index = this.index();
     if (!index) return [];
@@ -132,8 +138,21 @@ export class BuildEditor {
     return index.data.items
       .filter((item) => item.slot === itemSlot(slot) && item.id !== taken)
       .filter((item) => (query ? fold(item.name).includes(query) : this.weaker() || strong(item)))
-      .sort((a, b) => ITEM_RARITIES.indexOf(a.rarity) - ITEM_RARITIES.indexOf(b.rarity) || a.name.localeCompare(b.name));
+      .map((item) => ({ item, score: itemScore(item, this.troop()) }))
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          ITEM_RARITIES.indexOf(a.item.rarity) - ITEM_RARITIES.indexOf(b.item.rarity) ||
+          a.item.name.localeCompare(b.item.name),
+      )
+      .map(({ item }) => item);
   });
+
+  /** the troops of the march: its type, a rally or garrison those its equipment raises most */
+  private readonly troop = computed(() => troopOf(this.march()?.kind ?? '', this.totals()?.stats ?? {}));
+
+  /** the crit badge of every item: the march's troops */
+  protected readonly critTroop = computed(() => marchTroop(this.march()?.kind ?? '', this.totals()?.stats ?? {}));
 
   protected choose(item: ArmoryItem): void {
     const slot = this.slot();
@@ -207,12 +226,9 @@ export class BuildEditor {
     return statLabel(this.t(), this.march()?.kind ?? '', stat);
   }
 
-  /** whole numbers of at most two digits; anything else typed is dropped at once (rounded up) */
+  /** one decimal at most (Gether 12. 10. 2026); anything else typed is dropped at once */
   protected setStat(stat: ArmamentStat, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const digits = input.value.replace(/\D/g, '').slice(0, 2);
-    if (input.value !== digits) input.value = digits;
-    const value = digits === '' ? null : Math.min(Number(digits), STAT_MAX);
+    const value = readBonus(event.target as HTMLInputElement);
     this.draft.update((d) => ({ ...d, stats: { ...d.stats, [stat]: value } }));
     this.statsMissing.set(false);
     this.error.set(null);

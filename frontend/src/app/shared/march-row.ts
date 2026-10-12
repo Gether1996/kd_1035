@@ -5,7 +5,7 @@ import { Icon } from './icon';
 import { GEAR_SLOTS, hasBuild } from '../core/armory';
 import { BuildDialog } from './build-dialog';
 import { ImageViewer } from './image-viewer';
-import { statLabel } from './stat-label';
+import { formatBonus, statLabel } from './stat-label';
 
 /**
  * One march in a compact row (Gether 11. 10. 2026: "stačia len hlavy commanderov bez popisov"): number, type icon,
@@ -41,6 +41,7 @@ export class MarchRow {
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
   protected readonly icon = marchIcon;
+  protected readonly bonus = formatBonus;
 
   /** the equipment and armaments clicked together (core/armory.ts): a tile with the first item opens them */
   protected readonly build = computed(() => {

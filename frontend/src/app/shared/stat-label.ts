@@ -7,3 +7,26 @@ export function statLabel(t: Dict['marches'], kind: MarchKind | '', stat: (typeo
   const troop = kind ? troops[kind] : undefined;
   return stat === 'damage' || !troop ? t.stats[stat] : `${troop} ${t.stats[stat]}`;
 }
+
+/** the highest armament bonus: two digits and one decimal */
+export const BONUS_MAX = 99.9;
+
+/**
+ * An armament bonus as it is typed (Gether 12. 10. 2026: one decimal allowed): digits, a comma or a dot and one more
+ * digit; anything else is dropped from the field at once. null = empty.
+ */
+export function readBonus(input: HTMLInputElement): number | null {
+  const [typed, ...rest] = input.value.replace(/[^\d.,]/g, '').split(/[.,]/);
+  const whole = typed.slice(0, 2);
+  const fraction = rest.join('').slice(0, 1);
+  const clean = whole + (rest.length ? ',' + fraction : '');
+  if (input.value !== clean) input.value = clean;
+  if (!whole && !fraction) return null;
+  return Math.min(Number(`${whole || 0}.${fraction || 0}`), BONUS_MAX);
+}
+
+/** 12.5 → "12,5", 12 → "12" (one decimal at most, a decimal comma like in Slovak and Czech) */
+export function formatBonus(value: number | null | undefined): string {
+  if (value == null) return '';
+  return (Math.round(value * 10) / 10).toString().replace('.', ',');
+}
