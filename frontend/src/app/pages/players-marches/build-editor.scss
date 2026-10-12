@@ -443,3 +443,23 @@
   letter-spacing: 0.02em;
   text-transform: none;
 }
+
+// ---------------------------------------------------------------- a phone: searching with the keyboard open
+
+@media (max-width: 719px) {
+  // the dialog scrolls the whole list – a list scrolling inside a sheet half covered by the keyboard hid the items found
+  .be__items {
+    max-height: none;
+    overflow: visible;
+  }
+
+  // the search goes to the top of the sheet when focused (searchFocused)
+  .be__filter .input {
+    scroll-margin-top: 12px;
+  }
+
+  // while typing, the save bar would take the little room above the keyboard
+  .be:has(.be__filter .input:focus) .be__actions {
+    display: none;
+  }
+}

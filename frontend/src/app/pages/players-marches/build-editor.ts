@@ -163,6 +163,17 @@ export class BuildEditor {
     this.error.set(null);
   }
 
+  /**
+   * On a phone the keyboard covers half the sheet: the search moves to the top of the dialog, the items found right
+   * under it (Gether 12. 10. 2026: "nájdené itemy sú skryté"). After the keyboard has opened.
+   */
+  protected searchFocused(input: HTMLInputElement): void {
+    if (!matchMedia('(max-width: 719px)').matches) return;
+    setTimeout(() => input.scrollIntoView({ block: 'start', behavior: this.reducedMotion ? 'auto' : 'smooth' }), 300);
+  }
+
+  private readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   protected pickSlot(slot: GearSlot): void {
     this.slot.set(slot);
     this.search.set('');

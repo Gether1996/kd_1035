@@ -79,6 +79,7 @@
                   [placeholder]="b.search"
                   [value]="search()"
                   (input)="search.set(q.value)"
+                  (focus)="searchFocused(q)"
                 />
                 <label class="inline-switch">
                   <input class="switch" type="checkbox" role="switch" [checked]="weaker()" (change)="weaker.set(!weaker())" />
