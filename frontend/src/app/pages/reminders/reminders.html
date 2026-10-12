@@ -103,9 +103,12 @@
               <li class="mine__row">
                 <app-event-icon [src]="event.icon" [name]="name(event)" />
                 <span class="mine__name">{{ name(event) }}</span>
-                <span class="mine__when" [class.is-none]="!event.next_start">{{
-                  when(event)
-                }}</span>
+                <span class="mine__when" [class.is-none]="!event.next_start && !event.running_until">
+                  @if (!event.next_start && !event.running_until) {
+                    <svg appIcon="calendar-off"></svg>
+                  }
+                  {{ when(event) }}
+                </span>
                 <span class="mine__times"><svg appIcon="bell"></svg>{{ times(event) }}</span>
                 <span class="mine__actions">
                   <button
@@ -196,9 +199,12 @@
                   <span class="tile__body">
                     <span class="tile__name">{{ name(event) }}</span>
                     <span class="tile__repeat">{{ repeat(event) }}</span>
-                    <span class="tile__when" [class.is-none]="!event.next_start">{{
-                      when(event)
-                    }}</span>
+                    <span class="tile__when" [class.is-none]="!event.next_start && !event.running_until">
+                      @if (!event.next_start && !event.running_until) {
+                        <svg appIcon="calendar-off"></svg>
+                      }
+                      {{ when(event) }}
+                    </span>
                   </span>
                   <span class="tile__action">
                     @if (event.offsets?.length) {

@@ -484,9 +484,13 @@
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 
+  // no date yet: an icon besides the italics (not conveyed by the style alone); --text-mute fails 4.5:1 on the
+  // tinted pill (axe), so the colour stays --text-dim
   &.is-none {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-style: italic;
-    // --text-mute fails 4.5:1 on the tinted pill (axe); the italics alone mark the missing date
   }
 }
 

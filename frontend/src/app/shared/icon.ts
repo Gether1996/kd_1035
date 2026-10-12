@@ -8,6 +8,7 @@ export type IconName =
   | 'bell'
   | 'bell-off'
   | 'calendar-days'
+  | 'calendar-off'
   | 'calendar-plus'
   | 'check'
   | 'chevron-down'

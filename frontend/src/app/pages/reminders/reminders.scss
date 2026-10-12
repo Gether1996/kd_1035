@@ -300,11 +300,6 @@
   color: var(--text-dim);
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
-
-  &.is-none {
-    color: var(--text-mute);
-    font-style: italic;
-  }
 }
 
 .mine__times {
@@ -513,11 +508,15 @@
   color: var(--text-dim);
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
+}
 
-  &.is-none {
-    color: var(--text-mute);
-    font-style: italic;
-  }
+// no date yet: an icon besides the italics (not conveyed by the style alone), --text-dim like the calendar
+.mine__when.is-none,
+.tile__when.is-none {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-style: italic;
 }
 
 .tile__action {

@@ -192,9 +192,12 @@
                   <app-event-icon class="pill-event__icon" [src]="item.icon" [name]="name(item)" />
                   <span class="pill-event__text">
                     {{ name(item) }}
-                    <small class="pill-event__when" [class.is-none]="!item.start">{{
-                      irregularWhen(item)
-                    }}</small>
+                    <small class="pill-event__when" [class.is-none]="!item.start">
+                      @if (!item.start) {
+                        <svg appIcon="calendar-off"></svg>
+                      }
+                      {{ irregularWhen(item) }}
+                    </small>
                   </span>
                 </button>
               </li>
