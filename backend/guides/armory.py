@@ -19,7 +19,7 @@ SLOTS = ('weapon', 'helmet', 'chest', 'gloves', 'legs', 'boots', 'accessory')
 MARCH_SLOTS = ('weapon', 'helmet', 'chest', 'gloves', 'legs', 'boots', 'accessory1', 'accessory2')
 # iconic (awakening) level of an item: 0 = none, I–V
 ICONIC_MAX = 5
-# four armaments with up to three inscriptions each
+# inscriptions of the four armaments together
 MAX_INSCRIPTIONS = 12
 
 

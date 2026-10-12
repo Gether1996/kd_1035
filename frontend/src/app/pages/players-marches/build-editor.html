@@ -88,7 +88,7 @@
                       type="button"
                       class="be__item be__item--{{ item.rarity }}"
                       [attr.aria-pressed]="current()?.item?.id === item.id"
-                      (click)="choose(item); next()"
+                      (click)="choose(item)"
                     >
                       <img [src]="item.icon" alt="" width="96" height="96" loading="lazy" />
                       <span>{{ item.name }}</span>
@@ -150,7 +150,7 @@
           <button type="button" class="pill-btn pill-btn--quiet" (click)="close()">{{ b.cancel }}</button>
           <p class="form__state is-error" role="status">{{ error() }}</p>
         </div>
-        <p class="be__source">{{ b.source.replace('{date}', ix.data.verified) }}</p>
+        <p class="be__source">{{ b.source.replace('{date}', sourceDate(ix.data.verified)) }}</p>
       } @else if (failed()) {
         <p class="form__state is-error">{{ b.loadError }}</p>
       } @else {

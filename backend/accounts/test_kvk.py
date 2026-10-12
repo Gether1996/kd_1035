@@ -378,6 +378,9 @@ class MarchTests(KvkTestCase):
             {'gear': {'weapon': {'item': 'sacred-dominion', 'crit': 'yes'}}},
             {'gear': {'accessory1': {'item': 'ring-of-doom'}, 'accessory2': {'item': 'ring-of-doom'}}},
             {'gear': []},
+            {'gear': {'weapon': {'item': {'a': 1}}}},
+            {'gear': {'weapon': {'item': ['sacred-dominion']}}},
+            {'gear': {'weapon': 'sacred-dominion'}},
             {'formation': 'square'},
             # Thrasher is a Delta inscription
             {'formation': 'pincer'},

@@ -87,6 +87,8 @@ export class PlayersMarches {
   }
 
   protected showTab(tab: 'moje' | 'prehlad' | null): void {
+    // back on the players' marches after editing the own ones or their builds: the list asks again
+    if (!tab && (this.mine() || this.overview()) && !this.data.isLoading()) this.data.reload();
     void this.router.navigate([], { queryParams: { tab }, replaceUrl: true });
   }
 

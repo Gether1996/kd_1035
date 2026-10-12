@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.19.0:** výbava a armamenty marchu sa dajú naklikať – všetky predmety (crit, iconic), formácie s ikonou a ich inscriptions; nová záložka „Prehľad marchov“ ukáže každý march ako kartu s výbavou, jej bonusmi, ikonou formácie a inscriptions; pri marchoch ostatných hráčov ich otvorí zlatá dlaždica. Screenshoty a zadané bonusy ostávajú.
 - **11. 10. 2026 – v1.18.10:** Marche hráčov na úzkom mobile (320 px) – šípka karty ostane pri mene, hlavy commanderov sa zmestia do menej riadkov (posledné kolo kritika, backend bez nálezov).
 - **11. 10. 2026 – v1.18.9:** opravy po 4. kole kritika: budíky pri chybe servera ukážu hlášku (nie „0/5“); zoznam prihlášok a marchov sa po neúspešnom načítaní skúsi znova pri návrate na kartu; notifikácia do Discord kanála, pri ktorej sa nedala prečítať chybová odpoveď, sa skúsi znova a neostane falošne „odoslaná“.
 - **11. 10. 2026 – v1.18.8:** Marche hráčov – karty hráčov sú zbalené (meno, počet marchov a hlavy prvých commanderov), klik rozbalí detail všetkých marchov; tlačidlo „Rozbaliť všetky / Zbaliť všetky“.

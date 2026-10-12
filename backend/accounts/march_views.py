@@ -46,7 +46,8 @@ class MarchSerializer(ArmySerializer):
             piece = value.get(slot)
             if piece is None:
                 continue
-            item = items.get(piece.get('item')) if isinstance(piece, dict) else None
+            raw = piece.get('item') if isinstance(piece, dict) else None
+            item = items.get(raw) if isinstance(raw, str) else None
             if not item or item['slot'] != armory.slot_of(slot):
                 raise serializers.ValidationError(slot)
             crit, iconic = piece.get('crit', False), piece.get('iconic', 0)

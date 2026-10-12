@@ -55,10 +55,18 @@ describe('MarchBuilds', () => {
     expect(items().map((b) => b.textContent?.trim())).toEqual(['Sacred Dominion']);
     items()[0].click();
     await tick(fixture);
-    // on to the next empty slot (the helmet), the weapon tile shows its icon
-    expect(tiles()[1].getAttribute('aria-pressed')).toBe('true');
+    // the slot stays chosen (crit and iconic right below, the focus on the item), the tile shows its icon
+    expect(tiles()[0].getAttribute('aria-pressed')).toBe('true');
+    expect(items()[0].getAttribute('aria-pressed')).toBe('true');
     expect(tiles()[0].querySelector('img')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
-    tiles()[0].click();
+    // Zrušiť leaves the march as it was, the next opening starts from it again
+    dialog.querySelector<HTMLButtonElement>('.be__actions .pill-btn--quiet')!.click();
+    await tick(fixture);
+    expect(el.querySelector('app-march-build .gear__icon')).toBeNull();
+    el.querySelector<HTMLButtonElement>('app-march-build .pill-btn')!.click();
+    await tick(fixture);
+    expect(tiles()[0].querySelector('img')).toBeNull();
+    items()[0].click();
     await tick(fixture);
     dialog.querySelector<HTMLInputElement>('.be__crit input')!.click();
     await tick(fixture);

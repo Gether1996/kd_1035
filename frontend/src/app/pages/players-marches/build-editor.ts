@@ -124,14 +124,6 @@ export class BuildEditor {
     this.error.set(null);
   }
 
-  /** after an item is picked: on to the next empty slot */
-  protected next(): void {
-    const gear = this.draft().gear;
-    const start = GEAR_SLOTS.indexOf(this.slot());
-    const empty = [...GEAR_SLOTS.slice(start + 1), ...GEAR_SLOTS.slice(0, start)].find((s) => !gear[s]);
-    if (empty) this.pickSlot(empty);
-  }
-
   protected pickSlot(slot: GearSlot): void {
     this.slot.set(slot);
     this.search.set('');
@@ -222,13 +214,29 @@ export class BuildEditor {
 
   // ---------------------------------------------------------------- saving
 
+  /** the draft without ids the catalog no longer knows (a later fetch_armory may drop one) – they would block saving */
+  private known(): Build {
+    const index = this.index();
+    const draft = this.draft();
+    if (!index) return draft;
+    const gear = Object.fromEntries(Object.entries(draft.gear).filter(([, piece]) => piece && index.items.has(piece.item)));
+    const formation = index.formations.has(draft.formation) ? draft.formation : '';
+    return { gear, formation, inscriptions: draft.inscriptions.filter((id) => index.inscriptions.has(id)) };
+  }
+
+  /** "stav k októbru 2026" */
+  protected sourceDate(verified: string): string {
+    const [year, month] = verified.split('-').map(Number);
+    return `${this.t().build.months[month - 1] ?? ''} ${year}`.trim();
+  }
+
   protected async save(): Promise<void> {
     const march = this.march();
     if (!march || this.busy()) return;
     this.busy.set(true);
     this.error.set(null);
     try {
-      const updated = await this.api.update(march.id, this.draft());
+      const updated = await this.api.update(march.id, this.known());
       this.saved.emit(updated);
       this.close();
     } catch {
