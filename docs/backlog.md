@@ -1,11 +1,12 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo 6 hotové, v1.6.3. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md). Návrhy nových funkcií pre hráčov (11. 10. 2026, Gether vyberie): [`navrhy.md`](navrhy.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo 7 hotové, v1.24.4. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md). Návrhy nových funkcií pre hráčov (11. 10. 2026, Gether vyberie): [`navrhy.md`](navrhy.md).
 
 ## Hotové
 
 - **12. 10. 2026 – v1.24.4:** otvorený event v kalendári ostáva v adrese (`?event=&on=`), takže po prepnutí na CZ (alebo SK) sa otvorí ten istý dialóg; zatvorenie adresu vyčistí. Bez konzolovej chyby „Transition was skipped“. `.ics` jedného eventu odpovedá aj na HEAD, náhľad odkazu na skončený jednorazový event ukáže jeho dni a „Event skončil.“, opakované „Kopírovať odkaz“ čítačka oznámi znova a „termín oznámime“ má ikonu.
 - **12. 10. 2026 – v1.24.3:** superadmin môže v sekcii Hráči na `/ucet` zapnúť „Schvaľovať automaticky“ – nový hráč je schválený hneď pri prvom prihlásení a na Discord nepríde správa; čakajúcich hráčov ani tých so zrušeným schválením to nemení.
+- **12. 10. 2026 – bez verzie:** upozornenie superadminom na nového hráča počká na meno v hre (max. 15 min) a ukáže ho v nadpise, plus jazyk webu; texty hráča v správe sú bez markdownu a odkazov.
 - **12. 10. 2026 – v1.24.2:** Prihlášky na KvK (R4, superadmin): tlačidlo „Kopírovať pre Discord“ skopíruje vyfiltrované prihlášky ako prehľadný zoznam (rola → jednotky → hráč a commanderi), dlhý zoznam po častiach do 1900 znakov.
 - **12. 10. 2026 – v1.24.1:** Marche hráčov a Prihlášky na KvK sa dajú filtrovať podľa commandera (primárny aj sekundárny; s typom marchu platí pre ten istý march), na Marche hráčov ostane výber v adrese a karty zodpovedajúcich hráčov sa rozbalia; počty pri filtroch Prihlášok ho rešpektujú.
 - **12. 10. 2026 – v1.24.0:** prihlásený hráč raz potvrdí podmienky používania v okne (uloží sa verzia a čas súhlasu, bez neho nepridá marche ani prihlášku na KvK); podmienky majú nový blok o účte a obsahu od hráčov, okno spomína, že web používa iba nevyhnutné cookies.
@@ -97,8 +98,13 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - Zvyšok auditu prístupnosti (`tools/a11y/audit.sh`, 10. 10. 2026): moderate/minor nález žiadny. Ostáva: ~1 600 kontrastov, ktoré axe nevie posúdiť (text na prechodoch a SVG krajine – „incomplete“ v `tools/a11y/out`), ručne prejsť; dialógy superusera v kalendári (editor eventu, dátumy) zatiaľ nie sú v `STATE_LIST`; ručný test klávesnicou (poradie fokusu, pasca fokusu v dialógoch).
 - `migration-status` Stav migrácie v admine – blokované, kým Gether nepotvrdí, že ho vedenie bude udržiavať; skryť po 90 dňoch bez úpravy.
 - Drobnosti z kola 5: portrét pri „ktokoľvek“ v sekundárnej role; spoločná trieda pre odkaz „viac“ (intro/komunita); CZ label `focus_cs` v admine; rgba farby v `commander-finder.scss`; iOS Safari a atribút `download` pri .ics; zarovnanie titulkov v kompaktných riadkoch na 360 px; pevné počty návodov v `ux-analyza.md`.
-- Testovacie odoslanie Discord notifikácie do súkromného kanála – schválené, čaká na `DISCORD_TEST_WEBHOOK_URL`.
-- Týždenný prehľad eventov na Discorde – až po zapnutí rotácie a súhlase Gethera.
+- `event-test-dm` Ukážka správy eventu do súkromnej správy superadmina (namiesto `DISCORD_TEST_WEBHOOK_URL`, bez pingu roly) – kritik: upraviť; len tlačidlo v editore eventu na `/kalendar` + jedna admin akcia, nič neukladá, throttle `event_test`.
+- `players-last-seen` Hráči na `/ucet`: „naposledy {dátum}“ pod menom – kritik: zúžiť len na toto; mazanie hráča ostáva v Django admine, filter neaktívnych až 3 mesiace po nasadení.
+- `my-data-export` Stiahnuť moje údaje (JSON na `/ucet`) – kritik: až po nasadení; opraviť polia podľa modelov, test úplnosti cez `_meta.get_fields()`, veta v Ochrane údajov.
+- `tools-speedup-calculator` Stránka `/nastroje` s kalkulačkou speedupov – čaká na súhlas Gethera; vstup dni/hodiny/minúty, nie v pätičke, neoverené denominácie označiť.
+- `tools-training-calculator` Kalkulačka výcviku a bodov MGE – až po kalkulačke speedupov; len overené čísla, pridať do mesačnej kontroly.
+- Týždenný prehľad eventov na Discorde (`weekly-discord-digest`) – až po zapnutí rotácie a súhlase Gethera.
+- Drobnosti z kola 7: nadpis upozornenia na nového hráča cez `plain()`; komentár nad `.list__commander` v `kvk.scss` a odsadenie `.list__filters`; zvýrazniť zodpovedajúce marche pri filtri commandera; `\u200b` namiesto neviditeľného znaku v `roster-text.ts`; „Kopírovať pre Discord“ na `CopyLinkStatus`; náhľad starého termínu opakovaného eventu – „Tento termín skončil.“; bodka v `docs/eventy.md` a docstring `preview.py` na 120 znakov.
 - Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
 - `ui-polish-leftovers` Drobnosti z kola 4 (kritik: upraviť, až po funkciách; rgba v commander-finder vynechať – len ako rozhodnutie pre celý repo): spoločný štýl `.tag--live` (screenshoty pred/po na 5 šírkach), odkaz zlyhaných notifikácií len za 7 dní, naivný čas v `worker_status.json` (test spätne kompatibilného čítania), CZ „Kalendář“ na `/pripomienky` pretečie?, `#alliance` pri 360 px, nové screenshoty.
 - Drobnosti z kola 6: na desktop Chrome/Edge pri odmietnutí clipboardu otvorí systémové zdieľanie.
@@ -108,6 +114,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - Bezpečnostné hlavičky v nginx – už existujú (`security-headers.conf`); plná CSP by mala malý prínos a riziko.
 - Registrácia Governor ID so schválením R4, prístup R4 do adminu s exportom governorov, upozornenia vedenia na nové registrácie – Gether registráciu governorov zrušil (8. 10. 2026).
 - `discord-slash-events` Príkaz /eventy na Discorde – blokované: chýba rozhodnutie Gethera a nasadenie na verejné HTTPS (Interactions endpoint); nová závislosť, env a zmena Ochrany údajov. Navrhnúť znova po nasadení, ak o to Gether požiada.
+- `migration-application` (+ časť 2: stav, odpovede, mazanie) Žiadosť o migráciu cez web – vedenie o ňu nežiadalo, osobné údaje cudzích hráčov, duplikuje kontakt cez Discord.
 
 ## Čaká na Gethera
 
@@ -128,3 +135,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 - **Odber kalendára (v1.6.0):** po nasadení sa raz prihlásiť na odber v Google Kalendári (Iné kalendáre → Z URL, skopírovaný https odkaz) a na iPhone („Pridať do kalendára“); Google obnovuje hodiny až deň. Voliteľne `https://kd1035.eu/api/calendar.ics` do validátora (icalendar.org).
 - **Náhľad eventu (v1.6.2):** po nasadení vložiť odkaz na event do Discord kanála a skontrolovať kartu (čerstvý odkaz, Discord cachuje).
 - **Rozhodnúť:** chce Gether príkaz /eventy pre bota na Discorde (áno/nie)? Ak áno, `DISCORD_PUBLIC_KEY` (+ voliteľne `DISCORD_GUILD_ID`) do `.env` na serveri.
+- **Prihlášky na KvK (v1.24.2):** potvrdiť, že vedenie smie kopírovať zoznam prihlášok (meno v hre, rola, jednotky, commanderi) do Discord kanála – Ochrana údajov to už uvádza; ak nie, tlačidlo a dve vety von.
+- **Ukážka eventu do DM:** povoliť súkromné správy od bota (upozornenia na nových hráčov už chodia, asi áno).
+- **Kalkulačky:** áno/nie pre stránku `/nastroje` (speedupy, výcvik); voliteľne overiť v hre typové speedupy 3 h/8 h/15 h, kameň T3 lukostrelci/jazda (112), body T2 pred KvK (2).
+- **Hráči – neaktívni:** potvrdiť hranicu 90 dní (až po nasadení).
