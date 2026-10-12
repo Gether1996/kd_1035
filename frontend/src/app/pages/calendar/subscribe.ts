@@ -1,9 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
-  Injector,
   afterNextRender,
   computed,
   inject,
@@ -11,7 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { copyLink } from '../../shared/copy-link';
+import { CopyLinkStatus } from '../../shared/copy-link';
 import { Icon } from '../../shared/icon';
 
 /**
@@ -27,7 +25,6 @@ import { Icon } from '../../shared/icon';
 })
 export class Subscribe {
   protected readonly i18n = inject(I18n);
-  private readonly injector = inject(Injector);
 
   /** '' in the prerendered page – the links stay relative (https on the site) until the browser knows its host */
   private readonly origin = signal('');
@@ -40,35 +37,16 @@ export class Subscribe {
   );
 
   /** "Kopírovať odkaz": 'copied' for a moment, or the URL to copy by hand when neither clipboard nor share worked */
-  protected readonly copied = signal(false);
-  protected readonly manualUrl = signal('');
   private readonly manualInput = viewChild<ElementRef<HTMLInputElement>>('manual');
-  private copiedTimer?: ReturnType<typeof setTimeout>;
+  protected readonly copyStatus = new CopyLinkStatus(() => this.manualInput()?.nativeElement);
 
   constructor() {
     afterNextRender(() => this.origin.set(location.origin));
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.copiedTimer));
   }
 
-  /** No `await` before copyLink(): the clipboard needs the click's user activation. */
+  /** No `await` before this call: the clipboard needs the click's user activation. */
   protected copy(): void {
     if (!this.origin()) return; // not running in the browser yet
-    const url = this.feedUrl();
-    copyLink(url, this.i18n.t().calendar.subscribe.title).then((result) => {
-      clearTimeout(this.copiedTimer);
-      this.copied.set(result === 'copied');
-      this.manualUrl.set(result === 'failed' ? url : '');
-      if (result === 'copied') this.copiedTimer = setTimeout(() => this.copied.set(false), 2500);
-      if (result === 'failed') {
-        afterNextRender(
-          () => {
-            const input = this.manualInput()?.nativeElement;
-            input?.focus();
-            input?.select();
-          },
-          { injector: this.injector },
-        );
-      }
-    });
+    this.copyStatus.copy(this.feedUrl(), this.i18n.t().calendar.subscribe.title);
   }
 }

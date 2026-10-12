@@ -82,14 +82,14 @@
           }
           <!-- always in the DOM, so screen readers announce the change -->
           <p class="guide-actions__status" role="status">
-            @if (copied()) {
+            @if (copyStatus.copied()) {
               <svg appIcon="check"></svg> {{ t.guides.related.copied }}
             }
           </p>
         </div>
       </div>
 
-      @if (manualUrl(); as url) {
+      @if (copyStatus.manualUrl(); as url) {
         <label class="field manual-link">
           <span class="field__label">{{ t.guides.related.copyFailed }}</span>
           <input #manual class="input" type="url" readonly [value]="url" (focus)="manual.select()" />

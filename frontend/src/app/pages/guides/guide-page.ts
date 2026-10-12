@@ -6,14 +6,13 @@ import {
   DOCUMENT,
   DestroyRef,
   ElementRef,
-  Injector,
   PLATFORM_ID,
-  afterNextRender,
   computed,
   effect,
   inject,
   input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -22,7 +21,7 @@ import { GuideDetail, GuidesApi } from '../../core/guides-api';
 import { GUIDE_CATEGORIES, GuideCategory, I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Breadcrumbs } from '../../shared/breadcrumbs';
-import { copyLink } from '../../shared/copy-link';
+import { CopyLinkStatus } from '../../shared/copy-link';
 import { Icon } from '../../shared/icon';
 import { NotFoundLinks, notFoundMeta } from '../../shared/not-found';
 import { GuideEvents } from './guide-events';
@@ -46,7 +45,6 @@ export class GuidePage {
   protected readonly guides = inject(GuidesApi);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly doc = inject(DOCUMENT);
-  private readonly injector = inject(Injector);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly res = httpResource<GuideDetail>(() =>
@@ -94,33 +92,15 @@ export class GuidePage {
   });
 
   /** "Kopírovať odkaz": 'copied' for a moment, or the URL to copy by hand when neither clipboard nor share worked */
-  protected readonly copied = signal(false);
-  protected readonly manualUrl = signal('');
   private readonly manualInput = viewChild<ElementRef<HTMLInputElement>>('manual');
-  private copiedTimer?: ReturnType<typeof setTimeout>;
+  protected readonly copyStatus = new CopyLinkStatus(() => this.manualInput()?.nativeElement);
 
-  /** No `await` before copyLink(): the clipboard needs the click's user activation. */
+  /** No `await` before this call: the clipboard needs the click's user activation. */
   protected copyLink(): void {
     const g = this.guide();
     if (!g) return;
     // the page's own address in its language, without a query or hash
-    const url = this.doc.location.origin + this.i18n.guidePath(g.category, g.slug);
-    copyLink(url, this.title()).then((result) => {
-      clearTimeout(this.copiedTimer);
-      this.copied.set(result === 'copied');
-      this.manualUrl.set(result === 'failed' ? url : '');
-      if (result === 'copied') this.copiedTimer = setTimeout(() => this.copied.set(false), 2500);
-      if (result === 'failed') {
-        afterNextRender(
-          () => {
-            const input = this.manualInput()?.nativeElement;
-            input?.focus();
-            input?.select();
-          },
-          { injector: this.injector },
-        );
-      }
-    });
+    this.copyStatus.copy(this.doc.location.origin + this.i18n.guidePath(g.category, g.slug), this.title());
   }
 
   /** image from the article shown full screen */
@@ -138,9 +118,7 @@ export class GuidePage {
     // a related guide opens in this same component: no copy feedback from the previous guide
     effect(() => {
       this.slug();
-      clearTimeout(this.copiedTimer);
-      this.copied.set(false);
-      this.manualUrl.set('');
+      untracked(() => this.copyStatus.reset());
     });
 
     effect(() => {
@@ -162,9 +140,6 @@ export class GuidePage {
         breadcrumbs: this.crumbs(),
       });
     });
-    inject(DestroyRef).onDestroy(() => {
-      seo.set(null);
-      clearTimeout(this.copiedTimer);
-    });
+    inject(DestroyRef).onDestroy(() => seo.set(null));
   }
 }

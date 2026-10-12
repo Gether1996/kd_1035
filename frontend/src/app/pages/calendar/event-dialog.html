@@ -57,11 +57,11 @@
       </button>
       <!-- always in the DOM, so screen readers announce the change -->
       <p class="share__status" role="status">
-        @if (copied()) {
+        @if (copyStatus.copied()) {
           <svg appIcon="check"></svg> {{ c.share.copied }}
         }
       </p>
-      @if (manualUrl(); as url) {
+      @if (copyStatus.manualUrl(); as url) {
         <label class="field share__manual">
           <span class="field__label">{{ c.share.copyFailed }}</span>
           <input #manual class="input" type="url" readonly [value]="url" (focus)="manual.select()" />

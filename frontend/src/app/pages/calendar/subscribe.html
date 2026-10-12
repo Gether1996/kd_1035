@@ -15,11 +15,11 @@
   </div>
   <!-- always in the DOM, so screen readers announce the change -->
   <p class="subscribe__status" role="status">
-    @if (copied()) {
+    @if (copyStatus.copied()) {
       <svg appIcon="check"></svg> {{ c.copied }}
     }
   </p>
-  @if (manualUrl(); as url) {
+  @if (copyStatus.manualUrl(); as url) {
     <label class="field subscribe__manual">
       <span class="field__label">{{ c.copyFailed }}</span>
       <input #manual class="input" type="url" readonly [value]="url" (focus)="manual.select()" />

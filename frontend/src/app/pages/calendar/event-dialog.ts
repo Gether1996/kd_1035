@@ -4,13 +4,11 @@ import {
   DOCUMENT,
   DestroyRef,
   ElementRef,
-  Injector,
   afterNextRender,
   computed,
   inject,
   input,
   output,
-  signal,
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -18,7 +16,7 @@ import { EventGuide, PublicEvent, eventName, isOccurrence } from '../../core/eve
 import { I18n } from '../../core/i18n/i18n';
 import { ReminderEvent } from '../../core/reminders-api';
 import { googleUrl } from '../../shared/calendar-export';
-import { copyLink } from '../../shared/copy-link';
+import { CopyLinkStatus } from '../../shared/copy-link';
 import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { repeatLabel } from '../reminders/format';
@@ -67,7 +65,6 @@ export class EventDialog {
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   private readonly doc = inject(DOCUMENT);
-  private readonly injector = inject(Injector);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   protected readonly occurrence = computed(() => {
@@ -137,10 +134,8 @@ export class EventDialog {
 
   /** "Kopírovať odkaz na event": 'copied' for a moment, or the URL to copy by hand when neither clipboard nor share
    * worked – both inside the dialog, so the focus never leaves it */
-  protected readonly copied = signal(false);
-  protected readonly manualUrl = signal('');
   private readonly manualInput = viewChild<ElementRef<HTMLInputElement>>('manual');
-  private copiedTimer?: ReturnType<typeof setTimeout>;
+  protected readonly copyStatus = new CopyLinkStatus(() => this.manualInput()?.nativeElement);
 
   constructor() {
     const doc = this.doc;
@@ -152,31 +147,12 @@ export class EventDialog {
       doc.body.style.overflow = 'hidden';
     });
     // the page removes the dialog after `closed` (or leaves for the guide)
-    inject(DestroyRef).onDestroy(() => {
-      doc.body.style.overflow = '';
-      clearTimeout(this.copiedTimer);
-    });
+    inject(DestroyRef).onDestroy(() => (doc.body.style.overflow = ''));
   }
 
-  /** No `await` before copyLink(): the clipboard needs the click's user activation. */
+  /** No `await` before this call: the clipboard needs the click's user activation. */
   protected copyLink(): void {
-    const url = this.link();
-    copyLink(url, this.name()).then((result) => {
-      clearTimeout(this.copiedTimer);
-      this.copied.set(result === 'copied');
-      this.manualUrl.set(result === 'failed' ? url : '');
-      if (result === 'copied') this.copiedTimer = setTimeout(() => this.copied.set(false), 2500);
-      if (result === 'failed') {
-        afterNextRender(
-          () => {
-            const input = this.manualInput()?.nativeElement;
-            input?.focus();
-            input?.select();
-          },
-          { injector: this.injector },
-        );
-      }
-    });
+    this.copyStatus.copy(this.link(), this.name());
   }
 
   protected guideTitle(guide: EventGuide): string {

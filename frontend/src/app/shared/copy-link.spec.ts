@@ -1,4 +1,5 @@
-import { copyLink, copyText } from './copy-link';
+import { TestBed } from '@angular/core/testing';
+import { CopyLinkStatus, copyLink, copyText } from './copy-link';
 
 describe('copyLink', () => {
   const url = 'https://kd1035.eu/navody/commanderi/pary-pre-jazdu';
@@ -95,5 +96,56 @@ describe('copyText', () => {
     vi.stubGlobal('navigator', { share });
     expect(await copyText('x')).toBe(false);
     expect(share).not.toHaveBeenCalled();
+  });
+});
+
+describe('CopyLinkStatus', () => {
+  const url = 'https://kd1035.eu/kalendar?event=5&on=2026-10-14';
+  const answered = () => new Promise((resolve) => setTimeout(resolve)); // the clipboard's promise chain is done
+  let frames: FrameRequestCallback[];
+  const nextFrame = () => frames.splice(0).forEach((callback) => callback(0));
+
+  beforeEach(() => {
+    frames = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback));
+    vi.stubGlobal('cancelAnimationFrame', () => {});
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('a second copy clears the confirmation and sets it again on the next frame (announced again)', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+    const status = TestBed.runInInjectionContext(() => new CopyLinkStatus(() => undefined));
+    const seen: boolean[] = [];
+
+    status.copy(url);
+    await answered();
+    seen.push(status.copied());
+    nextFrame();
+    seen.push(status.copied());
+
+    // within a second: cleared first, so the status text changes, then set again
+    status.copy(url);
+    await answered();
+    seen.push(status.copied());
+    nextFrame();
+    seen.push(status.copied());
+
+    expect(seen).toEqual([false, true, false, true]);
+    expect(status.manualUrl()).toBe('');
+  });
+
+  it('shows the URL to copy by hand when nothing worked, and reset() hides both', async () => {
+    vi.stubGlobal('navigator', {});
+    const input = document.createElement('input');
+    document.body.append(input);
+    const status = TestBed.runInInjectionContext(() => new CopyLinkStatus(() => input));
+    status.copy(url);
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(status.manualUrl()).toBe(url);
+    expect(status.copied()).toBe(false);
+    status.reset();
+    expect(status.manualUrl()).toBe('');
+    input.remove();
   });
 });
