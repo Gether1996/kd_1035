@@ -3,45 +3,44 @@ import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  Injector,
   PLATFORM_ID,
+  afterNextRender,
   computed,
   inject,
   input,
   linkedSignal,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { hasBuild } from '../../core/armory';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
-import {
-  IMAGE_KINDS,
-  KVK_KINDS,
-  KVK_ROLES,
-  KvkApi,
-  KvkRole,
-  KvkSignup,
-  KvkState,
-  UploadError,
-} from '../../core/kvk-api';
-import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
+import { KVK_KINDS, KVK_ROLES, KvkApi, KvkRole, KvkSignup, KvkState, March, asMarch } from '../../core/kvk-api';
+import { MarchChange, MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
-import { ArmyDraft, ArmyError, MarchFields, SHOT_KINDS, ShotKind, armyDraft, armyError, releaseArmy } from '../../shared/march-fields';
+import { MarchBuild } from '../../shared/march-build';
+import { ArmyDraft, ArmyError, MarchFields, armyDraft, armyError } from '../../shared/march-fields';
+import { BuildEditor } from '../players-marches/build-editor';
 
 type PerRole<T> = Record<KvkRole, T>;
 
 const perRole = <T,>(make: (role: KvkRole) => T): PerRole<T> => ({ rally: make('rally'), garrison: make('garrison') });
 
 /**
- * The player's KvK sign-ups on /kvk (Gether 11. 10. 2026): the in-game name, then a tab for rally and one for
- * garrison – a player may sign up for both, each with its own army filled in like a march (MarchFields: commander
- * pair, a screenshot of the equipment and of the armaments, armament bonuses) and a note. Nothing is sent before
- * "Prihlásiť sa"; only the reviewers and the superuser see it. No rounds: a sign-up stays for every KvK until the player
- * or the superuser withdraws it; the heading (e.g. the date of the next KvK) is set by the superuser.
+ * The player's KvK sign-ups on /kvk – filled in exactly like "Moje marche" (Gether 12. 10. 2026: "žiadne screenshoty
+ * a všetko sa dá naklikať, presne ako moje marche"), plus a note. The in-game name, then a tab for rally and one for
+ * garrison (a player may sign up for both). Without a sign-up: the form – troops, commanders with their skills, note –
+ * and "Prihlásiť sa a naklikať výbavu" opens the build editor. With one: its card (equipment, armaments, bonuses) with
+ * "Upraviť výbavu", the pencil for the form, the note and withdrawing. Only the reviewers and the superuser see it; it
+ * stays for every KvK until the player or the superuser withdraws it.
  */
 @Component({
   selector: 'app-kvk-form',
-  imports: [Icon, MarchFields, RouterLink],
+  imports: [BuildEditor, Icon, MarchBuild, MarchFields, RouterLink],
   templateUrl: './kvk-form.html',
   styleUrl: './kvk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,20 +52,26 @@ export class KvkForm {
 
   private readonly api = inject(KvkApi);
   private readonly auth = inject(Auth);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().kvk);
   protected readonly roles = KVK_ROLES;
   protected readonly kinds = KVK_KINDS;
+  private readonly buildEditor = viewChild.required(BuildEditor);
 
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly commanderData = httpResource<MarchCommander[]>(() => (this.isBrowser ? marchCommandersUrl : undefined));
   protected readonly commanders = computed(() => (this.commanderData.hasValue() ? this.commanderData.value() : []));
+  protected readonly portraits = computed(() => new Map(this.commanders().map((c) => [c.name, c.icon])));
 
   /** the player's sign-ups – the forms start from them */
   protected readonly signups = linkedSignal<PerRole<KvkSignup | null>>(() => this.state().signups);
   protected readonly ingameName = linkedSignal(() => this.state().ingame_name);
   protected readonly notes = linkedSignal(() => perRole((role) => this.state().signups[role]?.note ?? ''));
   protected readonly armies = linkedSignal(() => perRole((role) => armyDraft(this.state().signups[role])));
+  /** the form of a role with a sign-up is open (the pencil) */
+  protected readonly editing = signal<KvkRole | null>(null);
 
   /** the tab: rally, or garrison when the player signed up only for that */
   protected readonly role = linkedSignal<KvkRole>(() =>
@@ -75,12 +80,13 @@ export class KvkForm {
   protected readonly signup = computed(() => this.signups()[this.role()]);
   protected readonly army = computed(() => this.armies()[this.role()]);
   protected readonly note = computed(() => this.notes()[this.role()]);
+  /** the form shows without a sign-up and while the pencil is on */
+  protected readonly formOpen = computed(() => !this.signup() || this.editing() === this.role());
 
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly formError = signal<'name' | 'failed' | null>(null);
   protected readonly armyProblem = signal<ArmyError | null>(null);
-  protected readonly uploadError = signal<{ kind: ShotKind; error: UploadError } | null>(null);
   /** the role whose withdraw waits for the confirmation */
   protected readonly confirmWithdraw = signal<KvkRole | null>(null);
 
@@ -90,22 +96,44 @@ export class KvkForm {
     return (this.i18n.lang() === 'cs' && s.title_cs) || s.title_sk;
   });
 
+  protected readonly asMarch = asMarch;
+  protected readonly built = hasBuild;
+
+  /** the build editor saves into the sign-up of the role shown */
+  protected readonly saveBuild = (_march: March, change: MarchChange): Promise<March> =>
+    this.api.saveBuild(this.role(), change).then(asMarch);
+
   protected showRole(role: KvkRole): void {
     this.role.set(role);
+    this.editing.set(null);
     this.formError.set(null);
     this.armyProblem.set(null);
-    this.uploadError.set(null);
     this.confirmWithdraw.set(null);
   }
 
   protected setArmy(value: ArmyDraft): void {
     this.armies.update((all) => ({ ...all, [this.role()]: value }));
     this.armyProblem.set(null);
-    this.uploadError.set(null);
   }
 
   protected setNote(value: string): void {
     this.notes.update((all) => ({ ...all, [this.role()]: value }));
+  }
+
+  /** the pencil: the form of the sign-up shown */
+  protected edit(): void {
+    this.editing.set(this.role());
+  }
+
+  /** "Zrušiť" in the form of a saved sign-up: back to its card, the changes dropped */
+  protected cancel(): void {
+    const role = this.role();
+    const signup = this.signups()[role];
+    this.armies.update((all) => ({ ...all, [role]: armyDraft(signup) }));
+    this.notes.update((all) => ({ ...all, [role]: signup?.note ?? '' }));
+    this.editing.set(null);
+    this.armyProblem.set(null);
+    this.formError.set(null);
   }
 
   protected async save(event: Event): Promise<void> {
@@ -116,48 +144,38 @@ export class KvkForm {
     this.formError.set(null);
     this.armyProblem.set(null);
     if (!this.ingameName().trim()) return this.formError.set('name');
-    const missing = armyError(army, { kind: true, shots: SHOT_KINDS, stats: false });
+    const missing = armyError(army);
     if (missing) return this.armyProblem.set(missing);
     this.saving.set(true);
     try {
       const first = !this.signup();
-      let signup = await this.api.saveSignup({
+      const signup = await this.api.saveSignup({
         ingame_name: this.ingameName().trim(),
         role,
         kind: army.kind,
         primary: army.primary,
         secondary: army.secondary,
-        ...army.stats,
+        primary_skills: army.skills.primary,
+        secondary_skills: army.skills.secondary,
         note: this.note().trim(),
       });
-      // a screenshot replaced by a new one goes on the server only once the new one is stored (a refused upload keeps it)
-      const removed = army.removed.filter((image) => !army.chosen[image.kind]);
-      for (const image of removed) await this.api.removeImage(image.id);
-      signup = { ...signup, images: signup.images.filter((i) => !removed.some((r) => r.id === i.id)) };
-      // the sign-up exists now: a failed upload keeps the chosen file, the player only picks that one again
-      let current: ArmyDraft = { ...army, removed: [] };
-      for (const kind of SHOT_KINDS) {
-        const chosen = current.chosen[kind];
-        if (!chosen) continue;
-        const result = await this.api.upload(role, kind, chosen.file);
-        if (typeof result === 'string') {
-          this.uploadError.set({ kind, error: result });
-          break;
-        }
-        URL.revokeObjectURL(chosen.preview);
-        signup = { ...signup, images: [...signup.images.filter((i) => i.kind !== kind), result] };
-        current = { ...current, keep: { ...current.keep, [kind]: result }, chosen: { ...current.chosen, [kind]: undefined } };
-      }
-      signup = { ...signup, complete: IMAGE_KINDS.every((kind) => signup.images.some((i) => i.kind === kind)) };
       // the sign-up saved the in-game name on the player too: the header drops its red "!"
       if (this.auth.needsName()) this.auth.reload();
-      this.signups.update((all) => ({ ...all, [role]: signup }));
-      this.armies.update((all) => ({ ...all, [role]: current }));
-      if (!this.uploadError()) {
-        this.saved.set(true);
-        setTimeout(() => this.saved.set(false), 3000);
+      this.store(signup);
+      this.editing.set(null);
+      this.saved.set(true);
+      setTimeout(() => this.saved.set(false), 3000);
+      if (first) {
+        this.changed.emit();
+        // like a new march: its equipment and armaments right away; the card's button gets the focus back
+        afterNextRender(
+          () => {
+            const button = this.host.nativeElement.querySelector<HTMLElement>('.kvk-card .march__build');
+            this.buildEditor().open(asMarch(signup), button);
+          },
+          { injector: this.injector },
+        );
       }
-      if (first) this.changed.emit();
     } catch {
       this.formError.set('failed');
     } finally {
@@ -165,15 +183,21 @@ export class KvkForm {
     }
   }
 
+  /** a sign-up saved by the form or the build editor */
+  protected store(signup: KvkSignup | March): void {
+    const role = (signup as KvkSignup).role ?? this.role();
+    this.signups.update((all) => ({ ...all, [role]: { ...(all[role] ?? {}), ...signup } as KvkSignup }));
+  }
+
   /** the player's sign-up of a role */
   protected async withdraw(role: KvkRole): Promise<void> {
     try {
       await this.api.withdraw(role);
       this.confirmWithdraw.set(null);
-      releaseArmy(this.armies()[role]);
       this.signups.update((all) => ({ ...all, [role]: null }));
       this.armies.update((all) => ({ ...all, [role]: armyDraft() }));
       this.notes.update((all) => ({ ...all, [role]: '' }));
+      this.editing.set(null);
       this.changed.emit();
     } catch {
       this.formError.set('failed');

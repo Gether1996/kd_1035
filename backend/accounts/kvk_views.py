@@ -1,35 +1,30 @@
-"""KvK sign-ups (/api/kvk/…): players sign up for rally and / or garrison, each filled in like a march (Gether
-11. 10. 2026) – commander pair, armament bonuses and one screenshot of the equipment and one of the armaments. No rounds:
-a sign-up stays until the player or the superuser withdraws it; the superuser only sets the heading (KvkSettings, e.g.
-the date of the next KvK) and picks the reviewers. Reviewers (Player.kvk_reviewer, e.g. R4) and the superuser see every
-sign-up with the player's marches. Session + CSRF like the rest of the player API.
+"""KvK sign-ups (/api/kvk/…): players sign up for rally and / or garrison, each filled in exactly like a march (Gether
+11. and 12. 10. 2026) – troop type, commanders with their skills, the build clicked together, armament bonuses – plus a
+note; no screenshots since 12. 10. 2026. No rounds: a sign-up stays until the player or the superuser withdraws it; the
+superuser only sets the heading (KvkSettings, e.g. the date of the next KvK) and picks the reviewers. Reviewers
+(Player.kvk_reviewer, e.g. R4) and the superuser see every sign-up with the player's marches. Session + CSRF like the
+rest of the player API.
 """
 
 import logging
 from decimal import Decimal
 
 from django.db import transaction
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
-from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
-from rest_framework.parsers import MultiPartParser
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
 
 from . import private_images
-from .army import ArmySerializer
-from .models import MARCH_STATS, KvkImage, KvkSettings, KvkSignup, March, Player
+from .army import BuildSerializer, current_of
+from .models import MARCH_STATS, KvkSettings, KvkSignup, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import player_of
 
 log = logging.getLogger(__name__)
-KINDS = [kind for kind, _ in KvkImage.Kind.choices]
 ROLES = [role for role, _ in KvkSignup.Role.choices]
-# one screenshot of the equipment and one of the armaments, like a march
-MAX_IMAGES_PER_KIND = 1
 
 
 class IsReviewer(BasePermission):
@@ -42,13 +37,6 @@ class IsSuperuser(BasePermission):
         return request.user.is_authenticated and request.user.is_superuser
 
 
-class UploadThrottle(UserRateThrottle):
-    """Screenshots per player (KvK and marches) – each one is decoded and re-encoded on the server."""
-
-    scope = 'private_upload'
-    rate = '60/hour'
-
-
 # ---------------------------------------------------------------- data
 
 
@@ -57,41 +45,28 @@ def settings_data() -> dict:
     return {'title_sk': heading.title_sk, 'title_cs': heading.title_cs}
 
 
-def image_data(image, base: str) -> dict:
-    url = f'{base}{image.pk}/'
-    return {
-        'id': image.pk,
-        'kind': image.kind,
-        'url': url,
-        'thumb': f'{url}?thumb=1',
-        'width': image.width,
-        'height': image.height,
-    }
-
-
 def army_data(army) -> dict:
-    """The commander pair, the armament bonuses (numbers with one decimal) and inscription counts (ArmyFields)."""
+    """The army of a march or a sign-up (ArmyFields): commanders with their skills, the armament bonuses (numbers with
+    one decimal), the inscription counts and the build clicked together."""
     values = {field: getattr(army, field) for field in MARCH_STATS}
     values = {field: float(value) if isinstance(value, Decimal) else value for field, value in values.items()}
-    return {'primary': army.primary, 'secondary': army.secondary, **values}
+    return {
+        'primary': army.primary,
+        'secondary': army.secondary,
+        'primary_skills': army.primary_skills,
+        'secondary_skills': army.secondary_skills,
+        **values,
+        'gear': army.gear,
+        'formation': army.formation,
+        'inscriptions': army.inscriptions,
+    }
 
 
 def march_data(march: March) -> dict:
-    return {
-        'id': march.pk,
-        'position': march.position,
-        'kind': march.kind,
-        'primary_skills': march.primary_skills,
-        'secondary_skills': march.secondary_skills,
-        **army_data(march),
-        'gear': march.gear,
-        'formation': march.formation,
-        'inscriptions': march.inscriptions,
-    }
+    return {'id': march.pk, 'position': march.position, 'kind': march.kind, **army_data(march)}
 
 
 def signup_data(signup: KvkSignup, with_player=False) -> dict:
-    images = list(signup.images.all())
     data = {
         'id': signup.pk,
         'role': signup.role,
@@ -99,9 +74,6 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
         **army_data(signup),
         'note': signup.note,
         'updated_at': iso(signup.updated_at),
-        'images': [image_data(image, '/api/kvk/images/') for image in images],
-        # a screenshot of every kind
-        'complete': {image.kind for image in images} >= set(KINDS),
     }
     if with_player:
         player = signup.player
@@ -117,13 +89,15 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
 
 
 def signups_of(player: Player) -> list[KvkSignup]:
-    return list(KvkSignup.objects.filter(player=player).prefetch_related('images'))
+    return list(KvkSignup.objects.filter(player=player))
 
 
 # ---------------------------------------------------------------- the player
 
 
-class SignupSerializer(ArmySerializer):
+class SignupSerializer(BuildSerializer):
+    """PUT: the sign-up's form (in-game name, role, troops, commanders with skills, note); PATCH: its build and bonuses."""
+
     ingame_name = serializers.CharField(max_length=32, trim_whitespace=True)
     role = serializers.ChoiceField(choices=KvkSignup.Role.choices)
     kind = serializers.ChoiceField(choices=KvkSignup.Kind.choices)
@@ -131,7 +105,7 @@ class SignupSerializer(ArmySerializer):
 
     def validate(self, data):
         # the primary commander is required, like in a march
-        if not data.get('primary'):
+        if not self.partial and not data.get('primary'):
             raise serializers.ValidationError({'primary': 'required'})
         return super().validate(data)
 
@@ -156,12 +130,14 @@ def state(request):
 
 
 @never_cache
-@api_view(['PUT', 'DELETE'])
+@api_view(['PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def signup(request):
-    """PUT {role, …}: sign up as rally or garrison, or change that sign-up (the in-game name is saved on the player
-    too). DELETE ?role=<rally|garrison>: withdraw that sign-up, screenshots included."""
+    """PUT {ingame_name, role, kind, primary, secondary?, primary_skills?, secondary_skills?, note?}: sign up as rally or
+    garrison, or change that sign-up (the in-game name is saved on the player too). PATCH {role, gear?, formation?,
+    inscriptions?, attack?, defense?, health?, damage?}: the build of that sign-up (404 without one). DELETE
+    ?role=<rally|garrison>: withdraw that sign-up."""
     player = request.user.player
     if request.method == 'DELETE':
         role = request.query_params.get('role')
@@ -169,9 +145,21 @@ def signup(request):
             return Response({'role': 'invalid'}, status=400)
         KvkSignup.objects.filter(player=player, role=role).delete()
         return Response(status=204)
-    saved = KvkSignup.objects.filter(player=player, role=request.data.get('role')).first()
-    current = {'primary': saved.primary, 'secondary': saved.secondary} if saved else {}
-    form = SignupSerializer(data=request.data, context={'current': current})
+    body = request.data if isinstance(request.data, dict) else {}
+    role = body.get('role')
+    saved = KvkSignup.objects.filter(player=player, role=role).first() if role in ROLES else None
+    if request.method == 'PATCH':
+        if not saved:
+            return Response(status=404)
+        # the build only – the form goes with PUT
+        build = {key: value for key, value in body.items() if key not in ('role', 'ingame_name', 'kind', 'note')}
+        form = SignupSerializer(data=build, partial=True, context={'current': current_of(saved)})
+        form.is_valid(raise_exception=True)
+        for field, value in form.validated_data.items():
+            setattr(saved, field, value)
+        saved.save()
+        return Response(signup_data(saved))
+    form = SignupSerializer(data=body, context={'current': current_of(saved), 'creating': saved is None})
     form.is_valid(raise_exception=True)
     data = form.validated_data
     with transaction.atomic():
@@ -179,68 +167,6 @@ def signup(request):
         player.save(update_fields=['ingame_name'])
         mine, _ = KvkSignup.objects.update_or_create(player=player, role=data.pop('role'), defaults=data)
     return Response(signup_data(mine))
-
-
-def store_image(model, upload_file, folder: str, **fields):
-    """Re-encodes the upload and writes its row; without the row the files would be orphans, so they go too."""
-    path, thumb, width, height = private_images.store(upload_file, folder)
-    try:
-        return model.objects.create(path=path, thumb=thumb, width=width, height=height, **fields)
-    except Exception:
-        private_images.unlink(path, thumb)
-        raise
-
-
-@never_cache
-@api_view(['POST'])
-@parser_classes([MultiPartParser])
-@permission_classes([IsPlayer])
-@throttle_classes([UploadThrottle])
-def upload(request):
-    """POST multipart {role: rally|garrison, kind: equipment|armaments, file}: the screenshot for that sign-up of the
-    player."""
-    mine = KvkSignup.objects.filter(player=request.user.player, role=request.data.get('role')).first()
-    if not mine:
-        return Response({'detail': 'no_signup'}, status=409)
-    kind = request.data.get('kind')
-    upload_file = request.FILES.get('file')
-    if kind not in KINDS or not upload_file:
-        return Response({'detail': 'bad_request'}, status=400)
-    # a new screenshot replaces the old one of that kind – only once it is stored, so a refused upload loses nothing
-    old = list(mine.images.filter(kind=kind))
-    try:
-        picture = store_image(KvkImage, upload_file, 'kvk', signup=mine, kind=kind)
-    except private_images.BadImage as exc:
-        return Response({'detail': exc.code}, status=400)
-    for image in old[: len(old) - MAX_IMAGES_PER_KIND + 1]:
-        image.delete()
-    mine.save(update_fields=['updated_at'])
-    return Response(image_data(picture, '/api/kvk/images/'), status=201)
-
-
-@never_cache
-@api_view(['DELETE'])
-@permission_classes([IsPlayer])
-@throttle_classes([WriteThrottle])
-def delete_image(request, image_id):
-    """DELETE one of the player's own screenshots."""
-    get_object_or_404(KvkImage, pk=image_id, signup__player=request.user.player).delete()
-    return Response(status=204)
-
-
-def owner_or_reviewer(request, owner_id: int) -> None:
-    """404 (not 403) for anyone else, so ids reveal nothing."""
-    player = player_of(request.user)
-    if not (private_images.can_review(request.user) or (player and player.pk == owner_id)):
-        raise Http404
-
-
-@api_view(['GET'])
-def image(request, image_id):
-    """The screenshot file (?thumb=1 the thumbnail) – for its owner, the reviewers and the superuser only."""
-    picture = get_object_or_404(KvkImage.objects.select_related('signup'), pk=image_id)
-    owner_or_reviewer(request, picture.signup.player_id)
-    return private_images.serve(picture.thumb if request.query_params.get('thumb') == '1' else picture.path)
 
 
 # ---------------------------------------------------------------- reviewers
@@ -251,7 +177,7 @@ def image(request, image_id):
 @permission_classes([IsReviewer])
 def all_signups(request):
     """Every sign-up with the player (name, in-game name, Discord ID for "Kontaktovať") and their marches."""
-    signups = KvkSignup.objects.select_related('player').prefetch_related('images', 'player__marches')
+    signups = KvkSignup.objects.select_related('player').prefetch_related('player__marches')
     rows = sorted(
         (signup_data(s, with_player=True) for s in signups),
         # by player, the rally sign-up before the garrison one (one card per player on /kvk)
@@ -265,7 +191,7 @@ def all_signups(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def delete_signup(request, signup_id):
-    """The superuser withdraws someone's sign-up, screenshots included."""
+    """The superuser withdraws someone's sign-up."""
     get_object_or_404(KvkSignup, pk=signup_id).delete()
     return Response(status=204)
 

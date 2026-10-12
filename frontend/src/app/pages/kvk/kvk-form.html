@@ -1,22 +1,15 @@
 @let k = t();
+@let m = i18n.t().marches;
 <section class="panel" aria-labelledby="kvk-form-title">
   <header class="panel__head">
     <div>
       <p class="panel__eyebrow">{{ k.signupEyebrow }}</p>
       <h2 class="panel__title" id="kvk-form-title">{{ title() || k.title }}</h2>
     </div>
-    @if (signup(); as s) {
-      <span class="badge" [class.badge--done]="s.complete">
-        @if (s.complete) {
-          <svg appIcon="check"></svg>
-        }
-        {{ s.complete ? k.statusDone : k.statusIncomplete }}
-      </span>
-    }
   </header>
   <p class="panel__lead">{{ k.lead }}</p>
 
-  <form class="form" (submit)="save($event)" novalidate>
+  <div class="form kvk-head">
     <div class="field">
       <label class="field__label" for="kvk-name">{{ k.ingameName }}</label>
       <input
@@ -47,52 +40,82 @@
         }
       </div>
     </div>
+  </div>
 
-    <!-- the army like in a march: commander pair, screenshots of the equipment and the armaments, bonuses -->
-    <app-march-fields
-      [value]="army()"
-      (valueChange)="setArmy($event)"
-      [commanders]="commanders()"
-      [kinds]="kinds"
-      [error]="armyProblem()"
-      [uploadError]="uploadError()"
-      [heading]="(title() || k.title) + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
-      [idPrefix]="'kvk-' + role()"
-    />
+  @if (formOpen()) {
+    <!-- like a new march: troops, commanders with their skills – plus the note; the build in the editor after it -->
+    <form class="form" (submit)="save($event)" novalidate>
+      <app-march-fields
+        [value]="army()"
+        (valueChange)="setArmy($event)"
+        [commanders]="commanders()"
+        [kinds]="kinds"
+        [error]="armyProblem()"
+        [heading]="(title() || k.title) + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
+        [idPrefix]="'kvk-' + role()"
+      />
 
-    <div class="field">
-      <label class="field__label" for="kvk-note">{{ k.note }}</label>
-      <textarea
-        #noteInput
-        id="kvk-note"
-        class="input textarea"
-        rows="3"
-        maxlength="500"
-        [placeholder]="k.notePlaceholder"
-        [value]="note()"
-        (input)="setNote(noteInput.value)"
-      ></textarea>
-    </div>
+      <div class="field">
+        <label class="field__label" for="kvk-note">{{ k.note }}</label>
+        <textarea
+          #noteInput
+          id="kvk-note"
+          class="input textarea"
+          rows="3"
+          maxlength="500"
+          [placeholder]="k.notePlaceholder"
+          [value]="note()"
+          (input)="setNote(noteInput.value)"
+        ></textarea>
+      </div>
 
-    <div class="form__actions">
-      <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">
-        {{ saving() ? k.saving : signup() ? k.save : k.submit }}
-      </button>
-      <p class="form__state" role="status" [class.is-error]="!!formError() || !!armyProblem()">
-        @if (formError(); as e) {
-          {{ k.errors[e] }}
-        } @else if (armyProblem(); as e) {
-          {{ i18n.t().marches.required[e] }}
-        } @else if (saved()) {
-          {{ k.saved }}
+      <div class="form__actions">
+        <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">
+          {{ saving() ? k.saving : signup() ? k.save : k.submit }}
+        </button>
+        @if (signup()) {
+          <button type="button" class="pill-btn pill-btn--quiet" (click)="cancel()">{{ m.cancel }}</button>
         }
-      </p>
-    </div>
-  </form>
+        <p class="form__state" role="status" [class.is-error]="!!formError() || !!armyProblem()">
+          @if (formError(); as e) {
+            {{ k.errors[e] }}
+          } @else if (armyProblem(); as e) {
+            {{ m.required[e] }}
+          }
+        </p>
+      </div>
+    </form>
+  } @else if (signup(); as s) {
+    <!-- the sign-up as the card of a march: equipment, armaments, bonuses -->
+    <app-march-build
+      class="kvk-card"
+      [march]="asMarch(s)"
+      [portraits]="portraits()"
+      [own]="true"
+      [numbered]="false"
+      [statsRequired]="true"
+      (slotPick)="builds.open(asMarch(s), null, $event)"
+      (armamentsPick)="builds.open(asMarch(s), null, undefined, 'armaments')"
+    >
+      <button type="button" class="pill-btn march__build" (click)="builds.open(asMarch(s), $event)">
+        <svg appIcon="swords"></svg>{{ built(s) ? m.build.change : m.build.edit }}
+      </button>
+      <button type="button" class="icon-btn" [attr.aria-label]="k.edit" [title]="k.edit" (click)="edit()">
+        <svg appIcon="pencil"></svg>
+      </button>
+    </app-march-build>
+    @if (s.note) {
+      <p class="kvk-note">{{ s.note }}</p>
+    }
+    <p class="form__state" role="status">{{ saved() ? k.saved : '' }}</p>
+  }
+
   <p class="panel__privacy">
     {{ k.privacy }} <a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a>
   </p>
 </section>
+
+<app-build-editor #builds [saveWith]="saveBuild" (saved)="store($event)" />
 
 @if (signup()) {
   <div class="withdraw">

@@ -223,10 +223,10 @@ MARCH_STATS = ('attack', 'defense', 'health', 'damage', 'white', 'blue', 'gold')
 
 
 class ArmyFields(models.Model):
-    """What a march and a KvK sign-up both say about an army (Gether 11. 10. 2026: the sign-up is filled in like a
-    march): the commander pair (names of guides/roster.py) and the armament bonuses in whole percent, rounded up, of
-    the march's troop type ("Cav ATK" for a cavalry march…) with the number of inscriptions by colour; empty = not
-    filled in."""
+    """What a march and a KvK sign-up both say about an army (Gether 11. and 12. 10. 2026: the sign-up is filled in
+    exactly like a march): the commander pair (names of guides/roster.py) with their skill levels, the build clicked
+    together, the armament bonuses in percent with one decimal of the troop type ("Cav ATK" for cavalry…) and the
+    number of inscriptions by colour (counted from the inscriptions clicked together); empty = not filled in."""
 
     primary = models.CharField('primárny commander', max_length=40, blank=True)
     secondary = models.CharField('sekundárny commander', max_length=40, blank=True)
@@ -237,14 +237,22 @@ class ArmyFields(models.Model):
     white = models.PositiveSmallIntegerField('biele inscriptions', null=True, blank=True, validators=STAT_LIMIT)
     blue = models.PositiveSmallIntegerField('modré inscriptions', null=True, blank=True, validators=STAT_LIMIT)
     gold = models.PositiveSmallIntegerField('zlaté inscriptions', null=True, blank=True, validators=STAT_LIMIT)
+    # skill levels of the commanders, 5555 = expertise (the default)
+    primary_skills = models.CharField('skilly primárneho', max_length=4, default=EXPERTISE, validators=SKILLS_LIMIT)
+    secondary_skills = models.CharField('skilly sekundárneho', max_length=4, default=EXPERTISE, validators=SKILLS_LIMIT)
+    # the build clicked together (Gether 12. 10. 2026; guides/armory.py): slot → {item, crit, iconic}, the formation
+    # and the ids of its inscriptions
+    gear = models.JSONField('výbava', default=dict, blank=True)
+    formation = models.CharField('formácia', max_length=20, blank=True)
+    inscriptions = models.JSONField('inscriptions', default=list, blank=True)
 
     class Meta:
         abstract = True
 
 
 class KvkSignup(ArmyFields):
-    """A player's sign-up for a KvK as rally or garrison: commander pair, armament bonuses, note and one screenshot of
-    the equipment and one of the armaments (KvkImage) – like a march. A player may sign up for both, each with its own
+    """A player's sign-up for a KvK as rally or garrison, filled in exactly like a march (ArmyFields, no screenshot since
+    12. 10. 2026) with a note. A player may sign up for both, each with its own
     army (Gether 11. 10. 2026). It stays until the player or the superuser withdraws it. Seen only by the player, the
     players with Player.kvk_reviewer and the superuser."""
 
@@ -278,32 +286,6 @@ class KvkSignup(ArmyFields):
         return f'{self.player} · {self.get_role_display()}'
 
 
-class KvkImage(models.Model):
-    """One screenshot of a sign-up, re-encoded without metadata (private_images.py) under PRIVATE_MEDIA_ROOT, plus a
-    thumbnail. The files go with the row (post_delete in cleanup.py)."""
-
-    class Kind(models.TextChoices):
-        EQUIPMENT = 'equipment', 'výbava'
-        ARMAMENTS = 'armaments', 'armamenty'
-
-    signup = models.ForeignKey(KvkSignup, on_delete=models.CASCADE, related_name='images', verbose_name='prihláška')
-    kind = models.CharField('čo je na obrázku', max_length=12, choices=Kind.choices)
-    # relative to PRIVATE_MEDIA_ROOT
-    path = models.CharField('súbor', max_length=200)
-    thumb = models.CharField('náhľad', max_length=200)
-    width = models.PositiveIntegerField(default=0)
-    height = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField('nahrané', auto_now_add=True)
-
-    class Meta:
-        ordering = ['kind', 'created_at']
-        verbose_name = 'screenshot prihlášky'
-        verbose_name_plural = 'screenshoty prihlášok'
-
-    def __str__(self):
-        return f'{self.signup} · {self.get_kind_display()}'
-
-
 # Gether 12. 10. 2026: up to 10 (players with 9 marches could not fill them in; 7 before)
 MAX_MARCHES = 10
 
@@ -328,14 +310,6 @@ class March(ArmyFields):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='marches', verbose_name='hráč')
     position = models.PositiveSmallIntegerField('poradie', default=1)
     kind = models.CharField('typ', max_length=12, choices=Kind.choices, blank=True)
-    # skill levels of the commanders, 5555 = expertise (the default)
-    primary_skills = models.CharField('skilly primárneho', max_length=4, default=EXPERTISE, validators=SKILLS_LIMIT)
-    secondary_skills = models.CharField('skilly sekundárneho', max_length=4, default=EXPERTISE, validators=SKILLS_LIMIT)
-    # the build clicked together on /marche (Gether 12. 10. 2026; guides/armory.py): slot → {item, crit, iconic}, the
-    # formation and the ids of its inscriptions – optional, next to the screenshot
-    gear = models.JSONField('výbava', default=dict, blank=True)
-    formation = models.CharField('formácia', max_length=20, blank=True)
-    inscriptions = models.JSONField('inscriptions', default=list, blank=True)
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
 

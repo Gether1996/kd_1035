@@ -84,39 +84,6 @@
   padding: 0 14px;
 }
 
-// edit as an icon (aria-label + title)
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border: 1px solid var(--field-line);
-  border-radius: 999px;
-  background: none;
-  color: var(--gold-300);
-  font: 600 0.8125rem/1 var(--font-body);
-  cursor: pointer;
-  transition:
-    background-color 0.2s,
-    border-color 0.2s;
-
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    border-color: var(--line-strong);
-    background: rgba(245, 196, 81, 0.08);
-  }
-
-  &[aria-disabled='true'] {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-}
 
 .march-hint {
   margin-top: 14px;

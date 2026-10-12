@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.22.0:** prihláška na KvK sa vypĺňa presne ako march – typ, commanderi so skillmi, naklikaná výbava, formácia, inscriptions a bonusy armamentov, k tomu poznámka; screenshoty sú zrušené (staré sa zmažú). Prihláška je karta ako march, R4 vidí rally a garrison hráča vedľa seba a jeho marche ako karty.
 - **12. 10. 2026 – v1.21.4:** hráč môže mať až 10 marchov (predtým 7); na veľkej obrazovke je „Pridať march“ prázdna karta v mriežke rovnako vysoká ako karty v riadku.
 - **12. 10. 2026 – v1.21.3:** hľadanie predmetu v editore výbavy na mobile – pole sa posunie na vrch okna a nájdené predmety nezakryje klávesnica ani pás s tlačidlami.
 - **12. 10. 2026 – v1.21.2:** formulár marchu na veľkej obrazovke už nie je roztiahnutý cez celý riadok – ostáva široký ako karta, prepínač Expertise je hneď pri mene commandera.

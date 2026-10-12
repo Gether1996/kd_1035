@@ -131,7 +131,7 @@ export class Marches {
   protected async save(): Promise<void> {
     const draft = this.draft();
     if (!draft || this.busy()) return;
-    const missing = armyError(draft, { kind: true, shots: [], stats: false });
+    const missing = armyError(draft);
     if (missing) return this.draftError.set(missing);
     const change = {
       kind: draft.kind,

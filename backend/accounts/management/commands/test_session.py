@@ -1,14 +1,11 @@
-import io
 from importlib import import_module
 
 from django.conf import settings
 from django.contrib.auth import BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY, get_user_model
 from django.contrib.sessions.models import Session
 from django.core.management.base import BaseCommand, CommandError
-from PIL import Image
 
-from accounts.kvk_views import store_image
-from accounts.models import MARCH_STATS, KvkImage, KvkSignup, March, Player
+from accounts.models import MARCH_STATS, KvkSignup, March, Player
 
 # a made-up Discord ID: the snapshot leaves discord_* users and every accounts_* row out (kingdom/snapshot.py)
 DISCORD_ID = '999000111'
@@ -64,7 +61,7 @@ class Command(BaseCommand):
         parser.add_argument('--superuser', action='store_true', help='Staff + superuser (manages events).')
         parser.add_argument('--delete', action='store_true', help='Delete the test player and its sessions.')
         parser.add_argument(
-            '--marches', action='store_true', help='Seven public marches and two KvK sign-ups with screenshots (/marche, /kvk).'
+            '--marches', action='store_true', help='Seven public marches and two KvK sign-ups (/marche, /kvk).'
         )
 
     def handle(self, *args, **options):
@@ -122,15 +119,11 @@ class Command(BaseCommand):
         # a rally and a garrison sign-up for KvK (/kvk)
         player.kvk_signups.all().delete()
         for role, kind, primary, secondary in (('rally', 'cavalry', 'William Marshal', 'David IV'), ('garrison', 'archer', 'Hayam Wuruk', 'Choe Yeong')):
-            signup = KvkSignup.objects.create(
-                player=player, role=role, kind=kind, primary=primary, secondary=secondary, **dict(zip(MARCH_STATS, (11, 9, 8, 3, 5, 2, 1)))
+            # the rally one clicked together like the first march, the garrison one without its build yet
+            build = SAMPLE_BUILDS[0] if role == 'rally' else {}
+            KvkSignup.objects.create(
+                player=player, role=role, kind=kind, primary=primary, secondary=secondary, **dict(zip(MARCH_STATS, (11, 9, 8, 3, 5, 2, 1))), **build
             )
-            for image_kind, colour in (('equipment', (180, 140, 60)), ('armaments', (40, 70, 130))):
-                upload = io.BytesIO()
-                Image.new('RGB', (640, 400), colour).save(upload, 'PNG')
-                upload.size = upload.tell()
-                upload.seek(0)
-                store_image(KvkImage, upload, 'kvk', signup=signup, kind=image_kind)
 
     @staticmethod
     def drop_sessions(user):

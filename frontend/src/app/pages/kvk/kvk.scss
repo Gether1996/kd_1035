@@ -278,14 +278,17 @@
   height: 16px;
 }
 
-// one sign-up of the player's card (rally / garrison), divided by a line from the one above
-.signup__entry {
+// the sign-ups of the player (rally / garrison): side by side as wide as the cards of marches
+.signup__entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  align-items: start;
+  gap: 16px;
   margin-top: 12px;
+}
 
-  & + & {
-    padding-top: 12px;
-    border-top: 1px solid var(--line);
-  }
+.signup__entry {
+  min-width: 0;
 }
 
 .signup__roles {
@@ -351,17 +354,15 @@
   }
 }
 
+// the player's marches as cards, as many side by side as fit
 .mini-marches {
   display: grid;
-  gap: 8px;
-  margin: 6px 0 0;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  align-items: start;
+  gap: 10px;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
-}
-
-.mini-march {
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
 }
 
 // ---------------------------------------------------------------- superuser: reviewers
@@ -402,4 +403,24 @@
     font-size: 0.875rem;
     color: var(--text-mute);
   }
+}
+
+// ---------------------------------------------------------------- the player's sign-up as the card of a march
+
+.kvk-card {
+  max-width: 640px;
+  margin-top: 18px;
+
+  .pill-btn .icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.kvk-note {
+  margin: 10px 0 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--gold-600);
+  color: var(--text-dim);
+  white-space: pre-line;
 }

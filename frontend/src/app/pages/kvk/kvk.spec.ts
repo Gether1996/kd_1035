@@ -4,6 +4,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { ARMORY } from '../../core/armory-testing';
 import { KvkApi, KvkSignup, KvkState } from '../../core/kvk-api';
 import { Scroll } from '../../core/scroll';
 import { KvkForm } from './kvk-form';
@@ -27,24 +28,27 @@ const SIGNUP: KvkSignup = {
   secondary: 'Takeda Shingen',
   note: '',
   updated_at: '2026-10-11T11:00:00Z',
-  images: [{ id: 1, kind: 'equipment', url: '/api/kvk/images/1/', thumb: '/api/kvk/images/1/?thumb=1', width: 1, height: 1 }],
-  complete: false,
+  primary_skills: '5555',
+  secondary_skills: '5555',
+  gear: {},
+  formation: '',
+  inscriptions: [],
 };
 const COMMANDERS = [
   { name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true },
   { name: 'Takeda Shingen', icon: '/static/guides/commanders/takeda-shingen.webp', pick: true },
 ];
-const image = (id: number, kind: string) => ({ id, kind, url: `/api/kvk/images/${id}/`, thumb: `/api/kvk/images/${id}/?thumb=1`, width: 1, height: 1 });
-
 function setup() {
   TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
   return TestBed.inject(HttpTestingController);
 }
 
-const flushAll = async (fixture: { whenStable(): Promise<unknown> }) => {
-  await fixture.whenStable();
-  await new Promise((resolve) => setTimeout(resolve));
-  await fixture.whenStable();
+// no whenStable(): a card asks for the item catalog (/api/armory/), which stays pending until the test answers it
+const flushAll = async (fixture: { detectChanges(): void }) => {
+  for (let round = 0; round < 3; round++) {
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+  }
 };
 
 describe('KvkForm', () => {
@@ -60,7 +64,7 @@ describe('KvkForm', () => {
     };
   });
 
-  it('is filled in like a march: commanders and both screenshots, sent only with "Prihlásiť sa"', async () => {
+  it('is filled in like a march: troops, commanders with skills, note – then the build editor of the sign-up', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
     fixture.componentRef.setInput('state', STATE);
@@ -74,42 +78,31 @@ describe('KvkForm', () => {
     expect(el.querySelector<HTMLInputElement>('#kvk-name')!.value).toBe('Nelly');
     // the heading set by the superuser
     expect(el.querySelector('#kvk-form-title')?.textContent).toContain('20.11. najbližšie KvK');
-    // cavalry, infantry or archers – the bonuses are read as theirs
+    // cavalry, infantry or archers; no screenshots, no bonuses in the form (they are clicked together after it)
     expect(el.querySelectorAll('.kind').length).toBe(3);
-    expect(el.querySelector('.stat-field__label')?.textContent?.trim()).toBe('ATK');
+    expect(el.querySelector('input[type="file"]')).toBeNull();
+    expect(el.querySelector('.stat-field')).toBeNull();
 
     // rally first; garrison is a second sign-up with its own army
     expect([...el.querySelectorAll('.role-tabs button')].map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false']);
     submit();
-    await fixture.whenStable();
+    await flushAll(fixture);
     expect(state()).toContain('Vyber typ marchu.');
     el.querySelectorAll<HTMLButtonElement>('.kind')[1].click();
-    await fixture.whenStable();
-    expect(el.querySelector('.stat-field__label')?.textContent?.trim()).toBe('Cav ATK');
+    await flushAll(fixture);
     submit();
-    await fixture.whenStable();
+    await flushAll(fixture);
     expect(state()).toContain('Vyber primárneho commandera.');
-
     el.querySelector<HTMLButtonElement>('.tile')!.click();
-    await fixture.whenStable();
+    await flushAll(fixture);
     el.querySelector<HTMLButtonElement>('.picker-tile')!.click();
-    await fixture.whenStable();
-    submit();
-    await fixture.whenStable();
-    expect(state()).toContain('Pridaj screenshot výbavy.');
-    http.expectNone('/api/kvk/signup/');
-
-    const pickFile = async (name: string) => {
-      const input = el.querySelector<HTMLInputElement>('input[type="file"]')!;
-      Object.defineProperty(input, 'files', { value: [new File(['x'], name, { type: 'image/png' })] });
-      input.dispatchEvent(new Event('change'));
-      await fixture.whenStable();
-    };
-    await pickFile('equipment.png');
-    await pickFile('armaments.png');
-    const stat = el.querySelector<HTMLInputElement>('.stat-field__input')!;
-    stat.value = '9';
-    stat.dispatchEvent(new Event('input'));
+    await flushAll(fixture);
+    // the commander is expertise by default
+    expect(el.querySelector<HTMLInputElement>('.skills__expertise input')!.checked).toBe(true);
+    const note = el.querySelector<HTMLTextAreaElement>('#kvk-note')!;
+    note.value = ' večer online ';
+    note.dispatchEvent(new Event('input'));
+    expect(el.querySelector('form .pill-btn')?.textContent?.trim()).toBe('Prihlásiť sa a naklikať výbavu');
     submit();
     const req = http.expectOne('/api/kvk/signup/');
     expect(req.request.method).toBe('PUT');
@@ -119,62 +112,79 @@ describe('KvkForm', () => {
       kind: 'cavalry',
       primary: 'Attila',
       secondary: '',
-      attack: 9,
-      defense: null,
-      health: null,
-      damage: null,
-      gold: null,
-      blue: null,
-      white: null,
-      note: '',
+      primary_skills: '5555',
+      secondary_skills: '5555',
+      note: 'večer online',
     });
-    req.flush({ ...SIGNUP, secondary: '', attack: 9, images: [] });
+    req.flush({ ...SIGNUP, secondary: '', note: 'večer online' });
     await flushAll(fixture);
-    http.expectOne('/api/kvk/signup/images/').flush(image(7, 'equipment'));
+    http.expectOne('/api/armory/').flush(ARMORY);
     await flushAll(fixture);
-    const second = http.expectOne('/api/kvk/signup/images/');
-    expect((second.request.body as FormData).get('kind')).toBe('armaments');
-    expect((second.request.body as FormData).get('role')).toBe('rally');
-    second.flush(image(8, 'armaments'));
+    // the sign-up is a card like a march, its build editor opens right away
+    expect(el.querySelector('.kvk-card .mb__primary')?.textContent?.trim()).toBe('Attila');
+    expect(el.querySelector('.kvk-note')?.textContent).toBe('večer online');
+    const dialog = el.querySelector('dialog.be')!;
+    expect(dialog.hasAttribute('open')).toBe(true);
+    dialog.querySelector<HTMLButtonElement>('.be__item')!.click();
     await flushAll(fixture);
-    expect(el.querySelector('.badge')?.textContent).toContain('Kompletná');
-    expect(state()).toContain('Uložené');
-    // the rally tab is marked as sent; the garrison tab starts empty
+    dialog.querySelectorAll<HTMLButtonElement>('.be__tabs button')[1].click();
+    await flushAll(fixture);
+    const stats = dialog.querySelectorAll<HTMLInputElement>('.be__stat-input');
+    ['12,5', '8', '6'].forEach((value, i) => {
+      stats[i].value = value;
+      stats[i].dispatchEvent(new Event('input'));
+    });
+    dialog.querySelector<HTMLButtonElement>('.be__actions .pill-btn')!.click();
+    const build = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/kvk/signup/');
+    expect(build.request.body).toEqual({
+      role: 'rally',
+      gear: { weapon: { item: 'sacred-dominion', crit: false, iconic: 0 } },
+      formation: '',
+      inscriptions: [],
+      attack: 12.5,
+      defense: 8,
+      health: 6,
+      damage: 0,
+    });
+    build.flush({ ...SIGNUP, secondary: '', note: 'večer online', ...build.request.body });
+    await flushAll(fixture);
+    expect(el.querySelector('.kvk-card .gear__icon')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
+    expect(el.querySelector('.kvk-card .march__build')?.textContent?.trim()).toBe('Upraviť výbavu');
+    // the rally tab is marked as sent; the garrison tab starts with an empty form
     expect(el.querySelector('.role-tabs button .role-tabs__done')).not.toBeNull();
     el.querySelectorAll<HTMLButtonElement>('.role-tabs button')[1].click();
-    await fixture.whenStable();
+    await flushAll(fixture);
     expect(el.querySelector('.tile__caption')?.textContent?.trim()).toBe('Primárny');
-    expect(el.querySelector('.badge')).toBeNull();
+    expect(el.querySelector('.kvk-card')).toBeNull();
     http.verify();
   });
 
-  it('says why an upload was refused and keeps the chosen file', async () => {
+  it('a saved sign-up is its card; the pencil opens the form and Zrušiť drops the changes', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
-    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: null, garrison: { ...SIGNUP, role: 'garrison' } } });
+    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: null, garrison: { ...SIGNUP, role: 'garrison', note: 'mesto' } } });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
     await flushAll(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    // the saved garrison sign-up opens its tab and fills the form: its commanders and its equipment screenshot
+    // the saved garrison sign-up opens its tab as a card
     expect(el.querySelector('.role-tabs button[aria-pressed="true"]')?.textContent).toContain('Garrison');
-    expect([...el.querySelectorAll('.tile__caption')].map((c) => c.textContent?.trim()).slice(0, 2)).toEqual(['Attila', 'Takeda Shingen']);
-    expect(el.querySelectorAll('.tile__box--shot img').length).toBe(1);
-
-    const input = el.querySelector<HTMLInputElement>('input[type="file"]')!;
-    Object.defineProperty(input, 'files', { value: [new File(['x'], 'a.txt', { type: 'text/plain' })] });
-    input.dispatchEvent(new Event('change'));
-    await fixture.whenStable();
-    el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
-    http.expectOne('/api/kvk/signup/').flush(SIGNUP);
+    expect(el.querySelector('form')).toBeNull();
+    expect(el.querySelector('.kvk-note')?.textContent).toBe('mesto');
+    el.querySelector<HTMLButtonElement>('.kvk-card .icon-btn')!.click();
     await flushAll(fixture);
-    const req = http.expectOne('/api/kvk/signup/images/');
-    expect((req.request.body as FormData).get('kind')).toBe('armaments');
-    req.flush({ detail: 'not_image' }, { status: 400, statusText: 'Bad Request' });
+    expect([...el.querySelectorAll('.tile__caption')].map((c) => c.textContent?.trim())).toEqual(['Attila', 'Takeda Shingen']);
+    const note = el.querySelector<HTMLTextAreaElement>('#kvk-note')!;
+    note.value = 'iné';
+    note.dispatchEvent(new Event('input'));
+    [...el.querySelectorAll<HTMLButtonElement>('form .pill-btn')].find((b) => b.textContent?.trim() === 'Zrušiť')!.click();
     await flushAll(fixture);
-    expect(el.querySelector('.block__error')?.textContent).toContain('nie je obrázok');
-    expect(el.querySelectorAll('.tile__box--shot img').length).toBe(2);
+    expect(el.querySelector('form')).toBeNull();
+    expect(el.querySelector('.kvk-note')?.textContent).toBe('mesto');
+    http.expectNone('/api/kvk/signup/');
     http.verify();
   });
 
@@ -189,12 +199,14 @@ describe('KvkForm', () => {
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
     await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.role-tabs__done').length).toBe(2);
 
     const buttons = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.withdraw button'));
     buttons()[0].click();
-    await fixture.whenStable();
+    await flushAll(fixture);
     buttons()[0].click();
     const req = http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/kvk/signup/');
     expect(req.request.params.get('role')).toBe('rally');
@@ -219,7 +231,7 @@ describe('KvkSignups', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.is-error')?.textContent).toBeTruthy();
   });
 
-  it('lists every sign-up, filters by role, opens a screenshot and lets the superuser withdraw one', async () => {
+  it('lists every sign-up as a card, filters by role and lets the superuser withdraw one', async () => {
     const http = setup();
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
       this.setAttribute('open', '');
@@ -234,18 +246,20 @@ describe('KvkSignups', () => {
     const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42' };
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
       signups: [
-        { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', images: [], attack: 12, defense: 9, health: 8, damage: 0, gold: 1, blue: 2, white: 3 }] },
-        { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer', attack: 8, player: { ...player, id: 2, ingame_name: 'Bob' } },
+        { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', attack: 12, defense: 9, health: 8, damage: 0, gold: 1, blue: 2, white: 3 }] },
+        { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer', attack: 8, defense: 7, health: 6, player: { ...player, id: 2, ingame_name: 'Bob' } },
       ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
     await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.signup').length).toBe(2);
     expect(el.querySelector('.signup__contact')?.getAttribute('href')).toBe('https://discord.com/users/42');
-    // the march as a row of portraits, the bonuses of its troop type below
-    expect(el.querySelector('.mini-march .mrow__head')?.getAttribute('alt')).toBe('Attila');
-    expect(el.querySelector('.mini-march .mrow__stats')?.textContent).toContain('Cav ATK 12%');
+    // the profile marches as cards, the bonuses of their troop type in the title
+    expect(el.querySelector('.mini-marches .mb__primary')?.textContent?.trim()).toBe('Attila');
+    expect(el.querySelector('.mini-marches .mb__stats li')?.getAttribute('title')).toBe('Cav ATK');
 
     // the troops filter, combined with the role
     const troops = () => [...el.querySelectorAll<HTMLButtonElement>('.list__filter--troops button')];
@@ -256,28 +270,25 @@ describe('KvkSignups', () => {
       'Lukostrelci · 1',
     ]);
     troops()[2].click();
-    await fixture.whenStable();
+    await flushAll(fixture);
     expect(Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent)).toEqual(['Nelly']);
     troops()[0].click();
-    await fixture.whenStable();
+    await flushAll(fixture);
 
     el.querySelectorAll<HTMLButtonElement>('.list__filter button')[2].click();
-    await fixture.whenStable();
+    await flushAll(fixture);
     expect(Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent)).toEqual(['Bob']);
     expect(troops().map((b) => b.textContent?.replace(/\s+/g, ' ').trim())[3]).toBe('Lukostrelci · 1');
 
-    // the sign-up is a row like a march: troops icon, heads, screenshots, bonuses of its troops
-    expect(el.querySelector('.signup__army .mrow__kind')?.getAttribute('alt')).toBe('Lukostrelci');
-    expect(el.querySelector('.signup__army .mrow__stats')?.textContent).toContain('Arch ATK 8%');
-    el.querySelector<HTMLButtonElement>('.signup__army .mrow__shot')!.click();
-    await fixture.whenStable();
-    // it opens in a dialog on the page, not a new page
-    expect(el.querySelector('dialog[open] .viewer__img')?.getAttribute('src')).toBe('/api/kvk/images/1/');
+    // the sign-up is the card of a march: troops, commanders, the bonuses of its troops (no screenshots)
+    expect(el.querySelector('.signup__army .mb__kind')?.getAttribute('alt')).toBe('Lukostrelci');
+    expect(el.querySelector('.signup__army .mb__stats li')?.getAttribute('title')).toBe('Arch ATK');
+    expect(el.querySelector('.signup__army .mb__stats li')?.textContent).toContain('8%');
 
     // the superuser withdraws it on the second click
     const remove = () => el.querySelector<HTMLButtonElement>('.signup__remove')!;
     remove().click();
-    await fixture.whenStable();
+    await flushAll(fixture);
     http.expectNone('/api/kvk/signups/10/');
     remove().click();
     http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/kvk/signups/10/').flush(null, { status: 204, statusText: '' });
@@ -293,7 +304,7 @@ describe('KvkSignups', () => {
     fixture.componentRef.setInput('data', data);
     fixture.detectChanges();
     const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42' };
-    const marches = [{ id: 5, position: 1, kind: 'cavalry' as const, primary: 'Attila', secondary: '', images: [] }];
+    const marches = [{ id: 5, position: 1, kind: 'cavalry' as const, primary: 'Attila', secondary: '' }];
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
       signups: [
         { ...SIGNUP, player, marches, note: 'rally note' },
@@ -301,6 +312,8 @@ describe('KvkSignups', () => {
       ],
     });
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
     await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.signup').length).toBe(1);
@@ -313,7 +326,7 @@ describe('KvkSignups', () => {
     expect(el.querySelector('.signup__meta')?.textContent).toContain('12. 10.');
     // a filter keeps only the matching sign-up in the card
     el.querySelectorAll<HTMLButtonElement>('.list__filter button')[2].click();
-    await fixture.whenStable();
+    await flushAll(fixture);
     expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Garrison']);
     http.verify();
   });

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import {
   ARMAMENT_PIECES,
   ArmoryApi,
@@ -22,7 +22,7 @@ import {
 } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { ARMAMENT_STATS, March, REQUIRED_STATS } from '../../core/kvk-api';
-import { MarchesApi } from '../../core/marches-api';
+import { MarchChange, MarchesApi } from '../../core/marches-api';
 import { FormationIcon } from '../../shared/formation-icon';
 import { GearGrid } from '../../shared/gear-grid';
 import { SetBonuses } from '../../shared/set-bonuses';
@@ -52,6 +52,8 @@ let nextId = 0;
 export class BuildEditor {
   /** the march with its new build */
   readonly saved = output<March>();
+  /** how the build is saved: a march by default; a KvK sign-up passes its own (PATCH /api/kvk/signup/) */
+  readonly saveWith = input<((march: March, change: MarchChange) => Promise<March>) | null>(null);
 
   private readonly api = inject(MarchesApi);
   private readonly armory = inject(ArmoryApi);
@@ -326,7 +328,9 @@ export class BuildEditor {
     this.busy.set(true);
     this.error.set(null);
     try {
-      const updated = await this.api.update(march.id, { ...this.known(), ...stats, damage: stats.damage ?? 0 });
+      const change = { ...this.known(), ...stats, damage: stats.damage ?? 0 };
+      const save = this.saveWith();
+      const updated = save ? await save(march, change) : await this.api.update(march.id, change);
       this.saved.emit(updated);
       this.close();
     } catch {

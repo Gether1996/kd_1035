@@ -12,7 +12,7 @@ from django.test import Client, TestCase, override_settings
 from PIL import Image
 
 from . import cleanup, private_images
-from .models import MAX_MARCHES, KvkImage, KvkSettings, KvkSignup, March
+from .models import MAX_MARCHES, KvkSettings, KvkSignup, March
 from .test_reminders import make_player
 
 
@@ -64,9 +64,6 @@ class KvkTestCase(TestCase):
         body = {'ingame_name': 'Nelly', 'role': 'rally', 'kind': 'cavalry', 'primary': 'Attila', **data}
         return self.call('put', '/api/kvk/signup/', body, client)
 
-    def upload(self, kind='equipment', file=None, client=None, role='rally'):
-        body = {'role': role, 'kind': kind, 'file': file or picture()}
-        return self.call('post_file', '/api/kvk/signup/images/', body, client)
 
 
 class SignupTests(KvkTestCase):
@@ -81,7 +78,7 @@ class SignupTests(KvkTestCase):
         self.player.refresh_from_db()
         self.assertEqual(self.player.ingame_name, 'Nelly')
         self.assertEqual(res.json()['note'], 'prvý rally')
-        self.assertFalse(res.json()['complete'])
+        self.assertNotIn('images', res.json())
         # a second PUT of the same role changes it
         self.sign_up(secondary='Takeda Shingen')
         self.assertEqual(KvkSignup.objects.get().secondary, 'Takeda Shingen')
@@ -93,32 +90,41 @@ class SignupTests(KvkTestCase):
     def test_rally_and_garrison_are_two_sign_ups_with_their_own_army(self):
         self.sign_up(primary='Attila')
         self.sign_up(role='garrison', primary='Takeda Shingen', note='mesto')
-        self.upload(kind='armaments', role='garrison')
         signups = self.client.get('/api/kvk/').json()['signups']
         self.assertEqual((signups['rally']['primary'], signups['garrison']['primary']), ('Attila', 'Takeda Shingen'))
-        self.assertEqual([i['kind'] for i in signups['garrison']['images']], ['armaments'])
-        self.assertEqual(signups['rally']['images'], [])
-        # a screenshot needs one of the player's sign-ups
-        self.assertEqual(self.upload(role='nothing').status_code, 409)
         # withdrawing the garrison keeps the rally
         self.assertEqual(self.call('delete', '/api/kvk/signup/?role=garrison').status_code, 204)
         self.assertEqual(list(KvkSignup.objects.values_list('role', flat=True)), ['rally'])
 
     def test_filled_in_like_a_march(self):
-        res = self.sign_up(secondary='Takeda Shingen', attack=12, gold=3)
+        # the form: troops, commanders with their skills, note (Gether 12. 10. 2026: exactly like a march)
+        res = self.sign_up(secondary='Takeda Shingen', primary_skills='5111', gold=3)
         self.assertEqual(res.status_code, 200, res.content)
         data = res.json()
-        self.assertEqual((data['primary'], data['secondary'], data['attack'], data['defense'], data['gold']), ('Attila', 'Takeda Shingen', 12, None, 3))
-        # the primary commander is required and must be one of the roster; bonuses have two digits
+        self.assertEqual((data['secondary'], data['primary_skills'], data['secondary_skills']), ('Takeda Shingen', '5111', '5555'))
+        # counts are never typed: a new sign-up starts at 0
+        self.assertEqual((data['attack'], data['gold'], data['gear'], data['inscriptions']), (None, 0, {}, []))
         self.assertEqual(self.sign_up(primary='').json()['primary'], ['required'])
         self.assertEqual(self.sign_up(primary='Nobody').json()['primary'], ['unknown'])
-        self.assertEqual(self.sign_up(attack=100).status_code, 400)
-        # a screenshot of the equipment and of the armaments makes it complete
-        self.upload()
-        self.assertFalse(self.client.get('/api/kvk/').json()['signups']['rally']['complete'])
-        self.upload(kind='armaments')
-        self.assertTrue(self.client.get('/api/kvk/').json()['signups']['rally']['complete'])
-        self.assertEqual(self.upload(kind='vip').status_code, 400)
+        self.assertEqual(self.sign_up(primary_skills='6111').status_code, 400)
+
+        # then its build with the armament bonuses, like the build editor of a march
+        build = {'role': 'rally', 'gear': {'weapon': {'item': 'sacred-dominion', 'crit': True}}, 'formation': 'delta'}
+        self.assertEqual(self.call('patch', '/api/kvk/signup/', build).json()['attack'], ['required'])
+        res = self.call('patch', '/api/kvk/signup/', {**build, 'inscriptions': ['delta-scroll-thrasher'], **STATS, 'attack': 12.5})
+        self.assertEqual(res.status_code, 200, res.content)
+        data = res.json()
+        self.assertEqual((data['attack'], data['damage'], data['gold'], data['formation']), (12.5, 0, 1, 'delta'))
+        self.assertEqual(data['gear']['weapon'], {'item': 'sacred-dominion', 'crit': True, 'iconic': 0})
+        self.assertEqual(self.call('patch', '/api/kvk/signup/', {'role': 'rally', 'formation': 'pincer'}).status_code, 400)
+        # the form again keeps the build
+        self.sign_up(note='zmena')
+        saved = KvkSignup.objects.get()
+        self.assertEqual((saved.formation, saved.gold, saved.note), ('delta', 1, 'zmena'))
+        # a build needs the sign-up
+        self.assertEqual(self.call('patch', '/api/kvk/signup/', {'role': 'garrison', **STATS}).status_code, 404)
+        # no screenshots any more
+        self.assertEqual(self.call('post_file', '/api/kvk/signup/images/', {'role': 'rally', 'kind': 'equipment'}).status_code, 404)
 
     def test_needs_a_role_and_a_name(self):
         self.assertEqual(self.sign_up(role='').status_code, 400)
@@ -136,90 +142,6 @@ class SignupTests(KvkTestCase):
         self.assertEqual(anonymous.get('/api/kvk/').json()['player'], False)
         admin = self.login(User.objects.create_superuser('admin', password='x'))
         self.assertEqual(self.sign_up(client=admin).status_code, 403)
-
-
-class ImageTests(KvkTestCase):
-    def setUp(self):
-        super().setUp()
-        self.sign_up()
-
-    def test_upload_strips_metadata_and_makes_a_thumbnail(self):
-        res = self.upload()
-        self.assertEqual(res.status_code, 201, res.content)
-        image = KvkImage.objects.get()
-        stored = Image.open(self.media / image.path)
-        self.assertEqual(stored.format, 'WEBP')
-        for key in ('exif', 'xmp', 'icc_profile'):
-            self.assertNotIn(key, stored.info)
-        self.assertNotIn(b'PhoneMaker', (self.media / image.path).read_bytes())
-        self.assertEqual(max(stored.size), private_images.MAX_SIDE)
-        self.assertLessEqual(max(Image.open(self.media / image.thumb).size), private_images.THUMB_SIDE)
-        self.assertNotIn(str(self.media), res.json()['url'])
-
-    def test_refuses_non_images_big_files_and_a_second_one_of_a_kind(self):
-        fake = SimpleUploadedFile('shot.png', b'<?php echo 1; ?>', content_type='image/png')
-        self.assertEqual(self.upload(file=fake).json()['detail'], 'not_image')
-        gif = io.BytesIO()
-        Image.new('RGB', (10, 10)).save(gif, 'GIF')
-        self.assertEqual(self.upload(file=SimpleUploadedFile('a.gif', gif.getvalue())).json()['detail'], 'not_image')
-        self.assertEqual(self.upload(kind='selfie').status_code, 400)
-        original = private_images.MAX_BYTES
-        private_images.MAX_BYTES = 100
-        try:
-            self.assertEqual(self.upload().json()['detail'], 'too_big')
-        finally:
-            private_images.MAX_BYTES = original
-        first = self.upload(kind='equipment', file=picture('PNG', (800, 600), exif=False))
-        self.assertEqual(first.status_code, 201)
-        # a second one of the same kind replaces the first – a refused one keeps it
-        self.assertEqual(self.upload(kind='equipment', file=fake).status_code, 400)
-        self.assertEqual(list(KvkImage.objects.values_list('pk', flat=True)), [first.json()['id']])
-        second = self.upload(kind='equipment')
-        self.assertEqual(second.status_code, 201)
-        self.assertEqual(list(KvkImage.objects.values_list('pk', flat=True)), [second.json()['id']])
-
-    def test_only_owner_reviewers_and_superuser_see_the_file(self):
-        url = self.upload().json()['url']
-        self.assertEqual(self.client.get(url).status_code, 200)
-        self.assertEqual(self.client.get(url)['Cache-Control'], 'private, max-age=600')
-        other = self.login(make_player('42').user)
-        self.assertEqual(other.get(url).status_code, 404)
-        self.assertEqual(Client().get(url).status_code, 404)
-
-        reviewer = make_player('43')
-        reviewer.kvk_reviewer = True
-        reviewer.save()
-        self.assertEqual(self.login(reviewer.user).get(url + '?thumb=1').status_code, 200)
-        self.assertEqual(self.login(User.objects.create_superuser('admin', password='x')).get(url).status_code, 200)
-
-    def test_files_go_with_image_signup_and_account(self):
-        self.upload()
-        self.upload(kind='armaments')
-        files = lambda: sorted(p.name for p in (self.media / 'kvk').iterdir())  # noqa: E731
-        self.assertEqual(len(files()), 4)
-
-        first = KvkImage.objects.first()
-        with self.captureOnCommitCallbacks(execute=True):
-            self.assertEqual(self.call('delete', f'/api/kvk/signup/images/{first.pk}/').status_code, 204)
-        self.assertEqual(len(files()), 2)
-
-        with self.captureOnCommitCallbacks(execute=True):
-            self.player.delete_account()
-        self.assertEqual(files(), [])
-
-        player = make_player('44')
-        client = self.login(player.user)
-        self.sign_up(client=client)
-        self.upload(client=client)
-        with self.captureOnCommitCallbacks(execute=True):
-            self.assertEqual(self.call('delete', '/api/kvk/signup/?role=rally', client=client).status_code, 204)
-        self.assertEqual(files(), [])
-
-    def test_someone_elses_image_cannot_be_deleted(self):
-        self.upload()
-        image = KvkImage.objects.get()
-        other = self.login(make_player('42').user)
-        self.assertEqual(self.call('delete', f'/api/kvk/signup/images/{image.pk}/', client=other).status_code, 404)
 
 
 class ReviewTests(KvkTestCase):
@@ -264,22 +186,18 @@ class ReviewTests(KvkTestCase):
 
 
 class RetentionTests(KvkTestCase):
-    def test_sweep_deletes_only_old_orphans(self):
-        self.sign_up()
-        self.upload()
+    def test_sweep_deletes_the_old_screenshots(self):
+        # nothing is uploaded since 12. 10. 2026 – every old file goes, a fresh one waits for the next sweep
+        (self.media / 'kvk').mkdir()
         orphan = self.media / 'kvk' / 'orphan.webp'
         orphan.write_bytes(b'x')
         fresh = self.media / 'kvk' / 'fresh.webp'
         fresh.write_bytes(b'x')
         old = time.time() - 2 * private_images.SWEEP_GRACE_SECONDS
         os.utime(orphan, (old, old))
-        image = KvkImage.objects.get()
-        os.utime(self.media / image.path, (old, old))
         self.assertEqual(cleanup.sweep_files(), 1)
         self.assertFalse(orphan.exists())
         self.assertTrue(fresh.exists())
-        self.assertTrue((self.media / image.path).exists())
-
 
 class MarchTests(KvkTestCase):
     def setUp(self):

@@ -1,18 +1,15 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type { Gear } from './armory';
+import type { MarchChange } from './marches-api';
 
 /** a player signs up for rally and garrison separately, each with its own army (Gether 11. 10. 2026) */
 export type KvkRole = 'rally' | 'garrison';
 export const KVK_ROLES: KvkRole[] = ['rally', 'garrison'];
 /** the troops of a sign-up's army – its bonuses are read as theirs (Gether 11. 10. 2026) */
 export const KVK_KINDS: MarchKind[] = ['infantry', 'cavalry', 'archer'];
-
-/** one screenshot of each, like a march (Gether 11. 10. 2026) */
-export type ImageKind = 'equipment' | 'armaments';
-export const IMAGE_KINDS: ImageKind[] = ['equipment', 'armaments'];
 
 /** the heading of the sign-ups – the superuser writes the date of the next KvK into it; '' = the page's own title */
 export interface KvkHeading {
@@ -21,28 +18,11 @@ export interface KvkHeading {
   title_cs: string;
 }
 
-export interface KvkImage {
-  id: number;
-  kind: ImageKind;
-  url: string;
-  thumb: string;
-  width: number;
-  height: number;
-}
-
-/** filled in like a march: commander pair (backend guides/roster.py) and armament bonuses, null = not filled in */
-export interface KvkSignup extends Partial<Record<MarchStat, number | null>> {
-  id: number;
+/** filled in exactly like a march (Gether 11. and 12. 10. 2026): the army of March plus the role and a note */
+export interface KvkSignup extends Omit<March, 'position'> {
   role: KvkRole;
-  /** cavalry, infantry or archers; '' = saved before it was asked for */
-  kind: MarchKind | '';
-  primary: string;
-  secondary: string;
   note: string;
   updated_at: string;
-  images: KvkImage[];
-  /** a screenshot of the equipment and of the armaments */
-  complete: boolean;
   /** for reviewers */
   player?: { id: number; name: string; ingame_name: string; avatar_url: string; discord_id: string };
   /** for reviewers: the player's marches from /ucet */
@@ -83,15 +63,6 @@ export const REQUIRED_STATS: MarchStat[] = ['attack', 'defense', 'health'];
 /** at most two digits */
 export const STAT_MAX = 99;
 
-export interface MarchImage {
-  id: number;
-  kind: 'equipment' | 'armaments';
-  url: string;
-  thumb: string;
-  width: number;
-  height: number;
-}
-
 export interface March extends Partial<Record<MarchStat, number | null>> {
   id: number;
   position: number;
@@ -102,13 +73,14 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   /** the commanders' skill levels, four digits 1–5 (5555 = expertise) – a march only */
   primary_skills?: string;
   secondary_skills?: string;
-  /** screenshots: only the army of a KvK sign-up shown as a march row – a march has none since 12. 10. 2026 */
-  images?: MarchImage[];
   /** the build clicked together on /marche (core/armory.ts); missing in an older response */
   gear?: Gear;
   formation?: string;
   inscriptions?: string[];
 }
+
+/** a sign-up shown and edited like a march (MarchBuild, BuildEditor) */
+export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 });
 
 /** No rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026). */
 export interface KvkState extends KvkHeading {
@@ -121,12 +93,15 @@ export interface KvkState extends KvkHeading {
   superuser: boolean;
 }
 
-export interface SignupForm extends Partial<Record<MarchStat, number | null>> {
+/** the form of a sign-up (PUT); its build goes with saveBuild (PATCH) */
+export interface SignupForm {
   ingame_name: string;
   role: KvkRole;
   kind: MarchKind | '';
   primary: string;
   secondary: string;
+  primary_skills: string;
+  secondary_skills: string;
   note: string;
 }
 
@@ -137,16 +112,6 @@ export interface ReviewerRow {
   avatar_url: string;
   reviewer: boolean;
   superuser: boolean;
-}
-
-/** Why an upload failed: not an image, over 10 MB, three of that kind already, too many uploads in an hour, anything else */
-export type UploadError = 'not_image' | 'too_big' | 'limit' | 'throttled' | 'failed';
-
-export function uploadError(e: unknown): UploadError {
-  if (!(e instanceof HttpErrorResponse)) return 'failed';
-  if (e.status === 429) return 'throttled';
-  const detail = e.error?.detail;
-  return detail === 'not_image' || detail === 'too_big' || detail === 'limit' ? detail : 'failed';
 }
 
 /** KvK sign-ups (backend accounts/kvk_views.py); browser only, session + CSRF. */
@@ -170,20 +135,9 @@ export class KvkApi {
     return firstValueFrom(this.http.delete('/api/kvk/signup/', { params: { role } }));
   }
 
-  async upload(role: KvkRole, kind: ImageKind, file: File): Promise<KvkImage | UploadError> {
-    const body = new FormData();
-    body.append('role', role);
-    body.append('kind', kind);
-    body.append('file', file);
-    try {
-      return await firstValueFrom(this.http.post<KvkImage>('/api/kvk/signup/images/', body));
-    } catch (e) {
-      return uploadError(e);
-    }
-  }
-
-  removeImage(id: number): Promise<unknown> {
-    return firstValueFrom(this.http.delete(`/api/kvk/signup/images/${id}/`));
+  /** the build of the player's sign-up of that role: equipment, formation, inscriptions, armament bonuses */
+  saveBuild(role: KvkRole, change: MarchChange): Promise<KvkSignup> {
+    return firstValueFrom(this.http.patch<KvkSignup>('/api/kvk/signup/', { role, ...change }));
   }
 
   /** every sign-up (reviewers and the superuser); must run in an injection context – `.reload()` after a change */

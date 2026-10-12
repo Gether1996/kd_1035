@@ -64,13 +64,13 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
 
 - Databáza (`db_data`) a nahrané súbory (`uploads`) sú v Docker volumes. Prežijú rebuild aj `docker compose down`.
 - **Nikdy nespúšťaj `docker compose down -v`.** Zmaže volumes aj s databázou.
-- Kontajner `worker` robí každých `BACKUP_INTERVAL_DAYS` (7) dní zálohu do `BACKUP_PATH` (`./backups`) a nechá posledných `BACKUP_KEEP` (8). Jedna záloha = databáza (`.sqlite3.gz`), nahrané súbory (`_uploads.tar.gz`) a screenshoty hráčov z marchov a prihlášok na KvK (`_private.tar.gz`). Raz denne zmaže expirované prihlásenia (session).
+- Kontajner `worker` robí každých `BACKUP_INTERVAL_DAYS` (7) dní zálohu do `BACKUP_PATH` (`./backups`) a nechá posledných `BACKUP_KEEP` (8). Jedna záloha = databáza (`.sqlite3.gz`), nahrané súbory (`_uploads.tar.gz`) a staré screenshoty hráčov (`_private.tar.gz`, len kým nejaké na disku ostali – nové sa od v1.22.0 nenahrávajú). Raz denne zmaže expirované prihlásenia (session).
 - Úvod adminu (`/admin/`, iba superuser) ukazuje panel **Prehľad**: či worker beží, vek poslednej zálohy, najbližšie a zlyhané notifikácie a či sú v `.env` nastavené Discord premenné. Červené „Worker nebeží“ = `docker compose logs worker` a `docker compose up -d worker`.
 
 ```bash
 # záloha hneď
 docker compose exec -u app worker python manage.py backup_db
-# obnova (názov súboru z ./backups) – vráti databázu a screenshoty tej istej zálohy
+# obnova (názov súboru z ./backups) – vráti databázu (a staré screenshoty, ak ich záloha má)
 docker compose exec -u app worker python manage.py restore_db kd1035_2026-10-07_120000.sqlite3.gz
 ```
 

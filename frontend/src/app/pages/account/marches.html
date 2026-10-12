@@ -97,11 +97,6 @@
       [value]="d"
       (valueChange)="update($event)"
       [commanders]="allCommanders()"
-      [shotKinds]="[]"
-      [withCounts]="false"
-      [withStats]="false"
-      [withSkills]="true"
-      [damageDefaultsToZero]="true"
       [error]="draftError()"
       [heading]="m.march.replace('{n}', '' + draftPosition())"
       idPrefix="march"
@@ -119,7 +114,7 @@
       }
       <p class="form__state is-error" role="status">
         @if (draftError(); as e) {
-          {{ e === 'stats' ? m.required.statsMarch : m.required[e] }}
+          {{ m.required[e] }}
         }
       </p>
     </div>

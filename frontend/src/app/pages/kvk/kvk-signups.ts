@@ -11,10 +11,10 @@ import {
   signal,
 } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
-import { KVK_KINDS, KvkApi, KvkSignup, MARCH_STATS, March, MarchKind, marchIcon } from '../../core/kvk-api';
+import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
-import { MarchRow } from '../../shared/march-row';
+import { MarchBuild } from '../../shared/march-build';
 
 type Role = 'all' | 'rally' | 'garrison';
 
@@ -24,12 +24,13 @@ const players = (signups: KvkSignup[]) => new Set(signups.map((s) => s.player?.i
 /**
  * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: one card per player (Gether 11. 10. 2026: a player
  * signed up for rally and garrison is one card, not two) with the name, contact and profile marches once and each of
- * their sign-ups below – role, the army as a march row (a thumbnail opens its screenshot in a dialog), note. The
+ * their sign-ups below – role, the army as the card of a march (equipment, armaments, bonuses – no screenshots since
+ * 12. 10. 2026), note; the profile marches as cards too. The
  * filters keep the sign-ups that match; the superuser may withdraw a sign-up.
  */
 @Component({
   selector: 'app-kvk-signups',
-  imports: [Icon, MarchRow],
+  imports: [Icon, MarchBuild],
   templateUrl: './kvk-signups.html',
   styleUrl: './kvk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,16 +84,8 @@ export class KvkSignups {
       updated: signups.map((s) => s.updated_at).sort().at(-1)!,
     }));
   });
-  /** each sign-up as a row like a march (no type, no number) */
-  protected readonly armies = computed(
-    () =>
-      new Map(
-        this.all().map((s): [number, March] => {
-          const stats = Object.fromEntries(MARCH_STATS.map((stat) => [stat, s[stat] ?? null]));
-          return [s.id, { id: s.id, position: 0, kind: s.kind, primary: s.primary, secondary: s.secondary, images: s.images, ...stats }];
-        }),
-      ),
-  );
+  /** each sign-up as the card of a march */
+  protected readonly asMarch = asMarch;
   /** the numbers on the filters count players (one card each), like the list below */
   protected readonly counts = computed(() => ({
     all: players(this.all()),
