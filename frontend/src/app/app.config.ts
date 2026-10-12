@@ -29,10 +29,11 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions({
         skipInitialTransition: true,
         onViewTransitionCreated: ({ transition, from, to }) => {
-          // jumping to a section on the same page needs no cross-fade
+          // jumping to a section on the same page or a query change (the calendar's open event) needs no cross-fade.
+          // Skipped once it is ready: skipping earlier rejects `ready`, which Angular logs as an error in dev mode.
           const same = leaf(from).routeConfig === leaf(to).routeConfig;
           const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-          if (same || reduce) transition.skipTransition();
+          if (same || reduce) transition.ready.then(() => transition.skipTransition(), () => {});
         },
       }),
     ),

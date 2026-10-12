@@ -1,5 +1,5 @@
 import { Occurrence } from '../../core/events-api';
-import { calendarQuery, eventLink, runsOn, validDay } from './deep-link';
+import { calendarQuery, eventLink, eventParams, runsOn, validDay } from './deep-link';
 
 const run = (start: string, end: string | null): Occurrence => ({
   id: 7,
@@ -34,6 +34,10 @@ describe('calendar deep link', () => {
     expect(eventLink({ id: 12, start: '2026-10-13T18:00:00Z' }, now)).toBe('?event=12&on=2026-10-13');
     expect(eventLink({ id: 12 }, now)).toBe('?event=12');
     expect(eventLink({ id: 12, start: null }, now)).toBe('?event=12');
+    // a run that is over keeps its own day – today would open the next run instead
+    expect(eventLink(run('2026-09-21T00:00:00Z', '2026-09-27T00:00:00Z'), now)).toBe('?event=7&on=2026-09-21');
+    expect(eventParams(run('2026-09-21T00:00:00Z', '2026-09-27T00:00:00Z'), now)).toEqual({ event: 7, on: '2026-09-21' });
+    expect(eventParams({ id: 12 }, now)).toEqual({ event: 12, on: null });
   });
 
   it('accepts only real days', () => {

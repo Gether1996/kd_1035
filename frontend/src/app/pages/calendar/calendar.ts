@@ -28,7 +28,7 @@ import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { repeatLabel } from '../reminders/format';
 import { DateDialog } from './admin/date-dialog';
-import { eventLink, runsOn, validDay } from './deep-link';
+import { eventLink, eventParams, runsOn, validDay } from './deep-link';
 import { EventEditor } from './admin/event-editor';
 import { EventsPanel } from './admin/events-panel';
 import { EventDialog, RemindState } from './event-dialog';
@@ -56,6 +56,11 @@ import {
 
 const ACCENTS = ['gold', 'red', 'navy'] as const;
 
+/** ?event= and ?on= as one comparable value, '' without either */
+function queryKey(event: unknown, on: unknown): string {
+  return event || on ? `${event ?? ''}|${on ?? ''}` : '';
+}
+
 /**
  * /kalendar – kingdom events in a month grid (an agenda list on phones), in the visitor's time and in UTC.
  * The prerendered page is only the shell: the month depends on today, so it is built in the browser. Clicking an event
@@ -79,8 +84,8 @@ const ACCENTS = ['gold', 'red', 'navy'] as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Calendar {
-  /** ?event=<id> – back from the Discord login started in that event's dialog, or a link from the home page: the
-   * event's dialog opens */
+  /** ?event=<id> – back from the Discord login started in that event's dialog, a link from the home page or a shared
+   * one: the event's dialog opens (and keeps it in the address while open) */
   readonly event = input<string>();
   /** ?on=<YYYY-MM-DD> – the month to open and the day of the run (deep-link.ts calendarQuery); a bad value is ignored */
   readonly on = input<string>();
@@ -173,6 +178,8 @@ export class Calendar {
   });
   /** the event that opened the dialog gets the focus back */
   private trigger: HTMLElement | null = null;
+  /** the query the open dialog stands for ('' = none): written by the dialog, or the deep link it was opened from */
+  private shown = '';
 
   // ---------------------------------------------------------------- superuser: event management
 
@@ -199,13 +206,24 @@ export class Calendar {
       this.destroyRef.onDestroy(() => clearInterval(timer));
     });
 
-    // back from the login started in a dialog (or a link from the home page): open the event – its run on ?on= when
-    // there is one – then drop ?event= and ?on= from the address
+    // ?event= and ?on= open the event's dialog: back from the login started in a dialog, a link from the home page,
+    // a shared link, or the other language of this page. The dialog keeps them in the address while it is open
+    // (below), so the language switch carries them over; `shown` is the query the dialog already stands for, so
+    // writing it, a month change or a reload of the calendar never selects the run again.
     effect(() => {
-      const id = Number(this.event());
+      const event = this.event();
       const on = this.on();
-      if ((!id && !on) || !this.loaded()) return;
+      if (!this.loaded()) return;
       untracked(() => {
+        const key = queryKey(event, on);
+        if (key === this.shown) return;
+        this.shown = key;
+        if (!key) {
+          // the query went away (the Kalendár link in the menu): the dialog closes
+          this.selected.set(null);
+          return;
+        }
+        const id = Number(event);
         const now = Date.now();
         const day = validDay(on);
         const runs = id ? this.all().filter((o) => o.id === id) : [];
@@ -217,12 +235,28 @@ export class Calendar {
             .map((e) => this.irregularItem(e))[0] ??
           runs.at(-1);
         if (item) this.selected.set(item);
-        void this.router.navigate([], {
-          queryParams: { event: null, on: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
+        // nothing to open (an old link, ?on= alone): the query goes; a different run gets its own query below
+        else this.writeQuery(null);
       });
+    });
+
+    // the open dialog in the address (replaced, no history entry; a query change neither scrolls nor reloads the
+    // page – app.ts, core/site-update.ts), gone again once it closes
+    effect(() => {
+      const item = this.selected();
+      untracked(() => this.writeQuery(item));
+    });
+  }
+
+  private writeQuery(item: PublicEvent | null): void {
+    const params = item ? eventParams(item, new Date()) : { event: null, on: null };
+    const key = queryKey(params.event, params.on);
+    if (key === this.shown) return;
+    this.shown = key;
+    void this.router.navigate([], {
+      queryParams: params,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 

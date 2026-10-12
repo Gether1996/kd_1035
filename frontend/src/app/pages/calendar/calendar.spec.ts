@@ -265,7 +265,7 @@ describe('Calendar', () => {
     expect(dialog()!.querySelector('.export')).toBeNull();
   });
 
-  it('a link with ?event= and ?on= opens that month and the run on that day, then drops both', async () => {
+  it('a link with ?event= and ?on= opens that month and the run on that day, and keeps both while it is open', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     // MGE again in November: the link from the home page names the day of the run
     const november = { ...MGE, start: '2026-11-30T00:00:00Z', end: '2026-12-06T00:00:00Z' };
@@ -276,19 +276,83 @@ describe('Calendar', () => {
     );
     expect(el().querySelector('.toolbar__title')?.textContent).toContain('november 2026');
     expect(dialog()?.textContent).toContain('30. 11.');
-    expect(navigate).toHaveBeenCalledWith([], {
+    // the address already names this run (the language switch carries it over)
+    expect(navigate).not.toHaveBeenCalled();
+
+    // closed: the query goes, replaced in the history
+    dialog()!.querySelector<HTMLButtonElement>('.modal__close')!.click();
+    await fixture.whenStable();
+    expect(dialog()).toBeNull();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith([], {
       queryParams: { event: null, on: null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
   });
 
-  it('a bad ?on= is ignored: the current month, and the event still opens', async () => {
+  it('a bad ?on= is ignored: the current month, and the event still opens (with its own day in the address)', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await render({ login_enabled: false, user: null }, DATA, { query: { event: '11', on: '2026-02-30' } });
     expect(el().querySelector('.toolbar__title')?.textContent).toContain('október 2026');
     expect(dialog()?.textContent).toContain('Silk Road');
+    expect(navigate.mock.calls).toHaveLength(1);
+    expect(navigate.mock.calls[0][1]?.queryParams).toEqual({ event: 11, on: '2026-10-13' });
+  });
+
+  it('an unknown event in the link opens nothing and drops the query', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await render({ login_enabled: false, user: null }, DATA, { query: { event: '99', on: '2026-10-13' } });
+    expect(dialog()).toBeNull();
     expect(navigate.mock.calls[0][1]?.queryParams).toEqual({ event: null, on: null });
+  });
+
+  it('the open dialog is in the address, and its own query never opens it again', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    // the router hands the written query back to the inputs
+    navigate.mockImplementation(async (_commands, extras) => {
+      const { event, on } = extras!.queryParams as { event: number | null; on: string | null };
+      fixture.componentRef.setInput('event', event === null ? undefined : String(event));
+      fixture.componentRef.setInput('on', on ?? undefined);
+      return true;
+    });
+    await render({ login_enabled: false, user: null });
+    await open(bar('MGE'));
+    // running since Monday: today, so the link opens the dialog while the run lasts
+    expect(navigate).toHaveBeenCalledExactlyOnceWith([], {
+      queryParams: { event: 2, on: '2026-10-08' },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    await fixture.whenStable();
+    expect(dialog()?.textContent).toContain('MGE – Jazda');
+
+    // another event: its own query
+    dialog()!.querySelector<HTMLButtonElement>('.modal__close')!.click();
+    await fixture.whenStable();
+    expect(navigate.mock.lastCall![1]?.queryParams).toEqual({ event: null, on: null });
+    await open(el().querySelectorAll<HTMLButtonElement>('.strip--irregular .pill-event')[1]);
+    expect(navigate.mock.lastCall![1]?.queryParams).toEqual({ event: 12, on: null });
+
+    // closed: the query goes and nothing opens again, not even when the calendar loads anew (another month)
+    dialog()!.querySelector<HTMLButtonElement>('.modal__close')!.click();
+    await fixture.whenStable();
+    el().querySelector<HTMLButtonElement>('.toolbar__controls .round-btn:last-child')!.click();
+    TestBed.tick();
+    http.expectOne((req) => req.url === '/api/events/').flush(DATA);
+    await settle();
+    await fixture.whenStable();
+    expect(dialog()).toBeNull();
+    expect(navigate).toHaveBeenCalledTimes(4);
+  });
+
+  it('the dialog closes when the query goes away (the Kalendár link in the menu)', async () => {
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await render({ login_enabled: false, user: null }, DATA, { query: { event: '11', on: '2026-10-13' } });
+    expect(dialog()?.textContent).toContain('Silk Road');
+    fixture.componentRef.setInput('event', undefined);
+    fixture.componentRef.setInput('on', undefined);
+    await fixture.whenStable();
+    expect(dialog()).toBeNull();
   });
 
   it('says when the month has no events', async () => {
