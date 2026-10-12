@@ -23,7 +23,7 @@ from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 
-from . import discord_oauth
+from . import discord_oauth, guard
 from .models import TERMS_VERSION, Player
 from .serializers import ProfileSerializer
 
@@ -165,6 +165,8 @@ def discord_callback(request):
         log.warning('Discord login of inactive user %s', user.pk)
         return back_to(next_url, 'error')
     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    # Discord confirmed the ID: an admin from .env gets the admin rights in this session (guard.py)
+    guard.prove_discord(request, profile['id'])
     if not user.player.ingame_name.strip():
         return back_to(ask_for_name(next_url))
     return back_to(next_url)

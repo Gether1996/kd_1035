@@ -599,3 +599,77 @@ class SnapshotPrivacyTests(TransactionTestCase):
 
         # the live database keeps its players
         self.assertEqual(Player.objects.count(), 2)
+
+
+ADMIN_ID = '80351110224678912'
+
+
+@override_settings(
+    **DISCORD,
+    SUPERUSER_GUARD=True,
+    DISCORD_ADMIN_IDS=[ADMIN_ID],
+    SUPERUSER_USERNAME='admin',
+    SUPERUSER_PASSWORD='env-pass',
+)
+class SuperuserGuardTests(TestCase):
+    """Admin rights only for the admins from .env, whatever the database says (Gether 12. 10. 2026)."""
+
+    def setUp(self):
+        cache.clear()
+        for name, value in (('exchange_code', 'tok'), ('fetch_user', dict(PROFILE))):
+            patcher = mock.patch.object(discord_oauth, name, return_value=value)
+            self.addCleanup(patcher.stop)
+            patcher.start()
+
+    def discord_login(self):
+        response = self.client.get('/api/auth/discord/login/')
+        state = parse_qs(urlsplit(response['Location']).query)['state'][0]
+        self.client.get('/api/auth/discord/callback/', {'state': state, 'code': 'abc'})
+
+    def superuser(self) -> bool:
+        return self.client.get('/api/auth/me/').json()['user']['is_superuser']
+
+    def test_the_admin_signed_in_with_discord(self):
+        self.discord_login()
+        self.assertTrue(self.superuser())
+        self.assertEqual(self.client.get('/admin/').status_code, 200)
+        # the ID taken out of .env: no admin rights from the next request on
+        with self.settings(DISCORD_ADMIN_IDS=[]):
+            self.assertFalse(self.superuser())
+
+    def test_flags_set_in_the_database_do_not_count(self):
+        friend = make_player('42')
+        friend.user.is_superuser = friend.user.is_staff = True
+        friend.user.save()
+        self.client.force_login(friend.user)
+        self.assertFalse(self.superuser())
+        self.assertEqual(self.client.get('/admin/').status_code, 302)
+        self.assertEqual(self.client.get('/api/kvk/reviewers/').status_code, 403)
+        # the flags stay in the database – only ignored
+        friend.user.refresh_from_db()
+        self.assertTrue(friend.user.is_superuser)
+
+    def test_a_session_without_the_discord_proof(self):
+        admin = make_player(ADMIN_ID)
+        admin.user.is_superuser = admin.user.is_staff = True
+        admin.user.save()
+        self.client.force_login(admin.user)
+        self.assertFalse(self.superuser())
+
+    def test_the_password_admin_only_with_the_password_from_env(self):
+        User.objects.create_superuser('admin', password='env-pass')
+        self.client.post('/admin/login/', {'username': 'admin', 'password': 'env-pass'})
+        self.assertEqual(self.client.get('/admin/').status_code, 200)
+
+        # someone put their own password hash into the database
+        self.client.logout()
+        admin = User.objects.get(username='admin')
+        admin.set_password('friend')
+        admin.save()
+        self.client.post('/admin/login/', {'username': 'admin', 'password': 'friend'})
+        self.assertIn('_auth_user_id', self.client.session)
+        self.assertEqual(self.client.get('/admin/').status_code, 302)
+        # … and a second superuser of their own
+        User.objects.create_superuser('boss', password='x')
+        self.client.post('/admin/login/', {'username': 'boss', 'password': 'x'})
+        self.assertEqual(self.client.get('/admin/').status_code, 302)

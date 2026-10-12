@@ -35,6 +35,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # admin rights only for the admins named in .env, whatever the database says (accounts/guard.py)
+    'accounts.guard.SuperuserGuard',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -127,8 +129,15 @@ DISCORD_EVENT_ROLE_ID = env('DISCORD_EVENT_ROLE_ID', default='')
 # --- Sign in with Discord (accounts app); both empty = login is switched off ---
 DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID', default='')
 DISCORD_CLIENT_SECRET = env('DISCORD_CLIENT_SECRET', default='')
-# Discord IDs that become superusers when they sign in with Discord (Gether); removing an ID does not revoke it
+# Discord IDs that become superusers when they sign in with Discord (Gether); with SUPERUSER_GUARD only these (and the
+# password admin below) have admin rights – removing an ID takes them away at the next request
 DISCORD_ADMIN_IDS = env.list('DISCORD_ADMIN_IDS', default=[])
+# the password admin of the Django admin (ensure_superuser) – with DISCORD_ADMIN_IDS the only admins the guard lets in
+SUPERUSER_USERNAME = env('DJANGO_SUPERUSER_USERNAME', default='')
+SUPERUSER_PASSWORD = env('DJANGO_SUPERUSER_PASSWORD', default='')
+# admin flags in the database count only in a session that signed in as one of those (Gether 12. 10. 2026); on in
+# production, off in development and tests (they switch it on themselves)
+SUPERUSER_GUARD = env.bool('SUPERUSER_GUARD', default=not DEBUG)
 
 # --- Personal event reminders (accounts app, sent by the worker as Discord DMs); empty = switched off ---
 # bot user of the same Discord application → private messages
