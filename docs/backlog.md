@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 10. 10. 2026 – kolo
 
 ## Hotové
 
+- **12. 10. 2026 – v1.21.4:** hráč môže mať až 10 marchov (predtým 7).
 - **12. 10. 2026 – v1.21.3:** hľadanie predmetu v editore výbavy na mobile – pole sa posunie na vrch okna a nájdené predmety nezakryje klávesnica ani pás s tlačidlami.
 - **12. 10. 2026 – v1.21.2:** formulár marchu na veľkej obrazovke už nie je roztiahnutý cez celý riadok – ostáva široký ako karta, prepínač Expertise je hneď pri mene commandera.
 - **12. 10. 2026 – v1.21.1:** užšie karty marchov – inscriptions pod sebou vedľa výbavy, bonusy v mriežke 2 × 2, iconic bez krídel; vedľa seba sa zmestí viac marchov (1920 px: 4) a obsah nie je roztiahnutý na celú obrazovku.

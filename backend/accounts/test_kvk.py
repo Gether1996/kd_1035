@@ -12,7 +12,7 @@ from django.test import Client, TestCase, override_settings
 from PIL import Image
 
 from . import cleanup, private_images
-from .models import KvkImage, KvkSettings, KvkSignup, March
+from .models import MAX_MARCHES, KvkImage, KvkSettings, KvkSignup, March
 from .test_reminders import make_player
 
 
@@ -299,11 +299,12 @@ class MarchTests(KvkTestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def test_add_up_to_seven_edit_and_delete_moves_the_rest_up(self):
+    def test_add_up_to_ten_edit_and_delete_moves_the_rest_up(self):
+        self.assertEqual(MAX_MARCHES, 10)
         # a new march needs its type and primary commander
         self.assertEqual(self.call('post', '/api/me/marches/', {'primary': 'Attila'}).json()['kind'], ['required'])
         self.assertEqual(self.call('post', '/api/me/marches/', {'kind': 'cavalry'}).json()['primary'], ['required'])
-        for i in range(7):
+        for i in range(MAX_MARCHES):
             res = self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
             self.assertEqual((res.status_code, res.json()['position']), (201, i + 1))
         self.assertEqual(self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS}).json()['detail'], 'limit')
@@ -318,7 +319,7 @@ class MarchTests(KvkTestCase):
         first = marches[0]['id']
         self.assertEqual(self.call('delete', f'/api/me/marches/{first}/').status_code, 204)
         positions = [m['position'] for m in self.client.get('/api/me/marches/').json()['marches']]
-        self.assertEqual(positions, [1, 2, 3, 4, 5, 6])
+        self.assertEqual(positions, list(range(1, MAX_MARCHES)))
 
     def test_a_commander_left_out_of_the_picker_stays_only_where_it_is_saved(self):
         self.assertEqual(self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Cao Cao', **STATS}).json()['primary'], ['unknown'])

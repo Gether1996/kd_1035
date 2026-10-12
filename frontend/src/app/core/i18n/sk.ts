@@ -309,7 +309,7 @@ export const sk = {
     loadError: 'Marche sa nepodarilo načítať.',
     march: '{n}. march',
     add: 'Pridať {n} march',
-    ordinals: ['prvý', 'druhý', 'tretí', 'štvrtý', 'piaty', 'šiesty', 'siedmy'],
+    ordinals: ['prvý', 'druhý', 'tretí', 'štvrtý', 'piaty', 'šiesty', 'siedmy', 'ôsmy', 'deviaty', 'desiaty'],
     kind: 'Typ marchu',
     kinds: {
       infantry: 'Pechota',

@@ -304,7 +304,8 @@ class KvkImage(models.Model):
         return f'{self.signup} · {self.get_kind_display()}'
 
 
-MAX_MARCHES = 7
+# Gether 12. 10. 2026: up to 10 (players with 9 marches could not fill them in; 7 before)
+MAX_MARCHES = 10
 
 
 

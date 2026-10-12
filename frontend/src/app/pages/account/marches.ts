@@ -27,9 +27,10 @@ type Draft = ArmyDraft & { id: number | null };
 
 /**
  * The player's marches on /marche?tab=prehlad – "Prehľad marchov" (Gether 12. 10. 2026: "Moje marche" merged into it,
- * no equipment screenshot): up to 7 marches, each a card with its equipment and armaments (MarchBuild). A march is
- * filled in (MarchFields: type, commander pair, ATK, DEF, HP, All DMG) and saved – a new one goes on to its equipment
- * and armaments right away (BuildEditor, the inscription counts follow from it); only then the next one can be added.
+ * no equipment screenshot): up to 10 marches (7 before), each a card with its equipment and armaments (MarchBuild).
+ * A march is filled in (MarchFields: type, commanders and their skills) and saved – a new one goes on to its equipment
+ * and armaments right away (BuildEditor: ATK, DEF, HP, All DMG there too, the inscription counts follow from it); only
+ * then the next one can be added.
  * Seen by the player, the reviewers (R4) and the superuser – and every signed-in player when the player makes them
  * public.
  */
@@ -51,7 +52,7 @@ export class Marches {
   protected readonly loaded = computed(() => this.data.hasValue());
   protected readonly failed = computed(() => !!this.data.error());
   protected readonly marches = linkedSignal<March[]>(() => (this.data.hasValue() ? this.data.value().marches : []));
-  protected readonly max = computed(() => (this.data.hasValue() ? this.data.value().max : 7));
+  protected readonly max = computed(() => (this.data.hasValue() ? this.data.value().max : 10));
   /** who sees the marches: every signed-in player (true) or only R4 and the superuser */
   protected readonly isPublic = linkedSignal(() => (this.data.hasValue() ? this.data.value().public : false));
   protected readonly visibilityFailed = signal(false);

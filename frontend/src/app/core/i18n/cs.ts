@@ -305,7 +305,7 @@ export const cs: Dict = {
     loadError: 'Marche se nepodařilo načíst.',
     march: '{n}. march',
     add: 'Přidat {n} march',
-    ordinals: ['první', 'druhý', 'třetí', 'čtvrtý', 'pátý', 'šestý', 'sedmý'],
+    ordinals: ['první', 'druhý', 'třetí', 'čtvrtý', 'pátý', 'šestý', 'sedmý', 'osmý', 'devátý', 'desátý'],
     kind: 'Typ marche',
     kinds: {
       infantry: 'Pěchota',
