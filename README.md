@@ -3,7 +3,7 @@
 Promo web pre KD 1035 – jediné čisto slovensko-české kráľovstvo v Rise of Kingdoms.
 Angular (prerendrované stránky, SK `/` + CZ `/cz`) + Django/DRF + SQLite, všetko v Dockeri.
 
-Projektové pravidlá: [CLAUDE.md](CLAUDE.md).
+Projektové pravidlá: [CLAUDE.md](CLAUDE.md). Nástroje pre Claude Code (skilly a agenti): [.claude/README.md](.claude/README.md).
 
 ## Lokálny vývoj
 
