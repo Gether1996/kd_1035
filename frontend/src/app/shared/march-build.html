@@ -43,6 +43,7 @@
             }
           </ul>
         }
+        <app-set-bonuses [worn]="worn()" />
       } @else if (failed()) {
         <p class="mb__note">{{ b.loadError }}</p>
       } @else {

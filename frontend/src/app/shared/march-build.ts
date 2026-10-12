@@ -14,6 +14,7 @@ import { I18n } from '../core/i18n/i18n';
 import { ARMAMENT_STATS, INSCRIPTIONS, March, REQUIRED_STATS, marchIcon } from '../core/kvk-api';
 import { FormationIcon } from './formation-icon';
 import { GearGrid } from './gear-grid';
+import { SetBonuses } from './set-bonuses';
 import { statLabel } from './stat-label';
 
 let nextId = 0;
@@ -27,7 +28,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-march-build',
-  imports: [FormationIcon, GearGrid],
+  imports: [FormationIcon, GearGrid, SetBonuses],
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,6 +80,9 @@ export class MarchBuild {
     const shown = values.filter((s) => s.value > 0);
     return shown.length ? { title: b.gearStats.replace('{troop}', b.troops[troop]), values: shown } : null;
   });
+
+  /** the sets worn – their bonuses reached are written under the equipment */
+  protected readonly worn = computed(() => this.totals()?.sets ?? []);
 
   protected readonly formation = computed(() => this.index()?.formations.get(this.build().formation) ?? null);
 

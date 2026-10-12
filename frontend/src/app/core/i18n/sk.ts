@@ -400,6 +400,7 @@ export const sk = {
       iconic: 'Iconic',
       iconicNone: 'Nie',
       gearStats: 'Bonusy z výbavy ({troop})',
+      sets: 'Setové bonusy',
       troops: { infantry: 'pechota', cavalry: 'jazda', archer: 'lukostrelci', siege: 'siege' },
       stats: { attack: 'ATK', defense: 'DEF', health: 'HP', march_speed: 'Rýchlosť' },
       pieces: { emblem: 'Emblem', flag: 'Flag', instrument: 'Instrument', scroll: 'Scroll' },

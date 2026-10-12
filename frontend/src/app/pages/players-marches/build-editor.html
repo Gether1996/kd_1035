@@ -14,11 +14,15 @@
       </header>
 
       @if (index(); as ix) {
-        <div class="segmented be__tabs" role="group" [attr.aria-label]="b.title">
-          <button type="button" [attr.aria-pressed]="tab() === 'gear'" (click)="tab.set('gear')">{{ b.gear }}</button>
-          <button type="button" [attr.aria-pressed]="tab() === 'armaments'" (click)="tab.set('armaments')">
-            {{ b.armaments }}
-            <span class="be__count">{{ draft().inscriptions.length }}</span>
+        <!-- two big tabs, so it is clear the editor switches between the equipment and the armaments (Gether 12. 10. 2026) -->
+        <div class="be__tabs" role="group" [attr.aria-label]="b.title">
+          <button type="button" class="be__tab" [attr.aria-pressed]="tab() === 'gear'" (click)="tab.set('gear')">
+            <svg appIcon="shield"></svg>{{ b.gear }}
+            <span class="be__count">{{ gearCount() }}/8</span>
+          </button>
+          <button type="button" class="be__tab" [attr.aria-pressed]="tab() === 'armaments'" (click)="tab.set('armaments')">
+            <svg appIcon="flag"></svg>{{ b.armaments }}
+            <span class="be__count">{{ draft().inscriptions.length }}/{{ maxPerPiece * 4 }}</span>
           </button>
         </div>
 
@@ -33,6 +37,7 @@
                   }
                 </ul>
               }
+              <app-set-bonuses [worn]="worn()" />
             </div>
 
             <div class="be__picker">

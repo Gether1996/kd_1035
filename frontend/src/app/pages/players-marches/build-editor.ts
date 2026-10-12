@@ -23,6 +23,7 @@ import { ARMAMENT_STATS, March, REQUIRED_STATS, STAT_MAX } from '../../core/kvk-
 import { MarchesApi } from '../../core/marches-api';
 import { FormationIcon } from '../../shared/formation-icon';
 import { GearGrid } from '../../shared/gear-grid';
+import { SetBonuses } from '../../shared/set-bonuses';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
 import { statLabel } from '../../shared/stat-label';
@@ -41,7 +42,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-build-editor',
-  imports: [FormationIcon, GearGrid, Icon],
+  imports: [FormationIcon, GearGrid, Icon, SetBonuses],
   templateUrl: './build-editor.html',
   styleUrl: './build-editor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -173,21 +174,28 @@ export class BuildEditor {
     });
   }
 
-  /** what the equipment gives the march's troops, live */
+  /** what the equipment gives the march's troops, live; a 0 is left out */
   protected readonly gearStats = computed(() => {
-    const index = this.index();
+    const totals = this.totals();
     const march = this.march();
-    if (!index || !march || !Object.keys(this.draft().gear).length) return null;
-    const totals = gearTotals(index, this.draft().gear);
+    if (!totals || !march) return null;
     const troop = troopOf(march.kind, totals.stats);
     const b = this.t().build;
-    return {
-      title: b.gearStats.replace('{troop}', b.troops[troop]),
-      values: TROOP_STATS.map((stat) => ({ stat, label: b.stats[stat], value: troopStat(totals.stats, troop, stat) })).filter(
-        (s) => s.value > 0 || s.stat !== 'march_speed',
-      ),
-    };
+    const values = TROOP_STATS.map((stat) => ({ stat, label: b.stats[stat], value: troopStat(totals.stats, troop, stat) }));
+    const shown = values.filter((s) => s.value > 0);
+    return shown.length ? { title: b.gearStats.replace('{troop}', b.troops[troop]), values: shown } : null;
   });
+
+  private readonly totals = computed(() => {
+    const index = this.index();
+    return index ? gearTotals(index, this.draft().gear) : null;
+  });
+
+  /** the sets worn – their bonuses reached are written under the equipment */
+  protected readonly worn = computed(() => this.totals()?.sets ?? []);
+
+  /** the slots filled, on the Výbava tab */
+  protected readonly gearCount = computed(() => Object.keys(this.draft().gear).length);
 
   // ---------------------------------------------------------------- armaments
 

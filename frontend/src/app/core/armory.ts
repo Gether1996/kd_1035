@@ -189,3 +189,16 @@ export class ArmoryApi {
     if (this.data.error()) this.data.reload();
   }
 }
+
+/** The sets whose bonuses are reached, with the game's text of each bonus ("Cavalry Attack +5%") */
+export function reachedSets(sets: ActiveSet[]): { id: string; name: string; count: number; total: number; bonuses: string[] }[] {
+  return sets
+    .filter((s) => s.bonuses.length)
+    .map((s) => ({
+      id: s.set.id,
+      name: s.set.name,
+      count: s.count,
+      total: s.set.pieces.length,
+      bonuses: s.bonuses.map((b) => b.text),
+    }));
+}

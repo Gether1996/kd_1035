@@ -1,5 +1,5 @@
 import { ARMORY } from './armory-testing';
-import { armoryIndex, gearTotals, hasBuild, troopOf, troopStat } from './armory';
+import { armoryIndex, gearTotals, hasBuild, reachedSets, troopOf, troopStat } from './armory';
 
 describe('armory', () => {
   const index = armoryIndex(ARMORY);
@@ -18,6 +18,9 @@ describe('armory', () => {
     expect(sets.map((s) => [s.set.id, s.count, s.bonuses.length])).toEqual([['wasteland', 2, 1]]);
     // one piece of a set: listed, no bonus
     expect(gearTotals(index, { chest: { item: 'heavy-armor', crit: false, iconic: 0 } }).sets[0].bonuses).toEqual([]);
+    // written on the card only when a bonus is reached
+    expect(reachedSets(sets)).toEqual([{ id: 'wasteland', name: 'Hellish Wasteland', count: 2, total: 2, bonuses: ['Cavalry Attack +5%'] }]);
+    expect(reachedSets(gearTotals(index, { chest: { item: 'heavy-armor', crit: false, iconic: 0 } }).sets)).toEqual([]);
   });
 
   it('shows the march type troops; a rally or garrison the strongest, siege for siege', () => {

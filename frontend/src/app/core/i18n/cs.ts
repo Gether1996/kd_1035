@@ -394,6 +394,7 @@ export const cs: Dict = {
       iconic: 'Iconic',
       iconicNone: 'Ne',
       gearStats: 'Bonusy z výbavy ({troop})',
+      sets: 'Setové bonusy',
       troops: { infantry: 'pěchota', cavalry: 'jízda', archer: 'lukostřelci', siege: 'siege' },
       stats: { attack: 'ATK', defense: 'DEF', health: 'HP', march_speed: 'Rychlost' },
       pieces: { emblem: 'Emblem', flag: 'Flag', instrument: 'Instrument', scroll: 'Scroll' },
