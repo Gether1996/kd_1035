@@ -68,14 +68,18 @@
           <ng-container *ngTemplateOutlet="editor" />
         </li>
       }
+      <!-- the next march as an empty card in the grid, as tall as the cards of its row (Gether 12. 10. 2026) -->
+      @if (canAdd()) {
+        <li class="march march--add">
+          <button type="button" class="add-march" [attr.aria-disabled]="busy() || null" (click)="add()">
+            <span class="add-march__plus"><svg appIcon="plus"></svg></span>
+            {{ addLabel() }}
+          </button>
+        </li>
+      }
     </ol>
 
-    @if (canAdd()) {
-      <button type="button" class="add-march" [attr.aria-disabled]="busy() || null" (click)="add()">
-        <span class="add-march__plus"><svg appIcon="plus"></svg></span>
-        {{ addLabel() }}
-      </button>
-    } @else if (draft() && marches().length < max()) {
+    @if (draft() && marches().length < max()) {
       <p class="march-hint">{{ m.saveFirst }}</p>
     }
     <p class="form__state is-error" role="status">{{ error() }}</p>
