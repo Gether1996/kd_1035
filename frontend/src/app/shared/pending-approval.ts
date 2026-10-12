@@ -1,10 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject } from '@angular/core';
+import { Auth } from '../core/auth';
 import { I18n } from '../core/i18n/i18n';
 import { Icon } from './icon';
+import { reloadOnReturn } from './reload-on-return';
 
 /**
  * A new player the superadmin has not approved yet (Gether 12. 10. 2026) – instead of adding marches, the KvK sign-up
- * and the other players' marches. The superadmin already got a Discord message about them.
+ * and the other players' marches. Asks who is signed in again when it shows and when the player comes back to the tab,
+ * so the page opens up as soon as the superadmin approves them.
  */
 @Component({
   selector: 'app-pending-approval',
@@ -62,4 +66,10 @@ import { Icon } from './icon';
 export class PendingApproval {
   private readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches.pending);
+
+  constructor() {
+    const auth = inject(Auth);
+    if (isPlatformBrowser(inject(PLATFORM_ID))) auth.reload();
+    reloadOnReturn(() => auth.reload());
+  }
 }

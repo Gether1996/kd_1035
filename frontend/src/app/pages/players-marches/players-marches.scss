@@ -53,6 +53,11 @@
   margin-left: auto;
 }
 
+// "upravené 12. 10." never breaks between the day and the month
+.player__updated {
+  white-space: nowrap;
+}
+
 .players {
   display: grid;
   // one column: an open player's march cards need the width, and opening one never leaves holes in a grid

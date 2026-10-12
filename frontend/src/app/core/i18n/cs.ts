@@ -271,7 +271,6 @@ export const cs: Dict = {
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čeká',
-    pendingCount: 'Čeká na schválení: {n}',
     filters: {
       role: 'Role',
       all: 'Všichni',
@@ -312,7 +311,7 @@ export const cs: Dict = {
     title: 'Moje marche',
     pending: {
       title: 'Čekáš na schválení',
-      text: 'Superadmin tě ještě neschválil – upozornění mu už přišlo na Discord. Pak přidáš marche i přihlášku na KvK a uvidíš marche ostatních.',
+      text: 'Superadmin tě ještě neschválil. Až tě schválí, přidáš marche i přihlášku na KvK a uvidíš marche ostatních.',
     },
     loadError: 'Marche se nepodařilo načíst.',
     march: '{n}. march',

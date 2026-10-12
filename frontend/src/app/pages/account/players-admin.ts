@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
 import { KvkApi, ReviewerRow } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
@@ -155,10 +155,21 @@ export class PlayersAdmin {
     return new Map(order.map(({ p }, i) => [p.id, i]));
   });
 
+  /**
+   * The players as they were when a filter was picked (or the list loaded): a switch flipped under "Čakajú" or "R4"
+   * keeps its row until the next filter change – the counts on the buttons follow at once.
+   */
+  private readonly filtered = linkedSignal({
+    source: () => [this.role(), this.approval(), this.data.hasValue() ? this.data.value() : null] as const,
+    computation: () => new Map(untracked(this.players).map((p) => [p.id, p])),
+  });
+
   protected readonly shown = computed(() => {
     const rank = this.rank();
+    const filtered = this.filtered();
+    const as = (p: ReviewerRow) => filtered.get(p.id) ?? p;
     return this.found()
-      .filter((p) => this.roleMatches(p, this.role()) && this.approvalMatches(p, this.approval()))
+      .filter((p) => this.roleMatches(as(p), this.role()) && this.approvalMatches(as(p), this.approval()))
       .sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
   });
 

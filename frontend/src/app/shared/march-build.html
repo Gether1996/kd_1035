@@ -26,7 +26,7 @@
         @if (c.skills === '5555') {
           <span class="mb__expertise" role="img" [attr.aria-label]="k.skills.expertise" [title]="k.skills.expertise"><svg appIcon="crown"></svg></span>
         } @else if (c.skills) {
-          <span class="mb__skills" [title]="k.skills.title">{{ c.skills }}</span>
+          <span class="mb__skills" role="img" [attr.aria-label]="k.skills.title + ': ' + c.skills.split('').join(' ')" [title]="k.skills.title">{{ c.skills }}</span>
         }
       </span>
     } @empty {

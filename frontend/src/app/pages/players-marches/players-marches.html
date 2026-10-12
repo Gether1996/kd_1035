@@ -89,7 +89,7 @@
             <img class="player__avatar" [src]="player.avatar_url" alt="" width="40" height="40" />
             <span class="player__who">
               <strong class="player__name">{{ name(player) }}</strong>
-              <span class="player__discord">{{ player.ingame_name ? player.name + ' · ' : '' }}{{ updated(player.updated_at) }}</span>
+              <span class="player__discord">{{ player.ingame_name ? player.name + ' · ' : '' }}<span class="player__updated">{{ updated(player.updated_at) }}</span></span>
             </span>
             @if (player.me) {
               <span class="tag">{{ p.you }}</span>

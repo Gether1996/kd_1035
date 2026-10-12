@@ -275,7 +275,6 @@ export const sk = {
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čaká',
-    pendingCount: 'Čaká na schválenie: {n}',
     filters: {
       role: 'Rola',
       all: 'Všetci',
@@ -316,7 +315,7 @@ export const sk = {
     title: 'Moje marche',
     pending: {
       title: 'Čakáš na schválenie',
-      text: 'Superadmin ťa ešte neschválil – upozornenie mu už prišlo na Discord. Potom pridáš marche aj prihlášku na KvK a uvidíš marche ostatných.',
+      text: 'Superadmin ťa ešte neschválil. Keď ťa schváli, pridáš marche aj prihlášku na KvK a uvidíš marche ostatných.',
     },
     loadError: 'Marche sa nepodarilo načítať.',
     march: '{n}. march',

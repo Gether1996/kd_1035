@@ -18,7 +18,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
 from . import private_images
-from .army import BuildSerializer, current_of
+from .army import BUILD_FIELDS, BuildSerializer, current_of
 from .models import MARCH_STATS, KvkSettings, KvkSignup, March, Player
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import not_approved, player_of
@@ -154,8 +154,8 @@ def signup(request):
     if request.method == 'PATCH':
         if not saved:
             return Response(status=404)
-        # the build only – the form goes with PUT
-        build = {key: value for key, value in body.items() if key not in ('role', 'ingame_name', 'kind', 'note')}
+        # the build and the armament bonuses only – the form (commanders, skills, note…) goes with PUT
+        build = {key: value for key, value in body.items() if key in BUILD_FIELDS or key in MARCH_STATS}
         form = SignupSerializer(data=build, partial=True, context={'current': current_of(saved)})
         form.is_valid(raise_exception=True)
         for field, value in form.validated_data.items():

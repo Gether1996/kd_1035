@@ -43,6 +43,7 @@ function setup(user: object) {
           enabled: signal(true),
           user: signal(user),
           loginUrl: () => '/api/auth/discord/login/',
+          reload: () => {},
         },
       },
     ],

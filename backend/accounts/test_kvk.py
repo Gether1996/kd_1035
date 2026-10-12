@@ -490,3 +490,26 @@ class NewcomerTests(TestCase):
         announce_new_players()
         self.send.assert_not_called()
         self.assertTrue(Player.objects.get(pk=newbie.pk).announced)
+
+    @override_settings(DISCORD_ADMIN_IDS=['1', '2'])
+    def test_an_admin_who_got_it_does_not_get_it_again(self):
+        newbie = make_player('42', approved=False)
+        Player.objects.filter(pk=newbie.pk).update(announced=False)
+        self.send.side_effect = [None, discord_bot.BotError('429', temporary=True)]
+        self.assertEqual(announce_new_players(), 1)
+        self.assertEqual(announce_new_players(), 0)
+        self.assertEqual([c.args[0] for c in self.send.call_args_list], ['1', '2'])
+
+
+class SignupBuildTests(KvkTestCase):
+    def test_the_build_patch_changes_only_the_build(self):
+        self.sign_up(note='večer')
+        res = self.call(
+            'patch',
+            '/api/kvk/signup/',
+            {'role': 'rally', 'primary': '', 'primary_skills': '1111', 'note': 'x', 'kind': 'archer', 'attack': 12.5},
+        )
+        self.assertEqual(res.status_code, 200, res.content)
+        saved = KvkSignup.objects.get()
+        self.assertEqual((saved.primary, saved.primary_skills, saved.note, saved.kind), ('Attila', '5555', 'večer', 'cavalry'))
+        self.assertEqual(float(saved.attack), 12.5)

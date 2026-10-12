@@ -55,7 +55,14 @@
           <div class="skills__row">
             <span class="skills__name">{{ name }}</span>
             <label class="skills__expertise">
-              <input class="switch" type="checkbox" role="switch" [checked]="level === expertise" (change)="toggleExpertise(slot)" />
+              <input
+                class="switch"
+                type="checkbox"
+                role="switch"
+                [attr.aria-label]="m.skills.expertise + ': ' + name"
+                [checked]="level === expertise"
+                (change)="toggleExpertise(slot)"
+              />
               {{ m.skills.expertise }}
             </label>
             @if (level !== expertise) {

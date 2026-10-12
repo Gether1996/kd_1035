@@ -328,13 +328,14 @@ describe('PlayersAdmin', () => {
     await settle(fixture);
     expect(names()).toEqual(['nova']);
 
-    // approve: the row stays where it is until the filter is changed
+    // approve: the row stays until another filter is picked, the counts follow at once
     el.querySelector<HTMLInputElement>('.switch')!.click();
     const req = http.expectOne('/api/kvk/reviewers/3/');
     expect(req.request.body).toEqual({ approved: true });
     req.flush({ id: 3, reviewer: false, approved: true });
     await settle(fixture);
-    expect(names()).toEqual([]);
+    expect(names()).toEqual(['nova']);
+    expect(filters()[1].textContent?.trim()).toBe('Čakajú · 0');
     filters()[0].click();
     await settle(fixture);
     expect(names()).toEqual(['nova', 'Gether', 'Nelly']);

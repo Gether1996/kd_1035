@@ -55,11 +55,14 @@ def announce_new_players() -> int:
     for player in pending[:PER_TICK]:
         if not Player.objects.filter(pk=player.pk, announced=False).update(announced=True):
             continue  # another worker took it
+        sent = False
         for target in targets:
             try:
                 discord_bot.send_dm(target, message(player))
+                sent = True
             except discord_bot.BotError as exc:
-                if exc.temporary:
+                if exc.temporary and not sent:
+                    # nobody has it yet: the next tick tries again (with more admins, one who got it never gets it twice)
                     Player.objects.filter(pk=player.pk).update(announced=False)
                     log.warning('Discord unavailable, the new player waits for the next tick: %s', exc)
                     raise DiscordPaused from exc

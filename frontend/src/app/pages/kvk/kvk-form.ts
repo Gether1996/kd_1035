@@ -99,9 +99,9 @@ export class KvkForm {
   protected readonly asMarch = asMarch;
   protected readonly built = hasBuild;
 
-  /** the build editor saves into the sign-up of the role shown */
-  protected readonly saveBuild = (_march: March, change: MarchChange): Promise<March> =>
-    this.api.saveBuild(this.role(), change).then(asMarch);
+  /** the build editor saves into the sign-up it was opened for */
+  protected readonly saveBuild = (march: March, change: MarchChange): Promise<March> =>
+    this.api.saveBuild((march as Partial<KvkSignup>).role ?? this.role(), change).then(asMarch);
 
   protected showRole(role: KvkRole): void {
     this.role.set(role);
