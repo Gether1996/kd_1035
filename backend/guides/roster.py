@@ -14,7 +14,10 @@ the guides (or one missing on rokstats, like Gonzalo de Cordoba) shows up withou
 
 import unicodedata
 
+from .commander_index import _names as names_in
+from .commander_index import _pairs as pair_cells
 from .commander_index import commander_index
+from .meta import commanders
 from .meta.render import COMMANDER_DIR, slug
 
 ROSTER = [
@@ -137,6 +140,47 @@ EXCLUDED = frozenset(
     }
 )
 
+# the troop type of every commander a march may name (the game client via app.rokstats.online/commanders, "primaryBranch",
+# read 13. 10. 2026; Gonzalo de Cordoba and Gajah Mada are missing there – siege by our siege guide). Integration =
+# gatherers and peacekeepers. The picker puts the meta of the march's type first, then leadership (Gether 13. 10. 2026).
+_TROOPS = {
+    'infantry': (
+        'Alexander the Great', 'Bai Qi', 'Bjorn Ironside', 'Charles Martel', 'Cheok Jun-gyeong', 'Constantine I',
+        'Flavius Aetius', 'Gorgo', 'Guan Yu', 'Harald Sigurdsson', 'Ivar the Boneless', "K'inich Janaab' Pakal",
+        'Leonidas I', 'Liu Che', 'Ragnar Lodbrok Prime', 'Richard', 'Sargon the Great', 'Scipio Aemilianus',
+        'Scipio Africanus Prime', 'Sun Tzu', 'Sun Tzu Prime', 'Tariq ibn Ziyad', 'Tokugawa Ieyasu',
+        'William Wallace', 'Zenobia',
+    ),
+    'cavalry': (
+        'Achilles', 'Alexander Nevsky', 'Arthur Pendragon', 'Attila', 'Baibars', 'Belisarius', 'Belisarius Prime',
+        'Bertrand du Guesclin', 'Cao Cao', 'Chandragupta Maurya', 'David IV', 'Gang Gamchan', 'Genghis Khan',
+        'Huo Qubing', 'Ivan IV', 'Jadwiga', 'Jan Žižka', 'Joan of Arc Prime', 'Justinian I', 'Minamoto', 'Pelagius',
+        'Saladin', 'Subutai', 'Takeda Shingen', 'William I', 'William Marshal', 'Xiang Yu',
+    ),
+    'archer': (
+        'Alp Arslan', 'Amanitore', 'Artemisia I', 'Ashurbanipal', 'Boudica Prime', 'Choe Yeong', 'Cyrus the Great',
+        'Dido', 'Edward of Woodstock', 'El Cid', 'Gilgamesh', 'Hayam Wuruk', 'Henry V', 'Hermann Prime', 'Imhotep',
+        'Nebuchadnezzar II', 'Qin Shi Huang', 'Ramesses II', 'Shajar al-Durr', 'Shapur I', "Siyaj K'ak'", 'Tomyris',
+        'Yi Seong-Gye', 'Zhuge Liang',
+    ),
+    'leadership': (
+        'Aethelflaed', 'Charlemagne', 'Hannibal Barca', 'Hector', 'Heraclius', 'Honda Tadakatsu', 'Lu Bu',
+        'Matthias I', 'Moctezuma I', 'Philip II', 'Suleiman I', 'Theodora', 'Trajan', 'Vercingetorix', 'Yi Sun-sin',
+    ),
+    'engineering': (
+        'Afonso de Albuquerque', 'Archimedes', 'Babur', 'Elizabeth I', 'Gajah Mada', 'Gonzalo de Cordoba',
+        'John Hunyadi', 'Margaret I', 'Mary I', 'Stephen III',
+    ),
+    'integration': (
+        'Boudica', 'Casimir III', 'Constance', 'Joan of Arc', 'Lohar', 'Matilda of Flanders', 'Pepin III',
+        'Seondeok', 'Yahya ibn Khalid',
+    ),
+}
+TROOPS = {name: troop for troop, names in _TROOPS.items() for name in names}
+
+# the march types whose picker starts with the commanders of their pair guide
+META_KINDS = ('infantry', 'cavalry', 'archer', 'engineering')
+
 
 def portrait_name(name: str) -> str:
     """The portrait file of a commander: "Jan Žižka" → jan-zizka (slug of the name without diacritics)."""
@@ -147,13 +191,34 @@ def _icon(name: str) -> str:
     return f'/static/guides/commanders/{portrait_name(name)}.webp'
 
 
+def meta_order() -> dict[str, list[str]]:
+    """{march type: the commanders of its pair guide} in the order of the guide – the best pair first, primary before
+    secondary, then the line-ups – each named once."""
+    order: dict[str, list[str]] = {}
+    for guide in commanders.GUIDES:
+        kind = guide.get('specialty')
+        if kind not in META_KINDS:
+            continue
+        names = order.setdefault(kind, [])
+        for primary, secondary, _ in pair_cells(guide):
+            for commander in names_in(primary) + names_in(secondary):
+                if commander['name'] not in names:
+                    names.append(commander['name'])
+    return order
+
+
 def march_commanders() -> list[dict]:
-    """Sorted list of {name, icon, pick}: every commander a march may name. pick=False are the commanders of our guides
-    in EXCLUDED – not offered any more, but a march saved with one keeps its portrait."""
+    """Sorted list of {name, icon, pick, troop, meta}: every commander a march may name. pick=False are the commanders
+    of our guides in EXCLUDED – not offered any more, but a march saved with one keeps its portrait. troop = TROOPS
+    (None for a commander not there yet), meta = {march type: rank in its pair guide, 0 = best}."""
     guides = {item['name']: item['icon'] for item in commander_index()}
     items = {name: {'name': name, 'icon': _icon(name), 'pick': True} for name, _ in ROSTER}
     for name, icon in guides.items():
         items.setdefault(name, {'name': name, 'icon': icon, 'pick': name not in EXCLUDED})
+    ranks = meta_order()
+    for name, item in items.items():
+        item['troop'] = TROOPS.get(name)
+        item['meta'] = {kind: names.index(name) for kind, names in ranks.items() if name in names}
     return sorted(items.values(), key=lambda item: item['name'].casefold())
 
 

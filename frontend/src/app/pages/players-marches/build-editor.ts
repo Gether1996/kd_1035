@@ -160,8 +160,8 @@ export class BuildEditor {
   protected choose(item: ArmoryItem): void {
     const slot = this.slot();
     const before = this.draft().gear[slot];
-    // the same item keeps its crit and iconic level
-    const piece = before?.item === item.id ? before : { item: item.id, crit: false, iconic: 0 };
+    // the same item keeps its crit and iconic level; a new gold one starts at iconic I (Gether 13. 10. 2026)
+    const piece = before?.item === item.id ? before : { item: item.id, crit: false, iconic: item.iconic ? 1 : 0 };
     this.draft.update((d) => ({ ...d, gear: { ...d.gear, [slot]: piece } }));
     this.error.set(null);
   }

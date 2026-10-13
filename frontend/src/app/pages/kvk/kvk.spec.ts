@@ -139,7 +139,7 @@ describe('KvkForm', () => {
     const build = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/kvk/signup/');
     expect(build.request.body).toEqual({
       role: 'rally',
-      gear: { weapon: { item: 'sacred-dominion', crit: false, iconic: 0 } },
+      gear: { weapon: { item: 'sacred-dominion', crit: false, iconic: 1 } },
       formation: '',
       inscriptions: [],
       attack: 12.5,
@@ -155,7 +155,9 @@ describe('KvkForm', () => {
     expect(el.querySelector('.role-tabs button .role-tabs__done')).not.toBeNull();
     el.querySelectorAll<HTMLButtonElement>('.role-tabs button')[1].click();
     await flushAll(fixture);
-    expect(el.querySelector('.tile__caption')?.textContent?.trim()).toBe('Primárny');
+    // the type comes first (Gether 13. 10. 2026)
+    expect(el.querySelector('.tile')).toBeNull();
+    expect(el.querySelector('.kind-first')?.textContent?.trim()).toBe('Najprv vyber typ marchu.');
     expect(el.querySelector('.kvk-card')).toBeNull();
     http.verify();
   });

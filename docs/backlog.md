@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **13. 10. 2026 – v1.24.6:** nový march (aj KvK prihláška) začína povinným výberom typu; pri pechote, jazde, lukostrelcoch a siege sú v okne commanderov najprv meta commanderi daného typu (poradie z návodu párov), potom leadership a potom ostatní; nový zlatý predmet má predvolene iconic I.
 - **12. 10. 2026 – v1.24.5:** prázdna výbava alebo armamenty sú načerveno – v editore záložka, na vlastných marchoch a KvK prihláške odkazy „Doplň výbavu“ / „Doplň armamenty“, nad marchmi hláška „Neúplné marche: N“.
 - **12. 10. 2026 – v1.24.4:** otvorený event v kalendári ostáva v adrese (`?event=&on=`), takže po prepnutí na CZ (alebo SK) sa otvorí ten istý dialóg; zatvorenie adresu vyčistí. Bez konzolovej chyby „Transition was skipped“. `.ics` jedného eventu odpovedá aj na HEAD, náhľad odkazu na skončený jednorazový event ukáže jeho dni a „Event skončil.“, opakované „Kopírovať odkaz“ čítačka oznámi znova a „termín oznámime“ má ikonu.
 - **12. 10. 2026 – v1.24.3:** superadmin môže v sekcii Hráči na `/ucet` zapnúť „Schvaľovať automaticky“ – nový hráč je schválený hneď pri prvom prihlásení a na Discord nepríde správa; čakajúcich hráčov ani tých so zrušeným schválením to nemení.

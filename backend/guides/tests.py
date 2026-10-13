@@ -533,6 +533,24 @@ class MarchCommanderTests(TestCase):
         self.assertLessEqual({c['name'] for c in commander_index.commander_index()}, set(items))
         self.assertTrue(items['Gonzalo de Cordoba']['pick'])
 
+    def test_api_gives_the_troop_and_the_meta_rank_of_every_commander(self):
+        items = {item['name']: item for item in self.client.get('/api/commanders/marches/').json()}
+        # a commander added by the monthly meta update needs his troop type in roster.TROOPS
+        self.assertEqual([name for name, item in items.items() if not item['troop']], [])
+        self.assertEqual(items['Hector']['troop'], 'leadership')
+        self.assertEqual(items['Gonzalo de Cordoba']['troop'], 'engineering')
+        # the rank in the pair guide of the type: the first pair first, primary before secondary
+        order = roster.meta_order()
+        self.assertEqual(order['cavalry'][:2], ['Ivan IV', 'Achilles'])
+        self.assertEqual(order['infantry'][0], 'Sun Tzu Prime')
+        self.assertEqual(order['archer'][0], 'Qin Shi Huang')
+        self.assertEqual(order['engineering'][:2], ['Gonzalo de Cordoba', 'Gajah Mada'])
+        self.assertEqual(items['Ivan IV']['meta'], {'cavalry': 0})
+        self.assertEqual(items['Qin Shi Huang']['meta']['archer'], 0)
+        self.assertEqual(items['Minamoto']['meta'], {})
+        self.assertLessEqual({name for names in order.values() for name in names}, set(items))
+        self.assertEqual(set(roster.TROOPS) - set(items), set())
+
     def test_march_portraits_do_not_change_the_guides(self):
         # a new portrait in the folder would put an icon into every guide cell naming that commander
         roster_only = {roster.portrait_name(name) for name, _ in roster.ROSTER} - {

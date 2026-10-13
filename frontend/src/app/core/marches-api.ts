@@ -20,6 +20,10 @@ export interface MarchCommander {
   icon: string;
   /** offered in the picker; false = left out (golden keys, gatherers, epic), listed for the portrait of old marches */
   pick: boolean;
+  /** the troop type in the game (infantry, cavalry, archer, leadership, engineering, integration) */
+  troop?: string | null;
+  /** march type → rank in its pair guide (0 = best); only infantry, cavalry, archer and siege have one */
+  meta?: Partial<Record<MarchKind, number>>;
 }
 
 export interface PlayerMarches {

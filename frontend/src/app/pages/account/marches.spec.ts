@@ -63,9 +63,17 @@ describe('Marches', () => {
     save().click();
     await fixture.whenStable();
     expect(el.textContent).toContain('Vyber typ marchu.');
+    // the type comes first (Gether 13. 10. 2026): no commander before it
+    expect(el.querySelector('.march--editing .tile')).toBeNull();
+    expect(el.querySelector('.kind-first')?.textContent?.trim()).toBe('Najprv vyber typ marchu.');
 
     el.querySelectorAll<HTMLButtonElement>('.kind')[1].click();
     await fixture.whenStable();
+    // a second click keeps the type
+    el.querySelectorAll<HTMLButtonElement>('.kind')[1].click();
+    await fixture.whenStable();
+    expect(el.querySelectorAll('.kind')[1].getAttribute('aria-pressed')).toBe('true');
+    expect(el.querySelector('.kind-first')).toBeNull();
     // only the type and the commanders: no screenshot, the bonuses are typed in the build editor
     expect(el.querySelector('.march--editing input[type="file"]')).toBeNull();
     expect(el.querySelector('.march--editing .stat-field')).toBeNull();
@@ -124,7 +132,8 @@ describe('Marches', () => {
     saveBuild().click();
     const build = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/me/marches/1/');
     expect(build.request.body).toEqual({
-      gear: { weapon: { item: 'sacred-dominion', crit: false, iconic: 0 } },
+      // a new gold item starts at iconic I (Gether 13. 10. 2026)
+      gear: { weapon: { item: 'sacred-dominion', crit: false, iconic: 1 } },
       formation: '',
       inscriptions: [],
       attack: 12.5,

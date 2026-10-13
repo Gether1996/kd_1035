@@ -168,17 +168,42 @@ img.tile__box {
   }
 }
 
+// the commanders wait for the type (Gether 13. 10. 2026)
+.kind-first {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
 // ---------------------------------------------------------------- the commander picker: a grid of heads
+
+// the groups scroll together (meta of the type, leadership, the rest)
+.picker-list {
+  max-height: min(60dvh, 520px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.picker-group {
+  margin: 12px 4px 4px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+
+  &:first-of-type {
+    margin-top: 4px;
+  }
+}
 
 .picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
   gap: 4px;
-  max-height: min(60dvh, 520px);
   margin: 0;
   padding: 2px;
-  overflow-x: hidden;
-  overflow-y: auto;
   list-style: none;
 
   > li {

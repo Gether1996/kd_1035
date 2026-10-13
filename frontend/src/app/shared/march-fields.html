@@ -23,68 +23,73 @@
   </div>
 </fieldset>
 
-<!-- the two commanders: square tiles with a caption -->
-<div class="tiles">
-  @for (slot of slots; track slot) {
-    @let name = d[slot];
-    <button
-      type="button"
-      class="tile"
-      [class.is-invalid]="slot === 'primary' && error() === 'primary'"
-      [attr.aria-label]="m.slots[slot] + ': ' + (name || m.choose)"
-      (click)="openPicker(slot, $event)"
-    >
-      @if (name && portrait(name); as src) {
-        <img class="tile__box" [src]="src" alt="" width="96" height="96" />
-      } @else {
-        <span class="tile__box tile__box--empty"><svg appIcon="plus"></svg></span>
-      }
-      <span class="tile__caption" [class.is-set]="!!name">{{ name || m.slotsShort[slot] }}</span>
-    </button>
-  }
-</div>
-
-<!-- the commanders' skill levels: expertise by default, else four levels 1–5 (Gether 12. 10. 2026) -->
-@if (d.primary || d.secondary) {
-  <fieldset class="block">
-    <legend class="block__label">{{ m.skills.title }}</legend>
-    <div class="skills">
-      @for (slot of slots; track slot) {
-        @if (d[slot]; as name) {
-          @let level = d.skills[slot];
-          <div class="skills__row">
-            <span class="skills__name">{{ name }}</span>
-            <label class="skills__expertise">
-              <input
-                class="switch"
-                type="checkbox"
-                role="switch"
-                [attr.aria-label]="m.skills.expertise + ': ' + name"
-                [checked]="level === expertise"
-                (change)="toggleExpertise(slot)"
-              />
-              {{ m.skills.expertise }}
-            </label>
-            @if (level !== expertise) {
-              <span class="skills__levels">
-                @for (i of skillIndexes; track i) {
-                  <select
-                    class="select skills__level"
-                    [attr.aria-label]="name + ': ' + m.skills.skill.replace('{n}', '' + (i + 1))"
-                    (change)="setSkill(slot, i, $event)"
-                  >
-                    @for (n of skillLevels; track n) {
-                      <option [value]="n" [selected]="level[i] === n">{{ n }}</option>
-                    }
-                  </select>
-                }
-              </span>
-            }
-          </div>
+<!-- the type comes first (Gether 13. 10. 2026): the commander picker is sorted by it -->
+@if (!d.kind && !d.primary && !d.secondary) {
+  <p class="kind-first">{{ m.kindFirst }}</p>
+} @else {
+  <!-- the two commanders: square tiles with a caption -->
+  <div class="tiles">
+    @for (slot of slots; track slot) {
+      @let name = d[slot];
+      <button
+        type="button"
+        class="tile"
+        [class.is-invalid]="slot === 'primary' && error() === 'primary'"
+        [attr.aria-label]="m.slots[slot] + ': ' + (name || m.choose)"
+        (click)="openPicker(slot, $event)"
+      >
+        @if (name && portrait(name); as src) {
+          <img class="tile__box" [src]="src" alt="" width="96" height="96" />
+        } @else {
+          <span class="tile__box tile__box--empty"><svg appIcon="plus"></svg></span>
         }
-      }
-    </div>
-  </fieldset>
+        <span class="tile__caption" [class.is-set]="!!name">{{ name || m.slotsShort[slot] }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- the commanders' skill levels: expertise by default, else four levels 1–5 (Gether 12. 10. 2026) -->
+  @if (d.primary || d.secondary) {
+    <fieldset class="block">
+      <legend class="block__label">{{ m.skills.title }}</legend>
+      <div class="skills">
+        @for (slot of slots; track slot) {
+          @if (d[slot]; as name) {
+            @let level = d.skills[slot];
+            <div class="skills__row">
+              <span class="skills__name">{{ name }}</span>
+              <label class="skills__expertise">
+                <input
+                  class="switch"
+                  type="checkbox"
+                  role="switch"
+                  [attr.aria-label]="m.skills.expertise + ': ' + name"
+                  [checked]="level === expertise"
+                  (change)="toggleExpertise(slot)"
+                />
+                {{ m.skills.expertise }}
+              </label>
+              @if (level !== expertise) {
+                <span class="skills__levels">
+                  @for (i of skillIndexes; track i) {
+                    <select
+                      class="select skills__level"
+                      [attr.aria-label]="name + ': ' + m.skills.skill.replace('{n}', '' + (i + 1))"
+                      (change)="setSkill(slot, i, $event)"
+                    >
+                      @for (n of skillLevels; track n) {
+                        <option [value]="n" [selected]="level[i] === n">{{ n }}</option>
+                      }
+                    </select>
+                  }
+                </span>
+              }
+            </div>
+          }
+        }
+      </div>
+    </fieldset>
+  }
 }
 
 <dialog #picker class="modal modal--wide" (close)="pickerClosed()" [attr.aria-labelledby]="idPrefix() + '-picker-title'">
@@ -114,24 +119,35 @@
           (input)="search.set(q.value)"
         />
       </div>
-      <ul class="picker-grid">
+      <div class="picker-list">
         @if (d[slot]) {
-          <li>
-            <button type="button" class="picker-tile picker-tile--clear" (click)="pick('')">
-              <span class="pick__portrait pick__portrait--empty"><svg appIcon="x"></svg></span>
-              <span class="picker-tile__name">{{ m.clear }}</span>
-            </button>
-          </li>
+          <ul class="picker-grid">
+            <li>
+              <button type="button" class="picker-tile picker-tile--clear" (click)="pick('')">
+                <span class="pick__portrait pick__portrait--empty"><svg appIcon="x"></svg></span>
+                <span class="picker-tile__name">{{ m.clear }}</span>
+              </button>
+            </li>
+          </ul>
         }
-        @for (c of shown(); track c.icon) {
-          <li>
-            <button type="button" class="picker-tile" [attr.aria-pressed]="d[slot] === c.name" (click)="pick(c.name)">
-              <img class="pick__portrait" [src]="c.icon" alt="" width="96" height="96" loading="lazy" />
-              <span class="picker-tile__name">{{ c.name }}</span>
-            </button>
-          </li>
+        <!-- infantry, cavalry, archer and siege: the meta of the type, leadership, the rest (Gether 13. 10. 2026) -->
+        @for (group of groups(); track group.key) {
+          @let groupId = group.key === 'all' ? null : idPrefix() + '-group-' + group.key;
+          @if (groupId) {
+            <h3 class="picker-group" [id]="groupId">{{ groupTitle(group.key) }}</h3>
+          }
+          <ul class="picker-grid" [attr.aria-labelledby]="groupId">
+            @for (c of group.commanders; track c.icon) {
+              <li>
+                <button type="button" class="picker-tile" [attr.aria-pressed]="d[slot] === c.name" (click)="pick(c.name)">
+                  <img class="pick__portrait" [src]="c.icon" alt="" width="96" height="96" loading="lazy" />
+                  <span class="picker-tile__name">{{ c.name }}</span>
+                </button>
+              </li>
+            }
+          </ul>
         }
-      </ul>
+      </div>
     </div>
   }
 </dialog>

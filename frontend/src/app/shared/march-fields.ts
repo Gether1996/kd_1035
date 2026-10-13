@@ -56,8 +56,41 @@ export function armyError(draft: ArmyDraft): ArmyError | null {
   return null;
 }
 
+export type PickerGroupKey = 'meta' | 'leadership' | 'rest' | 'all';
+
+export interface PickerGroup {
+  key: PickerGroupKey;
+  commanders: MarchCommander[];
+}
+
+/** march types whose picker starts with the meta of their pair guide */
+const META_KINDS: ReadonlySet<MarchKind | ''> = new Set(['infantry', 'cavalry', 'archer', 'engineering']);
+
 /**
- * The fields of a march or a KvK sign-up: the type as icons, two commander tiles (the picker is a dialog with a grid of
+ * The commander picker of an infantry, cavalry, archer or siege march (Gether 13. 10. 2026): the meta commanders of
+ * that type in the order of its pair guide, then leadership (the meta ones first), then the rest – that type first.
+ * Other types (and no type) keep one alphabetical list. The list comes in alphabetical; sorting is stable.
+ */
+export function pickerGroups(commanders: MarchCommander[], kind: MarchKind | ''): PickerGroup[] {
+  if (!META_KINDS.has(kind)) return [{ key: 'all', commanders }];
+  const rank = (c: MarchCommander) => c.meta?.[kind as MarchKind] ?? Infinity;
+  const byRank = (a: MarchCommander, b: MarchCommander) => rank(a) - rank(b);
+  const meta = commanders.filter((c) => c.troop === kind && rank(c) < Infinity).sort(byRank);
+  const leadership = commanders.filter((c) => c.troop === 'leadership').sort(byRank);
+  const rest = commanders
+    .filter((c) => !meta.includes(c) && c.troop !== 'leadership')
+    .sort((a, b) => Number(b.troop === kind) - Number(a.troop === kind));
+  const groups: PickerGroup[] = [
+    { key: 'meta', commanders: meta },
+    { key: 'leadership', commanders: leadership },
+    { key: 'rest', commanders: rest },
+  ];
+  return groups.filter((g) => g.commanders.length);
+}
+
+/**
+ * The fields of a march or a KvK sign-up: the type as icons (first – the commanders show once it is chosen), two
+ * commander tiles (the picker is a dialog with a grid of
  * heads) and the commanders' skill levels – expertise by default, else four levels 1–5 (Gether 12. 10. 2026). Used by
  * "Prehľad marchov" (/marche) and the KvK sign-up (/kvk).
  */
@@ -102,8 +135,9 @@ export class MarchFields {
     this.valueChange.emit(next);
   }
 
+  /** the type comes first and stays chosen – the commander picker is sorted by it */
   protected setKind(kind: MarchKind): void {
-    this.patch({ kind: this.current().kind === kind ? '' : kind });
+    this.patch({ kind });
   }
 
   // ---------------------------------------------------------------- commander skills
@@ -130,11 +164,21 @@ export class MarchFields {
 
   protected readonly picking = signal<Slot | null>(null);
   protected readonly search = signal('');
-  protected readonly shown = computed(() => {
+  /** the commanders found, grouped for the march's type */
+  protected readonly groups = computed(() => {
     const query = fold(this.search());
-    return query ? this.offered().filter((c) => fold(c.name).includes(query)) : this.offered();
+    const shown = query ? this.offered().filter((c) => fold(c.name).includes(query)) : this.offered();
+    return pickerGroups(shown, this.current().kind);
   });
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('picker');
+
+  /** "Meta · Jazda", "Leadership", "Ostatní" */
+  protected groupTitle(key: PickerGroupKey): string {
+    const m = this.t();
+    const kind = this.current().kind;
+    if (key === 'meta') return kind ? m.pickerGroups.meta.replace('{kind}', m.kinds[kind]) : '';
+    return key === 'all' ? '' : m.pickerGroups[key];
+  }
 
   protected openPicker(slot: Slot, event: Event): void {
     this.opener = event.currentTarget as HTMLElement;

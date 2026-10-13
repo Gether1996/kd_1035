@@ -385,6 +385,9 @@ export const cs: Dict = {
     },
     search: 'Hledat commandera',
     clear: 'Bez commandera',
+    // the commander picker of an infantry, cavalry, archer or siege march (Gether 13. 10. 2026)
+    pickerGroups: { meta: 'Meta · {kind}', leadership: 'Leadership', rest: 'Ostatní' },
+    kindFirst: 'Nejdřív vyber typ marche.',
     remove: 'Odstranit',
     removeConfirm: 'Opravdu odstranit?',
     failed: 'Nepodařilo se uložit. Zkus to znovu.',

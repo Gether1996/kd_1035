@@ -394,6 +394,9 @@ export const sk = {
     },
     search: 'Hľadať commandera',
     clear: 'Bez commandera',
+    // the commander picker of an infantry, cavalry, archer or siege march (Gether 13. 10. 2026)
+    pickerGroups: { meta: 'Meta · {kind}', leadership: 'Leadership', rest: 'Ostatní' },
+    kindFirst: 'Najprv vyber typ marchu.',
     remove: 'Odstrániť',
     removeConfirm: 'Naozaj odstrániť?',
     failed: 'Nepodarilo sa uložiť. Skús to znova.',
