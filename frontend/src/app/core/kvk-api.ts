@@ -117,6 +117,8 @@ export interface ReviewerRow {
   reviewer: boolean;
   /** adds marches and KvK sign-ups */
   approved: boolean;
+  /** /vyhodnocovanie (Gether 13. 10. 2026) */
+  evaluator: boolean;
   superuser: boolean;
   /** the first sign-in */
   created_at: string;
@@ -184,10 +186,13 @@ export class KvkApi {
   /** R4 and / or the approval of a player (superuser) */
   setPlayer(
     id: number,
-    change: Partial<Pick<ReviewerRow, 'reviewer' | 'approved'>>,
-  ): Promise<{ id: number; reviewer: boolean; approved: boolean }> {
+    change: Partial<Pick<ReviewerRow, 'reviewer' | 'approved' | 'evaluator'>>,
+  ): Promise<{ id: number; reviewer: boolean; approved: boolean; evaluator: boolean }> {
     return firstValueFrom(
-      this.http.patch<{ id: number; reviewer: boolean; approved: boolean }>(`/api/kvk/reviewers/${id}/`, change),
+      this.http.patch<{ id: number; reviewer: boolean; approved: boolean; evaluator: boolean }>(
+        `/api/kvk/reviewers/${id}/`,
+        change,
+      ),
     );
   }
 }

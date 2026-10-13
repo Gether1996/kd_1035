@@ -29,6 +29,8 @@ export class EvalResultsTab {
   readonly texts = input.required<EvalTexts>();
   /** the variables are not saved yet */
   readonly dirty = input(false);
+  /** "Aj neschválení" – the server sends un-approved players to the superuser only */
+  readonly superuser = input(false);
   /** the last note about a player was not saved */
   readonly failed = input(false);
   /** "Rátať s power" – off: the estimate from the marches only */
@@ -43,7 +45,9 @@ export class EvalResultsTab {
   protected readonly show = signal<Show>('marches');
   protected readonly sort = signal<Sort>('required');
   protected readonly opened = signal<ReadonlySet<number>>(new Set());
-  protected readonly shows: Show[] = ['marches', 'approved', 'all'];
+  protected readonly shows = computed<Show[]>(() =>
+    this.superuser() ? ['marches', 'approved', 'all'] : ['marches', 'approved'],
+  );
   protected readonly sorts: Sort[] = ['required', 'score', 'progress', 'name'];
 
   protected readonly rows = computed(() => {

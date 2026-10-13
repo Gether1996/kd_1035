@@ -299,6 +299,9 @@ export const sk = {
     approveLabel: 'Schválený – pridáva marche a prihlášky na KvK',
     r4: 'R4',
     toggle: 'R4 – vidí prihlášky',
+    // the KvK evaluation (/vyhodnocovanie): the acclaim estimate and the players' power (Gether 13. 10. 2026)
+    evaluator: 'Vyhodnocovanie',
+    evaluatorLabel: 'Vyhodnocovanie – odhad acclaimu a power hráčov',
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čaká',
@@ -851,7 +854,7 @@ export const sk = {
           'Prihlášky na KvK – rolu (rally, garrison), typ jednotiek, commanderov a ich skilly, naklikanú výbavu, formáciu a inscriptions, bonusy armamentov a poznámku.',
           'Marche na stránke Marche – typ, commanderov a ich skilly, bonusy armamentov a naklikanú výbavu, formáciu a inscriptions.',
           'Screenshoty prihlášok a marchov už neukladáme – staršie sme zmazali, zo záloh zmiznú do 8 týždňov.',
-          'Pri vyhodnocovaní KvK si správca môže k tvojmu účtu zapísať tvoju power, dosiahnutý acclaim a či máš iba T4 jednotky.',
+          'Pri vyhodnocovaní KvK si správca (alebo vedenie, ktorému to povolí) môže k tvojmu účtu zapísať tvoju power, dosiahnutý acclaim a či máš iba T4 jednotky.',
         ],
       },
       {
@@ -863,7 +866,7 @@ export const sk = {
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
-          'Z tvojich marchov (a power, ak ju správca zapíše) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power, acclaim a T4 vidí iba správca.',
+          'Z tvojich marchov (a power, ak ju správca zapíše) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power, acclaim a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov).',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

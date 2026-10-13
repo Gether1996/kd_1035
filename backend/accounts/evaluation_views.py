@@ -1,7 +1,8 @@
 """/vyhodnocovanie – the KvK evaluation of the superadmin (Gether 13. 10. 2026: the "KVK Requirements" spreadsheet on
 the web). The page computes everything itself from the marches the players clicked together and the variables saved
 here, so a changed variable shows at once; the server keeps the variables and what the superadmin writes down about
-a player (power, acclaim reached, T4, a correction of the recommended power). Superuser only."""
+a player (power, acclaim reached, T4, a correction of the recommended power). The superuser and the players the
+superuser lets in (Player.evaluator, a switch next to R4 – Gether 13. 10. 2026); those see only approved players."""
 
 import json
 import math
@@ -12,11 +13,13 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
-from .kvk_views import IsSuperuser, march_data
-from .models import EvaluationSettings, Player, PlayerEvaluation
+from .kvk_views import march_data
+from .models import APPROVED, EvaluationSettings, Player, PlayerEvaluation
 from .reminder_views import WriteThrottle, iso
+from .views import player_of
 
 # the variables are a few hundred numbers and the pair table: far below this
 SETTINGS_MAX_BYTES = 64 * 1024
@@ -47,6 +50,22 @@ def clean_settings(value, depth=0):
     return value
 
 
+class CanEvaluate(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        player = player_of(user)
+        return user.is_superuser or bool(player and player.evaluator)
+
+
+def visible_players(request):
+    """Every active player for the superuser; the others see approved players only (an un-approved player's marches
+    are the superuser's alone, Gether 12. 10. 2026)."""
+    players = Player.objects.filter(user__is_active=True)
+    return players if request.user.is_superuser else players.filter(APPROVED)
+
+
 def record_of(player: Player) -> PlayerEvaluation | None:
     try:
         return player.evaluation
@@ -70,12 +89,12 @@ def settings_data(row: EvaluationSettings) -> dict:
 
 @never_cache
 @api_view(['GET'])
-@permission_classes([IsSuperuser])
+@permission_classes([CanEvaluate])
 def evaluation(request):
-    """The variables and every active player with their marches and what the superadmin wrote down – those not
-    approved too (the page leaves them out unless asked), and players without a march."""
+    """The variables and every player with their marches and what was written down about them – for the superuser
+    those not approved too (the page leaves them out unless asked), and players without a march."""
     players = (
-        Player.objects.filter(user__is_active=True)
+        visible_players(request)
         .select_related('user', 'evaluation')
         .prefetch_related('marches')
     )
@@ -99,7 +118,7 @@ def evaluation(request):
 
 @never_cache
 @api_view(['PUT'])
-@permission_classes([IsSuperuser])
+@permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_settings(request):
     """PUT {settings: {...}} – the variables; {settings: null} goes back to the defaults."""
@@ -145,11 +164,11 @@ def save_record(player: Player, values: dict) -> PlayerEvaluation:
 
 @never_cache
 @api_view(['PATCH'])
-@permission_classes([IsSuperuser])
+@permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_player(request, player_id):
     """PATCH {power?, acclaim?, t4?, power_bonus?} – what the superadmin writes down about one player."""
-    player = get_object_or_404(Player, pk=player_id, user__is_active=True)
+    player = get_object_or_404(visible_players(request), pk=player_id)
     form = RecordSerializer(data=request.data)
     form.is_valid(raise_exception=True)
     if not form.validated_data:
@@ -163,7 +182,7 @@ BULK_MAX = 500
 
 @never_cache
 @api_view(['PATCH'])
-@permission_classes([IsSuperuser])
+@permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_players(request):
     """PATCH {players: [{id, power?, acclaim?, t4?, power_bonus?}, …]} – many players at once (the power of everyone
@@ -173,7 +192,7 @@ def evaluation_players(request):
         return Response({'players': 'list'}, status=400)
     if any(not isinstance(item, dict) or type(item.get('id')) is not int for item in items):
         return Response({'players': 'id'}, status=400)
-    players = {p.pk: p for p in Player.objects.filter(pk__in=[i['id'] for i in items], user__is_active=True)}
+    players = {p.pk: p for p in visible_players(request).filter(pk__in=[i['id'] for i in items])}
     changes = []
     for item in items:
         form = RecordSerializer(data={k: v for k, v in item.items() if k != 'id'})

@@ -4,7 +4,7 @@ import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { KvkApi, ReviewerRow } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
 
-type Flag = 'reviewer' | 'approved';
+type Flag = 'reviewer' | 'approved' | 'evaluator';
 type RoleFilter = 'all' | 'r4' | 'others';
 type ApprovalFilter = 'all' | 'approved' | 'pending';
 type Sort = 'name' | 'newest' | 'login' | 'marches';
@@ -15,7 +15,8 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
  * "Hráči" on /ucet – superuser only (Gether 11. and 12. 10. 2026): every player signed in with Discord with two
  * switches – "Schválený" (a new player adds marches and KvK sign-ups only once approved; the superadmin gets a Discord
  * message about each new one) and "R4" (sees every KvK sign-up and every player's marches). Filters for R4 and the
- * approval, sorting and filters for marches and KvK sign-ups like on /marche (Gether 13. 10. 2026); the players waiting
+ * approval, sorting and filters for marches and KvK sign-ups like on /marche, a third switch "Vyhodnocovanie" lets a
+ * player into /vyhodnocovanie (Gether 13. 10. 2026); the players waiting
  * for the approval come first. "Schvaľovať automaticky" lets every new player in at once, without
  * the Discord message.
  */
@@ -145,6 +146,18 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
                     [attr.aria-label]="k.toggle + ': ' + (p.ingame_name || p.name)"
                     [checked]="p.reviewer"
                     (change)="set(p, 'reviewer', r4)"
+                  />
+                </label>
+                <label class="reviewer__switch">
+                  <span aria-hidden="true">{{ k.evaluator }}</span>
+                  <input
+                    #ev
+                    class="switch"
+                    type="checkbox"
+                    role="switch"
+                    [attr.aria-label]="k.evaluatorLabel + ': ' + (p.ingame_name || p.name)"
+                    [checked]="p.evaluator"
+                    (change)="set(p, 'evaluator', ev)"
                   />
                 </label>
               </span>

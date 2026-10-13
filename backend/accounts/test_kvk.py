@@ -448,7 +448,7 @@ class ApprovalTests(KvkTestCase):
         self.assertEqual(self.call('patch', url, {'approved': 'yes'}, admin).status_code, 400)
         self.assertEqual(self.call('patch', url, {'approved': True}, self.client).status_code, 403)
         res = self.call('patch', url, {'approved': True}, admin)
-        self.assertEqual(res.json(), {'id': self.newbie.pk, 'reviewer': False, 'approved': True})
+        self.assertEqual(res.json(), {'id': self.newbie.pk, 'reviewer': False, 'approved': True, 'evaluator': False})
         self.assertEqual(self.sign_up(self.new).status_code, 200)
         self.assertEqual(len(self.new.get('/api/marches/').json()['players']), 1)
         # the superuser needs no approval

@@ -4,10 +4,10 @@
  * does the same). The frame (menu item, title for the browser) is in i18n. A test checks both have the same keys.
  */
 const sk = {
-  eyebrow: 'Superadmin',
+  eyebrow: 'Vedenie',
   title: 'Vyhodnocovanie',
   intro: 'Odhad acclaimu na KvK z naklikaných marchov. Premenné sú z Excelu KVK Requirements, upraviť ich môžeš.',
-  onlySuperuser: 'Vyhodnocovanie vidí iba superadmin.',
+  onlySuperuser: 'Vyhodnocovanie vidí iba superadmin a hráči, ktorým ho povolí.',
   loadError: 'Údaje sa nepodarilo načítať. Skús to znova o chvíľu.',
   armoryError: 'Katalóg výbavy sa nenačítal – výbava sa teraz nepočíta.',
   tabs: { results: 'Odhad acclaimu', settings: 'Premenné' },
@@ -230,10 +230,10 @@ const sk = {
 export type EvalTexts = typeof sk;
 
 const cs: EvalTexts = {
-  eyebrow: 'Superadmin',
+  eyebrow: 'Vedení',
   title: 'Vyhodnocování',
   intro: 'Odhad acclaimu na KvK z naklikaných marchů. Proměnné jsou z Excelu KVK Requirements, upravit je můžeš.',
-  onlySuperuser: 'Vyhodnocování vidí jen superadmin.',
+  onlySuperuser: 'Vyhodnocování vidí jen superadmin a hráči, kterým ho povolí.',
   loadError: 'Údaje se nepodařilo načíst. Zkus to znovu za chvíli.',
   armoryError: 'Katalog výbavy se nenačetl – výbava se teď nepočítá.',
   tabs: { results: 'Odhad acclaimu', settings: 'Proměnné' },

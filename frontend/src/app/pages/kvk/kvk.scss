@@ -512,10 +512,12 @@
   }
 }
 
-// "Schválený" and "R4", each a small caption with its switch; on a phone under the name
+// "Schválený", "R4" and "Vyhodnocovanie", each a small caption with its switch; on a phone under the name
 .reviewer__switches {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 16px;
   margin-left: auto;
 }
 

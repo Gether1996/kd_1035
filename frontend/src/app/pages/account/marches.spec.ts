@@ -352,6 +352,7 @@ describe('PlayersAdmin', () => {
       last_login: null,
       marches: 0,
       kvk: [],
+      evaluator: false,
     };
     http.expectOne('/api/kvk/reviewers/').flush({
       players: [
@@ -403,7 +404,8 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova', 'Gether']);
     select('#players-kvk', 'all');
     await settle(fixture);
-    expect(el.querySelectorAll('.reviewer .switch').length).toBe(4);
+    // approved, R4 and Vyhodnocovanie for each player but the superuser
+    expect(el.querySelectorAll('.reviewer .switch').length).toBe(6);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
     expect(filters().map((b) => b.textContent?.trim())).toEqual([
       'Všetci · 3',
@@ -431,9 +433,18 @@ describe('PlayersAdmin', () => {
     expect(el.querySelector('.tag--pending')).toBeNull();
 
     // R4 of Nelly; the filter R4 shows only her
-    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[3];
+    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[4];
     r4().click();
-    http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, reviewer: true, approved: true });
+    http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, reviewer: true, approved: true, evaluator: false });
+    // Vyhodnocovanie of Nelly (Gether 13. 10. 2026)
+    const evaluator = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
+    expect(evaluator.getAttribute('aria-label')).toBe('Vyhodnocovanie – odhad acclaimu a power hráčov: Nelly');
+    evaluator.click();
+    const ev = http.expectOne('/api/kvk/reviewers/2/');
+    expect(ev.request.body).toEqual({ evaluator: true });
+    ev.flush({ id: 2, reviewer: true, approved: true, evaluator: true });
+    await settle(fixture);
+    expect(evaluator.checked).toBe(true);
     await settle(fixture);
     filters()[4].click();
     await settle(fixture);

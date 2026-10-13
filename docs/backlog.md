@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **13. 10. 2026 – v1.25.2:** prístup na Vyhodnocovanie sa dá dať aj iným hráčom – prepínač „Vyhodnocovanie“ v sekcii Hráči na `/ucet` (vidia len schválených hráčov).
 - **13. 10. 2026 – v1.25.1:** vo Vyhodnocovaní sa dá nastaviť počet započítaných marchov (1–10) – počíta sa prvých X v poradí hráča alebo najlepších X; tabuľka power a fond sa predĺžia.
 - **13. 10. 2026 – v1.25.0:** stránka **Vyhodnocovanie** pre superadmina (menu účtu): odhad acclaimu na KvK z naklikaných marchov (výbava, iconic, refine, armamenty, inscriptions, páry a skilly) a voliteľnej power, všetky premenné z Excelu KVK Requirements nastaviteľné, power hráčov uložená v databáze (aj hromadne), CSV.
 - **13. 10. 2026 – v1.24.9:** karty marchov sú kompaktné – menšia výbava, bez bonusov v % a setových bonusov; tlačidlo Detail ukáže všetko v plnej veľkosti.

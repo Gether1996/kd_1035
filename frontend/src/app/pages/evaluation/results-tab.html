@@ -20,7 +20,7 @@
   <div class="field ev-bar__select">
     <label class="sr-only" for="ev-show">{{ x.show.label }}</label>
     <select #showBy id="ev-show" class="select" (change)="show.set($any(showBy.value))">
-      @for (o of shows; track o) {
+      @for (o of shows(); track o) {
         <option [value]="o" [selected]="show() === o">{{ x.show[o] }}</option>
       }
     </select>

@@ -89,3 +89,31 @@ class EvaluationApiTests(TestCase):
         for bad in ({}, {'players': []}, {'players': [{'power': 1}]}, {'players': [{'id': self.player.pk, 'power': -1}]}):
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
         self.assertEqual(self.call('patch', url, {'players': [{'id': self.player.pk, 'power': 1}]}, self.nelly).status_code, 403)
+
+    def test_the_superuser_lets_players_in(self):
+        # the switch next to R4 in Hráči on /ucet
+        url = f'/api/kvk/reviewers/{self.player.pk}/'
+        self.assertEqual(self.call('patch', url, {'evaluator': 'yes'}).status_code, 400)
+        self.assertEqual(self.call('patch', url, {'evaluator': True}, self.nelly).status_code, 403)
+        self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluator'], False)
+        res = self.call('patch', url, {'evaluator': True})
+        self.assertEqual(res.json(), {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluator': True})
+        rows = {p['id']: p for p in self.admin.get('/api/kvk/reviewers/').json()['players']}
+        self.assertTrue(rows[self.player.pk]['evaluator'])
+        self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluator'], True)
+        # the evaluator: the page, the variables and the notes – of approved players only
+        data = self.nelly.get('/api/evaluation/')
+        self.assertEqual(data.status_code, 200)
+        ids = {p['id'] for p in data.json()['players']}
+        self.assertIn(self.player.pk, ids)
+        self.assertNotIn(self.newbie.pk, ids)
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 200)
+        self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 90}, self.nelly).status_code, 200)
+        self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.newbie.pk}/', {'power': 90}, self.nelly).status_code, 404)
+        bulk = {'players': [{'id': self.newbie.pk, 'power': 1}]}
+        self.assertEqual(self.call('patch', '/api/evaluation/players/', bulk, self.nelly).status_code, 400)
+        # switched off again: no way in
+        self.call('patch', url, {'evaluator': False})
+        self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
+        # the superuser counts as one
+        self.assertEqual(self.admin.get('/api/auth/me/').json()['user']['evaluator'], True)

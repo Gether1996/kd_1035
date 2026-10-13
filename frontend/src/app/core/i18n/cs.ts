@@ -294,6 +294,9 @@ export const cs: Dict = {
     approveLabel: 'Schválený – přidává marche a přihlášky na KvK',
     r4: 'R4',
     toggle: 'R4 – vidí přihlášky',
+    // the KvK evaluation (/vyhodnocovanie): the acclaim estimate and the players' power (Gether 13. 10. 2026)
+    evaluator: 'Vyhodnocování',
+    evaluatorLabel: 'Vyhodnocování – odhad acclaimu a power hráčů',
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čeká',
@@ -841,7 +844,7 @@ export const cs: Dict = {
           'Přihlášky na KvK – roli (rally, garrison), typ jednotek, commandery a jejich skilly, naklikanou výbavu, formaci a inscriptions, bonusy armamentů a poznámku.',
           'Marche na stránce Marche – typ, commandery a jejich skilly, bonusy armamentů a naklikanou výbavu, formaci a inscriptions.',
           'Screenshoty přihlášek a marchů už neukládáme – starší jsme smazali, ze záloh zmizí do 8 týdnů.',
-          'Při vyhodnocování KvK si správce může k tvému účtu zapsat tvou power, dosažený acclaim a jestli máš jen T4 jednotky.',
+          'Při vyhodnocování KvK si správce (nebo vedení, kterému to povolí) může k tvému účtu zapsat tvou power, dosažený acclaim a jestli máš jen T4 jednotky.',
         ],
       },
       {
@@ -853,7 +856,7 @@ export const cs: Dict = {
           'Vedení si může seznam přihlášek (jméno ve hře, role, jednotky, commandeři a formace) zkopírovat do Discordu, kde plánuje KvK.',
           'Pokud u marchí zvolíš „Všichni hráči“, uvidí tvé marche spolu se jménem ve hře, Discord jménem a avatarem i všichni schválení hráči přihlášení na webu (stránka Marche hráčů). Změnit to můžeš kdykoli.',
           'Dokud tě správce neschválí nebo pokud schválení zruší, tvé marche a přihlášky zůstanou uložené, ale vidí je jen on.',
-          'Z tvých marchů (a power, pokud ji správce zapíše) web spočítá odhad acclaimu na KvK. Odhad i zapsanou power, acclaim a T4 vidí jen správce.',
+          'Z tvých marchů (a power, pokud ji správce zapíše) web spočítá odhad acclaimu na KvK. Odhad i zapsanou power, acclaim a T4 vidí jen správce a vedení, kterému povolí vyhodnocování (to vidí jen schválené hráče).',
           'Nic nezveřejňujeme, neprodáváme ani nepředáváme dál – kromě služeb v následujícím bodě.',
         ],
       },

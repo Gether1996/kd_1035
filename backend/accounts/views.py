@@ -223,6 +223,8 @@ def signed_in(request) -> dict | None:
         'is_staff': request.user.is_staff,
         # manages events (admin, irregular dates in the calendar)
         'is_superuser': request.user.is_superuser,
+        # /vyhodnocovanie – the superadmin gives it like R4 (Gether 13. 10. 2026)
+        'evaluator': player.evaluator or request.user.is_superuser,
     }
 
 

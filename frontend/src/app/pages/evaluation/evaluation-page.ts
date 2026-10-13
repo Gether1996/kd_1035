@@ -30,7 +30,8 @@ type Tab = 'settings' | 'results';
  * the web, better). "Premenné" edits the variables, "Odhad acclaimu" shows what each player should reach from the
  * marches they clicked together; a changed variable counts in the table at once, "Uložiť" keeps it. Power is optional
  * (not asked from the players yet): when the superadmin writes it down, the marches it asks for and the excess count.
- * In the account menu of the superadmin only; a prerendered shell, not indexed, not in the sitemap.
+ * In the account menu of the superadmin and the players the superadmin lets in (Player.evaluator – they see approved
+ * players only); a prerendered shell, not indexed, not in the sitemap.
  */
 @Component({
   selector: 'app-evaluation-page',
@@ -42,7 +43,7 @@ type Tab = 'settings' | 'results';
     <div class="container content is-evaluation">
       @if (!auth.ready()) {
         <div class="placeholder" aria-hidden="true"></div>
-      } @else if (!superuser()) {
+      } @else if (!allowed()) {
         <p class="state">{{ x.onlySuperuser }}</p>
       } @else if (data.error()) {
         <p class="state">{{ x.loadError }}</p>
@@ -90,6 +91,7 @@ type Tab = 'settings' | 'results';
             [settings]="draft()"
             [texts]="x"
             [dirty]="dirty()"
+            [superuser]="superuser()"
             [failed]="recordFailed()"
             [(usePower)]="usePower"
             (record)="saveRecord($event.id, $event.change)"
@@ -112,8 +114,10 @@ export class EvaluationPage {
   protected readonly texts = computed(() => EVAL_TEXTS[this.i18n.lang()]);
 
   protected readonly superuser = computed(() => !!this.auth.user()?.is_superuser);
-  protected readonly data = this.api.data(() => this.superuser());
-  private readonly commanders = httpResource<MarchCommander[]>(() => (this.superuser() ? marchCommandersUrl : undefined));
+  /** the superadmin and the players let in with the switch in Hráči on /ucet (Gether 13. 10. 2026) */
+  protected readonly allowed = computed(() => this.superuser() || !!this.auth.user()?.evaluator);
+  protected readonly data = this.api.data(() => this.allowed());
+  private readonly commanders = httpResource<MarchCommander[]>(() => (this.allowed() ? marchCommandersUrl : undefined));
   protected readonly commanderNames = computed(() => (this.commanders.hasValue() ? this.commanders.value().map((c) => c.name) : []));
 
   /** the players as loaded, with the notes the superadmin changed since */

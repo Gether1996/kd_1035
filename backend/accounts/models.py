@@ -67,6 +67,12 @@ class Player(models.Model):
         default=False,
         help_text='Hráč (napr. R4) vidí všetky prihlášky na KvK a marche všetkých hráčov. Nastavuje superadmin.',
     )
+    evaluator = models.BooleanField(
+        'vyhodnocovanie KvK',
+        default=False,
+        help_text='Hráč má prístup na /vyhodnocovanie: odhad acclaimu schválených hráčov, ich power a premenné '
+        'výpočtu. Nastavuje superadmin.',
+    )
     approved = models.BooleanField(
         'schválený',
         default=False,

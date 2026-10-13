@@ -245,6 +245,7 @@ def reviewers(request):
                 'ingame_name': p.ingame_name,
                 'avatar_url': p.avatar_url,
                 'reviewer': p.kvk_reviewer,
+                'evaluator': p.evaluator,
                 'approved': p.approved,
                 'created_at': iso(p.created_at),
                 'last_login': iso(p.user.last_login) if p.user.last_login else None,
@@ -278,17 +279,20 @@ def auto_approve(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def reviewer(request, player_id):
-    """PATCH {reviewer?: bool, approved?: bool} – R4 (sees the sign-ups), approved (adds marches and sign-ups)."""
+    """PATCH {reviewer?: bool, approved?: bool, evaluator?: bool} – R4 (sees the sign-ups), approved (adds marches
+    and sign-ups), evaluator (/vyhodnocovanie)."""
     player = get_object_or_404(Player, pk=player_id)
     body = request.data if isinstance(request.data, dict) else {}
-    fields = {'reviewer': 'kvk_reviewer', 'approved': 'approved'}
+    fields = {'reviewer': 'kvk_reviewer', 'approved': 'approved', 'evaluator': 'evaluator'}
     changes = {name: body[name] for name in fields if name in body}
     if not changes:
-        return Response({'detail': 'reviewer or approved'}, status=400)
+        return Response({'detail': 'reviewer, approved or evaluator'}, status=400)
     for name, value in changes.items():
         if type(value) is not bool:
             return Response({name: 'bool'}, status=400)
         setattr(player, fields[name], value)
     player.save(update_fields=[fields[name] for name in changes])
     log.info('Player %s: %s', player.pk, changes)
-    return Response({'id': player.pk, 'reviewer': player.kvk_reviewer, 'approved': player.approved})
+    return Response(
+        {'id': player.pk, 'reviewer': player.kvk_reviewer, 'approved': player.approved, 'evaluator': player.evaluator}
+    )
