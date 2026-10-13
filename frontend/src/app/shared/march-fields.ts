@@ -56,7 +56,7 @@ export function armyError(draft: ArmyDraft): ArmyError | null {
   return null;
 }
 
-export type PickerGroupKey = 'meta' | 'leadership' | 'rest' | 'all';
+export type PickerGroupKey = 'meta' | 'troop' | 'leadership' | 'rest' | 'all';
 
 export interface PickerGroup {
   key: PickerGroupKey;
@@ -68,20 +68,21 @@ const META_KINDS: ReadonlySet<MarchKind | ''> = new Set(['infantry', 'cavalry', 
 
 /**
  * The commander picker of an infantry, cavalry, archer or siege march (Gether 13. 10. 2026): the meta commanders of
- * that type in the order of its pair guide, then leadership (the meta ones first), then the rest – that type first.
- * Other types (and no type) keep one alphabetical list. The list comes in alphabetical; sorting is stable.
+ * that type in the order of its pair guide, then the other commanders of that type, then leadership (the meta ones
+ * first), then the rest. Other types (and no type) keep one alphabetical list. The list comes in alphabetical; sorting
+ * is stable.
  */
 export function pickerGroups(commanders: MarchCommander[], kind: MarchKind | ''): PickerGroup[] {
   if (!META_KINDS.has(kind)) return [{ key: 'all', commanders }];
   const rank = (c: MarchCommander) => c.meta?.[kind as MarchKind] ?? Infinity;
   const byRank = (a: MarchCommander, b: MarchCommander) => rank(a) - rank(b);
   const meta = commanders.filter((c) => c.troop === kind && rank(c) < Infinity).sort(byRank);
+  const troop = commanders.filter((c) => c.troop === kind && !meta.includes(c));
   const leadership = commanders.filter((c) => c.troop === 'leadership').sort(byRank);
-  const rest = commanders
-    .filter((c) => !meta.includes(c) && c.troop !== 'leadership')
-    .sort((a, b) => Number(b.troop === kind) - Number(a.troop === kind));
+  const rest = commanders.filter((c) => c.troop !== kind && c.troop !== 'leadership');
   const groups: PickerGroup[] = [
     { key: 'meta', commanders: meta },
+    { key: 'troop', commanders: troop },
     { key: 'leadership', commanders: leadership },
     { key: 'rest', commanders: rest },
   ];
@@ -172,11 +173,12 @@ export class MarchFields {
   });
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('picker');
 
-  /** "Meta · Jazda", "Leadership", "Ostatní" */
+  /** "Meta · Jazda", "Jazda", "Leadership", "Ostatní" */
   protected groupTitle(key: PickerGroupKey): string {
     const m = this.t();
     const kind = this.current().kind;
     if (key === 'meta') return kind ? m.pickerGroups.meta.replace('{kind}', m.kinds[kind]) : '';
+    if (key === 'troop') return kind ? m.kinds[kind] : '';
     return key === 'all' ? '' : m.pickerGroups[key];
   }
 

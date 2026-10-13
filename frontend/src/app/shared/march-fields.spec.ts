@@ -25,18 +25,19 @@ const names = (kind: Parameters<typeof pickerGroups>[1]) =>
   pickerGroups(COMMANDERS, kind).map((g) => [g.key, g.commanders.map((x) => x.name)]);
 
 describe('pickerGroups', () => {
-  it('puts the meta of the type first, then leadership, then the rest with that type first', () => {
+  it('puts the meta of the type first, then the rest of that type, leadership and the others', () => {
     expect(names('cavalry')).toEqual([
       ['meta', ['Ivan IV', 'Achilles']],
+      ['troop', ['Alexander Nevsky', 'Saladin']],
       // the leadership commanders of the cavalry guide first
       ['leadership', ['Hector', 'Charlemagne']],
-      ['rest', ['Alexander Nevsky', 'Saladin', 'Bai Qi', 'Qin Shi Huang']],
+      ['rest', ['Bai Qi', 'Qin Shi Huang']],
     ]);
   });
 
   it('leaves out empty groups', () => {
     expect(names('archer').map(([key]) => key)).toEqual(['meta', 'leadership', 'rest']);
-    expect(pickerGroups([c('Saladin', 'cavalry')], 'cavalry').map((g) => g.key)).toEqual(['rest']);
+    expect(pickerGroups([c('Saladin', 'cavalry')], 'cavalry').map((g) => g.key)).toEqual(['troop']);
   });
 
   it('keeps one alphabetical list for the other types and no type', () => {
