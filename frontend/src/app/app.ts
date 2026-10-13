@@ -102,14 +102,21 @@ export class App {
 }
 
 /**
+ * How long restore() and follow() keep correcting the position while content from the API still arrives. Any scroll,
+ * touch, key or click of the visitor ends it at once, so it never fights them; 2 s was too short on a slow phone
+ * connection (the iPhone e2e run caught forward to /#alliance a whole section off).
+ */
+const SETTLE_MS = 5000;
+
+/**
  * Scrolls to `position` once the page is tall enough for it – a guide's content arrives from the API a moment after
  * the page is shown – and keeps it there while the page still grows: content loading above it (the home page's next
  * events) made the browser's scroll anchoring keep the wrong part in view (forward to /#alliance landed a whole
- * section below it). Gives up after 2 s, or as soon as the visitor scrolls or clicks.
+ * section below it). Gives up after SETTLE_MS, or as soon as the visitor scrolls or clicks.
  */
 function restore(scroller: ViewportScroller, doc: Document, [x, y]: [number, number]): AbortController {
   const restoring = new AbortController();
-  const until = performance.now() + 2000;
+  const until = performance.now() + SETTLE_MS;
   for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
     addEventListener(type, () => restoring.abort(), { passive: true, signal: restoring.signal });
   }
@@ -123,7 +130,7 @@ function restore(scroller: ViewportScroller, doc: Document, [x, y]: [number, num
   if (main && typeof ResizeObserver !== 'undefined') {
     const observer = new ResizeObserver(step);
     observer.observe(main);
-    const timer = setTimeout(() => restoring.abort(), 2000);
+    const timer = setTimeout(() => restoring.abort(), SETTLE_MS);
     restoring.signal.addEventListener('abort', () => {
       observer.disconnect();
       clearTimeout(timer);
@@ -136,7 +143,7 @@ function restore(scroller: ViewportScroller, doc: Document, [x, y]: [number, num
 /**
  * Keeps a section link on its section while the page above it still grows – the home page's next events arrive from
  * the API after the jump and pushed Aliancia/Komunita down by a whole section. Only reacts when the page height
- * changes, so the smooth scroll itself is left alone. Gives up after 2.5 s, or as soon as the visitor scrolls or
+ * changes, so the smooth scroll itself is left alone. Gives up after SETTLE_MS, or as soon as the visitor scrolls or
  * clicks.
  */
 function follow(scroller: ViewportScroller, doc: Document, anchor: string): AbortController {
@@ -153,7 +160,7 @@ function follow(scroller: ViewportScroller, doc: Document, anchor: string): Abor
     scroller.scrollToAnchor(anchor, { behavior: 'instant' });
   });
   observer.observe(main);
-  const timer = setTimeout(() => following.abort(), 2500);
+  const timer = setTimeout(() => following.abort(), SETTLE_MS);
   following.signal.addEventListener('abort', () => {
     observer.disconnect();
     clearTimeout(timer);
