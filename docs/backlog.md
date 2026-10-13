@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **13. 10. 2026 – v1.25.0:** stránka **Vyhodnocovanie** pre superadmina (menu účtu): odhad acclaimu na KvK z naklikaných marchov (výbava, iconic, refine, armamenty, inscriptions, páry a skilly) a voliteľnej power, všetky premenné z Excelu KVK Requirements nastaviteľné, power hráčov uložená v databáze (aj hromadne), CSV.
 - **13. 10. 2026 – v1.24.9:** karty marchov sú kompaktné – menšia výbava, bez bonusov v % a setových bonusov; tlačidlo Detail ukáže všetko v plnej veľkosti.
 - **13. 10. 2026 – v1.24.8:** vo výbere commandera je za skupinou Meta · <typ> vlastná skupina ostatných commanderov toho typu (napr. Jazda), až potom Leadership a Ostatní.
 - **13. 10. 2026 – v1.24.7:** sekcia Hráči na `/ucet` má zoradenie (meno, najnovší, naposledy prihlásení, počet marchov) a filtre marchov a KvK prihlášok, pri hráčovi čas registrácie, posledné prihlásenie, počet marchov a KvK; uložená zlatá výbava bez iconic dostala iconic I.

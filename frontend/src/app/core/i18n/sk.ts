@@ -39,6 +39,10 @@ export const sk = {
       title: 'Marche hráčov | KD 1035',
       description: 'Marche hráčov kráľovstva KD 1035 – commanderi, výbava a armamenty.',
     },
+    evaluation: {
+      title: 'Vyhodnocovanie KvK | KD 1035',
+      description: 'Odhad acclaimu hráčov kráľovstva KD 1035 na KvK.',
+    },
     kvk: {
       title: 'Prihláška na KvK | KD 1035',
       description: 'Prihláška hráčov kráľovstva KD 1035 na KvK – rally a garrison.',
@@ -86,6 +90,8 @@ export const sk = {
     reminders: 'Pripomienky eventov',
     marches: 'Marche',
     kvk: 'Prihláška na KvK',
+    // the superadmin only (/vyhodnocovanie)
+    evaluation: 'Vyhodnocovanie',
     accountMenu: 'Stránky hráča',
     // the in-game name is missing: the red "!" in the header (screen readers) and the menu item to set it
     nameMissing: 'Chýba ti meno v hre',
@@ -845,6 +851,7 @@ export const sk = {
           'Prihlášky na KvK – rolu (rally, garrison), typ jednotiek, commanderov a ich skilly, naklikanú výbavu, formáciu a inscriptions, bonusy armamentov a poznámku.',
           'Marche na stránke Marche – typ, commanderov a ich skilly, bonusy armamentov a naklikanú výbavu, formáciu a inscriptions.',
           'Screenshoty prihlášok a marchov už neukladáme – staršie sme zmazali, zo záloh zmiznú do 8 týždňov.',
+          'Pri vyhodnocovaní KvK si správca môže k tvojmu účtu zapísať tvoju power, dosiahnutý acclaim a či máš iba T4 jednotky.',
         ],
       },
       {
@@ -856,6 +863,7 @@ export const sk = {
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
+          'Z tvojich marchov (a power, ak ju správca zapíše) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power, acclaim a T4 vidí iba správca.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

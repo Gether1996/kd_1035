@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import alarm_views, kvk_views, march_views, reminder_views, views
+from . import alarm_views, evaluation_views, kvk_views, march_views, reminder_views, views
 
 urlpatterns = [
     path('auth/discord/login/', views.discord_login),
@@ -24,4 +24,8 @@ urlpatterns = [
     path('me/marches/', march_views.marches),
     path('me/marches/<int:march_id>/', march_views.march),
     path('marches/', march_views.players_marches),
+    path('evaluation/', evaluation_views.evaluation),
+    path('evaluation/settings/', evaluation_views.evaluation_settings),
+    path('evaluation/players/', evaluation_views.evaluation_players),
+    path('evaluation/players/<int:player_id>/', evaluation_views.evaluation_player),
 ]

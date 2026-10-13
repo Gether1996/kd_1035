@@ -19,6 +19,7 @@ export type Page =
   | 'glossary'
   | 'kvk'
   | 'playersMarches'
+  | 'evaluation'
   | 'guides'
   | 'guide';
 export type GuideCategory = 'commanderi' | 'vybava' | 'eventy' | 'tipy';
@@ -43,6 +44,7 @@ const FIXED_PATHS = {
   glossary: '/slovnik',
   kvk: '/kvk',
   playersMarches: '/marche',
+  evaluation: '/vyhodnocovanie',
 } satisfies Partial<Record<Page, string>>;
 type FixedPage = keyof typeof FIXED_PATHS;
 

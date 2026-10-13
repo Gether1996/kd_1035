@@ -1,0 +1,336 @@
+@let x = texts();
+@let s = x.sections;
+@let v = settings();
+@let fs = fields();
+
+<!-- one number field -->
+<ng-template #num let-f>
+  <div class="field ev-field">
+    <label class="ev-field__label" [for]="id(f.path)">{{ f.label }}</label>
+    <input
+      class="input ev-input"
+      type="number"
+      step="any"
+      inputmode="decimal"
+      [id]="id(f.path)"
+      [value]="value(f.path)"
+      (change)="setNumber(f.path, $event)"
+    />
+  </div>
+</ng-template>
+
+<div class="ev-sections">
+  <!-- acclaim -->
+  <section class="ev-card" aria-labelledby="ev-s-acclaim">
+    <h2 class="ev-card__title" id="ev-s-acclaim">{{ s.acclaim.title }}</h2>
+    <p class="ev-card__hint">{{ s.acclaim.hint }}</p>
+    <div class="ev-grid">
+      <ng-container *ngTemplateOutlet="num; context: { $implicit: fs.acclaim[0] }" />
+      <div class="field ev-field">
+        <label class="ev-field__label" for="ev-benchmark-player">{{ s.acclaim.player }}</label>
+        <select id="ev-benchmark-player" class="select ev-input" (change)="setBenchmarkPlayer($event)">
+          <option value="" [selected]="v.acclaim.player === null">{{ s.acclaim.noPlayer }}</option>
+          @for (p of benchmarkPlayers(); track p.id) {
+            <option [value]="p.id" [selected]="v.acclaim.player === p.id">{{ p.name }} · {{ p.score.toFixed(1) }}</option>
+          }
+        </select>
+      </div>
+      @if (v.acclaim.player === null) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: { path: ['acclaim', 'score'], label: s.acclaim.score } }" />
+      }
+      @for (f of fs.acclaim.slice(1); track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+  </section>
+
+  <!-- power -->
+  <section class="ev-card" aria-labelledby="ev-s-power">
+    <h2 class="ev-card__title" id="ev-s-power">{{ s.power.title }}</h2>
+    <p class="ev-card__hint">{{ s.power.hint }}</p>
+    <label class="ev-switch">
+      <input class="switch" type="checkbox" role="switch" [checked]="v.power.expected" (change)="setFlag(['power', 'expected'], $event)" />
+      <span>{{ s.power.expected }}</span>
+    </label>
+    <div class="ev-grid">
+      @for (f of fs.power; track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+    <h3 class="ev-card__sub">{{ s.power.table }}</h3>
+    <div class="ev-scroll">
+      <table class="ev-table ev-table--form">
+        <thead>
+          <tr>
+            <th scope="col">{{ s.power.count }}</th>
+            <th scope="col">{{ s.power.min }}</th>
+            <th scope="col">{{ s.power.max }}</th>
+            <th scope="col">{{ s.power.scoreMin }}</th>
+            <th scope="col">{{ s.power.scoreMax }}</th>
+            <th scope="col">{{ s.power.now }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of v.power.table; track $index; let i = $index) {
+            <tr>
+              <th scope="row">{{ i + 1 }}</th>
+              @for (key of ['min', 'max', 'scoreMin', 'scoreMax']; track key) {
+                <td>
+                  <input
+                    class="input ev-input ev-input--cell"
+                    type="number"
+                    step="any"
+                    inputmode="decimal"
+                    [attr.aria-label]="(i + 1) + ' · ' + $any(s.power)[key]"
+                    [value]="value(['power', 'table', i, key])"
+                    (change)="setNumber(['power', 'table', i, key], $event)"
+                  />
+                </td>
+              }
+              <td class="ev-table__note">{{ rangeNow(i) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <label class="ev-switch">
+      <input class="switch" type="checkbox" role="switch" [checked]="v.power.auto" (change)="setFlag(['power', 'auto'], $event)" />
+      <span>{{ s.power.auto }}</span>
+    </label>
+    <div class="ev-grid">
+      @for (f of fs.powerAuto; track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+  </section>
+
+  <!-- marches -->
+  <section class="ev-card" aria-labelledby="ev-s-marches">
+    <h2 class="ev-card__title" id="ev-s-marches">{{ s.marches.title }}</h2>
+    <p class="ev-card__hint">{{ s.marches.hint }}</p>
+    <div class="chips" role="group" [attr.aria-label]="s.marches.kinds">
+      @for (kind of kinds; track kind) {
+        @let on = v.marches.kinds.includes(kind);
+        <label class="chip">
+          <input type="checkbox" [checked]="on" (change)="toggleKind(kind)" />
+          <span><svg [appIcon]="on ? 'check' : 'plus'"></svg>{{ x.kinds[kind] }}</span>
+        </label>
+      }
+    </div>
+    <div class="ev-grid">
+      @for (f of fs.marches; track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+  </section>
+
+  <!-- armaments -->
+  <section class="ev-card" aria-labelledby="ev-s-armaments">
+    <h2 class="ev-card__title" id="ev-s-armaments">{{ s.armaments.title }}</h2>
+    <p class="ev-card__hint">{{ s.armaments.hint }}</p>
+    <div class="ev-grid">
+      @for (f of fs.armaments; track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+  </section>
+
+  <!-- equipment -->
+  <section class="ev-card ev-card--wide" aria-labelledby="ev-s-equipment">
+    <h2 class="ev-card__title" id="ev-s-equipment">{{ s.equipment.title }}</h2>
+    <p class="ev-card__hint">{{ s.equipment.hint }}</p>
+    <div class="ev-scroll">
+      <table class="ev-table ev-table--form">
+        <thead>
+          <tr>
+            <th scope="col"></th>
+            @for (r of rarities; track r) {
+              <th scope="col" class="ev-rarity ev-rarity--{{ r }}">{{ x.rarities[r] }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (group of ['base', 'crit']; track group) {
+            <tr>
+              <th scope="row">{{ group === 'base' ? s.equipment.base : s.equipment.crit }}</th>
+              @for (r of rarities; track r) {
+                <td>
+                  <input
+                    class="input ev-input ev-input--cell"
+                    type="number"
+                    step="any"
+                    inputmode="decimal"
+                    [attr.aria-label]="(group === 'base' ? s.equipment.base : s.equipment.crit) + ' · ' + x.rarities[r]"
+                    [value]="value(['equipment', group, r])"
+                    (change)="setNumber(['equipment', group, r], $event)"
+                  />
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <h3 class="ev-card__sub">{{ s.equipment.iconic }}</h3>
+    <div class="ev-grid ev-grid--tight">
+      @for (level of v.equipment.iconic; track $index; let i = $index) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: { path: ['equipment', 'iconic', i], label: 'Iconic ' + ['I', 'II', 'III', 'IV', 'V'][i] } }" />
+      }
+    </div>
+    <h3 class="ev-card__sub">{{ s.equipment.slots }}</h3>
+    <div class="ev-grid ev-grid--tight">
+      @for (slot of slots; track slot) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: { path: ['equipment', 'slots', slot], label: x.slots[slot] } }" />
+      }
+    </div>
+    <div class="ev-grid">
+      @for (f of fs.equipment; track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+    <h3 class="ev-card__sub">{{ s.equipment.tiers }}</h3>
+    <ul class="ev-tiers">
+      @for (tier of v.equipment.tiers; track tier.tier; let i = $index) {
+        <li class="ev-tier">
+          <label class="ev-tier__name" [for]="id(['equipment', 'tiers', i, 'points'])">{{ tier.tier }}</label>
+          <input
+            class="input ev-input ev-input--cell"
+            type="number"
+            step="any"
+            inputmode="decimal"
+            [id]="id(['equipment', 'tiers', i, 'points'])"
+            [value]="tier.points"
+            (change)="setNumber(['equipment', 'tiers', i, 'points'], $event)"
+          />
+          @if (x.tierNotes[tier.tier]; as note) {
+            <span class="ev-tier__note">{{ note }}</span>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- commander pairs -->
+  <section class="ev-card ev-card--wide" aria-labelledby="ev-s-pairs">
+    <h2 class="ev-card__title" id="ev-s-pairs">{{ s.pairs.title }}</h2>
+    <p class="ev-card__hint">{{ s.pairs.hint }}</p>
+    <div class="ev-grid">
+      @for (f of fs.pairs; track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+    <p class="ev-card__hint">{{ skillExample() }}</p>
+
+    <h3 class="ev-card__sub">{{ s.pairs.missing }}</h3>
+    @if (missing().length) {
+      <ul class="ev-missing">
+        @for (m of missing(); track m.primary + m.secondary) {
+          <li class="ev-missing__row">
+            <span class="ev-missing__pair">{{ m.primary }} + {{ m.secondary }}</span>
+            <span class="ev-missing__used">{{ used(m.players) }}</span>
+            <button type="button" class="pill-btn pill-btn--quiet ev-small" (click)="addPair(m.primary, m.secondary)">
+              <svg appIcon="plus"></svg> {{ s.pairs.add }}
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="ev-card__hint">{{ s.pairs.noMissing }}</p>
+    }
+
+    <div class="ev-pairs-bar">
+      <div class="field ev-pairs-bar__search">
+        <label class="sr-only" for="ev-pair-filter">{{ s.pairs.filter }}</label>
+        <input
+          #pf
+          id="ev-pair-filter"
+          class="input ev-input"
+          type="search"
+          autocomplete="off"
+          [placeholder]="s.pairs.filter"
+          [value]="pairFilter()"
+          (input)="pairFilter.set(pf.value)"
+        />
+      </div>
+      <button type="button" class="pill-btn pill-btn--quiet ev-small" (click)="addPair()">
+        <svg appIcon="plus"></svg> {{ s.pairs.addRow }}
+      </button>
+    </div>
+    <datalist id="ev-commanders">
+      @for (name of commanders(); track name) {
+        <option [value]="name"></option>
+      }
+    </datalist>
+    <div class="ev-scroll ev-scroll--pairs">
+      <table class="ev-table ev-table--form ev-table--pairs">
+        <thead>
+          <tr>
+            <th scope="col">{{ s.pairs.primaryName }}</th>
+            <th scope="col">{{ s.pairs.secondaryName }}</th>
+            <th scope="col">{{ s.pairs.points }}</th>
+            <th scope="col"><span class="sr-only">{{ s.pairs.remove }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of pairRows(); track p.index + '|' + p.row[0] + '|' + p.row[1]) {
+            <tr>
+              <td>
+                <input
+                  class="input ev-input ev-input--cell"
+                  list="ev-commanders"
+                  [attr.aria-label]="s.pairs.primaryName"
+                  [value]="p.row[0]"
+                  (change)="setPair(p.index, 0, $event)"
+                />
+              </td>
+              <td>
+                <input
+                  class="input ev-input ev-input--cell"
+                  list="ev-commanders"
+                  [attr.aria-label]="s.pairs.secondaryName"
+                  [value]="p.row[1]"
+                  (change)="setPair(p.index, 1, $event)"
+                />
+              </td>
+              <td>
+                <input
+                  class="input ev-input ev-input--cell ev-input--points"
+                  type="number"
+                  step="any"
+                  inputmode="decimal"
+                  [attr.aria-label]="s.pairs.points + ': ' + p.row[0] + ' + ' + p.row[1]"
+                  [value]="p.row[2]"
+                  (change)="setPair(p.index, 2, $event)"
+                />
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="ev-icon-btn"
+                  [attr.aria-label]="s.pairs.remove + ': ' + p.row[0] + ' + ' + p.row[1]"
+                  (click)="removePair(p.index)"
+                >
+                  <svg appIcon="trash-2"></svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- the fund -->
+  <section class="ev-card" aria-labelledby="ev-s-fund">
+    <h2 class="ev-card__title" id="ev-s-fund">{{ s.fund.title }}</h2>
+    <p class="ev-card__hint">{{ s.fund.hint }}</p>
+    <div class="ev-grid">
+      @for (n of counts; track n) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: { path: ['fund', 'max', n - 1], label: fundLabel(n) } }" />
+      }
+      @for (f of fs.fund; track f.label) {
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
+      }
+    </div>
+  </section>
+</div>

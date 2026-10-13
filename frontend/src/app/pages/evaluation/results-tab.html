@@ -1,0 +1,287 @@
+@let x = texts();
+@let c = x.columns;
+@let d = x.detail;
+@let e = evaluation();
+
+<div class="ev-bar">
+  <div class="field ev-bar__search">
+    <label class="sr-only" for="ev-search">{{ x.search }}</label>
+    <input
+      #q
+      id="ev-search"
+      class="input"
+      type="search"
+      autocomplete="off"
+      [placeholder]="x.search"
+      [value]="search()"
+      (input)="search.set(q.value)"
+    />
+  </div>
+  <div class="field ev-bar__select">
+    <label class="sr-only" for="ev-show">{{ x.show.label }}</label>
+    <select #showBy id="ev-show" class="select" (change)="show.set($any(showBy.value))">
+      @for (o of shows; track o) {
+        <option [value]="o" [selected]="show() === o">{{ x.show[o] }}</option>
+      }
+    </select>
+  </div>
+  <div class="field ev-bar__select">
+    <label class="sr-only" for="ev-sort">{{ x.sort.label }}</label>
+    <select #sortBy id="ev-sort" class="select" (change)="sort.set($any(sortBy.value))">
+      @for (o of sorts; track o) {
+        <option [value]="o" [selected]="sort() === o">{{ x.sort[o] }}</option>
+      }
+    </select>
+  </div>
+  <label class="ev-switch">
+    <input #up class="switch" type="checkbox" role="switch" [checked]="usePower()" (change)="usePower.set(up.checked)" />
+    <span>{{ x.usePower }}</span>
+  </label>
+  <button
+    type="button"
+    class="pill-btn pill-btn--quiet ev-small"
+    [attr.aria-expanded]="bulkOpen()"
+    aria-controls="ev-bulk"
+    (click)="bulkOpen.set(!bulkOpen())"
+  >
+    <svg appIcon="pencil"></svg> {{ x.bulk.open }}
+  </button>
+  <button type="button" class="pill-btn pill-btn--quiet ev-small" (click)="download()">
+    <svg appIcon="download"></svg> {{ x.csv }}
+  </button>
+</div>
+
+@if (bulkOpen()) {
+  <div class="ev-bulk" id="ev-bulk">
+    <label class="ev-field__label" for="ev-bulk-text">{{ x.bulk.label }}</label>
+    <p class="ev-card__hint" id="ev-bulk-hint">{{ x.bulk.hint }}</p>
+    <textarea #bulk id="ev-bulk-text" class="input ev-bulk__text" rows="6" aria-describedby="ev-bulk-hint"></textarea>
+    <div class="ev-bulk__actions">
+      <button type="button" class="pill-btn ev-small" (click)="saveBulk(bulk)">{{ x.bulk.save }}</button>
+      <p class="ev-note" role="status">{{ bulkResult() }}</p>
+    </div>
+  </div>
+}
+
+<dl class="ev-summary">
+  <div>
+    <dt>{{ x.summary.players }}</dt>
+    <dd>{{ rows().length }}</dd>
+  </div>
+  <div>
+    <dt>{{ x.summary.total }}</dt>
+    <dd>{{ int(total()) }}</dd>
+  </div>
+  <div>
+    <dt>{{ x.summary.perPoint }}</dt>
+    <dd>{{ int(e.perPoint) }}</dd>
+  </div>
+  <div>
+    <dt>{{ x.summary.benchmark }}</dt>
+    <dd>{{ dec(e.benchmarkScore) }}</dd>
+  </div>
+</dl>
+
+@if (!usePower()) {
+  <p class="ev-note ev-note--gold">{{ x.powerOff }}</p>
+} @else if (noPower()) {
+  <p class="ev-note">{{ x.noPower }}</p>
+}
+@if (dirty()) {
+  <p class="ev-note ev-note--gold">{{ x.unsaved }}</p>
+}
+<p class="ev-note ev-note--error" role="status">{{ failed() ? x.saveFailed : '' }}</p>
+
+<div class="ev-scroll ev-scroll--results">
+  <table class="ev-table ev-results">
+    <thead>
+      <tr>
+        <th scope="col" class="ev-num">#</th>
+        <th scope="col">{{ c.player }}</th>
+        <th scope="col" class="ev-num">{{ c.marches }}</th>
+        <th scope="col" class="ev-num">{{ c.score }}</th>
+        <th scope="col" class="ev-num">{{ c.required }}</th>
+        <th scope="col">{{ c.acclaim }}</th>
+        <th scope="col">{{ c.progress }}</th>
+        <th scope="col">{{ c.power }}</th>
+        <th scope="col" class="ev-num">{{ c.recommended }}</th>
+        <th scope="col">{{ c.t4 }}</th>
+        <th scope="col" class="ev-num">{{ c.fund }}</th>
+        <th scope="col"><span class="sr-only">{{ c.detail }}</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of rows(); track r.player.id; let i = $index) {
+        @let open = opened().has(r.player.id);
+        @let who = name(r);
+        <tr class="ev-row" [class.is-open]="open">
+          <td class="ev-num ev-rank">{{ i + 1 }}</td>
+          <th scope="row" class="ev-player">
+            <img class="ev-player__avatar" [src]="r.player.avatar_url" alt="" width="32" height="32" loading="lazy" />
+            <span class="ev-player__name">
+              {{ who }}
+              @if (!r.player.approved) {
+                <span class="ev-tag">{{ x.pending }}</span>
+              }
+              @if (r.player.ingame_name) {
+                <small>{{ r.player.name }}</small>
+              }
+            </span>
+          </th>
+          <td class="ev-num">
+            {{ r.counted }}
+            @if (r.missing) {
+              <span class="ev-missing-count" [title]="x.missingTitle">+{{ r.missing }}</span>
+            }
+          </td>
+          <td class="ev-num">{{ dec(r.score) }}</td>
+          <td class="ev-num ev-required">{{ int(r.acclaim.required) }}</td>
+          <td>
+            <input
+              class="input ev-input ev-input--cell ev-input--acclaim"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              [attr.aria-label]="c.acclaim + ': ' + who"
+              [value]="r.player.acclaim ?? ''"
+              (change)="setAcclaim(r, $event)"
+            />
+          </td>
+          <td>
+            @if (r.progress !== null) {
+              <span class="ev-progress" [class.is-done]="r.progress >= 1">
+                <span class="ev-progress__bar" [style.--p]="r.progress > 1 ? 1 : r.progress"></span>
+                {{ percent(r.progress) }}
+              </span>
+            }
+          </td>
+          <td>
+            <input
+              class="input ev-input ev-input--cell ev-input--power"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              [attr.aria-label]="c.power + ': ' + who"
+              [value]="r.player.power ?? ''"
+              (change)="setPower(r, $event)"
+            />
+          </td>
+          <td class="ev-num" [class.is-over]="r.excess > 0">{{ r.recommended ?? '–' }}</td>
+          <td>
+            <input class="ev-check" type="checkbox" [attr.aria-label]="c.t4 + ': ' + who" [checked]="r.player.t4" (change)="setT4(r, $event)" />
+          </td>
+          <td class="ev-num" [title]="r.fund ? fundTitle(r) : ''">{{ r.fund === null ? '' : compact(r.fund) }}</td>
+          <td>
+            <button
+              type="button"
+              class="ev-icon-btn"
+              [attr.aria-expanded]="open"
+              [attr.aria-controls]="'ev-detail-' + r.player.id"
+              [attr.aria-label]="c.detail + ': ' + who"
+              (click)="toggle(r.player.id)"
+            >
+              <svg appIcon="chevron-down" [class.is-open]="open"></svg>
+            </button>
+          </td>
+        </tr>
+        @if (open) {
+          <tr class="ev-detail-row" [id]="'ev-detail-' + r.player.id">
+            <td colspan="12">
+              <div class="ev-detail">
+                <!-- how the acclaim adds up -->
+                <p class="ev-detail__sum">
+                  <strong>{{ d.acclaim }}:</strong>
+                  {{ int(r.acclaim.marches) }} {{ d.fromMarches }}
+                  @if (r.acclaim.excess) {
+                    + {{ int(r.acclaim.excess) }} ({{ excessText(r) }})
+                  }
+                  @if (r.acclaim.floor > r.acclaim.marches + r.acclaim.excess) {
+                    → {{ int(r.acclaim.floor) }} ({{ d.floor }})
+                  }
+                  @if (r.acclaim.t4) {
+                    − {{ int(r.acclaim.t4) }} ({{ t4Text() }})
+                  }
+                  = <strong class="ev-required">{{ int(r.acclaim.required) }}</strong>
+                  @if (r.acclaim.required === settings().acclaim.minimum) {
+                    ({{ d.minimum }})
+                  }
+                </p>
+                @if (r.missing) {
+                  <p class="ev-detail__line">{{ missingText(r) }}</p>
+                }
+                @if (limitText(r); as limit) {
+                  <p class="ev-detail__line" [class.is-over]="r.excess > 0">{{ limit }}</p>
+                }
+                <div class="field ev-detail__bonus">
+                  <label class="ev-field__label" [for]="'ev-bonus-' + r.player.id">{{ d.bonus }}</label>
+                  <input
+                    class="input ev-input ev-input--cell"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    [id]="'ev-bonus-' + r.player.id"
+                    [value]="r.player.power_bonus"
+                    (change)="setBonus(r, $event)"
+                  />
+                </div>
+
+                <!-- march by march -->
+                @if (r.marches.length) {
+                  <ol class="ev-marches">
+                    @for (m of r.marches; track m.march.id) {
+                      <li class="ev-march" [class.is-skipped]="!m.counted">
+                        <div class="ev-march__head">
+                          @if (m.march.kind) {
+                            <img class="ev-march__kind" [src]="icon(m.march.kind)" [alt]="x.kinds[m.march.kind]" [title]="x.kinds[m.march.kind]" width="96" height="96" />
+                          }
+                          <span class="ev-march__pair">
+                            {{ m.march.primary || '–' }}@if (m.march.secondary) { + {{ m.march.secondary }}}
+                          </span>
+                          <span class="ev-march__total">{{ dec(m.total) }}</span>
+                        </div>
+                        @if (m.skipped) {
+                          <p class="ev-march__skip">{{ d.skipped[m.skipped] }}</p>
+                        }
+                        <dl class="ev-march__parts">
+                          <div>
+                            <dt>{{ d.pair }}</dt>
+                            <dd>
+                              {{ dec(m.pair.points, 0) }} · {{ d.source[m.pair.source] }}
+                              @if (m.skills < 0.999) {
+                                · {{ d.skills }} ×{{ dec(m.skills, 2) }}
+                              }
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>{{ d.equipment }}</dt>
+                            <dd>
+                              {{ dec(m.equipment.points) }}
+                              @if (m.equipment.tier) {
+                                <span class="ev-tier-badge">{{ m.equipment.tier }}</span>
+                              }
+                              · {{ gearText(m) }}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>{{ d.armaments }}</dt>
+                            <dd>{{ dec(m.armaments.points) }} · {{ armamentText(m) }}</dd>
+                          </div>
+                        </dl>
+                      </li>
+                    }
+                  </ol>
+                } @else {
+                  <p class="ev-detail__line">{{ d.noMarches }}</p>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      } @empty {
+        <tr>
+          <td colspan="12" class="ev-empty">{{ x.empty }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

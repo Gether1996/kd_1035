@@ -56,6 +56,10 @@ export class Header {
       { label: t.marches, link: this.i18n.path('playersMarches'), icon: 'shield' },
       { label: t.reminders, link: this.i18n.path('reminders'), icon: 'bell' },
       { label: t.kvk, link: this.i18n.path('kvk'), icon: 'swords' },
+      // the KvK evaluation – the superadmin only (Gether 13. 10. 2026)
+      ...(this.auth.user()?.is_superuser
+        ? [{ label: t.evaluation, link: this.i18n.path('evaluation'), icon: 'scale' as const }]
+        : []),
     ];
   });
 

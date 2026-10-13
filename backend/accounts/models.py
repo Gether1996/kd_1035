@@ -377,3 +377,52 @@ class March(ArmyFields):
 
     def __str__(self):
         return f'{self.player} · {self.position}. march'
+
+
+class EvaluationSettings(models.Model):
+    """The variables of the KvK evaluation on /vyhodnocovanie (one row; Gether 13. 10. 2026: the "KVK Requirements"
+    spreadsheet on the web, every variable adjustable). `data` is the JSON the page edits – the page fills in its
+    defaults (the spreadsheet's constants) for anything missing; the server only checks it is plain JSON of a sane
+    size (evaluation_views.clean_settings)."""
+
+    data = models.JSONField('premenné', default=dict, blank=True)
+    updated_at = models.DateTimeField('upravené', auto_now=True)
+
+    class Meta:
+        verbose_name = 'premenné vyhodnocovania'
+        verbose_name_plural = 'premenné vyhodnocovania'
+
+    def __str__(self):
+        return 'Premenné vyhodnocovania'
+
+    @classmethod
+    def load(cls) -> 'EvaluationSettings':
+        return cls.objects.get_or_create(pk=1)[0]
+
+
+class PlayerEvaluation(models.Model):
+    """What the superadmin writes down about a player for the KvK evaluation and the game has no API for: the power
+    in millions, the acclaim reached, T4 troops only and a correction of the recommended power. Seen only by the
+    superadmin, gone with the account (the privacy page says so)."""
+
+    player = models.OneToOneField(Player, on_delete=models.CASCADE, related_name='evaluation', verbose_name='hráč')
+    power = models.DecimalField(
+        'power (mil.)', max_digits=6, decimal_places=1, null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(Decimal('9999.9'))],
+    )  # fmt: skip
+    acclaim = models.PositiveBigIntegerField(
+        'aktuálny acclaim', null=True, blank=True, validators=[MaxValueValidator(10**12)]
+    )
+    t4 = models.BooleanField('iba T4 jednotky', default=False)
+    power_bonus = models.DecimalField(
+        'úprava odporúčanej power (mil.)', max_digits=5, decimal_places=1, default=0,
+        validators=[MinValueValidator(Decimal('-999.9')), MaxValueValidator(Decimal('999.9'))],
+    )  # fmt: skip
+    updated_at = models.DateTimeField('upravené', auto_now=True)
+
+    class Meta:
+        verbose_name = 'vyhodnocovanie hráča'
+        verbose_name_plural = 'vyhodnocovanie hráčov'
+
+    def __str__(self):
+        return f'{self.player} · vyhodnocovanie'

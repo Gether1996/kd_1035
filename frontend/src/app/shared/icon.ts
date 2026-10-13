@@ -33,6 +33,7 @@ export type IconName =
   | 'pencil'
   | 'plus'
   | 'repeat'
+  | 'scale'
   | 'search'
   | 'send'
   | 'shield'

@@ -1,0 +1,355 @@
+// "Odhad acclaimu": the bar, the summary, the table of the players and one player's computation.
+@use 'common';
+
+:host {
+  display: block;
+}
+
+.ev-input--acclaim {
+  width: 130px;
+}
+
+.ev-input--power {
+  width: 84px;
+}
+
+.ev-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.ev-bar__search {
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+
+.ev-bar__select {
+  flex: 0 1 200px;
+
+  @media (max-width: 560px) {
+    flex: 1 1 140px;
+  }
+}
+
+.ev-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 0 0 12px;
+
+  div {
+    display: grid;
+    gap: 2px;
+  }
+
+  dt {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+
+  dd {
+    margin: 0;
+    font: 700 1.125rem/1.2 var(--font-body);
+    color: var(--gold-100);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.ev-note {
+  margin: 0 0 10px;
+  font-size: 0.9375rem;
+  color: var(--text-mute);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.ev-note--gold {
+  color: var(--gold-300);
+}
+
+.ev-note--error {
+  color: var(--red-300);
+}
+
+.ev-results {
+  min-width: 1080px;
+
+  td {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.ev-num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.ev-rank {
+  color: var(--text-mute);
+}
+
+.ev-player {
+  min-width: 180px;
+
+  &[scope='row'] {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+.ev-player__avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.ev-player__name {
+  display: grid;
+  gap: 1px;
+  font-weight: 600;
+  color: var(--text);
+
+  small {
+    font-weight: 400;
+    font-size: 0.8125rem;
+    color: var(--text-mute);
+  }
+}
+
+.ev-tag {
+  justify-self: start;
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--red-500) 55%, transparent);
+  border-radius: 999px;
+  color: var(--red-300);
+  font: 600 0.6875rem/1.4 var(--font-body);
+}
+
+.ev-required {
+  font-weight: 700;
+  color: var(--gold-100);
+}
+
+.ev-missing-count {
+  margin-left: 4px;
+  color: var(--red-300);
+  font-weight: 600;
+}
+
+.is-over {
+  color: var(--red-300);
+}
+
+.ev-check {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--gold-400);
+  cursor: pointer;
+}
+
+.ev-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  color: var(--text-dim);
+
+  &.is-done {
+    color: var(--gold-100);
+  }
+}
+
+.ev-progress__bar {
+  position: relative;
+  width: 60px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--field-bg);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold-400);
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+  }
+}
+
+.ev-empty {
+  padding: 24px 8px !important;
+  text-align: center !important;
+  color: var(--text-mute);
+}
+
+.ev-detail-row > td {
+  padding: 0 8px 16px;
+}
+
+.ev-detail {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+}
+
+.ev-detail__bonus {
+  max-width: 220px;
+}
+
+.ev-marches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-march {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+
+  &.is-skipped {
+    opacity: 0.6;
+  }
+}
+
+.ev-march__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ev-march__kind {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+}
+
+.ev-march__pair {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ev-march__total {
+  font: 700 1rem/1 var(--font-body);
+  color: var(--gold-100);
+}
+
+.ev-march__skip {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
+.ev-march__parts {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.875rem;
+
+  div {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  dt {
+    color: var(--text-mute);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-dim);
+  }
+}
+
+.ev-tier-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  color: var(--gold-300);
+  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+// a phone: the table scrolls sideways – the player's name and the opened computation stay in view
+.ev-results .ev-player {
+  // only where the table does not fit – on a wide screen the opaque cell would stand out
+  @media (max-width: 1199px) {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--bg);
+  }
+}
+
+.ev-detail {
+  position: sticky;
+  left: 0;
+  max-width: calc(100vw - 2 * var(--gutter) - 16px);
+}
+
+// pasting the power of everyone
+.ev-bulk {
+  display: grid;
+  gap: 8px;
+  max-width: 640px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+}
+
+.ev-bulk__text {
+  min-height: 140px;
+  padding: 10px 12px;
+  font: inherit;
+  resize: vertical;
+}
+
+.ev-bulk__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+
+  .ev-note {
+    margin: 0;
+  }
+}
+
+.ev-row.is-open td,
+.ev-row.is-open th {
+  border-bottom-color: transparent;
+}
+
+.ev-detail__sum,
+.ev-detail__line {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+}

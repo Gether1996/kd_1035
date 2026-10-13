@@ -1,0 +1,168 @@
+// "Premenné": cards of fields, the power table, the equipment, the tiers and the pair table.
+@use 'common';
+
+:host {
+  display: block;
+}
+
+.ev-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.ev-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: clamp(14px, 3vw, 20px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.ev-card--wide {
+  grid-column: 1 / -1;
+}
+
+.ev-card__title {
+  margin: 0;
+  font: 700 1.125rem/1.2 var(--font-display);
+  color: var(--gold-100);
+}
+
+.ev-card__sub {
+  margin: 6px 0 0;
+  font: 600 0.8125rem/1.2 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.ev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+  gap: 10px 12px;
+}
+
+.ev-grid--tight {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 110px), 1fr));
+}
+
+.ev-field {
+  gap: 5px;
+}
+
+.ev-input--points {
+  width: 90px;
+}
+
+// the tiers with what each looks like
+.ev-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-tier {
+  display: grid;
+  grid-template-columns: 36px 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.ev-tier__name {
+  font: 700 0.9375rem/1 var(--font-body);
+  color: var(--gold-300);
+}
+
+.ev-tier__note {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--text-mute);
+}
+
+.ev-rarity--legendary {
+  color: var(--rarity-legendary);
+}
+
+.ev-rarity--epic {
+  color: var(--rarity-epic);
+}
+
+.ev-rarity--elite {
+  color: var(--rarity-elite);
+}
+
+.ev-rarity--advanced {
+  color: var(--rarity-advanced);
+}
+
+.ev-rarity--common {
+  color: var(--rarity-common);
+}
+
+// pairs players use that are not in the table
+.ev-missing {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-missing__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--red-500) 40%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.ev-missing__pair {
+  flex: 1 1 200px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ev-missing__used {
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.ev-pairs-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.ev-pairs-bar__search {
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+
+.ev-scroll--pairs {
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.ev-table--form {
+  th[scope='row'] {
+    font-weight: 600;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+}
+
+.ev-table__note {
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
