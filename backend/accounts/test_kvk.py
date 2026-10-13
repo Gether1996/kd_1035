@@ -432,6 +432,16 @@ class ApprovalTests(KvkTestCase):
         rows = {p['id']: p for p in admin.get('/api/kvk/reviewers/').json()['players']}
         self.assertEqual((rows[self.newbie.pk]['approved'], rows[self.player.pk]['approved']), (False, True))
         self.assertIn('created_at', rows[self.newbie.pk])
+        # first and last sign-in, the marches and the KvK sign-ups for the filters (Gether 13. 10. 2026)
+        before = self.player.marches.count()
+        March.objects.create(player=self.player, position=before + 1, kind='cavalry', primary='Attila')
+        KvkSignup.objects.create(player=self.player, role='rally', kind='cavalry', primary='Attila')
+        KvkSignup.objects.create(player=self.player, role='garrison', kind='infantry', primary='Bai Qi')
+        rows = {p['id']: p for p in admin.get('/api/kvk/reviewers/').json()['players']}
+        row = rows[self.player.pk]
+        self.assertEqual((row['marches'], row['kvk']), (before + 1, ['garrison', 'rally']))
+        self.assertEqual((rows[self.newbie.pk]['marches'], rows[self.newbie.pk]['kvk']), (0, []))
+        self.assertTrue(rows[admin_player.pk]['last_login'].endswith('Z'))
 
         url = f'/api/kvk/reviewers/{self.newbie.pk}/'
         self.assertEqual(self.call('patch', url, {}, admin).status_code, 400)
@@ -616,3 +626,36 @@ class TermsTests(KvkTestCase):
         # new terms: asked again
         Player.objects.filter(pk=newbie.pk).update(terms_version='2026-01-01')
         self.assertFalse(client.get('/api/auth/me/').json()['user']['terms_accepted'])
+
+
+class GoldGearIconicMigrationTests(TestCase):
+    """accounts/0026: saved gold equipment without an iconic level gets I (Gether 13. 10. 2026)."""
+
+    def test_gold_pieces_without_iconic_get_one(self):
+        from importlib import import_module
+
+        from django.apps import apps
+
+        player = make_player()
+        gear = {
+            'weapon': {'item': 'dragons-breath-bow', 'crit': False, 'iconic': 0},
+            'helmet': {'item': 'lance-of-the-hellish-wasteland', 'crit': True, 'iconic': 3},
+        }
+        march = March.objects.create(player=player, position=1, kind='archer', primary='Qin Shi Huang', gear=gear)
+        epic = March.objects.create(
+            player=player, position=2, kind='archer', primary='Qin Shi Huang',
+            gear={'weapon': {'item': 'heart-of-the-saint', 'crit': False, 'iconic': 0}},
+        )  # fmt: skip
+        signup = KvkSignup.objects.create(
+            player=player, role='rally', kind='archer', primary='Qin Shi Huang',
+            gear={'weapon': {'item': 'dragons-breath-bow', 'crit': False, 'iconic': 0}},
+        )  # fmt: skip
+        import_module('accounts.migrations.0026_gold_gear_iconic_one').iconic_one(apps, None)
+        march.refresh_from_db()
+        epic.refresh_from_db()
+        signup.refresh_from_db()
+        self.assertEqual(march.gear['weapon']['iconic'], 1)
+        # a level set by the player stays, an epic item cannot be awakened
+        self.assertEqual(march.gear['helmet']['iconic'], 3)
+        self.assertEqual(epic.gear['weapon']['iconic'], 0)
+        self.assertEqual(signup.gear['weapon']['iconic'], 1)

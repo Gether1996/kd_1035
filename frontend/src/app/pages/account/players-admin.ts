@@ -7,12 +7,16 @@ import { fold } from '../../shared/search';
 type Flag = 'reviewer' | 'approved';
 type RoleFilter = 'all' | 'r4' | 'others';
 type ApprovalFilter = 'all' | 'approved' | 'pending';
+type Sort = 'name' | 'newest' | 'login' | 'marches';
+type MarchFilter = 'all' | 'with' | 'without';
+type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
 
 /**
  * "Hráči" on /ucet – superuser only (Gether 11. and 12. 10. 2026): every player signed in with Discord with two
  * switches – "Schválený" (a new player adds marches and KvK sign-ups only once approved; the superadmin gets a Discord
  * message about each new one) and "R4" (sees every KvK sign-up and every player's marches). Filters for R4 and the
- * approval; the players waiting for it come first. "Schvaľovať automaticky" lets every new player in at once, without
+ * approval, sorting and filters for marches and KvK sign-ups like on /marche (Gether 13. 10. 2026); the players waiting
+ * for the approval come first. "Schvaľovať automaticky" lets every new player in at once, without
  * the Discord message.
  */
 @Component({
@@ -72,6 +76,32 @@ type ApprovalFilter = 'all' | 'approved' | 'pending';
             }
           </div>
         </div>
+        <div class="players-bar__selects">
+          <div class="field players-bar__select">
+            <label class="sr-only" for="players-sort">{{ k.sort }}</label>
+            <select #sortBy id="players-sort" class="select" (change)="sort.set($any(sortBy.value))">
+              @for (o of sorts; track o) {
+                <option [value]="o" [selected]="sort() === o">{{ k.sorts[o] }}</option>
+              }
+            </select>
+          </div>
+          <div class="field players-bar__select">
+            <label class="sr-only" for="players-marches">{{ k.marchFilter }}</label>
+            <select #marchBy id="players-marches" class="select" (change)="marchFilter.set($any(marchBy.value))">
+              @for (o of marchFilters; track o) {
+                <option [value]="o" [selected]="marchFilter() === o">{{ k.marchFilters[o] }}</option>
+              }
+            </select>
+          </div>
+          <div class="field players-bar__select">
+            <label class="sr-only" for="players-kvk">{{ k.kvkFilter }}</label>
+            <select #kvkBy id="players-kvk" class="select" (change)="kvkFilter.set($any(kvkBy.value))">
+              @for (o of kvkFilters; track o) {
+                <option [value]="o" [selected]="kvkFilter() === o">{{ k.kvkFilters[o] }}</option>
+              }
+            </select>
+          </div>
+        </div>
       </div>
       @if (data.error()) {
         <p class="panel__lead is-error">{{ k.loadError }}</p>
@@ -88,7 +118,7 @@ type ApprovalFilter = 'all' | 'approved' | 'pending';
                 }
               </strong>
               <span>
-                {{ p.ingame_name ? p.name + ' · ' : '' }}{{ p.superuser ? k.superuser + ' · ' : '' }}{{ since(p.created_at) }}
+                {{ p.ingame_name ? p.name + ' · ' : '' }}{{ p.superuser ? k.superuser + ' · ' : '' }}{{ details(p) }}
               </span>
             </span>
             @if (!p.superuser) {
@@ -138,6 +168,9 @@ export class PlayersAdmin {
   protected readonly t = computed(() => this.i18n.t().players);
   protected readonly roleFilters: RoleFilter[] = ['all', 'r4', 'others'];
   protected readonly approvalFilters: ApprovalFilter[] = ['all', 'pending', 'approved'];
+  protected readonly sorts: Sort[] = ['name', 'newest', 'login', 'marches'];
+  protected readonly marchFilters: MarchFilter[] = ['all', 'with', 'without'];
+  protected readonly kvkFilters: KvkFilter[] = ['all', 'any', 'rally', 'garrison', 'none'];
 
   protected readonly data = this.api.reviewers(() => true);
   protected readonly players = linkedSignal<ReviewerRow[]>(() => (this.data.hasValue() ? this.data.value().players : []));
@@ -146,6 +179,9 @@ export class PlayersAdmin {
   protected readonly search = signal('');
   protected readonly role = signal<RoleFilter>('all');
   protected readonly approval = signal<ApprovalFilter>('all');
+  protected readonly sort = signal<Sort>('name');
+  protected readonly marchFilter = signal<MarchFilter>('all');
+  protected readonly kvkFilter = signal<KvkFilter>('all');
   protected readonly failed = signal(false);
 
   /** the superadmin counts as approved and not as R4 */
@@ -155,24 +191,46 @@ export class PlayersAdmin {
   private readonly approvalMatches = (p: ReviewerRow, f: ApprovalFilter) =>
     f === 'all' || (f === 'approved') === this.approved(p);
 
-  /** the search and the other filter – the counts on the buttons of one filter follow the other one */
+  private readonly marchMatches = (p: ReviewerRow, f: MarchFilter) => f === 'all' || (f === 'with') === p.marches > 0;
+  private readonly kvkMatches = (p: ReviewerRow, f: KvkFilter) =>
+    f === 'all' || (f === 'any' ? p.kvk.length > 0 : f === 'none' ? !p.kvk.length : p.kvk.includes(f));
+
+  /** the search, marches and KvK – the counts on the buttons of one segmented filter follow the other one */
   private readonly found = computed(() => {
     const query = fold(this.search());
-    return this.players().filter((p) => !query || fold(`${p.ingame_name} ${p.name}`).includes(query));
+    const marches = this.marchFilter();
+    const kvk = this.kvkFilter();
+    return this.players().filter(
+      (p) =>
+        (!query || fold(`${p.ingame_name} ${p.name}`).includes(query)) &&
+        this.marchMatches(p, marches) &&
+        this.kvkMatches(p, kvk),
+    );
   });
 
   /**
-   * The order as loaded: the players waiting for the approval first, the newest of them on top, the rest by name (the
-   * API's order). A switch does not move its row away under the cursor.
+   * The order as loaded: the players waiting for the approval first (the newest of them on top), the rest by the sort
+   * picked – by name (the API's order), the newest, the last signed in or the most marches. A switch does not move its
+   * row away under the cursor.
    */
   private readonly rank = computed(() => {
     const loaded = this.data.hasValue() ? this.data.value().players : [];
+    const sort = this.sort();
+    const by = (a: ReviewerRow, b: ReviewerRow) =>
+      sort === 'newest'
+        ? b.created_at.localeCompare(a.created_at)
+        : sort === 'login'
+          ? (b.last_login ?? '').localeCompare(a.last_login ?? '')
+          : sort === 'marches'
+            ? b.marches - a.marches
+            : 0;
     const order = loaded
       .map((p, i) => ({ p, i }))
       .sort((a, b) => {
         const waiting = Number(this.approved(a.p)) - Number(this.approved(b.p));
         if (waiting) return waiting;
-        return this.approved(a.p) ? a.i - b.i : b.p.created_at.localeCompare(a.p.created_at);
+        if (!this.approved(a.p)) return b.p.created_at.localeCompare(a.p.created_at);
+        return by(a.p, b.p) || a.i - b.i;
       });
     return new Map(order.map(({ p }, i) => [p.id, i]));
   });
@@ -203,15 +261,25 @@ export class PlayersAdmin {
     return this.found().filter((p) => this.approvalMatches(p, f) && this.roleMatches(p, this.role())).length;
   }
 
-  /** "od 12. 10. 2026" – the first sign-in */
-  protected since(iso: string): string {
+  /** "od 12. 10. 2026 14:32 · naposledy 13. 10. 2026 9:05 · 3 marche · KvK rally, garrison" – in the kingdom's time */
+  protected details(p: ReviewerRow): string {
+    const k = this.t();
     const date = new Intl.DateTimeFormat(this.i18n.locale(), {
       day: 'numeric',
       month: 'numeric',
       year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
       timeZone: KINGDOM_ZONE,
     });
-    return this.t().since.replace('{date}', date.format(new Date(iso)));
+    const [one, few, many] = k.marchCount;
+    const n = p.marches;
+    const parts = [k.since.replace('{date}', date.format(new Date(p.created_at)))];
+    if (p.last_login) parts.push(k.lastLogin.replace('{date}', date.format(new Date(p.last_login))));
+    if (n) parts.push((n === 1 ? one : n <= 4 ? few : many).replace('{n}', String(n)));
+    // rally before garrison, like the sign-ups
+    if (p.kvk.length) parts.push(k.kvk.replace('{roles}', [...p.kvk].sort().reverse().join(', ')));
+    return parts.join(' · ');
   }
 
   protected async setAuto(box: HTMLInputElement): Promise<void> {

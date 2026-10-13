@@ -335,11 +335,20 @@ describe('PlayersAdmin', () => {
     const http = setup();
     const fixture = TestBed.createComponent(PlayersAdmin);
     fixture.detectChanges();
-    const player = { avatar_url: '', reviewer: false, approved: true, superuser: false, created_at: '2026-10-01T12:00:00Z' };
+    const player = {
+      avatar_url: '',
+      reviewer: false,
+      approved: true,
+      superuser: false,
+      created_at: '2026-10-01T12:00:00Z',
+      last_login: null,
+      marches: 0,
+      kvk: [],
+    };
     http.expectOne('/api/kvk/reviewers/').flush({
       players: [
-        { ...player, id: 1, name: 'gether', ingame_name: 'Gether', superuser: true },
-        { ...player, id: 2, name: 'nelly', ingame_name: 'Nelly' },
+        { ...player, id: 1, name: 'gether', ingame_name: 'Gether', superuser: true, last_login: '2026-10-13T07:05:00Z' },
+        { ...player, id: 2, name: 'nelly', ingame_name: 'Nelly', created_at: '2026-10-05T12:00:00Z', marches: 3, kvk: ['garrison', 'rally'] },
         { ...player, id: 3, name: 'nova', ingame_name: '', approved: false, created_at: '2026-10-12T12:00:00Z' },
       ],
       auto_approve: false,
@@ -350,7 +359,42 @@ describe('PlayersAdmin', () => {
     // the new player waits on top; the superuser has no switches
     expect(names()).toEqual(['nova', 'Gether', 'Nelly']);
     expect(el.querySelector('.reviewer.is-pending .tag--pending')?.textContent).toBe('Čaká');
-    expect(el.querySelector('.reviewer__name > span')?.textContent?.trim()).toBe('od 12. 10. 2026');
+    // the first sign-in with its time, the last one, marches and KvK sign-ups (Gether 13. 10. 2026)
+    const details = () => Array.from(el.querySelectorAll('.reviewer__name > span'), (n) => n.textContent?.trim());
+    expect(details()).toEqual([
+      'od 12. 10. 2026 14:00',
+      'gether · superadmin · od 1. 10. 2026 14:00 · naposledy 13. 10. 2026 9:05',
+      'nelly · od 5. 10. 2026 14:00 · 3 marche · KvK rally, garrison',
+    ]);
+    // sorting keeps the waiting player on top; filters for marches and KvK
+    const select = (id: string, value: string) => {
+      const box = el.querySelector<HTMLSelectElement>(id)!;
+      box.value = value;
+      box.dispatchEvent(new Event('change'));
+    };
+    select('#players-sort', 'newest');
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Nelly', 'Gether']);
+    select('#players-sort', 'login');
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Gether', 'Nelly']);
+    select('#players-sort', 'marches');
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Nelly', 'Gether']);
+    select('#players-sort', 'name');
+    select('#players-marches', 'with');
+    await settle(fixture);
+    expect(names()).toEqual(['Nelly']);
+    select('#players-marches', 'without');
+    select('#players-kvk', 'rally');
+    await settle(fixture);
+    expect(names()).toEqual([]);
+    select('#players-marches', 'all');
+    select('#players-kvk', 'none');
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Gether']);
+    select('#players-kvk', 'all');
+    await settle(fixture);
     expect(el.querySelectorAll('.reviewer .switch').length).toBe(4);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
     expect(filters().map((b) => b.textContent?.trim())).toEqual([

@@ -120,6 +120,12 @@ export interface ReviewerRow {
   superuser: boolean;
   /** the first sign-in */
   created_at: string;
+  /** the last sign-in (null = never recorded) */
+  last_login: string | null;
+  /** how many marches the player has */
+  marches: number;
+  /** the KvK sign-ups: 'garrison', 'rally' */
+  kvk: string[];
 }
 
 /** KvK sign-ups (backend accounts/kvk_views.py); browser only, session + CSRF. */

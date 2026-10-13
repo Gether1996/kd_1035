@@ -10,6 +10,7 @@ import logging
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
@@ -227,9 +228,15 @@ def settings(request):
 @api_view(['GET'])
 @permission_classes([IsSuperuser])
 def reviewers(request):
-    """Every active player signed in with Discord: the reviewer flag (R4), the approval for marches and KvK sign-ups
-    and when they first signed in."""
-    players = Player.objects.filter(user__is_active=True).select_related('user')
+    """Every active player signed in with Discord: the reviewer flag (R4), the approval for marches and KvK sign-ups,
+    when they first and last signed in, how many marches they have and which KvK sign-ups (Gether 13. 10. 2026: filters
+    like on /marche)."""
+    players = (
+        Player.objects.filter(user__is_active=True)
+        .select_related('user')
+        .annotate(march_count=Count('marches', distinct=True))
+        .prefetch_related(Prefetch('kvk_signups', queryset=KvkSignup.objects.only('player_id', 'role')))
+    )
     rows = sorted(
         (
             {
@@ -240,6 +247,9 @@ def reviewers(request):
                 'reviewer': p.kvk_reviewer,
                 'approved': p.approved,
                 'created_at': iso(p.created_at),
+                'last_login': iso(p.user.last_login) if p.user.last_login else None,
+                'marches': p.march_count,
+                'kvk': sorted(signup.role for signup in p.kvk_signups.all()),
                 'superuser': p.user.is_superuser,
             }
             for p in players

@@ -475,6 +475,23 @@
   }
 }
 
+// sort, marches, KvK (Gether 13. 10. 2026) – a row of their own under the search and the switches
+.players-bar__selects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  flex-basis: 100%;
+  margin-top: 12px;
+}
+
+.players-bar__select {
+  flex: 0 1 220px;
+
+  @media (max-width: 560px) {
+    flex: 1 1 140px;
+  }
+}
+
 .reviewers__search {
   flex: 1 1 240px;
   max-width: 360px;
