@@ -1,0 +1,9 @@
+{
+  "name": "kd1035-qa",
+  "private": true,
+  "description": "Chrome DevTools MCP server for manual QA with Claude Code (.mcp.json → chrome-devtools-mcp.mjs)",
+  "type": "module",
+  "devDependencies": {
+    "chrome-devtools-mcp": "1.10.1"
+  }
+}

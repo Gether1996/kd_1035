@@ -26,6 +26,7 @@ Every finished change goes straight to `main` (CLAUDE.md → Git), so this is th
 - [ ] **Model changed** → migration generated and inspected (skill `kd-migration`); `makemigrations --check --dry-run` clean
 - [ ] **Visible change** → screenshots at 360, 768, 1280, 1920 and 2560 (CLAUDE.md → 100 % responzívne), SK and CZ, signed in and out where it matters (skill `kd-verify`)
 - [ ] **UI change** → `tools/a11y/audit.sh --player` with 0 critical/serious (CLAUDE.md → Prístupnosť)
+- [ ] **Page, routing, layout or dialog change** → `tools/e2e/run.sh` green (skill `kd-verify` 1b); a bigger UI change also gets `/kd-qa` on a phone and a laptop (docs/qa.md)
 - [ ] **Any text on the site** → in `sk.ts` and `cs.ts` (the glossary's `terms.ts` is the one exception), correct diacritics
 - [ ] **New page** → `app.routes.ts`, `i18n.ts`, `app.routes.server.ts`, sitemap `STATIC_PAGES`, `Seo`
 - [ ] **Personal data, cookie, third party or retention changed** → privacy page in both languages and its date

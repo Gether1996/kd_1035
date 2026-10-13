@@ -54,13 +54,11 @@
               <li>
                 <a class="row row--compact row--related" [routerLink]="i18n.guidePath(r.category, r.slug)">
                   <span class="row__body">
+                    @if (r.specialty_icon) {
+                      <img class="row__specialty" [src]="r.specialty_icon" alt="" width="96" height="96" decoding="async" />
+                    }
                     <span class="row__eyebrow">{{ t.guides.categories[r.category].title }}</span>
-                    <strong>
-                      @if (r.specialty_icon) {
-                        <img class="row__specialty" [src]="r.specialty_icon" alt="" width="96" height="96" decoding="async" />
-                      }
-                      {{ guides.title(r) }}
-                    </strong>
+                    <strong>{{ guides.title(r) }}</strong>
                   </span>
                   <svg class="row__arrow" appIcon="arrow-right"></svg>
                 </a>

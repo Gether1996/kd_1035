@@ -62,12 +62,10 @@
             <li>
               <a class="row row--compact row--result" [routerLink]="i18n.guidePath(g.category, g.slug)">
                 <span class="row__body">
-                  <strong>
-                    @if (g.specialty_icon) {
-                      <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
-                    }
-                    {{ guides.title(g) }}
-                  </strong>
+                  @if (g.specialty_icon) {
+                    <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
+                  }
+                  <strong>{{ guides.title(g) }}</strong>
                   <small class="row__category">{{ t.guides.categories[g.category].title }}</small>
                 </span>
                 <svg class="row__arrow" appIcon="arrow-right"></svg>
@@ -119,12 +117,10 @@
                 <a class="row row--compact" [routerLink]="i18n.guidePath(g.category, g.slug)">
                   <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
                   <span class="row__body">
-                    <strong>
-                      @if (g.specialty_icon) {
-                        <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
-                      }
-                      {{ guides.title(g) }}
-                    </strong>
+                    @if (g.specialty_icon) {
+                      <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
+                    }
+                    <strong>{{ guides.title(g) }}</strong>
                   </span>
                   <time class="row__date" [attr.datetime]="g.updated_at">{{ guides.date(g.updated_at) }}</time>
                   <svg class="row__arrow" appIcon="arrow-right"></svg>

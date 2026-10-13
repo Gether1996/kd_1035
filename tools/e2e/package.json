@@ -1,0 +1,14 @@
+{
+  "name": "kd1035-e2e",
+  "private": true,
+  "description": "End-to-end, smoke and responsive layout tests of the KD 1035 website (Playwright)",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "smoke": "playwright test --grep @smoke",
+    "report": "playwright show-report out/report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

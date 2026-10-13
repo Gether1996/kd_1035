@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **13. 10. 2026 – v1.26.1:** mobil – ikony špecializácií v návodoch na jednej osi s číslom a šípkou, väčšie dotykové plochy (breadcrumbs, Celá kategória, Späť na zoznam, Zrušiť hľadanie), mená commanderov v „Moji commanderi“ sa nelámu v strede slova, zdieľaný odkaz na sekciu (`/#alliance`) a krok dopredu v prehliadači ostanú na sekcii. K tomu QA: e2e testy `tools/e2e`, CI na každý PR a manuálne QA cez Chrome DevTools MCP (`docs/qa.md`).
 - **13. 10. 2026 – v1.26.0:** Vyhodnocovanie podľa Slimových pripomienok – páry commanderov ako tabuľka v databáze (Django admin aj s vložením z Excelu, aktuálna meta z meta-rok.com a RoKBattles, každé poradie zvlášť, pár mimo tabuľky a march bez sekundárneho sa nehodnotí), rovnaká váha skillov oboch commanderov, tier list inscriptions (Charge na úrovni zlatej), vysvetlivky „i“ pri premenných a stĺpcoch, skóre preč z tabuľky a CSV, premenné aj v Django admine.
 - **13. 10. 2026 – v1.25.2:** prístup na Vyhodnocovanie sa dá dať aj iným hráčom – prepínač „Vyhodnocovanie“ v sekcii Hráči na `/ucet` (vidia len schválených hráčov).
 - **13. 10. 2026 – v1.25.1:** vo Vyhodnocovaní sa dá nastaviť počet započítaných marchov (1–10) – počíta sa prvých X v poradí hráča alebo najlepších X; tabuľka power a fond sa predĺžia.

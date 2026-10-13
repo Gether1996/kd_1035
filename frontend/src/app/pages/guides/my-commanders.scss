@@ -47,20 +47,23 @@
   color: var(--text-dim);
 }
 
+// two tiles side by side on a phone (~133 px each): a 32 px portrait and 14 px names leave room for Albuquerque,
+// Ashurbanipal or Vercingetorix on one line (they broke mid-word); Nebuchadnezzar still breaks, with a hyphen where the
+// browser hyphenates the page language (phones)
 .tile {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   min-height: 48px;
-  padding: 4px 6px 4px 4px;
+  padding: 4px 6px 4px 3px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: none;
   color: var(--text-dim);
   font: inherit;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.2;
   text-align: left;
   cursor: pointer;
@@ -74,8 +77,8 @@
   }
 
   .portrait {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     padding: 2px;
   }
 
@@ -93,6 +96,7 @@
 .tile__name {
   min-width: 0;
   overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 // a badge on the portrait's corner – the name keeps the whole width

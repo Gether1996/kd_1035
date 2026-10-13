@@ -29,6 +29,7 @@ Nové alebo zmenené súbory Claude Code zvyčajne načíta sám. Ak skill v `/`
 | `kd-write-tests` | ideš meniť kód, ktorý má málo testov | vypíše správanie (oprávnenia, validácia, časové hranice, SK/CZ, zlyhanie API…) a pokryje ho test po teste |
 | `kd-done` | posledný krok pred commitom a pushom | jeden checklist: testy, žiadne tajomstvá v diffe, dopad na živý web, migrácie, screenshoty, SK + CZ, Ochrana údajov, `.env.example`, verzia |
 | `kd-doc-budget` | ideš rozširovať `CLAUDE.md` alebo `docs/*.md` | limity veľkosti a ako súbor zmenšiť bez straty informácií |
+| `kd-qa` | pred mergom do `main` (= nasadenie), po zmene UI, „na mobile to je divné“ | automatické e2e testy (`tools/e2e`), potom paralelní `kd-qa-tester` v skutočnom Chrome cez Chrome DevTools MCP; jeden zoradený report so screenshotmi. Detail `docs/qa.md` |
 | `kd-docs-drift` | raz za čas, po veľkej zmene | porovná dokumentáciu s kódom (cesty, príkazy, premenné, čísla) a stránky Ochrana údajov / Podmienky s tým, čo kód naozaj ukladá. Opravuje až po tvojom súhlase. |
 
 Pôvodné skilly ostávajú: `kd-verify` (testy + screenshoty), `kd-release` (nová verzia), `kd-event-data` (zmena eventov), `kd-review-branch` (vetva spolupracovníka); k nim workflow `kd-meta-update` (mesačná aktualizácia návodov, `.claude/workflows/`). Nové skilly ich volajú, nenahrádzajú.
@@ -38,6 +39,7 @@ Pôvodné skilly ostávajú: `kd-verify` (testy + screenshoty), `kd-release` (no
 | Agent | Kedy | Čo vráti |
 |---|---|---|
 | `kd-smoke-test` | zmenu treba vyskúšať naozaj – API ako anonym / test hráč / superuser, prehliadač, log workera | verdikt `PASS` / `FAIL` / `PARTIAL` / `BLOCKED` s dôkazmi. Iba čítanie, dev stack. |
+| `kd-qa-tester` | manuálne / exploratívne testovanie v Chrome (MCP `chrome-devtools`) – emulácia mobilov, pomalá sieť, konzola, Lighthouse | nálezy Blokujúce / Vážne / Drobné / Nápad s repro krokmi a screenshotmi v `tools/qa/out/`. Iba čítanie. |
 | `kd-docs-lookup` | potrebuješ presné API Django 6, DRF, Angularu, Vitestu, Playwrightu, nh3, Compose, nginx alebo Discordu | krátku odpoveď so zdrojom a verziou. Nič neupravuje. |
 
 Pôvodní agenti `kd-ideator`, `kd-critic`, `kd-builder` patria ku kolám `kd-improve` (`docs/agenti.md`), ktoré sa spúšťajú už len na Getherov pokyn. `kd-critic` a `kd-builder` sa dajú použiť aj samostatne – `kd-plan-feature` a `kd-done` ich volajú.
@@ -50,6 +52,7 @@ Chyba          kd-fix-bug  →  kd-done
 Zmena modelu   kd-migration  (kd-done ju pripomenie)
 Pred refaktorom   kd-write-tests
 Treba to vidieť bežať   kd-smoke-test
+Pred mergom / mobil     kd-qa  (tools/e2e + kd-qa-tester v Chrome)
 Dokumentácia   kd-doc-budget pri písaní, kd-docs-drift raz za čas
 ```
 

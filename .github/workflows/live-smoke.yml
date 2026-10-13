@@ -1,0 +1,48 @@
+# Read-only check of the live site after a deploy: every page in both languages on a phone, the 404s, cache headers,
+# sitemap and link previews (tools/e2e, @smoke + "production server"). GET requests only, one at a time – nginx
+# rate-limits real visitors and so us. Started by hand only: Actions → Live smoke → Run workflow (docs/qa.md).
+name: Live smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Site to check
+        default: https://kd1035.eu
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: tools/e2e
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/e2e/package-lock.json
+      - run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Smoke on a phone
+        env:
+          BASE_URL: ${{ inputs.url }}
+          PROD: '1'
+        run: npx playwright test --project phone --grep "@smoke|production server" --workers 1 --retries 1
+      - name: Summary
+        if: always()
+        run: |
+          { echo '```'; node summary.mjs out/run.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: live-smoke-report
+          path: tools/e2e/out/report
+          retention-days: 14

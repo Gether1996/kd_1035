@@ -29,12 +29,10 @@
           <a class="row" [routerLink]="i18n.guidePath(g.category, g.slug)">
             <span class="row__index">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
             <span class="row__body">
-              <strong>
-                @if (g.specialty_icon) {
-                  <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
-                }
-                {{ guides.title(g) }}
-              </strong>
+              @if (g.specialty_icon) {
+                <img class="row__specialty" [src]="g.specialty_icon" alt="" width="96" height="96" decoding="async" />
+              }
+              <strong>{{ guides.title(g) }}</strong>
               @if (guides.excerpt(g)) {
                 <small>{{ guides.excerpt(g) }}</small>
               }
