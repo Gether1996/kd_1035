@@ -1,4 +1,4 @@
-import { httpResource } from '@angular/common/http';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,7 +19,7 @@ import { PageHeader } from '../../shared/page-header';
 import { EvaluationApi, RecordChange } from './evaluation-api';
 import { EvalResultsTab } from './results-tab';
 import { EvalPlayer, evaluate } from './scoring';
-import { EvalSettings, normalizeSettings } from './settings';
+import { EvalSettings, normalizeSettings, toSave } from './settings';
 import { EvalSettingsTab } from './settings-tab';
 import { EVAL_TEXTS } from './texts';
 
@@ -63,12 +63,13 @@ type Tab = 'settings' | 'results';
             [evaluation]="evaluation()"
             [players]="players()"
             [commanders]="commanderNames()"
+            [armory]="armory.index()"
             [texts]="x"
           />
           <div class="ev-actions" role="group" [attr.aria-label]="x.tabs.settings">
             <p class="ev-actions__state" role="status">
               @if (failed()) {
-                <span class="is-error">{{ x.settingsFailed }}</span>
+                <span class="is-error">{{ stalePairs() ? x.stalePairs : unknownNames().length ? x.unknownCommanders.replace('{names}', unknownNames().join(', ')) : x.settingsFailed }}</span>
               } @else if (dirty()) {
                 {{ x.dirty }}
               } @else if (savedAt(); as at) {
@@ -123,13 +124,21 @@ export class EvaluationPage {
   /** the players as loaded, with the notes the superadmin changed since */
   protected readonly players = linkedSignal<EvalPlayer[]>(() => (this.data.hasValue() ? this.data.value().players : []));
   /** the variables as saved on the server (normalised into the defaults) */
-  private readonly saved = linkedSignal<EvalSettings>(() => normalizeSettings(this.data.hasValue() ? this.data.value().settings : null));
+  private readonly saved = linkedSignal<EvalSettings>(() =>
+    this.data.hasValue() ? normalizeSettings(this.data.value().settings, this.data.value().pairs) : normalizeSettings(null),
+  );
   private readonly savedIso = linkedSignal(() => (this.data.hasValue() ? this.data.value().updated_at : null));
+  /** the version of the pair table this page loaded – a save of the table is refused over another one */
+  private readonly pairsVersion = linkedSignal(() => (this.data.hasValue() ? this.data.value().pairs_version : ''));
   /** the variables being edited – the table counts with them right away */
   protected readonly draft = linkedSignal(() => this.saved());
   protected readonly dirty = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
   protected readonly saving = signal(false);
   protected readonly failed = signal(false);
+  /** commanders of the pair table a march cannot name – the server refused the save */
+  protected readonly unknownNames = signal<string[]>([]);
+  /** the pair table was changed elsewhere meanwhile – the save was refused */
+  protected readonly stalePairs = signal(false);
   protected readonly recordFailed = signal(false);
   protected readonly tab = signal<Tab>('results');
 
@@ -161,15 +170,29 @@ export class EvaluationPage {
     inject(DestroyRef).onDestroy(() => seo.set(null));
   }
 
+  /**
+   * The variables, and the pair table only when it was changed here – over the version it was loaded in, so a table
+   * changed meanwhile in the admin is not undone. The server sends the table back sorted by points (Slim 13. 10. 2026)
+   * and, when this page did not touch it, as it is now.
+   */
   protected async save(): Promise<void> {
     this.saving.set(true);
     this.failed.set(false);
+    this.unknownNames.set([]);
+    this.stalePairs.set(false);
     try {
-      const res = await this.api.saveSettings(this.draft());
-      this.saved.set(normalizeSettings(res.settings));
+      const body = toSave(this.draft());
+      const changed = JSON.stringify(this.draft().pairs.rows) !== JSON.stringify(this.saved().pairs.rows);
+      const pairs = changed ? { rows: body.pairs, version: this.pairsVersion() } : null;
+      const res = await this.api.saveSettings(body.settings, pairs);
+      this.saved.set(normalizeSettings(res.settings, res.pairs));
       this.savedIso.set(res.updated_at);
+      this.pairsVersion.set(res.pairs_version);
       this.draft.set(this.saved());
-    } catch {
+    } catch (error) {
+      const answer = error instanceof HttpErrorResponse ? error.error : null;
+      if (Array.isArray(answer?.names)) this.unknownNames.set(answer.names);
+      this.stalePairs.set(answer?.pairs === 'stale');
       this.failed.set(true);
     } finally {
       this.saving.set(false);
@@ -179,11 +202,13 @@ export class EvaluationPage {
   protected discard(): void {
     this.draft.set(this.saved());
     this.failed.set(false);
+    this.unknownNames.set([]);
+    this.stalePairs.set(false);
   }
 
-  /** the spreadsheet's values – saved only with "Uložiť" */
+  /** the default variables – the pair table stays (it has no default in the code) – saved only with "Uložiť" */
   protected defaults(): void {
-    this.draft.set(normalizeSettings(null));
+    this.draft.set(normalizeSettings(null, this.draft().pairs.rows));
   }
 
   /** many players at once (the power pasted for everyone): saved first, then shown */

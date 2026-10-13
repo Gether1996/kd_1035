@@ -3,14 +3,20 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { EvalPlayer } from './scoring';
+import { PairRow } from './settings';
 
 /** /api/evaluation/ (backend accounts/evaluation_views.py); superuser only, browser only */
 export interface EvaluationData {
   /** null = nothing saved, the defaults count */
   settings: Record<string, unknown> | null;
   updated_at: string | null;
+  /** the commander pair table – in the database (guides.CommanderPair), the best first; its version guards a save */
+  pairs: PairRow[];
+  pairs_version: string;
   players: EvalPlayer[];
 }
+
+export type SavedSettings = Pick<EvaluationData, 'settings' | 'updated_at' | 'pairs' | 'pairs_version'>;
 
 export type RecordChange = Partial<Pick<EvalPlayer, 'power' | 'acclaim' | 't4' | 'power_bonus'>>;
 
@@ -24,10 +30,14 @@ export class EvaluationApi {
     return httpResource<EvaluationData>(() => (this.isBrowser && when() ? '/api/evaluation/' : undefined));
   }
 
-  saveSettings(settings: unknown): Promise<Pick<EvaluationData, 'settings' | 'updated_at'>> {
-    return firstValueFrom(
-      this.http.put<Pick<EvaluationData, 'settings' | 'updated_at'>>('/api/evaluation/settings/', { settings }),
-    );
+  /**
+   * The variables and – only when changed on the page – the whole pair table over the version it was loaded in, both
+   * or nothing. The table changed meanwhile (admin, another evaluator) → 409 {pairs: 'stale'}; a commander a march
+   * cannot name → 400 {pairs: 'unknown', names}.
+   */
+  saveSettings(settings: unknown, pairs: { rows: PairRow[]; version: string } | null): Promise<SavedSettings> {
+    const body = pairs ? { settings, pairs: pairs.rows, pairs_version: pairs.version } : { settings };
+    return firstValueFrom(this.http.put<SavedSettings>('/api/evaluation/settings/', body));
   }
 
   /** many players at once – all or nothing */

@@ -7,18 +7,19 @@ import { RecordChange } from './evaluation-api';
 import { Evaluation, MarchEval, PlayerEval, parsePowerList } from './scoring';
 import { EvalSettings } from './settings';
 import { EvalTexts } from './texts';
+import { EvalTip } from './tip';
 
 type Show = 'marches' | 'approved' | 'all';
-type Sort = 'required' | 'score' | 'progress' | 'name';
+type Sort = 'required' | 'progress' | 'name';
 
 /**
- * "Odhad acclaimu" of /vyhodnocovanie: one row per player – the counted marches, the score, the acclaim they should
+ * "Odhad acclaimu" of /vyhodnocovanie: one row per player – the counted marches, the acclaim they should
  * reach, what the superadmin wrote down (acclaim reached, power, T4) and the progress; a row opens the computation
  * march by march. CSV for a spreadsheet or Discord.
  */
 @Component({
   selector: 'app-eval-results',
-  imports: [Icon],
+  imports: [Icon, EvalTip],
   templateUrl: './results-tab.html',
   styleUrl: './results-tab.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,7 +49,7 @@ export class EvalResultsTab {
   protected readonly shows = computed<Show[]>(() =>
     this.superuser() ? ['marches', 'approved', 'all'] : ['marches', 'approved'],
   );
-  protected readonly sorts: Sort[] = ['required', 'score', 'progress', 'name'];
+  protected readonly sorts: Sort[] = ['required', 'progress', 'name'];
 
   protected readonly rows = computed(() => {
     const query = fold(this.search());
@@ -61,7 +62,6 @@ export class EvalResultsTab {
     const name = (r: PlayerEval) => r.player.ingame_name || r.player.name;
     const sort = this.sort();
     return rows.sort((a, b) => {
-      if (sort === 'score') return b.score - a.score;
       if (sort === 'progress') return (a.progress ?? Infinity) - (b.progress ?? Infinity);
       if (sort === 'name') return name(a).localeCompare(name(b));
       return b.acclaim.required - a.acclaim.required;
@@ -166,7 +166,23 @@ export class EvalResultsTab {
   protected armamentText(m: MarchEval): string {
     const d = this.texts().detail;
     if (!m.armaments.filled) return d.noArmaments;
-    return d.stats.replace('{a}', this.dec(m.armaments.stats)).replace('{b}', this.dec(m.armaments.inscriptions));
+    const text = d.stats.replace('{a}', this.dec(m.armaments.stats)).replace('{b}', this.dec(m.armaments.inscriptions));
+    return m.armaments.tiered ? `${text} (${d.tiered})` : text;
+  }
+
+  /** the score is not a column any more – the acclaim from the marches says how it was counted */
+  protected scoreText(r: PlayerEval): string {
+    return this.texts().detail.fromScore.replace('{s}', this.dec(r.score)).replace('{per}', this.int(this.evaluation().perPoint));
+  }
+
+  // ---------------------------------------------------------------- explanations
+
+  protected tip(key: string): string {
+    return this.texts().tips[key] ?? '';
+  }
+
+  protected tipLabel(label: string): string {
+    return this.texts().tipLabel.replace('{label}', label);
   }
 
   // ---------------------------------------------------------------- the notes
@@ -219,7 +235,8 @@ export class EvalResultsTab {
   /** the rows shown as CSV (semicolons and a BOM: a Slovak or Czech Excel opens it right away) */
   protected download(): void {
     const c = this.texts().columns;
-    const head = [c.player, 'Discord', c.marches, c.score, c.required, c.acclaim, c.progress, c.power, c.recommended, c.t4, c.fund];
+    // no score: it is only how the acclaim is counted (Slim 13. 10. 2026: "skóre by som dal z tabuľky preč")
+    const head = [c.player, 'Discord', c.marches, c.required, c.acclaim, c.progress, c.power, c.recommended, c.t4, c.fund];
     const cell = (v: string | number | null) => {
       const text = v === null ? '' : typeof v === 'number' ? String(Math.round(v * 100) / 100).replace('.', ',') : v;
       return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -229,7 +246,6 @@ export class EvalResultsTab {
         this.name(r),
         r.player.name,
         r.counted + (r.missing ? ` + ${r.missing}` : ''),
-        r.score,
         r.acclaim.required,
         r.player.acclaim,
         r.progress === null ? null : Math.round(r.progress * 100),

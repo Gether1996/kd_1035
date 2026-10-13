@@ -1,0 +1,48 @@
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.ev-tip {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -4px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-mute);
+  cursor: help;
+  transition: color 0.2s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--gold-300);
+  }
+
+  .icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+// the popover: in the top layer, placed by the component
+.ev-tip__bubble {
+  position: fixed;
+  inset: auto;
+  max-width: min(300px, calc(100vw - 24px));
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  font: 400 0.875rem/1.45 var(--font-body);
+  letter-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+}

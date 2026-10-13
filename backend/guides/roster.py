@@ -224,3 +224,11 @@ def march_commanders() -> list[dict]:
 
 def missing_portraits() -> list[str]:
     return [name for name, _ in ROSTER if not (COMMANDER_DIR / f'{portrait_name(name)}.webp').exists()]
+
+
+def commander_names() -> dict[str, str]:
+    """{name without diacritics and case: the name} of every commander a march may name – the rows of the commander
+    pair table (CommanderPair) are written like this."""
+    from .models import fold
+
+    return {fold(item['name']): item['name'] for item in march_commanders()}

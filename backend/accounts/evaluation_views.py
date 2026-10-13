@@ -16,12 +16,14 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
+from guides.pairs import check_rows, pair_rows, pairs_version, replace_pairs
+
 from .kvk_views import march_data
 from .models import APPROVED, EvaluationSettings, Player, PlayerEvaluation
 from .reminder_views import WriteThrottle, iso
 from .views import player_of
 
-# the variables are a few hundred numbers and the pair table: far below this
+# the variables are a few hundred numbers and the inscription tier list: far below this
 SETTINGS_MAX_BYTES = 64 * 1024
 SETTINGS_MAX_DEPTH = 6
 
@@ -83,8 +85,15 @@ def record_data(record: PlayerEvaluation | None) -> dict:
 
 
 def settings_data(row: EvaluationSettings) -> dict:
-    # nothing saved yet: the page uses its defaults (the spreadsheet's constants)
-    return {'settings': row.data or None, 'updated_at': iso(row.updated_at) if row.data else None}
+    # nothing saved yet: the page uses its defaults (the spreadsheet's constants); the commander pairs are a table of
+    # their own (guides.CommanderPair – in the database, editable in the admin too, Gether 13. 10. 2026)
+    rows = pair_rows()
+    return {
+        'settings': row.data or None,
+        'updated_at': iso(row.updated_at) if row.data else None,
+        'pairs': rows,
+        'pairs_version': pairs_version(rows),
+    }
 
 
 @never_cache
@@ -121,8 +130,12 @@ def evaluation(request):
 @permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_settings(request):
-    """PUT {settings: {...}} – the variables; {settings: null} goes back to the defaults."""
-    value = request.data.get('settings') if isinstance(request.data, dict) else None
+    """PUT {settings: {...}, pairs?: [[primary, secondary, points], …], pairs_version?} – the variables ({settings:
+    null} goes back to the defaults) and, when the page changed it, the whole commander pair table; both or nothing.
+    The table is saved only over the version the page loaded (pairs_version from GET): changed meanwhile in the admin
+    or by another evaluator → 409 {pairs: 'stale'}. A commander a march cannot name → 400 {pairs: 'unknown', names}."""
+    body = request.data if isinstance(request.data, dict) else {}
+    value = body.get('settings')
     if value is not None and not isinstance(value, dict):
         return Response({'settings': 'object'}, status=400)
     try:
@@ -131,9 +144,22 @@ def evaluation_settings(request):
         return Response({'settings': 'invalid'}, status=400)
     if len(json.dumps(value)) > SETTINGS_MAX_BYTES:
         return Response({'settings': 'too_large'}, status=400)
-    row = EvaluationSettings.load()
-    row.data = value or {}
-    row.save()
+    pairs = None
+    if 'pairs' in body:
+        try:
+            pairs, unknown = check_rows(body['pairs'])
+        except ValueError:
+            return Response({'pairs': 'invalid'}, status=400)
+        if unknown:
+            return Response({'pairs': 'unknown', 'names': unknown}, status=400)
+    with transaction.atomic():
+        if pairs is not None and body.get('pairs_version') != pairs_version(pair_rows()):
+            return Response({'pairs': 'stale'}, status=409)
+        row = EvaluationSettings.load()
+        row.data = value or {}
+        row.save()
+        if pairs is not None:
+            replace_pairs(pairs)
     return Response(settings_data(row))
 
 

@@ -166,3 +166,55 @@
   color: var(--text-mute);
   white-space: nowrap;
 }
+
+// a label with its "i" (EvalTip)
+.ev-field__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+}
+
+.ev-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// a commander a march cannot name – the server would refuse the table
+.ev-input.is-invalid {
+  border-color: var(--red-300);
+}
+
+// a pair of 0 points is in the table but not evaluated
+.ev-input.is-zero {
+  border-color: var(--gold-600);
+}
+
+// the inscription tier list
+.ev-input--tier {
+  min-width: 150px;
+}
+
+.ev-insc-formations {
+  white-space: normal;
+  min-width: 140px;
+}
+
+.ev-num {
+  text-align: right !important;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ev-pairs-bar__select {
+  min-width: 190px;
+}
+
+// on a phone the tier is what matters – the formations only take the room
+@media (max-width: 599px) {
+  .ev-insc-formations,
+  .ev-insc-points {
+    display: none;
+  }
+}

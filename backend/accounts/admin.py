@@ -226,3 +226,7 @@ class KvkSignupAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     @admin.display(description='hráč', ordering='player__ingame_name')
     def player_name(self, obj):
         return obj.player.ingame_name or obj.player.name
+
+
+# the variables of /vyhodnocovanie (registered there)
+from . import evaluation_admin  # noqa: E402, F401

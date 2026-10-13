@@ -1,5 +1,6 @@
 import { GEAR_SLOTS, GearSlot, ITEM_RARITIES, ItemRarity } from '../../core/armory';
 import { MARCH_KINDS, MarchKind } from '../../core/kvk-api';
+import { fold } from '../../shared/search';
 
 /**
  * The variables of the KvK evaluation (/vyhodnocovanie, Gether 13. 10. 2026). The defaults are the constants of the
@@ -68,6 +69,10 @@ export interface EvalSettings {
     white: number;
     /** the inscription points of the best armaments (spreadsheet: 200) */
     inscMax: number;
+    /** the points of each tier of the inscription tier list (Slim 13. 10. 2026: "Charge je na úrovni zlatej") */
+    tiers: Record<InscriptionTier, number>;
+    /** an inscription's tier by its name; one not listed counts by its colour (gold, blue, white above) */
+    inscriptions: Record<string, InscriptionTier>;
   };
   equipment: {
     /** the points of a piece by its rarity, the crit (refine) and iconic I–V on top */
@@ -85,17 +90,13 @@ export interface EvalSettings {
     tiers: Tier[];
   };
   pairs: {
-    /** primary, secondary, points (100 = a full meta pair) */
+    /**
+     * primary, secondary, points (100 = a full meta pair); each order is its own row. A pair not in the table, or with
+     * 0 points, and a march without a secondary are not evaluated at all (Slim 13. 10. 2026: "s tým nehrať"). Kept in
+     * the database (guides.CommanderPair), saved with the variables but not in their JSON.
+     */
     rows: PairRow[];
-    /** a pair that is not in the table */
-    unknown: number;
-    /** the pair in the table the other way round: its points × this */
-    reversed: number;
-    /** a primary commander without a secondary */
-    solo: number;
-    /** the skill levels: how much the primary and the secondary weigh, the factor of 1111 and the curve */
-    primary: number;
-    secondary: number;
+    /** the skill levels of both commanders (equal weight): the factor of 1111 and the curve */
     minimum: number;
     curve: number;
   };
@@ -129,82 +130,61 @@ export interface Tier {
 
 export type PairRow = [primary: string, secondary: string, points: number];
 
-/**
- * The commander pairs of the spreadsheet (sheet Commander Pair Scoring, source meta-rok.com tier list), with the
- * names of our roster. Left out: commanders nobody can pick here (Mulan, Eulji Mundeok, Julius Caesar, Frederick I,
- * Mehmed II) and the rows for unfinished commanders – the skill levels clicked in count for those now.
- */
-export const DEFAULT_PAIRS: PairRow[] = [
-  ['Qin Shi Huang', 'Zhuge Liang', 120],
-  ['Qin Shi Huang', 'Yi Seong-Gye', 117],
-  ['Sun Tzu Prime', 'Bai Qi', 110],
-  ['Sun Tzu Prime', 'Liu Che', 110],
-  ['Arthur Pendragon', 'Achilles', 100],
-  ['Sun Tzu Prime', 'William Wallace', 95],
-  ['Alp Arslan', 'Hermann Prime', 95],
-  ['Sun Tzu Prime', 'Ivar the Boneless', 95],
-  ['Attila', 'Achilles', 92],
-  ['Hermann Prime', 'Alp Arslan', 92],
-  ['Bai Qi', 'Liu Che', 92],
-  ['Achilles', 'Gang Gamchan', 92],
-  ['Gang Gamchan', 'Achilles', 92],
-  ['William Wallace', 'Bai Qi', 88],
-  ['Bai Qi', 'Ivar the Boneless', 88],
-  ['Gajah Mada', 'Gonzalo de Cordoba', 84],
-  ['Bai Qi', 'William Wallace', 84],
-  ['Hermann Prime', 'Zhuge Liang', 84],
-  ['Arthur Pendragon', 'David IV', 84],
-  ['Arthur Pendragon', 'Gang Gamchan', 84],
-  ['Huo Qubing', 'Arthur Pendragon', 84],
-  ['Alp Arslan', 'Yi Seong-Gye', 84],
-  ['Arthur Pendragon', 'Hector', 84],
-  ['Philip II', 'Zhuge Liang', 84],
-  ['Ragnar Lodbrok Prime', 'Scipio Africanus Prime', 84],
-  ['Alp Arslan', 'Zhuge Liang', 84],
-  ['Bai Qi', 'Vercingetorix', 84],
-  ['Scipio Africanus Prime', 'Ragnar Lodbrok Prime', 80],
-  ['Zhuge Liang', 'Hermann Prime', 80],
-  ['Attila', 'David IV', 80],
-  ['Alp Arslan', 'Philip II', 80],
-  ['Liu Che', 'Vercingetorix', 80],
-  ['Joan of Arc Prime', 'Arthur Pendragon', 78],
-  ['Arthur Pendragon', 'Philip II', 78],
-  ['Liu Che', 'Philip II', 78],
-  ['Qin Shi Huang', 'Shajar al-Durr', 78],
-  ['Qin Shi Huang', 'Alp Arslan', 78],
-  ['Zhuge Liang', 'Philip II', 78],
-  ['Margaret I', 'Gonzalo de Cordoba', 78],
-  ['Bai Qi', 'Philip II', 78],
-  ['William Wallace', 'Liu Che', 78],
-  ['Scipio Africanus Prime', 'Liu Che', 78],
-  ['Liu Che', 'William Wallace', 78],
-  ['Shajar al-Durr', 'Alp Arslan', 72],
-  ['Zhuge Liang', 'Ashurbanipal', 70],
-  ['Ragnar Lodbrok Prime', 'Philip II', 70],
-  ['Huo Qubing', 'Joan of Arc Prime', 70],
-  ['Huo Qubing', 'Belisarius Prime', 70],
-  ['Liu Che', 'Cheok Jun-gyeong', 66],
-  ['Liu Che', 'Alexander the Great', 66],
-  ['Cheok Jun-gyeong', 'Liu Che', 66],
-  ['Alexander Nevsky', 'Joan of Arc Prime', 66],
-  ['Alexander Nevsky', 'Belisarius Prime', 66],
-  ['Bai Qi', 'Alexander the Great', 60],
-  ['Philip II', 'Tariq ibn Ziyad', 60],
-  ['Guan Yu', 'Scipio Africanus Prime', 55],
-  ['Alexander Nevsky', 'William I', 55],
-  ['Boudica Prime', 'Yi Seong-Gye', 55],
-  ['Yi Seong-Gye', 'Aethelflaed', 33],
-  ['Minamoto', 'Saladin', 30],
-  ['Minamoto', 'Cao Cao', 25],
-  ['Richard', 'Charles Martel', 15],
-  ['Aethelflaed', 'Cao Cao', 7],
-  ['Aethelflaed', 'Joan of Arc', 5],
-];
+export const INSCRIPTION_TIERS = ['S', 'A', 'B', 'C', 'D'] as const;
+export type InscriptionTier = (typeof INSCRIPTION_TIERS)[number];
+
+/** the best pair first – the table is sorted like this whenever it is loaded or saved (Slim 13. 10. 2026) */
+export function sortPairs(rows: PairRow[]): PairRow[] {
+  return [...rows].sort((a, b) => b[2] - a[2] || a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+}
 
 const TIERS: Tier[] = [
   ['S+', 100], ['S', 99], ['S-', 98], ['A+', 95], ['A', 90], ['A-', 85], ['B+', 72], ['B', 68],
   ['B-', 58], ['C+', 52], ['C', 50], ['C-', 40], ['D+', 30], ['D', 25], ['D-', 20], ['F', 5],
 ].map(([tier, points]) => ({ tier: tier as string, points: points as number }));
+
+/**
+ * The inscription tier list for the open field (Slim 13. 10. 2026: "dal by som mu tier list inscriptions, charge je na
+ * úrovni zlatej"). Sources: WarDaddyChadski with Davor – Delta, Pincer, Wedge tier lists (5.–15. 1. 2026), Special
+ * Inscription Priority List (18. 1. 2026), Wedge 2.0 (31. 3. 2026), Pincer 2.0 (31. 7. 2026), Arch (28. 10. 2024);
+ * Chisgule Gaming and DOM 117 on Pincer 2 / Charge (30.–31. 7. 2026); Mr Siege – V formation (26. 3. 2025).
+ * Formations without a current source (Echelon, Tercio, Triple Line, Circle, Hollow Square) count by colour.
+ */
+export const DEFAULT_INSCRIPTIONS: Record<string, InscriptionTier> = Object.fromEntries(
+  (
+    [
+      // Pincer
+      ['S', 'Tidebreaker', 'Thundering', 'Dominate', 'Toppler', 'Cleaver', 'Demolisher'],
+      ['A', 'Bulwark', 'Charge'],
+      ['B', 'Airtight', 'Vigor', 'Rattling', 'Raider'],
+      ['C', 'Imploder', 'Bludgeon', 'Bolstered'],
+      ['D', 'Hardheaded'],
+      // Delta
+      ['S', 'Flurry', 'Thrasher', 'Steelskin', 'Butterfly Effect'],
+      ['A', 'Causative'],
+      ['B', 'Relentless', 'Pummeler'],
+      ['C', 'Determined'],
+      // Wedge
+      ['S', 'Horseback Action', 'Advantage Advanced', 'Intrepid'],
+      ['A', 'Indomitable', 'Hunter', 'Unstoppable'],
+      ['B', 'Balanced', 'Maneuver at Ease', 'Divine Staff', 'Soar', 'Focus Fire', 'Boiling Blood'],
+      ['C', 'Fury', 'Ballista', 'Crazed'],
+      ['D', 'Defiant'],
+      // Arch – Destructive and Battle-Ready do less than a common
+      ['S', 'Fearless', 'Straight to the Point', 'Invincible'],
+      ['B', 'Forceful', 'Even-Keeled'],
+      ['C', 'Unswerving'],
+      ['D', 'Destructive', 'Battle-Ready'],
+      // V (siege)
+      ['S', 'Astute', 'Drilled', 'Sharpshooter'],
+      ['B', 'Sharp Arrows', 'Bloody Bolt'],
+      ['C', 'Merciless', 'Full Draw'],
+      // commons good on every march, and those with no use in the field (barbarians, cities, garrison)
+      ['C', 'Assertive', 'Strategic', 'Robust', 'Fit', 'Vitality', 'Hardy'],
+      ['D', 'Payback', 'Annexer', 'Pacifier', 'Cleanser', 'Siegework', 'Sentries', 'Vengeful', 'Patronage', 'Phalanx'],
+    ] as [InscriptionTier, ...string[]][]
+  ).flatMap(([tier, ...names]) => names.map((name) => [name, tier])),
+);
 
 export const DEFAULT_SETTINGS: EvalSettings = {
   acclaim: { benchmark: 5_600_000, score: 286.53, player: null, minimum: 200_000, t4: 11, round: 1000 },
@@ -246,6 +226,8 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     blue: 25,
     white: 10,
     inscMax: 200,
+    tiers: { S: 50, A: 40, B: 30, C: 20, D: 5 },
+    inscriptions: DEFAULT_INSCRIPTIONS,
   },
   equipment: {
     // calibrated on the tiers: 8 × legendary = C (50), + refine and iconic IV = A (90), iconic V = S+ (100)
@@ -258,12 +240,7 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     tiers: TIERS,
   },
   pairs: {
-    rows: DEFAULT_PAIRS,
-    unknown: 50,
-    reversed: 0.9,
-    solo: 30,
-    primary: 0.75,
-    secondary: 0.25,
+    rows: [],
     minimum: 0.3,
     curve: 1.5,
   },
@@ -315,21 +292,23 @@ const list = (value: unknown, defaults: number[], min = 0, max = 1e12): number[]
 
 /**
  * The saved variables merged into the defaults: every value checked (a number within its bounds, the right length
- * of a list) – something missing or wrong takes the default, keys the page does not know are dropped.
+ * of a list) – something missing or wrong takes the default, keys the page does not know are dropped. The commander
+ * pairs come from their own table in the database (guides.CommanderPair, Gether 13. 10. 2026), not from the JSON.
  */
-export function normalizeSettings(value: unknown): EvalSettings {
+export function normalizeSettings(value: unknown, pairRows: unknown = []): EvalSettings {
   const d = DEFAULT_SETTINGS;
   const raw = obj(value);
   const acclaim = obj(raw['acclaim']);
   const power = obj(raw['power']);
   const marches = obj(raw['marches']);
   const equipment = obj(raw['equipment']);
+  const armaments = obj(raw['armaments']);
   const pairs = obj(raw['pairs']);
   const fund = obj(raw['fund']);
   const table = Array.isArray(power['table']) ? power['table'] : [];
   const tiers = Array.isArray(equipment['tiers']) ? equipment['tiers'] : [];
   const kinds = Array.isArray(marches['kinds']) ? marches['kinds'] : d.marches.kinds;
-  const rows = Array.isArray(pairs['rows']) ? pairs['rows'] : d.pairs.rows;
+  const rows = Array.isArray(pairRows) ? pairRows : [];
   const player = acclaim['player'];
   const max = Math.round(num(marches['max'], d.marches.max, 1, MARCHES_LIMIT));
   // the saved rows of the power table and the fund, as many as the marches counted
@@ -369,9 +348,15 @@ export function normalizeSettings(value: unknown): EvalSettings {
       armaments: num(marches['armaments'], d.marches.armaments, 0, 10),
     },
     armaments: {
-      ...group(raw['armaments'], d.armaments),
+      ...group(armaments, {
+        statsWeight: d.armaments.statsWeight,
+        inscWeight: d.armaments.inscWeight,
+        gold: d.armaments.gold,
+        blue: d.armaments.blue,
+        white: d.armaments.white,
+      }),
       // divisors: never 0
-      ...group(raw['armaments'], {
+      ...group(armaments, {
         attack: d.armaments.attack,
         defense: d.armaments.defense,
         health: d.armaments.health,
@@ -379,6 +364,13 @@ export function normalizeSettings(value: unknown): EvalSettings {
         combatMax: d.armaments.combatMax,
         inscMax: d.armaments.inscMax,
       }, 0.01),
+      tiers: group(armaments['tiers'], d.armaments.tiers, 0, 1000),
+      // saved before the tier list existed: the default tier list
+      inscriptions: Object.fromEntries(
+        Object.entries(obj(armaments['inscriptions'] ?? d.armaments.inscriptions)).filter(
+          ([name, tier]) => !!name.trim() && INSCRIPTION_TIERS.includes(tier as InscriptionTier),
+        ),
+      ) as Record<string, InscriptionTier>,
     },
     equipment: {
       base: group(equipment['base'], d.equipment.base),
@@ -390,16 +382,15 @@ export function normalizeSettings(value: unknown): EvalSettings {
       tiers: d.equipment.tiers.map((tier, i) => ({ tier: tier.tier, points: num(obj(tiers[i])['points'], tier.points, 0, 1000) })),
     },
     pairs: {
-      rows: rows
-        .filter((r): r is unknown[] => Array.isArray(r) && r.length === 3)
-        .filter(([p, s, n]) => typeof p === 'string' && typeof s === 'string' && typeof n === 'number' && Number.isFinite(n))
-        .map(([p, s, n]) => [(p as string).trim(), (s as string).trim(), Math.max(0, Math.min(500, n as number))] as PairRow)
-        .filter(([p]) => !!p),
-      unknown: num(pairs['unknown'], d.pairs.unknown, 0, 500),
-      reversed: num(pairs['reversed'], d.pairs.reversed, 0, 2),
-      solo: num(pairs['solo'], d.pairs.solo, 0, 500),
-      primary: num(pairs['primary'], d.pairs.primary, 0, 10),
-      secondary: num(pairs['secondary'], d.pairs.secondary, 0, 10),
+      rows: sortPairs(
+        uniquePairs(
+          rows
+            .filter((r): r is unknown[] => Array.isArray(r) && r.length === 3)
+            .filter(([p, s, n]) => typeof p === 'string' && typeof s === 'string' && typeof n === 'number' && Number.isFinite(n))
+            .map(([p, s, n]) => [(p as string).trim(), (s as string).trim(), Math.max(0, Math.min(500, n as number))] as PairRow)
+            .filter(([p, s]) => !!p && !!s),
+        ),
+      ),
       minimum: num(pairs['minimum'], d.pairs.minimum, 0, 1),
       curve: num(pairs['curve'], d.pairs.curve, 0.1, 5),
     },
@@ -413,5 +404,22 @@ export function normalizeSettings(value: unknown): EvalSettings {
   return result;
 }
 
+/** a pair written twice: the first row counts (a row added on top is the newest) */
+function uniquePairs(rows: PairRow[]): PairRow[] {
+  const seen = new Set<string>();
+  return rows.filter(([p, s]) => {
+    const key = `${fold(p)}|${fold(s)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export const RARITIES = ITEM_RARITIES;
 export const SLOTS = GEAR_SLOTS;
+
+/** what the server keeps: the variables as JSON, the pair table (rows filled in) as a table of its own */
+export function toSave(settings: EvalSettings): { settings: unknown; pairs: PairRow[] } {
+  const { rows, ...pairs } = settings.pairs;
+  return { settings: { ...settings, pairs }, pairs: rows.filter(([p, s]) => !!p.trim() && !!s.trim()) };
+}

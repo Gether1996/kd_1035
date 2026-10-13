@@ -1,4 +1,4 @@
-import { ArmoryIndex, GEAR_SLOTS, buildOf, gearTotals, troopOf, troopStat } from '../../core/armory';
+import { ArmoryIndex, GEAR_SLOTS, Inscription, buildOf, gearTotals, troopOf, troopStat } from '../../core/armory';
 import { March } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
 import { EvalSettings, PowerRow } from './settings';
@@ -19,18 +19,20 @@ export interface EvalPlayer {
   power_bonus: number;
 }
 
-export type PairSource = 'table' | 'reversed' | 'unknown' | 'solo' | 'none';
+/** from the table; not there, without a secondary or without a commander = not evaluated */
+export type PairSource = 'table' | 'unknown' | 'solo' | 'none';
 
 export interface MarchEval {
   march: March;
   /** counts for the total: an open-field type and among the best */
   counted: boolean;
-  /** why not: a type that does not count, or more marches than counted */
-  skipped: 'kind' | 'limit' | null;
+  /** why not: a type that does not count, a pair not evaluated, or more marches than counted */
+  skipped: 'kind' | 'pair' | 'limit' | null;
   pair: { points: number; source: PairSource };
   /** 1 = both commanders expertise */
   skills: number;
-  armaments: { stats: number; inscriptions: number; points: number; filled: boolean };
+  /** tiered: the inscriptions clicked together scored by the tier list (else the counts by colour) */
+  armaments: { stats: number; inscriptions: number; points: number; filled: boolean; tiered: boolean };
   equipment: EquipmentEval;
   total: number;
 }
@@ -84,21 +86,29 @@ export interface Evaluation {
 
 // ---------------------------------------------------------------- one march
 
-const pairKey = (primary: string, secondary: string) => `${fold(primary)}|${fold(secondary)}`;
+export const pairKey = (primary: string, secondary: string) => `${fold(primary)}|${fold(secondary)}`;
 
+/** each order of a pair is its own row; a pair written twice: the first row counts */
 export function pairTable(settings: EvalSettings): Map<string, number> {
-  return new Map(settings.pairs.rows.map(([p, s, points]) => [pairKey(p, s), points]));
+  const table = new Map<string, number>();
+  for (const [p, s, points] of settings.pairs.rows) {
+    const key = pairKey(p, s);
+    if (!table.has(key)) table.set(key, points);
+  }
+  return table;
 }
 
-/** the points of the pair: from the table, the table the other way round, a solo commander or a pair not there */
-export function pairPoints(settings: EvalSettings, table: Map<string, number>, march: March): MarchEval['pair'] {
+/**
+ * The points of the pair from the table, in this order exactly (Slim 13. 10. 2026: the other order is a row of its
+ * own – "achilles ivan je lepší ivan achilles": Ivan IV first is the better one). A pair not there and a march
+ * without a secondary score 0 – such a march is not evaluated at all ("s tým nehrať", "marchku bez secondary ani
+ * akceptovať nebudeme").
+ */
+export function pairPoints(table: Map<string, number>, march: March): MarchEval['pair'] {
   if (!march.primary) return { points: 0, source: 'none' };
-  if (!march.secondary) return { points: settings.pairs.solo, source: 'solo' };
-  const direct = table.get(pairKey(march.primary, march.secondary));
-  if (direct !== undefined) return { points: direct, source: 'table' };
-  const reversed = table.get(pairKey(march.secondary, march.primary));
-  if (reversed !== undefined) return { points: reversed * settings.pairs.reversed, source: 'reversed' };
-  return { points: settings.pairs.unknown, source: 'unknown' };
+  if (!march.secondary) return { points: 0, source: 'solo' };
+  const points = table.get(pairKey(march.primary, march.secondary));
+  return points === undefined ? { points: 0, source: 'unknown' } : { points, source: 'table' };
 }
 
 /** 0 at 1111, 1 at 5555 (expertise) */
@@ -109,25 +119,40 @@ const readiness = (skills: string | undefined) => {
 
 /**
  * The skill levels of the pair as a factor (the spreadsheet scored unfinished commanders about a third of the full
- * pair): the primary weighs more; minimum + (1 − minimum) × readiness^curve.
+ * pair): both commanders weigh the same (Slim 13. 10. 2026: "váha skillov primary alebo secondary je zlá");
+ * minimum + (1 − minimum) × readiness^curve.
  */
 export function skillFactor(settings: EvalSettings, march: March): number {
   const p = settings.pairs;
-  const wp = p.primary;
-  const ws = march.secondary ? p.secondary : 0;
-  const ready = wp + ws > 0 ? (wp * readiness(march.primary_skills) + ws * readiness(march.secondary_skills)) / (wp + ws) : 1;
+  const ready = march.secondary ? (readiness(march.primary_skills) + readiness(march.secondary_skills)) / 2 : readiness(march.primary_skills);
   return p.minimum + (1 - p.minimum) * Math.pow(ready, p.curve);
 }
 
-/** the spreadsheet's armament points: the bonuses over their best, the inscriptions by colour over their best */
-export function armamentPoints(settings: EvalSettings, march: March): MarchEval['armaments'] {
+/** the points of one inscription: its tier in the tier list, else its colour */
+export function inscriptionValue(settings: EvalSettings, inscription: Pick<Inscription, 'name' | 'rarity'>): number {
+  const a = settings.armaments;
+  const tier = a.inscriptions[inscription.name];
+  if (tier) return a.tiers[tier];
+  return inscription.rarity === 'special' ? a.gold : inscription.rarity === 'rare' ? a.blue : a.white;
+}
+
+/**
+ * The spreadsheet's armament points: the bonuses over their best, the inscriptions over their best – the ones clicked
+ * together by the tier list (Slim 13. 10. 2026), the counts typed in before by colour.
+ */
+export function armamentPoints(settings: EvalSettings, march: March, index: ArmoryIndex | null = null): MarchEval['armaments'] {
   const a = settings.armaments;
   const v = (n: number | null | undefined) => n ?? 0;
   const bonuses = v(march.attack) / a.attack + v(march.defense) / a.defense + v(march.health) / a.health + v(march.damage) / a.damage;
   const stats = (bonuses / a.combatMax) * a.statsWeight;
-  const inscriptions = ((v(march.gold) * a.gold + v(march.blue) * a.blue + v(march.white) * a.white) / a.inscMax) * a.inscWeight;
-  const filled = [march.attack, march.defense, march.health, march.gold, march.blue, march.white].some((n) => (n ?? 0) > 0);
-  return { stats, inscriptions, points: stats + inscriptions, filled };
+  const clicked = index ? (march.inscriptions ?? []).map((id) => index.inscriptions.get(id)).filter((i) => !!i) : [];
+  const tiered = clicked.length > 0;
+  const raw = tiered
+    ? clicked.reduce((sum, i) => sum + inscriptionValue(settings, i), 0)
+    : v(march.gold) * a.gold + v(march.blue) * a.blue + v(march.white) * a.white;
+  const inscriptions = (raw / a.inscMax) * a.inscWeight;
+  const filled = tiered || [march.attack, march.defense, march.health, march.gold, march.blue, march.white].some((n) => (n ?? 0) > 0);
+  return { stats, inscriptions, points: stats + inscriptions, filled, tiered };
 }
 
 /** the tier of the spreadsheet a score reaches */
@@ -187,9 +212,9 @@ export function equipmentPoints(settings: EvalSettings, march: March, index: Arm
 
 /** a march in the spreadsheet's formula: (equipment × weight + armaments × weight) × pair / 100 × skills */
 export function marchEval(settings: EvalSettings, table: Map<string, number>, march: March, index: ArmoryIndex | null): MarchEval {
-  const pair = pairPoints(settings, table, march);
+  const pair = pairPoints(table, march);
   const skills = skillFactor(settings, march);
-  const armaments = armamentPoints(settings, march);
+  const armaments = armamentPoints(settings, march, index);
   const equipment = equipmentPoints(settings, march, index);
   const m = settings.marches;
   const total = (equipment.points * m.equipment + armaments.points * m.armaments) * (pair.points / 100) * skills;
@@ -256,15 +281,16 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     // the first X in the player's order (Gether 13. 10. 2026: "prvých X marchov podľa toho, ako ich má nastavené"),
     // or the best X
     const byPosition = (a: MarchEval, b: MarchEval) => a.march.position - b.march.position || a.march.id - b.march.id;
+    // a march whose pair is not evaluated takes no place – the next one counts instead
     const eligible = marches
-      .filter((m) => m.march.kind && kinds.has(m.march.kind))
+      .filter((m) => m.march.kind && kinds.has(m.march.kind) && m.pair.points > 0)
       .sort(settings.marches.order === 'best' ? (a, b) => b.total - a.total || byPosition(a, b) : byPosition);
     eligible.forEach((m, i) => {
       m.counted = i < settings.marches.max;
       m.skipped = m.counted ? null : 'limit';
     });
     marches.forEach((m) => {
-      if (!m.counted && !m.skipped) m.skipped = 'kind';
+      if (!m.counted && !m.skipped) m.skipped = m.march.kind && kinds.has(m.march.kind) ? 'pair' : 'kind';
     });
     const counted = eligible.filter((m) => m.counted);
     const marchScore = counted.reduce((sum, m) => sum + m.total, 0);
@@ -334,8 +360,17 @@ function sortMarches(marches: MarchEval[]): void {
   marches.sort((a, b) => a.march.position - b.march.position || a.march.id - b.march.id);
 }
 
-/** the commander pairs the players use that are not in the table, the most used first */
-export function missingPairs(settings: EvalSettings, players: EvalPlayer[]): { primary: string; secondary: string; players: number }[] {
+export interface MissingPair {
+  primary: string;
+  secondary: string;
+  /** how many players have it */
+  players: number;
+  /** the points of the other order when that one is in the table */
+  reversed: number | null;
+}
+
+/** the commander pairs the players use that are not in the table (in this order), the most used first */
+export function missingPairs(settings: EvalSettings, players: EvalPlayer[]): MissingPair[] {
   const table = pairTable(settings);
   const kinds = new Set(settings.marches.kinds);
   const found = new Map<string, { primary: string; secondary: string; who: Set<number> }>();
@@ -350,7 +385,12 @@ export function missingPairs(settings: EvalSettings, players: EvalPlayer[]): { p
     }
   }
   return [...found.values()]
-    .map((e) => ({ primary: e.primary, secondary: e.secondary, players: e.who.size }))
+    .map((e) => ({
+      primary: e.primary,
+      secondary: e.secondary,
+      players: e.who.size,
+      reversed: table.get(pairKey(e.secondary, e.primary)) ?? null,
+    }))
     .sort((a, b) => b.players - a.players || a.primary.localeCompare(b.primary));
 }
 

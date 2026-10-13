@@ -24,6 +24,7 @@ export type IconName =
   | 'flame'
   | 'gift'
   | 'hand-helping'
+  | 'info'
   | 'languages'
   | 'lightbulb'
   | 'link'

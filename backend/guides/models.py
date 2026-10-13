@@ -1,6 +1,8 @@
 import re
+import unicodedata
 from html import unescape
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
@@ -8,6 +10,14 @@ from django.utils.html import strip_tags
 from django.utils.text import Truncator
 
 from .sanitize import clean_html
+
+# the points of a commander pair (CommanderPair), as the page allows
+PAIR_POINTS_MAX = 500
+
+
+def fold(name: str) -> str:
+    """A commander's name without diacritics and case, like the page's fold(): "Jan Žižka" = "jan zizka"."""
+    return unicodedata.normalize('NFD', name).encode('ascii', 'ignore').decode().casefold().strip()
 
 
 class Guide(models.Model):
@@ -119,3 +129,32 @@ class GuideImage(models.Model):
 def _delete_image_file(sender, instance, **kwargs):
     # also runs when the whole guide is deleted (cascade)
     instance.image.delete(save=False)
+
+
+class CommanderPair(models.Model):
+    """A commander pair of the KvK evaluation (/vyhodnocovanie) and its points, 100 = a full meta pair. A table in the
+    database, not a file (Gether 13. 10. 2026: "json na commanderov nie je dobré riešenie, … databázovo") – edited in
+    the admin or in Premenné on the page, live without a deploy. Each order of a pair is its own row (Slim: "achilles
+    ivan je lepší ivan achilles" – Ivan IV first is the better one); a pair not here, or with 0 points, is not evaluated.
+    The names are checked against the roster by the admin form and the API (guides.pairs), not here: a row the list
+    edits only the points of must not fail on its names."""
+
+    primary = models.CharField('primárny', max_length=64)
+    secondary = models.CharField('sekundárny', max_length=64)
+    points = models.DecimalField(
+        'body',
+        max_digits=4,
+        decimal_places=1,
+        validators=[MinValueValidator(0), MaxValueValidator(PAIR_POINTS_MAX)],
+        help_text='100 = plný meta pár, skóre marchu × body / 100; 0 = nehodnotí sa.',
+    )
+    updated_at = models.DateTimeField('upravené', auto_now=True)
+
+    class Meta:
+        ordering = ['-points', 'primary', 'secondary']
+        verbose_name = 'pár commanderov (vyhodnocovanie)'
+        verbose_name_plural = 'páry commanderov (vyhodnocovanie)'
+        constraints = [models.UniqueConstraint(fields=['primary', 'secondary'], name='one_row_per_pair_order')]
+
+    def __str__(self):
+        return f'{self.primary} + {self.secondary}'

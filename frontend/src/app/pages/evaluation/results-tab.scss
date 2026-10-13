@@ -353,3 +353,9 @@
   line-height: 1.45;
   color: var(--text-dim);
 }
+
+.ev-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

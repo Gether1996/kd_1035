@@ -33,10 +33,13 @@
       }
     </select>
   </div>
-  <label class="ev-switch">
-    <input #up class="switch" type="checkbox" role="switch" [checked]="usePower()" (change)="usePower.set(up.checked)" />
-    <span>{{ x.usePower }}</span>
-  </label>
+  <div class="ev-switch-row">
+    <label class="ev-switch">
+      <input #up class="switch" type="checkbox" role="switch" [checked]="usePower()" (change)="usePower.set(up.checked)" />
+      <span>{{ x.usePower }}</span>
+    </label>
+    <app-eval-tip [text]="tip('results.usePower')" [label]="tipLabel(x.usePower)" />
+  </div>
   <button
     type="button"
     class="pill-btn pill-btn--quiet ev-small"
@@ -73,7 +76,7 @@
     <dd>{{ int(total()) }}</dd>
   </div>
   <div>
-    <dt>{{ x.summary.perPoint }}</dt>
+    <dt>{{ x.summary.perPoint }} <app-eval-tip [text]="tip('results.perPoint')" [label]="tipLabel(x.summary.perPoint)" /></dt>
     <dd>{{ int(e.perPoint) }}</dd>
   </div>
   <div>
@@ -98,15 +101,14 @@
       <tr>
         <th scope="col" class="ev-num">#</th>
         <th scope="col">{{ c.player }}</th>
-        <th scope="col" class="ev-num">{{ c.marches }}</th>
-        <th scope="col" class="ev-num">{{ c.score }}</th>
-        <th scope="col" class="ev-num">{{ c.required }}</th>
-        <th scope="col">{{ c.acclaim }}</th>
-        <th scope="col">{{ c.progress }}</th>
-        <th scope="col">{{ c.power }}</th>
-        <th scope="col" class="ev-num">{{ c.recommended }}</th>
-        <th scope="col">{{ c.t4 }}</th>
-        <th scope="col" class="ev-num">{{ c.fund }}</th>
+        <th scope="col" class="ev-num">{{ c.marches }} <app-eval-tip [text]="tip('results.marches')" [label]="tipLabel(c.marches)" /></th>
+        <th scope="col" class="ev-num">{{ c.required }} <app-eval-tip [text]="tip('results.required')" [label]="tipLabel(c.required)" /></th>
+        <th scope="col">{{ c.acclaim }} <app-eval-tip [text]="tip('results.acclaim')" [label]="tipLabel(c.acclaim)" /></th>
+        <th scope="col">{{ c.progress }} <app-eval-tip [text]="tip('results.progress')" [label]="tipLabel(c.progress)" /></th>
+        <th scope="col">{{ c.power }} <app-eval-tip [text]="tip('results.power')" [label]="tipLabel(c.power)" /></th>
+        <th scope="col" class="ev-num">{{ c.recommended }} <app-eval-tip [text]="tip('results.recommended')" [label]="tipLabel(c.recommended)" /></th>
+        <th scope="col">{{ c.t4 }} <app-eval-tip [text]="tip('results.t4')" [label]="tipLabel(c.t4)" /></th>
+        <th scope="col" class="ev-num">{{ c.fund }} <app-eval-tip [text]="tip('results.fund')" [label]="tipLabel(c.fund)" /></th>
         <th scope="col"><span class="sr-only">{{ c.detail }}</span></th>
       </tr>
     </thead>
@@ -134,7 +136,6 @@
               <span class="ev-missing-count" [title]="x.missingTitle">+{{ r.missing }}</span>
             }
           </td>
-          <td class="ev-num">{{ dec(r.score) }}</td>
           <td class="ev-num ev-required">{{ int(r.acclaim.required) }}</td>
           <td>
             <input
@@ -186,12 +187,12 @@
         </tr>
         @if (open) {
           <tr class="ev-detail-row" [id]="'ev-detail-' + r.player.id">
-            <td colspan="12">
+            <td colspan="11">
               <div class="ev-detail">
                 <!-- how the acclaim adds up -->
                 <p class="ev-detail__sum">
                   <strong>{{ d.acclaim }}:</strong>
-                  {{ int(r.acclaim.marches) }} {{ d.fromMarches }}
+                  {{ int(r.acclaim.marches) }} {{ d.fromMarches }} ({{ scoreText(r) }})
                   @if (r.acclaim.excess) {
                     + {{ int(r.acclaim.excess) }} ({{ excessText(r) }})
                   }
@@ -279,7 +280,7 @@
         }
       } @empty {
         <tr>
-          <td colspan="12" class="ev-empty">{{ x.empty }}</td>
+          <td colspan="11" class="ev-empty">{{ x.empty }}</td>
         </tr>
       }
     </tbody>

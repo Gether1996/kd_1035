@@ -1,8 +1,18 @@
+import json
+from importlib import import_module
+
+from django.apps import apps as django_apps
+from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
+
+from guides import commander_index
+from guides.meta.sync import sync_guides
+from guides.models import CommanderPair, fold
+from guides.roster import commander_names
 
 from .models import EvaluationSettings, March, PlayerEvaluation
-from .test_reminders import make_player
+from .test_reminders import PLAIN_STATIC, make_player
 
 
 class EvaluationApiTests(TestCase):
@@ -117,3 +127,167 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
         # the superuser counts as one
         self.assertEqual(self.admin.get('/api/auth/me/').json()['user']['evaluator'], True)
+
+    def test_the_commander_pairs_live_in_the_database(self):
+        # the table the migration put in (meta-rok.com + RoKBattles), the best first, each order its own row
+        data = self.admin.get('/api/evaluation/').json()
+        pairs, version = data['pairs'], data['pairs_version']
+        self.assertIn(['Ivan IV', 'Achilles', 116], pairs)
+        self.assertIn(['Achilles', 'Ivan IV', 92], pairs)
+        self.assertEqual([p[2] for p in pairs], sorted((p[2] for p in pairs), reverse=True))
+        # saved with the variables over the version loaded: the whole table, names like the roster, the best first;
+        # an empty row and the same commander twice are left out
+        rows = [['ivan iv', 'ACHILLES', 110.25], ['Attila', 'Achilles', 90], ['', '', 0], ['Attila', 'attila', 50]]
+        res = self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}, 'pairs': rows, 'pairs_version': version})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['pairs'], [['Ivan IV', 'Achilles', 110.2], ['Attila', 'Achilles', 90]])
+        self.assertEqual(list(CommanderPair.objects.values_list('primary', flat=True)), ['Ivan IV', 'Attila'])
+        version = res.json()['pairs_version']
+        # only what changed is written
+        attila = CommanderPair.objects.get(primary='Attila')
+        rows = [['Ivan IV', 'Achilles', 116], ['Attila', 'Achilles', 90]]
+        res = self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}, 'pairs': rows, 'pairs_version': version})
+        self.assertEqual(CommanderPair.objects.get(primary='Attila').updated_at, attila.updated_at)
+        version = res.json()['pairs_version']
+        # changed meanwhile (the admin): a save over the old version is refused, nothing is saved
+        CommanderPair.objects.create(primary='Arthur Pendragon', secondary='Ivan IV', points=112)
+        res = self.call('put', '/api/evaluation/settings/', {'settings': {'z': 1}, 'pairs': rows, 'pairs_version': version})
+        self.assertEqual((res.status_code, res.json()), (409, {'pairs': 'stale'}))
+        self.assertEqual(EvaluationSettings.load().data, {'a': 1})
+        self.assertEqual(CommanderPair.objects.count(), 3)
+        # without the table: the variables saved, the table stays and comes back as it is now
+        res = self.call('put', '/api/evaluation/settings/', {'settings': {'c': 3}})
+        self.assertEqual(len(res.json()['pairs']), 3)
+        version = res.json()['pairs_version']
+        # a commander a march cannot name: nothing is saved, the names come back
+        rows = [['Ivan IV', 'Achilles', 100], ['Ivar', 'Achiles', 50]]
+        res = self.call('put', '/api/evaluation/settings/', {'settings': {'b': 2}, 'pairs': rows, 'pairs_version': version})
+        self.assertEqual(res.json(), {'pairs': 'unknown', 'names': ['Achiles', 'Ivar']})
+        self.assertEqual(EvaluationSettings.load().data, {'c': 3})
+        for bad in ('x', [['A', 'B']], [['Attila', 'Achilles', 600]], [['Attila', 'Achilles', True]]):
+            res = self.call('put', '/api/evaluation/settings/', {'settings': {}, 'pairs': bad, 'pairs_version': version})
+            self.assertEqual(res.json(), {'pairs': 'invalid'}, bad)
+        self.assertEqual(CommanderPair.objects.count(), 3)
+
+
+    def test_every_commander_of_the_pair_table_can_be_picked(self):
+        # the commanders of our guides count too (Gonzalo de Cordoba, Gajah Mada are not in the roster of the client)
+        sync_guides()
+        commander_index._cache.clear()
+        known = commander_names()
+        names = {name for pair in CommanderPair.objects.all() for name in (pair.primary, pair.secondary)}
+        self.assertTrue(names)
+        self.assertEqual({name for name in names if known.get(fold(name)) != name}, set())
+
+    def test_the_migration_keeps_rows_changed_on_the_page(self):
+        seed = import_module('guides.migrations.0012_commander_pairs').seed
+        CommanderPair.objects.all().delete()
+        row = EvaluationSettings.load()
+        row.data = {
+            'pairs': {
+                'rows': [
+                    ['Qin Shi Huang', 'Zhuge Liang', 120],  # the spreadsheet's, untouched: the new table
+                    ['Arthur Pendragon', 'Achilles', 95],  # changed on the page: kept
+                    ['Ivan IV', 'Achilles', 70],  # added on the page: kept
+                ],
+                'curve': 2,
+            },
+            'acclaim': {'minimum': 1},
+        }
+        row.save()
+        seed(django_apps, None)
+        points = {(p.primary, p.secondary): float(p.points) for p in CommanderPair.objects.all()}
+        self.assertEqual(points[('Qin Shi Huang', 'Zhuge Liang')], 118)
+        self.assertEqual(points[('Arthur Pendragon', 'Achilles')], 95)
+        self.assertEqual(points[('Ivan IV', 'Achilles')], 70)
+        self.assertEqual(points[('Achilles', 'Ivan IV')], 92)
+        self.assertEqual(EvaluationSettings.load().data, {'pairs': {'curve': 2}, 'acclaim': {'minimum': 1}})
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class EvaluationAdminTests(TestCase):
+    """The variables in the Django admin (Gether 13. 10. 2026) as readable JSON; the commander pairs as a table with
+    many rows at once from a spreadsheet."""
+
+    url = '/admin/accounts/evaluationsettings/'
+    pairs = '/admin/guides/commanderpair/'
+
+    def setUp(self):
+        self.client.force_login(User.objects.create_superuser('boss', password='x'))
+
+    def change_url(self):
+        return f'{self.url}{EvaluationSettings.load().pk}/change/'
+
+    def test_superuser_only(self):
+        self.client.force_login(User.objects.create_user('r4', password='x', is_staff=True))
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+        self.assertEqual(self.client.get(self.pairs).status_code, 403)
+        self.assertEqual(self.client.get(f'{self.pairs}import/').status_code, 403)
+
+    def test_the_variables_as_json(self):
+        self.assertRedirects(self.client.get(self.url), self.change_url())
+        self.assertEqual(self.client.get(f'{self.url}add/').status_code, 403)
+        row = EvaluationSettings.load()
+        row.data = {'acclaim': {'minimum': 150000}}
+        row.save()
+        self.assertContains(self.client.get(self.change_url()), '&quot;minimum&quot;: 150000')
+        data = json.dumps({'acclaim': {'minimum': 120000}})
+        self.assertEqual(self.client.post(self.change_url(), {'data': data}).status_code, 302)
+        self.assertEqual(EvaluationSettings.load().data, {'acclaim': {'minimum': 120000}})
+        for bad in ('[1]', json.dumps({'t': 'x' * 300}), '{'):
+            self.assertEqual(self.client.post(self.change_url(), {'data': bad}).status_code, 200, bad)
+        # empty = the page's defaults
+        self.assertEqual(self.client.post(self.change_url(), {'data': ''}).status_code, 302)
+        self.assertEqual(EvaluationSettings.load().data, {})
+
+    def test_pairs_one_by_one(self):
+        page = self.client.get(self.pairs)
+        self.assertContains(page, 'Ivan IV')
+        self.assertContains(page, 'Vložiť z Excelu')
+        new = {'primary': 'ivar the boneless', 'secondary': 'achilles', 'points': '60'}
+        self.assertEqual(self.client.post(f'{self.pairs}add/', new).status_code, 302)
+        self.assertTrue(CommanderPair.objects.filter(primary='Ivar the Boneless', secondary='Achilles', points=60).exists())
+        # a name a march cannot have, the same commander twice, a pair already there, too many points
+        for data in (
+            {'primary': 'Ivar', 'secondary': 'Achilles', 'points': '60'},
+            {'primary': 'Achilles', 'secondary': 'Achilles', 'points': '60'},
+            {'primary': 'Ivan IV', 'secondary': 'Achilles', 'points': '60'},
+            {'primary': 'Attila', 'secondary': 'Hector', 'points': '501'},
+        ):
+            self.assertEqual(self.client.post(f'{self.pairs}add/', data).status_code, 200, data)
+
+    def test_points_saved_from_the_list(self):
+        # a row whose commander is not pickable (any more) does not stop a save of the points from the list
+        CommanderPair.objects.all().delete()
+        good = CommanderPair.objects.create(primary='Ivan IV', secondary='Achilles', points=116)
+        old = CommanderPair.objects.create(primary='Mulan', secondary='Achilles', points=40)
+        form = {
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '2',
+            'form-0-id': str(good.pk),
+            'form-0-points': '110',
+            'form-1-id': str(old.pk),
+            'form-1-points': '30',
+            '_save': 'Uložiť',
+        }
+        self.assertEqual(self.client.post(self.pairs, form).status_code, 302)
+        self.assertEqual(sorted(CommanderPair.objects.values_list('points', flat=True)), [30, 110])
+
+    def test_many_pairs_from_a_spreadsheet(self):
+        self.assertContains(self.client.get(f'{self.pairs}import/'), 'Ivan IV; Achilles; 116')
+        # a tab from a spreadsheet, a decimal comma, any case: new pairs added, others' points changed, the rest stays
+        lines = 'Achilles\tIvar the Boneless\t80\nivan iv; achilles; 99,5\n\n'
+        self.assertEqual(self.client.post(f'{self.pairs}import/', {'lines': lines}).status_code, 302)
+        points = {(p.primary, p.secondary): float(p.points) for p in CommanderPair.objects.all()}
+        self.assertEqual(points[('Achilles', 'Ivar the Boneless')], 80)
+        self.assertEqual(points[('Ivan IV', 'Achilles')], 99.5)
+        self.assertEqual(points[('Achilles', 'Ivan IV')], 92)
+        # errors by line, nothing saved
+        bad = 'Atila; Achilles; 90\nAttila; Achilles\nAttila; Achilles; x\nAttila; Achilles; 900\nAttila; attila; 50'
+        response = self.client.post(f'{self.pairs}import/', {'lines': bad, 'replace': 'on'})
+        for error in ('1. riadok: neznámy commander „Atila“', '2. riadok', '3. riadok', '4. riadok', '5. riadok: primárny'):
+            self.assertContains(response, error)
+        self.assertGreater(CommanderPair.objects.count(), 100)
+        # the whole table replaced
+        self.client.post(f'{self.pairs}import/', {'lines': 'Attila; Achilles; 90', 'replace': 'on'})
+        self.assertEqual(list(CommanderPair.objects.values_list('primary', 'secondary')), [('Attila', 'Achilles')])
