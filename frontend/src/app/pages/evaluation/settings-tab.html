@@ -118,6 +118,28 @@
       }
     </div>
     <div class="ev-grid">
+      <div class="field ev-field">
+        <label class="ev-field__label" for="ev-marches-max">{{ s.marches.max }}</label>
+        <input
+          id="ev-marches-max"
+          class="input ev-input"
+          type="number"
+          min="1"
+          [max]="limit"
+          step="1"
+          inputmode="numeric"
+          [value]="v.marches.max"
+          (change)="setMax($event)"
+        />
+      </div>
+      <div class="field ev-field">
+        <label class="ev-field__label" for="ev-marches-order">{{ s.marches.order }}</label>
+        <select id="ev-marches-order" class="select ev-input" (change)="setOrder($event)">
+          @for (o of orders; track o) {
+            <option [value]="o" [selected]="v.marches.order === o">{{ s.marches.orders[o] }}</option>
+          }
+        </select>
+      </div>
       @for (f of fs.marches; track f.label) {
         <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
       }
@@ -325,7 +347,7 @@
     <h2 class="ev-card__title" id="ev-s-fund">{{ s.fund.title }}</h2>
     <p class="ev-card__hint">{{ s.fund.hint }}</p>
     <div class="ev-grid">
-      @for (n of counts; track n) {
+      @for (n of counts(); track n) {
         <ng-container *ngTemplateOutlet="num; context: { $implicit: { path: ['fund', 'max', n - 1], label: fundLabel(n) } }" />
       }
       @for (f of fs.fund; track f.label) {

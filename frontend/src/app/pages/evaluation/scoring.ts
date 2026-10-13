@@ -253,7 +253,12 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
 
   const partial: Draft[] = players.map((player) => {
     const marches = player.marches.map((m) => marchEval(settings, table, m, index));
-    const eligible = marches.filter((m) => m.march.kind && kinds.has(m.march.kind)).sort((a, b) => b.total - a.total);
+    // the first X in the player's order (Gether 13. 10. 2026: "prvých X marchov podľa toho, ako ich má nastavené"),
+    // or the best X
+    const byPosition = (a: MarchEval, b: MarchEval) => a.march.position - b.march.position || a.march.id - b.march.id;
+    const eligible = marches
+      .filter((m) => m.march.kind && kinds.has(m.march.kind))
+      .sort(settings.marches.order === 'best' ? (a, b) => b.total - a.total || byPosition(a, b) : byPosition);
     eligible.forEach((m, i) => {
       m.counted = i < settings.marches.max;
       m.skipped = m.counted ? null : 'limit';
@@ -324,9 +329,9 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
   return { rows, perPoint, benchmarkScore, ranges };
 }
 
-/** the counted marches first, the best on top, then the others in their order */
+/** in the player's order, as on /marche */
 function sortMarches(marches: MarchEval[]): void {
-  marches.sort((a, b) => Number(b.counted) - Number(a.counted) || (a.counted ? b.total - a.total : a.march.position - b.march.position));
+  marches.sort((a, b) => a.march.position - b.march.position || a.march.id - b.march.id);
 }
 
 /** the commander pairs the players use that are not in the table, the most used first */

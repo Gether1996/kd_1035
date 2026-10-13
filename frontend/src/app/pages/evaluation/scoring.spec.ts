@@ -13,7 +13,7 @@ import {
   percentile,
   skillFactor,
 } from './scoring';
-import { DEFAULT_SETTINGS, EvalSettings, normalizeSettings } from './settings';
+import { DEFAULT_SETTINGS, EvalSettings, normalizeSettings, rowsFor } from './settings';
 
 // one legendary (iconic) and one epic item for every slot
 const CATALOG: ArmoryData = {
@@ -205,7 +205,10 @@ describe('evaluation scoring', () => {
     });
     expect(s.acclaim).toMatchObject({ benchmark: 5_600_000, score: 0.01, player: 7 });
     expect(s.marches.kinds).toEqual(['cavalry']);
-    expect(s.marches.max).toBe(5);
+    expect(s.marches.max).toBe(9);
+    expect(s.power.table.length).toBe(9);
+    expect(s.fund.max.length).toBe(9);
+    expect(normalizeSettings({ marches: { max: 12 } }).marches.max).toBe(10);
     expect(s.pairs.rows).toEqual([['Attila', 'Achilles', 92]]);
     expect(s.power.table[0]).toEqual({ ...DEFAULT_SETTINGS.power.table[0], min: 60 });
     expect(s.power.low).toBe(100);
@@ -243,5 +246,31 @@ describe('evaluation scoring', () => {
       { id: 3, power: 93.3 },
     ]);
     expect(unknown).toEqual(['nobody 50', 'Twin 60', 'no number here']);
+  });
+
+  it('counts the first X marches in the player\'s order, or the best X', () => {
+    // seven marches, the later ones better (more inscriptions)
+    const marches = [1, 2, 3, 4, 5, 6, 7].map((n) => march({ id: n, position: n, gold: n, gear: gear('gold', false, 0) }));
+    const counted = (settings: EvalSettings) =>
+      evaluate(settings, [player(1, marches)], INDEX).rows[0].marches.filter((m) => m.counted).map((m) => m.march.position);
+    expect(counted(normalizeSettings({ marches: { max: 3 } }))).toEqual([1, 2, 3]);
+    expect(counted(normalizeSettings({ marches: { max: 3, order: 'best' } }))).toEqual([5, 6, 7]);
+    expect(counted(normalizeSettings({ marches: { max: 7 } }))).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    // shown in the player's order, the ones over the limit marked
+    const row = evaluate(normalizeSettings({ marches: { max: 3 } }), [player(1, marches)], INDEX).rows[0];
+    expect(row.marches.map((m) => [m.march.position, m.skipped])).toEqual([
+      [1, null], [2, null], [3, null], [4, 'limit'], [5, 'limit'], [6, 'limit'], [7, 'limit'],
+    ]);
+  });
+
+  it('goes on with the power table and the fund past 5 marches', () => {
+    const { table, fund } = rowsFor(7, DEFAULT_SETTINGS.power.table, DEFAULT_SETTINGS.fund.max);
+    expect(table[5]).toEqual({ min: 105, max: 122, scoreMin: 288.17, scoreMax: 288.17 + (288.17 - 141.36) });
+    expect(table[6].min).toBe(122);
+    expect(fund.slice(5)).toEqual([1_800_000_000, 2_100_000_000]);
+    // 7 marches counted: 125 M of power asks for all seven
+    const settings = normalizeSettings({ marches: { max: 7 } });
+    expect(expectedMarches(settings, 125)).toBe(7);
+    expect(expectedMarches(settings, 110)).toBe(6);
   });
 });

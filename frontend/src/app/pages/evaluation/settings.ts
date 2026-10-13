@@ -44,8 +44,10 @@ export interface EvalSettings {
   marches: {
     /** which march types count (open field) */
     kinds: MarchKind[];
-    /** the best this many count */
+    /** this many count (up to MARCHES_LIMIT, as many as a player may have) */
     max: number;
+    /** which: the first in the player's order (Gether 13. 10. 2026) or the best by score */
+    order: MarchOrder;
     /** the weights of the equipment and the armaments in a march (spreadsheet: 0.75 / 0.25) */
     equipment: number;
     armaments: number;
@@ -107,6 +109,11 @@ export interface EvalSettings {
     gold: number;
   };
 }
+
+export type MarchOrder = 'position' | 'best';
+
+/** a player has at most 10 marches (backend accounts MAX_MARCHES) */
+export const MARCHES_LIMIT = 10;
 
 export interface PowerRow {
   min: number;
@@ -220,7 +227,13 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     high: 90,
     samples: 5,
   },
-  marches: { kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'], max: 5, equipment: 0.75, armaments: 0.25 },
+  marches: {
+    kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'],
+    max: 5,
+    order: 'position',
+    equipment: 0.75,
+    armaments: 0.25,
+  },
   armaments: {
     attack: 3,
     defense: 2.75,
@@ -256,6 +269,30 @@ export const DEFAULT_SETTINGS: EvalSettings = {
   },
   fund: { max: [400e6, 600e6, 900e6, 1200e6, 1500e6], food: 2, wood: 2, stone: 1, gold: 2 },
 };
+
+// ---------------------------------------------------------------- more marches than the spreadsheet's 5
+
+/**
+ * The power table and the fund for 1 … count marches. Rows the spreadsheet does not have (6 and more marches) go on
+ * from the last two: the next power range starts where the last one ends and is as wide, the same for the score
+ * range and the fund – a starting point, every value is editable.
+ */
+export function rowsFor(count: number, table: PowerRow[], fund: number[]): { table: PowerRow[]; fund: number[] } {
+  const rows = table.slice(0, count);
+  const money = fund.slice(0, count);
+  while (rows.length < count) {
+    const last = rows[rows.length - 1] ?? { min: 63, max: 66, scoreMin: 0, scoreMax: 40 };
+    const width = Math.max(1, last.max - last.min);
+    const scoreWidth = Math.max(1, last.scoreMax - last.scoreMin);
+    rows.push({ min: last.max, max: last.max + width, scoreMin: last.scoreMax, scoreMax: last.scoreMax + scoreWidth });
+  }
+  while (money.length < count) {
+    const last = money[money.length - 1] ?? 0;
+    const step = money.length > 1 ? last - money[money.length - 2] : last;
+    money.push(Math.max(0, last + step));
+  }
+  return { table: rows, fund: money };
+}
 
 // ---------------------------------------------------------------- normalising what the server keeps
 
@@ -294,7 +331,16 @@ export function normalizeSettings(value: unknown): EvalSettings {
   const kinds = Array.isArray(marches['kinds']) ? marches['kinds'] : d.marches.kinds;
   const rows = Array.isArray(pairs['rows']) ? pairs['rows'] : d.pairs.rows;
   const player = acclaim['player'];
-  return {
+  const max = Math.round(num(marches['max'], d.marches.max, 1, MARCHES_LIMIT));
+  // the saved rows of the power table and the fund, as many as the marches counted
+  const defaults = rowsFor(max, d.power.table, d.fund.max);
+  const funds = Array.isArray(fund['max']) ? fund['max'] : [];
+  const sized = rowsFor(
+    max,
+    defaults.table.map((row, i) => group(table[i], row)),
+    defaults.fund.map((value, i) => num(funds[i], value, 0)),
+  );
+  const result: EvalSettings = {
     acclaim: {
       benchmark: num(acclaim['benchmark'], d.acclaim.benchmark, 0),
       score: num(acclaim['score'], d.acclaim.score, 0.01),
@@ -309,7 +355,7 @@ export function normalizeSettings(value: unknown): EvalSettings {
       expected: typeof power['expected'] === 'boolean' ? power['expected'] : d.power.expected,
       phantom: num(power['phantom'], d.power.phantom, 0, 200),
       emptyMarch: num(power['emptyMarch'], d.power.emptyMarch, 0, 1000),
-      table: d.power.table.map((row, i) => group(table[i], row)),
+      table: [],
       auto: typeof power['auto'] === 'boolean' ? power['auto'] : d.power.auto,
       low: num(power['low'], d.power.low, 0, 100),
       high: num(power['high'], d.power.high, 0, 100),
@@ -317,7 +363,8 @@ export function normalizeSettings(value: unknown): EvalSettings {
     },
     marches: {
       kinds: MARCH_KINDS.filter((k) => kinds.includes(k)),
-      max: Math.round(num(marches['max'], d.marches.max, 1, 5)),
+      max,
+      order: marches['order'] === 'best' ? 'best' : 'position',
       equipment: num(marches['equipment'], d.marches.equipment, 0, 10),
       armaments: num(marches['armaments'], d.marches.armaments, 0, 10),
     },
@@ -357,10 +404,13 @@ export function normalizeSettings(value: unknown): EvalSettings {
       curve: num(pairs['curve'], d.pairs.curve, 0.1, 5),
     },
     fund: {
-      max: list(fund['max'], d.fund.max),
+      max: [],
       ...group(fund, { food: d.fund.food, wood: d.fund.wood, stone: d.fund.stone, gold: d.fund.gold }),
     },
   };
+  result.power.table = sized.table;
+  result.fund.max = sized.fund;
+  return result;
 }
 
 export const RARITIES = ITEM_RARITIES;

@@ -4,7 +4,7 @@ import { MARCH_KINDS, MarchKind, March } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
 import { EvalPlayer, Evaluation, missingPairs, skillFactor } from './scoring';
-import { EvalSettings, PairRow, RARITIES, SLOTS } from './settings';
+import { EvalSettings, MARCHES_LIMIT, MarchOrder, PairRow, RARITIES, SLOTS, rowsFor } from './settings';
 import { EvalTexts } from './texts';
 
 type Path = readonly (string | number)[];
@@ -37,7 +37,10 @@ export class EvalSettingsTab {
   protected readonly kinds = MARCH_KINDS;
   protected readonly rarities = RARITIES;
   protected readonly slots = SLOTS;
-  protected readonly counts = [1, 2, 3, 4, 5];
+  /** 1 … the marches counted: the rows of the fund */
+  protected readonly counts = computed(() => Array.from({ length: this.settings().marches.max }, (_, i) => i + 1));
+  protected readonly limit = MARCHES_LIMIT;
+  protected readonly orders: MarchOrder[] = ['position', 'best'];
 
   // ---------------------------------------------------------------- values by path
 
@@ -100,7 +103,6 @@ export class EvalSettingsTab {
       ],
       powerAuto: [f(['power', 'low'], s.power.low), f(['power', 'high'], s.power.high), f(['power', 'samples'], s.power.samples)],
       marches: [
-        f(['marches', 'max'], s.marches.max),
         f(['marches', 'equipment'], s.marches.equipment),
         f(['marches', 'armaments'], s.marches.armaments),
       ],
@@ -139,6 +141,26 @@ export class EvalSettingsTab {
       else kinds.add(kind);
       draft.marches.kinds = MARCH_KINDS.filter((k) => kinds.has(k));
     });
+  }
+
+  /** the marches counted: the power table and the fund grow or shrink with it */
+  protected setMax(event: Event): void {
+    const box = event.target as HTMLInputElement;
+    const value = Math.round(Number(box.value));
+    if (!Number.isFinite(value) || value < 1 || value > MARCHES_LIMIT) {
+      box.value = String(this.settings().marches.max);
+      return;
+    }
+    this.change((draft) => {
+      draft.marches.max = value;
+      const rows = rowsFor(value, draft.power.table, draft.fund.max);
+      draft.power.table = rows.table;
+      draft.fund.max = rows.fund;
+    });
+  }
+
+  protected setOrder(event: Event): void {
+    this.put(['marches', 'order'], (event.target as HTMLSelectElement).value as MarchOrder);
   }
 
   // ---------------------------------------------------------------- pairs
