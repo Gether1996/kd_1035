@@ -27,8 +27,8 @@ jobs:
     env:
       DJANGO_DEBUG: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13' # backend/Dockerfile
           cache: pip
@@ -48,8 +48,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24 # frontend/Dockerfile
           cache: npm
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Throwaway .env
         # nothing real: a random key, login switched on with a made-up Discord app (the tests sign in through
@@ -97,7 +97,7 @@ jobs:
           done
           docker compose ps; docker compose logs --tail=100; exit 1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -128,7 +128,7 @@ jobs:
         if: failure()
         run: docker compose logs --tail=200 backend web worker
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
