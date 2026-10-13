@@ -25,7 +25,7 @@ export type LayoutReport = {
   small: string[];
   /** Visible text under 11 px (the uppercase labels are 11 px on purpose). */
   tiny: string[];
-  /** Words wider than their box, so `overflow-wrap: break-word` cuts them mid-word ("Albuquerqu / e"). */
+  /** Words split over two lines because their box is too narrow ("Albuquerqu / e"). */
   brokenWords: string[];
 };
 
@@ -133,30 +133,23 @@ export function measure(page: Page, aligned = ALIGNED): Promise<LayoutReport> {
       .filter((el) => !el.closest('.sr-only'))
       .map((el) => `${name(el)} ${getComputedStyle(el).fontSize}`);
 
-    const probe = document.createElement('span');
-    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
-    document.body.append(probe);
-    const brokenWords = all
-      .filter((el) => {
-        const s = getComputedStyle(el);
-        return /break-word|anywhere/.test(s.overflowWrap) || s.wordBreak === 'break-all';
-      })
-      .filter((el) => [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim()))
-      .flatMap((el) => {
-        const s = getComputedStyle(el);
-        const room = el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
-        probe.style.font = s.font;
-        probe.style.letterSpacing = s.letterSpacing;
-        probe.style.textTransform = s.textTransform;
-        return (el.textContent ?? '')
-          .split(/\s+/)
-          .filter((word) => {
-            probe.textContent = word;
-            return word && probe.getBoundingClientRect().width > room + 0.5;
-          })
-          .map((word) => `${name(el)}: "${word}" in ${Math.round(room)} px`);
-      });
-    probe.remove();
+    // a word whose letters sit on two lines – exact, from the line boxes of the word itself (no font measuring); only
+    // where CSS allows breaking inside a word: overflow-wrap, word-break or hyphenation
+    const brokenWords: string[] = [];
+    const range = document.createRange();
+    for (const el of all) {
+      const s = getComputedStyle(el);
+      if (!/break-word|anywhere/.test(s.overflowWrap) && s.wordBreak !== 'break-all' && s.hyphens !== 'auto') continue;
+      for (const node of el.childNodes) {
+        if (node.nodeType !== Node.TEXT_NODE) continue;
+        for (const match of node.textContent!.matchAll(/\S{2,}/g)) {
+          range.setStart(node, match.index);
+          range.setEnd(node, match.index + match[0].length);
+          const tops = new Set([...range.getClientRects()].map((r) => Math.round(r.top)));
+          if (tops.size > 1) brokenWords.push(`${name(el)}: "${match[0]}"`);
+        }
+      }
+    }
 
     return { sideways, sticking, misaligned, clipped, stretched, small, tiny, brokenWords };
   }, aligned);
