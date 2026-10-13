@@ -31,6 +31,10 @@ tools/screenshots/node_modules/
 tools/a11y/out/
 tools/a11y/node_modules/
 tools/youtube/out/
+tools/e2e/out/
+tools/e2e/node_modules/
+tools/qa/out/
+tools/qa/node_modules/
 
 # Database backups (worker)
 backups/
