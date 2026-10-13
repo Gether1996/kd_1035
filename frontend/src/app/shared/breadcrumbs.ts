@@ -48,6 +48,10 @@ import { Icon } from './icon';
     }
 
     a {
+      // a 24 px tall target for a finger (WCAG 2.5.8) without moving the line; 3 px each way still leaves the 6 px
+      // gap between two wrapped lines free
+      padding-block: 3px;
+      margin-block: -3px;
       color: var(--text-dim);
       transition: color 0.2s;
 
