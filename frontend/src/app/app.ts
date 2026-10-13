@@ -74,12 +74,17 @@ export class App {
         const anchor = e.urlAfterRedirects.includes('#');
         // the first navigation is the prerendered page itself – a visitor may have scrolled before the app started
         if (changed && !popstate && !anchor && e.id > 1) scroller.scrollToPosition([0, 0], { behavior: 'instant' });
+        // a shared link straight to a section (/#alliance): the browser jumps there in the prerendered page and the
+        // router sends no Scroll event for the first navigation, so the next events loading above it pushed it away
+        const fragment = router.parseUrl(e.urlAfterRedirects).fragment;
+        if (e.id === 1 && fragment) restoring = follow(scroller, doc, fragment);
       } else if (e instanceof Scroll && popstate) {
         // the router saved the position when the visitor left the page; after a reload it has none
-        if (e.position) restoring = restore(scroller, e.position);
+        if (e.position) restoring = restore(scroller, doc, e.position);
         else if (changed && !e.anchor) scroller.scrollToPosition([0, 0], { behavior: 'instant' });
       } else if (e instanceof Scroll && e.anchor) {
         // a section link (/#alliance): sections above it that load from the API afterwards would push it away
+        restoring?.abort();
         restoring = follow(scroller, doc, e.anchor);
       }
     });
@@ -98,9 +103,11 @@ export class App {
 
 /**
  * Scrolls to `position` once the page is tall enough for it – a guide's content arrives from the API a moment after
- * the page is shown. Gives up after 2 s, or as soon as the visitor scrolls or clicks.
+ * the page is shown – and keeps it there while the page still grows: content loading above it (the home page's next
+ * events) made the browser's scroll anchoring keep the wrong part in view (forward to /#alliance landed a whole
+ * section below it). Gives up after 2 s, or as soon as the visitor scrolls or clicks.
  */
-function restore(scroller: ViewportScroller, [x, y]: [number, number]): AbortController {
+function restore(scroller: ViewportScroller, doc: Document, [x, y]: [number, number]): AbortController {
   const restoring = new AbortController();
   const until = performance.now() + 2000;
   for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
@@ -109,9 +116,19 @@ function restore(scroller: ViewportScroller, [x, y]: [number, number]): AbortCon
   const step = () => {
     if (restoring.signal.aborted) return;
     scroller.scrollToPosition([x, y], { behavior: 'instant' });
-    if (Math.abs(scrollY - y) < 1 || performance.now() > until) restoring.abort();
-    else requestAnimationFrame(step);
+    if (performance.now() > until) restoring.abort();
+    else if (Math.abs(scrollY - y) >= 1) requestAnimationFrame(step);
   };
+  const main = doc.querySelector('main');
+  if (main && typeof ResizeObserver !== 'undefined') {
+    const observer = new ResizeObserver(step);
+    observer.observe(main);
+    const timer = setTimeout(() => restoring.abort(), 2000);
+    restoring.signal.addEventListener('abort', () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    });
+  }
   step();
   return restoring;
 }
