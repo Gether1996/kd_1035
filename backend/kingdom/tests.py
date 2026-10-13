@@ -1027,7 +1027,7 @@ class EventTemplateTests(TestCase):
         self.assertEqual((am.irregular, am.time_basis, am.duration_minutes), (True, 'utc', 7 * 24 * 60))
         self.assertEqual((am.reminders, am.player_reminders), ([EVENING_BEFORE], [EVENING_BEFORE, 180]))
         karuak = KingdomEvent.objects.get(name_sk='Karuak Ceremony')
-        self.assertEqual((karuak.irregular, karuak.duration_minutes, karuak.icon), (True, 3 * 24 * 60, 'karuak'))
+        self.assertEqual((karuak.irregular, karuak.duration_minutes, karuak.icon), (True, 4 * 24 * 60, 'karuak'))
         self.assertEqual(karuak.reminders, [EVENING_BEFORE])
         # every template with game art gets its icon, and the icon file exists
         self.assertEqual(KingdomEvent.objects.get(name_sk='Karuak Boss').icon, 'karuak')
@@ -1180,6 +1180,35 @@ class EventTemplateTests(TestCase):
         self.assertEqual((karuak.irregular, karuak.time_basis, karuak.icon), (True, 'utc', 'ceroli'))
         self.assertEqual((karuak.reminders, karuak.player_reminders), ([EVENING_BEFORE], [EVENING_BEFORE, 180]))
         karuak.full_clean()
+
+    def test_karuak_ceremony_runs_four_days(self):
+        from importlib import import_module
+
+        from django.apps import apps
+
+        four_days = import_module('kingdom.migrations.0017_karuak_ceremony_four_days').four_days
+        karuak = KingdomEvent.objects.create(
+            name_sk='Karuak Ceremony', starts_at=utc(2026, 10, 14), duration_minutes=3 * 24 * 60, irregular=True
+        )
+        pending = EventNotification.objects.create(
+            title='x', send_at=utc(2026, 10, 13, 16), event=karuak, occurrence_start=utc(2026, 10, 14), offset_minutes=-1080
+        )
+        sent = EventNotification.objects.create(
+            title='y', send_at=utc(2026, 10, 12), status=EventNotification.Status.SENT, event=karuak
+        )
+        # a Karuak Ceremony moved by hand in the admin stays as it is
+        moved = KingdomEvent.objects.create(
+            name_sk='Karuak Ceremony', starts_at=utc(2026, 11, 4), duration_minutes=3 * 24 * 60, irregular=True
+        )
+        four_days(apps, None)
+        four_days(apps, None)
+        karuak.refresh_from_db()
+        self.assertEqual(karuak.duration_minutes, 4 * 24 * 60)
+        self.assertEqual(list(events.overlapping(karuak, utc(2026, 10, 17, 23), utc(2026, 10, 18))), [utc(2026, 10, 14)])
+        self.assertFalse(EventNotification.objects.filter(pk=pending.pk).exists())
+        self.assertTrue(EventNotification.objects.filter(pk=sent.pk).exists())
+        moved.refresh_from_db()
+        self.assertEqual(moved.duration_minutes, 3 * 24 * 60)
 
     def test_irregular_event_has_no_cycle(self):
         event = KingdomEvent(name_sk='Silk Road', starts_at=utc(2026, 10, 9, 18), repeat_days=7, irregular=True)
