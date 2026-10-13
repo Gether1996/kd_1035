@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/tools/qa/chrome-devtools-mcp.mjs"]
+    }
+  }
+}

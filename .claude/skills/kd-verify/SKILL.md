@@ -18,6 +18,14 @@ tools/test.sh frontend --include src/app/pages/calendar
 - No bind mount, so it works while Docker Desktop fails on the dev mount. Needs the dev images (`docker compose -f docker-compose.dev.yml up --build` once). After a change in `frontend/package.json` start the dev frontend once so `npm install` fills the `node_modules` volume.
 - Changed a model? Also `docker compose -f docker-compose.dev.yml exec -T backend python manage.py makemigrations --check --dry-run`.
 
+## 1b. End-to-end and layout suite (pages, routing, layout, header, dialogs)
+
+```bash
+tools/e2e/run.sh --grep "@smoke|@layout|@journey"   # every page SK + CZ on 7 devices (320 px … 2560 px, iPhone WebKit), ~5 min
+tools/e2e/run.sh --project phone --grep @layout     # while iterating; --player adds the signed-in pages
+```
+Ends with `summary.mjs`: failures (console errors, sideways scroll with the culprit, rows off their centre line, cut-off text, stretched images, broken journeys) and grouped warnings (tap targets, tiny text). CI runs the same suite on every PR (docs/qa.md). A fixed layout bug gets a check here (`tests/pages.ts`, `ALIGNED` in `tests/layout.ts`, `tests/journeys.spec.ts`).
+
 ## 2. Screenshots (visual changes)
 
 The dev stack must run (`docker compose -f docker-compose.dev.yml up -d`, site on :4200). Images go to `tools/screenshots/out/` (git-ignored); all variables are described at the top of `tools/screenshots/shoot.mjs`.
