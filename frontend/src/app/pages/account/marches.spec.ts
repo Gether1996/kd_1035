@@ -147,6 +147,14 @@ describe('Marches', () => {
     // no headings (as little text as possible) – the columns are named for screen readers; the full "Cav ATK" in the title
     expect(el.querySelector('.mb__label')).toBeNull();
     expect(Array.from(el.querySelectorAll('.mb__part'), (p) => p.getAttribute('aria-label'))).toEqual(['Výbava', 'Armamenty']);
+    // compact: no bonuses in % until "Detail" (Gether 13. 10. 2026)
+    expect(el.querySelector('.mb__stats')).toBeNull();
+    const detail = el.querySelector<HTMLButtonElement>('.mb__detail')!;
+    expect([detail.textContent?.trim(), detail.getAttribute('aria-expanded')]).toEqual(['Detail', 'false']);
+    detail.click();
+    await settle(fixture);
+    expect([detail.textContent?.trim(), detail.getAttribute('aria-expanded')]).toEqual(['Skryť detail', 'true']);
+    expect(el.querySelector('app-march-build')?.classList).toContain('is-detail');
     const stats = Array.from(el.querySelectorAll<HTMLElement>('.mb__part:last-child .mb__stats li'));
     expect(stats.map((s) => s.title)).toEqual(['Cav ATK', 'Cav DEF', 'Cav HP', 'All DMG']);
     // a decimal comma

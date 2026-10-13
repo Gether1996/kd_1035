@@ -423,6 +423,9 @@ export const sk = {
     },
     // the build clicked together on /marche (core/armory.ts; Gether 12. 10. 2026); game terms stay English
     build: {
+      // the bonuses in % and set bonuses of a march card (Gether 13. 10. 2026)
+      detail: 'Detail',
+      detailHide: 'Skryť detail',
       title: 'Výbava a armamenty',
       open: 'Výbava a armamenty',
       edit: 'Naklikať výbavu',

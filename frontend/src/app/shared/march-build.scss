@@ -120,9 +120,10 @@
   display: grid;
   gap: 18px;
 
-  // side by side from 360 px of card width: the equipment and a narrow column of armaments as tall as it
+  // side by side from 360 px of card width: the equipment and a narrow column of armaments as tall as it; compact
+  // (without "Detail") the equipment is a quarter smaller (Gether 13. 10. 2026)
   @container (min-width: 360px) {
-    grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
+    grid-template-columns: minmax(128px, 158px) minmax(0, 1fr);
     gap: 18px;
   }
 
@@ -138,15 +139,15 @@
   gap: 10px;
   min-width: 0;
 
-  // stacked on a phone: the equipment a bit smaller, in the middle (Gether 12. 10. 2026)
+  // stacked on a phone: the equipment a bit smaller, in the middle (Gether 12. 10. 2026); compact a quarter smaller
   app-gear-grid {
     justify-self: center;
     width: 100%;
-    max-width: 190px;
+    max-width: 143px;
 
     @container (min-width: 360px) {
       justify-self: start;
-      max-width: 210px;
+      max-width: 158px;
     }
   }
 
@@ -154,6 +155,69 @@
     @container (min-width: 360px) {
       padding-left: 18px;
       border-left: 1px solid var(--line);
+    }
+  }
+}
+
+// "Detail": the full-size equipment with every bonus
+:host(.is-detail) {
+  .mb__body {
+    @container (min-width: 360px) {
+      grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
+    }
+
+    &:has(> :only-child) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .mb__part app-gear-grid {
+    max-width: 190px;
+
+    @container (min-width: 360px) {
+      max-width: 210px;
+    }
+  }
+}
+
+// a small quiet toggle under the armaments
+.mb__detail {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 4px;
+  min-height: 32px;
+  margin-top: 2px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-dim);
+  font: 600 0.8125rem/1 var(--font-body);
+  cursor: pointer;
+  transition:
+    border-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out);
+
+  &:hover {
+    border-color: var(--line-strong);
+    color: var(--gold-100);
+  }
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s var(--ease-out);
+
+    &.is-open {
+      transform: rotate(180deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    .icon {
+      transition: none;
     }
   }
 }

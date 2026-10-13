@@ -264,6 +264,8 @@ describe('KvkSignups', () => {
     expect(el.querySelector('.signup__contact')?.getAttribute('href')).toBe('https://discord.com/users/42');
     // the profile marches as cards, the bonuses of their troop type in the title
     expect(el.querySelector('.mini-marches .mb__primary')?.textContent?.trim()).toBe('Attila');
+    el.querySelector<HTMLButtonElement>('.mini-marches .mb__detail')!.click();
+    await flushAll(fixture);
     expect(el.querySelector('.mini-marches .mb__stats li')?.getAttribute('title')).toBe('Cav ATK');
 
     // the troops filter, combined with the role
@@ -286,6 +288,8 @@ describe('KvkSignups', () => {
     expect(troops().map((b) => b.textContent?.replace(/\s+/g, ' ').trim())[3]).toBe('Lukostrelci · 1');
 
     // the sign-up is the card of a march: troops, commanders, the bonuses of its troops (no screenshots)
+    el.querySelector<HTMLButtonElement>('.signup__army .mb__detail')!.click();
+    await flushAll(fixture);
     expect(el.querySelector('.signup__army .mb__kind')?.getAttribute('alt')).toBe('Lukostrelci');
     expect(el.querySelector('.signup__army .mb__stats li')?.getAttribute('title')).toBe('Arch ATK');
     expect(el.querySelector('.signup__army .mb__stats li')?.textContent).toContain('8%');

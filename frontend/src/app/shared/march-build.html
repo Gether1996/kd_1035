@@ -43,14 +43,16 @@
       @if (index(); as ix) {
         <!-- the own march: a tile opens the editor on its slot -->
         <app-gear-grid [gear]="build().gear" [index]="ix" [pickable]="own()" [critTroop]="critTroop()" (pick)="slotPick.emit($event)" />
-        @if (gearStats(); as g) {
-          <ul class="mb__stats" [attr.aria-label]="g.title" [title]="g.title">
-            @for (s of g.values; track s.stat) {
-              <li><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
-            }
-          </ul>
+        @if (detail()) {
+          @if (gearStats(); as g) {
+            <ul class="mb__stats" [attr.aria-label]="g.title" [title]="g.title">
+              @for (s of g.values; track s.stat) {
+                <li><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
+              }
+            </ul>
+          }
+          <app-set-bonuses [worn]="worn()" />
         }
-        <app-set-bonuses [worn]="worn()" />
       } @else if (failed()) {
         <p class="mb__note">{{ b.loadError }}</p>
       } @else {
@@ -89,10 +91,12 @@
       } @else {
         <p class="mb__missing">{{ k.statsMissing }}</p>
       }
-    } @else if (armamentStats().length || counts().length) {
+    } @else if ((detail() && armamentStats().length) || counts().length) {
       <ul class="mb__stats" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
-        @for (s of armamentStats(); track s.key) {
-          <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
+        @if (detail()) {
+          @for (s of armamentStats(); track s.key) {
+            <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
+          }
         }
         @if (counts().length) {
           <!-- the dots stay together on one line -->
@@ -105,6 +109,13 @@
           </li>
         }
       </ul>
+    }
+    @if (hasDetail()) {
+      <!-- the bonuses in % and the set bonuses, with the full-size equipment (Gether 13. 10. 2026) -->
+      <button type="button" class="mb__detail" [attr.aria-expanded]="detail()" (click)="detail.set(!detail())">
+        {{ detail() ? b.detailHide : b.detail }}
+        <svg appIcon="chevron-down" [class.is-open]="detail()"></svg>
+      </button>
     }
   </section>
 </div>

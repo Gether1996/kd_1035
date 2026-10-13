@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **13. 10. 2026 – v1.24.9:** karty marchov sú kompaktné – menšia výbava, bez bonusov v % a setových bonusov; tlačidlo Detail ukáže všetko v plnej veľkosti.
 - **13. 10. 2026 – v1.24.8:** vo výbere commandera je za skupinou Meta · <typ> vlastná skupina ostatných commanderov toho typu (napr. Jazda), až potom Leadership a Ostatní.
 - **13. 10. 2026 – v1.24.7:** sekcia Hráči na `/ucet` má zoradenie (meno, najnovší, naposledy prihlásení, počet marchov) a filtre marchov a KvK prihlášok, pri hráčovi čas registrácie, posledné prihlásenie, počet marchov a KvK; uložená zlatá výbava bez iconic dostala iconic I.
 - **13. 10. 2026 – v1.24.6:** nový march (aj KvK prihláška) začína povinným výberom typu; pri pechote, jazde, lukostrelcoch a siege sú v okne commanderov najprv meta commanderi daného typu (poradie z návodu párov), potom leadership a potom ostatní; nový zlatý predmet má predvolene iconic I.

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import {
   ArmoryApi,
   GearSlot,
@@ -35,6 +35,7 @@ let nextId = 0;
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.is-detail]': 'detail()' },
 })
 export class MarchBuild {
   readonly march = input.required<March>();
@@ -50,6 +51,11 @@ export class MarchBuild {
   /** "Doplň bonusy armamentov" of the own march: the editor opens on its Armamenty tab */
   readonly armamentsPick = output<void>();
   protected readonly id = `march-build-${++nextId}`;
+  /**
+   * Compact by default (Gether 13. 10. 2026: "šetriť miesto, pokiaľ niekoho nezaujímajú detaily %"): a smaller
+   * equipment, no bonuses in % and no set bonuses – "Detail" shows them with the full-size equipment.
+   */
+  protected readonly detail = signal(false);
 
   private readonly armory = inject(ArmoryApi);
   protected readonly i18n = inject(I18n);
@@ -137,6 +143,11 @@ export class MarchBuild {
     if (this.inscriptions().length) return [];
     return INSCRIPTIONS.filter((key) => (march[key] ?? 0) > 0).map((key) => ({ key, value: march[key]! }));
   });
+
+  /** something the compact card hides: a bonus of the equipment or the armaments, a set bonus */
+  protected readonly hasDetail = computed(
+    () => !!this.gearStats() || this.worn().length > 0 || (!this.statsMissing() && this.armamentStats().length > 0),
+  );
 
   constructor() {
     this.armory.load();
