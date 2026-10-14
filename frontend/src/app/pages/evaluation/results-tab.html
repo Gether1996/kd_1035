@@ -205,7 +205,7 @@
                   <p class="ev-detail__line">{{ missingText(r) }}</p>
                 }
                 @if (limitText(r); as limit) {
-                  <p class="ev-detail__line" [class.is-over]="r.excess > 0">{{ limit }}</p>
+                  <p class="ev-detail__line" [class.is-over]="over(r)">{{ limit }}</p>
                 }
                 @if (progressText(r); as progress) {
                   <p class="ev-detail__line">{{ progress }}</p>

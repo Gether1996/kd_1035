@@ -317,7 +317,7 @@ export const sk = {
       evaluation_settings: {
         short: 'Vyh. nastavenia',
         label: 'Nastavenia vyhodnocovania – premenné a páry commanderov',
-        tip: 'Nastavenia vyhodnocovania: mení premenné výpočtu a tabuľku párov commanderov – platí pre všetkých.',
+        tip: 'Nastavenia vyhodnocovania: mení premenné výpočtu, páry a formácie commanderov (platí pre všetkých) a vidí pri tom marche a skóre schválených hráčov.',
       },
     },
     superuser: 'superadmin',

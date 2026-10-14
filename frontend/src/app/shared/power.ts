@@ -1,7 +1,8 @@
 /** Power as typed: "42.5" or "42,5" = millions, a big number ("42 500 000", "42,500,000", "42.500.000") = the power
  * itself. The migration calculator on /o-nas and the player's power on /ucet. */
 export function parsePower(text: string): number | null {
-  const plain = text.replace(/[\s ]/g, '');
+  // "101,5 M" or "101.5 mil." like in the bulk paste of the evaluation
+  const plain = text.replace(/[\s ]/g, '').replace(/(m|mil\.?)$/i, '');
   // thousands separators as the game shows them – two or more groups of three digits
   const grouped = /^\d{1,3}([.,])\d{3}(\1\d{3})+$/.test(plain);
   const clean = grouped ? plain.replace(/[.,]/g, '') : plain.replace(',', '.');

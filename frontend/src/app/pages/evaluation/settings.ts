@@ -409,7 +409,7 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
     formations: {
       byCommander: Object.fromEntries(
         Object.entries(obj(formationMap))
-          .map(([name, ids]) => [name.trim(), Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string' && !!id) : []] as const)
+          .map(([name, ids]) => [name.trim(), Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string' && !!id).slice(0, 2) : []] as const)
           .filter(([name, ids]) => !!name && ids.length > 0)
           .sort(([a], [b]) => a.localeCompare(b)),
       ),

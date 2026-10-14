@@ -310,7 +310,7 @@ export const cs: Dict = {
       evaluation_settings: {
         short: 'Vyh. nastavení',
         label: 'Nastavení vyhodnocování – proměnné a páry commanderů',
-        tip: 'Nastavení vyhodnocování: mění proměnné výpočtu a tabulku párů commanderů – platí pro všechny.',
+        tip: 'Nastavení vyhodnocování: mění proměnné výpočtu, páry a formace commanderů (platí pro všechny) a vidí přitom marche a skóre schválených hráčů.',
       },
     },
     superuser: 'superadmin',

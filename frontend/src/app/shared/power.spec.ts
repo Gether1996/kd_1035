@@ -17,6 +17,8 @@ describe('power', () => {
     expect(powerMillions('101 549 999')).toBe(101.5);
     expect(powerMillions('101,500,000')).toBe(101.5);
     expect(powerMillions(' 98.46 ')).toBe(98.5);
+    expect(powerMillions('101,5 M')).toBe(101.5);
+    expect(powerMillions('101.5mil.')).toBe(101.5);
     expect(powerMillions('')).toBeNull();
     expect(powerMillions('   ')).toBeNull();
     for (const bad of ['abc', '0', '-5', '10000']) expect(powerMillions(bad), bad).toBeUndefined();

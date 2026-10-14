@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.28.6:** Drobnosti z druhej kontroly: power na Môj účet berie aj „101,5 M“, riadok o power navyše v detaile hráča je červený podľa toho istého ako stĺpec Odp. power, vysvetlivka prepínača Vyh. nastavenia hovorí, čo vidí, najviac 2 formácie na commandera aj v databáze.
 - **14. 10. 2026 – v1.28.5:** Opravy po kontrole kritika: hráč iba s „Vyh. nastavenia“ už nedostane power, acclaim ani T4 hráčov, pokazený zoznam typov v premenných nezhodí marche, formácie sa ukladajú nad verziou (zmena z adminu sa neprepíše), zápis profilu má limit požiadaviek, nadpisy sekcií Premenných sú priamo v rozklikávacom riadku (čítačky obrazovky).
 - **14. 10. 2026 – v1.28.4:** V Marche hráčov svieti nesprávny pár alebo formácia aj pri zatvorenom hráčovi – červený okraj, „Na opravu: N“ a červený rámik pri portréte (superadmin a hráč pri svojich).
 - **14. 10. 2026 – v1.28.3:** March vo formácii, ktorú jeho primárny commander nemá viesť, má v marchoch červený okraj a vetu s odporúčanou formáciou – vidí to iba hráč a superadmin.

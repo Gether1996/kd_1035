@@ -562,6 +562,17 @@ class OwnPowerTests(TestCase):
         self.patch({'ingame_name': 'Gether'})
         self.assertEqual(PlayerEvaluation.objects.get(player=self.player).power, Decimal('85'))
 
+    def test_writes_are_throttled_per_player(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        self.addCleanup(cache.clear)
+        statuses = [self.patch({'power': 90}).status_code for _ in range(61)]
+        self.assertEqual(statuses[:60], [200] * 60)
+        self.assertEqual(statuses[60], 429)
+        # reading is not limited
+        self.assertEqual(self.client.get('/api/auth/me/').status_code, 200)
+
     def test_refuses_a_power_out_of_range(self):
         for bad in [-1, 10_000, 101.55, 'abc']:
             with self.subTest(bad=bad):
