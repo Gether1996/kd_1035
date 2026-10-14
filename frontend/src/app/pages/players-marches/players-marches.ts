@@ -14,6 +14,7 @@ import {
   untracked,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { MarchNotices } from '../../shared/march-notices';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
@@ -40,7 +41,7 @@ type Sort = 'updated' | 'count' | 'name';
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [Icon, PageHeader, Marches, MarchBuild, PendingApproval, CommanderFilter],
+  imports: [Icon, PageHeader, Marches, MarchBuild, PendingApproval, CommanderFilter, MarchNotices],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

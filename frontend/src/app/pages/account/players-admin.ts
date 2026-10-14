@@ -3,6 +3,7 @@ import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { KvkApi, PlayerFlag, ReviewerRow } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
+import { MarchNotices } from '../../shared/march-notices';
 import { EvalTip } from '../evaluation/tip';
 
 type RoleFilter = 'all' | 'r4' | 'others';
@@ -23,7 +24,7 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
  */
 @Component({
   selector: 'app-players-admin',
-  imports: [EvalTip],
+  imports: [EvalTip, MarchNotices],
   template: `
     @let k = t();
     <section class="panel" aria-labelledby="players-title">
@@ -48,6 +49,8 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
             (change)="setAuto(auto)"
           />
         </label>
+        <!-- a Discord DM to the players with a wrong pair or formation (Gether 14. 10. 2026) -->
+        <div class="players-notices"><app-march-notices /></div>
       }
       <div class="players-bar">
         <div class="field reviewers__search">

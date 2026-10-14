@@ -14,9 +14,9 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
-from . import private_images
+from . import discord_bot, notices, private_images
 from .army import BuildSerializer, current_of
-from .kvk_views import march_data
+from .kvk_views import IsSuperuser, march_data
 from .models import APPROVED, MAX_MARCHES, March, Player
 from .pair_check import counting, evaluation_marches, march_checker
 from .reminder_views import IsPlayer, WriteThrottle, iso
@@ -190,3 +190,24 @@ def players_marches(request):
         key=lambda p: (p['ingame_name'] or p['name']).casefold(),
     )
     return Response({'players': rows, 'reviewer': reviewer})
+
+
+@never_cache
+@api_view(['GET', 'POST'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def march_notices(request):
+    """The superadmin's Discord DMs about wrong pairs and formations (Gether 14. 10. 2026, accounts/notices.py).
+    GET: {bot, players: [the preview]}. POST {players: [id, …]}: queues them for the worker → {queued}."""
+    if request.method == 'GET':
+        return Response({'bot': discord_bot.enabled(), 'players': notices.preview()})
+    if not discord_bot.enabled():
+        return Response({'detail': 'bot'}, status=400)
+    ids = request.data.get('players') if isinstance(request.data, dict) else None
+    if (
+        not isinstance(ids, list)
+        or not 1 <= len(ids) <= notices.MAX_PLAYERS
+        or any(type(i) is not int for i in ids)
+    ):
+        return Response({'players': 'list'}, status=400)
+    return Response({'queued': notices.queue(ids, request.user)})

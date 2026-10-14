@@ -288,6 +288,24 @@ export const sk = {
       noKind: 'Bez typu jednotiek',
     },
   },
+  // the superadmin's Discord notices about wrong pairs and formations in the players' marches (Gether 14. 10. 2026)
+  marchNotices: {
+    open: 'Upozorniť hráčov na chyby',
+    title: 'Upozornenie na chyby v marchoch',
+    lead: 'Hráči s nesprávnym párom alebo formáciou a správa, ktorú im bot pošle na Discord. Odškrtni, komu ju poslať nechceš.',
+    close: 'Zavrieť',
+    loading: 'Načítavam…',
+    loadError: 'Zoznam sa nepodarilo načítať. Skús to znova.',
+    noBot: 'Bot nie je nastavený (DISCORD_BOT_TOKEN), správy sa teraz poslať nedajú.',
+    none: 'Nikto nemá v marchoch chybu.',
+    marches: ['{n} march na opravu', '{n} marche na opravu', '{n} marchov na opravu'],
+    muted: 'správy od bota vypnuté',
+    told: 'už upozornený {date}',
+    state: { pending: 'čaká na odoslanie', sent: 'odoslané', failed: 'neodoslané', skipped: 'medzitým opravené' },
+    send: 'Odoslať ({n})',
+    queued: 'Zaradené: {n}. Bot ich pošle v najbližších minútach.',
+    failed: 'Nepodarilo sa odoslať. Skús to znova.',
+  },
   players: {
     title: 'Hráči',
     lead: 'Nového hráča schváľ – až potom pridá marche a prihlášku na KvK a uvidí marche ostatných. R4 vidí všetky prihlášky aj marche.',
@@ -887,6 +905,7 @@ export const sk = {
         list: [
           'Vybrané eventy, časy pripomienok, jazyk správ a či ich chceš dostávať na Discorde.',
           'Záznam odoslaných pripomienok na 30 dní, aby žiadna neprišla dvakrát.',
+          'Ak máš v marchoch nesprávny pár alebo formáciu, správca ti môže cez bota poslať súkromnú správu s tým, čo opraviť (len keď máš správy od bota zapnuté). Text správy, kto ju poslal a kedy si pamätáme 30 dní.',
           'Budíky – tvoj text, čas a kedy ti má bot napísať.',
         ],
       },

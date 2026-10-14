@@ -11,6 +11,7 @@ from django.utils import timezone
 from accounts.alarms import prune_alarms, send_alarms
 from accounts.cleanup import sweep_files
 from accounts.newcomers import announce_new_players
+from accounts.notices import send_march_notices
 from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
 from kingdom.backups import backup_due, create_backup
 from kingdom.discord import send_due
@@ -71,6 +72,14 @@ class Command(BaseCommand):
                 pass
             except Exception:
                 log.exception('Announcing new players failed')
+
+            try:
+                # the superadmin's notices about wrong pairs and formations in the players' marches
+                send_march_notices(timezone.now())
+            except DiscordPaused:
+                pass
+            except Exception:
+                log.exception('Sending march notices failed')
 
             if time.monotonic() >= next_backup_check:
                 next_backup_check = time.monotonic() + BACKUP_CHECK_SECONDS

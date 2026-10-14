@@ -74,6 +74,10 @@
           <svg appIcon="chevron-down" [class.is-up]="allOpen()"></svg>{{ allOpen() ? p.collapseAll : p.expandAll }}
         </button>
       }
+      <!-- the superadmin: a Discord DM to the players with a wrong pair or formation (Gether 14. 10. 2026) -->
+      @if (auth.user()?.is_superuser) {
+        <app-march-notices />
+      }
     </div>
 
     @if (!players().length) {

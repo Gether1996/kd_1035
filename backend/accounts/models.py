@@ -440,3 +440,38 @@ class PlayerEvaluation(models.Model):
 
     def __str__(self):
         return f'{self.player} · vyhodnocovanie'
+
+
+class MarchNotice(models.Model):
+    """A Discord DM from the bot telling a player which of their marches the KvK evaluation does not like – a wrong
+    commander pair or formation, what /marche shows them in red (Gether 14. 10. 2026: "hromadné odoslanie discord
+    správy"). The superadmin queues it from a preview, the worker sends it (accounts/notices.py). Kept 30 days, the
+    privacy page says so; gone with the account."""
+
+    class State(models.TextChoices):
+        PENDING = 'pending', 'čaká'
+        SENT = 'sent', 'odoslané'
+        FAILED = 'failed', 'neodoslané'
+        # the marches were fixed before it went out
+        SKIPPED = 'skipped', 'netreba'
+
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='march_notices', verbose_name='hráč')
+    # what was wrong when it was queued (and sent) – the same problems are not told twice
+    fingerprint = models.CharField('chyby', max_length=40)
+    text = models.TextField('správa', blank=True)
+    state = models.CharField('stav', max_length=8, choices=State.choices, default=State.PENDING)
+    error = models.CharField('chyba', max_length=200, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+', verbose_name='od'
+    )
+    created_at = models.DateTimeField('zaradené', auto_now_add=True)
+    claimed_at = models.DateTimeField('posiela sa od', null=True, blank=True)
+    sent_at = models.DateTimeField('odoslané', null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'upozornenie na marche'
+        verbose_name_plural = 'upozornenia na marche'
+
+    def __str__(self):
+        return f'{self.player} · {self.get_state_display()}'

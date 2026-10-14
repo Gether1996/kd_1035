@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import Alarm, EventReminder, KvkSettings, KvkSignup, Player, PlayerSettings, SentReminder
+from .models import Alarm, EventReminder, KvkSettings, KvkSignup, MarchNotice, Player, PlayerSettings, SentReminder
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -94,6 +94,27 @@ class SentReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     @admin.display(description='hráč', ordering='player__global_name')
     def player_name(self, obj):
         return obj.player.ingame_name or obj.player.name
+
+@admin.register(MarchNotice)
+class MarchNoticeAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """The notices about wrong pairs and formations sent from the preview on /ucet or /marche (30 days)."""
+
+    list_display = ['created_at', 'player_name', 'state', 'sent_at', 'error']
+    list_filter = ['state']
+    list_select_related = ['player']
+    search_fields = ['player__username', 'player__global_name', 'player__ingame_name']
+    readonly_fields = ['player', 'fingerprint', 'text', 'state', 'error', 'created_by', 'created_at', 'claimed_at', 'sent_at']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='hráč', ordering='player__global_name')
+    def player_name(self, obj):
+        return obj.player.ingame_name or obj.player.name
+
 
 admin.site.unregister(User)
 

@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.30.0:** Superadmin pošle hráčom s nesprávnym párom alebo formáciou správu od bota na Discord – náhľad so zoznamom a presným textom (čo je zle a čo zmeniť, bez bodov), odkaz rovno na Prehľad marchov, bez opakovania rovnakých chýb; tlačidlo v sekcii Hráči na Môj účet a na Marche hráčov.
 - **14. 10. 2026 – v1.29.3:** Neuložené Premenné vo Vyhodnocovaní sa nestratia – pri odchode z/zatvorení stránky sa web (prehliadač) opýta; záložka Premenné má vlastnú adresu `/vyhodnocovanie?tab=premenne`.
 - **14. 10. 2026 – v1.29.2:** Súhrn „Na opravu pre vyhodnocovanie KvK: N“ nad vlastnými marchmi (klik prejde na prvý taký march) a červené číslo pri skratke Moje marche na Môj účet.
 - **14. 10. 2026 – v1.29.1:** Upozornenie na nesprávny pár marchu povie, keď sa hodnotí opačné poradie commanderov („Hodnotí sa opačné poradie: Ivan IV + Achilles.“).

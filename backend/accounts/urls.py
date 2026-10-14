@@ -25,6 +25,7 @@ urlpatterns = [
     path('me/marches/order/', march_views.march_order),
     path('me/marches/<int:march_id>/', march_views.march),
     path('marches/', march_views.players_marches),
+    path('marches/notices/', march_views.march_notices),
     path('evaluation/', evaluation_views.evaluation),
     path('evaluation/settings/', evaluation_views.evaluation_settings),
     path('evaluation/players/', evaluation_views.evaluation_players),
