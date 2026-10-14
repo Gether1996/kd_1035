@@ -186,4 +186,3 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - **Poradie marchov (v1.29.0):** potvrdiť, že neschválený hráč / bez súhlasu s podmienkami smie meniť poradie svojich marchov, a že hráči vidia, koľko a akých marchov vyhodnocovanie počíta.
 - **Upozornenie na pár (v1.29.1):** smú hráči vidieť mená (nie body) až 3 hodnotených partnerov k primárnemu? Ak áno, `pair_hint.partners` ako PATCH.
 - **Vyhodnocovanie:** smú sa požiadavky na acclaim po hráčoch zverejniť (Discord kópia alebo /ucet – vybrať jedno)? Hranica zastaranej power (návrh 21 dní).
-- **Uvítacia správa (v1.32.0):** potvrdiť, že schválený hráč smie dostať jednu automatickú DM od bota; tag `v1.32.0` pushnúť, ak na GitHube chýba.
