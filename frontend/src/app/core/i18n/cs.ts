@@ -419,6 +419,8 @@ export const cs: Dict = {
     formationProblem: '{commander} má vést formaci {want}, ne {have} – ve vyhodnocování KvK se armamenty počítají méně.',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, co je u nich červené.',
+    // a pair or a formation the KvK evaluation does not like – a button to the first such march
+    problemsCount: 'K opravě pro vyhodnocování KvK: {n} – podívej se na červené věty u marchí.',
     choose: 'Vybrat',
     edit: 'Upravit',
     editMarch: 'Upravit typ a commandery',
@@ -968,6 +970,8 @@ export const cs: Dict = {
       title: 'Moje marche',
       text: 'Commandeři, výbava a armamenty tvých marchí.',
       link: 'Otevřít',
+      // after the count of marches the KvK evaluation does not like
+      issues: 'k opravě',
     },
     ingame: {
       label: 'Jméno ve hře',

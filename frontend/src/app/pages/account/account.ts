@@ -15,6 +15,8 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
+import { marchHasProblem } from '../../core/kvk-api';
+import { MarchesApi } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
@@ -42,6 +44,15 @@ export class Account {
   protected readonly i18n = inject(I18n);
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
+
+  /**
+   * "Moje marche 2 na opravu" – the own marches (browser only, once the player is known); a pair or a formation the KvK
+   * evaluation does not like. Nothing when the request fails.
+   */
+  private readonly ownMarches = inject(MarchesApi).list(() => !!this.auth.user());
+  protected readonly marchIssues = computed(() =>
+    this.ownMarches.hasValue() ? this.ownMarches.value().marches.filter(marchHasProblem).length : 0,
+  );
 
   /** first click on "delete" asks, the second one deletes */
   protected readonly confirming = signal(false);

@@ -227,6 +227,20 @@
   }
 }
 
+.shortcut__issues {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--red-500);
+  color: var(--text);
+  font: 700 0.8125rem/1 var(--font-body);
+  vertical-align: 2px;
+}
+
 .shortcut__go {
   display: inline-flex;
   align-items: center;

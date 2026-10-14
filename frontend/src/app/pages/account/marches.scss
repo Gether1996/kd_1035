@@ -107,6 +107,20 @@
   color: var(--text);
 }
 
+// "Na opravu pre vyhodnocovanie KvK: 2" – the whole line goes to the first red card
+.march-fix {
+  display: block;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.25s;
+
+  &:hover {
+    border-color: var(--red-500);
+  }
+}
+
 // the next march: a dashed row on a phone, an empty card as tall as the cards of its row on a wide screen
 .march--add {
   display: grid;
@@ -166,4 +180,9 @@
       height: 26px;
     }
   }
+}
+
+// "Na opravu…" scrolls a card under the sticky header
+.march app-march-build {
+  scroll-margin-top: calc(var(--header-h) + 16px);
 }

@@ -21,9 +21,17 @@
   @if (failed()) {
     <p class="panel__lead is-error">{{ m.loadError }}</p>
   } @else if (loaded()) {
-    @if (incomplete(); as n) {
-      <p class="march-hint march-hint--alert" role="status">{{ m.incompleteCount.replace('{n}', '' + n) }}</p>
-    }
+    <!-- one live region: what is missing, and what the KvK evaluation does not like (a button to the first such card) -->
+    <div class="march-alerts" role="status">
+      @if (incomplete(); as n) {
+        <p class="march-hint march-hint--alert">{{ m.incompleteCount.replace('{n}', '' + n) }}</p>
+      }
+      @if (toFix(); as n) {
+        <button type="button" class="march-hint march-hint--alert march-fix" (click)="showFirstProblem()">
+          {{ m.problemsCount.replace('{n}', '' + n) }}
+        </button>
+      }
+    </div>
     <!-- the evaluation counts the first X in this order (Premenné "Prvé v poradí hráča"); the arrows move a march -->
     @if (counted(); as text) {
       <p class="march-hint march-order">{{ text }}</p>

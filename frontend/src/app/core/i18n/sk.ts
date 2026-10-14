@@ -434,6 +434,8 @@ export const sk = {
     formationProblem: '{commander} má viesť formáciu {want}, nie {have} – vo vyhodnocovaní KvK sa armamenty počítajú menej.',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, čo je pri nich červené.',
+    // a pair or a formation the KvK evaluation does not like – a button to the first such march
+    problemsCount: 'Na opravu pre vyhodnocovanie KvK: {n} – pozri červené vety pri marchoch.',
     choose: 'Vybrať',
     edit: 'Upraviť',
     editMarch: 'Upraviť typ a commanderov',
@@ -985,6 +987,8 @@ export const sk = {
       title: 'Moje marche',
       text: 'Commanderi, výbava a armamenty tvojich marchov.',
       link: 'Otvoriť',
+      // after the count of marches the KvK evaluation does not like
+      issues: 'na opravu',
     },
     ingame: {
       label: 'Meno v hre',

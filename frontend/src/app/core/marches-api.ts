@@ -64,9 +64,9 @@ export class MarchesApi {
   private readonly http = inject(HttpClient);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  /** must run in an injection context */
-  list() {
-    return httpResource<OwnMarches>(() => (this.isBrowser ? '/api/me/marches/' : undefined));
+  /** must run in an injection context; `when` false = nothing is asked (/ucet before the player is known) */
+  list(when: () => boolean = () => true) {
+    return httpResource<OwnMarches>(() => (this.isBrowser && when() ? '/api/me/marches/' : undefined));
   }
 
   /** true = every signed-in player sees the marches, false = only R4 and the superuser */

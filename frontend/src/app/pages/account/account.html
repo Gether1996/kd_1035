@@ -153,7 +153,13 @@
       <a class="shortcut" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'prehlad' }">
         <span class="shortcut__icon"><svg appIcon="shield"></svg></span>
         <span class="shortcut__body">
-          <strong>{{ a.marches.title }}</strong>
+          <strong
+            >{{ a.marches.title }}
+            <!-- marches the KvK evaluation does not like (red on /marche) -->
+            @if (marchIssues(); as n) {
+              <span class="shortcut__issues">{{ n }}<span class="sr-only"> {{ a.marches.issues }}</span></span>
+            }
+          </strong>
           <small>{{ a.marches.text }}</small>
         </span>
         <span class="shortcut__go">{{ a.marches.link }}<svg appIcon="chevron-right"></svg></span>

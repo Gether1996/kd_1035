@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 import { emptyParts, hasBuild } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
-import { March, REQUIRED_STATS } from '../../core/kvk-api';
+import { March, REQUIRED_STATS, marchHasProblem } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { ArmyDraft, ArmyError, MarchFields, armyDraft, armyError } from '../../shared/march-fields';
@@ -96,6 +96,11 @@ export class Marches {
         return empty.gear || empty.armaments || REQUIRED_STATS.some((stat) => m[stat] == null);
       }).length,
   );
+  /**
+   * marches with a pair or a formation the KvK evaluation does not like – the red border alone is easy to scroll past
+   * with 8 marches
+   */
+  protected readonly toFix = computed(() => this.marches().filter(marchHasProblem).length);
   /** a new march can be added once nothing is being edited */
   protected readonly canAdd = computed(() => !this.draft() && this.marches().length < this.max());
 
@@ -231,6 +236,16 @@ export class Marches {
       { injector: this.injector },
     );
   }
+
+  /** "Na opravu pre vyhodnocovanie KvK: 2": the first such card comes into view and its first control gets the focus */
+  protected showFirstProblem(): void {
+    const card = this.host.nativeElement.querySelector<HTMLElement>('app-march-build.is-bad-pair');
+    if (!card) return;
+    card.scrollIntoView({ block: 'start', behavior: this.reducedMotion ? 'auto' : 'smooth' });
+    card.querySelector<HTMLElement>('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus({ preventScroll: true });
+  }
+
+  private readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /** "Odstrániť" in the editor of a saved march; the second click removes it */
   protected async removeDraft(): Promise<void> {

@@ -421,6 +421,48 @@ describe('Marches', () => {
     expect((best.nativeElement as HTMLElement).querySelector('.march-order')).toBeNull();
     again.verify();
   });
+
+  it('says how many marches the evaluation does not like and takes the player to the first one', async () => {
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    const http = setup();
+    const fixture = TestBed.createComponent(Marches);
+    fixture.detectChanges();
+    const marches: March[] = [
+      { ...MARCH, id: 1, position: 1, kind: 'cavalry', primary: 'Attila', secondary: 'Takeda Shingen' },
+      { ...MARCH, id: 2, position: 2, kind: 'cavalry', primary: 'Attila', secondary: '', pair_problem: 'solo' },
+      { ...MARCH, id: 3, position: 3, kind: 'cavalry', primary: 'Attila', secondary: 'Cao Cao', formation_problem: ['Wedge'] },
+    ];
+    http.expectOne('/api/me/marches/').flush({ marches, max: 10, public: false });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    // one live region for both lines
+    expect(el.querySelectorAll('[role="status"] .march-hint--alert').length).toBe(2);
+    const fix = el.querySelector<HTMLButtonElement>('button.march-fix')!;
+    expect(fix.textContent).toContain('Na opravu pre vyhodnocovanie KvK: 2');
+
+    fix.click();
+    const second = el.querySelector('[data-march="2"]')!;
+    expect(scrolled.mock.contexts[0]).toBe(second);
+    expect(document.activeElement).toBe(second.querySelector('.march__build'));
+    http.verify();
+
+    // nothing to fix: no line
+    TestBed.resetTestingModule();
+    const again = setup();
+    const fine = TestBed.createComponent(Marches);
+    fine.detectChanges();
+    again.expectOne('/api/me/marches/').flush({ marches: [marches[0]], max: 10, public: false });
+    again.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await tick(fine);
+    again.expectOne('/api/armory/').flush(ARMORY);
+    await settle(fine);
+    expect((fine.nativeElement as HTMLElement).querySelector('.march-fix')).toBeNull();
+    again.verify();
+  });
 });
 
 describe('PlayersAdmin', () => {

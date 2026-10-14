@@ -20,14 +20,21 @@ describe('Account', () => {
     });
   });
 
+  /** the signed-in player is known a moment after /api/auth/me/ answers, then the own marches are asked for */
+  async function settle() {
+    TestBed.tick();
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+  }
+
   async function render(me: Me, next?: string) {
     const fixture = TestBed.createComponent(Account);
     if (next) fixture.componentRef.setInput('next', next);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/auth/me/').flush(me);
-    // admin content for SEO (links) is not under test
-    TestBed.tick();
+    // admin content for SEO (links) and the own marches (once the player is known) are not under test
+    await settle();
     http.match(() => true).forEach((req) => req.flush('down', { status: 500, statusText: 'Server Error' }));
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
@@ -51,6 +58,42 @@ describe('Account', () => {
     expect(privacyLink(el)?.getAttribute('href')).toBe('/ochrana-udajov');
     // the reminders have their own page
     expect(el.querySelector('.shortcut')?.getAttribute('href')).toBe('/pripomienky');
+  });
+
+  it('counts the own marches the evaluation does not like on the Moje marche shortcut', async () => {
+    const fixture = TestBed.createComponent(Account);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/auth/me/').flush({
+      login_enabled: true,
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, terms_accepted: true, is_staff: false, is_superuser: false },
+    });
+    await settle();
+    const march = { position: 1, kind: 'cavalry', primary: 'Attila', secondary: '' };
+    http.expectOne('/api/me/marches/').flush({
+      marches: [
+        { ...march, id: 1, pair_problem: 'solo' },
+        { ...march, id: 2, secondary: 'Takeda Shingen', pair_problem: null, formation_problem: [] },
+        { ...march, id: 3, secondary: 'Takeda Shingen', formation_problem: ['Wedge'] },
+      ],
+      max: 10,
+      public: false,
+    });
+    http.match(() => true).forEach((req) => req.flush('down', { status: 500, statusText: 'Server Error' }));
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    // the count, and for a screen reader what it means
+    expect(el.querySelector('.shortcut__issues')?.textContent?.trim()).toBe('2 na opravu');
+    expect(el.querySelector('.shortcut__issues .sr-only')?.textContent?.trim()).toBe('na opravu');
+  });
+
+  it('shows no count when the marches cannot be loaded', async () => {
+    // render() answers every other request with an error
+    const el = await render({
+      login_enabled: true,
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, terms_accepted: true, is_staff: false, is_superuser: false },
+    });
+    expect(el.querySelector('.shortcut__issues')).toBeNull();
   });
 
   it('asks for the in-game name first and then goes on to the page the player came for', async () => {
