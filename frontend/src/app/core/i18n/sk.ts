@@ -338,7 +338,7 @@ export const sk = {
       evaluation_overview: {
         short: 'Pož. acclaim',
         label: 'Požadovaný acclaim – zverejnený prehľad',
-        tip: 'Požadovaný acclaim: vidí zverejnený požadovaný acclaim schválených hráčov, nič nemení. Power, marche ani premenné iných hráčov nevidí.',
+        tip: 'Požadovaný acclaim: vidí zverejnený požadovaný acclaim schválených hráčov, nič nemení. Pri hráčoch vidí aj power a odporúčanú power, nie marche ani premenné.',
       },
     },
     superuser: 'superadmin',
@@ -931,7 +931,7 @@ export const sk = {
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
-          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Keď vedenie zverejní požadovaný acclaim, hráči, ktorým to správca povolí, uvidia pri schválených hráčoch meno, avatar, počet marchov a požadovaný acclaim – power ani marche nie.',
+          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Keď vedenie zverejní požadovaný acclaim, hráči, ktorým to správca povolí, uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

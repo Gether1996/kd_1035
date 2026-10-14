@@ -43,9 +43,14 @@
   color: var(--gold-100);
 }
 
-.ov-mine__marches {
+.ov-mine__meta {
   font-size: 0.9375rem;
   color: var(--text-dim);
+}
+
+.is-over {
+  font-weight: 700;
+  color: var(--red-300);
 }
 
 .ov-bar {
@@ -81,8 +86,9 @@
   }
 
   // a long header wraps on a phone instead of widening the table
-  thead th.ov-required {
+  thead th {
     white-space: normal;
+    vertical-align: bottom;
   }
 
   tbody tr.is-you {
@@ -143,6 +149,75 @@
   color: var(--gold-100);
 }
 
+// a header is a button: a click sorts by the column
+.ov-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover,
+  &.is-active {
+    color: var(--gold-100);
+  }
+}
+
+.ev-num .ov-sort {
+  justify-content: flex-end;
+}
+
+.ov-sort__icon {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  opacity: 0;
+  transition: transform 0.2s var(--ease-out);
+
+  .is-active > & {
+    opacity: 1;
+  }
+
+  &.is-up {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// the power, the recommended power under it
+.ov-power {
+  line-height: 1.2;
+}
+
+.ov-power__now,
+.ov-power__none {
+  display: block;
+}
+
+.ov-power__rec {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-mute);
+}
+
+.ov-legend {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-mute);
+}
+
 .ov-missing {
   color: var(--red-300);
   font-weight: 600;
@@ -154,13 +229,45 @@
   color: var(--text-dim);
 }
 
-@media (max-width: 420px) {
-  .ov-avatar {
+.ov-short {
+  display: none;
+}
+
+// a phone: no avatar and no rank column (the rank is the default order anyway), short headers, tight cells – the
+// table fits the screen and a name wraps between words, not letter by letter
+@media (max-width: 480px) {
+  .ov-avatar,
+  .ov-rank {
     display: none;
   }
 
-  .ev-table th,
-  .ev-table td {
-    padding: 6px 5px;
+  .ov-long {
+    display: none;
+  }
+
+  .ov-short {
+    display: inline;
+  }
+
+  .ov-table {
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: 6px 4px;
+    }
+
+    thead th {
+      letter-spacing: 0.04em;
+    }
+  }
+
+  .ov-player__box {
+    flex-wrap: wrap;
+    gap: 2px 6px;
+  }
+
+  .ov-name {
+    overflow-wrap: break-word;
   }
 }

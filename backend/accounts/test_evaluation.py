@@ -157,14 +157,14 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(self.admin.get('/api/evaluation/').json()['overview'], {'published_at': None, 'rows': []})
         self.player.ingame_name = 'Nelly v hre'
         self.player.save()
-        row = {'id': self.player.pk, 'marches': 3, 'missing': 1, 'required': 1_250_000}
+        row = {'id': self.player.pk, 'marches': 3, 'missing': 1, 'required': 1_250_000, 'power': 101.5, 'recommended': 88.0}
         res = self.call('put', url, {'rows': [row]})
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()['rows'], [row])
         self.assertIsNotNone(res.json()['published_at'])
         # the evaluators see what was published next to the estimate
         self.assertEqual(self.admin.get('/api/evaluation/').json()['overview']['rows'], [row])
-        # the players with the switch: the name in the game, the avatar and the numbers – no power, no marches
+        # the players with the switch: the name in the game, the avatar and the numbers with the power – no marches
         self.player.evaluation_overview = True
         self.player.save()
         data = self.nelly.get(url).json()
@@ -183,7 +183,10 @@ class EvaluationApiTests(TestCase):
             {'rows': [{**row, 'required': -1}]},
             {'rows': [{**row, 'required': 1.5}]},
             {'rows': [{**row, 'marches': 99}]},
-            {'rows': [{**row, 'power': 100}]},
+            {'rows': [{**row, 'extra': 100}]},
+            {'rows': [{**row, 'power': -1}]},
+            {'rows': [{**row, 'power': '101'}]},
+            {'rows': [{**row, 'recommended': 10_000}]},
             {'rows': [{'id': self.player.pk}]},
         ):
             self.assertEqual(self.call('put', url, bad).status_code, 400, bad)
@@ -196,6 +199,9 @@ class EvaluationApiTests(TestCase):
         self.player.approved = True
         self.player.save()
         self.assertEqual(self.call('put', url, {'rows': []}).json(), {'published_at': None, 'rows': []})
+        # no power written down, no march counted: null
+        empty = {**row, 'power': None, 'recommended': None}
+        self.assertEqual(self.call('put', url, {'rows': [empty]}).json()['rows'], [empty])
 
     def test_the_formations_of_the_commanders_live_in_the_database(self):
         """Gether 14. 10. 2026 (Slim: "nastaviť každého commandera, akú má mať formáciu")"""

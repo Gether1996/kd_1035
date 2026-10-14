@@ -276,11 +276,16 @@ def evaluation_players(request):
 OVERVIEW_MAX_MARCHES = 20
 OVERVIEW_MAX_ACCLAIM = 10**12
 OVERVIEW_KEYS = ('id', 'marches', 'missing', 'required')
+# the power and the power the counted marches carry, millions (Gether 14. 10. 2026: "kombinovaná aktuálna power /
+# odporúčaná power"); null = not written down / no march counted
+OVERVIEW_POWER = ('power', 'recommended')
+OVERVIEW_MAX_POWER = 9999.9
 
 
 def overview_row(item) -> dict | None:
-    """{id, marches, missing, required} – whole numbers in range, or None"""
-    if not isinstance(item, dict) or set(item) != set(OVERVIEW_KEYS):
+    """{id, marches, missing, required, power, recommended} – whole numbers in range, the power in millions with one
+    decimal or null; or None"""
+    if not isinstance(item, dict) or set(item) != {*OVERVIEW_KEYS, *OVERVIEW_POWER}:
         return None
     if any(type(item[key]) is not int for key in OVERVIEW_KEYS):
         return None
@@ -288,7 +293,14 @@ def overview_row(item) -> dict | None:
         return None
     if not 0 <= item['required'] <= OVERVIEW_MAX_ACCLAIM:
         return None
-    return {key: item[key] for key in OVERVIEW_KEYS}
+    for key in OVERVIEW_POWER:
+        value = item[key]
+        if value is not None and (type(value) not in (int, float) or not 0 <= value <= OVERVIEW_MAX_POWER):
+            return None
+    return {
+        **{key: item[key] for key in OVERVIEW_KEYS},
+        **{key: None if item[key] is None else round(float(item[key]), 1) for key in OVERVIEW_POWER},
+    }
 
 
 def overview_data(row: EvaluationSettings) -> dict:
@@ -302,8 +314,9 @@ def overview_data(row: EvaluationSettings) -> dict:
 def evaluation_overview(request):
     """"Požadovaný acclaim" (Gether 14. 10. 2026: a plain overview for the players, nothing to edit).
     GET – what was published, approved players only (a player who left or lost the approval drops out), with the name
-    and avatar; `you` marks the reader. Never the variables, the pairs, the marches or anyone's power.
-    PUT {rows: [{id, marches, missing, required}, …]} – an evaluator publishes what the estimate counts now (the page
+    and avatar; `you` marks the reader. The power and the recommended power as published (Gether 14. 10. 2026) – never
+    the variables, the pairs or the marches.
+    PUT {rows: [{id, marches, missing, required, power, recommended}, …]} – an evaluator publishes what the estimate counts now (the page
     computes it, the server cannot); approved players only, each once, all or nothing; [] = nothing published."""
     row = EvaluationSettings.load()
     if request.method == 'PUT':
@@ -334,6 +347,9 @@ def evaluation_overview(request):
             'marches': r['marches'],
             'missing': r['missing'],
             'required': r['required'],
+            # rows published before the power column have none
+            'power': r.get('power'),
+            'recommended': r.get('recommended'),
             'you': p.user_id == request.user.pk,
         }
         for r in published

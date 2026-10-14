@@ -129,12 +129,13 @@ describe('EvaluationPage', () => {
     fixture.detectChanges();
     // nothing of the evaluation itself is asked for
     http.expectNone('/api/evaluation/');
-    const row = { avatar_url: '', missing: 0, you: false };
+    const row = { avatar_url: '', missing: 0, you: false, power: null, recommended: null };
     http.expectOne('/api/evaluation/overview/').flush({
       published_at: '2026-10-14T16:30:00Z',
       rows: [
-        { ...row, id: 1, name: 'Gether', marches: 5, required: 3_000_000 },
-        { ...row, id: 2, name: 'Slim', marches: 3, missing: 2, required: 5_600_000, you: true },
+        { ...row, id: 1, name: 'Gether', marches: 5, required: 3_000_000, power: 95, recommended: 101.5 },
+        { ...row, id: 2, name: 'Slim', marches: 3, missing: 2, required: 5_600_000, you: true, power: 104.2, recommended: 80 },
+        { ...row, id: 3, name: 'Enko', marches: 1, required: 200_000 },
       ],
     });
     await tick(fixture);
@@ -144,9 +145,30 @@ describe('EvaluationPage', () => {
     expect(button(fixture, 'Premenné')).toBeUndefined();
     expect(el.querySelector('input:not([type=search]), select, textarea')).toBeNull();
     // the highest first, the reader's own on top too
-    expect(Array.from(el.querySelectorAll('.ov-name')).map((n) => n.textContent?.trim())).toEqual(['Slim', 'Gether']);
+    const names = () => Array.from(el.querySelectorAll('.ov-name')).map((n) => n.textContent?.trim());
+    expect(names()).toEqual(['Slim', 'Gether', 'Enko']);
     expect(el.querySelector('.ov-mine__value')?.textContent?.replace(/\s/g, '')).toBe('5600000');
     expect(el.querySelector('tr.is-you .ov-you')?.textContent?.trim()).toBe('ty');
+    // the power with the recommended power under it, red when the marches carry less (Gether 14. 10. 2026)
+    const power = el.querySelector('tr.is-you .ov-power')!;
+    expect(power.querySelector('.is-over')?.textContent?.trim()).toBe('104,2');
+    expect(power.querySelector('.ov-power__rec')?.textContent?.trim()).toBe('odp. 80');
+    expect(el.querySelector('tr:not(.is-you) .ov-power .is-over')).toBeNull();
+
+    // a click on a header sorts by it, again the other way; no power is always last; the rank stays
+    const header = (text: string) =>
+      Array.from(el.querySelectorAll<HTMLButtonElement>('.ov-sort')).find((b) => b.textContent?.trim().startsWith(text))!;
+    header('Power (M)').click();
+    await tick(fixture);
+    expect(names()).toEqual(['Slim', 'Gether', 'Enko']);
+    expect(header('Power (M)').closest('th')?.getAttribute('aria-sort')).toBe('descending');
+    header('Power (M)').click();
+    await tick(fixture);
+    expect(names()).toEqual(['Gether', 'Slim', 'Enko']);
+    header('Hráč').click();
+    await tick(fixture);
+    expect(names()).toEqual(['Enko', 'Gether', 'Slim']);
+    expect(Array.from(el.querySelectorAll('td.ov-rank')).map((n) => n.textContent?.trim())).toEqual(['3', '2', '1']);
   });
 
   it('publishes what the table counts – not while the variables are unsaved', async () => {
