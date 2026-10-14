@@ -104,11 +104,12 @@
         <th scope="col" class="ev-num">{{ c.marches }} <app-eval-tip [text]="tip('results.marches')" [label]="tipLabel(c.marches)" /></th>
         <th scope="col" class="ev-num">{{ c.required }} <app-eval-tip [text]="tip('results.required')" [label]="tipLabel(c.required)" /></th>
         <th scope="col">{{ c.acclaim }} <app-eval-tip [text]="tip('results.acclaim')" [label]="tipLabel(c.acclaim)" /></th>
-        <th scope="col">{{ c.progress }} <app-eval-tip [text]="tip('results.progress')" [label]="tipLabel(c.progress)" /></th>
         <th scope="col">{{ c.power }} <app-eval-tip [text]="tip('results.power')" [label]="tipLabel(c.power)" /></th>
-        <th scope="col" class="ev-num">{{ c.recommended }} <app-eval-tip [text]="tip('results.recommended')" [label]="tipLabel(c.recommended)" /></th>
+        <th scope="col" class="ev-num">
+          <abbr [title]="c.recommended">{{ c.recommendedShort }}</abbr>
+          <app-eval-tip [text]="tip('results.recommended')" [label]="tipLabel(c.recommended)" />
+        </th>
         <th scope="col">{{ c.t4 }} <app-eval-tip [text]="tip('results.t4')" [label]="tipLabel(c.t4)" /></th>
-        <th scope="col" class="ev-num">{{ c.fund }} <app-eval-tip [text]="tip('results.fund')" [label]="tipLabel(c.fund)" /></th>
         <th scope="col"><span class="sr-only">{{ c.detail }}</span></th>
       </tr>
     </thead>
@@ -116,28 +117,38 @@
       @for (r of rows(); track r.player.id; let i = $index) {
         @let open = opened().has(r.player.id);
         @let who = name(r);
+        <!-- a narrow screen shows each row as a card: the .ev-label of a cell names it instead of the header -->
         <tr class="ev-row" [class.is-open]="open">
           <td class="ev-num ev-rank">{{ i + 1 }}</td>
           <th scope="row" class="ev-player">
-            <img class="ev-player__avatar" [src]="r.player.avatar_url" alt="" width="32" height="32" loading="lazy" />
-            <span class="ev-player__name">
-              {{ who }}
-              @if (!r.player.approved) {
-                <span class="ev-tag">{{ x.pending }}</span>
-              }
-              @if (r.player.ingame_name) {
-                <small>{{ r.player.name }}</small>
-              }
+            <span class="ev-player__box">
+              <img class="ev-player__avatar" [src]="r.player.avatar_url" alt="" width="32" height="32" loading="lazy" />
+              <span class="ev-player__name">
+                {{ who }}
+                @if (!r.player.approved) {
+                  <span class="ev-tag">{{ x.pending }}</span>
+                }
+                @if (r.player.ingame_name) {
+                  <small>{{ r.player.name }}</small>
+                }
+              </span>
             </span>
           </th>
           <td class="ev-num">
-            {{ r.counted }}
-            @if (r.missing) {
-              <span class="ev-missing-count" [title]="x.missingTitle">+{{ r.missing }}</span>
-            }
+            <span class="ev-label">{{ c.marches }}</span>
+            <span>
+              {{ r.counted }}
+              @if (r.missing) {
+                <span class="ev-missing-count" [title]="x.missingTitle">+{{ r.missing }}</span>
+              }
+            </span>
           </td>
-          <td class="ev-num ev-required">{{ int(r.acclaim.required) }}</td>
+          <td class="ev-num ev-required">
+            <span class="ev-label">{{ c.required }}</span>
+            {{ int(r.acclaim.required) }}
+          </td>
           <td>
+            <span class="ev-label" aria-hidden="true">{{ c.acclaim }}</span>
             <input
               class="input ev-input ev-input--cell ev-input--acclaim"
               type="text"
@@ -149,14 +160,7 @@
             />
           </td>
           <td>
-            @if (r.progress !== null) {
-              <span class="ev-progress" [class.is-done]="r.progress >= 1">
-                <span class="ev-progress__bar" [style.--p]="r.progress > 1 ? 1 : r.progress"></span>
-                {{ percent(r.progress) }}
-              </span>
-            }
-          </td>
-          <td>
+            <span class="ev-label" aria-hidden="true">{{ c.power }}</span>
             <input
               class="input ev-input ev-input--cell ev-input--power"
               type="text"
@@ -167,12 +171,15 @@
               (change)="setPower(r, $event)"
             />
           </td>
-          <td class="ev-num" [class.is-over]="r.excess > 0">{{ r.recommended ?? '–' }}</td>
+          <td class="ev-num" [class.is-over]="r.excess > 0">
+            <span class="ev-label">{{ c.recommended }}</span>
+            {{ r.recommended ?? '–' }}
+          </td>
           <td>
+            <span class="ev-label" aria-hidden="true">{{ c.t4 }}</span>
             <input class="ev-check" type="checkbox" [attr.aria-label]="c.t4 + ': ' + who" [checked]="r.player.t4" (change)="setT4(r, $event)" />
           </td>
-          <td class="ev-num" [title]="r.fund ? fundTitle(r) : ''">{{ r.fund === null ? '' : compact(r.fund) }}</td>
-          <td>
+          <td class="ev-toggle">
             <button
               type="button"
               class="ev-icon-btn"
@@ -187,7 +194,7 @@
         </tr>
         @if (open) {
           <tr class="ev-detail-row" [id]="'ev-detail-' + r.player.id">
-            <td colspan="11">
+            <td colspan="9">
               <div class="ev-detail">
                 <!-- how the acclaim adds up -->
                 <p class="ev-detail__sum">
@@ -212,6 +219,9 @@
                 }
                 @if (limitText(r); as limit) {
                   <p class="ev-detail__line" [class.is-over]="r.excess > 0">{{ limit }}</p>
+                }
+                @if (progressText(r); as progress) {
+                  <p class="ev-detail__line">{{ progress }}</p>
                 }
                 <div class="field ev-detail__bonus">
                   <label class="ev-field__label" [for]="'ev-bonus-' + r.player.id">{{ d.bonus }}</label>
@@ -280,7 +290,7 @@
         }
       } @empty {
         <tr>
-          <td colspan="11" class="ev-empty">{{ x.empty }}</td>
+          <td colspan="9" class="ev-empty">{{ x.empty }}</td>
         </tr>
       }
     </tbody>

@@ -80,7 +80,7 @@
     </div>
     <ng-container *ngTemplateOutlet="sub; context: { $implicit: s.power.table, key: 'power.table' }" />
     <div class="ev-scroll">
-      <table class="ev-table ev-table--form">
+      <table class="ev-table ev-table--form ev-table--power">
         <thead>
           <tr>
             <th scope="col">{{ s.power.count }}</th>
@@ -94,9 +94,9 @@
         <tbody>
           @for (row of v.power.table; track $index; let i = $index) {
             <tr>
-              <th scope="row">{{ i + 1 }}</th>
+              <th scope="row" [attr.data-label]="s.power.count">{{ i + 1 }}</th>
               @for (key of ['min', 'max', 'scoreMin', 'scoreMax']; track key) {
-                <td>
+                <td [attr.data-label]="$any(s.power)[key]">
                   <input
                     class="input ev-input ev-input--cell"
                     type="number"
@@ -108,7 +108,7 @@
                   />
                 </td>
               }
-              <td class="ev-table__note">{{ rangeNow(i) }}</td>
+              <td class="ev-table__note" [attr.data-label]="s.power.now">{{ rangeNow(i) }}</td>
             </tr>
           }
         </tbody>
@@ -271,7 +271,7 @@
     <h2 class="ev-card__title" id="ev-s-equipment">{{ s.equipment.title }}</h2>
     <p class="ev-card__hint">{{ s.equipment.hint }}</p>
     <div class="ev-scroll">
-      <table class="ev-table ev-table--form">
+      <table class="ev-table ev-table--form ev-table--equipment">
         <thead>
           <tr>
             <th scope="col"></th>
@@ -289,7 +289,7 @@
                 <app-eval-tip [text]="tip('equipment.' + group)" [label]="tipLabel(label)" />
               </th>
               @for (r of rarities; track r) {
-                <td>
+                <td class="ev-rarity--{{ r }}" [attr.data-label]="x.rarities[r]">
                   <input
                     class="input ev-input ev-input--cell"
                     type="number"

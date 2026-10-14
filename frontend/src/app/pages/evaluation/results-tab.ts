@@ -115,15 +115,22 @@ export class EvalResultsTab {
     return r.player.ingame_name || r.player.name;
   }
 
-  protected fundTitle(r: PlayerEval): string {
+  /** the progress and the fund are not columns any more (Gether 14. 10. 2026: "progres a FBP daj preč") – the detail */
+  protected progressText(r: PlayerEval): string | null {
+    if (r.progress === null) return null;
+    const d = this.texts().detail;
+    const progress = d.progress.replace('{p}', this.percent(r.progress));
+    if (!r.fund) return progress;
     const f = this.settings().fund;
     const all = f.food + f.wood + f.stone + f.gold || 1;
     const part = (share: number) => this.compact(((r.fund ?? 0) * share) / all);
-    return this.texts()
-      .fundTitle.replace('{food}', part(f.food))
+    const fund = d.fund
+      .replace('{total}', this.compact(r.fund))
+      .replace('{food}', part(f.food))
       .replace('{wood}', part(f.wood))
       .replace('{stone}', part(f.stone))
       .replace('{gold}', part(f.gold));
+    return `${progress} · ${fund}`;
   }
 
   protected missingText(r: PlayerEval): string {
@@ -235,8 +242,9 @@ export class EvalResultsTab {
   /** the rows shown as CSV (semicolons and a BOM: a Slovak or Czech Excel opens it right away) */
   protected download(): void {
     const c = this.texts().columns;
-    // no score: it is only how the acclaim is counted (Slim 13. 10. 2026: "skóre by som dal z tabuľky preč")
-    const head = [c.player, 'Discord', c.marches, c.required, c.acclaim, c.progress, c.power, c.recommended, c.t4, c.fund];
+    // the columns of the table: no score (Slim 13. 10. 2026: "skóre by som dal z tabuľky preč"), no progress and fund
+    // (Gether 14. 10. 2026)
+    const head = [c.player, 'Discord', c.marches, c.required, c.acclaim, c.power, c.recommended, c.t4];
     const cell = (v: string | number | null) => {
       const text = v === null ? '' : typeof v === 'number' ? String(Math.round(v * 100) / 100).replace('.', ',') : v;
       return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -248,11 +256,9 @@ export class EvalResultsTab {
         r.counted + (r.missing ? ` + ${r.missing}` : ''),
         r.acclaim.required,
         r.player.acclaim,
-        r.progress === null ? null : Math.round(r.progress * 100),
         r.player.power,
         r.recommended,
         r.player.t4 ? 'T4' : '',
-        r.fund === null ? null : Math.round(r.fund),
       ]
         .map(cell)
         .join(';'),

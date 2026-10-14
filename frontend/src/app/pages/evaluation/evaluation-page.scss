@@ -3,9 +3,10 @@
   display: block;
 }
 
-// a wide admin page: the table needs the room
+// a wide admin page: more room for the cards of the variables and the table than the site's 1200 px
 .content.is-evaluation {
-  max-width: min(94%, 1600px);
+  width: min(100% - 2 * var(--gutter), 1440px);
+  max-width: none;
 }
 
 .ev-tabs {

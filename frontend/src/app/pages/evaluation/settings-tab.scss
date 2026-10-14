@@ -153,12 +153,29 @@
   overflow-y: auto;
 }
 
+// a table of fields fits its card: the headers wrap, the numbers are short (Gether 14. 10. 2026: no sideways
+// scrolling); a narrow card turns each row into a small grid – the end of this file
 .ev-table--form {
   th[scope='row'] {
     font-weight: 600;
     color: var(--text-dim);
     white-space: nowrap;
   }
+
+  thead th {
+    vertical-align: bottom;
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  input[type='number'].ev-input--cell {
+    min-width: 64px;
+  }
+}
+
+.ev-table--power .ev-table__note {
+  min-width: 96px;
+  white-space: normal;
 }
 
 .ev-table__note {
@@ -211,10 +228,156 @@
   min-width: 190px;
 }
 
-// on a phone the tier is what matters – the formations only take the room
-@media (max-width: 599px) {
+// ---------------------------------------------------------------- a narrow card: each row a small grid
+
+.ev-scroll {
+  container: ev-table / inline-size;
+}
+
+@mixin ev-cell-label {
+  content: attr(data-label);
+  font: 600 0.6875rem/1.25 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+// the rows as grids, without the header
+@mixin ev-table-grid {
+  display: block;
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: block;
+  }
+
+  tr {
+    display: grid;
+    gap: 8px 10px;
+    padding: 10px 0 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  th,
+  td {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+}
+
+// the power table: the number of marches, then the four fields in two columns and the range now
+@container ev-table (max-width: 499px) {
+  .ev-table--power {
+    @include ev-table-grid;
+
+    tr {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    th[scope='row'] {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      grid-column: 1 / -1;
+      color: var(--gold-100);
+    }
+
+    .ev-table__note {
+      grid-column: 1 / -1;
+      min-width: 0;
+    }
+
+    [data-label]::before {
+      @include ev-cell-label;
+      color: var(--text-dim);
+    }
+  }
+}
+
+// the equipment: the row's name, then the rarities in their colours
+@container ev-table (max-width: 599px) {
+  .ev-table--equipment {
+    @include ev-table-grid;
+
+    tr {
+      grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    }
+
+    th[scope='row'] {
+      display: flex;
+      align-items: center;
+      grid-column: 1 / -1;
+    }
+
+    td::before {
+      @include ev-cell-label;
+    }
+  }
+}
+
+// the inscriptions: the tier is what matters – the formations and the points only take the room
+@container ev-table (max-width: 519px) {
   .ev-insc-formations,
   .ev-insc-points {
     display: none;
+  }
+}
+
+@container ev-table (max-width: 339px) {
+  .ev-table--insc {
+    @include ev-table-grid;
+
+    th[scope='row'] {
+      white-space: normal;
+    }
+
+    .ev-insc-formations,
+    .ev-insc-points {
+      display: none;
+    }
+
+    .ev-input--tier {
+      min-width: 0;
+    }
+  }
+}
+
+// the pairs: the two commanders under each other, the points and the bin beside them
+@container ev-table (max-width: 379px) {
+  .ev-table--pairs {
+    @include ev-table-grid;
+
+    tr {
+      grid-template-columns: minmax(0, 1fr) 76px;
+      gap: 6px 8px;
+      padding: 8px 0;
+    }
+
+    td:nth-child(2) {
+      grid-row: 2;
+    }
+
+    td:nth-child(3) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    td:nth-child(4) {
+      grid-column: 2;
+      grid-row: 2;
+      justify-items: end;
+    }
+
+    .ev-input--cell,
+    .ev-input--points {
+      width: 100%;
+      min-width: 0;
+    }
   }
 }

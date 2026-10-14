@@ -6,7 +6,7 @@
 }
 
 .ev-input--acclaim {
-  width: 130px;
+  width: 116px;
 }
 
 .ev-input--power {
@@ -78,12 +78,35 @@
   color: var(--red-300);
 }
 
-.ev-results {
-  min-width: 1080px;
+// the table fits the page – long headers wrap instead of making it scroll sideways (Gether 14. 10. 2026)
+.ev-scroll--results {
+  container: ev-results / inline-size;
+}
 
+.ev-results {
   td {
     font-variant-numeric: tabular-nums;
   }
+
+  thead th {
+    vertical-align: bottom;
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  abbr[title] {
+    text-decoration: none;
+    cursor: help;
+  }
+}
+
+// a cell's name in a card (a narrow screen); the table has its header
+.ev-label {
+  display: none;
+  font: 600 0.6875rem/1.25 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
 .ev-num {
@@ -96,13 +119,13 @@
 }
 
 .ev-player {
-  min-width: 180px;
+  min-width: 170px;
+}
 
-  &[scope='row'] {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+.ev-player__box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .ev-player__avatar {
@@ -115,6 +138,7 @@
 .ev-player__name {
   display: grid;
   gap: 1px;
+  overflow-wrap: anywhere;
   font-weight: 600;
   color: var(--text);
 
@@ -156,36 +180,6 @@
   cursor: pointer;
 }
 
-.ev-progress {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  color: var(--text-dim);
-
-  &.is-done {
-    color: var(--gold-100);
-  }
-}
-
-.ev-progress__bar {
-  position: relative;
-  width: 60px;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--field-bg);
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--gold-400);
-    transform: scaleX(var(--p, 0));
-    transform-origin: left;
-  }
-}
-
 .ev-empty {
   padding: 24px 8px !important;
   text-align: center !important;
@@ -220,6 +214,7 @@
 
 .ev-march {
   display: grid;
+  align-content: start;
   gap: 6px;
   padding: 10px 12px;
   border: 1px solid var(--line);
@@ -294,23 +289,6 @@
   line-height: 1.5;
 }
 
-// a phone: the table scrolls sideways – the player's name and the opened computation stay in view
-.ev-results .ev-player {
-  // only where the table does not fit – on a wide screen the opaque cell would stand out
-  @media (max-width: 1199px) {
-    position: sticky;
-    left: 0;
-    z-index: 1;
-    background: var(--bg);
-  }
-}
-
-.ev-detail {
-  position: sticky;
-  left: 0;
-  max-width: calc(100vw - 2 * var(--gutter) - 16px);
-}
-
 // pasting the power of everyone
 .ev-bulk {
   display: grid;
@@ -358,4 +336,135 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+// ---------------------------------------------------------------- a narrow screen: a card per player
+
+@container ev-results (max-width: 819px) {
+  .ev-results,
+  .ev-results tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ev-results thead {
+    display: none;
+  }
+
+  .ev-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px 14px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+
+    // the name above, the value in a line as high as a field
+    > th,
+    > td {
+      display: grid;
+      grid-template-rows: auto minmax(40px, auto);
+      align-content: start;
+      align-items: center;
+      justify-items: start;
+      gap: 5px;
+      padding: 0;
+      border: 0;
+      text-align: left !important;
+      white-space: normal;
+    }
+
+    // the head of the card: the rank, the player, the button opening the computation
+    > .ev-player,
+    > .ev-toggle {
+      grid-template-rows: auto;
+    }
+
+    > .ev-player {
+      grid-column: 1 / -1;
+      justify-items: stretch;
+      min-width: 0;
+      padding: 0 46px 0 30px;
+    }
+
+    > .ev-rank {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      display: flex;
+      align-items: center;
+      height: 40px;
+    }
+
+    > .ev-toggle {
+      position: absolute;
+      top: 14px;
+      right: 12px;
+    }
+  }
+
+  .ev-player__box {
+    min-height: 40px;
+  }
+
+  .ev-label {
+    display: block;
+  }
+
+  .ev-input--acclaim,
+  .ev-input--power {
+    width: 100%;
+    min-width: 0;
+  }
+
+  // the computation hangs under its card
+  .ev-row.is-open {
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+
+  .ev-detail-row {
+    display: block;
+    margin-top: -10px;
+
+    > td {
+      display: block;
+      padding: 0;
+      border: 0;
+    }
+  }
+
+  .ev-detail {
+    border-top: 0;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  }
+
+  .ev-results tbody > tr:not(.ev-row, .ev-detail-row) {
+    display: block;
+
+    > td {
+      display: block;
+      border: 0;
+    }
+  }
+}
+
+@container ev-results (min-width: 420px) and (max-width: 819px) {
+  .ev-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  // narrower columns: a name may take two lines – the values stay in one line
+  .ev-label {
+    display: flex;
+    align-items: flex-end;
+    min-height: 2.5em;
+  }
+}
+
+@container ev-results (min-width: 680px) and (max-width: 819px) {
+  .ev-row {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
