@@ -133,6 +133,9 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
 - `ui-polish-leftovers` Drobnosti z kola 4 (kritik: upraviť, až po funkciách; rgba v commander-finder vynechať – len ako rozhodnutie pre celý repo): spoločný štýl `.tag--live` (screenshoty pred/po na 5 šírkach), odkaz zlyhaných notifikácií len za 7 dní, naivný čas v `worker_status.json` (test spätne kompatibilného čítania), CZ „Kalendář“ na `/pripomienky` pretečie?, `#alliance` pri 360 px, nové screenshoty.
 - Drobnosti z kola 6: na desktop Chrome/Edge pri odmietnutí clipboardu otvorí systémové zdieľanie.
+- Kolo 14. 10. 2026 – schválené, nepostavené: `eval-quick-filters` rýchle filtre vo Vyhodnocovaní (Na opravu vrátane solo, Bez power, Nad odp. power – skryť pri vypnutej power; zoradenie podľa power; 360 px zalomiť); `players-access-filter` Hráči na /ucet: filter podľa prístupu + počet na opravu (bez superadmina v „Bez prístupu“, pevný počet dotazov).
+- Kolo 14. 10. 2026 – upraviť: `eval-discord-copy` Kopírovať požiadavky na KvK pre Discord – až po rozhodnutí Gethera, max. jedno z tohto a `published-requirement`, zmena Ochrany údajov; `power-freshness` kedy a kto zapísal power (`power_at`/`power_by` len pri zmene, `staleDays` v Premenných, Ochrana údajov, MINOR); `player-deeplinks` preklik `?hrac=` medzi /marche a /vyhodnocovanie – najprv presne určiť viditeľnosť podľa roly.
+- Drobnosti z kola 14. 10.: chyba posunu marchu sa ukáže len pod zoznamom (ukázať pri karte); veta o počítaní aj pri < 2 marchoch; komentár `select_for_update` (SQLite nemá zámok riadkov); pri swap skrátiť hlavnú vetu upozornenia; test `pair_hint` kľúčov == {'swap'}; tlačidlo „Na opravu“ bez chevronu (na dotyku nevyzerá klikateľne); `scrollIntoView` mock bez obnovenia; selektor fokusu bez `:not([disabled])`; Späť + Zrušiť pri neuložených Premenných preskočí stránku (`canceledNavigationResolution: 'computed'`?), dvojitá výzva pri novom builde, e2e journey pre leave guard.
 
 ## Zamietnuté
 
@@ -140,6 +143,9 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - Registrácia Governor ID so schválením R4, prístup R4 do adminu s exportom governorov, upozornenia vedenia na nové registrácie – Gether registráciu governorov zrušil (8. 10. 2026).
 - `discord-slash-events` Príkaz /eventy na Discorde – blokované: chýba rozhodnutie Gethera a nasadenie na verejné HTTPS (Interactions endpoint); nová závislosť, env a zmena Ochrany údajov. Navrhnúť znova po nasadení, ak o to Gether požiada.
 - `migration-application` (+ časť 2: stav, odpovede, mazanie) Žiadosť o migráciu cez web – vedenie o ňu nežiadalo, osobné údaje cudzích hráčov, duplikuje kontakt cez Discord.
+- `fix-reminder-dm` Správa „oprav si march“ od superadmina cez bota – nový druh kontaktu, chýba rozhodnutie a reset tokenu; červené upozornenia už stačia.
+- `picker-scored-partners` Výber commandera najprv s hodnotenými pármi – duplikuje v1.24.6 (meta skupiny), zverejnil by celý zoznam párov vedenia.
+- `published-requirement` Zverejnená požiadavka na KvK na /ucet – politické rozhodnutie, prekrýva sa s `eval-discord-copy`; navrhnúť znova po rozhodnutí Gethera.
 
 ## Čaká na Gethera
 
@@ -164,3 +170,6 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - **Ukážka eventu do DM:** povoliť súkromné správy od bota (upozornenia na nových hráčov už chodia, asi áno).
 - **Kalkulačky:** áno/nie pre stránku `/nastroje` (speedupy, výcvik); voliteľne overiť v hre typové speedupy 3 h/8 h/15 h, kameň T3 lukostrelci/jazda (112), body T2 pred KvK (2).
 - **Hráči – neaktívni:** potvrdiť hranicu 90 dní (až po nasadení).
+- **Poradie marchov (v1.29.0):** potvrdiť, že neschválený hráč / bez súhlasu s podmienkami smie meniť poradie svojich marchov, a že hráči vidia, koľko a akých marchov vyhodnocovanie počíta.
+- **Upozornenie na pár (v1.29.1):** smú hráči vidieť mená (nie body) až 3 hodnotených partnerov k primárnemu? Ak áno, `pair_hint.partners` ako PATCH.
+- **Vyhodnocovanie:** smú sa požiadavky na acclaim po hráčoch zverejniť (Discord kópia alebo /ucet – vybrať jedno)? Hranica zastaranej power (návrh 21 dní).
