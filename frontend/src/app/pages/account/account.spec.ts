@@ -87,4 +87,32 @@ describe('Account', () => {
     expect(input.value).toBe('Nelly');
     expect(el.querySelector('#ingame-state')?.textContent).toContain('Najprv si nastav meno v hre');
   });
+
+  it('shows the power of the evaluation and saves millions or the whole number from the game', async () => {
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', power: 98.4, approved: true, terms_accepted: true, is_staff: false, is_superuser: false };
+    const el = await render({ login_enabled: true, user });
+    const input = el.querySelector<HTMLInputElement>('#account-power')!;
+    expect(input.value).toBe('98,4');
+    const http = TestBed.inject(HttpTestingController);
+    const form = el.querySelector<HTMLFormElement>('form.ingame--power')!;
+
+    input.value = '101 500 000';
+    form.dispatchEvent(new Event('submit'));
+    const req = http.expectOne((r) => r.method === 'PATCH');
+    expect(req.request.body).toEqual({ power: 101.5 });
+    req.flush({ login_enabled: true, user: { ...user, power: 101.5 } });
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(input.value).toBe('101,5');
+    expect(el.querySelector('#power-state')?.textContent).toContain('Uložené');
+
+    // not a power: nothing is sent; empty clears it
+    input.value = 'veľa';
+    form.dispatchEvent(new Event('submit'));
+    http.expectNone((r) => r.method === 'PATCH');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(el.querySelector('#power-state')?.textContent).toContain('Zadaj power v miliónoch');
+    input.value = '';
+    form.dispatchEvent(new Event('submit'));
+    expect(http.expectOne((r) => r.method === 'PATCH').request.body).toEqual({ power: null });
+  });
 });

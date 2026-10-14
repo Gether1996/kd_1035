@@ -198,8 +198,8 @@ def cannot_post(player: Player) -> Response | None:
 @ensure_csrf_cookie
 @api_view(['GET', 'PATCH', 'DELETE'])
 def me(request):
-    """GET: is login switched on and who is signed in. PATCH: the player's in-game name. DELETE: the player deletes
-    their own account."""
+    """GET: is login switched on and who is signed in. PATCH: the player's in-game name and power. DELETE: the player
+    deletes their own account."""
     if request.method == 'DELETE':
         return delete_account(request)
     if request.method == 'PATCH':
@@ -211,11 +211,14 @@ def signed_in(request) -> dict | None:
     player = player_of(request.user)
     if not player:
         return None
+    # the power of the KvK evaluation – the player's own or the one the superadmin wrote down (Gether 14. 10. 2026)
+    evaluation = getattr(player, 'evaluation', None)
     return {
         'discord_id': player.discord_id,
         'name': player.name,
         'avatar_url': player.avatar_url,
         'ingame_name': player.ingame_name,
+        'power': float(evaluation.power) if evaluation and evaluation.power is not None else None,
         # adds marches and KvK sign-ups (a new player waits for the superadmin, Gether 12. 10. 2026)
         'approved': player.may_post,
         # agreed to the current terms of use – else the web asks first (Gether 12. 10. 2026)

@@ -1,19 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { PAGE_PRICE, Passports, parsePower, passportsFor } from './passports';
+import { PAGE_PRICE, Passports, passportsFor } from './passports';
 
 describe('passports', () => {
-  it('reads millions or the whole number', () => {
-    expect(parsePower('42,5')).toBe(42_500_000);
-    expect(parsePower('42.5')).toBe(42_500_000);
-    expect(parsePower('42 500 000')).toBe(42_500_000);
-    expect(parsePower('9')).toBe(9_000_000);
-    expect(parsePower('42,500,000')).toBe(42_500_000);
-    expect(parsePower('42.500.000')).toBe(42_500_000);
-    expect(parsePower('42,500')).toBe(42_500_000); // one group = a decimal comma (42,5 mil.)
-    for (const bad of ['', '0', 'abc', '-5', '1,2,3']) expect(parsePower(bad), bad).toBeNull();
-  });
-
   it('gives the pages of the bracket; a limit belongs to the lower row; troops in the hospital do not count', () => {
     expect(passportsFor(9_000_000).pages).toBe(1);
     expect(passportsFor(10_000_000).pages).toBe(1);

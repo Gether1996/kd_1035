@@ -64,6 +64,34 @@
           </p>
         </form>
 
+        <form class="ingame ingame--power" novalidate (submit)="savePower($event, powerInput)">
+          <label class="field__label" for="account-power">{{ a.power.label }}</label>
+          <div class="ingame__row">
+            <input
+              #powerInput
+              id="account-power"
+              class="input"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              [placeholder]="a.power.placeholder"
+              [value]="powerText(user.power ?? null)"
+              [attr.aria-invalid]="powerState() === 'invalid' || null"
+              aria-describedby="power-hint power-state"
+              (input)="powerState.set(null)"
+            />
+            <button type="submit" class="btn btn--gold" [disabled]="saving()">
+              {{ a.power.save }}
+            </button>
+          </div>
+          <p class="field__hint" id="power-hint">{{ a.power.hint }}</p>
+          <p class="ingame__state" id="power-state" role="status" [class.is-error]="powerState() === 'failed' || powerState() === 'invalid'">
+            @if (powerState(); as state) {
+              {{ a.power[state] }}
+            }
+          </p>
+        </form>
+
         <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="logout()">
           <svg appIcon="log-out"></svg> {{ a.logout }}
         </button>

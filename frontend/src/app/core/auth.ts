@@ -10,6 +10,8 @@ export interface Player {
   avatar_url: string;
   /** typed by the player on /ucet, '' until then */
   ingame_name: string;
+  /** the current power in millions – the one of the KvK evaluation, typed on /ucet or by the superadmin; null = none */
+  power?: number | null;
   /** adds marches and KvK sign-ups – a new player waits for the superadmin (Gether 12. 10. 2026) */
   approved: boolean;
   /** agreed to the current terms of use – else the terms gate asks first */
@@ -69,6 +71,11 @@ export class Auth {
   /** The player's name in Rise of Kingdoms, so leadership recognises them ('' clears it). */
   async saveIngameName(name: string): Promise<void> {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { ingame_name: name })));
+  }
+
+  /** The player's current power in millions (null clears it) – the KvK evaluation counts with it. */
+  async savePower(power: number | null): Promise<void> {
+    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { power })));
   }
 
   /** The player agrees to the current terms of use (the server saves the version and the time). */

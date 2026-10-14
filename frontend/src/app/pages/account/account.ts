@@ -18,11 +18,12 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
+import { powerMillions } from '../../shared/power';
 import { PlayersAdmin } from './players-admin';
 
 /**
- * /ucet – the player's own account: sign in with Discord, in-game name, sign out, delete; a link to the event
- * reminders (/pripomienky).
+ * /ucet – the player's own account: sign in with Discord, in-game name, current power, sign out, delete; a link to the
+ * event reminders (/pripomienky).
  * Not indexed, not in the sitemap.
  */
 @Component({
@@ -48,6 +49,7 @@ export class Account {
   protected readonly result = signal<'deleted' | 'failed' | null>(null);
   protected readonly saving = signal(false);
   protected readonly nameState = signal<'saved' | 'failed' | 'required' | null>(null);
+  protected readonly powerState = signal<'saved' | 'failed' | 'invalid' | null>(null);
 
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
@@ -108,6 +110,33 @@ export class Account {
       if (next && !this.auth.needsName()) void this.router.navigateByUrl(next);
     } catch {
       this.nameState.set('failed');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  /** the power as the field shows it: millions with a decimal comma, no thousands separator */
+  protected powerText(power: number | null): string {
+    return power === null ? '' : new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 1, useGrouping: false }).format(power);
+  }
+
+  /** the power of the KvK evaluation (Gether 14. 10. 2026) – millions or the whole number from the game; empty clears it */
+  protected async savePower(event: Event, input: HTMLInputElement): Promise<void> {
+    event.preventDefault();
+    this.powerState.set(null);
+    const power = powerMillions(input.value);
+    if (power === undefined) {
+      this.powerState.set('invalid');
+      input.focus();
+      return;
+    }
+    this.saving.set(true);
+    try {
+      await this.auth.savePower(power);
+      input.value = this.powerText(power);
+      this.powerState.set('saved');
+    } catch {
+      this.powerState.set('failed');
     } finally {
       this.saving.set(false);
     }

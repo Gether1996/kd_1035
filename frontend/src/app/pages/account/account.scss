@@ -152,6 +152,11 @@
   }
 }
 
+// the power right under the name – the state line of the name keeps them apart
+.ingame--power {
+  margin-top: 4px;
+}
+
 .ingame__state {
   min-height: 1.4em;
   font-size: 0.9375rem;

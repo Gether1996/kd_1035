@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
+import { parsePower } from '../../shared/power';
 
 /**
  * Passport Pages needed to migrate, by account power: [upper limit in millions (inclusive), pages]. Same in
@@ -33,19 +34,6 @@ export const PAGE_PRICE = 600_000;
 /** power of one troop the player still sends to the hospital – wounded troops do not count (the power shown in the
  * game already leaves out the ones there now) */
 const HOSPITAL_POWER = { t4: 4, t5: 10 };
-
-/** Power as typed: "42.5" or "42,5" = millions, a big number ("42 500 000", "42,500,000", "42.500.000") = the power
- * itself. */
-export function parsePower(text: string): number | null {
-  const plain = text.replace(/[\s ]/g, '');
-  // thousands separators as the game shows them – two or more groups of three digits
-  const grouped = /^\d{1,3}([.,])\d{3}(\1\d{3})+$/.test(plain);
-  const clean = grouped ? plain.replace(/[.,]/g, '') : plain.replace(',', '.');
-  if (!/^\d+(\.\d+)?$/.test(clean)) return null;
-  const value = Number(clean);
-  if (!value) return null;
-  return value >= 10_000 ? value : value * 1_000_000;
-}
 
 export interface PassportResult {
   /** power that counts, after the troops the player still sends to the hospital */

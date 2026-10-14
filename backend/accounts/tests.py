@@ -4,6 +4,7 @@ import sqlite3
 import tempfile
 import urllib.error
 from datetime import timedelta
+from decimal import Decimal
 from pathlib import Path
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
@@ -20,7 +21,7 @@ from kingdom import snapshot
 from kingdom.models import KingdomEvent
 
 from . import discord_oauth
-from .models import EventReminder, Player, PlayerSettings, SentReminder
+from .models import EventReminder, Player, PlayerEvaluation, PlayerSettings, SentReminder
 
 DISCORD = {'DISCORD_CLIENT_ID': '1234567890', 'DISCORD_CLIENT_SECRET': 'shh', 'SITE_URL': 'https://kd1035.test'}
 CALLBACK = 'https://kd1035.test/api/auth/discord/callback/'
@@ -368,6 +369,7 @@ class MeTests(TestCase):
                     'name': 'Nelly',
                     'avatar_url': 'https://cdn.discordapp.com/embed/avatars/5.png',
                     'ingame_name': '',
+                    'power': None,
                     'approved': False,
                     'terms_accepted': False,
                     'is_staff': False,
@@ -521,6 +523,51 @@ class IngameNameTests(TestCase):
         self.assertEqual(self.patch({'ingame_name': 'X'}, self.token()).status_code, 403)
         self.client.force_login(User.objects.create_superuser('boss', password='x'))
         self.assertEqual(self.patch({'ingame_name': 'X'}, self.token()).status_code, 403)
+
+
+class OwnPowerTests(TestCase):
+    """The current power on /ucet is the power of the KvK evaluation (Gether 14. 10. 2026)."""
+
+    def setUp(self):
+        self.client = Client(enforce_csrf_checks=True)
+        self.player = make_player(ingame_name='GetheR')
+        self.client.force_login(self.player.user)
+        self.csrf = self.client.get('/api/auth/me/').cookies['csrftoken'].value
+
+    def patch(self, data):
+        return self.client.patch(
+            '/api/auth/me/', json.dumps(data), content_type='application/json', HTTP_X_CSRFTOKEN=self.csrf
+        )
+
+    def test_shows_the_power_the_superadmin_wrote_down(self):
+        self.assertIsNone(self.client.get('/api/auth/me/').json()['user']['power'])
+        PlayerEvaluation.objects.create(player=self.player, power=Decimal('101.5'), acclaim=300_000)
+        self.assertEqual(self.client.get('/api/auth/me/').json()['user']['power'], 101.5)
+
+    def test_player_writes_down_and_clears_the_power(self):
+        response = self.patch({'power': 98.4})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['user']['power'], 98.4)
+        self.assertEqual(PlayerEvaluation.objects.get(player=self.player).power, Decimal('98.4'))
+        self.assertEqual(self.patch({'power': None}).json()['user']['power'], None)
+        self.assertIsNone(PlayerEvaluation.objects.get(player=self.player).power)
+
+    def test_changes_only_the_power_of_the_evaluation(self):
+        PlayerEvaluation.objects.create(player=self.player, power=Decimal('80'), acclaim=300_000, t4=True)
+        self.patch({'power': 85})
+        record = PlayerEvaluation.objects.get(player=self.player)
+        self.assertEqual((record.power, record.acclaim, record.t4), (Decimal('85'), 300_000, True))
+        # the name alone leaves the power as it is
+        self.patch({'ingame_name': 'Gether'})
+        self.assertEqual(PlayerEvaluation.objects.get(player=self.player).power, Decimal('85'))
+
+    def test_refuses_a_power_out_of_range(self):
+        for bad in [-1, 10_000, 101.55, 'abc']:
+            with self.subTest(bad=bad):
+                response = self.patch({'power': bad})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn('power', response.json())
+        self.assertFalse(PlayerEvaluation.objects.exists())
 
 
 @override_settings(STORAGES=PLAIN_STATIC)
