@@ -3,12 +3,16 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  Injector,
+  afterNextRender,
   computed,
   effect,
   inject,
+  input,
   linkedSignal,
   signal,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { ArmoryApi } from '../../core/armory';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
@@ -24,6 +28,8 @@ import { EvalSettingsTab } from './settings-tab';
 import { EVAL_TEXTS } from './texts';
 
 type Tab = 'settings' | 'results';
+/** ?tab= of the variables (the table has no query) */
+const SETTINGS_QUERY = 'premenne';
 
 /**
  * /vyhodnocovanie – the KvK evaluation of the superadmin (Gether 13. 10. 2026: the spreadsheet "KVK Requirements" on
@@ -32,6 +38,8 @@ type Tab = 'settings' | 'results';
  * (not asked from the players yet): when the superadmin writes it down, the marches it asks for and the excess count.
  * In the account menu of the superadmin and the players the superadmin lets in (Player.evaluator – they see approved
  * players only); a prerendered shell, not indexed, not in the sitemap.
+ * Unsaved Premenné are not lost by leaving (14. 10. 2026): a link or back asks first (leave-guard.ts), closing or
+ * reloading the tab gets the browser's own question – so does the full page load of a newer build (core/site-update.ts).
  */
 @Component({
   selector: 'app-evaluation-page',
@@ -50,10 +58,10 @@ type Tab = 'settings' | 'results';
       } @else if (data.hasValue()) {
         @if (canTable() && canSettings()) {
           <div class="segmented ev-tabs" role="group" [attr.aria-label]="x.title">
-            <button type="button" [attr.aria-pressed]="tab() === 'settings'" (click)="picked.set('settings')">
+            <button type="button" [attr.aria-pressed]="tab() === 'settings'" (click)="showTab('settings')">
               {{ x.tabs.settings }}@if (dirty()) {<span class="ev-dot" aria-hidden="true"></span>}
             </button>
-            <button type="button" [attr.aria-pressed]="tab() === 'results'" (click)="picked.set('results')">{{ x.tabs.results }}</button>
+            <button type="button" [attr.aria-pressed]="tab() === 'results'" (click)="showTab('results')">{{ x.tabs.results }}</button>
           </div>
         }
         @if (armory.failed()) {
@@ -115,6 +123,7 @@ export class EvaluationPage {
   protected readonly auth = inject(Auth);
   protected readonly armory = inject(ArmoryApi);
   private readonly api = inject(EvaluationApi);
+  private readonly router = inject(Router);
   protected readonly texts = computed(() => EVAL_TEXTS[this.i18n.lang()]);
 
   protected readonly superuser = computed(() => !!this.auth.user()?.is_superuser);
@@ -150,9 +159,12 @@ export class EvaluationPage {
   /** the pair table or the formations were changed elsewhere meanwhile – the save was refused */
   protected readonly stalePairs = signal(false);
   protected readonly recordFailed = signal(false);
-  private readonly picked = signal<Tab>('results');
-  /** the tab picked, or the only one allowed */
-  protected readonly tab = computed<Tab>(() => (!this.canTable() ? 'settings' : !this.canSettings() ? 'results' : this.picked()));
+  /** ?tab=premenne opens the variables, so a reload or a shared link shows them; no query = the table */
+  readonly query = input<string>(undefined, { alias: 'tab' });
+  /** the tab in the address, or the only one allowed (an unknown value or a tab without its switch: the allowed one) */
+  protected readonly tab = computed<Tab>(() =>
+    !this.canTable() ? 'settings' : !this.canSettings() ? 'results' : this.query() === SETTINGS_QUERY ? 'settings' : 'results',
+  );
 
   /** "Rátať s power": off = the estimate from the marches only (a view switch, not saved) */
   protected readonly usePower = signal(true);
@@ -180,6 +192,36 @@ export class EvaluationPage {
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.i18n.t().seo.evaluation, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
+
+    // closing or reloading the tab with unsaved variables: the browser asks in its own words (no text of ours); only
+    // while dirty, a clean page leaves at once (and stays in the back/forward cache)
+    const injector = inject(Injector);
+    afterNextRender(() => {
+      effect(
+        (onCleanup) => {
+          if (!this.dirty()) return;
+          const ask = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            // older Safari asks only with this set
+            e.returnValue = true;
+          };
+          addEventListener('beforeunload', ask);
+          onCleanup(() => removeEventListener('beforeunload', ask));
+        },
+        { injector },
+      );
+    });
+  }
+
+  /** for the route's leave guard: nothing unsaved, or the user agrees to drop it */
+  canLeave(): boolean {
+    return !this.dirty() || confirm(this.texts().leaveUnsaved);
+  }
+
+  /** the tab in the address without a new history entry – back leaves the page, not the tab */
+  protected showTab(tab: Tab): void {
+    const queryParams = { tab: tab === 'settings' ? SETTINGS_QUERY : null };
+    void this.router.navigate([], { queryParams, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   /**

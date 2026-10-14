@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { About } from './pages/about/about';
+import { leaveEvaluation } from './pages/evaluation/leave-guard';
 import { Home } from './pages/home/home';
 import { NotFound } from './pages/not-found/not-found';
 import { Privacy } from './pages/privacy/privacy';
@@ -28,6 +29,8 @@ const pages = (): Routes => [
   {
     path: 'vyhodnocovanie',
     loadComponent: () => import('./pages/evaluation/evaluation-page').then((m) => m.EvaluationPage),
+    // unsaved Premenné are not dropped by a click elsewhere (14. 10. 2026)
+    canDeactivate: [leaveEvaluation],
   },
   { path: 'slovnik', loadComponent: () => import('./pages/glossary/glossary').then((m) => m.Glossary) },
   // guides too
