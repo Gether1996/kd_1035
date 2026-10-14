@@ -34,7 +34,9 @@ class EventCalendarTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # October 2026: Thursday 1 → Saturday 31, so Monday 28 September → Sunday 1 November
         self.assertEqual((response.json()['from'], response.json()['to']), ('2026-09-28', '2026-11-01'))
-        self.assertEqual(response['Cache-Control'], 'public, max-age=300')
+        # asked again on every visit: a date leadership just set must show after a reload (Gether 14. 10. 2026 – the
+        # browser kept the calendar 5 minutes, Karuak Boss stayed "termín oznámime")
+        self.assertEqual(response['Cache-Control'], 'no-cache')
         self.assertNotIn('Cookie', response.get('Vary', ''))
 
     def test_range_days_are_local_and_inclusive(self, _now):

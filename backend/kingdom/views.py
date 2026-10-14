@@ -100,7 +100,7 @@ class EventCalendar(APIView):
     (Europe/Bratislava), a running multi-day event included, plus every irregular event with its next (or running)
     date – null while leadership has not announced one."""
 
-    # public and the same for everyone: no session (a cache may keep it), nothing to protect with CSRF
+    # public and the same for everyone: no session, nothing to protect with CSRF
     authentication_classes = []
 
     def get(self, request):
@@ -141,7 +141,9 @@ class EventCalendar(APIView):
         response = Response(
             {'from': first.isoformat(), 'to': last.isoformat(), 'occurrences': occurrences, 'irregular': irregular}
         )
-        response['Cache-Control'] = 'public, max-age=300'
+        # stored, but asked again on every visit: a date or an event the superadmin just changed shows after a reload
+        # (Gether 14. 10. 2026 – with max-age=300 the browser kept the old calendar 5 minutes)
+        response['Cache-Control'] = 'no-cache'
         return response
 
 
