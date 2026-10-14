@@ -10,7 +10,7 @@ import logging
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Count, Prefetch
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
@@ -21,11 +21,13 @@ from rest_framework.response import Response
 from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
 from .models import APPROVED, MARCH_STATS, KvkSettings, KvkSignup, March, Player, PlayerSettings
+from .pair_check import march_checker
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
 
 log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
+PROBLEMS = ('pair_problem', 'formation_problem')
 
 
 class IsReviewer(BasePermission):
@@ -230,12 +232,17 @@ def settings(request):
 def reviewers(request):
     """Every active player signed in with Discord: the reviewer flag (R4), the approval for marches and KvK sign-ups,
     when they first and last signed in, how many marches they have and which KvK sign-ups (Gether 13. 10. 2026: filters
-    like on /marche)."""
+    like on /marche), and `issues` – how many of their marches are red on /marche (a wrong pair or formation,
+    march_checker; read once for the whole list, the queries do not grow with the players)."""
+    check = march_checker()
     players = (
         Player.objects.filter(user__is_active=True)
         .select_related('user')
-        .annotate(march_count=Count('marches', distinct=True))
-        .prefetch_related(Prefetch('kvk_signups', queryset=KvkSignup.objects.only('player_id', 'role')))
+        .prefetch_related(
+            Prefetch('kvk_signups', queryset=KvkSignup.objects.only('player_id', 'role')),
+            # only what the checker reads
+            Prefetch('marches', queryset=March.objects.only('player_id', 'kind', 'primary', 'secondary', 'formation')),
+        )
     )
     rows = sorted(
         (
@@ -250,7 +257,9 @@ def reviewers(request):
                 'approved': p.approved,
                 'created_at': iso(p.created_at),
                 'last_login': iso(p.user.last_login) if p.user.last_login else None,
-                'marches': p.march_count,
+                'marches': len(p.marches.all()),
+                # red on /marche (marchHasProblem in core/kvk-api.ts)
+                'issues': sum(1 for march in p.marches.all() if any(map(check(march).get, PROBLEMS))),
                 'kvk': sorted(signup.role for signup in p.kvk_signups.all()),
                 'superuser': p.user.is_superuser,
             }

@@ -3,7 +3,9 @@ from datetime import timedelta
 from unittest import mock
 
 from django.core.cache import cache
+from django.db import connection
 from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from guides.models import CommanderFormation, CommanderPair
@@ -17,8 +19,8 @@ BOT = {'DISCORD_BOT_TOKEN': 'token', 'SITE_URL': 'https://kd1035.eu'}
 
 
 @override_settings(**BOT)
-class MarchNoticeTests(TestCase):
-    """Gether 14. 10. 2026: the superadmin tells players by a bot DM what is red in their marches."""
+class RedMarches(TestCase):
+    """Nelly with three red marches (and a rally march the evaluation skips), Bob with a right one, the superadmin"""
 
     def setUp(self):
         cache.clear()
@@ -60,6 +62,10 @@ class MarchNoticeTests(TestCase):
         return client.post(
             '/api/marches/notices/', json.dumps(data), content_type='application/json', HTTP_X_CSRFTOKEN=client.token
         )
+
+
+class MarchNoticeTests(RedMarches):
+    """Gether 14. 10. 2026: the superadmin tells players by a bot DM what is red in their marches."""
 
     def test_the_message_says_what_is_wrong_and_links_to_the_marches(self):
         problems = notices.problems_of(self.nelly, notices.march_checker())
@@ -169,3 +175,32 @@ class MarchNoticeTests(TestCase):
         self.post({'players': [self.nelly.pk]})
         self.nelly.delete_account()
         self.assertFalse(MarchNotice.objects.exists())
+
+
+class ReviewerIssuesTests(RedMarches):
+    """The Hráči list on /ucet counts the red marches of each player (`issues`) in the same number of queries for any
+    number of players."""
+
+    def rows(self):
+        return {p['id']: p for p in self.admin.get('/api/kvk/reviewers/').json()['players']}
+
+    def test_issues_are_the_red_marches(self):
+        rows = self.rows()
+        # solo, the other order and a wrong formation; the rally march is not evaluated
+        self.assertEqual((rows[self.nelly.pk]['issues'], rows[self.nelly.pk]['marches']), (3, 4))
+        self.assertEqual((rows[self.bob.pk]['issues'], rows[self.bob.pk]['marches']), (0, 1))
+        March.objects.filter(player=self.nelly, position=1).update(secondary='Takeda Shingen')
+        self.assertEqual(self.rows()[self.nelly.pk]['issues'], 2)
+
+    def test_the_queries_do_not_grow_with_the_players(self):
+        self.bob.delete_account()
+        self.rows()  # the first request of the session writes it
+        with CaptureQueriesContext(connection) as one:
+            self.assertEqual(self.rows()[self.nelly.pk]['issues'], 3)
+        for n in range(4):
+            other = self.player(str(900 + n), f'Other {n}')
+            self.march(other, 1, 'Attila', '')  # solo
+            self.march(other, 2, 'Attila', 'Takeda Shingen', formation='wedge')
+        with self.assertNumQueries(len(one.captured_queries)):
+            rows = self.rows()
+        self.assertEqual(sorted(p['issues'] for p in rows.values()), [0, 2, 2, 2, 2, 3])
