@@ -83,6 +83,8 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
    * is not in its table. Sent to the player and the superuser only (Gether 14. 10. 2026), missing for anyone else.
    */
   pair_problem?: 'solo' | 'unknown' | null;
+  /** how to fix an 'unknown' pair: swap = the other order is scored (no points are ever sent) – the same people only */
+  pair_hint?: { swap: boolean } | null;
   /** the formations its primary commander should lead with, when the march uses another one – the same people only */
   formation_problem?: string[] | null;
 }

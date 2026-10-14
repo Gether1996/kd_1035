@@ -415,6 +415,7 @@ export const cs: Dict = {
       solo: 'Chybí sekundární commander – ve vyhodnocování KvK se tento march nepočítá.',
       unknown: 'Tento pár se ve vyhodnocování KvK nepočítá – vyber jiný pár nebo jiné pořadí.',
     },
+    pairHint: { swap: 'Hodnotí se opačné pořadí: {secondary} + {primary}.' },
     formationProblem: '{commander} má vést formaci {want}, ne {have} – ve vyhodnocování KvK se armamenty počítají méně.',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, co je u nich červené.',

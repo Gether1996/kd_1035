@@ -31,6 +31,13 @@
   color: var(--red-300);
 }
 
+// how to fix the pair – its own line under the warning
+.mb__pair-hint {
+  display: block;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
 .mb__head {
   display: flex;
   flex-wrap: wrap;

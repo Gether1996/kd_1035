@@ -37,7 +37,12 @@
 </header>
 <!-- a pair the KvK evaluation does not score – only the player and the superadmin are told (Gether 14. 10. 2026) -->
 @if (m.pair_problem; as problem) {
-  <p class="mb__pair-problem">{{ k.pairProblem[problem] }}</p>
+  <p class="mb__pair-problem">
+    {{ k.pairProblem[problem] }}
+    @if (pairHint(); as hint) {
+      <span class="mb__pair-hint">{{ hint }}</span>
+    }
+  </p>
 }
 @if (formationProblem(); as text) {
   <p class="mb__pair-problem">{{ text }}</p>

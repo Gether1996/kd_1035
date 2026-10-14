@@ -428,6 +428,8 @@ export const sk = {
       solo: 'Chýba sekundárny commander – vo vyhodnocovaní KvK sa tento march nepočíta.',
       unknown: 'Tento pár sa vo vyhodnocovaní KvK nepočíta – vyber iný pár alebo iné poradie.',
     },
+    // how to fix it, under the sentence above (the player cannot see the pair table)
+    pairHint: { swap: 'Hodnotí sa opačné poradie: {secondary} + {primary}.' },
     // a formation the primary commander should not lead with (Gether 14. 10. 2026) – the player and the superadmin only
     formationProblem: '{commander} má viesť formáciu {want}, nie {have} – vo vyhodnocovaní KvK sa armamenty počítajú menej.',
     armamentsMissingOwn: 'Doplň armamenty',

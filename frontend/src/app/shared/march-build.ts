@@ -142,6 +142,13 @@ export class MarchBuild {
       .replace('{want}', wanted.map(name).join(' / '));
   });
 
+  /** how to fix a pair the evaluation does not score: the other order is scored – the names as on the march */
+  protected readonly pairHint = computed(() => {
+    const march = this.march();
+    if (!march.pair_hint?.swap) return null;
+    return this.t().pairHint.swap.replace('{secondary}', march.secondary).replace('{primary}', march.primary);
+  });
+
   /** the own march with no item or no armament at all: a red link opens the editor on that tab */
   protected readonly missing = computed(() => {
     const parts = emptyParts(this.march());
