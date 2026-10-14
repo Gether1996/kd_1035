@@ -71,7 +71,6 @@ export class EvalResultsTab {
     });
   });
 
-  protected readonly total = computed(() => this.rows().reduce((sum, r) => sum + r.acclaim.required, 0));
   // ---------------------------------------------------------------- the power of everyone at once
 
   protected readonly bulkOpen = signal(false);

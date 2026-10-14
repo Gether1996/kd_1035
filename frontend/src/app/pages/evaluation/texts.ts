@@ -29,7 +29,6 @@ const sk = {
   },
   summary: {
     players: 'Hráči',
-    total: 'Spolu acclaim',
   },
   noPower: 'Power zatiaľ nikto nemá zapísanú – odhad je čisto z marchov. Zapíš ju v stĺpci Power alebo hromadne.',
   powerOff: 'Power sa teraz nepočíta – odhad je čisto z marchov.',
@@ -343,7 +342,6 @@ const cs: EvalTexts = {
   },
   summary: {
     players: 'Hráči',
-    total: 'Celkem acclaim',
   },
   noPower: 'Power zatím nikdo nemá zapsanou – odhad je čistě z marchů. Zapiš ji ve sloupci Power nebo hromadně.',
   powerOff: 'Power se teď nepočítá – odhad je čistě z marchů.',
