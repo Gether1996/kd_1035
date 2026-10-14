@@ -156,6 +156,14 @@ describe('Account', () => {
     expect(el.querySelector('#power-state')?.textContent).toContain('Zadaj power v miliónoch');
     input.value = '';
     form.dispatchEvent(new Event('submit'));
-    expect(http.expectOne((r) => r.method === 'PATCH').request.body).toEqual({ power: null });
+    const clear = http.expectOne((r) => r.method === 'PATCH');
+    expect(clear.request.body).toEqual({ power: null });
+    expect(form.querySelector('.ingame__ask')).toBeNull();
+    // no power: the same reminder as a missing name (Gether 14. 10. 2026)
+    clear.flush({ login_enabled: true, user: { ...user, power: null } });
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(form.id).toBe('power');
+    expect(form.classList).toContain('is-required');
+    expect(form.querySelector('.ingame__ask')?.textContent).toContain('Doplň svoju aktuálnu power');
   });
 });

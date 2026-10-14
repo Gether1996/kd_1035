@@ -96,6 +96,9 @@ export const sk = {
     // the in-game name is missing: the red "!" in the header (screen readers) and the menu item to set it
     nameMissing: 'Chýba ti meno v hre',
     setName: 'Doplň meno v hre',
+    // the same for the current power (Gether 14. 10. 2026)
+    powerMissing: 'Chýba ti aktuálna power',
+    setPower: 'Doplň aktuálnu power',
   },
   hero: {
     tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',
@@ -1021,6 +1024,7 @@ export const sk = {
       label: 'Aktuálna power',
       placeholder: 'Napr. 101,5',
       hint: 'V miliónoch (101,5) alebo celé číslo z hry. Vedenie s ňou ráta pri KvK.',
+      required: 'Doplň svoju aktuálnu power – vedenie s ňou ráta pri KvK.',
       invalid: 'Zadaj power v miliónoch, napr. 101,5.',
       save: 'Uložiť',
       saved: 'Uložené.',

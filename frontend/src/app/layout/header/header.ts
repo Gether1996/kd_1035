@@ -47,6 +47,11 @@ export class Header {
   private readonly burger = viewChild<ElementRef<HTMLButtonElement>>('burger');
   /** Escape in the account menu hides it until the pointer or the focus leaves */
   protected readonly menuClosed = signal(false);
+  /** what the red "!" stands for, for screen readers */
+  protected readonly missing = computed(() => {
+    const t = this.i18n.t().nav;
+    return [this.auth.needsName() ? t.nameMissing : '', this.auth.needsPower() ? t.powerMissing : ''].filter(Boolean).join(', ');
+  });
 
   /** the signed-in player's pages: the account menu (desktop) and the mobile menu */
   protected readonly accountItems = computed<{ label: string; link: string; icon: IconName }[]>(() => {

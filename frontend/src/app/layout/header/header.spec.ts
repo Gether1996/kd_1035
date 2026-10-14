@@ -108,6 +108,7 @@ describe('Header account slot', () => {
         name: 'Nelly',
         avatar_url: 'https://cdn.discordapp.com/a.png',
         ingame_name: '',
+        power: 95,
         approved: true,
         terms_accepted: true,
         is_staff: false,
@@ -145,13 +146,27 @@ describe('Header account slot', () => {
     ]);
   });
 
-  it('has no "!" once the player has an in-game name', async () => {
+  it('has no "!" once the player has an in-game name and the power', async () => {
     await answer({
       login_enabled: true,
-      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, terms_accepted: true, is_staff: false, is_superuser: false },
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', power: 101.5, approved: true, terms_accepted: true, is_staff: false, is_superuser: false },
     });
     expect(el().querySelector('.alert-badge')).toBeNull();
     expect(el().querySelector('.is-alert')).toBeNull();
+  });
+
+  it('asks for the current power like for the name (Gether 14. 10. 2026)', async () => {
+    await answer({
+      login_enabled: true,
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', power: null, approved: true, terms_accepted: true, is_staff: false, is_superuser: false },
+    });
+    const link = el().querySelector<HTMLAnchorElement>('.account__link');
+    expect(link?.querySelector('.alert-badge')).not.toBeNull();
+    expect(link?.textContent).toContain('Chýba ti aktuálna power');
+    expect(el().querySelector('.burger')?.getAttribute('aria-label')).toContain('Chýba ti aktuálna power');
+    const alerts = (selector: string) => Array.from(el().querySelectorAll(selector), (a) => [a.getAttribute('href'), a.textContent?.trim()]);
+    expect(alerts('.account__dropdown .is-alert')).toEqual([['/ucet#power', '!Doplň aktuálnu power']]);
+    expect(alerts('.drawer__page.is-alert').map(([href]) => href)).toEqual(['/ucet#power']);
   });
 });
 

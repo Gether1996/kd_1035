@@ -42,8 +42,8 @@
             >
               <img class="account__avatar" [src]="user.avatar_url" alt="" width="28" height="28" />
               <span class="account__label">{{ user.name }}</span>
-              @if (auth.needsName()) {
-                <span class="alert-badge" aria-hidden="true">!</span><span class="sr-only">{{ t.nameMissing }}</span>
+              @if (auth.needsAttention()) {
+                <span class="alert-badge" aria-hidden="true">!</span><span class="sr-only">{{ missing() }}</span>
               }
             </a>
             <nav class="account__dropdown" aria-labelledby="account-menu-label" (keydown.escape)="closeMenu($event)">
@@ -53,6 +53,13 @@
                   <li>
                     <a class="is-alert" [routerLink]="i18n.path('account')" fragment="meno">
                       <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>{{ t.setName }}
+                    </a>
+                  </li>
+                }
+                @if (auth.needsPower()) {
+                  <li>
+                    <a class="is-alert" [routerLink]="i18n.path('account')" fragment="power">
+                      <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>{{ t.setPower }}
                     </a>
                   </li>
                 }
@@ -81,11 +88,11 @@
       type="button"
       aria-controls="mobile-menu"
       [attr.aria-expanded]="menuOpen()"
-      [attr.aria-label]="(menuOpen() ? t.close : t.menu) + (auth.needsName() ? ' – ' + t.nameMissing : '')"
+      [attr.aria-label]="(menuOpen() ? t.close : t.menu) + (auth.needsAttention() ? ' – ' + missing() : '')"
       (click)="toggle()"
     >
       <span></span><span></span>
-      @if (auth.needsName()) {
+      @if (auth.needsAttention()) {
         <span class="alert-badge" aria-hidden="true">!</span>
       }
     </button>
@@ -127,6 +134,15 @@
               <a class="drawer__page is-alert" [routerLink]="i18n.path('account')" fragment="meno" (click)="close()">
                 <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>
                 <span>{{ t.setName }}</span>
+                <svg appIcon="chevron-right"></svg>
+              </a>
+            </li>
+          }
+          @if (auth.needsPower()) {
+            <li>
+              <a class="drawer__page is-alert" [routerLink]="i18n.path('account')" fragment="power" (click)="close()">
+                <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>
+                <span>{{ t.setPower }}</span>
                 <svg appIcon="chevron-right"></svg>
               </a>
             </li>

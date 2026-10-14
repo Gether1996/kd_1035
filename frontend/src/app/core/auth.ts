@@ -54,6 +54,14 @@ export class Auth {
     const user = this.user();
     return !!user && !user.ingame_name.trim();
   });
+  /** signed in without the current power – the same reminder as the name (Gether 14. 10. 2026), the power is not
+   * required, the reminder stays until it is written down */
+  readonly needsPower = computed(() => {
+    const user = this.user();
+    return !!user && (user.power ?? null) === null;
+  });
+  /** the red "!" in the header: something of the profile is missing */
+  readonly needsAttention = computed(() => this.needsName() || this.needsPower());
 
   /** Full navigation to Discord; afterwards the player comes back to `next` (the current page by default). */
   loginUrl(next = this.i18n.switchPath(this.i18n.lang())): string {

@@ -64,7 +64,10 @@
           </p>
         </form>
 
-        <form class="ingame ingame--power" novalidate (submit)="savePower($event, powerInput)">
+        <form id="power" class="ingame ingame--power" [class.is-required]="auth.needsPower()" novalidate (submit)="savePower($event, powerInput)">
+          @if (auth.needsPower()) {
+            <p class="ingame__ask" role="status"><span class="ingame__mark" aria-hidden="true">!</span>{{ a.power.required }}</p>
+          }
           <label class="field__label" for="account-power">{{ a.power.label }}</label>
           <div class="ingame__row">
             <input

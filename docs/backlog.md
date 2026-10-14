@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.31.1:** Chýbajúca aktuálna power sa pripomína rovnako ako meno v hre – červený „!“ v hlavičke, položka „Doplň aktuálnu power“ v menu a výzva na Môj účet.
 - **14. 10. 2026 – v1.31.0:** Vyhodnocovanie má tretiu záložku **Požadovaný acclaim** – jednoduchý prehľad pre hráčov (vlastný acclaim navrchu, poradie, hľadanie), ktorý vedenie zverejní tlačidlom Zverejniť; prepínače v sekcii Hráči sú teraz Vyh. nastavenia (obe doterajšie záložky) a Pož. acclaim (iba prehľad). Stĺpec Aktuálny acclaim, progres a fond FBP sú preč; na mobile má pole Power v karte hráča celú šírku.
 - **14. 10. 2026 – v1.30.0:** Superadmin pošle hráčom s nesprávnym párom alebo formáciou správu od bota na Discord – náhľad so zoznamom a presným textom (čo je zle a čo zmeniť, bez bodov), odkaz rovno na Prehľad marchov, bez opakovania rovnakých chýb; tlačidlo v sekcii Hráči na Môj účet a na Marche hráčov.
 - **14. 10. 2026 – v1.29.3:** Neuložené Premenné vo Vyhodnocovaní sa nestratia – pri odchode z/zatvorení stránky sa web (prehliadač) opýta; záložka Premenné má vlastnú adresu `/vyhodnocovanie?tab=premenne`.

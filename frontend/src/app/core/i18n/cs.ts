@@ -95,6 +95,8 @@ export const cs: Dict = {
     accountMenu: 'Stránky hráče',
     nameMissing: 'Chybí ti jméno ve hře',
     setName: 'Doplň jméno ve hře',
+    powerMissing: 'Chybí ti aktuální power',
+    setPower: 'Doplň aktuální power',
   },
   hero: {
     tagline: 'Jediné čistě česko-slovenské království ve hře.',
@@ -1003,6 +1005,7 @@ export const cs: Dict = {
       label: 'Aktuální power',
       placeholder: 'Např. 101,5',
       hint: 'V milionech (101,5) nebo celé číslo ze hry. Vedení s ní počítá při KvK.',
+      required: 'Doplň svou aktuální power – vedení s ní počítá při KvK.',
       invalid: 'Zadej power v milionech, např. 101,5.',
       save: 'Uložit',
       saved: 'Uloženo.',
