@@ -1,6 +1,9 @@
 """The formation each commander should lead with (CommanderFormation, Gether 14. 10. 2026) – read for /vyhodnocovanie,
 saved from its Premenné tab and in the admin. Names written like the roster, formations as the ids of armory.json."""
 
+import hashlib
+import json
+
 from django.db import transaction
 
 from .armory import formations as formation_ids
@@ -9,8 +12,8 @@ from .roster import commander_names
 
 # more than the game has commanders – a sane limit for one request
 MAX_COMMANDERS = 500
-# a commander with more good formations than this takes any
-MAX_PER_COMMANDER = 3
+# the page has two slots for each commander (the admin as many)
+MAX_PER_COMMANDER = 2
 
 
 def formation_map() -> dict[str, list[str]]:
@@ -18,14 +21,23 @@ def formation_map() -> dict[str, list[str]]:
     return {row.commander: row.formations for row in CommanderFormation.objects.all() if row.formations}
 
 
+def formations_version(mapping: dict[str, list[str]]) -> str:
+    """What the page saw of the table: a save made against another version would undo a change made meanwhile (the
+    admin, another evaluator), so it is refused – like the pairs."""
+    return hashlib.sha1(json.dumps(sorted(mapping.items()), ensure_ascii=False).encode()).hexdigest()[:16]
+
+
 def clean_formations(value) -> list[str]:
     """A list of known formation ids, each once, at most MAX_PER_COMMANDER; ValueError for anything else."""
     known = formation_ids()
-    if not isinstance(value, list) or len(value) > MAX_PER_COMMANDER:
+    if not isinstance(value, list) or len(value) > len(known):
         raise ValueError('formations')
     if any(not isinstance(f, str) or f not in known for f in value):
         raise ValueError('formation')
-    return list(dict.fromkeys(value))
+    chosen = list(dict.fromkeys(value))
+    if len(chosen) > MAX_PER_COMMANDER:
+        raise ValueError('formations')
+    return chosen
 
 
 def check_formations(value) -> tuple[dict[str, list[str]], list[str]]:

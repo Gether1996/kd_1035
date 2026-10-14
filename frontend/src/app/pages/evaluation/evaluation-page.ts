@@ -138,6 +138,8 @@ export class EvaluationPage {
   private readonly savedIso = linkedSignal(() => (this.data.hasValue() ? this.data.value().updated_at : null));
   /** the version of the pair table this page loaded – a save of the table is refused over another one */
   private readonly pairsVersion = linkedSignal(() => (this.data.hasValue() ? this.data.value().pairs_version : ''));
+  /** the same for the commanders' formations */
+  private readonly formationsVersion = linkedSignal(() => (this.data.hasValue() ? this.data.value().formations_version : ''));
   /** the variables being edited – the table counts with them right away */
   protected readonly draft = linkedSignal(() => this.saved());
   protected readonly dirty = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
@@ -145,7 +147,7 @@ export class EvaluationPage {
   protected readonly failed = signal(false);
   /** commanders of the pair table a march cannot name – the server refused the save */
   protected readonly unknownNames = signal<string[]>([]);
-  /** the pair table was changed elsewhere meanwhile – the save was refused */
+  /** the pair table or the formations were changed elsewhere meanwhile – the save was refused */
   protected readonly stalePairs = signal(false);
   protected readonly recordFailed = signal(false);
   private readonly picked = signal<Tab>('results');
@@ -195,15 +197,17 @@ export class EvaluationPage {
       const changed = JSON.stringify(this.draft().pairs.rows) !== JSON.stringify(this.saved().pairs.rows);
       const pairs = changed ? { rows: body.pairs, version: this.pairsVersion() } : null;
       const moved = JSON.stringify(this.draft().formations.byCommander) !== JSON.stringify(this.saved().formations.byCommander);
-      const res = await this.api.saveSettings(body.settings, pairs, moved ? body.formations : null);
+      const formations = moved ? { map: body.formations, version: this.formationsVersion() } : null;
+      const res = await this.api.saveSettings(body.settings, pairs, formations);
       this.saved.set(normalizeSettings(res.settings, res.pairs, res.formations));
       this.savedIso.set(res.updated_at);
       this.pairsVersion.set(res.pairs_version);
+      this.formationsVersion.set(res.formations_version);
       this.draft.set(this.saved());
     } catch (error) {
       const answer = error instanceof HttpErrorResponse ? error.error : null;
       if (Array.isArray(answer?.names)) this.unknownNames.set(answer.names);
-      this.stalePairs.set(answer?.pairs === 'stale');
+      this.stalePairs.set(answer?.pairs === 'stale' || answer?.formations === 'stale');
       this.failed.set(true);
     } finally {
       this.saving.set(false);

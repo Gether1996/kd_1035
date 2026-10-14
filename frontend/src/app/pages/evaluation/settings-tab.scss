@@ -39,10 +39,8 @@
   }
 }
 
-.ev-card__heads {
-  display: grid;
+.ev-card__summary .ev-card__title {
   flex: 1;
-  gap: 4px;
   min-width: 0;
 }
 

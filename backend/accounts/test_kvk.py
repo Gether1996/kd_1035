@@ -405,10 +405,13 @@ class MarchTests(KvkTestCase):
         admin.user.save()
         marches = self.login(admin.user).get('/api/marches/').json()['players'][0]['marches']
         self.assertEqual([m['pair_problem'] for m in marches], expected)
-        # the types the evaluation counts are its own setting: rally counted, cavalry not
-        EvaluationSettings.objects.update_or_create(pk=1, defaults={'data': {'marches': {'kinds': ['conquering']}}})
+        # the types the evaluation counts are its own setting: rally counted, cavalry not; a broken entry (the JSON is
+        # editable in the admin) is left out, the lists still work
+        kinds = ['conquering', ['cavalry'], {'a': 1}]
+        EvaluationSettings.objects.update_or_create(pk=1, defaults={'data': {'marches': {'kinds': kinds}}})
         marches = self.client.get('/api/me/marches/').json()['marches']
         self.assertEqual([m['pair_problem'] for m in marches], [None, None, None, None, 'solo'])
+        self.assertEqual(self.client.get('/api/marches/').status_code, 200)
 
     def test_a_formation_the_primary_should_not_lead_with_is_told_to_the_player_and_the_superuser(self):
         """Gether 14. 10. 2026: like the wrong pair – a red border for the player and the superadmin only."""

@@ -38,13 +38,11 @@
   <!-- acclaim -->
   <details class="ev-card" [open]="isOpen('acclaim')" (toggle)="toggled('acclaim', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-acclaim">{{ s.acclaim.title }}</h2>
-          <span class="ev-card__hint">{{ s.acclaim.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-acclaim">{{ s.acclaim.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.acclaim.hint }}</p>
     <div class="ev-grid">
       <ng-container *ngTemplateOutlet="num; context: { $implicit: fs.acclaim[0] }" />
       <div class="field ev-field">
@@ -72,13 +70,11 @@
   <!-- power -->
   <details class="ev-card" [open]="isOpen('power')" (toggle)="toggled('power', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-power">{{ s.power.title }}</h2>
-          <span class="ev-card__hint">{{ s.power.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-power">{{ s.power.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.power.hint }}</p>
     <div class="ev-switch-row">
       <label class="ev-switch">
         <input class="switch" type="checkbox" role="switch" [checked]="v.power.expected" (change)="setFlag(['power', 'expected'], $event)" />
@@ -145,13 +141,11 @@
   <!-- marches -->
   <details class="ev-card" [open]="isOpen('marches')" (toggle)="toggled('marches', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-marches">{{ s.marches.title }}</h2>
-          <span class="ev-card__hint">{{ s.marches.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-marches">{{ s.marches.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.marches.hint }}</p>
     <ng-container *ngTemplateOutlet="sub; context: { $implicit: s.marches.kinds, key: 'marches.kinds' }" />
     <div class="chips" role="group" [attr.aria-label]="s.marches.kinds">
       @for (kind of kinds; track kind) {
@@ -201,13 +195,11 @@
   <!-- armaments -->
   <details class="ev-card" [open]="isOpen('armaments')" (toggle)="toggled('armaments', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-armaments">{{ s.armaments.title }}</h2>
-          <span class="ev-card__hint">{{ s.armaments.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-armaments">{{ s.armaments.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.armaments.hint }}</p>
     <div class="ev-grid">
       @for (f of fs.armaments; track f.label) {
         <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
@@ -219,13 +211,11 @@
   <!-- the inscription tier list (Slim 13. 10. 2026) -->
   <details class="ev-card ev-card--wide" [open]="isOpen('inscriptions')" (toggle)="toggled('inscriptions', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-inscriptions">{{ s.inscriptions.title }}</h2>
-          <span class="ev-card__hint">{{ s.inscriptions.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-inscriptions">{{ s.inscriptions.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.inscriptions.hint }}</p>
     <ng-container *ngTemplateOutlet="sub; context: { $implicit: s.inscriptions.tiers, key: 'inscriptions.tiers' }" />
     <div class="ev-grid ev-grid--tight">
       @for (f of fs.inscriptionTiers; track f.label) {
@@ -304,13 +294,11 @@
   <!-- equipment -->
   <details class="ev-card ev-card--wide" [open]="isOpen('equipment')" (toggle)="toggled('equipment', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-equipment">{{ s.equipment.title }}</h2>
-          <span class="ev-card__hint">{{ s.equipment.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-equipment">{{ s.equipment.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.equipment.hint }}</p>
     <div class="ev-scroll">
       <table class="ev-table ev-table--form ev-table--equipment">
         <thead>
@@ -390,13 +378,11 @@
   <!-- commander pairs: a table in the database (guides.CommanderPair) -->
   <details class="ev-card ev-card--wide" [open]="isOpen('pairs')" (toggle)="toggled('pairs', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-pairs">{{ s.pairs.title }}</h2>
-          <span class="ev-card__hint">{{ s.pairs.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-pairs">{{ s.pairs.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.pairs.hint }}</p>
     <div class="ev-grid">
       @for (f of fs.pairs; track f.label) {
         <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
@@ -515,13 +501,11 @@
   <!-- the formation each commander should lead with (Gether 14. 10. 2026, Slim: "nastaviť každého commandera, akú má mať formáciu") -->
   <details class="ev-card" [open]="isOpen('formations')" (toggle)="toggled('formations', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-formations">{{ s.formations.title }}</h2>
-        <span class="ev-card__hint">{{ s.formations.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-formations">{{ s.formations.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.formations.hint }}</p>
       <div class="ev-grid">
         <ng-container *ngTemplateOutlet="num; context: { $implicit: fs.formations }" />
       </div>
@@ -583,13 +567,11 @@
   <!-- the fund -->
   <details class="ev-card" [open]="isOpen('fund')" (toggle)="toggled('fund', $event)">
     <summary class="ev-card__summary">
-      <span class="ev-card__heads">
-        <h2 class="ev-card__title" id="ev-s-fund">{{ s.fund.title }}</h2>
-          <span class="ev-card__hint">{{ s.fund.hint }}</span>
-      </span>
+      <h2 class="ev-card__title" id="ev-s-fund">{{ s.fund.title }}</h2>
       <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
     </summary>
     <div class="ev-card__body">
+      <p class="ev-card__hint">{{ s.fund.hint }}</p>
     <div class="ev-grid">
       @for (n of counts(); track n) {
         <ng-container

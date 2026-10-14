@@ -414,9 +414,10 @@ class EvaluationSettings(models.Model):
 
 
 class PlayerEvaluation(models.Model):
-    """What the superadmin writes down about a player for the KvK evaluation and the game has no API for: the power
-    in millions, the acclaim reached, T4 troops only and a correction of the recommended power. Seen only by the
-    superadmin, gone with the account (the privacy page says so)."""
+    """What is written down about a player for the KvK evaluation and the game has no API for: the power in millions
+    (the player on /ucet too, since 14. 10. 2026), the acclaim reached, T4 troops only and a correction of the
+    recommended power. Seen by the superadmin and the players with the table switch of the evaluation (approved players
+    only), the power by the player too; gone with the account (the privacy page says so)."""
 
     player = models.OneToOneField(Player, on_delete=models.CASCADE, related_name='evaluation', verbose_name='hráč')
     power = models.DecimalField(

@@ -90,7 +90,7 @@ const sk = {
   neverSaved: 'Zatiaľ predvolené hodnoty.',
   settingsFailed: 'Premenné sa nepodarilo uložiť.',
   unknownCommanders: 'Neuložené – v tabuľke párov sú neznámi commanderi: {names}. Oprav mená podľa marchov.',
-  stalePairs: 'Neuložené – tabuľku párov medzitým zmenil niekto iný. Obnov stránku a zmeny urob znova.',
+  stalePairs: 'Neuložené – tabuľku párov alebo formácií medzitým zmenil niekto iný. Obnov stránku a zmeny urob znova.',
   sections: {
     acclaim: {
       title: 'Acclaim',
@@ -402,7 +402,7 @@ const cs: EvalTexts = {
   neverSaved: 'Zatím výchozí hodnoty.',
   settingsFailed: 'Proměnné se nepodařilo uložit.',
   unknownCommanders: 'Neuloženo – v tabulce párů jsou neznámí commandeři: {names}. Oprav jména podle marchů.',
-  stalePairs: 'Neuloženo – tabulku párů mezitím změnil někdo jiný. Obnov stránku a změny udělej znovu.',
+  stalePairs: 'Neuloženo – tabulku párů nebo formací mezitím změnil někdo jiný. Obnov stránku a změny udělej znovu.',
   sections: {
     acclaim: {
       title: 'Acclaim',

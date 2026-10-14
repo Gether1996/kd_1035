@@ -126,10 +126,14 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.newbie.pk}/', {'power': 90}, self.nelly).status_code, 404)
         bulk = {'players': [{'id': self.newbie.pk, 'power': 1}]}
         self.assertEqual(self.call('patch', '/api/evaluation/players/', bulk, self.nelly).status_code, 400)
-        # the variables only: the page and the variables, no notes
+        # the variables only: the page and the variables, no notes – not even to read
         self.call('patch', url, {'evaluator': False, 'evaluation_settings': True})
         self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluation_settings'], True)
-        self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 200)
+        data = self.nelly.get('/api/evaluation/')
+        self.assertEqual(data.status_code, 200)
+        me = next(p for p in data.json()['players'] if p['id'] == self.player.pk)
+        self.assertEqual((me['power'], me['acclaim'], me['t4'], me['power_bonus']), (None, None, False, 0.0))
+        self.assertEqual(len(me['marches']), 1)
         self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 200)
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 80}, self.nelly).status_code, 403)
         self.assertEqual(self.call('patch', '/api/evaluation/players/', {'players': [{'id': self.player.pk, 'power': 1}]}, self.nelly).status_code, 403)
@@ -146,22 +150,35 @@ class EvaluationApiTests(TestCase):
 
         CommanderFormation.objects.all().delete()
         CommanderFormation.objects.create(commander='Attila', formations=['wedge'])
-        self.assertEqual(self.admin.get('/api/evaluation/').json()['formations'], {'Attila': ['wedge']})
-        # saved with the variables when the page changed them: names like the roster, each formation once, an empty
-        # list = any formation (the row goes away)
-        body = {'settings': {'a': 1}, 'formations': {'attila': [], 'IVAN IV': ['pincer', 'pincer', 'wedge']}}
+        data = self.admin.get('/api/evaluation/').json()
+        self.assertEqual(data['formations'], {'Attila': ['wedge']})
+        version = data['formations_version']
+        # saved with the variables when the page changed them, over the version it loaded: names like the roster, each
+        # formation once, an empty list = any formation (the row goes away)
+        formations = {'attila': [], 'IVAN IV': ['pincer', 'pincer', 'wedge']}
+        body = {'settings': {'a': 1}, 'formations': formations, 'formations_version': version}
         res = self.call('put', '/api/evaluation/settings/', body)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()['formations'], {'Ivan IV': ['pincer', 'wedge']})
         self.assertEqual(list(CommanderFormation.objects.values_list('commander', flat=True)), ['Ivan IV'])
+        version = res.json()['formations_version']
+        # changed meanwhile (the admin): a save over the old version is refused, nothing is saved
+        CommanderFormation.objects.create(commander='Attila', formations=['arch'])
+        res = self.call('put', '/api/evaluation/settings/', {**body, 'settings': {'z': 1}, 'formations_version': version})
+        self.assertEqual((res.status_code, res.json()), (409, {'formations': 'stale'}))
+        self.assertEqual(EvaluationSettings.load().data, {'a': 1})
+        self.assertEqual(CommanderFormation.objects.count(), 2)
         # without them: they stay
-        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {}}).json()['formations'], {'Ivan IV': ['pincer', 'wedge']})
+        res = self.call('put', '/api/evaluation/settings/', {'settings': {}})
+        self.assertEqual(res.json()['formations'], {'Attila': ['arch'], 'Ivan IV': ['pincer', 'wedge']})
+        version = res.json()['formations_version']
         # a commander a march cannot name: nothing is saved
-        res = self.call('put', '/api/evaluation/settings/', {'settings': {'b': 2}, 'formations': {'Ivar': ['arch']}})
+        body = {'settings': {'b': 2}, 'formations': {'Ivar': ['arch']}, 'formations_version': version}
+        res = self.call('put', '/api/evaluation/settings/', body)
         self.assertEqual(res.json(), {'formations': 'unknown', 'names': ['Ivar']})
         self.assertEqual(EvaluationSettings.load().data, {})
-        for bad in ('x', {'Attila': 'wedge'}, {'Attila': ['square']}, {'Attila': ['arch', 'v', 'delta', 'wedge']}):
-            res = self.call('put', '/api/evaluation/settings/', {'settings': {}, 'formations': bad})
+        for bad in ('x', {'Attila': 'wedge'}, {'Attila': ['square']}, {'Attila': ['arch', 'v', 'delta']}):
+            res = self.call('put', '/api/evaluation/settings/', {'settings': {}, 'formations': bad, 'formations_version': version})
             self.assertEqual(res.json(), {'formations': 'invalid'}, bad)
         # the variables only: a player with the table switch only may not
         self.player.evaluator = True

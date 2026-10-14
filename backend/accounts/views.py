@@ -18,10 +18,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.response import Response
-from rest_framework.throttling import SimpleRateThrottle
+from rest_framework.permissions import SAFE_METHODS
+from rest_framework.throttling import SimpleRateThrottle, UserRateThrottle
 
 from . import discord_oauth, guard
 from .models import TERMS_VERSION, Player, PlayerSettings
@@ -194,9 +195,20 @@ def cannot_post(player: Player) -> Response | None:
     return None
 
 
+class ProfileThrottle(UserRateThrottle):
+    """Changes of the own profile (the in-game name, the power) per player – like the other writes of the API."""
+
+    scope = 'profile'
+    rate = '60/minute'
+
+    def allow_request(self, request, view):
+        return request.method in SAFE_METHODS or super().allow_request(request, view)
+
+
 @never_cache
 @ensure_csrf_cookie
 @api_view(['GET', 'PATCH', 'DELETE'])
+@throttle_classes([ProfileThrottle])
 def me(request):
     """GET: is login switched on and who is signed in. PATCH: the player's in-game name and power. DELETE: the player
     deletes their own account."""

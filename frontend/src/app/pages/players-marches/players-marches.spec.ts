@@ -227,6 +227,48 @@ describe('PlayersMarches', () => {
     http.match(() => true).forEach((r) => r.flush({}));
   });
 
+  it('shows the superadmin a wrong pair or formation on a closed player and on the march (Gether 14. 10. 2026)', async () => {
+    const http = setup({ name: 'Gether', approved: true, is_superuser: true });
+    const fixture = TestBed.createComponent(PlayersMarches);
+    fixture.detectChanges();
+    const wrong = [
+      { ...MARCH, secondary: '', pair_problem: 'solo', formation_problem: null },
+      { ...MARCH, id: 2, position: 2, pair_problem: null, formation_problem: ['arch'] },
+      { ...MARCH, id: 3, position: 3, pair_problem: null, formation_problem: null },
+    ];
+    const player = { name: 'bob', ingame_name: 'Bob', avatar_url: '', public: true, approved: true, me: false, updated_at: '2026-10-12T12:00:00Z' };
+    http.expectOne('/api/marches/').flush({
+      reviewer: true,
+      players: [
+        { ...player, id: 1, marches: wrong },
+        // the server leaves the fields out for the others' marches it does not tell about
+        { ...player, id: 2, name: 'eve', ingame_name: 'Eve', marches: [MARCH] },
+      ],
+    });
+    http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
+    await tick(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const rows = Array.from(el.querySelectorAll<HTMLElement>('.player'));
+    const bob = rows.find((r) => r.textContent?.includes('Bob'))!;
+    const eve = rows.find((r) => r.textContent?.includes('Eve'))!;
+    expect(bob.classList).toContain('has-problem');
+    expect(bob.querySelector('.tag--problem')?.textContent).toContain('Na opravu: 2');
+    expect(bob.querySelectorAll('.player__mini.is-bad').length).toBe(2);
+    expect(eve.classList).not.toContain('has-problem');
+    expect(eve.querySelector('.tag--problem')).toBeNull();
+    // opened: the red cards with what is wrong
+    bob.querySelector<HTMLButtonElement>('.player__head')!.click();
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await tick(fixture);
+    const cards = Array.from(bob.querySelectorAll('app-march-build'));
+    expect(cards.map((c) => c.classList.contains('is-bad-pair'))).toEqual([true, true, false]);
+    const notes = Array.from(bob.querySelectorAll('.mb__pair-problem'), (n) => n.textContent?.trim());
+    expect(notes[0]).toContain('Chýba sekundárny commander');
+    expect(notes[1]).toContain('Attila má viesť formáciu');
+    expect(notes[1]).toContain('nie Delta');
+  });
+
   it('a new player waits for the superadmin instead of the list', async () => {
     const http = setup({ name: 'Nova', approved: false });
     const fixture = TestBed.createComponent(PlayersMarches);

@@ -20,7 +20,8 @@ def counted_kinds() -> set[str]:
     data = EvaluationSettings.objects.filter(pk=1).values_list('data', flat=True).first()
     marches = data.get('marches') if isinstance(data, dict) else None
     kinds = marches.get('kinds') if isinstance(marches, dict) else None
-    return set(kinds) if isinstance(kinds, list) else set(DEFAULT_KINDS)
+    # the JSON can be edited in the admin – anything but names is left out instead of failing every march list
+    return {k for k in kinds if isinstance(k, str)} if isinstance(kinds, list) else set(DEFAULT_KINDS)
 
 
 def march_checker() -> Callable[[March], dict]:

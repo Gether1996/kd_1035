@@ -18,7 +18,7 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
-from guides.formations import check_formations, formation_map, replace_formations
+from guides.formations import check_formations, formation_map, formations_version, replace_formations
 from guides.pairs import check_rows, pair_rows, pairs_version, replace_pairs
 
 from .kvk_views import march_data
@@ -117,8 +117,10 @@ def settings_data(row: EvaluationSettings) -> dict:
         'updated_at': iso(row.updated_at) if row.data else None,
         'pairs': rows,
         'pairs_version': pairs_version(rows),
-        # the formations the commanders should lead with (guides.CommanderFormation, Gether 14. 10. 2026)
-        'formations': formation_map(),
+        # the formations the commanders should lead with (guides.CommanderFormation, Gether 14. 10. 2026); its version
+        # guards a save like the pairs'
+        'formations': (formations := formation_map()),
+        'formations_version': formations_version(formations),
     }
 
 
@@ -127,7 +129,9 @@ def settings_data(row: EvaluationSettings) -> dict:
 @permission_classes([CanEvaluate])
 def evaluation(request):
     """The variables and every player with their marches and what was written down about them – for the superuser
-    those not approved too (the page leaves them out unless asked), and players without a march."""
+    those not approved too (the page leaves them out unless asked), and players without a march. The power, acclaim
+    and T4 only with the table switch: the variables alone do not show them (Gether 14. 10. 2026, two switches)."""
+    table = allowed(request, 'evaluator')
     players = (
         visible_players(request)
         .select_related('user', 'evaluation')
@@ -142,7 +146,7 @@ def evaluation(request):
                 'avatar_url': p.avatar_url,
                 'approved': p.may_post,
                 'marches': [march_data(m) for m in p.marches.all()],
-                **record_data(record_of(p)),
+                **record_data(record_of(p) if table else None),
             }
             for p in players
         ),
@@ -157,9 +161,9 @@ def evaluation(request):
 @throttle_classes([WriteThrottle])
 def evaluation_settings(request):
     """PUT {settings: {...}, pairs?: [[primary, secondary, points], …], pairs_version?, formations?: {commander:
-    [formation, …]}} – the variables ({settings: null} goes back to the defaults) and, when the page changed them, the
+    [formation, …]}, formations_version?} – the variables ({settings: null} goes back to the defaults) and, when the page changed them, the
     whole commander pair table and the commanders' formations; all or nothing. A commander a march cannot name in the
-    formations → 400 {formations: 'unknown', names}.
+    formations → 400 {formations: 'unknown', names}; the formations changed meanwhile → 409 {formations: 'stale'}.
     The table is saved only over the version the page loaded (pairs_version from GET): changed meanwhile in the admin
     or by another evaluator → 409 {pairs: 'stale'}. A commander a march cannot name → 400 {pairs: 'unknown', names}."""
     body = request.data if isinstance(request.data, dict) else {}
@@ -191,6 +195,8 @@ def evaluation_settings(request):
     with transaction.atomic():
         if pairs is not None and body.get('pairs_version') != pairs_version(pair_rows()):
             return Response({'pairs': 'stale'}, status=409)
+        if formations is not None and body.get('formations_version') != formations_version(formation_map()):
+            return Response({'formations': 'stale'}, status=409)
         row = EvaluationSettings.load()
         row.data = value or {}
         row.save()

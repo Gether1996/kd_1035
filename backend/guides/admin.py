@@ -11,6 +11,7 @@ from django.utils.safestring import mark_safe
 from kingdom.permissions import SuperuserOnlyAdmin
 
 from .armory import armory
+from .formations import MAX_PER_COMMANDER
 from .models import CommanderFormation, CommanderPair, Guide, GuideImage
 from .pairs import check_rows, known_name, merge_pairs, pair_rows, parse_lines, replace_pairs
 
@@ -185,13 +186,14 @@ class CommanderPairAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
 
 class CommanderFormationForm(forms.ModelForm):
-    """A commander a march can name, written like the roster, and the formations of armory.json in the order ticked."""
+    """A commander a march can name, written like the roster, and up to two formations of armory.json (in the order of
+    the list – the order plays no part in the evaluation, either one counts)."""
 
     formations = forms.MultipleChoiceField(
         label='Formácie',
         required=False,
         widget=forms.CheckboxSelectMultiple,
-        help_text='Odporúčané formácie (najviac 3). Žiadna = hocijaká formácia.',
+        help_text='Odporúčané formácie (najviac 2). Žiadna = hocijaká formácia.',
     )
 
     class Meta:
@@ -210,8 +212,8 @@ class CommanderFormationForm(forms.ModelForm):
 
     def clean_formations(self):
         chosen = self.cleaned_data['formations']
-        if len(chosen) > 3:
-            raise forms.ValidationError('Najviac 3 formácie.')
+        if len(chosen) > MAX_PER_COMMANDER:
+            raise forms.ValidationError(f'Najviac {MAX_PER_COMMANDER} formácie.')
         return chosen
 
 
