@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.32.0:** Schválený hráč dostane od bota súkromnú správu (SK/CZ), že môže pridať marche a prihlášku na KvK, s odkazom na Prehľad marchov – iba raz, iba keď ho superadmin schváli (nie auto-approve), iba so zapnutými správami od bota; „Čakáš na schválenie“ a Ochrana údajov to spomínajú (kolo agentov).
 - **14. 10. 2026 – v1.31.6:** Preklik medzi hráčom vo Vyhodnocovaní a jeho marchmi: v detaile riadku „Marche hráča“ (`/marche?hrac=`, iba ten hráč rozbalený, čip ho zruší), na otvorenej karte na `/marche` „Vyhodnocovanie“ pre tých, čo ho majú v menu (`/vyhodnocovanie?hrac=` riadok otvorí a odroluje k nemu); nezapočítané marche v detaile majú čitateľný text (kolo agentov).
 - **14. 10. 2026 – v1.31.5:** Hráči na Môj účet (superadmin): filter Prístup (R4, Vyh. nastavenia, Pož. acclaim, Bez prístupu), filter Marche „Na opravu“ a červený počet marchov na opravu pri hráčovi; tlačidlo Upozorniť hráčov na chyby sa na 320 px zalomí namiesto rolovania do strany (kolo agentov).
 - **14. 10. 2026 – v1.31.4:** Vyhodnocovanie: rýchle filtre nad tabuľkou Odhad acclaimu – Na opravu (sólo, pár mimo tabuľky, nesprávna formácia), Bez power a Nad odp. power s počtom hráčov, uložené v adrese (`?f=`), aby sa dal poslať odkaz; zoradenie aj podľa power (kolo agentov).

@@ -426,7 +426,7 @@ export const sk = {
     title: 'Moje marche',
     pending: {
       title: 'Čakáš na schválenie',
-      text: 'Superadmin ťa ešte neschválil. Keď ťa schváli, pridáš marche aj prihlášku na KvK a uvidíš marche ostatných.',
+      text: 'Superadmin ťa ešte neschválil. Keď ťa schváli, pridáš marche aj prihlášku na KvK a uvidíš marche ostatných. Po schválení ti napíše bot na Discorde, ak máš povolené súkromné správy.',
     },
     loadError: 'Marche sa nepodarilo načítať.',
     march: '{n}. march',
@@ -927,6 +927,7 @@ export const sk = {
           'Vybrané eventy, časy pripomienok, jazyk správ a či ich chceš dostávať na Discorde.',
           'Záznam odoslaných pripomienok na 30 dní, aby žiadna neprišla dvakrát.',
           'Ak máš v marchoch nesprávny pár alebo formáciu, správca ti môže cez bota poslať súkromnú správu s tým, čo opraviť (len keď máš správy od bota zapnuté). Text správy, kto ju poslal a kedy si pamätáme 30 dní.',
+          'Keď ťa správca schváli, bot ti pošle jednu krátku správu, že môžeš začať (len keď máš správy od bota zapnuté).',
           'Budíky – tvoj text, čas a kedy ti má bot napísať.',
         ],
       },

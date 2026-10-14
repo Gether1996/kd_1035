@@ -413,7 +413,7 @@ export const cs: Dict = {
     title: 'Moje marche',
     pending: {
       title: 'Čekáš na schválení',
-      text: 'Superadmin tě ještě neschválil. Až tě schválí, přidáš marche i přihlášku na KvK a uvidíš marche ostatních.',
+      text: 'Superadmin tě ještě neschválil. Až tě schválí, přidáš marche i přihlášku na KvK a uvidíš marche ostatních. Po schválení ti napíše bot na Discordu, pokud máš povolené soukromé zprávy.',
     },
     loadError: 'Marche se nepodařilo načíst.',
     march: '{n}. march',
@@ -907,6 +907,7 @@ export const cs: Dict = {
           'Vybrané eventy, časy připomínek, jazyk zpráv a jestli je chceš dostávat na Discordu.',
           'Záznam odeslaných připomínek na 30 dní, aby žádná nepřišla dvakrát.',
           'Pokud máš v marchích špatný pár nebo formaci, správce ti může přes bota poslat soukromou zprávu s tím, co opravit (jen když máš zprávy od bota zapnuté). Text zprávy, kdo ji poslal a kdy si pamatujeme 30 dní.',
+          'Až tě správce schválí, bot ti pošle jednu krátkou zprávu, že můžeš začít (jen když máš zprávy od bota zapnuté).',
           'Budíky – tvůj text, čas a kdy ti má bot napsat.',
         ],
       },
