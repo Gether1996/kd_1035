@@ -485,6 +485,39 @@ class MarchTests(KvkTestCase):
         self.assertEqual([m['pair_problem'] for m in marches], [None, None, None, None, 'solo'])
         self.assertEqual(self.client.get('/api/marches/').status_code, 200)
 
+    def test_a_pair_scored_only_in_the_other_order_tells_the_player_to_swap_it(self):
+        """The player cannot see the pair table: an 'unknown' pair says whether the other order scores – never the
+        points, and only to the player and the superuser."""
+        from guides.models import CommanderPair
+
+        CommanderPair.objects.all().delete()
+        CommanderPair.objects.create(primary='Ivan IV', secondary='Achilles', points=120)
+        CommanderPair.objects.create(primary='Attila', secondary='Takeda Shingen', points=0)
+        self.call('patch', '/api/me/marches/', {'public': True})
+        rows = [
+            ('Achilles', 'Ivan IV', {'swap': True}),
+            ('Ivan IV', 'Achilles', None),  # scored
+            ('Takeda Shingen', 'Attila', {'swap': False}),  # the other order has 0 points
+            ('Achilles', '', None),  # solo
+        ]
+        for position, (primary, secondary, _) in enumerate(rows, start=1):
+            March.objects.create(
+                player=self.player, position=position, kind='infantry', primary=primary, secondary=secondary, **STATS
+            )
+        expected = [hint for *_, hint in rows]
+        res = self.client.get('/api/me/marches/')
+        self.assertEqual([m['pair_hint'] for m in res.json()['marches']], expected)
+        self.assertNotIn('points', res.content.decode())
+        # another player: nothing; the superuser: the same hints
+        other = self.login(make_player('42').user).get('/api/marches/')
+        self.assertTrue(all('pair_hint' not in m for m in other.json()['players'][0]['marches']))
+        admin = make_player('43')
+        admin.user.is_superuser = True
+        admin.user.save()
+        res = self.login(admin.user).get('/api/marches/')
+        self.assertEqual([m['pair_hint'] for m in res.json()['players'][0]['marches']], expected)
+        self.assertNotIn('points', res.content.decode())
+
     def test_a_formation_the_primary_should_not_lead_with_is_told_to_the_player_and_the_superuser(self):
         """Gether 14. 10. 2026: like the wrong pair – a red border for the player and the superadmin only."""
         from guides.models import CommanderFormation, CommanderPair

@@ -55,13 +55,17 @@ def counting(marches: dict | None = None) -> dict:
 def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
     """One read of the settings (or `marches` already read by evaluation_marches()), the pair table and the
     formations; the returned function says what is wrong with a march: pair_problem 'solo' (no secondary), 'unknown'
-    (not in the table or 0 points) or None, and formation_problem the formations its primary should lead with when it
-    uses another one (else None)."""
+    (not in the table or 0 points) or None, pair_hint how to fix an 'unknown' pair ({swap: the other order scores},
+    never the points; else None) and formation_problem the formations its primary should lead with when it uses
+    another one (else None)."""
     kinds = counted_kinds(marches)
     table: dict[tuple[str, str], float] = {}
     for primary, secondary, points in CommanderPair.objects.values_list('primary', 'secondary', 'points'):
         table.setdefault((fold(primary), fold(secondary)), points)
     formations = {fold(row.commander): row.formations for row in CommanderFormation.objects.all() if row.formations}
+
+    def scores(primary: str, secondary: str) -> bool:
+        return (table.get((fold(primary), fold(secondary))) or 0) > 0
 
     def pair(march: March) -> str | None:
         if not march.secondary:
@@ -74,7 +78,10 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
 
     def check(march: March) -> dict:
         if march.kind not in kinds or not march.primary:
-            return {'pair_problem': None, 'formation_problem': None}
-        return {'pair_problem': pair(march), 'formation_problem': formation(march)}
+            return {'pair_problem': None, 'pair_hint': None, 'formation_problem': None}
+        problem = pair(march)
+        # the player cannot see the pair table – say when only the order is wrong (names as on the march)
+        hint = {'swap': scores(march.secondary, march.primary)} if problem == 'unknown' else None
+        return {'pair_problem': problem, 'pair_hint': hint, 'formation_problem': formation(march)}
 
     return check
