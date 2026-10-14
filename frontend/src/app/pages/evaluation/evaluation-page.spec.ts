@@ -372,7 +372,7 @@ describe('EvaluationPage', () => {
       expect(el.querySelector('#ev-player-1')?.classList).not.toContain('is-open');
       expect(scroll.mock.calls).toEqual([['ev-player-2']]);
       // the detail links to the player's marches – what the visitor sees there, /marche decides
-      const link = el.querySelector<HTMLAnchorElement>('#ev-detail-2 .ev-detail__links a')!;
+      const link = el.querySelector<HTMLAnchorElement>('#ev-detail-2 a[href^="/marche"]')!;
       expect(link.getAttribute('href')).toBe('/marche?hrac=2');
       expect(link.textContent).toContain('Marche hráča');
       // closed by hand: stays closed, no second scroll
