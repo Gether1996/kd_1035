@@ -99,6 +99,11 @@ class Player(models.Model):
         default=False,
         help_text='Worker poslal superadminovi na Discord, že sa prihlásil nový hráč.',
     )
+    welcome_due = models.BooleanField(
+        'čaká správa o schválení',
+        default=False,
+        help_text='Superadmin hráča schválil a worker mu ešte neposlal súkromnú správu, že môže začať.',
+    )
     terms_version = models.CharField(
         'verzia podmienok', max_length=10, blank=True, help_text='Dátum podmienok používania, s ktorými hráč súhlasil.'
     )
@@ -125,6 +130,15 @@ class Player(models.Model):
     def may_post(self) -> bool:
         """Adds and changes marches and KvK sign-ups: approved by the superadmin, or the superadmin themself."""
         return self.approved or self.user.is_superuser
+
+    def approval_changed(self, was_approved: bool) -> list[str]:
+        """The superadmin approved the player (newcomers.send_welcomes tells them by a bot DM) or took the approval
+        back (a message still waiting is cancelled). Returns the fields to save. The superadmin never waited, and
+        the auto-approve at the first sign-in does not come here."""
+        if self.approved == was_approved:
+            return []
+        self.welcome_due = self.approved and not self.user.is_superuser
+        return ['welcome_due']
 
     @property
     def avatar_url(self) -> str:

@@ -303,10 +303,12 @@ def reviewer(request, player_id):
     changes = {name: body[name] for name in fields if name in body}
     if not changes:
         return Response({'detail': 'reviewer, approved, evaluation_settings or evaluation_overview'}, status=400)
+    was_approved = player.approved
     for name, value in changes.items():
         if type(value) is not bool:
             return Response({name: 'bool'}, status=400)
         setattr(player, fields[name], value)
-    player.save(update_fields=[fields[name] for name in changes])
+    # a newly approved player gets a bot DM that they can start (newcomers.send_welcomes)
+    player.save(update_fields=[fields[name] for name in changes] + player.approval_changed(was_approved))
     log.info('Player %s: %s', player.pk, changes)
     return Response({'id': player.pk, **{name: getattr(player, field) for name, field in fields.items()}})

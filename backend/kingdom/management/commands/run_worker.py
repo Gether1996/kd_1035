@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from accounts.alarms import prune_alarms, send_alarms
 from accounts.cleanup import sweep_files
-from accounts.newcomers import announce_new_players
+from accounts.newcomers import announce_new_players, send_welcomes
 from accounts.notices import send_march_notices
 from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
 from kingdom.backups import backup_due, create_backup
@@ -72,6 +72,14 @@ class Command(BaseCommand):
                 pass
             except Exception:
                 log.exception('Announcing new players failed')
+
+            try:
+                # ... and the player they approve gets a DM that they can start
+                send_welcomes(timezone.now())
+            except DiscordPaused:
+                pass
+            except Exception:
+                log.exception('Sending welcomes to approved players failed')
 
             try:
                 # the superadmin's notices about wrong pairs and formations in the players' marches

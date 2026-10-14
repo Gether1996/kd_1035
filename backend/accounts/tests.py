@@ -189,7 +189,7 @@ class LoginFlowTests(TestCase):
         PlayerSettings.objects.update_or_create(pk=1, defaults={'auto_approve': True})
         self.callback(state=self.start(), code='abc')
         player = User.objects.get().player
-        self.assertEqual((player.approved, player.announced), (True, True))
+        self.assertEqual((player.approved, player.announced, player.welcome_due), (True, True, False))
         self.assertTrue(self.client.get('/api/auth/me/').json()['user']['approved'])
 
     def test_auto_approve_does_not_approve_a_returning_player(self):
@@ -618,6 +618,22 @@ class PlayerAdminTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(list(User.objects.values_list('username', flat=True)), ['boss'])
         self.assertFalse(LogEntry.objects.exists())
+
+    def test_approving_here_queues_the_welcome_like_the_hrachi_list(self):
+        Player.objects.filter(pk=self.player.pk).update(approved=False)
+        self.client.force_login(self.admin)
+        url = f'{self.url}{self.player.pk}/change/'
+        self.assertEqual(self.client.post(url, {'ingame_name': 'Nelly1035', 'approved': 'on'}).status_code, 302)
+        self.player.refresh_from_db()
+        self.assertEqual((self.player.approved, self.player.welcome_due), (True, True))
+        # saved again (an R4 switch): no second message; the approval taken back cancels the waiting one
+        Player.objects.filter(pk=self.player.pk).update(welcome_due=False)
+        self.client.post(url, {'ingame_name': 'Nelly1035', 'approved': 'on', 'kvk_reviewer': 'on'})
+        self.assertFalse(Player.objects.get(pk=self.player.pk).welcome_due)
+        Player.objects.filter(pk=self.player.pk).update(welcome_due=True)
+        self.client.post(url, {'ingame_name': 'Nelly1035'})
+        self.player.refresh_from_db()
+        self.assertEqual((self.player.approved, self.player.welcome_due), (False, False))
 
 
     def test_users_list_shows_and_finds_the_in_game_name(self):

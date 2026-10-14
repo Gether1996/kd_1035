@@ -8,6 +8,8 @@ and approved (migration accounts/0023).
 
 The web asks for the in-game name only after the first sign-in, so the message waits for it: a player is announced as
 soon as they save the in-game name, or NAME_GRACE after the first sign-in without it ("zatiaľ nevyplnené").
+
+Once the superadmin approves the player, the bot tells the player too (send_welcomes).
 """
 
 import logging
@@ -20,6 +22,7 @@ from django.utils import timezone
 
 from . import discord_bot
 from .models import Player
+from .notices import page_url
 from .reminders import GOLD, DiscordPaused
 
 log = logging.getLogger(__name__)
@@ -91,5 +94,68 @@ def announce_new_players(now: datetime | None = None) -> int:
                     log.warning('Discord unavailable, the new player waits for the next tick: %s', exc)
                     raise DiscordPaused from exc
                 log.warning('New player %s not announced to %s: %s', player.pk, target, exc)
+        count += 1
+    return count
+
+
+# the approved player's welcome (Gether's round of agents 14. 10. 2026: the player waiting for the approval otherwise
+# never learns it came) – one DM in the player's language with a link to the overview of the own marches
+WELCOME = {
+    'sk': {
+        'title': 'Si schválený na webe KD 1035',
+        'text': 'Môžeš pridať marche a prihlášku na KvK.',
+        'link': 'Pridať marche',
+    },
+    'cs': {
+        'title': 'Jsi schválen na webu KD 1035',
+        'text': 'Můžeš přidat marche a přihlášku na KvK.',
+        'link': 'Přidat marche',
+    },
+}
+
+
+def welcome_message(player: Player) -> dict:
+    t = WELCOME.get(player.lang, WELCOME['sk'])
+    lines = [t['text']]
+    embed = {'title': t['title'], 'color': GOLD, 'footer': {'text': 'KD 1035'}}
+    if settings.SITE_URL:
+        lines += ['', f'[{t["link"]}]({page_url(player.lang)})']
+        embed['url'] = page_url(player.lang)
+    embed['description'] = '\n'.join(lines)
+    return {'embeds': [embed]}
+
+
+def send_welcomes(now: datetime | None = None) -> int:
+    """Tells the players the superadmin has just approved (Player.welcome_due, set by Player.approval_changed) that
+    they can start. Returns how many messages went out.
+
+    A player is claimed (welcome_due=False in one UPDATE) before the message goes out, so it is sent at most once. A
+    player who switched the bot's messages off (remind_discord) gets nothing. Discord rate limiting or down: the player
+    is released and DiscordPaused stops the round until the next tick; refused (DMs closed…) = never tried again.
+    Without a bot every flag is cleared at once, so no pile of old messages arrives once the bot is set up.
+    """
+    if not discord_bot.enabled():
+        Player.objects.filter(welcome_due=True).update(welcome_due=False)
+        return 0
+    # revoked before the tick is handled by approval_changed; a blocked account or a superadmin never gets it
+    Player.objects.filter(welcome_due=True).filter(
+        Q(approved=False) | Q(user__is_active=False) | Q(user__is_superuser=True)
+    ).update(welcome_due=False)
+    due = Player.objects.filter(welcome_due=True).order_by('pk')
+    count = 0
+    for player in due[:PER_TICK]:
+        if not Player.objects.filter(pk=player.pk, welcome_due=True).update(welcome_due=False):
+            continue  # another worker took it
+        if not player.remind_discord:
+            continue
+        try:
+            discord_bot.send_dm(player.discord_id, welcome_message(player))
+        except discord_bot.BotError as exc:
+            if exc.temporary:
+                Player.objects.filter(pk=player.pk).update(welcome_due=True)
+                log.warning('Discord unavailable, the welcome waits for the next tick: %s', exc)
+                raise DiscordPaused from exc
+            log.info('Welcome of player %s not sent: %s', player.pk, 'DMs closed' if exc.blocked else exc)
+            continue
         count += 1
     return count

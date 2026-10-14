@@ -64,6 +64,13 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     def last_login(self, obj):
         return obj.user.last_login
 
+    def save_model(self, request, obj, form, change):
+        # approved here like in the Hráči list on /ucet: the player gets the bot DM (newcomers.send_welcomes)
+        was_approved = Player.objects.filter(pk=obj.pk).values_list('approved', flat=True).first()
+        if was_approved is not None:
+            obj.approval_changed(was_approved)
+        super().save_model(request, obj, form, change)
+
     # deleting a player removes the whole site account (the user), not just its Discord profile, and the admin
     # history about it – including the deletion entry the admin has just logged with the player's name
     def delete_model(self, request, obj):

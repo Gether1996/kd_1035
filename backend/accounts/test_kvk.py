@@ -17,7 +17,7 @@ from PIL import Image
 
 from . import cleanup, discord_bot, private_images
 from .models import MAX_MARCHES, TERMS_VERSION, KvkSettings, KvkSignup, March, Player, PlayerSettings
-from .newcomers import NAME_GRACE, announce_new_players
+from .newcomers import NAME_GRACE, announce_new_players, send_welcomes
 from .reminder_views import iso
 from .reminders import DiscordPaused
 from .test_reminders import make_player
@@ -733,6 +733,116 @@ class NewcomerTests(TestCase):
         self.assertEqual(announce_new_players(), 1)
         self.assertEqual(announce_new_players(), 0)
         self.assertEqual([c.args[0] for c in self.send.call_args_list], ['1', '2'])
+
+
+@override_settings(DISCORD_BOT_TOKEN='bot', SITE_URL='https://kd1035.eu')
+class WelcomeTests(KvkTestCase):
+    """The bot tells a player the superadmin has just approved that they can start (round of agents 14. 10. 2026)."""
+
+    def setUp(self):
+        super().setUp()
+        patcher = mock.patch('accounts.discord_bot.send_dm')
+        self.send = patcher.start()
+        self.addCleanup(patcher.stop)
+        admin_player = make_player('245662824171438090')
+        admin_player.user.is_superuser = True
+        admin_player.user.save()
+        self.admin = self.login(admin_player.user)
+        self.admin_player = admin_player
+        self.newbie = make_player('42', approved=False)
+        self.url = f'/api/kvk/reviewers/{self.newbie.pk}/'
+
+    def patch(self, **data):
+        return self.call('patch', self.url, data, self.admin)
+
+    def due(self) -> bool:
+        return Player.objects.get(pk=self.newbie.pk).welcome_due
+
+    def test_an_approved_player_gets_one_message(self):
+        self.assertEqual(self.patch(approved=True).status_code, 200)
+        self.assertTrue(self.due())
+        self.assertEqual(send_welcomes(), 1)
+        target, message = self.send.call_args.args
+        self.assertEqual(target, '42')
+        embed = message['embeds'][0]
+        self.assertEqual(embed['title'], 'Si schválený na webe KD 1035')
+        self.assertIn('Môžeš pridať marche a prihlášku na KvK.', embed['description'])
+        self.assertIn('[Pridať marche](https://kd1035.eu/marche?tab=prehlad)', embed['description'])
+        self.assertEqual((embed['url'], embed['footer']['text']), ('https://kd1035.eu/marche?tab=prehlad', 'KD 1035'))
+        self.assertFalse(self.due())
+        self.assertEqual(send_welcomes(), 0)
+        self.assertEqual(self.send.call_count, 1)
+
+    def test_the_message_is_czech_for_a_czech_player(self):
+        Player.objects.filter(pk=self.newbie.pk).update(lang='cs')
+        self.patch(approved=True)
+        send_welcomes()
+        embed = self.send.call_args.args[1]['embeds'][0]
+        self.assertEqual(embed['title'], 'Jsi schválen na webu KD 1035')
+        self.assertIn('[Přidat marche](https://kd1035.eu/cz/marche?tab=prehlad)', embed['description'])
+
+    def test_other_switches_and_saving_again_never_queue_it(self):
+        self.patch(reviewer=True, evaluation_settings=True, evaluation_overview=True)
+        self.assertFalse(self.due())
+        # already approved: approving again or flipping another switch sends nothing
+        url = f'/api/kvk/reviewers/{self.player.pk}/'
+        self.call('patch', url, {'approved': True}, self.admin)
+        self.call('patch', url, {'reviewer': True, 'evaluation_overview': False}, self.admin)
+        self.assertFalse(Player.objects.get(pk=self.player.pk).welcome_due)
+        self.assertEqual(send_welcomes(), 0)
+        self.send.assert_not_called()
+
+    def test_taking_the_approval_back_before_the_tick_cancels_it(self):
+        self.patch(approved=True)
+        self.patch(approved=False)
+        self.assertFalse(self.due())
+        self.assertEqual(send_welcomes(), 0)
+        self.send.assert_not_called()
+
+    def test_the_superadmin_never_gets_it(self):
+        Player.objects.filter(pk=self.admin_player.pk).update(approved=False)
+        self.call('patch', f'/api/kvk/reviewers/{self.admin_player.pk}/', {'approved': True}, self.admin)
+        self.assertFalse(Player.objects.get(pk=self.admin_player.pk).welcome_due)
+        # nor a flag set some other way, nor a blocked account
+        Player.objects.filter(pk=self.admin_player.pk).update(welcome_due=True)
+        self.patch(approved=True)
+        User.objects.filter(pk=self.newbie.user_id).update(is_active=False)
+        self.assertEqual(send_welcomes(), 0)
+        self.send.assert_not_called()
+        self.assertFalse(Player.objects.filter(welcome_due=True).exists())
+
+    def test_bot_messages_switched_off_clear_it_without_a_message(self):
+        Player.objects.filter(pk=self.newbie.pk).update(remind_discord=False)
+        self.patch(approved=True)
+        self.assertEqual(send_welcomes(), 0)
+        self.send.assert_not_called()
+        self.assertFalse(self.due())
+
+    def test_discord_down_keeps_it_for_the_next_tick_refused_never_again(self):
+        self.patch(approved=True)
+        self.send.side_effect = discord_bot.BotError('429', temporary=True)
+        with self.assertRaises(DiscordPaused):
+            send_welcomes()
+        self.assertTrue(self.due())
+        self.send.side_effect = discord_bot.BotError('blocked', blocked=True)
+        with self.assertLogs('accounts.newcomers', 'INFO') as logs:
+            self.assertEqual(send_welcomes(), 0)
+        self.assertFalse(self.due())
+        self.assertNotIn('Nelly', '\n'.join(logs.output))
+        self.assertEqual(send_welcomes(), 0)
+        self.assertEqual(self.send.call_count, 2)
+
+    @override_settings(DISCORD_BOT_TOKEN='')
+    def test_without_a_bot_nothing_piles_up(self):
+        self.patch(approved=True)
+        self.assertEqual(send_welcomes(), 0)
+        self.send.assert_not_called()
+        self.assertFalse(self.due())
+
+    def test_auto_approved_and_earlier_players_get_nothing(self):
+        # the migration's default and views.save_player with auto-approve leave welcome_due False
+        self.assertEqual(send_welcomes(), 0)
+        self.send.assert_not_called()
 
 
 class SignupBuildTests(KvkTestCase):
