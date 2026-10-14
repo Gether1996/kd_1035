@@ -32,6 +32,12 @@
       }
     </select>
   </div>
+  <!-- to-do lists before KvK; the counts follow the search and "Hráči" -->
+  <div class="segmented ev-quick" role="group" [attr.aria-label]="x.quick.label">
+    @for (f of quicks(); track f) {
+      <button type="button" [attr.aria-pressed]="quick() === f" (click)="setQuick(f)">{{ x.quick[f] }} · {{ counts()[f] }}</button>
+    }
+  </div>
   <div class="ev-switch-row">
     <label class="ev-switch">
       <input #up class="switch" type="checkbox" role="switch" [checked]="usePower()" (change)="usePower.set(up.checked)" />

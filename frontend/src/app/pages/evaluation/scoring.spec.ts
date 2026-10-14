@@ -11,6 +11,7 @@ import {
   parsePowerList,
   pairTable,
   percentile,
+  quickMatch,
   skillFactor,
 } from './scoring';
 import { DEFAULT_INSCRIPTIONS, DEFAULT_SETTINGS, EvalSettings, PairRow, normalizeSettings, rowsFor, toSave } from './settings';
@@ -364,5 +365,33 @@ describe('evaluation scoring', () => {
     const settings = withPairs({ marches: { max: 7 } });
     expect(expectedMarches(settings, 125)).toBe(7);
     expect(expectedMarches(settings, 110)).toBe(6);
+  });
+
+  it('picks the players for the quick filters: to fix, without power, over the recommended power', () => {
+    const settings = normalizeSettings({ marches: { max: 1 } }, PAIRS, { 'qin shi huang': ['pincer'] });
+    const ok = march({ id: 1, position: 1, formation: 'pincer', gear: gear('gold', false, 0) });
+    const players = [
+      // a solo march (skipped as an unevaluated pair)
+      player(1, [ok, march({ id: 2, position: 2, secondary: '' })], { power: 60 }),
+      // a counted march in a formation its primary should not lead with
+      player(2, [march({ id: 3, position: 1, formation: 'arch', gear: gear('gold', false, 0) })]),
+      // a valid march over the max, and a garrison (a type that does not count) without a secondary: nothing to fix
+      player(3, [ok, march({ id: 4, position: 2, formation: 'pincer' }), march({ id: 5, position: 3, kind: 'garrison', secondary: '' })], {
+        power: 200,
+      }),
+      // a pair not in the table
+      player(4, [march({ id: 6, position: 1, primary: 'Alexander Nevsky', secondary: 'Achilles' })]),
+      // a march over the max in a wrong formation – /marche says so too
+      player(5, [ok, march({ id: 7, position: 2, formation: 'arch' })]),
+    ];
+    const rows = evaluate(settings, players, INDEX).rows;
+    expect(rows[2].marches.map((m) => m.skipped)).toEqual([null, 'limit', 'kind']);
+    const ids = (filter: Parameters<typeof quickMatch>[0]) => rows.filter((r) => quickMatch(filter, r)).map((r) => r.player.id);
+    expect(ids('all')).toEqual([1, 2, 3, 4, 5]);
+    expect(ids('fix')).toEqual([1, 2, 4, 5]);
+    expect(ids('nopower')).toEqual([2, 4, 5]);
+    // "Odp. power" in red: more power than the own counted marches carry
+    expect(rows[2].ownLimit).not.toBeNull();
+    expect(ids('over')).toEqual([3]);
   });
 });

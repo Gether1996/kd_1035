@@ -50,7 +50,8 @@ const sk = {
   // ---------------------------------------------------------------- results
   search: 'Hľadať hráča',
   show: { label: 'Hráči', marches: 'S marchmi', approved: 'Všetci schválení', all: 'Aj neschválení' },
-  sort: { label: 'Zoradiť', required: 'Požadovaný acclaim', name: 'Meno' },
+  sort: { label: 'Zoradiť', required: 'Požadovaný acclaim', name: 'Meno', power: 'Power' },
+  quick: { label: 'Rýchly filter', all: 'Všetci', fix: 'Na opravu', nopower: 'Bez power', over: 'Nad odp. power' },
   csv: 'Stiahnuť CSV',
   usePower: 'Rátať s power',
   bulk: {
@@ -384,7 +385,8 @@ const cs: EvalTexts = {
 
   search: 'Hledat hráče',
   show: { label: 'Hráči', marches: 'S marchi', approved: 'Všichni schválení', all: 'I neschválení' },
-  sort: { label: 'Seřadit', required: 'Požadovaný acclaim', name: 'Jméno' },
+  sort: { label: 'Seřadit', required: 'Požadovaný acclaim', name: 'Jméno', power: 'Power' },
+  quick: { label: 'Rychlý filtr', all: 'Všichni', fix: 'K opravě', nopower: 'Bez power', over: 'Nad dop. power' },
   csv: 'Stáhnout CSV',
   usePower: 'Počítat s power',
   bulk: {

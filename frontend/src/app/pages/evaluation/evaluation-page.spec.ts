@@ -43,7 +43,7 @@ function setup(user: object, platform = 'browser') {
 }
 
 /** the page with its data loaded – a saved benchmark that is not the default, so "Predvolené" makes it dirty */
-async function open(user: object, tab?: string, players: object[] = []): Promise<ComponentFixture<EvaluationPage>> {
+async function open(user: object, tab?: string, players: object[] = [], data: object = {}): Promise<ComponentFixture<EvaluationPage>> {
   const http = setup(user);
   const fixture = TestBed.createComponent(EvaluationPage);
   if (tab) fixture.componentRef.setInput('tab', tab);
@@ -57,6 +57,7 @@ async function open(user: object, tab?: string, players: object[] = []): Promise
     formations_version: '1',
     players,
     overview: { published_at: null, rows: [] },
+    ...data,
   });
   http.match('/api/commanders/marches/').forEach((r) => r.flush([]));
   http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
@@ -234,6 +235,89 @@ describe('EvaluationPage', () => {
     expect(unload()).toBe(true);
     fixture.destroy();
     expect(unload()).toBe(false);
+  });
+
+  it('narrows the table by a quick filter kept in ?f=, with counts that follow the search and Hráči', async () => {
+    const march = { id: 1, position: 1, kind: 'archer', primary: 'Qin Shi Huang', secondary: 'Yi Seong-Gye' };
+    const solo = { ...march, id: 2, position: 2, secondary: '' };
+    const p = { ingame_name: '', avatar_url: '', approved: true, t4: false, power_bonus: 0 };
+    const players = [
+      // more power than one march carries
+      { ...p, id: 1, name: 'Anna', marches: [march], power: 100 },
+      // a solo march, no power
+      { ...p, id: 2, name: 'Boris', marches: [march, solo], power: null },
+      // no marches – not among "S marchmi"
+      { ...p, id: 3, name: 'Cyril', marches: [], power: null },
+      { ...p, id: 4, name: 'Dana', marches: [march], power: 50 },
+    ];
+    const fixture = await open(SUPERUSER, undefined, players, { pairs: [['Qin Shi Huang', 'Yi Seong-Gye', 117]] });
+    const el = fixture.nativeElement as HTMLElement;
+    const router = TestBed.inject(Router);
+    const quick = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.ev-quick button'));
+    const labels = () => quick().map((b) => b.textContent?.trim());
+    const pressed = () => quick().find((b) => b.getAttribute('aria-pressed') === 'true')?.textContent?.trim();
+    const names = () => Array.from(el.querySelectorAll('.ev-player__name')).map((n) => n.textContent?.trim());
+    const change = async (id: string, value: string) => {
+      const box = el.querySelector<HTMLInputElement | HTMLSelectElement>(id)!;
+      box.value = value;
+      box.dispatchEvent(new Event(id === '#ev-search' ? 'input' : 'change'));
+      await tick(fixture);
+    };
+
+    expect(el.querySelector('.ev-quick')?.getAttribute('aria-label')).toBe('Rýchly filter');
+    expect(labels()).toEqual(['Všetci · 3', 'Na opravu · 1', 'Bez power · 1', 'Nad odp. power · 1']);
+    // the counts follow the search and "Hráči"
+    await change('#ev-search', 'da');
+    expect(labels()).toEqual(['Všetci · 1', 'Na opravu · 0', 'Bez power · 0', 'Nad odp. power · 0']);
+    await change('#ev-search', '');
+    await change('#ev-show', 'approved');
+    expect(labels()).toEqual(['Všetci · 4', 'Na opravu · 1', 'Bez power · 2', 'Nad odp. power · 1']);
+
+    // by power: the most first, without power last
+    await change('#ev-sort', 'power');
+    expect(names()).toEqual(['Anna', 'Dana', 'Boris', 'Cyril']);
+
+    quick()[2].click();
+    await tick(fixture);
+    expect(names()).toEqual(['Boris', 'Cyril']);
+    expect(router.url).toBe('/?f=nopower');
+    // the tabs keep ?f=
+    button(fixture, 'Premenné').click();
+    await tick(fixture);
+    expect(router.url).toBe('/?f=nopower&tab=premenne');
+    button(fixture, 'Odhad acclaimu').click();
+    await tick(fixture);
+    expect(router.url).toBe('/?f=nopower');
+    quick()[0].click();
+    await tick(fixture);
+    expect(router.url).toBe('/');
+
+    // a link with ?f=fix opens the same view
+    fixture.componentRef.setInput('f', 'fix');
+    await tick(fixture);
+    expect(pressed()).toBe('Na opravu · 1');
+    expect(names()).toEqual(['Boris']);
+
+    // "Rátať s power" off: no power filters, an active one back to all and out of the address
+    await router.navigateByUrl('/?f=over');
+    fixture.componentRef.setInput('f', 'over');
+    await tick(fixture);
+    expect(pressed()).toBe('Nad odp. power · 1');
+    expect(names()).toEqual(['Anna']);
+    el.querySelector<HTMLInputElement>('.ev-switch input')!.click();
+    await tick(fixture);
+    await tick(fixture);
+    expect(labels()).toEqual(['Všetci · 4', 'Na opravu · 1']);
+    expect(pressed()).toBe('Všetci · 4');
+    expect(router.url).toBe('/');
+    // and a link with a power filter is not taken while it is off
+    fixture.componentRef.setInput('f', undefined);
+    await router.navigateByUrl('/?f=nopower');
+    fixture.componentRef.setInput('f', 'nopower');
+    await tick(fixture);
+    await tick(fixture);
+    expect(pressed()).toBe('Všetci · 4');
+    expect(router.url).toBe('/');
   });
 
   it('never asks on the server', () => {

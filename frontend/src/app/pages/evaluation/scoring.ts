@@ -445,3 +445,41 @@ export function parsePowerList(text: string, players: EvalPlayer[]): { found: { 
   }
   return { found: [...found].map(([id, power]) => ({ id, power })), unknown };
 }
+
+// ---------------------------------------------------------------- quick filters of the table
+
+/** "Na opravu", "Bez power" and "Nad odp. power" of the table – a to-do list before KvK */
+export type QuickFilter = 'all' | 'fix' | 'nopower' | 'over';
+export const QUICK_FILTERS: readonly QuickFilter[] = ['all', 'fix', 'nopower', 'over'];
+/** hidden with "Rátať s power" off */
+export const POWER_FILTERS: ReadonlySet<string> = new Set<QuickFilter>(['nopower', 'over']);
+
+/**
+ * A march the player should change: a pair not evaluated (solo or not in the table – both skipped as 'pair') or a
+ * formation its primary commander should not lead with. Counted from the evaluation, not from marchHasProblem() of
+ * the server: the table counts with the Premenné being edited, unsaved ones too, and the filter has to agree with it.
+ * Not a type that does not count ('kind'), nor a march over the max ('limit') by itself – the player cannot fix
+ * either by changing commanders; a march over the max in a wrong formation is one (/marche says so as well).
+ */
+export function marchToFix(m: MarchEval): boolean {
+  return m.skipped === 'pair' || (m.skipped !== 'kind' && m.formation.ok === false);
+}
+
+/** more power than the player's own counted marches carry ("Odp. power" in red) */
+export function overLimit(r: PlayerEval): boolean {
+  const power = r.player.power;
+  return power !== null && r.ownLimit !== null && power > r.ownLimit;
+}
+
+export function quickMatch(filter: QuickFilter, r: PlayerEval): boolean {
+  switch (filter) {
+    case 'fix':
+      return r.marches.some(marchToFix);
+    case 'nopower':
+      return r.player.power === null;
+    case 'over':
+      return overLimit(r);
+    default:
+      return true;
+  }
+}

@@ -30,7 +30,7 @@ import { EvalSettingsTab } from './settings-tab';
 import { EVAL_TEXTS } from './texts';
 
 type Tab = 'settings' | 'results' | 'overview';
-/** ?tab= of the variables and of the published overview (the table has no query) */
+/** ?tab= of the variables and of the published overview (the table has none, only its quick filter ?f=) */
 const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null, overview: 'prehlad' };
 
 /**
@@ -120,6 +120,7 @@ const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null,
               [superuser]="superuser()"
               [failed]="recordFailed()"
               [(usePower)]="usePower"
+              [filter]="filterQuery()"
               (record)="saveRecord($event.id, $event.change)"
               (records)="saveRecords($event)"
               [publishedAt]="published().published_at"
@@ -181,6 +182,8 @@ export class EvaluationPage {
   /** ?tab=premenne opens the variables, ?tab=prehlad the published overview, so a reload or a shared link shows
    * them; no query = the table */
   readonly query = input<string>(undefined, { alias: 'tab' });
+  /** ?f= – a quick filter of the table (read by the table only; the tabs keep it) */
+  readonly filterQuery = input<string>(undefined, { alias: 'f' });
   /** the tab in the address; an unknown value = the table, a player with the overview switch only = the overview */
   protected readonly tab = computed<Tab>(() => {
     if (!this.canEdit()) return 'overview';

@@ -1,4 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, model, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  model,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
+import { Router } from '@angular/router';
 import { ArmoryIndex } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
@@ -6,13 +19,27 @@ import { marchIcon } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
 import { RecordChange } from './evaluation-api';
-import { Evaluation, MarchEval, PlayerEval, parsePowerList } from './scoring';
+import {
+  Evaluation,
+  MarchEval,
+  POWER_FILTERS,
+  PlayerEval,
+  QUICK_FILTERS,
+  QuickFilter,
+  overLimit,
+  parsePowerList,
+  quickMatch,
+} from './scoring';
 import { EvalSettings } from './settings';
 import { EvalTexts } from './texts';
 import { EvalTip } from './tip';
 
 type Show = 'marches' | 'approved' | 'all';
-type Sort = 'required' | 'name';
+type Sort = 'required' | 'name' | 'power';
+
+/** ?f= of the address: a quick filter, anything else = all */
+const asQuick = (query: string | undefined): QuickFilter =>
+  QUICK_FILTERS.includes(query as QuickFilter) ? (query as QuickFilter) : 'all';
 
 /**
  * "Odhad acclaimu" of /vyhodnocovanie: one row per player – the counted marches, the acclaim they should
@@ -51,8 +78,11 @@ export class EvalResultsTab {
   readonly publishing = input(false);
   readonly publishFailed = input(false);
   readonly publish = output<void>();
+  /** ?f=fix|nopower|over of the page – a link from Discord opens the same view */
+  readonly filter = input<string>();
 
   private readonly i18n = inject(I18n);
+  private readonly router = inject(Router);
   protected readonly icon = marchIcon;
   protected readonly search = signal('');
   protected readonly show = signal<Show>('marches');
@@ -61,23 +91,70 @@ export class EvalResultsTab {
   protected readonly shows = computed<Show[]>(() =>
     this.superuser() ? ['marches', 'approved', 'all'] : ['marches', 'approved'],
   );
-  protected readonly sorts: Sort[] = ['required', 'name'];
+  protected readonly sorts: Sort[] = ['required', 'name', 'power'];
 
-  protected readonly rows = computed(() => {
+  /**
+   * The quick filters (to-do lists before KvK): "Na opravu", "Bez power", "Nad odp. power"; the power ones only while
+   * the table counts with power
+   */
+  protected readonly quicks = computed(() => QUICK_FILTERS.filter((f) => this.usePower() || !POWER_FILTERS.has(f)));
+  /** from ?f=; a click keeps its pick until the address changes, "Rátať s power" off drops a power one */
+  protected readonly quick = linkedSignal<{ query: string | undefined; power: boolean }, QuickFilter>({
+    source: () => ({ query: this.filter(), power: this.usePower() }),
+    computation: ({ query, power }, previous) => {
+      const picked = previous && previous.source.query === query ? previous.value : asQuick(query);
+      return !power && POWER_FILTERS.has(picked) ? 'all' : picked;
+    },
+  });
+
+  /** the players the search and "Hráči" leave – the counts on the quick filters are from them */
+  private readonly listed = computed(() => {
     const query = fold(this.search());
     const show = this.show();
-    const rows = this.evaluation().rows.filter((r) => {
+    return this.evaluation().rows.filter((r) => {
       if (show !== 'all' && !r.player.approved) return false;
       if (show === 'marches' && !r.counted) return false;
       return !query || fold(`${r.player.ingame_name} ${r.player.name}`).includes(query);
     });
+  });
+
+  protected readonly counts = computed(() => {
+    const rows = this.listed();
+    return Object.fromEntries(QUICK_FILTERS.map((f) => [f, rows.filter((r) => quickMatch(f, r)).length])) as Record<
+      QuickFilter,
+      number
+    >;
+  });
+
+  protected readonly rows = computed(() => {
+    const quick = this.quick();
+    const rows = this.listed().filter((r) => quickMatch(quick, r));
     const name = (r: PlayerEval) => r.player.ingame_name || r.player.name;
     const sort = this.sort();
     return rows.sort((a, b) => {
       if (sort === 'name') return name(a).localeCompare(name(b));
+      // the most power first, the players without it last
+      if (sort === 'power') return (b.player.power ?? -1) - (a.player.power ?? -1) || name(a).localeCompare(name(b));
       return b.acclaim.required - a.acclaim.required;
     });
   });
+
+  constructor() {
+    // ?f=nopower|over while the table does not count with power (a link, or the switch turned off): out of the address
+    effect(() => {
+      if (!this.usePower() && POWER_FILTERS.has(this.filter() ?? '')) untracked(() => this.setFilterQuery(null));
+    });
+  }
+
+  /** a quick filter, kept in ?f= next to ?tab= (no new history entry, like ?cmd= on /marche) */
+  protected setQuick(filter: QuickFilter): void {
+    this.quick.set(filter);
+    this.setFilterQuery(filter === 'all' ? null : filter);
+  }
+
+  private setFilterQuery(f: string | null): void {
+    void this.router.navigate([], { queryParams: { f }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
 
   // ---------------------------------------------------------------- the power of everyone at once
 
@@ -154,8 +231,7 @@ export class EvalResultsTab {
    * 104 M) – the recommended power of the marches counted with the missing ones is in the computation of the detail
    */
   protected over(r: PlayerEval): boolean {
-    const power = r.player.power;
-    return this.usePower() && power !== null && r.ownLimit !== null && power > r.ownLimit;
+    return this.usePower() && overLimit(r);
   }
 
   protected limitText(r: PlayerEval): string | null {

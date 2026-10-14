@@ -30,6 +30,20 @@
   }
 }
 
+// the quick filters: four buttons with counts – on a phone a line of their own, two by two
+.ev-quick {
+  @media (max-width: 560px) {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    border-radius: 22px;
+
+    button {
+      flex: 1 1 40%;
+      padding: 0 8px;
+    }
+  }
+}
+
 .ev-summary {
   display: flex;
   flex-wrap: wrap;
