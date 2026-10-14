@@ -13,7 +13,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MarchNotices } from '../../shared/march-notices';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
@@ -37,11 +37,12 @@ type Sort = 'updated' | 'count' | 'name';
  * mali ako motiváciu"; R4 and the superuser see every player's), "Prehľad marchov" (?tab=prehlad, the old ?tab=moje
  * too) = the player's own marches (the Marches component; Gether 12. 10. 2026: "Moje marche" merged into it). Both
  * show each march as a card with its equipment and armaments (MarchBuild). Signed-in players only; a prerendered shell,
- * not indexed, not in the sitemap.
+ * not indexed, not in the sitemap. ?hrac=<id> and the "Vyhodnocovanie" link of a card jump between a player here and
+ * their row of /vyhodnocovanie (14. 10. 2026) – only a filter of what /api/marches/ already gives this visitor.
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [Icon, PageHeader, Marches, MarchBuild, PendingApproval, CommanderFilter, MarchNotices],
+  imports: [RouterLink, Icon, PageHeader, Marches, MarchBuild, PendingApproval, CommanderFilter, MarchNotices],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +52,8 @@ export class PlayersMarches {
   readonly tab = input<string>();
   /** ?cmd=Attila – only the players with a march of this commander (a shareable link, kept across the tabs) */
   readonly cmd = input<string>();
+  /** ?hrac=12 – only this player, opened (the link from a row of /vyhodnocovanie; kept across the tabs like ?cmd=) */
+  readonly hrac = input<string>();
 
   protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
@@ -77,7 +80,15 @@ export class PlayersMarches {
   protected readonly commander = linkedSignal(() => this.cmd() ?? '');
   protected readonly players = computed(() => (this.data.hasValue() ? this.data.value().players : []));
   protected readonly commanders = computed(() => marchCommanders(this.players().flatMap((p) => p.marches)));
+  /** the player of ?hrac= (null = everyone); only looked up in what /api/marches/ gave this visitor */
+  protected readonly focus = computed(() => {
+    const id = Number(this.hrac());
+    return Number.isInteger(id) && id > 0 ? id : null;
+  });
+  /** the player of ?hrac= when this visitor sees them – else the page says so without a name */
+  protected readonly focused = computed(() => this.players().find((p) => p.id === this.focus()) ?? null);
   protected readonly shown = computed(() => {
+    const focus = this.focus();
     const query = fold(this.search());
     const kind = this.kind();
     const commander = this.commander();
@@ -91,6 +102,7 @@ export class PlayersMarches {
       name: byName,
     };
     return this.players()
+      .filter((p) => !focus || p.id === focus)
       .filter((p) => !query || fold(`${p.ingame_name} ${p.name}`).includes(query))
       .filter((p) => (!kind && !commander) || p.marches.some(fits))
       .sort(order[this.sort()]);
@@ -127,6 +139,14 @@ export class PlayersMarches {
       expandedFor = commander;
       if (commander) this.opened.set(new Set(untracked(this.shown).map((p) => p.id)));
     });
+    // the player of ?hrac= opens once, the same way
+    let expandedPlayer: number | null = null;
+    effect(() => {
+      const player = this.focused();
+      if (!player || player.id === expandedPlayer) return;
+      expandedPlayer = player.id;
+      this.opened.update((opened) => new Set(opened).add(player.id));
+    });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.playersMarches, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
@@ -143,6 +163,11 @@ export class PlayersMarches {
   protected setCommander(name: string): void {
     this.commander.set(name);
     void this.router.navigate([], { queryParams: { cmd: name || null }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  /** the chip of ?hrac= removed: everyone again, without a new history entry */
+  protected clearPlayer(): void {
+    void this.router.navigate([], { queryParams: { hrac: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   protected isOpen(id: number): boolean {

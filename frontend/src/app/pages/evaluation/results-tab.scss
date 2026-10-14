@@ -277,8 +277,19 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
 
+  // a march that does not count: dashed and muted, but the text keeps its contrast (opacity failed axe)
   &.is-skipped {
-    opacity: 0.6;
+    border-style: dashed;
+
+    .ev-march__kind {
+      opacity: 0.6;
+    }
+
+    .ev-march__pair,
+    .ev-march__total,
+    dd {
+      color: var(--text-mute);
+    }
   }
 }
 
@@ -381,6 +392,18 @@
   border-bottom-color: transparent;
 }
 
+// the player of ?hrac= (the link from /marche): a gold bar at the start of the row
+.ev-row.is-focus > :first-child {
+  box-shadow: inset 3px 0 0 var(--gold-400);
+}
+
+.ev-detail__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
 .ev-detail__sum,
 .ev-detail__line {
   margin: 0;
@@ -475,6 +498,14 @@
   .ev-input--power {
     width: 100%;
     min-width: 0;
+  }
+
+  .ev-row.is-focus {
+    border-color: var(--gold-400);
+
+    > :first-child {
+      box-shadow: none;
+    }
   }
 
   // the computation hangs under its card

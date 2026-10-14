@@ -25,7 +25,7 @@ const tick = async (fixture: { detectChanges(): void }) => {
   fixture.detectChanges();
 };
 
-function setup(user: object) {
+function setup(user: { name: string; approved: boolean; evaluation_settings?: boolean; evaluation_overview?: boolean; is_superuser?: boolean }) {
   HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
     this.setAttribute('open', '');
   };
@@ -42,6 +42,7 @@ function setup(user: object) {
           failed: signal(false),
           enabled: signal(true),
           user: signal(user),
+          canEvaluate: signal(!!(user.evaluation_settings || user.evaluation_overview || user.is_superuser)),
           loginUrl: () => '/api/auth/discord/login/',
           reload: () => {},
         },
@@ -287,5 +288,100 @@ describe('PlayersMarches', () => {
     expect(el.querySelector('.tabs')).toBeNull();
     http.expectNone('/api/marches/');
     http.match(() => true).forEach((r) => r.flush([]));
+  });
+
+  describe('?hrac= – one player, from a row of /vyhodnocovanie', () => {
+    const player = (id: number, name: string, extra: object = {}) => ({
+      id,
+      name,
+      ingame_name: '',
+      avatar_url: '',
+      public: true,
+      approved: true,
+      me: false,
+      marches: [MARCH],
+      updated_at: '2026-10-12T12:00:00Z',
+      ...extra,
+    });
+
+    async function load(user: Parameters<typeof setup>[0], hrac: string | undefined, players: object[]) {
+      const http = setup(user);
+      const router = TestBed.inject(Router);
+      await router.navigateByUrl(hrac ? `/?cmd=Attila&hrac=${hrac}` : '/');
+      const fixture = TestBed.createComponent(PlayersMarches);
+      if (hrac) {
+        fixture.componentRef.setInput('cmd', 'Attila');
+        fixture.componentRef.setInput('hrac', hrac);
+      }
+      fixture.detectChanges();
+      http.expectOne('/api/marches/').flush({ reviewer: false, players });
+      http.match('/api/commanders/marches/').forEach((r) => r.flush([]));
+      await tick(fixture);
+      await tick(fixture);
+      http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+      await tick(fixture);
+      return { fixture, router, el: fixture.nativeElement as HTMLElement };
+    }
+
+    const names = (el: HTMLElement) => Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent);
+
+    it('shows only that player, opened; the chip brings everyone back and drops ?hrac from the address', async () => {
+      const { fixture, router, el } = await load({ name: 'Nelly', approved: true }, '2', [player(1, 'nelly'), player(2, 'bob'), player(3, 'cara')]);
+      expect(names(el)).toEqual(['bob']);
+      expect(el.querySelector('.player.is-open .player__name')?.textContent).toBe('bob');
+      const chip = el.querySelector<HTMLButtonElement>('.focus__chip')!;
+      expect(chip.textContent).toContain('Hráč: bob');
+      chip.click();
+      await tick(fixture);
+      // ?cmd= stays
+      expect(router.url).toBe('/?cmd=Attila');
+      // the router gives the page the address without ?hrac=
+      fixture.componentRef.setInput('hrac', undefined);
+      await tick(fixture);
+      expect(names(el)).toEqual(['bob', 'cara', 'nelly']);
+      expect(el.querySelector('.focus__chip')).toBeNull();
+    });
+
+    it('a player the visitor does not see: a plain sentence, nothing about them in the page', async () => {
+      // the API leaves out the player of ?hrac= (not public, not approved…) – the page asks nobody else for them
+      const { fixture, router, el } = await load({ name: 'Nelly', approved: true }, '731', [player(1, 'nelly'), player(2, 'bob')]);
+      const asked = TestBed.inject(HttpTestingController).match(() => true).map((r) => r.request.urlWithParams);
+      expect(asked.filter((url) => /731|marches|evaluation|kvk|players/.test(url))).toEqual([]);
+      expect(el.querySelector('.focus__missing')?.textContent).toContain('Tohto hráča tu nevidíš alebo nemá marche.');
+      expect(el.querySelectorAll('.player').length).toBe(0);
+      expect(el.querySelector('.focus__chip')).toBeNull();
+      expect(el.textContent).not.toContain('731');
+      expect(el.querySelector('[id$="-731"], [href*="731"]')).toBeNull();
+      const all = Array.from(el.querySelectorAll<HTMLButtonElement>('.focus__missing button')).find((b) => b.textContent?.trim() === 'Zobraziť všetkých')!;
+      all.click();
+      await tick(fixture);
+      expect(router.url).toBe('/?cmd=Attila');
+    });
+
+    it('links an approved player to /vyhodnocovanie only for the ones with it in the account menu', async () => {
+      const players = [player(1, 'nelly'), player(2, 'nova', { approved: false })];
+      const links = (el: HTMLElement) =>
+        Array.from(el.querySelectorAll<HTMLAnchorElement>('.player__links a'), (a) => a.getAttribute('href'));
+      const openAll = async (fixture: { detectChanges(): void }, el: HTMLElement) => {
+        el.querySelector<HTMLButtonElement>('.bar .pill-btn')!.click();
+        await tick(fixture);
+      };
+
+      // with "Vyh. nastavenia": the approved player only
+      let page = await load({ name: 'Slim', approved: true, evaluation_settings: true }, undefined, players);
+      await openAll(page.fixture, page.el);
+      expect(page.el.querySelectorAll('.player.is-open').length).toBe(2);
+      expect(links(page.el)).toEqual(['/vyhodnocovanie?hrac=1']);
+      TestBed.resetTestingModule();
+
+      // a regular approved player and an R4 without the evaluation: no link
+      for (const user of [{ name: 'Nelly', approved: true }, { name: 'Hefarion', approved: true, kvk_reviewer: true }]) {
+        page = await load(user, undefined, players);
+        await openAll(page.fixture, page.el);
+        expect(page.el.querySelectorAll('.player.is-open').length).toBe(2);
+        expect(links(page.el)).toEqual([]);
+        TestBed.resetTestingModule();
+      }
+    });
   });
 });

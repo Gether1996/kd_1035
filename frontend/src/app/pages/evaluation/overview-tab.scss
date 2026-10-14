@@ -98,6 +98,15 @@
       box-shadow: inset 3px 0 0 var(--gold-400);
     }
   }
+
+  // the player of ?hrac= (the link from /marche)
+  tbody tr.is-focus {
+    background: color-mix(in srgb, var(--gold-400) 10%, transparent);
+
+    > :first-child {
+      box-shadow: inset 3px 0 0 var(--gold-400);
+    }
+  }
 }
 
 .ev-num {

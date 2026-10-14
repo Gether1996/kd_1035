@@ -11,7 +11,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ArmoryIndex } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
@@ -50,7 +50,7 @@ const asQuick = (query: string | undefined): QuickFilter =>
  */
 @Component({
   selector: 'app-eval-results',
-  imports: [Icon, EvalTip],
+  imports: [RouterLink, Icon, EvalTip],
   templateUrl: './results-tab.html',
   styleUrl: './results-tab.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,8 +80,10 @@ export class EvalResultsTab {
   readonly publish = output<void>();
   /** ?f=fix|nopower|over of the page – a link from Discord opens the same view */
   readonly filter = input<string>();
+  /** ?hrac= of the page – this player's row opens once (and shows even when the filters would hide it) */
+  readonly focus = input<number | null>(null);
 
-  private readonly i18n = inject(I18n);
+  protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
   protected readonly icon = marchIcon;
   protected readonly search = signal('');
@@ -143,6 +145,20 @@ export class EvalResultsTab {
     // ?f=nopower|over while the table does not count with power (a link, or the switch turned off): out of the address
     effect(() => {
       if (!this.usePower() && POWER_FILTERS.has(this.filter() ?? '')) untracked(() => this.setFilterQuery(null));
+    });
+    // the player of ?hrac=: shown and opened once – a row closed by hand afterwards stays closed
+    let openedFor: number | null = null;
+    effect(() => {
+      const id = this.focus();
+      const row = this.evaluation().rows.find((r) => r.player.id === id);
+      if (!row || id === openedFor) return;
+      openedFor = id;
+      untracked(() => {
+        if (!row.player.approved) this.show.set('all');
+        else if (!row.counted && this.show() === 'marches') this.show.set('approved');
+        if (!quickMatch(this.quick(), row)) this.setQuick('all');
+        this.opened.update((opened) => new Set(opened).add(row.player.id));
+      });
     });
   }
 

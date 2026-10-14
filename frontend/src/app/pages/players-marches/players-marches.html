@@ -80,10 +80,25 @@
       }
     </div>
 
-    @if (!players().length) {
+    <!-- ?hrac= from /vyhodnocovanie: one player; one the visitor does not see gets no name, only the plain sentence -->
+    @if (focus() && !focused()) {
+      <div class="state focus__missing">
+        <p>{{ p.player.missing }}</p>
+        <button type="button" class="pill-btn pill-btn--quiet" (click)="clearPlayer()">{{ p.player.all }}</button>
+      </div>
+    } @else if (!players().length) {
       <p class="state">{{ p.empty }}</p>
-    } @else if (!shown().length) {
-      <p class="state">{{ p.noMatch }}</p>
+    } @else {
+      @if (focused(); as one) {
+        <div class="focus">
+          <button type="button" class="focus__chip" [title]="p.player.clear" (click)="clearPlayer()">
+            {{ p.player.label.replace('{name}', name(one)) }}<svg appIcon="x"></svg><span class="sr-only"> – {{ p.player.clear }}</span>
+          </button>
+        </div>
+      }
+      @if (!shown().length) {
+        <p class="state">{{ p.noMatch }}</p>
+      }
     }
 
     <ul class="players">
@@ -129,6 +144,14 @@
             }
           </button>
           @if (open) {
+            <!-- to the player's row of the KvK evaluation – whoever has it in the account menu; it shows approved players only -->
+            @if (auth.canEvaluate() && player.approved) {
+              <p class="player__links">
+                <a class="pill-btn pill-btn--quiet" [routerLink]="i18n.path('evaluation')" [queryParams]="{ hrac: player.id }">
+                  <svg appIcon="scale"></svg>{{ p.evaluationLink }}<span class="sr-only">: {{ name(player) }}</span>
+                </a>
+              </p>
+            }
             <ol class="player__marches" [id]="'player-marches-' + player.id">
               @for (march of player.marches; track march.id) {
                 <li>

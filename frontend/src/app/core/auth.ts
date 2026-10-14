@@ -62,6 +62,11 @@ export class Auth {
   });
   /** the red "!" in the header: something of the profile is missing */
   readonly needsAttention = computed(() => this.needsName() || this.needsPower());
+  /** opens /vyhodnocovanie – the account menu item and the links to it (/marche) show exactly then */
+  readonly canEvaluate = computed(() => {
+    const user = this.user();
+    return !!user && (!!user.evaluation_settings || !!user.evaluation_overview || user.is_superuser);
+  });
 
   /** Full navigation to Discord; afterwards the player comes back to `next` (the current page by default). */
   loginUrl(next = this.i18n.switchPath(this.i18n.lang())): string {

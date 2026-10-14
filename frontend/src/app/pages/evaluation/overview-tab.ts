@@ -82,7 +82,7 @@ type SortKey = 'name' | 'marches' | 'power' | 'required';
         </thead>
         <tbody>
           @for (r of rows(); track r.row.id) {
-            <tr [class.is-you]="r.row.you">
+            <tr [id]="'ev-player-' + r.row.id" [class.is-you]="r.row.you" [class.is-focus]="r.row.id === focus()">
               <td class="ev-num ov-rank">{{ r.rank }}</td>
               <th scope="row" class="ov-player">
                 <span class="ov-player__box">
@@ -124,6 +124,8 @@ type SortKey = 'name' | 'marches' | 'power' | 'required';
 export class EvalOverviewTab {
   readonly overview = input.required<Overview<OverviewPlayer>>();
   readonly texts = input.required<EvalTexts>();
+  /** ?hrac= of the page – that player's row is highlighted */
+  readonly focus = input<number | null>(null);
 
   protected readonly i18n = inject(I18n);
   protected readonly search = signal('');

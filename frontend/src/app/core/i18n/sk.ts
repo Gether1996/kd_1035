@@ -412,6 +412,15 @@ export const sk = {
     kindFilter: 'Typ marchu',
     allKinds: 'Všetky typy',
     updated: 'upravené {date}',
+    // ?hrac= – one player, from a row of /vyhodnocovanie; a player the visitor does not see is never named
+    player: {
+      label: 'Hráč: {name}',
+      clear: 'zobraziť všetkých hráčov',
+      missing: 'Tohto hráča tu nevidíš alebo nemá marche.',
+      all: 'Zobraziť všetkých',
+    },
+    // an open player: their row of the KvK evaluation
+    evaluationLink: 'Vyhodnocovanie',
   },
   marches: {
     title: 'Moje marche',

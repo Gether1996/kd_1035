@@ -129,7 +129,7 @@
         @let open = opened().has(r.player.id);
         @let who = name(r);
         <!-- a narrow screen shows each row as a card: the .ev-label of a cell names it instead of the header -->
-        <tr class="ev-row" [class.is-open]="open">
+        <tr class="ev-row" [id]="'ev-player-' + r.player.id" [class.is-open]="open" [class.is-focus]="r.player.id === focus()">
           <td class="ev-num ev-rank">{{ i + 1 }}</td>
           <th scope="row" class="ev-player">
             <span class="ev-player__box">
@@ -231,6 +231,12 @@
                     (change)="setBonus(r, $event)"
                   />
                 </div>
+                <!-- what the visitor may see there, /marche decides (others get a sentence without a name) -->
+                <p class="ev-detail__links">
+                  <a class="pill-btn pill-btn--quiet ev-small" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ hrac: r.player.id }">
+                    <svg appIcon="shield"></svg>{{ d.marchesLink }}<span class="sr-only">: {{ who }}</span>
+                  </a>
+                </p>
 
                 <!-- march by march -->
                 @if (r.marches.length) {

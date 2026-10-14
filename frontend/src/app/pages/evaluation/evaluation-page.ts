@@ -1,3 +1,4 @@
+import { ViewportScroller } from '@angular/common';
 import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -44,6 +45,8 @@ const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null,
  * not indexed, not in the sitemap.
  * Unsaved Premenné are not lost by leaving (14. 10. 2026): a link or back asks first (leave-guard.ts), closing or
  * reloading the tab gets the browser's own question – so does the full page load of a newer build (core/site-update.ts).
+ * ?hrac=<id> (the "Vyhodnocovanie" link of a player on /marche, 14. 10. 2026) opens that player's row of the table, or
+ * highlights it in the overview, and scrolls to it once after the load.
  */
 @Component({
   selector: 'app-evaluation-page',
@@ -71,7 +74,7 @@ const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null,
           @if (overview.error()) {
             <p class="state">{{ x.loadError }}</p>
           } @else if (overview.hasValue()) {
-            <app-eval-overview [overview]="overview.value()" [texts]="x" />
+            <app-eval-overview [overview]="overview.value()" [texts]="x" [focus]="focus()" />
           } @else {
             <div class="placeholder" aria-hidden="true"></div>
           }
@@ -121,6 +124,7 @@ const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null,
               [failed]="recordFailed()"
               [(usePower)]="usePower"
               [filter]="filterQuery()"
+              [focus]="focus()"
               (record)="saveRecord($event.id, $event.change)"
               (records)="saveRecords($event)"
               [publishedAt]="published().published_at"
@@ -184,6 +188,12 @@ export class EvaluationPage {
   readonly query = input<string>(undefined, { alias: 'tab' });
   /** ?f= – a quick filter of the table (read by the table only; the tabs keep it) */
   readonly filterQuery = input<string>(undefined, { alias: 'f' });
+  /** ?hrac=12 – that player's row (only among the players this page's API gives the visitor) */
+  readonly playerQuery = input<string>(undefined, { alias: 'hrac' });
+  protected readonly focus = computed(() => {
+    const id = Number(this.playerQuery());
+    return Number.isInteger(id) && id > 0 ? id : null;
+  });
   /** the tab in the address; an unknown value = the table, a player with the overview switch only = the overview */
   protected readonly tab = computed<Tab>(() => {
     if (!this.canEdit()) return 'overview';
@@ -228,9 +238,25 @@ export class EvaluationPage {
     effect(() => seo.set({ ...this.i18n.t().seo.evaluation, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
 
+    const injector = inject(Injector);
+    // a link with ?hrac= scrolls to the player's row once, as soon as the tab shows its data – one render after it, no
+    // timers; back/forward is left to App, which puts the page where the visitor left it
+    const back = this.router.currentNavigation()?.trigger === 'popstate';
+    const scroller = inject(ViewportScroller);
+    let scroll: boolean | undefined;
+    effect(() => {
+      // decided with the address the page was opened with
+      scroll ??= !back && this.focus() !== null;
+      const id = this.focus();
+      if (!scroll || id === null) return;
+      const tab = this.tab();
+      if (tab === 'overview' ? !this.overview.hasValue() : tab !== 'results' || !this.data.hasValue()) return;
+      scroll = false;
+      afterNextRender({ read: () => scroller.scrollToAnchor(`ev-player-${id}`) }, { injector });
+    });
+
     // closing or reloading the tab with unsaved variables: the browser asks in its own words (no text of ours); only
     // while dirty, a clean page leaves at once (and stays in the back/forward cache)
-    const injector = inject(Injector);
     afterNextRender(() => {
       effect(
         (onCleanup) => {

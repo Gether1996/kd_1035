@@ -401,6 +401,13 @@ export const cs: Dict = {
     kindFilter: 'Typ marche',
     allKinds: 'Všechny typy',
     updated: 'upraveno {date}',
+    player: {
+      label: 'Hráč: {name}',
+      clear: 'zobrazit všechny hráče',
+      missing: 'Tohoto hráče tu nevidíš nebo nemá marche.',
+      all: 'Zobrazit všechny',
+    },
+    evaluationLink: 'Vyhodnocování',
   },
   marches: {
     title: 'Moje marche',

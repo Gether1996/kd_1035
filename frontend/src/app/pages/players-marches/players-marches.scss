@@ -238,3 +238,65 @@
 .player__mini.is-bad {
   border: 2px solid var(--red-500);
 }
+
+// ?hrac= from /vyhodnocovanie: the one player shown, the chip brings everyone back
+.focus {
+  margin-bottom: 14px;
+}
+
+.focus__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  max-width: 100%;
+  padding: 0 14px 0 16px;
+  border: 1px solid var(--gold-400);
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--gold-400) 12%, var(--field-bg));
+  color: var(--gold-100);
+  font: 600 0.9375rem/1.2 var(--font-body);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  .icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--gold-400) 22%, var(--field-bg));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold-300);
+    outline-offset: 2px;
+  }
+}
+
+.focus__missing {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+
+  p {
+    margin: 0;
+  }
+}
+
+// an open player: the link to their row of the KvK evaluation above the marches
+.player__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0 16px 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus__chip {
+    transition: none;
+  }
+}

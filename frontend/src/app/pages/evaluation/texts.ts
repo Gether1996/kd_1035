@@ -96,6 +96,8 @@ const sk = {
     missing: '+ {n} chýbajúce marche × {score} (power {power} M chce {expected})',
     bonus: 'Úprava odporúčanej power (M)',
     noMarches: 'Žiadny march sa nezapočítava.',
+    // /marche?hrac= – what the visitor may see there, the page of the marches decides
+    marchesLink: 'Marche hráča',
     pair: 'Pár',
     skills: 'skilly',
     equipment: 'Výbava',
@@ -431,6 +433,7 @@ const cs: EvalTexts = {
     missing: '+ {n} chybějící marche × {score} (power {power} M chce {expected})',
     bonus: 'Úprava doporučené power (M)',
     noMarches: 'Žádný march se nezapočítává.',
+    marchesLink: 'Marche hráče',
     pair: 'Pár',
     skills: 'skilly',
     equipment: 'Výbava',

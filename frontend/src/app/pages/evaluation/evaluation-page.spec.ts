@@ -1,8 +1,9 @@
+import { ViewportScroller } from '@angular/common';
 import { PLATFORM_ID, signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, provideRouter } from '@angular/router';
+import { ActivatedRouteSnapshot, Navigation, Router, RouterStateSnapshot, provideRouter } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
 import { Auth } from '../../core/auth';
 import { Scroll } from '../../core/scroll';
@@ -327,5 +328,86 @@ describe('EvaluationPage', () => {
     expect(guard(dirty)).toBe(true);
     expect(guard(null)).toBe(true);
     expect(confirm).not.toHaveBeenCalled();
+  });
+
+  describe('?hrac= – the player of a link from /marche', () => {
+    const player = { name: 'x', ingame_name: '', avatar_url: '', approved: true, marches: [], power: null, t4: false, power_bonus: 0 };
+    const players = [
+      { ...player, id: 1, name: 'nelly' },
+      { ...player, id: 2, name: 'bob' },
+    ];
+
+    async function load(back = false) {
+      const http = setup(SUPERUSER);
+      const scroll = vi.spyOn(TestBed.inject(ViewportScroller), 'scrollToAnchor').mockImplementation(() => {});
+      if (back) vi.spyOn(TestBed.inject(Router), 'currentNavigation').mockReturnValue({ trigger: 'popstate' } as Navigation);
+      const fixture = TestBed.createComponent(EvaluationPage);
+      fixture.componentRef.setInput('hrac', '2');
+      fixture.detectChanges();
+      await tick(fixture);
+      // nothing to scroll to before the data is there
+      expect(scroll).not.toHaveBeenCalled();
+      http.expectOne('/api/evaluation/').flush({
+        settings: null,
+        updated_at: null,
+        pairs: [],
+        pairs_version: '1',
+        formations: {},
+        formations_version: '1',
+        players,
+        overview: { published_at: '2026-10-14T16:30:00Z', rows: [] },
+      });
+      http.match('/api/commanders/marches/').forEach((r) => r.flush([]));
+      http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+      await tick(fixture);
+      await tick(fixture);
+      return { fixture, scroll, el: fixture.nativeElement as HTMLElement };
+    }
+
+    it('opens the row – shown although it has no marches – scrolls to it once and links to the marches', async () => {
+      const { fixture, scroll, el } = await load();
+      const row = el.querySelector('#ev-player-2')!;
+      expect(row.classList).toContain('is-open');
+      expect(row.classList).toContain('is-focus');
+      expect(el.querySelector('#ev-player-1')?.classList).not.toContain('is-open');
+      expect(scroll.mock.calls).toEqual([['ev-player-2']]);
+      // the detail links to the player's marches – what the visitor sees there, /marche decides
+      const link = el.querySelector<HTMLAnchorElement>('#ev-detail-2 .ev-detail__links a')!;
+      expect(link.getAttribute('href')).toBe('/marche?hrac=2');
+      expect(link.textContent).toContain('Marche hráča');
+      // closed by hand: stays closed, no second scroll
+      el.querySelector<HTMLButtonElement>('#ev-player-2 .ev-icon-btn')!.click();
+      await tick(fixture);
+      await tick(fixture);
+      expect(el.querySelector('#ev-player-2')?.classList).not.toContain('is-open');
+      expect(scroll).toHaveBeenCalledTimes(1);
+    });
+
+    it('highlights the row in "Požadovaný acclaim" and scrolls to it', async () => {
+      const http = setup({ name: 'Slim', approved: true, evaluation_overview: true });
+      const scroll = vi.spyOn(TestBed.inject(ViewportScroller), 'scrollToAnchor').mockImplementation(() => {});
+      const fixture = TestBed.createComponent(EvaluationPage);
+      fixture.componentRef.setInput('hrac', '3');
+      fixture.detectChanges();
+      const row = { avatar_url: '', missing: 0, you: false, power: null, recommended: null, marches: 1 };
+      http.expectOne('/api/evaluation/overview/').flush({
+        published_at: '2026-10-14T16:30:00Z',
+        rows: [
+          { ...row, id: 2, name: 'Slim', required: 500_000, you: true },
+          { ...row, id: 3, name: 'Enko', required: 200_000 },
+        ],
+      });
+      await tick(fixture);
+      await tick(fixture);
+      const el = fixture.nativeElement as HTMLElement;
+      expect(Array.from(el.querySelectorAll('tr.is-focus .ov-name'), (n) => n.textContent?.trim())).toEqual(['Enko']);
+      expect(scroll.mock.calls).toEqual([['ev-player-3']]);
+    });
+
+    it('leaves back/forward to App', async () => {
+      const { scroll, el } = await load(true);
+      expect(el.querySelector('#ev-player-2')?.classList).toContain('is-open');
+      expect(scroll).not.toHaveBeenCalled();
+    });
   });
 });
