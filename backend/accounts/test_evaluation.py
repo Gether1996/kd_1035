@@ -140,6 +140,34 @@ class EvaluationApiTests(TestCase):
         me = self.admin.get('/api/auth/me/').json()['user']
         self.assertEqual((me['evaluator'], me['evaluation_settings']), (True, True))
 
+    def test_the_formations_of_the_commanders_live_in_the_database(self):
+        """Gether 14. 10. 2026 (Slim: "nastaviť každého commandera, akú má mať formáciu")"""
+        from guides.models import CommanderFormation
+
+        CommanderFormation.objects.all().delete()
+        CommanderFormation.objects.create(commander='Attila', formations=['wedge'])
+        self.assertEqual(self.admin.get('/api/evaluation/').json()['formations'], {'Attila': ['wedge']})
+        # saved with the variables when the page changed them: names like the roster, each formation once, an empty
+        # list = any formation (the row goes away)
+        body = {'settings': {'a': 1}, 'formations': {'attila': [], 'IVAN IV': ['pincer', 'pincer', 'wedge']}}
+        res = self.call('put', '/api/evaluation/settings/', body)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['formations'], {'Ivan IV': ['pincer', 'wedge']})
+        self.assertEqual(list(CommanderFormation.objects.values_list('commander', flat=True)), ['Ivan IV'])
+        # without them: they stay
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {}}).json()['formations'], {'Ivan IV': ['pincer', 'wedge']})
+        # a commander a march cannot name: nothing is saved
+        res = self.call('put', '/api/evaluation/settings/', {'settings': {'b': 2}, 'formations': {'Ivar': ['arch']}})
+        self.assertEqual(res.json(), {'formations': 'unknown', 'names': ['Ivar']})
+        self.assertEqual(EvaluationSettings.load().data, {})
+        for bad in ('x', {'Attila': 'wedge'}, {'Attila': ['square']}, {'Attila': ['arch', 'v', 'delta', 'wedge']}):
+            res = self.call('put', '/api/evaluation/settings/', {'settings': {}, 'formations': bad})
+            self.assertEqual(res.json(), {'formations': 'invalid'}, bad)
+        # the variables only: a player with the table switch only may not
+        self.player.evaluator = True
+        self.player.save()
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', body, self.nelly).status_code, 403)
+
     def test_the_commander_pairs_live_in_the_database(self):
         # the table the migration put in (meta-rok.com + RoKBattles), the best first, each order its own row
         data = self.admin.get('/api/evaluation/').json()

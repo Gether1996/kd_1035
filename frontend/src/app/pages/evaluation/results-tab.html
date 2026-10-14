@@ -1,7 +1,6 @@
 @let x = texts();
 @let c = x.columns;
 @let d = x.detail;
-@let e = evaluation();
 
 <div class="ev-bar">
   <div class="field ev-bar__search">
@@ -74,14 +73,6 @@
   <div>
     <dt>{{ x.summary.total }}</dt>
     <dd>{{ int(total()) }}</dd>
-  </div>
-  <div>
-    <dt>{{ x.summary.perPoint }} <app-eval-tip [text]="tip('results.perPoint')" [label]="tipLabel(x.summary.perPoint)" /></dt>
-    <dd>{{ int(e.perPoint) }}</dd>
-  </div>
-  <div>
-    <dt>{{ x.summary.benchmark }}</dt>
-    <dd>{{ dec(e.benchmarkScore) }}</dd>
   </div>
 </dl>
 

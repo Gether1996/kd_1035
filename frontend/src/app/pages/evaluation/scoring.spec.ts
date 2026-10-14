@@ -145,6 +145,24 @@ describe('evaluation scoring', () => {
     expect(row.counted).toBe(2);
   });
 
+  it('lowers the armaments of a march in a formation its primary commander should not use (Gether 14. 10. 2026)', () => {
+    const settings = normalizeSettings({ formations: { wrong: 0.5 } }, PAIRS, { 'qin shi huang': ['pincer', 'wedge'], Attila: [] });
+    const table = pairTable(settings);
+    const base = { attack: 10, defense: 9, health: 8, gold: 2, blue: 1, white: 1 };
+    const right = marchEval(settings, table, march({ ...base, formation: 'wedge' }), INDEX);
+    const wrong = marchEval(settings, table, march({ ...base, formation: 'arch' }), INDEX);
+    const none = marchEval(settings, table, march(base), INDEX);
+    expect(right.formation).toEqual({ preferred: ['pincer', 'wedge'], ok: true });
+    expect(wrong.formation.ok).toBe(false);
+    expect(none.formation.ok).toBeNull();
+    expect(wrong.armaments.points).toBeCloseTo(right.armaments.points * 0.5, 9);
+    expect(none.armaments.points).toBeCloseTo(right.armaments.points, 9);
+    // a commander without a formation set (or an empty list) takes any
+    const attila = marchEval(settings, table, march({ ...base, primary: 'Attila', secondary: 'Achilles', formation: 'arch' }), INDEX);
+    expect(attila.formation).toEqual({ preferred: [], ok: null });
+    expect(Object.keys(settings.formations.byCommander)).toEqual(['qin shi huang']);
+  });
+
   it('lowers a pair of unfinished commanders, both the same', () => {
     expect(skillFactor(S, march())).toBe(1);
     // both 1111: the spreadsheet scored such pairs about a third of the full one

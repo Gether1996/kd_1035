@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, model, output, signal } from '@angular/core';
+import { ArmoryIndex } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { marchIcon } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
@@ -28,6 +29,8 @@ export class EvalResultsTab {
   readonly evaluation = input.required<Evaluation>();
   readonly settings = input.required<EvalSettings>();
   readonly texts = input.required<EvalTexts>();
+  /** the formation names of the detail */
+  readonly armory = input<ArmoryIndex | null>(null);
   /** the variables are not saved yet */
   readonly dirty = input(false);
   /** "Aj neschválení" – the server sends un-approved players to the superuser only */
@@ -185,7 +188,18 @@ export class EvalResultsTab {
     const d = this.texts().detail;
     if (!m.armaments.filled) return d.noArmaments;
     const text = d.stats.replace('{a}', this.dec(m.armaments.stats)).replace('{b}', this.dec(m.armaments.inscriptions));
-    return m.armaments.tiered ? `${text} (${d.tiered})` : text;
+    const parts = [m.armaments.tiered ? `${text} (${d.tiered})` : text];
+    // a formation the primary commander should not lead with (Gether 14. 10. 2026)
+    if (m.formation.ok === false) {
+      const name = (id: string | undefined) => (id && this.armory()?.formations.get(id)?.name) || id || '';
+      parts.push(
+        d.wrongFormation
+          .replace('{have}', name(m.march.formation))
+          .replace('{want}', m.formation.preferred.map(name).join(' / '))
+          .replace('{f}', this.dec(this.settings().formations.wrong, 2)),
+      );
+    }
+    return parts.join(' · ');
   }
 
   /** the score is not a column any more – the acclaim from the marches says how it was counted */

@@ -31,8 +31,11 @@ export interface MarchEval {
   pair: { points: number; source: PairSource };
   /** 1 = both commanders expertise */
   skills: number;
-  /** tiered: the inscriptions clicked together scored by the tier list (else the counts by colour) */
+  /** tiered: the inscriptions clicked together scored by the tier list (else the counts by colour); points after the
+   * formation factor */
   armaments: { stats: number; inscriptions: number; points: number; filled: boolean; tiered: boolean };
+  /** the formations the primary commander should use; ok = null when he has none set or the march has no formation */
+  formation: { preferred: string[]; ok: boolean | null };
   equipment: EquipmentEval;
   total: number;
 }
@@ -85,6 +88,21 @@ export interface Evaluation {
 }
 
 // ---------------------------------------------------------------- one march
+
+/** commander (folded) → the formations a march he leads should use */
+export function formationTable(settings: EvalSettings): Map<string, string[]> {
+  return new Map(Object.entries(settings.formations.byCommander).map(([name, ids]) => [fold(name), ids]));
+}
+
+/**
+ * Does the march use a formation its primary commander should lead with (Gether 14. 10. 2026, Slim: "nastaviť
+ * každého commandera, akú má mať formáciu")? A commander without one set takes any.
+ */
+export function formationOf(formations: Map<string, string[]>, march: March): MarchEval['formation'] {
+  const preferred = formations.get(fold(march.primary)) ?? [];
+  const ok = !preferred.length || !march.formation ? null : preferred.includes(march.formation);
+  return { preferred, ok };
+}
 
 export const pairKey = (primary: string, secondary: string) => `${fold(primary)}|${fold(secondary)}`;
 
@@ -210,15 +228,26 @@ export function equipmentPoints(settings: EvalSettings, march: March, index: Arm
   };
 }
 
-/** a march in the spreadsheet's formula: (equipment × weight + armaments × weight) × pair / 100 × skills */
-export function marchEval(settings: EvalSettings, table: Map<string, number>, march: March, index: ArmoryIndex | null): MarchEval {
+/**
+ * a march in the spreadsheet's formula: (equipment × weight + armaments × weight) × pair / 100 × skills; the armaments
+ * of a march in a formation its primary commander should not use × the variable "iná formácia"
+ */
+export function marchEval(
+  settings: EvalSettings,
+  table: Map<string, number>,
+  march: March,
+  index: ArmoryIndex | null,
+  formations: Map<string, string[]> = formationTable(settings),
+): MarchEval {
   const pair = pairPoints(table, march);
   const skills = skillFactor(settings, march);
-  const armaments = armamentPoints(settings, march, index);
+  const formation = formationOf(formations, march);
+  const raw = armamentPoints(settings, march, index);
+  const armaments = { ...raw, points: raw.points * (formation.ok === false ? settings.formations.wrong : 1) };
   const equipment = equipmentPoints(settings, march, index);
   const m = settings.marches;
   const total = (equipment.points * m.equipment + armaments.points * m.armaments) * (pair.points / 100) * skills;
-  return { march, counted: false, skipped: null, pair, skills, armaments, equipment, total };
+  return { march, counted: false, skipped: null, pair, skills, armaments, formation, equipment, total };
 }
 
 // ---------------------------------------------------------------- power
@@ -273,11 +302,12 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
   // "Rátať s power" off (Gether 13. 10. 2026): the estimate from the marches only, the power written down stays
   const powerOf = (player: EvalPlayer) => (usePower ? player.power : null);
   const table = pairTable(settings);
+  const formations = formationTable(settings);
   const kinds = new Set(settings.marches.kinds);
   const p = settings.power;
 
   const partial: Draft[] = players.map((player) => {
-    const marches = player.marches.map((m) => marchEval(settings, table, m, index));
+    const marches = player.marches.map((m) => marchEval(settings, table, m, index, formations));
     // the first X in the player's order (Gether 13. 10. 2026: "prvých X marchov podľa toho, ako ich má nastavené"),
     // or the best X
     const byPosition = (a: MarchEval, b: MarchEval) => a.march.position - b.march.position || a.march.id - b.march.id;

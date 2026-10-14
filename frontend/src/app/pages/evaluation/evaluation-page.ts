@@ -92,6 +92,7 @@ type Tab = 'settings' | 'results';
           <app-eval-results
             [evaluation]="evaluation()"
             [settings]="draft()"
+            [armory]="armory.index()"
             [texts]="x"
             [dirty]="dirty()"
             [superuser]="superuser()"
@@ -130,7 +131,9 @@ export class EvaluationPage {
   protected readonly players = linkedSignal<EvalPlayer[]>(() => (this.data.hasValue() ? this.data.value().players : []));
   /** the variables as saved on the server (normalised into the defaults) */
   private readonly saved = linkedSignal<EvalSettings>(() =>
-    this.data.hasValue() ? normalizeSettings(this.data.value().settings, this.data.value().pairs) : normalizeSettings(null),
+    this.data.hasValue()
+      ? normalizeSettings(this.data.value().settings, this.data.value().pairs, this.data.value().formations)
+      : normalizeSettings(null),
   );
   private readonly savedIso = linkedSignal(() => (this.data.hasValue() ? this.data.value().updated_at : null));
   /** the version of the pair table this page loaded – a save of the table is refused over another one */
@@ -191,8 +194,9 @@ export class EvaluationPage {
       const body = toSave(this.draft());
       const changed = JSON.stringify(this.draft().pairs.rows) !== JSON.stringify(this.saved().pairs.rows);
       const pairs = changed ? { rows: body.pairs, version: this.pairsVersion() } : null;
-      const res = await this.api.saveSettings(body.settings, pairs);
-      this.saved.set(normalizeSettings(res.settings, res.pairs));
+      const moved = JSON.stringify(this.draft().formations.byCommander) !== JSON.stringify(this.saved().formations.byCommander);
+      const res = await this.api.saveSettings(body.settings, pairs, moved ? body.formations : null);
+      this.saved.set(normalizeSettings(res.settings, res.pairs, res.formations));
       this.savedIso.set(res.updated_at);
       this.pairsVersion.set(res.pairs_version);
       this.draft.set(this.saved());
@@ -213,9 +217,10 @@ export class EvaluationPage {
     this.stalePairs.set(false);
   }
 
-  /** the default variables – the pair table stays (it has no default in the code) – saved only with "Uložiť" */
+  /** the default variables – the pair table and the formations stay (they have no default in the code) – saved only
+   * with "Uložiť" */
   protected defaults(): void {
-    this.draft.set(normalizeSettings(null, this.draft().pairs.rows));
+    this.draft.set(normalizeSettings(null, this.draft().pairs.rows, this.draft().formations.byCommander));
   }
 
   /** many players at once (the power pasted for everyone): saved first, then shown */

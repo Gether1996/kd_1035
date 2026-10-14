@@ -15,7 +15,7 @@ import { ArmoryIndex, InscriptionRarity } from '../../core/armory';
 import { MARCH_KINDS, MarchKind, March } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
-import { EvalPlayer, Evaluation, inscriptionValue, missingPairs, skillFactor } from './scoring';
+import { EvalPlayer, Evaluation, formationOf, formationTable, inscriptionValue, missingPairs, skillFactor } from './scoring';
 import {
   EvalSettings,
   INSCRIPTION_TIERS,
@@ -43,9 +43,23 @@ type InscriptionShow = 'top' | 'special' | 'rare' | 'common' | 'tiered';
 
 const RARITY_ORDER: Record<InscriptionRarity, number> = { special: 0, rare: 1, common: 2 };
 
+/** the sections opened last time (a per-viewer convenience: the page works without it) */
+const OPEN_KEY = 'kd1035.evaluation.open';
+
+function readOpen(): Set<string> {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? '[]');
+    return new Set(Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
 /**
  * "Premenné" of /vyhodnocovanie: every variable of the evaluation in sections (acclaim, power, marches, armaments,
- * the inscription tier list, equipment, commander pairs, the fund), each with an explanation behind an "i". A change
+ * the inscription tier list, equipment, commander pairs, the commanders' formations, the fund), each with an
+ * explanation behind an "i". The sections are closed until opened (Gether 14. 10. 2026: "nech si admin otvorí, čo
+ * potrebuje"); the browser remembers which were open. A change
  * goes into the draft at once (on change, not on every key – a number half typed must not jump); the page saves it
  * with "Uložiť" – the pair table into its own table in the database.
  */
@@ -53,7 +67,7 @@ const RARITY_ORDER: Record<InscriptionRarity, number> = { special: 0, rare: 1, c
   selector: 'app-eval-settings',
   imports: [Icon, NgTemplateOutlet, EvalTip],
   templateUrl: './settings-tab.html',
-  styleUrl: './settings-tab.scss',
+  styleUrls: ['./settings-tab.scss', './settings-tables.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EvalSettingsTab {
@@ -159,6 +173,7 @@ export class EvalSettingsTab {
       inscriptionTiers: INSCRIPTION_TIERS.map((tier): NumField => ({ path: ['armaments', 'tiers', tier], label: `Tier ${tier}` })),
       equipment: [f(['equipment', 'statsWeight'], s.equipment.statsWeight), f(['equipment', 'statsMax'], s.equipment.statsMax)],
       pairs: (['minimum', 'curve'] as const).map((key) => f(['pairs', key], s.pairs[key])),
+      formations: f(['formations', 'wrong'], s.formations.wrong),
       fund: (['food', 'wood', 'stone', 'gold'] as const).map((key) => f(['fund', key], s.fund[key])),
     };
   });
@@ -330,6 +345,81 @@ export class EvalSettingsTab {
 
   protected reversedText(points: number): string {
     return this.texts().sections.pairs.reversed.replace('{n}', String(points).replace('.', ','));
+  }
+
+  // ---------------------------------------------------------------- the sections
+
+  /** the page runs in the browser only (the data comes from the API) – read once */
+  private readonly opened = signal<ReadonlySet<string>>(readOpen());
+
+  protected isOpen(key: string): boolean {
+    return this.opened().has(key);
+  }
+
+  protected toggled(key: string, event: Event): void {
+    const open = (event.target as HTMLDetailsElement).open;
+    if (open === this.opened().has(key)) return;
+    const next = new Set(this.opened());
+    if (open) next.add(key);
+    else next.delete(key);
+    this.opened.set(next);
+    try {
+      localStorage.setItem(OPEN_KEY, JSON.stringify([...next]));
+    } catch {
+      // a private window: the sections close again next time
+    }
+  }
+
+  // ---------------------------------------------------------------- formations
+
+  protected readonly formationFilter = signal('');
+  /** the formations of the catalog, by name */
+  protected readonly formationList = computed(() =>
+    [...(this.armory()?.formations.values() ?? [])].map((f) => ({ id: f.id, name: f.name })).sort((a, b) => a.name.localeCompare(b.name)),
+  );
+
+  /**
+   * Every commander of the pair table and of the formation table, with its formations and how many marches of the
+   * players he leads in another one (of the types that count)
+   */
+  protected readonly formationRows = computed(() => {
+    const s = this.settings();
+    const query = fold(this.formationFilter());
+    const formations = formationTable(s);
+    const kinds = new Set(s.marches.kinds);
+    const names = new Map<string, string>();
+    for (const name of [...Object.keys(s.formations.byCommander), ...s.pairs.rows.flatMap(([p, q]) => [p, q])]) {
+      if (name.trim() && !names.has(fold(name))) names.set(fold(name), name.trim());
+    }
+    const off = new Map<string, number>();
+    for (const player of this.players()) {
+      for (const m of player.marches) {
+        if (!m.kind || !kinds.has(m.kind) || formationOf(formations, m).ok !== false) continue;
+        off.set(fold(m.primary), (off.get(fold(m.primary)) ?? 0) + 1);
+      }
+    }
+    return [...names]
+      .filter(([key]) => !query || key.includes(query))
+      .map(([key, name]) => ({ name, ids: formations.get(key) ?? [], off: off.get(key) ?? 0 }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  /** the first or the second formation of a commander; no first = any formation */
+  protected setFormation(name: string, slot: 0 | 1, event: Event): void {
+    const id = (event.target as HTMLSelectElement).value;
+    this.change((draft) => {
+      const table = draft.formations.byCommander;
+      const key = Object.keys(table).find((k) => fold(k) === fold(name)) ?? name;
+      const ids = [...(table[key] ?? [])];
+      if (slot === 0) ids[0] = id;
+      else ids[1] = id;
+      const clean = [...new Set(ids.filter((v) => !!v))];
+      const result = slot === 0 && !id ? [] : clean;
+      if (result.length) table[key] = result;
+      else delete table[key];
+      // in the order the page loads them, so a change made and undone is not "unsaved"
+      draft.formations.byCommander = Object.fromEntries(Object.entries(table).sort(([a], [b]) => a.localeCompare(b)));
+    });
   }
 
   // ---------------------------------------------------------------- power

@@ -10,7 +10,8 @@ from django.utils.safestring import mark_safe
 
 from kingdom.permissions import SuperuserOnlyAdmin
 
-from .models import CommanderPair, Guide, GuideImage
+from .armory import armory
+from .models import CommanderFormation, CommanderPair, Guide, GuideImage
 from .pairs import check_rows, known_name, merge_pairs, pair_rows, parse_lines, replace_pairs
 
 PREVIEW_STYLE = (
@@ -181,3 +182,48 @@ class CommanderPairAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
             'title': 'Vložiť páry z Excelu',
         }
         return TemplateResponse(request, 'admin/guides/commanderpair/import.html', context)
+
+
+class CommanderFormationForm(forms.ModelForm):
+    """A commander a march can name, written like the roster, and the formations of armory.json in the order ticked."""
+
+    formations = forms.MultipleChoiceField(
+        label='Formácie',
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        help_text='Odporúčané formácie (najviac 3). Žiadna = hocijaká formácia.',
+    )
+
+    class Meta:
+        model = CommanderFormation
+        fields = ['commander', 'formations']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['formations'].choices = [(f['id'], f['name']) for f in armory()['formations']]
+
+    def clean_commander(self):
+        name = known_name(self.cleaned_data['commander'])
+        if not name:
+            raise forms.ValidationError('Neznámy commander – meno ako pri marchi (napr. Ivan IV, Ivar the Boneless).')
+        return name
+
+    def clean_formations(self):
+        chosen = self.cleaned_data['formations']
+        if len(chosen) > 3:
+            raise forms.ValidationError('Najviac 3 formácie.')
+        return chosen
+
+
+@admin.register(CommanderFormation)
+class CommanderFormationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """The formations of the commanders for /vyhodnocovanie (also in Premenné on the page)."""
+
+    list_display = ['commander', 'formation_names', 'updated_at']
+    search_fields = ['commander']
+    form = CommanderFormationForm
+
+    @admin.display(description='formácie')
+    def formation_names(self, row):
+        names = {f['id']: f['name'] for f in armory()['formations']}
+        return ', '.join(names.get(f, f) for f in row.formations) or '–'

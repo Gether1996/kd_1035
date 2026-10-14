@@ -13,10 +13,12 @@ export interface EvaluationData {
   /** the commander pair table – in the database (guides.CommanderPair), the best first; its version guards a save */
   pairs: PairRow[];
   pairs_version: string;
+  /** commander → the formations a march he leads should use (guides.CommanderFormation, Gether 14. 10. 2026) */
+  formations: Record<string, string[]>;
   players: EvalPlayer[];
 }
 
-export type SavedSettings = Pick<EvaluationData, 'settings' | 'updated_at' | 'pairs' | 'pairs_version'>;
+export type SavedSettings = Pick<EvaluationData, 'settings' | 'updated_at' | 'pairs' | 'pairs_version' | 'formations'>;
 
 export type RecordChange = Partial<Pick<EvalPlayer, 'power' | 'acclaim' | 't4' | 'power_bonus'>>;
 
@@ -33,10 +35,18 @@ export class EvaluationApi {
   /**
    * The variables and – only when changed on the page – the whole pair table over the version it was loaded in, both
    * or nothing. The table changed meanwhile (admin, another evaluator) → 409 {pairs: 'stale'}; a commander a march
-   * cannot name → 400 {pairs: 'unknown', names}.
+   * cannot name → 400 {pairs: 'unknown', names}. The commanders' formations go along the same way when changed.
    */
-  saveSettings(settings: unknown, pairs: { rows: PairRow[]; version: string } | null): Promise<SavedSettings> {
-    const body = pairs ? { settings, pairs: pairs.rows, pairs_version: pairs.version } : { settings };
+  saveSettings(
+    settings: unknown,
+    pairs: { rows: PairRow[]; version: string } | null,
+    formations: Record<string, string[]> | null = null,
+  ): Promise<SavedSettings> {
+    const body = {
+      settings,
+      ...(pairs ? { pairs: pairs.rows, pairs_version: pairs.version } : {}),
+      ...(formations ? { formations } : {}),
+    };
     return firstValueFrom(this.http.put<SavedSettings>('/api/evaluation/settings/', body));
   }
 

@@ -100,6 +100,16 @@ export interface EvalSettings {
     minimum: number;
     curve: number;
   };
+  formations: {
+    /**
+     * commander → the formations a march he leads should use (Gether 14. 10. 2026, Slim: "nastaviť každého commandera,
+     * akú má mať formáciu"); not listed = any. Kept in the database (guides.CommanderFormation) like the pairs, saved
+     * with the variables but not in their JSON.
+     */
+    byCommander: Record<string, string[]>;
+    /** the armaments of a march in another formation count × this */
+    wrong: number;
+  };
   fund: {
     /** the most a player pays at 0 % of the acclaim, by the number of marches (1–5) */
     max: number[];
@@ -244,6 +254,7 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     minimum: 0.3,
     curve: 1.5,
   },
+  formations: { byCommander: {}, wrong: 0.8 },
   fund: { max: [400e6, 600e6, 900e6, 1200e6, 1500e6], food: 2, wood: 2, stone: 1, gold: 2 },
 };
 
@@ -295,7 +306,7 @@ const list = (value: unknown, defaults: number[], min = 0, max = 1e12): number[]
  * of a list) – something missing or wrong takes the default, keys the page does not know are dropped. The commander
  * pairs come from their own table in the database (guides.CommanderPair, Gether 13. 10. 2026), not from the JSON.
  */
-export function normalizeSettings(value: unknown, pairRows: unknown = []): EvalSettings {
+export function normalizeSettings(value: unknown, pairRows: unknown = [], formationMap: unknown = {}): EvalSettings {
   const d = DEFAULT_SETTINGS;
   const raw = obj(value);
   const acclaim = obj(raw['acclaim']);
@@ -304,6 +315,7 @@ export function normalizeSettings(value: unknown, pairRows: unknown = []): EvalS
   const equipment = obj(raw['equipment']);
   const armaments = obj(raw['armaments']);
   const pairs = obj(raw['pairs']);
+  const formations = obj(raw['formations']);
   const fund = obj(raw['fund']);
   const table = Array.isArray(power['table']) ? power['table'] : [];
   const tiers = Array.isArray(equipment['tiers']) ? equipment['tiers'] : [];
@@ -394,6 +406,15 @@ export function normalizeSettings(value: unknown, pairRows: unknown = []): EvalS
       minimum: num(pairs['minimum'], d.pairs.minimum, 0, 1),
       curve: num(pairs['curve'], d.pairs.curve, 0.1, 5),
     },
+    formations: {
+      byCommander: Object.fromEntries(
+        Object.entries(obj(formationMap))
+          .map(([name, ids]) => [name.trim(), Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string' && !!id) : []] as const)
+          .filter(([name, ids]) => !!name && ids.length > 0)
+          .sort(([a], [b]) => a.localeCompare(b)),
+      ),
+      wrong: num(formations['wrong'], d.formations.wrong, 0, 1),
+    },
     fund: {
       max: [],
       ...group(fund, { food: d.fund.food, wood: d.fund.wood, stone: d.fund.stone, gold: d.fund.gold }),
@@ -418,8 +439,13 @@ function uniquePairs(rows: PairRow[]): PairRow[] {
 export const RARITIES = ITEM_RARITIES;
 export const SLOTS = GEAR_SLOTS;
 
-/** what the server keeps: the variables as JSON, the pair table (rows filled in) as a table of its own */
-export function toSave(settings: EvalSettings): { settings: unknown; pairs: PairRow[] } {
+/** what the server keeps: the variables as JSON, the pair table (rows filled in) and the formations as tables of their own */
+export function toSave(settings: EvalSettings): { settings: unknown; pairs: PairRow[]; formations: Record<string, string[]> } {
   const { rows, ...pairs } = settings.pairs;
-  return { settings: { ...settings, pairs }, pairs: rows.filter(([p, s]) => !!p.trim() && !!s.trim()) };
+  const { byCommander, ...formations } = settings.formations;
+  return {
+    settings: { ...settings, pairs, formations },
+    pairs: rows.filter(([p, s]) => !!p.trim() && !!s.trim()),
+    formations: byCommander,
+  };
 }

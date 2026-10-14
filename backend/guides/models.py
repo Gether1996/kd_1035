@@ -158,3 +158,26 @@ class CommanderPair(models.Model):
 
     def __str__(self):
         return f'{self.primary} + {self.secondary}'
+
+
+class CommanderFormation(models.Model):
+    """The formations a commander leading a march should use – for the KvK evaluation (/vyhodnocovanie, Gether 14. 10.
+    2026; Slim: "nastaviť každého commandera, akú má mať formáciu"). A table in the database like the pairs: edited in
+    the admin or in Premenné on the page. A march whose primary commander is here and that uses another formation scores
+    its armaments × the variable "iná formácia"; a commander not here (or with no formation) takes any. The first values
+    came from meta-rok.com and RoKBattles (migration 0014). The name is checked against the roster by the admin form and
+    the API (guides.formations), the formations against armory.json."""
+
+    commander = models.CharField('commander', max_length=64, unique=True)
+    formations = models.JSONField(
+        'formácie', default=list, blank=True, help_text='Odporúčané formácie v poradí; prázdne = hocijaká.'
+    )
+    updated_at = models.DateTimeField('upravené', auto_now=True)
+
+    class Meta:
+        ordering = ['commander']
+        verbose_name = 'formácia commandera (vyhodnocovanie)'
+        verbose_name_plural = 'formácie commanderov (vyhodnocovanie)'
+
+    def __str__(self):
+        return self.commander
