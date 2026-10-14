@@ -368,6 +368,9 @@ export const sk = {
     noMatch: 'Takého hráča tu nemáme.',
     you: 'Ty',
     r4Only: 'len R4',
+    // marches with a wrong pair or formation (the superadmin, the player at their own)
+    problems: 'Na opravu: {n}',
+    problemsHint: 'Nesprávny pár alebo formácia pre vyhodnocovanie KvK',
     // a player the superadmin has not approved (or un-approved) – only the superadmin sees their things
     hidden: 'neschválený',
     hiddenHint: 'Hráč nie je schválený – jeho marche a prihlášky vidíš iba ty.',

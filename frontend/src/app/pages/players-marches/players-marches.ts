@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
-import { MARCH_KINDS, MarchKind } from '../../core/kvk-api';
+import { MARCH_KINDS, March, MarchKind } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, PlayerMarches, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
@@ -159,6 +159,18 @@ export class PlayersMarches {
   /** "Rozbaliť všetky" / "Zbaliť všetky" – the players the search shows */
   protected toggleAll(): void {
     this.opened.set(this.allOpen() ? new Set() : new Set(this.shown().map((p) => p.id)));
+  }
+
+  /**
+   * A march with a pair or a formation the KvK evaluation does not like – the server says so to the superuser and to
+   * the player about their own (Gether 14. 10. 2026: it shows on a closed player too)
+   */
+  protected bad(march: March): boolean {
+    return !!march.pair_problem || !!march.formation_problem?.length;
+  }
+
+  protected problems(player: PlayerMarches): number {
+    return player.marches.filter((m) => this.bad(m)).length;
   }
 
   /** "6 marchov" */

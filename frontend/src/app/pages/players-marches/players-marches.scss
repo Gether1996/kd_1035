@@ -222,3 +222,19 @@
     transform: rotate(180deg);
   }
 }
+
+// a march with a wrong pair or formation for the KvK evaluation – seen on a closed player too (Gether 14. 10. 2026);
+// the superadmin and the player themself only
+.player.has-problem,
+.player.has-problem:has(.player__head:hover) {
+  border-color: var(--red-500);
+}
+
+.tag--problem {
+  border-color: color-mix(in srgb, var(--red-500) 70%, transparent);
+  color: var(--red-300);
+}
+
+.player__mini.is-bad {
+  border: 2px solid var(--red-500);
+}

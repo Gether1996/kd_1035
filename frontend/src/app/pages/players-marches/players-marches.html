@@ -85,7 +85,8 @@
     <ul class="players">
       @for (player of shown(); track player.id) {
         @let open = isOpen(player.id);
-        <li class="player" [class.is-open]="open">
+        @let wrong = problems(player);
+        <li class="player" [class.is-open]="open" [class.has-problem]="wrong > 0">
           <!-- the whole head opens and closes the player's marches (Gether 11. 10. 2026: "rozbaliť detail") -->
           <button
             type="button"
@@ -107,6 +108,9 @@
             } @else if (!player.public) {
               <span class="tag tag--private"><svg appIcon="eye-off"></svg>{{ p.r4Only }}</span>
             }
+            @if (wrong) {
+              <span class="tag tag--problem" [title]="p.problemsHint">{{ p.problems.replace('{n}', '' + wrong) }}<span class="sr-only"> – {{ p.problemsHint }}</span></span>
+            }
             <svg class="player__chevron" appIcon="chevron-down"></svg>
             @if (!open) {
               <!-- closed: the count and the leading commander of each march -->
@@ -114,7 +118,7 @@
                 <span class="player__count">{{ count(player.marches.length) }}</span>
                 @for (march of player.marches; track march.id) {
                   @if (portraits().get(march.primary); as src) {
-                    <img class="player__mini" [src]="src" alt="" width="64" height="64" loading="lazy" />
+                    <img class="player__mini" [class.is-bad]="bad(march)" [src]="src" alt="" width="64" height="64" loading="lazy" />
                   }
                 }
               </span>

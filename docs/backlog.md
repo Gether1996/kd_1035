@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.28.4:** V Marche hráčov svieti nesprávny pár alebo formácia aj pri zatvorenom hráčovi – červený okraj, „Na opravu: N“ a červený rámik pri portréte (superadmin a hráč pri svojich).
 - **14. 10. 2026 – v1.28.3:** March vo formácii, ktorú jeho primárny commander nemá viesť, má v marchoch červený okraj a vetu s odporúčanou formáciou – vidí to iba hráč a superadmin.
 - **14. 10. 2026 – v1.28.2:** Nad tabuľkou vyhodnocovania už nie je Spolu acclaim.
 - **14. 10. 2026 – v1.28.1:** Vo vyhodnocovaní je odporúčaná power hneď vedľa power hráča, čísla sa dajú porovnať na prvý pohľad.

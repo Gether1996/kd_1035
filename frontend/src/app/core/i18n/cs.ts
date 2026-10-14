@@ -361,6 +361,8 @@ export const cs: Dict = {
     noMatch: 'Takového hráče tu nemáme.',
     you: 'Ty',
     r4Only: 'jen R4',
+    problems: 'K opravě: {n}',
+    problemsHint: 'Špatný pár nebo formace pro vyhodnocování KvK',
     hidden: 'neschválený',
     hiddenHint: 'Hráč není schválený – jeho marche a přihlášky vidíš jen ty.',
     count: ['{n} march', '{n} marche', '{n} marchů'],
