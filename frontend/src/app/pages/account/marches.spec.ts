@@ -478,6 +478,7 @@ describe('PlayersAdmin', () => {
       created_at: '2026-10-01T12:00:00Z',
       last_login: null,
       marches: 0,
+      issues: 0,
       kvk: [],
       evaluation_settings: false,
       evaluation_overview: false,
@@ -485,7 +486,7 @@ describe('PlayersAdmin', () => {
     http.expectOne('/api/kvk/reviewers/').flush({
       players: [
         { ...player, id: 1, name: 'gether', ingame_name: 'Gether', superuser: true, last_login: '2026-10-13T07:05:00Z' },
-        { ...player, id: 2, name: 'nelly', ingame_name: 'Nelly', created_at: '2026-10-05T12:00:00Z', marches: 3, kvk: ['garrison', 'rally'] },
+        { ...player, id: 2, name: 'nelly', ingame_name: 'Nelly', created_at: '2026-10-05T12:00:00Z', marches: 3, issues: 2, kvk: ['garrison', 'rally'] },
         { ...player, id: 3, name: 'nova', ingame_name: '', approved: false, created_at: '2026-10-12T12:00:00Z' },
       ],
       auto_approve: false,
@@ -501,8 +502,13 @@ describe('PlayersAdmin', () => {
     expect(details()).toEqual([
       'od 12. 10. 2026 14:00',
       'gether · superadmin · od 1. 10. 2026 14:00 · naposledy 13. 10. 2026 9:05',
-      'nelly · od 5. 10. 2026 14:00 · 3 marche · KvK rally, garrison',
+      'nelly · od 5. 10. 2026 14:00 · 3 marche · KvK rally, garrison · na opravu: 2 – nesprávny pár alebo formácia pre vyhodnocovanie KvK',
     ]);
+    // the marches red on /marche: red, with the reason for screen readers and in the title
+    const issues = el.querySelectorAll('.reviewer__issues');
+    expect(issues.length).toBe(1);
+    expect(issues[0].getAttribute('title')).toBe('nesprávny pár alebo formácia pre vyhodnocovanie KvK');
+    expect(issues[0].querySelector('.sr-only')).not.toBeNull();
     // sorting keeps the waiting player on top; filters for marches and KvK
     const select = (id: string, value: string) => {
       const box = el.querySelector<HTMLSelectElement>(id)!;
@@ -526,6 +532,10 @@ describe('PlayersAdmin', () => {
     select('#players-kvk', 'rally');
     await settle(fixture);
     expect(names()).toEqual([]);
+    select('#players-kvk', 'all');
+    select('#players-marches', 'fix');
+    await settle(fixture);
+    expect(names()).toEqual(['Nelly']);
     select('#players-marches', 'all');
     select('#players-kvk', 'none');
     await settle(fixture);
@@ -537,14 +547,20 @@ describe('PlayersAdmin', () => {
     expect(el.querySelectorAll('.switch-legend li').length).toBe(4);
     expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(4);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
-    expect(filters().map((b) => b.textContent?.trim())).toEqual([
-      'Všetci · 3',
-      'Čakajú · 1',
-      'Schválení · 2',
-      'Všetci · 3',
+    expect(filters().map((b) => b.textContent?.trim())).toEqual(['Všetci · 3', 'Čakajú · 1', 'Schválení · 2']);
+    // by the switches; the superadmin is only under "všetci"
+    const access = () => Array.from(el.querySelectorAll('#players-access option'), (o) => o.textContent?.trim());
+    expect(access()).toEqual([
+      'Prístup: všetci · 3',
       'R4 · 0',
-      'Bez R4 · 3',
+      'Vyh. nastavenia · 0',
+      'Pož. acclaim · 0',
+      'Bez prístupu · 2',
     ]);
+    select('#players-access', 'none');
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Nelly']);
+    select('#players-access', 'all');
     filters()[1].click();
     await settle(fixture);
     expect(names()).toEqual(['nova']);
@@ -562,11 +578,19 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova', 'Gether', 'Nelly']);
     expect(el.querySelector('.tag--pending')).toBeNull();
 
-    // R4 of Nelly; the filter R4 shows only her
+    // R4 of Nelly under "Bez prístupu": her row stays until another filter is picked, the counts follow at once
+    select('#players-access', 'none');
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Nelly']);
     const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
     r4().click();
     const flags = { reviewer: true, approved: true, evaluation_settings: false, evaluation_overview: false };
     http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, ...flags });
+    await settle(fixture);
+    expect(names()).toEqual(['nova', 'Nelly']);
+    expect(access()[4]).toBe('Bez prístupu · 1');
+    select('#players-access', 'all');
+    await settle(fixture);
     // the evaluation of Nelly: the evaluation itself and its published overview, two switches (Gether 14. 10. 2026)
     const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
     expect(settings.getAttribute('aria-label')).toBe('Nastavenia vyhodnocovania – odhad acclaimu a premenné: Nelly');
@@ -585,9 +609,16 @@ describe('PlayersAdmin', () => {
     await settle(fixture);
     expect(overview.checked).toBe(true);
     await settle(fixture);
-    filters()[4].click();
+    for (const f of ['r4', 'evaluation_settings', 'evaluation_overview']) {
+      select('#players-access', f);
+      await settle(fixture);
+      expect(names()).toEqual(['Nelly']);
+    }
+    select('#players-access', 'none');
     await settle(fixture);
-    expect(names()).toEqual(['Nelly']);
+    expect(names()).toEqual(['nova']);
+    select('#players-access', 'r4');
+    await settle(fixture);
 
     el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[1].click();
     http.expectOne('/api/kvk/reviewers/2/').flush('x', { status: 500, statusText: 'Server Error' });

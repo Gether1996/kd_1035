@@ -345,10 +345,7 @@ export const sk = {
     since: 'od {date}',
     pending: 'Čaká',
     filters: {
-      role: 'Rola',
       all: 'Všetci',
-      r4: 'R4',
-      others: 'Bez R4',
       approval: 'Schválenie',
       approved: 'Schválení',
       pending: 'Čakajú',
@@ -357,7 +354,16 @@ export const sk = {
     sort: 'Zoradiť',
     sorts: { name: 'Meno', newest: 'Najnovší', login: 'Naposledy prihlásení', marches: 'Počet marchov' },
     marchFilter: 'Marche',
-    marchFilters: { all: 'Marche: všetci', with: 'S marchmi', without: 'Bez marchov' },
+    marchFilters: { all: 'Marche: všetci', with: 'S marchmi', without: 'Bez marchov', fix: 'Na opravu' },
+    // by the switches (Gether 14. 10. 2026) – the superadmin is only under "všetci"
+    access: 'Prístup',
+    accessFilters: {
+      all: 'Prístup: všetci',
+      r4: 'R4',
+      evaluation_settings: 'Vyh. nastavenia',
+      evaluation_overview: 'Pož. acclaim',
+      none: 'Bez prístupu',
+    },
     kvkFilter: 'Prihláška na KvK',
     kvkFilters: {
       all: 'KvK: všetci',
@@ -369,6 +375,9 @@ export const sk = {
     lastLogin: 'naposledy {date}',
     marchCount: ['{n} march', '{n} marche', '{n} marchov'],
     kvk: 'KvK {roles}',
+    // the player's marches red on /marche
+    issues: 'na opravu: {n}',
+    issuesHint: 'nesprávny pár alebo formácia pre vyhodnocovanie KvK',
     noMatch: 'Takého hráča tu nemáme.',
     empty: 'Zatiaľ sa neprihlásil žiadny hráč.',
     loadError: 'Hráčov sa nepodarilo načítať.',

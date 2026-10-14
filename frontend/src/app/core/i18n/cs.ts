@@ -336,10 +336,7 @@ export const cs: Dict = {
     since: 'od {date}',
     pending: 'Čeká',
     filters: {
-      role: 'Role',
       all: 'Všichni',
-      r4: 'R4',
-      others: 'Bez R4',
       approval: 'Schválení',
       approved: 'Schválení',
       pending: 'Čekají',
@@ -348,7 +345,16 @@ export const cs: Dict = {
     sort: 'Seřadit',
     sorts: { name: 'Jméno', newest: 'Nejnovější', login: 'Naposledy přihlášení', marches: 'Počet marchů' },
     marchFilter: 'Marche',
-    marchFilters: { all: 'Marche: všichni', with: 'S marchi', without: 'Bez marchů' },
+    marchFilters: { all: 'Marche: všichni', with: 'S marchi', without: 'Bez marchů', fix: 'K opravě' },
+    // by the switches (Gether 14. 10. 2026) – the superadmin is only under "všichni"
+    access: 'Přístup',
+    accessFilters: {
+      all: 'Přístup: všichni',
+      r4: 'R4',
+      evaluation_settings: 'Vyh. nastavení',
+      evaluation_overview: 'Pož. acclaim',
+      none: 'Bez přístupu',
+    },
     kvkFilter: 'Přihláška na KvK',
     kvkFilters: {
       all: 'KvK: všichni',
@@ -360,6 +366,9 @@ export const cs: Dict = {
     lastLogin: 'naposledy {date}',
     marchCount: ['{n} march', '{n} marche', '{n} marchů'],
     kvk: 'KvK {roles}',
+    // the player's marches red on /marche
+    issues: 'k opravě: {n}',
+    issuesHint: 'nesprávný pár nebo formace pro vyhodnocování KvK',
     noMatch: 'Takového hráče tu nemáme.',
     empty: 'Zatím se nepřihlásil žádný hráč.',
     loadError: 'Hráče se nepodařilo načíst.',

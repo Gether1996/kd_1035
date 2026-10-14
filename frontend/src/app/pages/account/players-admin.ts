@@ -6,10 +6,10 @@ import { fold } from '../../shared/search';
 import { MarchNotices } from '../../shared/march-notices';
 import { EvalTip } from '../evaluation/tip';
 
-type RoleFilter = 'all' | 'r4' | 'others';
+type AccessFilter = 'all' | 'r4' | 'evaluation_settings' | 'evaluation_overview' | 'none';
 type ApprovalFilter = 'all' | 'approved' | 'pending';
 type Sort = 'name' | 'newest' | 'login' | 'marches';
-type MarchFilter = 'all' | 'with' | 'without';
+type MarchFilter = 'all' | 'with' | 'without' | 'fix';
 type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
 
 /**
@@ -19,7 +19,8 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
  * approval, sorting and filters for marches and KvK sign-ups like on /marche; "Vyh. tabuľka" and "Vyh. nastavenia" let
  * a player into /vyhodnocovanie – its table, its variables (Gether 13. and 14. 10. 2026), a legend above the list
  * explains the four switches with an "i" each; the players waiting
- * for the approval come first. "Schvaľovať automaticky" lets every new player in at once, without
+ * for the approval come first. "Prístup" filters by the switches; "Na opravu" and the red count in a row are the
+ * player's marches with a wrong pair or formation, red on /marche too (Gether 14. 10. 2026). "Schvaľovať automaticky" lets every new player in at once, without
  * the Discord message.
  */
 @Component({
@@ -74,15 +75,16 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
               </button>
             }
           </div>
-          <div class="segmented" role="group" [attr.aria-label]="k.filters.role">
-            @for (f of roleFilters; track f) {
-              <button type="button" [attr.aria-pressed]="role() === f" (click)="role.set(f)">
-                {{ k.filters[f] }} · {{ roleCount(f) }}
-              </button>
-            }
-          </div>
         </div>
         <div class="players-bar__selects">
+          <div class="field players-bar__select">
+            <label class="sr-only" for="players-access">{{ k.access }}</label>
+            <select #accessBy id="players-access" class="select" (change)="access.set($any(accessBy.value))">
+              @for (o of accessFilters; track o) {
+                <option [value]="o" [selected]="access() === o">{{ k.accessFilters[o] }} · {{ accessCount(o) }}</option>
+              }
+            </select>
+          </div>
           <div class="field players-bar__select">
             <label class="sr-only" for="players-sort">{{ k.sort }}</label>
             <select #sortBy id="players-sort" class="select" (change)="sort.set($any(sortBy.value))">
@@ -133,7 +135,8 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
                 }
               </strong>
               <span>
-                {{ p.ingame_name ? p.name + ' · ' : '' }}{{ p.superuser ? k.superuser + ' · ' : '' }}{{ details(p) }}
+                <!-- "· na opravu: 2" red: the marches red on /marche, a wrong pair or formation for the KvK evaluation -->
+                {{ p.ingame_name ? p.name + ' · ' : '' }}{{ p.superuser ? k.superuser + ' · ' : '' }}{{ details(p) }}@if (p.issues) { · <span class="reviewer__issues" [title]="k.issuesHint">{{ k.issues.replace('{n}', '' + p.issues) }}<span class="sr-only"> – {{ k.issuesHint }}</span></span>}
               </span>
             </span>
             @if (!p.superuser) {
@@ -171,10 +174,10 @@ export class PlayersAdmin {
   private readonly api = inject(KvkApi);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().players);
-  protected readonly roleFilters: RoleFilter[] = ['all', 'r4', 'others'];
+  protected readonly accessFilters: AccessFilter[] = ['all', 'r4', 'evaluation_settings', 'evaluation_overview', 'none'];
   protected readonly approvalFilters: ApprovalFilter[] = ['all', 'pending', 'approved'];
   protected readonly sorts: Sort[] = ['name', 'newest', 'login', 'marches'];
-  protected readonly marchFilters: MarchFilter[] = ['all', 'with', 'without'];
+  protected readonly marchFilters: MarchFilter[] = ['all', 'with', 'without', 'fix'];
   protected readonly kvkFilters: KvkFilter[] = ['all', 'any', 'rally', 'garrison', 'none'];
   protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluation_settings', 'evaluation_overview'];
 
@@ -183,25 +186,28 @@ export class PlayersAdmin {
   /** new players approved at once, no Discord message (Gether 12. 10. 2026: open for now, closed later) */
   protected readonly autoApprove = linkedSignal(() => this.data.hasValue() && this.data.value().auto_approve);
   protected readonly search = signal('');
-  protected readonly role = signal<RoleFilter>('all');
+  protected readonly access = signal<AccessFilter>('all');
   protected readonly approval = signal<ApprovalFilter>('all');
   protected readonly sort = signal<Sort>('name');
   protected readonly marchFilter = signal<MarchFilter>('all');
   protected readonly kvkFilter = signal<KvkFilter>('all');
   protected readonly failed = signal(false);
 
-  /** the superadmin counts as approved and not as R4 */
+  /** the superadmin counts as approved; with no switches of their own, they are in no access filter but "všetci" */
   private readonly approved = (p: ReviewerRow) => p.approved || p.superuser;
-  private readonly roleMatches = (p: ReviewerRow, f: RoleFilter) =>
-    f === 'all' || (f === 'r4') === (p.reviewer && !p.superuser);
+  private readonly accessMatches = (p: ReviewerRow, f: AccessFilter) =>
+    f === 'all' ||
+    (!p.superuser &&
+      (f === 'r4' ? p.reviewer : f === 'none' ? !p.reviewer && !p.evaluation_settings && !p.evaluation_overview : p[f]));
   private readonly approvalMatches = (p: ReviewerRow, f: ApprovalFilter) =>
     f === 'all' || (f === 'approved') === this.approved(p);
 
-  private readonly marchMatches = (p: ReviewerRow, f: MarchFilter) => f === 'all' || (f === 'with') === p.marches > 0;
+  private readonly marchMatches = (p: ReviewerRow, f: MarchFilter) =>
+    f === 'all' || (f === 'fix' ? p.issues > 0 : (f === 'with') === p.marches > 0);
   private readonly kvkMatches = (p: ReviewerRow, f: KvkFilter) =>
     f === 'all' || (f === 'any' ? p.kvk.length > 0 : f === 'none' ? !p.kvk.length : p.kvk.includes(f));
 
-  /** the search, marches and KvK – the counts on the buttons of one segmented filter follow the other one */
+  /** the search, marches and KvK – the counts of the approval filter follow the access one and the other way round */
   private readonly found = computed(() => {
     const query = fold(this.search());
     const marches = this.marchFilter();
@@ -242,11 +248,11 @@ export class PlayersAdmin {
   });
 
   /**
-   * The players as they were when a filter was picked (or the list loaded): a switch flipped under "Čakajú" or "R4"
-   * keeps its row until the next filter change – the counts on the buttons follow at once.
+   * The players as they were when a filter was picked (or the list loaded): a switch flipped under "Čakajú" or an
+   * access filter keeps its row until the next filter change – the counts on the buttons follow at once.
    */
   private readonly filtered = linkedSignal({
-    source: () => [this.role(), this.approval(), this.data.hasValue() ? this.data.value() : null] as const,
+    source: () => [this.access(), this.approval(), this.data.hasValue() ? this.data.value() : null] as const,
     computation: () => new Map(untracked(this.players).map((p) => [p.id, p])),
   });
 
@@ -255,16 +261,16 @@ export class PlayersAdmin {
     const filtered = this.filtered();
     const as = (p: ReviewerRow) => filtered.get(p.id) ?? p;
     return this.found()
-      .filter((p) => this.roleMatches(as(p), this.role()) && this.approvalMatches(as(p), this.approval()))
+      .filter((p) => this.accessMatches(as(p), this.access()) && this.approvalMatches(as(p), this.approval()))
       .sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
   });
 
-  protected roleCount(f: RoleFilter): number {
-    return this.found().filter((p) => this.roleMatches(p, f) && this.approvalMatches(p, this.approval())).length;
+  protected accessCount(f: AccessFilter): number {
+    return this.found().filter((p) => this.accessMatches(p, f) && this.approvalMatches(p, this.approval())).length;
   }
 
   protected approvalCount(f: ApprovalFilter): number {
-    return this.found().filter((p) => this.approvalMatches(p, f) && this.roleMatches(p, this.role())).length;
+    return this.found().filter((p) => this.approvalMatches(p, f) && this.accessMatches(p, this.access())).length;
   }
 
   /** "od 12. 10. 2026 14:32 · naposledy 13. 10. 2026 9:05 · 3 marche · KvK rally, garrison" – in the kingdom's time */

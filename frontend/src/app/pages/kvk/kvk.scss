@@ -563,6 +563,12 @@
   }
 }
 
+// "na opravu: 2" – the player's marches red on /marche (the red of .tag--problem there)
+.reviewer__issues {
+  font-weight: 600;
+  color: var(--red-300);
+}
+
 // ---------------------------------------------------------------- the player's sign-up as the card of a march
 
 .kvk-card {

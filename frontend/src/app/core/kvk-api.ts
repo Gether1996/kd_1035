@@ -146,6 +146,8 @@ export interface ReviewerRow {
   last_login: string | null;
   /** how many marches the player has */
   marches: number;
+  /** how many of them are red on /marche – a wrong pair or formation for the KvK evaluation */
+  issues: number;
   /** the KvK sign-ups: 'garrison', 'rally' */
   kvk: string[];
 }

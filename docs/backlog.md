@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.31.5:** Hráči na Môj účet (superadmin): filter Prístup (R4, Vyh. nastavenia, Pož. acclaim, Bez prístupu), filter Marche „Na opravu“ a červený počet marchov na opravu pri hráčovi; tlačidlo Upozorniť hráčov na chyby sa na 320 px zalomí namiesto rolovania do strany (kolo agentov).
 - **14. 10. 2026 – v1.31.4:** Vyhodnocovanie: rýchle filtre nad tabuľkou Odhad acclaimu – Na opravu (sólo, pár mimo tabuľky, nesprávna formácia), Bez power a Nad odp. power s počtom hráčov, uložené v adrese (`?f=`), aby sa dal poslať odkaz; zoradenie aj podľa power (kolo agentov).
 - **14. 10. 2026 – v1.31.3:** Oprava: nový termín nepravidelného eventu (Karuak Boss) sa po obnovení kalendára ukáže hneď – prehliadač si kalendár už nepamätá 5 minút.
 - **14. 10. 2026 – v1.31.2:** Požadovaný acclaim má stĺpec Power (power hráča a pod ňou odporúčaná power, červená pri prebytku – súvisí s červeným +N pri marchoch) s vysvetlivkou pod tabuľkou a nadpisy tabuľky sa dajú kliknúť na zoradenie; na mobile sa tabuľka zmestí na šírku.

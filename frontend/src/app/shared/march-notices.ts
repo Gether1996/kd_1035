@@ -113,8 +113,18 @@ export interface NoticePlayer {
     }
 
     .pill-btn .icon {
+      flex: none;
       width: 15px;
       height: 15px;
+    }
+
+    /* wraps on a 320 px phone instead of widening the Hráči panel past the screen */
+    .pill-btn {
+      max-width: 100%;
+      padding-block: 8px;
+      line-height: 1.25;
+      text-align: center;
+      white-space: normal;
     }
 
     .notices__lead,
