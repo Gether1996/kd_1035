@@ -157,7 +157,8 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - `fix-reminder-dm` Správa „oprav si march“ od superadmina cez bota – nový druh kontaktu, chýba rozhodnutie a reset tokenu; červené upozornenia už stačia.
 - `picker-scored-partners` Výber commandera najprv s hodnotenými pármi – duplikuje v1.24.6 (meta skupiny), zverejnil by celý zoznam párov vedenia.
 - `published-requirement` Zverejnená požiadavka na KvK na /ucet – politické rozhodnutie, prekrýva sa s `eval-discord-copy`; navrhnúť znova po rozhodnutí Gethera.
-- `event-rsvp` Účasť na evente (idem/možno/nie, napr. Ark) – zatiaľ nie: chýba rozhodnutie, či vedenie nahradí Discord reakcie a pre ktoré eventy; nové osobné údaje; navrhnúť znova po súhlase.
+- `event-rsvp` Účasť na evente (idem/možno/nie) – **nie** (Gether 14. 10. 2026: „prepínač na zisťovať účasť nepotrebujem“, rozrobená verzia zahodená). Nenavrhovať znova.
+- Ručné pripomenutie chýbajúcej power, marchov či prihlášky na KvK správou od vedenia – **nie** (Gether 14. 10. 2026). Nenavrhovať znova.
 
 ## Čaká na Gethera
 
@@ -186,5 +187,3 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - **Upozornenie na pár (v1.29.1):** smú hráči vidieť mená (nie body) až 3 hodnotených partnerov k primárnemu? Ak áno, `pair_hint.partners` ako PATCH.
 - **Vyhodnocovanie:** smú sa požiadavky na acclaim po hráčoch zverejniť (Discord kópia alebo /ucet – vybrať jedno)? Hranica zastaranej power (návrh 21 dní).
 - **Uvítacia správa (v1.32.0):** potvrdiť, že schválený hráč smie dostať jednu automatickú DM od bota; tag `v1.32.0` pushnúť, ak na GitHube chýba.
-- **Pripomenutie chýbajúcich údajov:** smie vedenie posielať hráčom DM o chýbajúcej power, marchoch či prihláške na KvK (iba ručne)?
-- **Účasť na eventoch:** chceš RSVP pri eventoch (ktorých – Ark?) a smie R4 vidieť odpovede s menami a kopírovať ich na Discord?
