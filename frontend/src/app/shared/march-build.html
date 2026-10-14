@@ -39,6 +39,9 @@
 @if (m.pair_problem; as problem) {
   <p class="mb__pair-problem">{{ k.pairProblem[problem] }}</p>
 }
+@if (formationProblem(); as text) {
+  <p class="mb__pair-problem">{{ text }}</p>
+}
 
 <!-- no headings (Gether 12. 10. 2026: "čo najmenej textu") – the equipment's bonuses under its diamonds, the armaments' under the inscriptions -->
 <div class="mb__body">

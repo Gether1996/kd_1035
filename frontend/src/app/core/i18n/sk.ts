@@ -425,6 +425,8 @@ export const sk = {
       solo: 'Chýba sekundárny commander – vo vyhodnocovaní KvK sa tento march nepočíta.',
       unknown: 'Tento pár sa vo vyhodnocovaní KvK nepočíta – vyber iný pár alebo iné poradie.',
     },
+    // a formation the primary commander should not lead with (Gether 14. 10. 2026) – the player and the superadmin only
+    formationProblem: '{commander} má viesť formáciu {want}, nie {have} – vo vyhodnocovaní KvK sa armamenty počítajú menej.',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, čo je pri nich červené.',
     choose: 'Vybrať',

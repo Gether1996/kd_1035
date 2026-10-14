@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.28.3:** March vo formácii, ktorú jeho primárny commander nemá viesť, má v marchoch červený okraj a vetu s odporúčanou formáciou – vidí to iba hráč a superadmin.
 - **14. 10. 2026 – v1.28.2:** Nad tabuľkou vyhodnocovania už nie je Spolu acclaim.
 - **14. 10. 2026 – v1.28.1:** Vo vyhodnocovaní je odporúčaná power hneď vedľa power hráča, čísla sa dajú porovnať na prvý pohľad.
 - **14. 10. 2026 – v1.28.0:** Vyhodnocovanie podľa Slimových pripomienok – formácie commanderov (tabuľka v databáze, prvé hodnoty z meta-rok.com a RoKBattles; march v inej formácii má armamenty × 0,8, nastaviteľné), Premenné v rozklikávacích sekciách, jasnejšie vysvetlivky armamentov (% ATK = 1 % All DMG), nad tabuľkou bez Acclaim za bod a Referenčného skóre.

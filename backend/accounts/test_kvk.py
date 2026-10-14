@@ -410,6 +410,34 @@ class MarchTests(KvkTestCase):
         marches = self.client.get('/api/me/marches/').json()['marches']
         self.assertEqual([m['pair_problem'] for m in marches], [None, None, None, None, 'solo'])
 
+    def test_a_formation_the_primary_should_not_lead_with_is_told_to_the_player_and_the_superuser(self):
+        """Gether 14. 10. 2026: like the wrong pair – a red border for the player and the superadmin only."""
+        from guides.models import CommanderFormation, CommanderPair
+
+        CommanderPair.objects.all().delete()
+        CommanderPair.objects.create(primary='Attila', secondary='Takeda Shingen', points=100)
+        CommanderFormation.objects.all().delete()
+        CommanderFormation.objects.create(commander='Attila', formations=['arch', 'delta'])
+        self.call('patch', '/api/me/marches/', {'public': True})
+        for position, (kind, formation) in enumerate(
+            [('cavalry', 'wedge'), ('cavalry', 'delta'), ('cavalry', ''), ('conquering', 'wedge')], start=1
+        ):
+            March.objects.create(
+                player=self.player, position=position, kind=kind, primary='Attila', secondary='Takeda Shingen',
+                formation=formation, **STATS,
+            )  # fmt: skip
+        expected = [['arch', 'delta'], None, None, None]
+        marches = self.client.get('/api/me/marches/').json()['marches']
+        self.assertEqual([m['formation_problem'] for m in marches], expected)
+        self.assertEqual([m['pair_problem'] for m in marches], [None] * 4)
+        other = self.login(make_player('42').user)
+        self.assertNotIn('formation_problem', other.get('/api/marches/').json()['players'][0]['marches'][0])
+        admin = make_player('43')
+        admin.user.is_superuser = True
+        admin.user.save()
+        marches = self.login(admin.user).get('/api/marches/').json()['players'][0]['marches']
+        self.assertEqual([m['formation_problem'] for m in marches], expected)
+
     def test_public_marches_are_seen_by_every_signed_in_player(self):
         self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
         other = self.login(make_player('42').user)

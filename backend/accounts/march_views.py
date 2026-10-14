@@ -18,7 +18,7 @@ from . import private_images
 from .army import BuildSerializer, current_of
 from .kvk_views import march_data
 from .models import APPROVED, MAX_MARCHES, March, Player
-from .pair_check import pair_checker
+from .pair_check import march_checker
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
 
@@ -39,9 +39,10 @@ def marches_of(player):
     return player.marches.all()
 
 
-def own_march_data(march: March, problem=None) -> dict:
-    """A march for its player (and the superuser): with what is wrong with its pair for the KvK evaluation"""
-    return {**march_data(march), 'pair_problem': (problem or pair_checker())(march)}
+def own_march_data(march: March, check=None) -> dict:
+    """A march for its player (and the superuser): with what is wrong with its pair and formation for the KvK
+    evaluation"""
+    return {**march_data(march), **(check or march_checker())(march)}
 
 
 @never_cache
@@ -70,7 +71,7 @@ def marches(request):
                 return Response({'detail': 'limit', 'max': MAX_MARCHES}, status=400)
             march = March.objects.create(player=player, position=count + 1, **form.validated_data)
         return Response(own_march_data(march), status=201)
-    problem = pair_checker()
+    problem = march_checker()
     return Response(
         {
             'marches': [own_march_data(m, problem) for m in marches_of(player)],
@@ -129,8 +130,9 @@ def players_marches(request):
     elif not request.user.is_superuser:
         players = players.filter(APPROVED)
     players = players.select_related('user').prefetch_related('marches')
-    # a pair the KvK evaluation does not score: only the player and the superuser are told (Gether 14. 10. 2026)
-    problem = pair_checker()
+    # a pair the KvK evaluation does not score, a wrong formation: only the player and the superuser are told
+    # (Gether 14. 10. 2026)
+    problem = march_checker()
 
     def data_for(p):
         if request.user.is_superuser or (me and p.pk == me.pk):

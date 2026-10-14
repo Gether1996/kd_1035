@@ -35,7 +35,7 @@ let nextId = 0;
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.is-detail]': 'detail()', '[class.is-bad-pair]': '!!march().pair_problem' },
+  host: { '[class.is-detail]': 'detail()', '[class.is-bad-pair]': '!!march().pair_problem || !!march().formation_problem?.length' },
 })
 export class MarchBuild {
   readonly march = input.required<March>();
@@ -125,6 +125,21 @@ export class MarchBuild {
       full: statLabel(this.t(), march.kind, key),
       value: march[key]!,
     }));
+  });
+
+  /**
+   * A formation the march's primary commander should not lead with (the KvK evaluation, Gether 14. 10. 2026) – the
+   * server tells the player and the superuser only
+   */
+  protected readonly formationProblem = computed(() => {
+    const march = this.march();
+    const wanted = march.formation_problem;
+    if (!wanted?.length) return null;
+    const name = (id: string | undefined) => (id && this.index()?.formations.get(id)?.name) || id || '';
+    return this.t()
+      .formationProblem.replace('{have}', name(march.formation))
+      .replace('{commander}', march.primary)
+      .replace('{want}', wanted.map(name).join(' / '));
   });
 
   /** the own march with no item or no armament at all: a red link opens the editor on that tab */
