@@ -336,6 +336,91 @@ describe('Marches', () => {
     expect(el.querySelector('.add-march')?.textContent).toContain('siedmy');
     http.verify();
   });
+
+  it('moves a march up and down, keeps the focus on the arrow and goes back when saving fails', async () => {
+    const counting = { order: 'position', count: 5, kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'] };
+    const three = [1, 2, 3].map((id) => ({ ...MARCH, id, position: id, kind: 'cavalry' as const, primary: 'Attila' }));
+    const http = setup();
+    const fixture = TestBed.createComponent(Marches);
+    fixture.detectChanges();
+    http.expectOne('/api/me/marches/').flush({ marches: three, max: 10, public: false, counting });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    // the evaluation counts the first five in this order
+    expect(el.querySelector('.march-order')?.textContent?.trim()).toBe(
+      'Do vyhodnocovania KvK sa počíta prvých 5 marchov typu pechota, jazda, lukostrelci, mix (leadership) a siege – v tomto poradí. March s párom, ktorý sa nehodnotí, sa preskočí.',
+    );
+    const card = (id: number) => el.querySelector(`[data-march="${id}"]`)!;
+    const ids = () => Array.from(el.querySelectorAll('app-march-build'), (c) => Number(c.getAttribute('data-march')));
+    const labels = (id: number) => Array.from(card(id).querySelectorAll('.march__up, .march__down'), (b) => b.getAttribute('aria-label'));
+    // the first has no "up", the last no "down"
+    expect(labels(1)).toEqual(['Posunúť 1. march nižšie']);
+    expect(labels(2)).toEqual(['Posunúť 2. march vyššie', 'Posunúť 2. march nižšie']);
+    expect(labels(3)).toEqual(['Posunúť 3. march vyššie']);
+
+    card(1).querySelector<HTMLButtonElement>('.march__down')!.focus();
+    card(1).querySelector<HTMLButtonElement>('.march__down')!.click();
+    await tick(fixture);
+    // at once, before the server answers
+    expect(ids()).toEqual([2, 1, 3]);
+    expect(document.activeElement).toBe(card(1).querySelector('.march__down'));
+    // one move at a time
+    expect(card(1).querySelector('.march__down')?.getAttribute('aria-disabled')).toBe('true');
+    const req = http.expectOne((r) => r.method === 'PUT' && r.url === '/api/me/marches/order/');
+    expect(req.request.body).toEqual({ ids: [2, 1, 3] });
+    const moved = [three[1], three[0], three[2]].map((m, i) => ({ ...m, position: i + 1 }));
+    req.flush({ marches: moved, max: 10, public: false, counting });
+    await settle(fixture);
+    expect(Array.from(el.querySelectorAll('.mb__num'), (n) => n.textContent?.trim())).toEqual(['1.', '2.', '3.']);
+    expect(labels(1)).toEqual(['Posunúť 2. march vyššie', 'Posunúť 2. march nižšie']);
+
+    // up to the first place: no "up" any more, the focus goes to its "down"
+    card(1).querySelector<HTMLButtonElement>('.march__up')!.focus();
+    card(1).querySelector<HTMLButtonElement>('.march__up')!.click();
+    await tick(fixture);
+    expect(ids()).toEqual([1, 2, 3]);
+    expect(document.activeElement).toBe(card(1).querySelector('.march__down'));
+    http.expectOne((r) => r.method === 'PUT').flush('x', { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+    // the order the server has, the "up" back and focused
+    expect(ids()).toEqual([2, 1, 3]);
+    expect(document.activeElement).toBe(card(1).querySelector('.march__up'));
+    expect(el.querySelector('.form__state.is-error')?.textContent).toContain('Nepodarilo sa uložiť');
+
+    // not while a march is being edited
+    el.querySelector<HTMLButtonElement>('.march__edit')!.click();
+    await fixture.whenStable();
+    el.querySelector<HTMLButtonElement>('.march__down')!.click();
+    await settle(fixture);
+    http.expectNone((r) => r.method === 'PUT');
+    expect(ids()).toEqual([1, 3]);
+    http.verify();
+  });
+
+  it('says which marches the evaluation counts only when it counts the first ones', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(Marches);
+    fixture.detectChanges();
+    http.expectOne('/api/me/marches/').flush({ marches: [], max: 10, public: false, counting: { order: 'position', count: 1, kinds: ['cavalry'] } });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.march-order')?.textContent).toContain('sa počíta prvý march typu jazda – v tomto poradí');
+    http.verify();
+
+    TestBed.resetTestingModule();
+    const again = setup();
+    const best = TestBed.createComponent(Marches);
+    best.detectChanges();
+    again.expectOne('/api/me/marches/').flush({ marches: [], max: 10, public: false, counting: { order: 'best', count: 5, kinds: ['cavalry'] } });
+    again.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await settle(best);
+    expect((best.nativeElement as HTMLElement).querySelector('.march-order')).toBeNull();
+    again.verify();
+  });
 });
 
 describe('PlayersAdmin', () => {

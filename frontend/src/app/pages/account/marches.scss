@@ -74,8 +74,11 @@
   font-size: 1.125rem;
 }
 
-.march__edit {
+// edit, up, down (the KvK evaluation counts the first X in this order)
+.march__tools {
+  display: flex;
   flex-shrink: 0;
+  gap: 6px;
   margin-left: auto;
 }
 
@@ -88,6 +91,12 @@
 .march-hint {
   margin-top: 14px;
   color: var(--text-dim);
+}
+
+// which marches the KvK evaluation counts – a quiet line above the list
+.march-order {
+  max-width: 72ch;
+  font-size: 0.95rem;
 }
 
 .march-hint--alert {

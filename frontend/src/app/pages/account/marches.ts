@@ -1,5 +1,5 @@
 import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
-import { httpResource } from '@angular/common/http';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -56,6 +56,21 @@ export class Marches {
   /** who sees the marches: every signed-in player (true) or only R4 and the superuser */
   protected readonly isPublic = linkedSignal(() => (this.data.hasValue() ? this.data.value().public : false));
   protected readonly visibilityFailed = signal(false);
+  /**
+   * "Do vyhodnocovania KvK sa počíta prvých 5 marchov typu …" – only when the evaluation counts the first X in the
+   * player's order (Premenné), not the best X
+   */
+  protected readonly counted = computed(() => {
+    const counting = this.data.hasValue() ? this.data.value().counting : undefined;
+    if (counting?.order !== 'position' || !counting.kinds.length) return null;
+    const t = this.t().order;
+    const lang = this.i18n.lang();
+    const rule = new Intl.PluralRules(lang).select(counting.count);
+    const first = rule === 'one' ? t.first.one : rule === 'few' ? t.first.few : t.first.other;
+    const names = counting.kinds.map((kind) => this.t().kinds[kind].toLocaleLowerCase(lang));
+    const kinds = names.length > 1 ? `${names.slice(0, -1).join(', ')} ${t.and} ${names.at(-1)}` : names[0];
+    return t.counted.replace('{first}', first.replace('{n}', String(counting.count))).replace('{kinds}', kinds);
+  });
 
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   /** every commander a march may name with its portrait (backend/guides/roster.py) */
@@ -172,6 +187,48 @@ export class Marches {
   protected store(march: March): void {
     this.marches.update((list) =>
       list.some((m) => m.id === march.id) ? list.map((m) => (m.id === march.id ? march : m)) : [...list, march],
+    );
+  }
+
+  /**
+   * One place up (-1) or down (1) – the KvK evaluation counts the first X in the player's order. The list moves at
+   * once and goes back when the server says no (a stale order from another tab: the list is loaded again).
+   */
+  protected async move(march: March, step: -1 | 1): Promise<void> {
+    if (this.draft() || this.busy()) return;
+    const before = this.marches();
+    const from = before.findIndex((m) => m.id === march.id);
+    const to = from + step;
+    if (from < 0 || to < 0 || to >= before.length) return;
+    const order = [...before];
+    [order[from], order[to]] = [order[to], order[from]];
+    this.marches.set(order.map((m, i) => ({ ...m, position: i + 1 })));
+    this.refocus(march.id, step);
+    await this.run(async () => {
+      try {
+        this.marches.set((await this.api.reorder(order.map((m) => m.id))).marches);
+      } catch (error) {
+        this.marches.set(before);
+        this.refocus(march.id, step);
+        if (error instanceof HttpErrorResponse && error.status === 400) this.data.reload();
+        throw error;
+      }
+    });
+  }
+
+  /**
+   * The moved card is moved in the DOM too and its button loses the focus: the same arrow gets it back, or the other
+   * one when the card became the first or the last
+   */
+  private refocus(id: number, step: -1 | 1): void {
+    afterNextRender(
+      () => {
+        const card = this.host.nativeElement.querySelector(`[data-march="${id}"]`);
+        const same = step < 0 ? '.march__up' : '.march__down';
+        const other = step < 0 ? '.march__down' : '.march__up';
+        (card?.querySelector<HTMLElement>(same) ?? card?.querySelector<HTMLElement>(other))?.focus();
+      },
+      { injector: this.injector },
     );
   }
 

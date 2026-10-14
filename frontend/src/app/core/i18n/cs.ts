@@ -439,6 +439,17 @@ export const cs: Dict = {
     remove: 'Odstranit',
     removeConfirm: 'Opravdu odstranit?',
     failed: 'Nepodařilo se uložit. Zkus to znovu.',
+    // the KvK evaluation counts the first X in the player's order (Premenné: "Prvé v poradí hráča")
+    order: {
+      counted:
+        'Do vyhodnocování KvK se počítá {first} typu {kinds} – v tomto pořadí. March s párem, který se nehodnotí, se přeskočí.',
+      first: { one: 'první march', few: 'první {n} marche', other: 'prvních {n} marchů' },
+      and: 'a',
+      up: 'Posunout výš',
+      down: 'Posunout níž',
+      upMarch: 'Posunout {n}. march výš',
+      downMarch: 'Posunout {n}. march níž',
+    },
     visibility: {
       label: 'Kdo uvidí moje marche',
       r4: 'Jen R4',

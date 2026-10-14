@@ -42,6 +42,22 @@ export interface PlayerMarches {
   updated_at: string;
 }
 
+/** which marches the KvK evaluation counts (backend accounts/pair_check.py counting(), the saved Premenné) */
+export interface MarchCounting {
+  /** 'position': the first `count` in the player's order, 'best': the best `count` by score */
+  order: 'position' | 'best';
+  count: number;
+  kinds: MarchKind[];
+}
+
+/** GET /api/me/marches/ */
+export interface OwnMarches {
+  marches: March[];
+  max: number;
+  public: boolean;
+  counting?: MarchCounting;
+}
+
 /** The player's marches on /ucet (backend accounts/march_views.py); browser only, session + CSRF. */
 @Injectable({ providedIn: 'root' })
 export class MarchesApi {
@@ -50,9 +66,7 @@ export class MarchesApi {
 
   /** must run in an injection context */
   list() {
-    return httpResource<{ marches: March[]; max: number; public: boolean }>(() =>
-      this.isBrowser ? '/api/me/marches/' : undefined,
-    );
+    return httpResource<OwnMarches>(() => (this.isBrowser ? '/api/me/marches/' : undefined));
   }
 
   /** true = every signed-in player sees the marches, false = only R4 and the superuser */
@@ -74,6 +88,11 @@ export class MarchesApi {
 
   update(id: number, change: MarchChange): Promise<March> {
     return firstValueFrom(this.http.patch<March>(`/api/me/marches/${id}/`, change));
+  }
+
+  /** every own march id once, in the new order; answers like GET */
+  reorder(ids: number[]): Promise<OwnMarches> {
+    return firstValueFrom(this.http.put<OwnMarches>('/api/me/marches/order/', { ids }));
   }
 
   remove(id: number): Promise<unknown> {

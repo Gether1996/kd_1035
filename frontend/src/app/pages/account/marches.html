@@ -24,8 +24,12 @@
     @if (incomplete(); as n) {
       <p class="march-hint march-hint--alert" role="status">{{ m.incompleteCount.replace('{n}', '' + n) }}</p>
     }
+    <!-- the evaluation counts the first X in this order (Premenné "Prvé v poradí hráča"); the arrows move a march -->
+    @if (counted(); as text) {
+      <p class="march-hint march-order">{{ text }}</p>
+    }
     <ol class="march-list">
-      @for (march of marches(); track march.id) {
+      @for (march of marches(); track march.id; let first = $first, last = $last) {
         @if (draft()?.id === march.id) {
           <li class="march march--editing">
             <ng-container *ngTemplateOutlet="editor" />
@@ -49,16 +53,43 @@
               >
                 <svg appIcon="swords"></svg>{{ built(march) ? m.build.change : m.build.edit }}
               </button>
-              <button
-                type="button"
-                class="icon-btn march__edit"
-                [attr.aria-label]="m.editMarch + ': ' + m.march.replace('{n}', '' + march.position)"
-                [title]="m.editMarch"
-                [attr.aria-disabled]="!!draft() || null"
-                (click)="edit(march)"
-              >
-                <svg appIcon="pencil"></svg>
-              </button>
+              <!-- one group: on a narrow card it goes to its own row as a whole -->
+              <span class="march__tools">
+                <button
+                  type="button"
+                  class="icon-btn march__edit"
+                  [attr.aria-label]="m.editMarch + ': ' + m.march.replace('{n}', '' + march.position)"
+                  [title]="m.editMarch"
+                  [attr.aria-disabled]="!!draft() || null"
+                  (click)="edit(march)"
+                >
+                  <svg appIcon="pencil"></svg>
+                </button>
+                @if (!first) {
+                  <button
+                    type="button"
+                    class="icon-btn march__up"
+                    [attr.aria-label]="m.order.upMarch.replace('{n}', '' + march.position)"
+                    [title]="m.order.up"
+                    [attr.aria-disabled]="!!draft() || busy() || null"
+                    (click)="move(march, -1)"
+                  >
+                    <svg appIcon="chevron-up"></svg>
+                  </button>
+                }
+                @if (!last) {
+                  <button
+                    type="button"
+                    class="icon-btn march__down"
+                    [attr.aria-label]="m.order.downMarch.replace('{n}', '' + march.position)"
+                    [title]="m.order.down"
+                    [attr.aria-disabled]="!!draft() || busy() || null"
+                    (click)="move(march, 1)"
+                  >
+                    <svg appIcon="chevron-down"></svg>
+                  </button>
+                }
+              </span>
             </app-march-build>
           </li>
         }

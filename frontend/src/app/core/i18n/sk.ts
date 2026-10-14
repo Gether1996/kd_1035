@@ -453,6 +453,17 @@ export const sk = {
     remove: 'Odstrániť',
     removeConfirm: 'Naozaj odstrániť?',
     failed: 'Nepodarilo sa uložiť. Skús to znova.',
+    // the KvK evaluation counts the first X in the player's order (Premenné: "Prvé v poradí hráča")
+    order: {
+      counted:
+        'Do vyhodnocovania KvK sa počíta {first} typu {kinds} – v tomto poradí. March s párom, ktorý sa nehodnotí, sa preskočí.',
+      first: { one: 'prvý march', few: 'prvé {n} marche', other: 'prvých {n} marchov' },
+      and: 'a',
+      up: 'Posunúť vyššie',
+      down: 'Posunúť nižšie',
+      upMarch: 'Posunúť {n}. march vyššie',
+      downMarch: 'Posunúť {n}. march nižšie',
+    },
     visibility: {
       label: 'Kto uvidí moje marche',
       r4: 'Len R4',
