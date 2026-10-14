@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.32.2:** Oprava: späť/dopredu v prehliadači na odkaz na sekciu (`/#alliance`) vráti návštevníka k sekcii aj vtedy, keď stránku opustil skôr, než sa nad ňou načítali Najbližšie eventy (predtým skončil o celú sekciu vedľa; v CI to náhodne padalo na iPhone). CI teraz naozaj testuje aj prihláseného hráča a beh na `main` sa už neruší.
 - **14. 10. 2026 – v1.32.1:** Neschválený hráč s marchmi nerobí nič – nevidí ani vlastné, nemení, nemaže ani nepreusporiada; Marche mu zmizli z menu aj z Môj účet. Jeho marche ostávajú v databáze pre opätovné schválenie.
 - **14. 10. 2026 – v1.32.0:** Schválený hráč dostane od bota súkromnú správu (SK/CZ), že môže pridať marche a prihlášku na KvK, s odkazom na Prehľad marchov – iba raz, iba keď ho superadmin schváli (nie auto-approve), iba so zapnutými správami od bota; „Čakáš na schválenie“ a Ochrana údajov to spomínajú (kolo agentov).
 - **14. 10. 2026 – v1.31.6:** Preklik medzi hráčom vo Vyhodnocovaní a jeho marchmi: v detaile riadku „Marche hráča“ (`/marche?hrac=`, iba ten hráč rozbalený, čip ho zruší), na otvorenej karte na `/marche` „Vyhodnocovanie“ pre tých, čo ho majú v menu (`/vyhodnocovanie?hrac=` riadok otvorí a odroluje k nemu); nezapočítané marche v detaile majú čitateľný text (kolo agentov).
