@@ -13,7 +13,7 @@ import {
   troopStat,
 } from '../core/armory';
 import { I18n } from '../core/i18n/i18n';
-import { ARMAMENT_STATS, INSCRIPTIONS, March, REQUIRED_STATS, marchIcon } from '../core/kvk-api';
+import { ARMAMENT_STATS, INSCRIPTIONS, March, REQUIRED_STATS, marchHasProblem, marchIcon } from '../core/kvk-api';
 import { FormationIcon } from './formation-icon';
 import { GearGrid } from './gear-grid';
 import { Icon } from './icon';
@@ -35,7 +35,7 @@ let nextId = 0;
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.is-detail]': 'detail()', '[class.is-bad-pair]': '!!march().pair_problem || !!march().formation_problem?.length' },
+  host: { '[class.is-detail]': 'detail()', '[class.is-bad-pair]': 'hasProblem()' },
 })
 export class MarchBuild {
   readonly march = input.required<March>();
@@ -64,6 +64,8 @@ export class MarchBuild {
   protected readonly failed = this.armory.failed;
   protected readonly icon = marchIcon;
   protected readonly bonus = formatBonus;
+  /** the red border: a pair or a formation the KvK evaluation does not like */
+  protected readonly hasProblem = computed(() => marchHasProblem(this.march()));
 
   protected readonly build = computed(() => buildOf(this.march()));
   protected readonly empty = computed(() => {

@@ -89,6 +89,12 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   formation_problem?: string[] | null;
 }
 
+/**
+ * A march with a pair or a formation the KvK evaluation does not like – the server says so to the superuser and to the
+ * player about their own (Gether 14. 10. 2026); for anyone else both fields are missing
+ */
+export const marchHasProblem = (march: March): boolean => !!march.pair_problem || !!march.formation_problem?.length;
+
 /** a sign-up shown and edited like a march (MarchBuild, BuildEditor) */
 export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 });
 
