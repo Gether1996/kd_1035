@@ -18,6 +18,7 @@ from . import private_images
 from .army import BuildSerializer, current_of
 from .kvk_views import march_data
 from .models import APPROVED, MAX_MARCHES, March, Player
+from .pair_check import pair_checker
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
 
@@ -36,6 +37,11 @@ class MarchSerializer(BuildSerializer):
 
 def marches_of(player):
     return player.marches.all()
+
+
+def own_march_data(march: March, problem=None) -> dict:
+    """A march for its player (and the superuser): with what is wrong with its pair for the KvK evaluation"""
+    return {**march_data(march), 'pair_problem': (problem or pair_checker())(march)}
 
 
 @never_cache
@@ -63,9 +69,14 @@ def marches(request):
             if count >= MAX_MARCHES:
                 return Response({'detail': 'limit', 'max': MAX_MARCHES}, status=400)
             march = March.objects.create(player=player, position=count + 1, **form.validated_data)
-        return Response(march_data(march), status=201)
+        return Response(own_march_data(march), status=201)
+    problem = pair_checker()
     return Response(
-        {'marches': [march_data(m) for m in marches_of(player)], 'max': MAX_MARCHES, 'public': player.marches_public}
+        {
+            'marches': [own_march_data(m, problem) for m in marches_of(player)],
+            'max': MAX_MARCHES,
+            'public': player.marches_public,
+        }
     )
 
 
@@ -91,7 +102,7 @@ def march(request, march_id):
     for field, value in form.validated_data.items():
         setattr(mine, field, value)
     mine.save()
-    return Response(march_data(mine))
+    return Response(own_march_data(mine))
 
 
 class CanSeeMarches(BasePermission):
@@ -118,6 +129,14 @@ def players_marches(request):
     elif not request.user.is_superuser:
         players = players.filter(APPROVED)
     players = players.select_related('user').prefetch_related('marches')
+    # a pair the KvK evaluation does not score: only the player and the superuser are told (Gether 14. 10. 2026)
+    problem = pair_checker()
+
+    def data_for(p):
+        if request.user.is_superuser or (me and p.pk == me.pk):
+            return [own_march_data(m, problem) for m in p.marches.all()]
+        return [march_data(m) for m in p.marches.all()]
+
     rows = sorted(
         (
             {
@@ -129,7 +148,7 @@ def players_marches(request):
                 # false: hidden from everyone but the superuser
                 'approved': p.may_post,
                 'me': bool(me and p.pk == me.pk),
-                'marches': [march_data(m) for m in p.marches.all()],
+                'marches': data_for(p),
                 'updated_at': iso(max(m.updated_at for m in p.marches.all())),
             }
             for p in players

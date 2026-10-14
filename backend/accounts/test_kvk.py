@@ -369,6 +369,47 @@ class MarchTests(KvkTestCase):
         self.player.delete_account()
         self.assertFalse(March.objects.exists())
 
+    def test_a_pair_the_evaluation_does_not_score_is_told_to_the_player_and_the_superuser(self):
+        """Gether 14. 10. 2026: a red border on a march whose pair is filled in wrong – the others do not see it."""
+        from guides.models import CommanderPair
+
+        from .models import EvaluationSettings
+
+        CommanderPair.objects.all().delete()
+        CommanderPair.objects.create(primary='Attila', secondary='Takeda Shingen', points=100)
+        CommanderPair.objects.create(primary='Scipio Africanus', secondary='Attila', points=0)
+        self.call('patch', '/api/me/marches/', {'public': True})
+        rows = [
+            ('cavalry', 'Attila', 'Takeda Shingen', None),
+            ('cavalry', 'Takeda Shingen', 'Attila', 'unknown'),  # the other order is a row of its own
+            ('cavalry', 'Scipio Africanus', 'Attila', 'unknown'),  # 0 points
+            ('cavalry', 'Attila', '', 'solo'),
+            ('conquering', 'Attila', '', None),  # rally is not evaluated
+        ]
+        for kind, primary, secondary, _ in rows:
+            res = self.call('post', '/api/me/marches/', {'kind': kind, 'primary': primary, **STATS})
+            if secondary:
+                res = self.call('patch', f"/api/me/marches/{res.json()['id']}/", {'secondary': secondary})
+        expected = [problem for *_, problem in rows]
+        self.assertEqual(res.json()['pair_problem'], None)
+        self.assertEqual([m['pair_problem'] for m in self.client.get('/api/me/marches/').json()['marches']], expected)
+        self.assertEqual(
+            [m['pair_problem'] for m in self.client.get('/api/marches/').json()['players'][0]['marches']], expected
+        )
+        # another player: no word about it
+        other = self.login(make_player('42').user)
+        self.assertNotIn('pair_problem', other.get('/api/marches/').json()['players'][0]['marches'][1])
+        # the superuser sees it
+        admin = make_player('43')
+        admin.user.is_superuser = True
+        admin.user.save()
+        marches = self.login(admin.user).get('/api/marches/').json()['players'][0]['marches']
+        self.assertEqual([m['pair_problem'] for m in marches], expected)
+        # the types the evaluation counts are its own setting: rally counted, cavalry not
+        EvaluationSettings.objects.update_or_create(pk=1, defaults={'data': {'marches': {'kinds': ['conquering']}}})
+        marches = self.client.get('/api/me/marches/').json()['marches']
+        self.assertEqual([m['pair_problem'] for m in marches], [None, None, None, None, 'solo'])
+
     def test_public_marches_are_seen_by_every_signed_in_player(self):
         self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
         other = self.login(make_player('42').user)

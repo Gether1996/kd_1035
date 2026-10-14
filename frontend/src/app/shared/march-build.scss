@@ -16,6 +16,21 @@
   background: none;
 }
 
+// a pair the KvK evaluation does not score: a red border and one sentence under the head
+:host(.is-bad-pair) {
+  border: 2px solid var(--red-500);
+}
+
+.mb__pair-problem {
+  margin: -6px 0 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--red-500) 14%, transparent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--red-300);
+}
+
 .mb__head {
   display: flex;
   flex-wrap: wrap;

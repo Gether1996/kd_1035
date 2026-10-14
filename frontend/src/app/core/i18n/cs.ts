@@ -393,6 +393,10 @@ export const cs: Dict = {
     statsMissing: 'Bonusy armamentů nevyplněné',
     statsMissingOwn: 'Doplň bonusy armamentů',
     gearMissingOwn: 'Doplň výbavu',
+    pairProblem: {
+      solo: 'Chybí sekundární commander – ve vyhodnocování KvK se tento march nepočítá.',
+      unknown: 'Tento pár se ve vyhodnocování KvK nepočítá – vyber jiný pár nebo jiné pořadí.',
+    },
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, co je u nich červené.',
     choose: 'Vybrat',

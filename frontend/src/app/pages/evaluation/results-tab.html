@@ -171,9 +171,9 @@
               (change)="setPower(r, $event)"
             />
           </td>
-          <td class="ev-num" [class.is-over]="r.excess > 0">
+          <td class="ev-num" [class.is-over]="over(r)">
             <span class="ev-label">{{ c.recommended }}</span>
-            {{ r.recommended ?? '–' }}
+            {{ r.ownLimit ?? '–' }}
           </td>
           <td>
             <span class="ev-label" aria-hidden="true">{{ c.t4 }}</span>

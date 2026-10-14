@@ -35,7 +35,7 @@ let nextId = 0;
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.is-detail]': 'detail()' },
+  host: { '[class.is-detail]': 'detail()', '[class.is-bad-pair]': '!!march().pair_problem' },
 })
 export class MarchBuild {
   readonly march = input.required<March>();

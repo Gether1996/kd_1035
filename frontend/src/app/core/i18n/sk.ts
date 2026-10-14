@@ -402,6 +402,11 @@ export const sk = {
     statsMissingOwn: 'Doplň bonusy armamentov',
     // the own march with no item or no armament at all (Gether 12. 10. 2026)
     gearMissingOwn: 'Doplň výbavu',
+    // a pair the KvK evaluation does not score (Gether 14. 10. 2026) – the player and the superadmin only
+    pairProblem: {
+      solo: 'Chýba sekundárny commander – vo vyhodnocovaní KvK sa tento march nepočíta.',
+      unknown: 'Tento pár sa vo vyhodnocovaní KvK nepočíta – vyber iný pár alebo iné poradie.',
+    },
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, čo je pri nich červené.',
     choose: 'Vybrať',

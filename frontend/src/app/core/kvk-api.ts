@@ -78,6 +78,11 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   gear?: Gear;
   formation?: string;
   inscriptions?: string[];
+  /**
+   * The KvK evaluation does not score its pair: 'solo' = no secondary commander, 'unknown' = the pair (in this order)
+   * is not in its table. Sent to the player and the superuser only (Gether 14. 10. 2026), missing for anyone else.
+   */
+  pair_problem?: 'solo' | 'unknown' | null;
 }
 
 /** a sign-up shown and edited like a march (MarchBuild, BuildEditor) */

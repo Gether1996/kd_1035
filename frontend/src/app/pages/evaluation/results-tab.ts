@@ -144,7 +144,18 @@ export class EvalResultsTab {
   protected excessText(r: PlayerEval): string {
     return this.texts()
       .detail.fromExcess.replace('{m}', this.dec(r.excess))
+      .replace('{rec}', String(r.recommended ?? 0))
+      .replace('{n}', String(r.counted + r.missing))
       .replace('{per}', this.int(this.settings().power.excess));
+  }
+
+  /**
+   * "Odp. power" is the power the player's own counted marches carry (Gether 14. 10. 2026: 3 marches cannot recommend
+   * 104 M) – the recommended power of the marches counted with the missing ones is in the computation of the detail
+   */
+  protected over(r: PlayerEval): boolean {
+    const power = r.player.power;
+    return this.usePower() && power !== null && r.ownLimit !== null && power > r.ownLimit;
   }
 
   protected limitText(r: PlayerEval): string | null {
@@ -257,7 +268,7 @@ export class EvalResultsTab {
         r.acclaim.required,
         r.player.acclaim,
         r.player.power,
-        r.recommended,
+        r.ownLimit,
         r.player.t4 ? 'T4' : '',
       ]
         .map(cell)
