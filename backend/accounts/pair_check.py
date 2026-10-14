@@ -6,29 +6,58 @@ commander, or with a pair (in this order) that is not in guides.CommanderPair or
 lower (formationOf) – a commander without formations, or a march without one, takes any. Types the evaluation does
 not count (garrison and rally by default) get no warning."""
 
+import math
 from collections.abc import Callable
 
 from guides.models import CommanderFormation, CommanderPair, fold
 
-from .models import EvaluationSettings, March
+from .models import MAX_MARCHES, EvaluationSettings, March
 
 # DEFAULT_SETTINGS.marches.kinds in frontend/src/app/pages/evaluation/settings.ts – until Premenné save their own list
 DEFAULT_KINDS = ('infantry', 'cavalry', 'archer', 'leadership', 'engineering')
+# DEFAULT_SETTINGS.marches.max and .order
+DEFAULT_COUNT = 5
+ORDERS = ('position', 'best')
 
 
-def counted_kinds() -> set[str]:
+def evaluation_marches() -> dict:
+    """`marches` of the saved Premenné – one read shared by counted_kinds() and counting(); empty when unset or broken"""
     data = EvaluationSettings.objects.filter(pk=1).values_list('data', flat=True).first()
     marches = data.get('marches') if isinstance(data, dict) else None
-    kinds = marches.get('kinds') if isinstance(marches, dict) else None
+    return marches if isinstance(marches, dict) else {}
+
+
+def counted_kinds(marches: dict | None = None) -> set[str]:
+    kinds = (evaluation_marches() if marches is None else marches).get('kinds')
     # the JSON can be edited in the admin – anything but names is left out instead of failing every march list
     return {k for k in kinds if isinstance(k, str)} if isinstance(kinds, list) else set(DEFAULT_KINDS)
 
 
-def march_checker() -> Callable[[March], dict]:
-    """One read of the settings, the pair table and the formations; the returned function says what is wrong with a
-    march: pair_problem 'solo' (no secondary), 'unknown' (not in the table or 0 points) or None, and formation_problem
-    the formations its primary should lead with when it uses another one (else None)."""
-    kinds = counted_kinds()
+def counting(marches: dict | None = None) -> dict:
+    """Which marches the evaluation counts, told to the player on /marche: the first `count` (or the best) of the
+    `kinds` in the player's order – read as parseSettings in settings.ts does (a number is rounded into 1 …
+    MAX_MARCHES, anything else is the default) so the sentence says what scoring.ts does."""
+    marches = evaluation_marches() if marches is None else marches
+    count, order = marches.get('max'), marches.get('order')
+    if isinstance(count, (int, float)) and not isinstance(count, bool) and math.isfinite(count):
+        count = min(MAX_MARCHES, max(1, math.floor(count + 0.5)))
+    else:
+        count = DEFAULT_COUNT
+    kinds = counted_kinds(marches)
+    return {
+        'order': order if order in ORDERS else ORDERS[0],
+        'count': count,
+        # the march types in the order of the type picker
+        'kinds': [kind for kind in March.Kind.values if kind in kinds],
+    }
+
+
+def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
+    """One read of the settings (or `marches` already read by evaluation_marches()), the pair table and the
+    formations; the returned function says what is wrong with a march: pair_problem 'solo' (no secondary), 'unknown'
+    (not in the table or 0 points) or None, and formation_problem the formations its primary should lead with when it
+    uses another one (else None)."""
+    kinds = counted_kinds(marches)
     table: dict[tuple[str, str], float] = {}
     for primary, secondary, points in CommanderPair.objects.values_list('primary', 'secondary', 'points'):
         table.setdefault((fold(primary), fold(secondary)), points)

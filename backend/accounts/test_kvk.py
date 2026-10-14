@@ -10,7 +10,9 @@ from unittest import mock
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from PIL import Image
 
 from . import cleanup, discord_bot, private_images
@@ -243,6 +245,76 @@ class MarchTests(KvkTestCase):
         self.assertEqual(self.call('delete', f'/api/me/marches/{first}/').status_code, 204)
         positions = [m['position'] for m in self.client.get('/api/me/marches/').json()['marches']]
         self.assertEqual(positions, list(range(1, MAX_MARCHES)))
+
+    def test_reorder_own_marches(self):
+        """The KvK evaluation counts the first X in the player's order – the player moves them with two arrows."""
+        ids = [March.objects.create(player=self.player, position=n, kind='cavalry', primary='Attila').pk for n in (1, 2, 3)]
+        url = '/api/me/marches/order/'
+        res = self.call('put', url, {'ids': [ids[2], ids[0], ids[1]]})
+        self.assertEqual(res.status_code, 200, res.content)
+        # the same body as GET
+        self.assertEqual(res.json(), self.client.get('/api/me/marches/').json())
+        self.assertEqual([(m['id'], m['position']) for m in res.json()['marches']], [(ids[2], 1), (ids[0], 2), (ids[1], 3)])
+
+        other = make_player('42')
+        foreign = March.objects.create(player=other, position=1, kind='cavalry', primary='Attila').pk
+        bad = (
+            {'ids': ids[:2]},  # one missing (another tab added it)
+            {'ids': [ids[0], ids[0], ids[1]]},  # twice
+            {'ids': [ids[0], ids[1], foreign]},  # another player's
+            {'ids': [*ids, foreign]},
+            {'ids': [str(i) for i in ids]},
+            {'ids': [ids[0], ids[1], True]},
+            {'ids': list(range(MAX_MARCHES + 1))},
+            {'ids': 'all'},
+            {},
+            [ids],
+        )
+        for body in bad:
+            res = self.call('put', url, body)
+            self.assertEqual((res.status_code, res.json()), (400, {'ids': 'invalid'}), body)
+        positions = dict(March.objects.values_list('pk', 'position'))
+        self.assertEqual([positions[i] for i in ids], [2, 3, 1])
+        self.assertEqual(positions[foreign], 1)
+
+        # signed in only, with the CSRF token
+        anonymous = Client(enforce_csrf_checks=True)
+        self.assertEqual(anonymous.put(url, '{"ids": []}', content_type='application/json').status_code, 403)
+        no_token = Client(enforce_csrf_checks=True)
+        no_token.force_login(self.player.user)
+        self.assertEqual(no_token.put(url, '{"ids": []}', content_type='application/json').status_code, 403)
+        self.assertEqual(self.call('post', url, {'ids': ids}).status_code, 405)
+
+    def test_reordering_needs_no_approval_or_terms(self):
+        """Like DELETE: it only rearranges the player's own marches and shows nobody anything new."""
+        for discord_id, kwargs in (('42', {'approved': False}), ('43', {'terms': False})):
+            player = make_player(discord_id, **kwargs)
+            client = self.login(player.user)
+            ids = [March.objects.create(player=player, position=n, kind='archer', primary='Attila').pk for n in (1, 2)]
+            res = self.call('put', '/api/me/marches/order/', {'ids': ids[::-1]}, client)
+            self.assertEqual([m['id'] for m in res.json()['marches']], ids[::-1], discord_id)
+
+    def test_the_marches_say_which_ones_the_evaluation_counts(self):
+        from .models import EvaluationSettings
+
+        counting = lambda: self.client.get('/api/me/marches/').json()['counting']  # noqa: E731
+        default = {'order': 'position', 'count': 5, 'kinds': ['infantry', 'cavalry', 'archer', 'leadership', 'engineering']}
+        self.assertEqual(counting(), default)
+        data = {'marches': {'max': 3, 'order': 'best', 'kinds': ['conquering', 'cavalry', 7]}}
+        EvaluationSettings.objects.create(pk=1, data=data)
+        self.assertEqual(counting(), {'order': 'best', 'count': 3, 'kinds': ['cavalry', 'conquering']})
+        # read as settings.ts reads it: a number rounded into 1 … MAX_MARCHES, anything else the default
+        for count, order, expected in ((7.6, 'position', (8, 'position')), (40, 'x', (10, 'position')), (0, None, (1, 'position')), ('5', 'best', (5, 'best')), (True, 'best', (5, 'best'))):
+            EvaluationSettings.objects.filter(pk=1).update(data={'marches': {'max': count, 'order': order}})
+            self.assertEqual((counting()['count'], counting()['order']), expected, count)
+        EvaluationSettings.objects.filter(pk=1).update(data=['broken'])
+        self.assertEqual(counting(), default)
+        # one read of the settings for the whole list, however many marches
+        for n in (1, 2, 3):
+            March.objects.create(player=self.player, position=n, kind='cavalry', primary='Attila')
+        with CaptureQueriesContext(connection) as queries:
+            self.client.get('/api/me/marches/')
+        self.assertEqual(sum('accounts_evaluationsettings' in q['sql'] for q in queries.captured_queries), 1)
 
     def test_a_commander_left_out_of_the_picker_stays_only_where_it_is_saved(self):
         self.assertEqual(self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Cao Cao', **STATS}).json()['primary'], ['unknown'])

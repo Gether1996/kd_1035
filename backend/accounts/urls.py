@@ -22,6 +22,7 @@ urlpatterns = [
     path('kvk/reviewers/<int:player_id>/', kvk_views.reviewer),
     path('kvk/reviewers/auto-approve/', kvk_views.auto_approve),
     path('me/marches/', march_views.marches),
+    path('me/marches/order/', march_views.march_order),
     path('me/marches/<int:march_id>/', march_views.march),
     path('marches/', march_views.players_marches),
     path('evaluation/', evaluation_views.evaluation),

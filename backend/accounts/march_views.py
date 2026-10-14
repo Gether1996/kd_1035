@@ -18,7 +18,7 @@ from . import private_images
 from .army import BuildSerializer, current_of
 from .kvk_views import march_data
 from .models import APPROVED, MAX_MARCHES, March, Player
-from .pair_check import march_checker
+from .pair_check import counting, evaluation_marches, march_checker
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
 
@@ -45,12 +45,27 @@ def own_march_data(march: March, check=None) -> dict:
     return {**march_data(march), **(check or march_checker())(march)}
 
 
+def own_marches(player) -> Response:
+    """The player's marches in order, who may see them and which of them the KvK evaluation counts (the sentence above
+    the list) – one read of the evaluation settings."""
+    settings = evaluation_marches()
+    problem = march_checker(settings)
+    return Response(
+        {
+            'marches': [own_march_data(m, problem) for m in marches_of(player)],
+            'max': MAX_MARCHES,
+            'public': player.marches_public,
+            'counting': counting(settings),
+        }
+    )
+
+
 @never_cache
 @api_view(['GET', 'POST', 'PATCH'])
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def marches(request):
-    """GET: the player's marches in order and who may see them. POST {kind, primary, secondary?}: the next march (at
+    """GET: the player's marches in order, who may see them and which the KvK evaluation counts. POST {kind, primary, secondary?}: the next march (at
     most MAX_MARCHES). PATCH {public: bool}: every signed-in player may see them, or only R4 and the superuser."""
     player = request.user.player
     if request.method == 'PATCH':
@@ -71,14 +86,31 @@ def marches(request):
                 return Response({'detail': 'limit', 'max': MAX_MARCHES}, status=400)
             march = March.objects.create(player=player, position=count + 1, **form.validated_data)
         return Response(own_march_data(march), status=201)
-    problem = march_checker()
-    return Response(
-        {
-            'marches': [own_march_data(m, problem) for m in marches_of(player)],
-            'max': MAX_MARCHES,
-            'public': player.marches_public,
-        }
-    )
+    return own_marches(player)
+
+
+@never_cache
+@api_view(['PUT'])
+@permission_classes([IsPlayer])
+@throttle_classes([WriteThrottle])
+def march_order(request):
+    """PUT {ids: [march id, …]}: the player's marches in this order – the KvK evaluation counts the first X in the
+    player's order. Every own march exactly once: a stale order (another tab added or deleted one) is 400 and nothing
+    moves. Like DELETE it needs no approval or terms – it only rearranges the player's own marches and shows nobody
+    anything new. Returns the same body as GET."""
+    player = request.user.player
+    ids = request.data.get('ids') if isinstance(request.data, dict) else None
+    if not isinstance(ids, list) or len(ids) > MAX_MARCHES or any(type(i) is not int for i in ids):
+        return Response({'ids': 'invalid'}, status=400)
+    with transaction.atomic():
+        # locked, so two tabs cannot interleave their orders
+        mine = {m.pk: m for m in marches_of(player).select_for_update()}
+        if len(set(ids)) != len(ids) or set(ids) != set(mine):
+            return Response({'ids': 'invalid'}, status=400)
+        for position, pk in enumerate(ids, start=1):
+            mine[pk].position = position
+        March.objects.bulk_update(mine.values(), ['position'])
+    return own_marches(player)
 
 
 @never_cache
