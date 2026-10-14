@@ -10,6 +10,14 @@ const belowHeader = (page: Page, selector: string) =>
     return section ? Math.abs(section.getBoundingClientRect().top - header) : Infinity; // not rendered yet
   }, selector);
 
+/** How far (px) the visitor has scrolled past the spot where a link to the section lands (negative: above it). */
+const pastSection = (page: Page, selector: string) =>
+  page.evaluate((selector) => {
+    const header = document.querySelector('app-header')!.getBoundingClientRect().height;
+    const section = document.querySelector(selector);
+    return section ? Math.round(header - section.getBoundingClientRect().top) : NaN; // not rendered yet
+  }, selector);
+
 test.describe('navigation', () => {
   test('the mobile menu opens, navigates, closes with Escape @journey', async ({ page }) => {
     await open(page, '/');
@@ -50,24 +58,50 @@ test.describe('navigation', () => {
     await expect.poll(() => belowHeader(page, '#alliance')).toBeLessThan(4);
   });
 
-  test('back and forward return to where the visitor was @journey', async ({ page }) => {
-    // PR #1 (d4ac49a): forward to /#alliance stopped above the section, back to /o-nas jumped to the top
-    await open(page, '/o-nas');
-    const contacts = page.locator('main a.step-action[href="/#alliance"]');
-    await contacts.scrollIntoViewIfNeeded();
-    const left = await page.evaluate(() => Math.round(scrollY));
-    expect(left).toBeGreaterThan(300);
-    await contacts.click();
-    await expect(page).toHaveURL(/\/#alliance$/);
-    await expect.poll(() => belowHeader(page, '#alliance')).toBeLessThan(4);
+  // PR #1 (d4ac49a): forward to /#alliance stopped above the section, back to /o-nas jumped to the top. The next events
+  // load above #alliance: slowed down here, so a visitor who leaves before they arrive (the position saved then is a
+  // whole section short – on CI's iPhone that failed only by chance), one who leaves after and one who scrolled on from
+  // the section are all checked on every run
+  for (const { name, loaded, scroll } of [
+    { name: 'left before the next events loaded', loaded: false, scroll: 0 },
+    { name: 'left after the next events loaded', loaded: true, scroll: 0 },
+    { name: 'scrolled on from the section', loaded: true, scroll: 400 },
+  ]) {
+    test(`back and forward return to where the visitor was, ${name} @journey`, async ({ page }) => {
+      await page.route('**/api/events/**', async (route) => {
+        await new Promise((done) => setTimeout(done, 1500));
+        await route.continue().catch(() => {}); // the request may be gone with the page
+      });
+      await open(page, '/o-nas');
+      const contacts = page.locator('main a.step-action[href="/#alliance"]');
+      await contacts.scrollIntoViewIfNeeded();
+      const left = await page.evaluate(() => Math.round(scrollY));
+      expect(left).toBeGreaterThan(300);
+      await contacts.click();
+      await expect(page).toHaveURL(/\/#alliance$/);
+      await expect.poll(() => belowHeader(page, '#alliance')).toBeLessThan(4);
+      // the section of the next events (#events) is only there once they have loaded
+      if (loaded) await expect(page.locator('#events')).toBeAttached();
+      expect(await page.locator('#events').count()).toBe(loaded ? 1 : 0);
+      // a scroll of the visitor (the wheel event ends the section link's corrections, like a real one)
+      if (scroll) {
+        await page.evaluate((by) => {
+          dispatchEvent(new WheelEvent('wheel'));
+          scrollBy({ top: by, behavior: 'instant' });
+        }, scroll);
+      }
+      const past = await pastSection(page, '#alliance');
 
-    await page.goBack();
-    await expect(page).toHaveURL(/\/o-nas$/);
-    await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(left);
-    await page.goForward();
-    await expect(page).toHaveURL(/\/#alliance$/);
-    await expect.poll(() => belowHeader(page, '#alliance')).toBeLessThan(4);
-  });
+      await page.goBack();
+      await expect(page).toHaveURL(/\/o-nas$/);
+      await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(left);
+      await page.goForward();
+      await expect(page).toHaveURL(/\/#alliance$/);
+      // the same spot once the next events have loaded above the section
+      await expect(page.locator('#events')).toBeAttached();
+      await expect.poll(async () => Math.abs((await pastSection(page, '#alliance')) - past)).toBeLessThan(4);
+    });
+  }
 
   test('a new page starts at the top @journey', async ({ page }) => {
     await open(page, '/o-nas');
