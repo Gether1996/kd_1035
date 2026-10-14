@@ -65,11 +65,12 @@ export class App {
     let popstate = false;
     let restoring: AbortController | undefined;
     // Back/forward to a section link (/#alliance) returns to the section, not to the saved position: a visitor who left
-    // before the next events loaded above it saved a position a whole section short. Per history entry (the router's
-    // navigationId in history.state): how far below the section's landing spot the visitor was when they left.
+    // before the next events loaded above it saved a position a whole section short. Per history entry: how far below
+    // the section's landing spot the visitor was when they left. The router writes the id of every navigation, back
+    // and forward included, into the entry it lands on (history.state.navigationId), like it keys its own positions.
     const belowSection = new Map<number, number>();
-    let entry = 0; // the history entry the visitor is on
-    let returning = 0; // the history entry back/forward goes to
+    let current = 0; // the id of the navigation the visitor is on = the navigationId of its history entry
+    let returning = 0; // the navigationId of the entry back/forward goes to
     router.events.subscribe((e) => {
       if (e instanceof NavigationStart) {
         popstate = e.navigationTrigger === 'popstate';
@@ -78,10 +79,9 @@ export class App {
         // router.url and the page are still the ones being left
         const fragment = router.parseUrl(router.url).fragment;
         const section = fragment ? doc.getElementById(fragment) : null;
-        if (section) belowSection.set(entry, header() - section.getBoundingClientRect().top);
+        if (section) belowSection.set(current, Math.round(header() - section.getBoundingClientRect().top));
       } else if (e instanceof NavigationEnd) {
-        // back/forward keeps the history entry it returned to; any other navigation writes its own id into a new one
-        entry = popstate && returning ? returning : e.id;
+        current = e.id;
         const rest = parseUrl(e.urlAfterRedirects).rest;
         changed = rest !== previous;
         previous = rest;
@@ -93,11 +93,16 @@ export class App {
         const fragment = router.parseUrl(e.urlAfterRedirects).fragment;
         if (e.id === 1 && fragment) restoring = follow(scroller, doc, fragment);
       } else if (e instanceof Scroll && popstate) {
+        // back to the section – unless the visitor had scrolled up above it (the next events would then come between
+        // them); otherwise the position the router saved when the visitor left the page (after a reload it has none)
         const below = e.anchor ? belowSection.get(returning) : undefined;
-        if (e.anchor && below !== undefined) restoring = follow(scroller, doc, e.anchor, below);
-        // the router saved the position when the visitor left the page; after a reload it has none
-        else if (e.position) restoring = restore(scroller, doc, e.position);
-        else if (changed && !e.anchor) scroller.scrollToPosition([0, 0], { behavior: 'instant' });
+        if (e.anchor && below !== undefined && below >= -1) {
+          restoring = follow(scroller, doc, e.anchor, { below, position: e.position });
+        } else if (e.position) {
+          restoring = restore(scroller, doc, e.position);
+        } else if (changed && !e.anchor) {
+          scroller.scrollToPosition([0, 0], { behavior: 'instant' });
+        }
       } else if (e instanceof Scroll && e.anchor) {
         // a section link (/#alliance): sections above it that load from the API afterwards would push it away
         restoring?.abort();
@@ -159,17 +164,27 @@ function restore(scroller: ViewportScroller, doc: Document, [x, y]: [number, num
 /**
  * Keeps a section link on its section while the page above it still grows – the home page's next events arrive from
  * the API after the jump and pushed Aliancia/Komunita down by a whole section. Only reacts when the page height
- * changes, so the smooth scroll itself is left alone. Back/forward (`below` given) jumps there at once instead, `below`
- * px past the section's landing spot like when the visitor left. Gives up after SETTLE_MS, or as soon as the visitor
- * scrolls or clicks.
+ * changes, so the smooth scroll itself is left alone. Back/forward (`back` given) goes there at once instead,
+ * `back.below` px past the section's landing spot like when the visitor left; until the section is there (the page is
+ * still rendering, or its API failed) it keeps the position the router saved. Gives up after SETTLE_MS, or as soon as
+ * the visitor scrolls or clicks.
  */
-function follow(scroller: ViewportScroller, doc: Document, anchor: string, below?: number): AbortController {
+function follow(
+  scroller: ViewportScroller,
+  doc: Document,
+  anchor: string,
+  back?: { below: number; position: [number, number] | null },
+): AbortController {
   const following = new AbortController();
   const go = () => {
-    scroller.scrollToAnchor(anchor, { behavior: 'instant' });
-    if (below && doc.getElementById(anchor)) scroller.scrollToPosition([0, scrollY + below], { behavior: 'instant' });
+    if (!back || doc.getElementById(anchor)) {
+      scroller.scrollToAnchor(anchor, { behavior: 'instant' });
+      if (back?.below) scroller.scrollToPosition([0, scrollY + back.below], { behavior: 'instant' });
+    } else if (back.position) {
+      scroller.scrollToPosition(back.position, { behavior: 'instant' });
+    }
   };
-  if (below !== undefined) go();
+  if (back) go();
   const main = doc.querySelector('main');
   if (!main || typeof ResizeObserver === 'undefined') return following;
   for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {

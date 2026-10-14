@@ -12,8 +12,8 @@ on:
 permissions:
   contents: read
 
-# A new push to a PR cancels its running check. On main a started run always finishes, so every commit that may get
-# deployed has a verdict; a run still waiting is replaced by the newer push.
+# A new push to a PR cancels its running check. On main a started run always finishes; one still waiting for its turn
+# is replaced by the newer push, whose run tests everything up to it – deploy a commit only once its own run is green.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
