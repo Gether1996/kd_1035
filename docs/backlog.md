@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.29.3:** Neuložené Premenné vo Vyhodnocovaní sa nestratia – pri odchode z/zatvorení stránky sa web (prehliadač) opýta; záložka Premenné má vlastnú adresu `/vyhodnocovanie?tab=premenne`.
 - **14. 10. 2026 – v1.29.2:** Súhrn „Na opravu pre vyhodnocovanie KvK: N“ nad vlastnými marchmi (klik prejde na prvý taký march) a červené číslo pri skratke Moje marche na Môj účet.
 - **14. 10. 2026 – v1.29.1:** Upozornenie na nesprávny pár marchu povie, keď sa hodnotí opačné poradie commanderov („Hodnotí sa opačné poradie: Ivan IV + Achilles.“).
 - **14. 10. 2026 – v1.29.0:** Poradie vlastných marchov – šípky Posunúť vyššie / nižšie na kartách v Prehľade marchov a nad nimi veta, koľko a akých marchov sa počíta do vyhodnocovania KvK (keď Premenné počítajú prvých X v poradí hráča).
