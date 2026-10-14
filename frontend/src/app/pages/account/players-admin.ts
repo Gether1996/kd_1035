@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
-import { KvkApi, ReviewerRow } from '../../core/kvk-api';
+import { KvkApi, PlayerFlag, ReviewerRow } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
+import { EvalTip } from '../evaluation/tip';
 
-type Flag = 'reviewer' | 'approved' | 'evaluator';
 type RoleFilter = 'all' | 'r4' | 'others';
 type ApprovalFilter = 'all' | 'approved' | 'pending';
 type Sort = 'name' | 'newest' | 'login' | 'marches';
@@ -15,13 +15,15 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
  * "Hráči" on /ucet – superuser only (Gether 11. and 12. 10. 2026): every player signed in with Discord with two
  * switches – "Schválený" (a new player adds marches and KvK sign-ups only once approved; the superadmin gets a Discord
  * message about each new one) and "R4" (sees every KvK sign-up and every player's marches). Filters for R4 and the
- * approval, sorting and filters for marches and KvK sign-ups like on /marche, a third switch "Vyhodnocovanie" lets a
- * player into /vyhodnocovanie (Gether 13. 10. 2026); the players waiting
+ * approval, sorting and filters for marches and KvK sign-ups like on /marche; "Vyh. tabuľka" and "Vyh. nastavenia" let
+ * a player into /vyhodnocovanie – its table, its variables (Gether 13. and 14. 10. 2026), a legend above the list
+ * explains the four switches with an "i" each; the players waiting
  * for the approval come first. "Schvaľovať automaticky" lets every new player in at once, without
  * the Discord message.
  */
 @Component({
   selector: 'app-players-admin',
+  imports: [EvalTip],
   template: `
     @let k = t();
     <section class="panel" aria-labelledby="players-title">
@@ -107,6 +109,15 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
       @if (data.error()) {
         <p class="panel__lead is-error">{{ k.loadError }}</p>
       }
+      <!-- what the switches of each row do, once for the whole list -->
+      <ul class="switch-legend" [attr.aria-label]="k.legend">
+        @for (f of flags; track f) {
+          <li>
+            {{ k.flags[f].short }}
+            <app-eval-tip [text]="k.flags[f].tip" [label]="k.flags[f].label" />
+          </li>
+        }
+      </ul>
       <ul class="reviewers">
         @for (p of shown(); track p.id) {
           <li class="reviewer" [class.is-pending]="!p.approved && !p.superuser">
@@ -124,42 +135,20 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
             </span>
             @if (!p.superuser) {
               <span class="reviewer__switches">
-                <label class="reviewer__switch">
-                  <span aria-hidden="true">{{ k.approve }}</span>
-                  <input
-                    #ok
-                    class="switch"
-                    type="checkbox"
-                    role="switch"
-                    [attr.aria-label]="k.approveLabel + ': ' + (p.ingame_name || p.name)"
-                    [checked]="p.approved"
-                    (change)="set(p, 'approved', ok)"
-                  />
-                </label>
-                <label class="reviewer__switch">
-                  <span aria-hidden="true">{{ k.r4 }}</span>
-                  <input
-                    #r4
-                    class="switch"
-                    type="checkbox"
-                    role="switch"
-                    [attr.aria-label]="k.toggle + ': ' + (p.ingame_name || p.name)"
-                    [checked]="p.reviewer"
-                    (change)="set(p, 'reviewer', r4)"
-                  />
-                </label>
-                <label class="reviewer__switch">
-                  <span aria-hidden="true">{{ k.evaluator }}</span>
-                  <input
-                    #ev
-                    class="switch"
-                    type="checkbox"
-                    role="switch"
-                    [attr.aria-label]="k.evaluatorLabel + ': ' + (p.ingame_name || p.name)"
-                    [checked]="p.evaluator"
-                    (change)="set(p, 'evaluator', ev)"
-                  />
-                </label>
+                @for (f of flags; track f) {
+                  <label class="reviewer__switch">
+                    <span aria-hidden="true">{{ k.flags[f].short }}</span>
+                    <input
+                      #box
+                      class="switch"
+                      type="checkbox"
+                      role="switch"
+                      [attr.aria-label]="k.flags[f].label + ': ' + (p.ingame_name || p.name)"
+                      [checked]="p[f]"
+                      (change)="set(p, f, box)"
+                    />
+                  </label>
+                }
               </span>
             }
           </li>
@@ -184,6 +173,7 @@ export class PlayersAdmin {
   protected readonly sorts: Sort[] = ['name', 'newest', 'login', 'marches'];
   protected readonly marchFilters: MarchFilter[] = ['all', 'with', 'without'];
   protected readonly kvkFilters: KvkFilter[] = ['all', 'any', 'rally', 'garrison', 'none'];
+  protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluator', 'evaluation_settings'];
 
   protected readonly data = this.api.reviewers(() => true);
   protected readonly players = linkedSignal<ReviewerRow[]>(() => (this.data.hasValue() ? this.data.value().players : []));
@@ -306,7 +296,7 @@ export class PlayersAdmin {
     }
   }
 
-  protected async set(player: ReviewerRow, flag: Flag, box: HTMLInputElement): Promise<void> {
+  protected async set(player: ReviewerRow, flag: PlayerFlag, box: HTMLInputElement): Promise<void> {
     const value = box.checked;
     this.failed.set(false);
     try {

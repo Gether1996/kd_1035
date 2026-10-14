@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **14. 10. 2026 – v1.27.2:** Prístup k vyhodnocovaniu má dva prepínače v sekcii Hráči – Vyh. tabuľka (odhad acclaimu, zápis power, acclaimu a T4) a Vyh. nastavenia (premenné a páry commanderov), nad zoznamom legenda s „i“ pri každom prepínači; kto mal prístup doteraz, má oba.
 - **14. 10. 2026 – v1.27.1:** Nesprávne vyplnený pár (bez sekundárneho commandera alebo pár, ktorý vyhodnocovanie KvK nehodnotí) má v marchoch červený okraj a vetu – vidí to iba hráč a superadmin; „Odp. power“ vo vyhodnocovaní ukazuje power pre započítané marche hráča.
 - **14. 10. 2026 – v1.27.0:** Aktuálna power na Môj účet – hráč si ju zapíše v miliónoch alebo celým číslom z hry, je to tá istá power ako vo vyhodnocovaní (vidí aj tú, ktorú mu zapísal správca); stránka Ochrana údajov to spomína.
 - **14. 10. 2026 – v1.26.2:** Vyhodnocovanie bez rolovania do strany – tabuľka hráčov sa zmestí na šírku (bez stĺpcov Progres a FBP, tie sú v detaile hráča; „Odp. power“), na mobile a tablete karta na hráča, tabuľky premenných sa na úzkych obrazovkách preusporiadajú, stránka až 1440 px široká.

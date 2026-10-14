@@ -67,11 +67,18 @@ class Player(models.Model):
         default=False,
         help_text='Hráč (napr. R4) vidí všetky prihlášky na KvK a marche všetkých hráčov. Nastavuje superadmin.',
     )
+    # two switches since 14. 10. 2026 (Gether: "nastavenia vyhodnocovania" and "tabuľka vyhodnocovania")
     evaluator = models.BooleanField(
-        'vyhodnocovanie KvK',
+        'tabuľka vyhodnocovania',
         default=False,
-        help_text='Hráč má prístup na /vyhodnocovanie: odhad acclaimu schválených hráčov, ich power a premenné '
-        'výpočtu. Nastavuje superadmin.',
+        help_text='Hráč vidí na /vyhodnocovanie odhad acclaimu schválených hráčov a zapisuje im power, acclaim a T4. '
+        'Nastavuje superadmin.',
+    )
+    evaluation_settings = models.BooleanField(
+        'nastavenia vyhodnocovania',
+        default=False,
+        help_text='Hráč mení na /vyhodnocovanie premenné výpočtu a tabuľku párov commanderov (platí pre všetkých). '
+        'Nastavuje superadmin.',
     )
     approved = models.BooleanField(
         'schválený',

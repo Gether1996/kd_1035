@@ -290,13 +290,29 @@ export const cs: Dict = {
     auto: 'Schvalovat automaticky',
     autoOn: 'Nový hráč je schválený hned, zpráva na Discord nepřijde. Kdo už čeká, zůstává ke schválení.',
     autoOff: 'Nového hráče schvaluješ ty, o každém ti přijde zpráva na Discord.',
-    approve: 'Schválený',
-    approveLabel: 'Schválený – přidává marche a přihlášky na KvK',
-    r4: 'R4',
-    toggle: 'R4 – vidí přihlášky',
-    // the KvK evaluation (/vyhodnocovanie): the acclaim estimate and the players' power (Gether 13. 10. 2026)
-    evaluator: 'Vyhodnocování',
-    evaluatorLabel: 'Vyhodnocování – odhad acclaimu a power hráčů',
+    legend: 'Co znamenají přepínače',
+    flags: {
+      approved: {
+        short: 'Schválený',
+        label: 'Schválený – přidává marche a přihlášky na KvK',
+        tip: 'Přidává marche a přihlášky na KvK a vidí marche ostatních hráčů.',
+      },
+      reviewer: {
+        short: 'R4',
+        label: 'R4 – vidí přihlášky',
+        tip: 'Vidí všechny přihlášky na KvK a marche všech hráčů.',
+      },
+      evaluator: {
+        short: 'Vyh. tabulka',
+        label: 'Tabulka vyhodnocování – odhad acclaimu a power hráčů',
+        tip: 'Tabulka vyhodnocování: vidí odhad acclaimu schválených hráčů a zapisuje jim power, acclaim a T4.',
+      },
+      evaluation_settings: {
+        short: 'Vyh. nastavení',
+        label: 'Nastavení vyhodnocování – proměnné a páry commanderů',
+        tip: 'Nastavení vyhodnocování: mění proměnné výpočtu a tabulku párů commanderů – platí pro všechny.',
+      },
+    },
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čeká',

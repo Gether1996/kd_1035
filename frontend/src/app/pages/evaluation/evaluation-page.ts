@@ -48,12 +48,14 @@ type Tab = 'settings' | 'results';
       } @else if (data.error()) {
         <p class="state">{{ x.loadError }}</p>
       } @else if (data.hasValue()) {
-        <div class="segmented ev-tabs" role="group" [attr.aria-label]="x.title">
-          <button type="button" [attr.aria-pressed]="tab() === 'settings'" (click)="tab.set('settings')">
-            {{ x.tabs.settings }}@if (dirty()) {<span class="ev-dot" aria-hidden="true"></span>}
-          </button>
-          <button type="button" [attr.aria-pressed]="tab() === 'results'" (click)="tab.set('results')">{{ x.tabs.results }}</button>
-        </div>
+        @if (canTable() && canSettings()) {
+          <div class="segmented ev-tabs" role="group" [attr.aria-label]="x.title">
+            <button type="button" [attr.aria-pressed]="tab() === 'settings'" (click)="picked.set('settings')">
+              {{ x.tabs.settings }}@if (dirty()) {<span class="ev-dot" aria-hidden="true"></span>}
+            </button>
+            <button type="button" [attr.aria-pressed]="tab() === 'results'" (click)="picked.set('results')">{{ x.tabs.results }}</button>
+          </div>
+        }
         @if (armory.failed()) {
           <p class="notice notice--error">{{ x.armoryError }}</p>
         }
@@ -115,8 +117,11 @@ export class EvaluationPage {
   protected readonly texts = computed(() => EVAL_TEXTS[this.i18n.lang()]);
 
   protected readonly superuser = computed(() => !!this.auth.user()?.is_superuser);
-  /** the superadmin and the players let in with the switch in Hráči on /ucet (Gether 13. 10. 2026) */
-  protected readonly allowed = computed(() => this.superuser() || !!this.auth.user()?.evaluator);
+  /** the superadmin and the players let in with the switches in Hráči on /ucet (Gether 13. and 14. 10. 2026): the
+   * table (the players' power, acclaim, T4) and the variables are two switches – each opens its own tab */
+  protected readonly canTable = computed(() => this.superuser() || !!this.auth.user()?.evaluator);
+  protected readonly canSettings = computed(() => this.superuser() || !!this.auth.user()?.evaluation_settings);
+  protected readonly allowed = computed(() => this.canTable() || this.canSettings());
   protected readonly data = this.api.data(() => this.allowed());
   private readonly commanders = httpResource<MarchCommander[]>(() => (this.allowed() ? marchCommandersUrl : undefined));
   protected readonly commanderNames = computed(() => (this.commanders.hasValue() ? this.commanders.value().map((c) => c.name) : []));
@@ -140,7 +145,9 @@ export class EvaluationPage {
   /** the pair table was changed elsewhere meanwhile – the save was refused */
   protected readonly stalePairs = signal(false);
   protected readonly recordFailed = signal(false);
-  protected readonly tab = signal<Tab>('results');
+  private readonly picked = signal<Tab>('results');
+  /** the tab picked, or the only one allowed */
+  protected readonly tab = computed<Tab>(() => (!this.canTable() ? 'settings' : !this.canSettings() ? 'results' : this.picked()));
 
   /** "Rátať s power": off = the estimate from the marches only (a view switch, not saved) */
   protected readonly usePower = signal(true);

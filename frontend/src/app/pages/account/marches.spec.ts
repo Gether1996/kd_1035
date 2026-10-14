@@ -353,6 +353,7 @@ describe('PlayersAdmin', () => {
       marches: 0,
       kvk: [],
       evaluator: false,
+      evaluation_settings: false,
     };
     http.expectOne('/api/kvk/reviewers/').flush({
       players: [
@@ -404,8 +405,10 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova', 'Gether']);
     select('#players-kvk', 'all');
     await settle(fixture);
-    // approved, R4 and Vyhodnocovanie for each player but the superuser
-    expect(el.querySelectorAll('.reviewer .switch').length).toBe(6);
+    // approved, R4 and the two of the evaluation for each player but the superuser, explained once above the list
+    expect(el.querySelectorAll('.reviewer .switch').length).toBe(8);
+    expect(el.querySelectorAll('.switch-legend li').length).toBe(4);
+    expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(4);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
     expect(filters().map((b) => b.textContent?.trim())).toEqual([
       'Všetci · 3',
@@ -433,18 +436,27 @@ describe('PlayersAdmin', () => {
     expect(el.querySelector('.tag--pending')).toBeNull();
 
     // R4 of Nelly; the filter R4 shows only her
-    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[4];
+    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
     r4().click();
-    http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, reviewer: true, approved: true, evaluator: false });
-    // Vyhodnocovanie of Nelly (Gether 13. 10. 2026)
-    const evaluator = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
-    expect(evaluator.getAttribute('aria-label')).toBe('Vyhodnocovanie – odhad acclaimu a power hráčov: Nelly');
+    const flags = { reviewer: true, approved: true, evaluator: false, evaluation_settings: false };
+    http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, ...flags });
+    // the evaluation of Nelly: its table and its variables, two switches (Gether 13. and 14. 10. 2026)
+    const evaluator = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
+    expect(evaluator.getAttribute('aria-label')).toBe('Tabuľka vyhodnocovania – odhad acclaimu a power hráčov: Nelly');
     evaluator.click();
     const ev = http.expectOne('/api/kvk/reviewers/2/');
     expect(ev.request.body).toEqual({ evaluator: true });
-    ev.flush({ id: 2, reviewer: true, approved: true, evaluator: true });
+    ev.flush({ id: 2, ...flags, evaluator: true });
     await settle(fixture);
     expect(evaluator.checked).toBe(true);
+    const variables = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[7];
+    expect(variables.getAttribute('aria-label')).toBe('Nastavenia vyhodnocovania – premenné a páry commanderov: Nelly');
+    variables.click();
+    const vs = http.expectOne('/api/kvk/reviewers/2/');
+    expect(vs.request.body).toEqual({ evaluation_settings: true });
+    vs.flush({ id: 2, ...flags, evaluator: true, evaluation_settings: true });
+    await settle(fixture);
+    expect(variables.checked).toBe(true);
     await settle(fixture);
     filters()[4].click();
     await settle(fixture);

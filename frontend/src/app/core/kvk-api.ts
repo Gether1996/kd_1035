@@ -113,6 +113,9 @@ export interface SignupForm {
   note: string;
 }
 
+/** the switches of a player in Hráči on /ucet */
+export type PlayerFlag = 'reviewer' | 'approved' | 'evaluator' | 'evaluation_settings';
+
 export interface ReviewerRow {
   id: number;
   name: string;
@@ -122,8 +125,9 @@ export interface ReviewerRow {
   reviewer: boolean;
   /** adds marches and KvK sign-ups */
   approved: boolean;
-  /** /vyhodnocovanie (Gether 13. 10. 2026) */
+  /** /vyhodnocovanie (Gether 13. 10. 2026): its table – and its variables, a switch of their own (14. 10. 2026) */
   evaluator: boolean;
+  evaluation_settings: boolean;
   superuser: boolean;
   /** the first sign-in */
   created_at: string;
@@ -188,16 +192,8 @@ export class KvkApi {
     );
   }
 
-  /** R4 and / or the approval of a player (superuser) */
-  setPlayer(
-    id: number,
-    change: Partial<Pick<ReviewerRow, 'reviewer' | 'approved' | 'evaluator'>>,
-  ): Promise<{ id: number; reviewer: boolean; approved: boolean; evaluator: boolean }> {
-    return firstValueFrom(
-      this.http.patch<{ id: number; reviewer: boolean; approved: boolean; evaluator: boolean }>(
-        `/api/kvk/reviewers/${id}/`,
-        change,
-      ),
-    );
+  /** R4, the approval and the evaluation switches of a player (superuser) */
+  setPlayer(id: number, change: Partial<Pick<ReviewerRow, PlayerFlag>>): Promise<{ id: number } & Record<PlayerFlag, boolean>> {
+    return firstValueFrom(this.http.patch<{ id: number } & Record<PlayerFlag, boolean>>(`/api/kvk/reviewers/${id}/`, change));
   }
 }

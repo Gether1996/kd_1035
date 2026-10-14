@@ -295,13 +295,31 @@ export const sk = {
     auto: 'Schvaľovať automaticky',
     autoOn: 'Nový hráč je schválený hneď, správa na Discord nepríde. Kto už čaká, ostáva na schválenie.',
     autoOff: 'Nového hráča schvaľuješ ty, o každom ti príde správa na Discord.',
-    approve: 'Schválený',
-    approveLabel: 'Schválený – pridáva marche a prihlášky na KvK',
-    r4: 'R4',
-    toggle: 'R4 – vidí prihlášky',
-    // the KvK evaluation (/vyhodnocovanie): the acclaim estimate and the players' power (Gether 13. 10. 2026)
-    evaluator: 'Vyhodnocovanie',
-    evaluatorLabel: 'Vyhodnocovanie – odhad acclaimu a power hráčov',
+    // the switches of a player – short names in the row, the legend above the list explains them
+    legend: 'Čo znamenajú prepínače',
+    flags: {
+      approved: {
+        short: 'Schválený',
+        label: 'Schválený – pridáva marche a prihlášky na KvK',
+        tip: 'Pridáva marche a prihlášky na KvK a vidí marche ostatných hráčov.',
+      },
+      reviewer: {
+        short: 'R4',
+        label: 'R4 – vidí prihlášky',
+        tip: 'Vidí všetky prihlášky na KvK a marche všetkých hráčov.',
+      },
+      // the KvK evaluation (/vyhodnocovanie), two switches since 14. 10. 2026 (Gether)
+      evaluator: {
+        short: 'Vyh. tabuľka',
+        label: 'Tabuľka vyhodnocovania – odhad acclaimu a power hráčov',
+        tip: 'Tabuľka vyhodnocovania: vidí odhad acclaimu schválených hráčov a zapisuje im power, acclaim a T4.',
+      },
+      evaluation_settings: {
+        short: 'Vyh. nastavenia',
+        label: 'Nastavenia vyhodnocovania – premenné a páry commanderov',
+        tip: 'Nastavenia vyhodnocovania: mení premenné výpočtu a tabuľku párov commanderov – platí pre všetkých.',
+      },
+    },
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čaká',

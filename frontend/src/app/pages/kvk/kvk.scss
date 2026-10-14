@@ -513,6 +513,24 @@
 }
 
 // "Schválený", "R4" and "Vyhodnocovanie", each a small caption with its switch; on a phone under the name
+// "Hráči" on /ucet: what the switches of a row do, once above the list
+.switch-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+}
+
 .reviewer__switches {
   display: flex;
   flex-wrap: wrap;

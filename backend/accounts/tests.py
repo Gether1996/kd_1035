@@ -375,6 +375,7 @@ class MeTests(TestCase):
                     'is_staff': False,
                     'is_superuser': False,
                     'evaluator': False,
+                    'evaluation_settings': False,
                 },
             },
         )

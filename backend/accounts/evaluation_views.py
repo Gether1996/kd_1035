@@ -2,7 +2,9 @@
 the web). The page computes everything itself from the marches the players clicked together and the variables saved
 here, so a changed variable shows at once; the server keeps the variables and what the superadmin writes down about
 a player (power, acclaim reached, T4, a correction of the recommended power). The superuser and the players the
-superuser lets in (Player.evaluator, a switch next to R4 – Gether 13. 10. 2026); those see only approved players."""
+superuser lets in (switches next to R4 – Gether 13. 10. 2026; since 14. 10. 2026 two: Player.evaluator writes down
+the players' power, acclaim and T4, Player.evaluation_settings changes the variables and the pair table); those see
+only approved players."""
 
 import json
 import math
@@ -52,13 +54,34 @@ def clean_settings(value, depth=0):
     return value
 
 
+def allowed(request, *flags: str) -> bool:
+    """The superuser, or a player the superuser gave one of these switches (Hráči on /ucet)"""
+    user = request.user
+    if not user.is_authenticated:
+        return False
+    player = player_of(user)
+    return user.is_superuser or bool(player and any(getattr(player, flag) for flag in flags))
+
+
 class CanEvaluate(BasePermission):
+    """Opens /vyhodnocovanie: the table or the variables (Gether 14. 10. 2026: two switches)"""
+
     def has_permission(self, request, view):
-        user = request.user
-        if not user.is_authenticated:
-            return False
-        player = player_of(user)
-        return user.is_superuser or bool(player and player.evaluator)
+        return allowed(request, 'evaluator', 'evaluation_settings')
+
+
+class CanEditTable(BasePermission):
+    """Writes down the power, acclaim and T4 of the players"""
+
+    def has_permission(self, request, view):
+        return allowed(request, 'evaluator')
+
+
+class CanEditSettings(BasePermission):
+    """Changes the variables and the commander pair table – for everyone"""
+
+    def has_permission(self, request, view):
+        return allowed(request, 'evaluation_settings')
 
 
 def visible_players(request):
@@ -127,7 +150,7 @@ def evaluation(request):
 
 @never_cache
 @api_view(['PUT'])
-@permission_classes([CanEvaluate])
+@permission_classes([CanEditSettings])
 @throttle_classes([WriteThrottle])
 def evaluation_settings(request):
     """PUT {settings: {...}, pairs?: [[primary, secondary, points], …], pairs_version?} – the variables ({settings:
@@ -190,7 +213,7 @@ def save_record(player: Player, values: dict) -> PlayerEvaluation:
 
 @never_cache
 @api_view(['PATCH'])
-@permission_classes([CanEvaluate])
+@permission_classes([CanEditTable])
 @throttle_classes([WriteThrottle])
 def evaluation_player(request, player_id):
     """PATCH {power?, acclaim?, t4?, power_bonus?} – what the superadmin writes down about one player."""
@@ -208,7 +231,7 @@ BULK_MAX = 500
 
 @never_cache
 @api_view(['PATCH'])
-@permission_classes([CanEvaluate])
+@permission_classes([CanEditTable])
 @throttle_classes([WriteThrottle])
 def evaluation_players(request):
     """PATCH {players: [{id, power?, acclaim?, t4?, power_bonus?}, …]} – many players at once (the power of everyone

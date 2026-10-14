@@ -246,6 +246,7 @@ def reviewers(request):
                 'avatar_url': p.avatar_url,
                 'reviewer': p.kvk_reviewer,
                 'evaluator': p.evaluator,
+                'evaluation_settings': p.evaluation_settings,
                 'approved': p.approved,
                 'created_at': iso(p.created_at),
                 'last_login': iso(p.user.last_login) if p.user.last_login else None,
@@ -279,20 +280,23 @@ def auto_approve(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def reviewer(request, player_id):
-    """PATCH {reviewer?: bool, approved?: bool, evaluator?: bool} – R4 (sees the sign-ups), approved (adds marches
-    and sign-ups), evaluator (/vyhodnocovanie)."""
+    """PATCH {reviewer?: bool, approved?: bool, evaluator?: bool, evaluation_settings?: bool} – R4 (sees the
+    sign-ups), approved (adds marches and sign-ups), the table and the variables of /vyhodnocovanie."""
     player = get_object_or_404(Player, pk=player_id)
     body = request.data if isinstance(request.data, dict) else {}
-    fields = {'reviewer': 'kvk_reviewer', 'approved': 'approved', 'evaluator': 'evaluator'}
+    fields = {
+        'reviewer': 'kvk_reviewer',
+        'approved': 'approved',
+        'evaluator': 'evaluator',
+        'evaluation_settings': 'evaluation_settings',
+    }
     changes = {name: body[name] for name in fields if name in body}
     if not changes:
-        return Response({'detail': 'reviewer, approved or evaluator'}, status=400)
+        return Response({'detail': 'reviewer, approved, evaluator or evaluation_settings'}, status=400)
     for name, value in changes.items():
         if type(value) is not bool:
             return Response({name: 'bool'}, status=400)
         setattr(player, fields[name], value)
     player.save(update_fields=[fields[name] for name in changes])
     log.info('Player %s: %s', player.pk, changes)
-    return Response(
-        {'id': player.pk, 'reviewer': player.kvk_reviewer, 'approved': player.approved, 'evaluator': player.evaluator}
-    )
+    return Response({'id': player.pk, **{name: getattr(player, field) for name, field in fields.items()}})

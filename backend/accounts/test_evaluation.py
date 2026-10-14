@@ -107,7 +107,10 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(self.call('patch', url, {'evaluator': True}, self.nelly).status_code, 403)
         self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluator'], False)
         res = self.call('patch', url, {'evaluator': True})
-        self.assertEqual(res.json(), {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluator': True})
+        self.assertEqual(
+            res.json(),
+            {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluator': True, 'evaluation_settings': False},
+        )
         rows = {p['id']: p for p in self.admin.get('/api/kvk/reviewers/').json()['players']}
         self.assertTrue(rows[self.player.pk]['evaluator'])
         self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluator'], True)
@@ -117,16 +120,25 @@ class EvaluationApiTests(TestCase):
         ids = {p['id'] for p in data.json()['players']}
         self.assertIn(self.player.pk, ids)
         self.assertNotIn(self.newbie.pk, ids)
-        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 200)
+        # the table only (Gether 14. 10. 2026: two switches): the notes yes, the variables no
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 403)
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 90}, self.nelly).status_code, 200)
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.newbie.pk}/', {'power': 90}, self.nelly).status_code, 404)
         bulk = {'players': [{'id': self.newbie.pk, 'power': 1}]}
         self.assertEqual(self.call('patch', '/api/evaluation/players/', bulk, self.nelly).status_code, 400)
-        # switched off again: no way in
-        self.call('patch', url, {'evaluator': False})
+        # the variables only: the page and the variables, no notes
+        self.call('patch', url, {'evaluator': False, 'evaluation_settings': True})
+        self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluation_settings'], True)
+        self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 200)
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 200)
+        self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 80}, self.nelly).status_code, 403)
+        self.assertEqual(self.call('patch', '/api/evaluation/players/', {'players': [{'id': self.player.pk, 'power': 1}]}, self.nelly).status_code, 403)
+        # both off again: no way in
+        self.call('patch', url, {'evaluation_settings': False})
         self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
-        # the superuser counts as one
-        self.assertEqual(self.admin.get('/api/auth/me/').json()['user']['evaluator'], True)
+        # the superuser counts as both
+        me = self.admin.get('/api/auth/me/').json()['user']
+        self.assertEqual((me['evaluator'], me['evaluation_settings']), (True, True))
 
     def test_the_commander_pairs_live_in_the_database(self):
         # the table the migration put in (meta-rok.com + RoKBattles), the best first, each order its own row

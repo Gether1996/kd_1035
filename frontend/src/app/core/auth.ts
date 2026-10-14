@@ -19,8 +19,10 @@ export interface Player {
   is_staff: boolean;
   /** manages events (the admin, and in the calendar) */
   is_superuser: boolean;
-  /** /vyhodnocovanie: the superadmin, and the players the superadmin lets in (Gether 13. 10. 2026) */
+  /** /vyhodnocovanie: the superadmin, and the players the superadmin lets in (Gether 13. 10. 2026) – its table (the
+   * players' power, acclaim, T4) and, apart since 14. 10. 2026, its variables and pair table */
   evaluator?: boolean;
+  evaluation_settings?: boolean;
 }
 
 export interface Me {
