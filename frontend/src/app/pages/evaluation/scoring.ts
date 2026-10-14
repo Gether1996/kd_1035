@@ -13,7 +13,6 @@ export interface EvalPlayer {
   marches: March[];
   /** millions, null = not written down */
   power: number | null;
-  acclaim: number | null;
   t4: boolean;
   /** a correction of the recommended power, millions */
   power_bonus: number;
@@ -72,10 +71,6 @@ export interface PlayerEval {
   /** millions above the recommended power */
   excess: number;
   acclaim: { marches: number; excess: number; floor: number; t4: number; required: number };
-  /** the acclaim reached / required, null = not written down */
-  progress: number | null;
-  /** what the player pays to the fund at this progress (null = acclaim not written down) */
-  fund: number | null;
 }
 
 export interface Evaluation {
@@ -295,7 +290,7 @@ interface Draft {
 /**
  * Every player: the march scores, the total with the marches their power asks for, the recommended power, the
  * required acclaim (score × the benchmark's acclaim per point + the excess power, at least the power floor and the
- * minimum, T4 less), the progress and the fund. The score ranges of the power table come from the players when a
+ * minimum, T4 less). The score ranges of the power table come from the players when a
  * group has enough of them (the spreadsheet did the same from its own results).
  */
 export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: ArmoryIndex | null, usePower = true): Evaluation {
@@ -362,9 +357,6 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     const t4 = x.player.t4 ? base * (settings.acclaim.t4 / 100) : 0;
     const step = settings.acclaim.round;
     const required = Math.max(settings.acclaim.minimum, Math.round((base - t4) / step) * step);
-    const progress = x.player.acclaim !== null && required > 0 ? x.player.acclaim / required : null;
-    const fundMax = settings.fund.max[Math.max(1, x.group) - 1] ?? 0;
-    const fund = progress !== null ? fundMax * Math.max(0, 1 - progress) : null;
     return {
       player: x.player,
       marches: x.marches,
@@ -378,8 +370,6 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
       ownLimit,
       excess,
       acclaim: { marches, excess: excessAcclaim, floor, t4, required },
-      progress,
-      fund,
     };
   });
   return { rows, perPoint, benchmarkScore, ranges };

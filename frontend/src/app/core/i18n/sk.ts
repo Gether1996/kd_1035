@@ -326,16 +326,16 @@ export const sk = {
         label: 'R4 – vidí prihlášky',
         tip: 'Vidí všetky prihlášky na KvK a marche všetkých hráčov.',
       },
-      // the KvK evaluation (/vyhodnocovanie), two switches since 14. 10. 2026 (Gether)
-      evaluator: {
-        short: 'Vyh. tabuľka',
-        label: 'Tabuľka vyhodnocovania – odhad acclaimu a power hráčov',
-        tip: 'Tabuľka vyhodnocovania: vidí odhad acclaimu schválených hráčov a zapisuje im power, acclaim a T4.',
-      },
+      // the KvK evaluation (/vyhodnocovanie, Gether 14. 10. 2026): the evaluation itself, and its published result
       evaluation_settings: {
         short: 'Vyh. nastavenia',
-        label: 'Nastavenia vyhodnocovania – premenné a páry commanderov',
-        tip: 'Nastavenia vyhodnocovania: mení premenné výpočtu, páry a formácie commanderov (platí pre všetkých) a vidí pri tom marche a skóre schválených hráčov.',
+        label: 'Nastavenia vyhodnocovania – odhad acclaimu a premenné',
+        tip: 'Nastavenia vyhodnocovania: vidí odhad acclaimu schválených hráčov a ich marche, zapisuje im power a T4, mení premenné, páry a formácie commanderov (platí pre všetkých) a zverejňuje požadovaný acclaim.',
+      },
+      evaluation_overview: {
+        short: 'Pož. acclaim',
+        label: 'Požadovaný acclaim – zverejnený prehľad',
+        tip: 'Požadovaný acclaim: vidí zverejnený požadovaný acclaim schválených hráčov, nič nemení. Power, marche ani premenné iných hráčov nevidí.',
       },
     },
     superuser: 'superadmin',
@@ -916,7 +916,7 @@ export const sk = {
           'Prihlášky na KvK – rolu (rally, garrison), typ jednotiek, commanderov a ich skilly, naklikanú výbavu, formáciu a inscriptions, bonusy armamentov a poznámku.',
           'Marche na stránke Marche – typ, commanderov a ich skilly, bonusy armamentov a naklikanú výbavu, formáciu a inscriptions.',
           'Screenshoty prihlášok a marchov už neukladáme – staršie sme zmazali, zo záloh zmiznú do 8 týždňov.',
-          'Aktuálnu power, ak ju zapíšeš na stránke Môj účet. Pri vyhodnocovaní KvK ju môže zapísať aj správca (alebo vedenie, ktorému to povolí), spolu s dosiahnutým acclaimom a tým, či máš iba T4 jednotky.',
+          'Aktuálnu power, ak ju zapíšeš na stránke Môj účet. Pri vyhodnocovaní KvK ju môže zapísať aj správca (alebo vedenie, ktorému to povolí), spolu s tým, či máš iba T4 jednotky.',
         ],
       },
       {
@@ -928,7 +928,7 @@ export const sk = {
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
-          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power, acclaim a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet.',
+          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Keď vedenie zverejní požadovaný acclaim, hráči, ktorým to správca povolí, uvidia pri schválených hráčoch meno, avatar, počet marchov a požadovaný acclaim – power ani marche nie.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

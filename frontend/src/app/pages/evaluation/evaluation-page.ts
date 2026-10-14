@@ -21,97 +21,117 @@ import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { PageHeader } from '../../shared/page-header';
 import { EvaluationApi, RecordChange } from './evaluation-api';
+import { Overview, overviewChanges, overviewRows } from './overview';
+import { EvalOverviewTab } from './overview-tab';
 import { EvalResultsTab } from './results-tab';
 import { EvalPlayer, evaluate } from './scoring';
 import { EvalSettings, normalizeSettings, toSave } from './settings';
 import { EvalSettingsTab } from './settings-tab';
 import { EVAL_TEXTS } from './texts';
 
-type Tab = 'settings' | 'results';
-/** ?tab= of the variables (the table has no query) */
-const SETTINGS_QUERY = 'premenne';
+type Tab = 'settings' | 'results' | 'overview';
+/** ?tab= of the variables and of the published overview (the table has no query) */
+const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null, overview: 'prehlad' };
 
 /**
  * /vyhodnocovanie – the KvK evaluation of the superadmin (Gether 13. 10. 2026: the spreadsheet "KVK Requirements" on
  * the web, better). "Premenné" edits the variables, "Odhad acclaimu" shows what each player should reach from the
  * marches they clicked together; a changed variable counts in the table at once, "Uložiť" keeps it. Power is optional
  * (not asked from the players yet): when the superadmin writes it down, the marches it asks for and the excess count.
- * In the account menu of the superadmin and the players the superadmin lets in (Player.evaluator – they see approved
- * players only); a prerendered shell, not indexed, not in the sitemap.
+ * "Požadovaný acclaim" (Gether 14. 10. 2026) is what an evaluator published from the table: a plain overview, the only
+ * tab of a player with the overview switch. In the account menu of the superadmin and the players the superadmin lets
+ * in (Player.evaluation_settings, Player.evaluation_overview – they see approved players only); a prerendered shell,
+ * not indexed, not in the sitemap.
  * Unsaved Premenné are not lost by leaving (14. 10. 2026): a link or back asks first (leave-guard.ts), closing or
  * reloading the tab gets the browser's own question – so does the full page load of a newer build (core/site-update.ts).
  */
 @Component({
   selector: 'app-evaluation-page',
-  imports: [PageHeader, EvalSettingsTab, EvalResultsTab],
+  imports: [PageHeader, EvalSettingsTab, EvalResultsTab, EvalOverviewTab],
   template: `
     @let x = texts();
-    <app-page-header [crumbs]="crumbs()" [eyebrow]="x.eyebrow" [title]="x.title" [intro]="x.intro" />
+    <app-page-header [crumbs]="crumbs()" [eyebrow]="x.eyebrow" [title]="x.title" [intro]="canEdit() || !allowed() ? x.intro : x.introOverview" />
 
     <div class="container content is-evaluation">
       @if (!auth.ready()) {
         <div class="placeholder" aria-hidden="true"></div>
       } @else if (!allowed()) {
         <p class="state">{{ x.onlySuperuser }}</p>
-      } @else if (data.error()) {
-        <p class="state">{{ x.loadError }}</p>
-      } @else if (data.hasValue()) {
-        @if (canTable() && canSettings()) {
+      } @else {
+        @if (canEdit()) {
           <div class="segmented ev-tabs" role="group" [attr.aria-label]="x.title">
             <button type="button" [attr.aria-pressed]="tab() === 'settings'" (click)="showTab('settings')">
               {{ x.tabs.settings }}@if (dirty()) {<span class="ev-dot" aria-hidden="true"></span>}
             </button>
             <button type="button" [attr.aria-pressed]="tab() === 'results'" (click)="showTab('results')">{{ x.tabs.results }}</button>
+            <button type="button" [attr.aria-pressed]="tab() === 'overview'" (click)="showTab('overview')">{{ x.tabs.overview }}</button>
           </div>
         }
-        @if (armory.failed()) {
-          <p class="notice notice--error">{{ x.armoryError }}</p>
-        }
-        @if (tab() === 'settings') {
-          <app-eval-settings
-            [(settings)]="draft"
-            [evaluation]="evaluation()"
-            [players]="players()"
-            [commanders]="commanderNames()"
-            [armory]="armory.index()"
-            [texts]="x"
-          />
-          <div class="ev-actions" role="group" [attr.aria-label]="x.tabs.settings">
-            <p class="ev-actions__state" role="status">
-              @if (failed()) {
-                <span class="is-error">{{ stalePairs() ? x.stalePairs : unknownNames().length ? x.unknownCommanders.replace('{names}', unknownNames().join(', ')) : x.settingsFailed }}</span>
-              } @else if (dirty()) {
-                {{ x.dirty }}
-              } @else if (savedAt(); as at) {
-                {{ x.savedAt.replace('{date}', at) }}
-              } @else {
-                {{ x.neverSaved }}
-              }
-            </p>
-            <button type="button" class="pill-btn" [disabled]="!dirty() || saving()" (click)="save()">
-              {{ saving() ? x.saving : x.save }}
-            </button>
-            <button type="button" class="pill-btn pill-btn--quiet" [disabled]="!dirty() || saving()" (click)="discard()">
-              {{ x.discard }}
-            </button>
-            <button type="button" class="pill-btn pill-btn--quiet" [disabled]="saving()" (click)="defaults()">{{ x.defaults }}</button>
-          </div>
+        @if (tab() === 'overview') {
+          @if (overview.error()) {
+            <p class="state">{{ x.loadError }}</p>
+          } @else if (overview.hasValue()) {
+            <app-eval-overview [overview]="overview.value()" [texts]="x" />
+          } @else {
+            <div class="placeholder" aria-hidden="true"></div>
+          }
+        } @else if (data.error()) {
+          <p class="state">{{ x.loadError }}</p>
+        } @else if (data.hasValue()) {
+          @if (armory.failed()) {
+            <p class="notice notice--error">{{ x.armoryError }}</p>
+          }
+          @if (tab() === 'settings') {
+            <app-eval-settings
+              [(settings)]="draft"
+              [evaluation]="evaluation()"
+              [players]="players()"
+              [commanders]="commanderNames()"
+              [armory]="armory.index()"
+              [texts]="x"
+            />
+            <div class="ev-actions" role="group" [attr.aria-label]="x.tabs.settings">
+              <p class="ev-actions__state" role="status">
+                @if (failed()) {
+                  <span class="is-error">{{ stalePairs() ? x.stalePairs : unknownNames().length ? x.unknownCommanders.replace('{names}', unknownNames().join(', ')) : x.settingsFailed }}</span>
+                } @else if (dirty()) {
+                  {{ x.dirty }}
+                } @else if (savedAt(); as at) {
+                  {{ x.savedAt.replace('{date}', at) }}
+                } @else {
+                  {{ x.neverSaved }}
+                }
+              </p>
+              <button type="button" class="pill-btn" [disabled]="!dirty() || saving()" (click)="save()">
+                {{ saving() ? x.saving : x.save }}
+              </button>
+              <button type="button" class="pill-btn pill-btn--quiet" [disabled]="!dirty() || saving()" (click)="discard()">
+                {{ x.discard }}
+              </button>
+              <button type="button" class="pill-btn pill-btn--quiet" [disabled]="saving()" (click)="defaults()">{{ x.defaults }}</button>
+            </div>
+          } @else {
+            <app-eval-results
+              [evaluation]="evaluation()"
+              [settings]="draft()"
+              [armory]="armory.index()"
+              [texts]="x"
+              [dirty]="dirty()"
+              [superuser]="superuser()"
+              [failed]="recordFailed()"
+              [(usePower)]="usePower"
+              (record)="saveRecord($event.id, $event.change)"
+              (records)="saveRecords($event)"
+              [publishedAt]="published().published_at"
+              [changes]="changes()"
+              [publishing]="publishing()"
+              [publishFailed]="publishFailed()"
+              (publish)="publish()"
+            />
+          }
         } @else {
-          <app-eval-results
-            [evaluation]="evaluation()"
-            [settings]="draft()"
-            [armory]="armory.index()"
-            [texts]="x"
-            [dirty]="dirty()"
-            [superuser]="superuser()"
-            [failed]="recordFailed()"
-            [(usePower)]="usePower"
-            (record)="saveRecord($event.id, $event.change)"
-            (records)="saveRecords($event)"
-          />
+          <div class="placeholder" aria-hidden="true"></div>
         }
-      } @else {
-        <div class="placeholder" aria-hidden="true"></div>
       }
     </div>
   `,
@@ -128,12 +148,11 @@ export class EvaluationPage {
 
   protected readonly superuser = computed(() => !!this.auth.user()?.is_superuser);
   /** the superadmin and the players let in with the switches in Hráči on /ucet (Gether 13. and 14. 10. 2026): the
-   * table (the players' power, acclaim, T4) and the variables are two switches – each opens its own tab */
-  protected readonly canTable = computed(() => this.superuser() || !!this.auth.user()?.evaluator);
-  protected readonly canSettings = computed(() => this.superuser() || !!this.auth.user()?.evaluation_settings);
-  protected readonly allowed = computed(() => this.canTable() || this.canSettings());
-  protected readonly data = this.api.data(() => this.allowed());
-  private readonly commanders = httpResource<MarchCommander[]>(() => (this.allowed() ? marchCommandersUrl : undefined));
+   * estimate with the variables (all three tabs), or only the published required acclaim */
+  protected readonly canEdit = computed(() => this.superuser() || !!this.auth.user()?.evaluation_settings);
+  protected readonly allowed = computed(() => this.canEdit() || !!this.auth.user()?.evaluation_overview);
+  protected readonly data = this.api.data(() => this.canEdit());
+  private readonly commanders = httpResource<MarchCommander[]>(() => (this.canEdit() ? marchCommandersUrl : undefined));
   protected readonly commanderNames = computed(() => (this.commanders.hasValue() ? this.commanders.value().map((c) => c.name) : []));
 
   /** the players as loaded, with the notes the superadmin changed since */
@@ -159,16 +178,29 @@ export class EvaluationPage {
   /** the pair table or the formations were changed elsewhere meanwhile – the save was refused */
   protected readonly stalePairs = signal(false);
   protected readonly recordFailed = signal(false);
-  /** ?tab=premenne opens the variables, so a reload or a shared link shows them; no query = the table */
+  /** ?tab=premenne opens the variables, ?tab=prehlad the published overview, so a reload or a shared link shows
+   * them; no query = the table */
   readonly query = input<string>(undefined, { alias: 'tab' });
-  /** the tab in the address, or the only one allowed (an unknown value or a tab without its switch: the allowed one) */
-  protected readonly tab = computed<Tab>(() =>
-    !this.canTable() ? 'settings' : !this.canSettings() ? 'results' : this.query() === SETTINGS_QUERY ? 'settings' : 'results',
-  );
+  /** the tab in the address; an unknown value = the table, a player with the overview switch only = the overview */
+  protected readonly tab = computed<Tab>(() => {
+    if (!this.canEdit()) return 'overview';
+    const query = this.query();
+    return query === QUERY.settings ? 'settings' : query === QUERY.overview ? 'overview' : 'results';
+  });
+  /** the overview as the players see it – loaded each time its tab opens */
+  protected readonly overview = this.api.overview(() => this.allowed() && this.tab() === 'overview');
 
   /** "Rátať s power": off = the estimate from the marches only (a view switch, not saved) */
   protected readonly usePower = signal(true);
   protected readonly evaluation = computed(() => evaluate(this.draft(), this.players(), this.armory.index(), this.usePower()));
+
+  /** what is published now and how many players would see another value after publishing again */
+  protected readonly published = linkedSignal<Overview>(() =>
+    this.data.hasValue() ? this.data.value().overview : { published_at: null, rows: [] },
+  );
+  protected readonly changes = computed(() => overviewChanges(this.published().rows, overviewRows(this.evaluation())));
+  protected readonly publishing = signal(false);
+  protected readonly publishFailed = signal(false);
 
   protected readonly savedAt = computed(() => {
     const iso = this.savedIso();
@@ -220,7 +252,7 @@ export class EvaluationPage {
 
   /** the tab in the address without a new history entry – back leaves the page, not the tab */
   protected showTab(tab: Tab): void {
-    const queryParams = { tab: tab === 'settings' ? SETTINGS_QUERY : null };
+    const queryParams = { tab: QUERY[tab] };
     void this.router.navigate([], { queryParams, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
@@ -269,6 +301,20 @@ export class EvaluationPage {
     this.draft.set(normalizeSettings(null, this.draft().pairs.rows, this.draft().formations.byCommander));
   }
 
+  /** "Zverejniť": the required acclaim as the table counts it now (not with unsaved variables – the button waits) */
+  protected async publish(): Promise<void> {
+    if (this.dirty()) return;
+    this.publishing.set(true);
+    this.publishFailed.set(false);
+    try {
+      this.published.set(await this.api.publish(overviewRows(this.evaluation())));
+    } catch {
+      this.publishFailed.set(true);
+    } finally {
+      this.publishing.set(false);
+    }
+  }
+
   /** many players at once (the power pasted for everyone): saved first, then shown */
   protected async saveRecords(list: (RecordChange & { id: number })[]): Promise<void> {
     this.recordFailed.set(false);
@@ -278,7 +324,7 @@ export class EvaluationPage {
       this.players.update((all) =>
         all.map((p) => {
           const s = saved.get(p.id);
-          return s ? { ...p, power: s.power ?? null, acclaim: s.acclaim ?? null, t4: !!s.t4, power_bonus: s.power_bonus ?? 0 } : p;
+          return s ? { ...p, power: s.power ?? null, t4: !!s.t4, power_bonus: s.power_bonus ?? 0 } : p;
         }),
       );
     } catch {
@@ -294,9 +340,9 @@ export class EvaluationPage {
     this.recordFailed.set(false);
     try {
       const saved = await this.api.saveRecord(id, change);
-      put({ power: saved.power, acclaim: saved.acclaim, t4: saved.t4, power_bonus: saved.power_bonus });
+      put({ power: saved.power, t4: saved.t4, power_bonus: saved.power_bonus });
     } catch {
-      if (before) put({ power: before.power, acclaim: before.acclaim, t4: before.t4, power_bonus: before.power_bonus });
+      if (before) put({ power: before.power, t4: before.t4, power_bonus: before.power_bonus });
       this.recordFailed.set(true);
     }
   }

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, model, output, signal } from '@angular/core';
 import { ArmoryIndex } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
+import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { marchIcon } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
@@ -11,12 +12,14 @@ import { EvalTexts } from './texts';
 import { EvalTip } from './tip';
 
 type Show = 'marches' | 'approved' | 'all';
-type Sort = 'required' | 'progress' | 'name';
+type Sort = 'required' | 'name';
 
 /**
  * "Odhad acclaimu" of /vyhodnocovanie: one row per player – the counted marches, the acclaim they should
- * reach, what the superadmin wrote down (acclaim reached, power, T4) and the progress; a row opens the computation
- * march by march. CSV for a spreadsheet or Discord.
+ * reach, what the superadmin wrote down (power, T4); a row opens the computation march by march. CSV for a
+ * spreadsheet or Discord; "Zverejniť" publishes the required acclaim for the players with the overview switch.
+ * The acclaim reached is not a column any more, nor the progress and the fund counted from it (Gether 14. 10. 2026:
+ * "aktuálny acclaim dajme preč").
  */
 @Component({
   selector: 'app-eval-results',
@@ -42,6 +45,12 @@ export class EvalResultsTab {
   readonly record = output<{ id: number; change: RecordChange }>();
   /** the power of many players pasted at once */
   readonly records = output<(RecordChange & { id: number })[]>();
+  /** when the required acclaim was published (null = never), how many players would see another value now */
+  readonly publishedAt = input<string | null>(null);
+  readonly changes = input(0);
+  readonly publishing = input(false);
+  readonly publishFailed = input(false);
+  readonly publish = output<void>();
 
   private readonly i18n = inject(I18n);
   protected readonly icon = marchIcon;
@@ -52,7 +61,7 @@ export class EvalResultsTab {
   protected readonly shows = computed<Show[]>(() =>
     this.superuser() ? ['marches', 'approved', 'all'] : ['marches', 'approved'],
   );
-  protected readonly sorts: Sort[] = ['required', 'progress', 'name'];
+  protected readonly sorts: Sort[] = ['required', 'name'];
 
   protected readonly rows = computed(() => {
     const query = fold(this.search());
@@ -65,7 +74,6 @@ export class EvalResultsTab {
     const name = (r: PlayerEval) => r.player.ingame_name || r.player.name;
     const sort = this.sort();
     return rows.sort((a, b) => {
-      if (sort === 'progress') return (a.progress ?? Infinity) - (b.progress ?? Infinity);
       if (sort === 'name') return name(a).localeCompare(name(b));
       return b.acclaim.required - a.acclaim.required;
     });
@@ -105,35 +113,25 @@ export class EvalResultsTab {
     return new Intl.NumberFormat(this.i18n.locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
   }
 
-  protected compact(n: number): string {
-    return new Intl.NumberFormat(this.i18n.locale(), { notation: 'compact', maximumFractionDigits: 1 }).format(n);
-  }
-
-  protected percent(n: number): string {
-    return new Intl.NumberFormat(this.i18n.locale(), { style: 'percent', maximumFractionDigits: 0 }).format(n);
-  }
-
   protected name(r: PlayerEval): string {
     return r.player.ingame_name || r.player.name;
   }
 
-  /** the progress and the fund are not columns any more (Gether 14. 10. 2026: "progres a FBP daj preč") – the detail */
-  protected progressText(r: PlayerEval): string | null {
-    if (r.progress === null) return null;
-    const d = this.texts().detail;
-    const progress = d.progress.replace('{p}', this.percent(r.progress));
-    if (!r.fund) return progress;
-    const f = this.settings().fund;
-    const all = f.food + f.wood + f.stone + f.gold || 1;
-    const part = (share: number) => this.compact(((r.fund ?? 0) * share) / all);
-    const fund = d.fund
-      .replace('{total}', this.compact(r.fund))
-      .replace('{food}', part(f.food))
-      .replace('{wood}', part(f.wood))
-      .replace('{stone}', part(f.stone))
-      .replace('{gold}', part(f.gold));
-    return `${progress} · ${fund}`;
-  }
+  /** the state next to "Zverejniť": when, and whether the players see what the table counts now */
+  protected readonly publishState = computed(() => {
+    const p = this.texts().publish;
+    const at = this.publishedAt();
+    if (!at) return p.never;
+    const date = new Intl.DateTimeFormat(this.i18n.locale(), {
+      day: 'numeric',
+      month: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: KINGDOM_ZONE,
+    }).format(new Date(at));
+    const n = this.changes();
+    return `${p.at.replace('{date}', date)} ${n ? p.changed.replace('{n}', String(n)) : p.same}`;
+  });
 
   protected missingText(r: PlayerEval): string {
     return this.texts()
@@ -225,7 +223,7 @@ export class EvalResultsTab {
     this.opened.set(next);
   }
 
-  /** a whole number (acclaim) or one decimal (power); empty = not written down */
+  /** a whole number or one decimal (power); empty = not written down */
   private parse(box: HTMLInputElement, decimals: number): number | null | undefined {
     const text = box.value.replace(/\s/g, '').replace(',', '.');
     if (!text) return null;
@@ -233,13 +231,6 @@ export class EvalResultsTab {
     if (!Number.isFinite(value) || value < 0) return undefined;
     const factor = 10 ** decimals;
     return Math.round(value * factor) / factor;
-  }
-
-  protected setAcclaim(r: PlayerEval, event: Event): void {
-    const box = event.target as HTMLInputElement;
-    const value = this.parse(box, 0);
-    if (value === undefined) box.value = r.player.acclaim === null ? '' : String(r.player.acclaim);
-    else if (value !== r.player.acclaim) this.record.emit({ id: r.player.id, change: { acclaim: value } });
   }
 
   protected setPower(r: PlayerEval, event: Event): void {
@@ -266,9 +257,8 @@ export class EvalResultsTab {
   /** the rows shown as CSV (semicolons and a BOM: a Slovak or Czech Excel opens it right away) */
   protected download(): void {
     const c = this.texts().columns;
-    // the columns of the table: no score (Slim 13. 10. 2026: "skóre by som dal z tabuľky preč"), no progress and fund
-    // (Gether 14. 10. 2026)
-    const head = [c.player, 'Discord', c.marches, c.required, c.acclaim, c.power, c.recommended, c.t4];
+    // the columns of the table: no score (Slim 13. 10. 2026: "skóre by som dal z tabuľky preč")
+    const head = [c.player, 'Discord', c.marches, c.required, c.power, c.recommended, c.t4];
     const cell = (v: string | number | null) => {
       const text = v === null ? '' : typeof v === 'number' ? String(Math.round(v * 100) / 100).replace('.', ',') : v;
       return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -279,7 +269,6 @@ export class EvalResultsTab {
         r.player.name,
         r.counted + (r.missing ? ` + ${r.missing}` : ''),
         r.acclaim.required,
-        r.player.acclaim,
         r.player.power,
         r.ownLimit,
         r.player.t4 ? 'T4' : '',

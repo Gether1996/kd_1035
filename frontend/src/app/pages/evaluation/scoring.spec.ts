@@ -63,7 +63,6 @@ const player = (id: number, marches: March[], change: Partial<EvalPlayer> = {}):
   approved: true,
   marches,
   power: null,
-  acclaim: null,
   t4: false,
   power_bonus: 0,
   ...change,
@@ -208,7 +207,7 @@ describe('evaluation scoring', () => {
     const good = (id: number, kind: March['kind'] = 'archer') =>
       march({ id, kind, primary: 'Ivan IV', secondary: 'Achilles', attack: 10.1, defense: 9.5, health: 7, damage: 3.3, gold: 1, blue: 1, white: 2, gear: gear('gold', false, 0) });
     const marches = [good(1), good(2), good(3, 'garrison')];
-    const { rows, perPoint } = evaluate(settings, [player(1, marches, { power: 100, acclaim: 2_000_000 })], INDEX);
+    const { rows, perPoint } = evaluate(settings, [player(1, marches, { power: 100 })], INDEX);
     const row = rows[0];
     expect(perPoint).toBeCloseTo(5_600_000 / 286.53, 6);
     // the garrison does not count
@@ -226,8 +225,6 @@ describe('evaluation scoring', () => {
     expect(row.acclaim.required).toBe(Math.round((row.score * perPoint + row.excess * 32_000) / 1000) * 1000);
     // with only the two marches the power should be at most this
     expect(row.ownLimit).toBeLessThan(73);
-    expect(row.progress).toBeCloseTo(2_000_000 / row.acclaim.required, 9);
-    expect(row.fund).toBeCloseTo(1_500_000_000 * (1 - row.progress!), 0);
   });
 
   it('without power: no missing marches; the minimum, the power floor and T4', () => {
@@ -291,7 +288,6 @@ describe('evaluation scoring', () => {
     expect(s.marches.kinds).toEqual(['cavalry']);
     expect(s.marches.max).toBe(9);
     expect(s.power.table.length).toBe(9);
-    expect(s.fund.max.length).toBe(9);
     expect(withPairs({ marches: { max: 12 } }).marches.max).toBe(10);
     // a pair written twice: the first row; the best first
     expect(s.pairs).toEqual({ rows: [['Ivan IV', 'Achilles', 116], ['Attila', 'Achilles', 92]], minimum: 0.3, curve: 1.5 });
@@ -360,11 +356,10 @@ describe('evaluation scoring', () => {
     ]);
   });
 
-  it('goes on with the power table and the fund past 5 marches', () => {
-    const { table, fund } = rowsFor(7, DEFAULT_SETTINGS.power.table, DEFAULT_SETTINGS.fund.max);
+  it('goes on with the power table past 5 marches', () => {
+    const table = rowsFor(7, DEFAULT_SETTINGS.power.table);
     expect(table[5]).toEqual({ min: 105, max: 122, scoreMin: 288.17, scoreMax: 288.17 + (288.17 - 141.36) });
     expect(table[6].min).toBe(122);
-    expect(fund.slice(5)).toEqual([1_800_000_000, 2_100_000_000]);
     // 7 marches counted: 125 M of power asks for all seven
     const settings = withPairs({ marches: { max: 7 } });
     expect(expectedMarches(settings, 125)).toBe(7);

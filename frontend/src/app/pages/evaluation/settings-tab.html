@@ -564,24 +564,4 @@
     </div>
   </details>
 
-  <!-- the fund -->
-  <details class="ev-card" [open]="isOpen('fund')" (toggle)="toggled('fund', $event)">
-    <summary class="ev-card__summary">
-      <h2 class="ev-card__title" id="ev-s-fund">{{ s.fund.title }}</h2>
-      <svg class="ev-card__chevron" appIcon="chevron-down"></svg>
-    </summary>
-    <div class="ev-card__body">
-      <p class="ev-card__hint">{{ s.fund.hint }}</p>
-    <div class="ev-grid">
-      @for (n of counts(); track n) {
-        <ng-container
-          *ngTemplateOutlet="num; context: { $implicit: { path: ['fund', 'max', n - 1], label: fundLabel(n), tip: n === 1 ? tip('fund.max') : '' } }"
-        />
-      }
-      @for (f of fs.fund; track f.label) {
-        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
-      }
-    </div>
-    </div>
-  </details>
 </div>

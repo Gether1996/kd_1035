@@ -72,6 +72,25 @@
   </div>
 </dl>
 
+<!-- "Požadovaný acclaim" for the players: what this table counts, published (Gether 14. 10. 2026) -->
+<div class="ev-publish" role="group" [attr.aria-label]="x.publish.label">
+  <p class="ev-publish__state" role="status">
+    @if (publishFailed()) {
+      <span class="is-error">{{ x.publish.failed }}</span>
+    } @else if (dirty()) {
+      {{ x.publish.saveFirst }}
+    } @else {
+      {{ publishState() }}
+    }
+  </p>
+  <span class="ev-publish__actions">
+    <button type="button" class="pill-btn ev-small" [disabled]="dirty() || publishing()" (click)="publish.emit()">
+      <svg appIcon="send"></svg> {{ publishing() ? x.publish.busy : x.publish.button }}
+    </button>
+    <app-eval-tip [text]="tip('results.publish')" [label]="tipLabel(x.publish.button)" />
+  </span>
+</div>
+
 @if (!usePower()) {
   <p class="ev-note ev-note--gold">{{ x.powerOff }}</p>
 } @else if (noPower()) {
@@ -90,7 +109,6 @@
         <th scope="col">{{ c.player }}</th>
         <th scope="col" class="ev-num">{{ c.marches }} <app-eval-tip [text]="tip('results.marches')" [label]="tipLabel(c.marches)" /></th>
         <th scope="col" class="ev-num">{{ c.required }} <app-eval-tip [text]="tip('results.required')" [label]="tipLabel(c.required)" /></th>
-        <th scope="col">{{ c.acclaim }} <app-eval-tip [text]="tip('results.acclaim')" [label]="tipLabel(c.acclaim)" /></th>
         <th scope="col" class="ev-col-power">{{ c.power }} <app-eval-tip [text]="tip('results.power')" [label]="tipLabel(c.power)" /></th>
         <th scope="col" class="ev-col-rec">
           <abbr [title]="c.recommended">{{ c.recommendedShort }}</abbr>
@@ -134,18 +152,6 @@
             <span class="ev-label">{{ c.required }}</span>
             {{ int(r.acclaim.required) }}
           </td>
-          <td>
-            <span class="ev-label" aria-hidden="true">{{ c.acclaim }}</span>
-            <input
-              class="input ev-input ev-input--cell ev-input--acclaim"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              [attr.aria-label]="c.acclaim + ': ' + who"
-              [value]="r.player.acclaim ?? ''"
-              (change)="setAcclaim(r, $event)"
-            />
-          </td>
           <td class="ev-col-power">
             <span class="ev-label" aria-hidden="true">{{ c.power }}</span>
             <input
@@ -181,7 +187,7 @@
         </tr>
         @if (open) {
           <tr class="ev-detail-row" [id]="'ev-detail-' + r.player.id">
-            <td colspan="9">
+            <td colspan="8">
               <div class="ev-detail">
                 <!-- how the acclaim adds up -->
                 <p class="ev-detail__sum">
@@ -206,9 +212,6 @@
                 }
                 @if (limitText(r); as limit) {
                   <p class="ev-detail__line" [class.is-over]="over(r)">{{ limit }}</p>
-                }
-                @if (progressText(r); as progress) {
-                  <p class="ev-detail__line">{{ progress }}</p>
                 }
                 <div class="field ev-detail__bonus">
                   <label class="ev-field__label" [for]="'ev-bonus-' + r.player.id">{{ d.bonus }}</label>
@@ -277,7 +280,7 @@
         }
       } @empty {
         <tr>
-          <td colspan="9" class="ev-empty">{{ x.empty }}</td>
+          <td colspan="8" class="ev-empty">{{ x.empty }}</td>
         </tr>
       }
     </tbody>

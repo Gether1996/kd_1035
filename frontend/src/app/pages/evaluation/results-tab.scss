@@ -5,10 +5,6 @@
   display: block;
 }
 
-.ev-input--acclaim {
-  width: 116px;
-}
-
 .ev-input--power {
   width: 84px;
 }
@@ -72,6 +68,36 @@
 
 .ev-note--gold {
   color: var(--gold-300);
+}
+
+// "Zverejniť": what the players with the overview switch see
+.ev-publish {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+}
+
+.ev-publish__state {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-dim);
+
+  .is-error {
+    color: var(--red-300);
+  }
+}
+
+.ev-publish__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .ev-note--error {
@@ -387,6 +413,8 @@
       align-items: center;
       justify-items: start;
       gap: 5px;
+      // not the 1 % of a table column (Power, Odp. power) – the field fills its part of the card
+      width: auto;
       padding: 0;
       border: 0;
       text-align: left !important;
@@ -430,7 +458,6 @@
     display: block;
   }
 
-  .ev-input--acclaim,
   .ev-input--power {
     width: 100%;
     min-width: 0;
@@ -482,6 +509,6 @@
 
 @container ev-results (min-width: 680px) and (max-width: 819px) {
   .ev-row {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }

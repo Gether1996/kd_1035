@@ -110,15 +110,6 @@ export interface EvalSettings {
     /** the armaments of a march in another formation count × this */
     wrong: number;
   };
-  fund: {
-    /** the most a player pays at 0 % of the acclaim, by the number of marches (1–5) */
-    max: number[];
-    /** the shares of food, wood, stone and gold (spreadsheet: 2/7, 2/7, 1/7, 2/7) */
-    food: number;
-    wood: number;
-    stone: number;
-    gold: number;
-  };
 }
 
 export type MarchOrder = 'position' | 'best';
@@ -255,31 +246,25 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     curve: 1.5,
   },
   formations: { byCommander: {}, wrong: 0.8 },
-  fund: { max: [400e6, 600e6, 900e6, 1200e6, 1500e6], food: 2, wood: 2, stone: 1, gold: 2 },
 };
 
 // ---------------------------------------------------------------- more marches than the spreadsheet's 5
 
 /**
- * The power table and the fund for 1 … count marches. Rows the spreadsheet does not have (6 and more marches) go on
- * from the last two: the next power range starts where the last one ends and is as wide, the same for the score
- * range and the fund – a starting point, every value is editable.
+ * The power table for 1 … count marches. Rows the spreadsheet does not have (6 and more marches) go on from the
+ * last one: the next power range starts where the last one ends and is as wide, the same for the score range – a
+ * starting point, every value is editable. (The fund of the battle support went with the acclaim reached, Gether
+ * 14. 10. 2026.)
  */
-export function rowsFor(count: number, table: PowerRow[], fund: number[]): { table: PowerRow[]; fund: number[] } {
+export function rowsFor(count: number, table: PowerRow[]): PowerRow[] {
   const rows = table.slice(0, count);
-  const money = fund.slice(0, count);
   while (rows.length < count) {
     const last = rows[rows.length - 1] ?? { min: 63, max: 66, scoreMin: 0, scoreMax: 40 };
     const width = Math.max(1, last.max - last.min);
     const scoreWidth = Math.max(1, last.scoreMax - last.scoreMin);
     rows.push({ min: last.max, max: last.max + width, scoreMin: last.scoreMax, scoreMax: last.scoreMax + scoreWidth });
   }
-  while (money.length < count) {
-    const last = money[money.length - 1] ?? 0;
-    const step = money.length > 1 ? last - money[money.length - 2] : last;
-    money.push(Math.max(0, last + step));
-  }
-  return { table: rows, fund: money };
+  return rows;
 }
 
 // ---------------------------------------------------------------- normalising what the server keeps
@@ -316,20 +301,16 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
   const armaments = obj(raw['armaments']);
   const pairs = obj(raw['pairs']);
   const formations = obj(raw['formations']);
-  const fund = obj(raw['fund']);
   const table = Array.isArray(power['table']) ? power['table'] : [];
   const tiers = Array.isArray(equipment['tiers']) ? equipment['tiers'] : [];
   const kinds = Array.isArray(marches['kinds']) ? marches['kinds'] : d.marches.kinds;
   const rows = Array.isArray(pairRows) ? pairRows : [];
   const player = acclaim['player'];
   const max = Math.round(num(marches['max'], d.marches.max, 1, MARCHES_LIMIT));
-  // the saved rows of the power table and the fund, as many as the marches counted
-  const defaults = rowsFor(max, d.power.table, d.fund.max);
-  const funds = Array.isArray(fund['max']) ? fund['max'] : [];
+  // the saved rows of the power table, as many as the marches counted
   const sized = rowsFor(
     max,
-    defaults.table.map((row, i) => group(table[i], row)),
-    defaults.fund.map((value, i) => num(funds[i], value, 0)),
+    rowsFor(max, d.power.table).map((row, i) => group(table[i], row)),
   );
   const result: EvalSettings = {
     acclaim: {
@@ -415,13 +396,8 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
       ),
       wrong: num(formations['wrong'], d.formations.wrong, 0, 1),
     },
-    fund: {
-      max: [],
-      ...group(fund, { food: d.fund.food, wood: d.fund.wood, stone: d.fund.stone, gold: d.fund.gold }),
-    },
   };
-  result.power.table = sized.table;
-  result.fund.max = sized.fund;
+  result.power.table = sized;
   return result;
 }
 

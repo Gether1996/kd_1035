@@ -124,7 +124,7 @@ export interface SignupForm {
 }
 
 /** the switches of a player in Hráči on /ucet */
-export type PlayerFlag = 'reviewer' | 'approved' | 'evaluator' | 'evaluation_settings';
+export type PlayerFlag = 'reviewer' | 'approved' | 'evaluation_settings' | 'evaluation_overview';
 
 export interface ReviewerRow {
   id: number;
@@ -135,9 +135,10 @@ export interface ReviewerRow {
   reviewer: boolean;
   /** adds marches and KvK sign-ups */
   approved: boolean;
-  /** /vyhodnocovanie (Gether 13. 10. 2026): its table – and its variables, a switch of their own (14. 10. 2026) */
-  evaluator: boolean;
+  /** /vyhodnocovanie (Gether 13. and 14. 10. 2026): the estimate with the variables, or only the published required
+   * acclaim */
   evaluation_settings: boolean;
+  evaluation_overview: boolean;
   superuser: boolean;
   /** the first sign-in */
   created_at: string;

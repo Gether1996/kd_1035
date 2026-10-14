@@ -57,7 +57,7 @@ function readOpen(): Set<string> {
 
 /**
  * "Premenné" of /vyhodnocovanie: every variable of the evaluation in sections (acclaim, power, marches, armaments,
- * the inscription tier list, equipment, commander pairs, the commanders' formations, the fund), each with an
+ * the inscription tier list, equipment, commander pairs, the commanders' formations), each with an
  * explanation behind an "i". The sections are closed until opened (Gether 14. 10. 2026: "nech si admin otvorí, čo
  * potrebuje"); the browser remembers which were open. A change
  * goes into the draft at once (on change, not on every key – a number half typed must not jump); the page saves it
@@ -87,8 +87,6 @@ export class EvalSettingsTab {
   protected readonly rarities = RARITIES;
   protected readonly slots = SLOTS;
   protected readonly inscriptionTiers = INSCRIPTION_TIERS;
-  /** 1 … the marches counted: the rows of the fund */
-  protected readonly counts = computed(() => Array.from({ length: this.settings().marches.max }, (_, i) => i + 1));
   protected readonly limit = MARCHES_LIMIT;
   protected readonly orders: MarchOrder[] = ['position', 'best'];
 
@@ -174,7 +172,6 @@ export class EvalSettingsTab {
       equipment: [f(['equipment', 'statsWeight'], s.equipment.statsWeight), f(['equipment', 'statsMax'], s.equipment.statsMax)],
       pairs: (['minimum', 'curve'] as const).map((key) => f(['pairs', key], s.pairs[key])),
       formations: f(['formations', 'wrong'], s.formations.wrong),
-      fund: (['food', 'wood', 'stone', 'gold'] as const).map((key) => f(['fund', key], s.fund[key])),
     };
   });
 
@@ -204,7 +201,7 @@ export class EvalSettingsTab {
     });
   }
 
-  /** the marches counted: the power table and the fund grow or shrink with it */
+  /** the marches counted: the power table grows or shrinks with it */
   protected setMax(event: Event): void {
     const box = event.target as HTMLInputElement;
     const value = Math.round(Number(box.value));
@@ -214,9 +211,7 @@ export class EvalSettingsTab {
     }
     this.change((draft) => {
       draft.marches.max = value;
-      const rows = rowsFor(value, draft.power.table, draft.fund.max);
-      draft.power.table = rows.table;
-      draft.fund.max = rows.fund;
+      draft.power.table = rowsFor(value, draft.power.table);
     });
   }
 
@@ -431,9 +426,5 @@ export class EvalSettingsTab {
     return range.auto
       ? s.autoNow.replace('{min}', format(range.min)).replace('{max}', format(range.max)).replace('{n}', String(range.players))
       : s.fixedNow.replace('{n}', String(range.players));
-  }
-
-  protected fundLabel(n: number): string {
-    return this.texts().sections.fund.max.replace('{n}', String(n));
   }
 }

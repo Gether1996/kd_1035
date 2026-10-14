@@ -54,7 +54,9 @@ class EvaluationApiTests(TestCase):
         row = rows[self.player.pk]
         self.assertEqual([m['primary'] for m in row['marches']], ['Attila'])
         self.assertEqual(row['marches'][0]['primary_skills'], '5555')
-        self.assertEqual((row['power'], row['acclaim'], row['t4'], row['power_bonus']), (None, None, False, 0.0))
+        self.assertEqual((row['power'], row['t4'], row['power_bonus']), (None, False, 0.0))
+        # the acclaim reached is not written down any more (Gether 14. 10. 2026)
+        self.assertNotIn('acclaim', row)
         # the one waiting for the approval too, marked
         self.assertFalse(rows[self.newbie.pk]['approved'])
 
@@ -76,11 +78,12 @@ class EvaluationApiTests(TestCase):
     def test_notes_about_a_player(self):
         url = f'/api/evaluation/players/{self.player.pk}/'
         res = self.call('patch', url, {'power': 101.5, 'acclaim': 5600000})
-        self.assertEqual(res.json(), {'id': self.player.pk, 'power': 101.5, 'acclaim': 5600000, 't4': False, 'power_bonus': 0.0})
+        self.assertEqual(res.json(), {'id': self.player.pk, 'power': 101.5, 't4': False, 'power_bonus': 0.0})
+        self.assertIsNone(PlayerEvaluation.objects.get(player=self.player).acclaim)
         res = self.call('patch', url, {'t4': True, 'power_bonus': -6})
         self.assertEqual((res.json()['power'], res.json()['t4'], res.json()['power_bonus']), (101.5, True, -6.0))
         self.assertEqual(self.call('patch', url, {'power': None}).json()['power'], None)
-        for bad in ({}, {'power': -1}, {'power': 'x'}, {'power': 1.25}, {'acclaim': -5}, {'t4': 'yes'}, {'power_bonus': 5000}):
+        for bad in ({}, {'power': -1}, {'power': 'x'}, {'power': 1.25}, {'acclaim': 5}, {'t4': 'yes'}, {'power_bonus': 5000}):
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
         self.assertEqual(self.call('patch', '/api/evaluation/players/999999/', {'t4': True}).status_code, 404)
         # the notes go with the account
@@ -101,48 +104,98 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(self.call('patch', url, {'players': [{'id': self.player.pk, 'power': 1}]}, self.nelly).status_code, 403)
 
     def test_the_superuser_lets_players_in(self):
-        # the switch next to R4 in Hráči on /ucet
+        # the switch next to R4 in Hráči on /ucet – one for the estimate and the variables (Gether 14. 10. 2026)
         url = f'/api/kvk/reviewers/{self.player.pk}/'
-        self.assertEqual(self.call('patch', url, {'evaluator': 'yes'}).status_code, 400)
-        self.assertEqual(self.call('patch', url, {'evaluator': True}, self.nelly).status_code, 403)
-        self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluator'], False)
-        res = self.call('patch', url, {'evaluator': True})
+        self.assertEqual(self.call('patch', url, {'evaluation_settings': 'yes'}).status_code, 400)
+        self.assertEqual(self.call('patch', url, {'evaluation_settings': True}, self.nelly).status_code, 403)
+        # the old table switch is gone
+        self.assertEqual(self.call('patch', url, {'evaluator': True}).status_code, 400)
+        self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluation_settings'], False)
+        res = self.call('patch', url, {'evaluation_settings': True})
         self.assertEqual(
             res.json(),
-            {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluator': True, 'evaluation_settings': False},
+            {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': True, 'evaluation_overview': False},
         )
         rows = {p['id']: p for p in self.admin.get('/api/kvk/reviewers/').json()['players']}
-        self.assertTrue(rows[self.player.pk]['evaluator'])
-        self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluator'], True)
-        # the evaluator: the page, the variables and the notes – of approved players only
+        self.assertTrue(rows[self.player.pk]['evaluation_settings'])
+        me = self.nelly.get('/api/auth/me/').json()['user']
+        # the evaluators see the published overview too
+        self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (True, True))
+        # the page, the variables and the notes – of approved players only
         data = self.nelly.get('/api/evaluation/')
         self.assertEqual(data.status_code, 200)
         ids = {p['id'] for p in data.json()['players']}
         self.assertIn(self.player.pk, ids)
         self.assertNotIn(self.newbie.pk, ids)
-        # the table only (Gether 14. 10. 2026: two switches): the notes yes, the variables no
-        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 403)
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 200)
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 90}, self.nelly).status_code, 200)
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.newbie.pk}/', {'power': 90}, self.nelly).status_code, 404)
         bulk = {'players': [{'id': self.newbie.pk, 'power': 1}]}
         self.assertEqual(self.call('patch', '/api/evaluation/players/', bulk, self.nelly).status_code, 400)
-        # the variables only: the page and the variables, no notes – not even to read
-        self.call('patch', url, {'evaluator': False, 'evaluation_settings': True})
-        self.assertEqual(self.nelly.get('/api/auth/me/').json()['user']['evaluation_settings'], True)
-        data = self.nelly.get('/api/evaluation/')
-        self.assertEqual(data.status_code, 200)
-        me = next(p for p in data.json()['players'] if p['id'] == self.player.pk)
-        self.assertEqual((me['power'], me['acclaim'], me['t4'], me['power_bonus']), (None, None, False, 0.0))
-        self.assertEqual(len(me['marches']), 1)
-        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 200)
-        self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 80}, self.nelly).status_code, 403)
-        self.assertEqual(self.call('patch', '/api/evaluation/players/', {'players': [{'id': self.player.pk, 'power': 1}]}, self.nelly).status_code, 403)
-        # both off again: no way in
-        self.call('patch', url, {'evaluation_settings': False})
+        # the overview only: nothing of the evaluation itself
+        self.call('patch', url, {'evaluation_settings': False, 'evaluation_overview': True})
+        me = self.nelly.get('/api/auth/me/').json()['user']
+        self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (False, True))
         self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
+        self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 200)
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 2}}, self.nelly).status_code, 403)
+        self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 80}, self.nelly).status_code, 403)
+        self.assertEqual(self.call('put', '/api/evaluation/overview/', {'rows': []}, self.nelly).status_code, 403)
+        # both off again: no way in
+        self.call('patch', url, {'evaluation_overview': False})
+        self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
+        self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 403)
         # the superuser counts as both
         me = self.admin.get('/api/auth/me/').json()['user']
-        self.assertEqual((me['evaluator'], me['evaluation_settings']), (True, True))
+        self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (True, True))
+
+    def test_the_required_acclaim_is_published_for_the_players(self):
+        """Gether 14. 10. 2026: "Požadovaný acclaim" – a plain overview for the players, nothing to edit"""
+        url = '/api/evaluation/overview/'
+        self.assertEqual(Client().get(url).status_code, 403)
+        self.assertEqual(self.admin.get(url).json(), {'published_at': None, 'rows': []})
+        self.assertEqual(self.admin.get('/api/evaluation/').json()['overview'], {'published_at': None, 'rows': []})
+        self.player.ingame_name = 'Nelly v hre'
+        self.player.save()
+        row = {'id': self.player.pk, 'marches': 3, 'missing': 1, 'required': 1_250_000}
+        res = self.call('put', url, {'rows': [row]})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['rows'], [row])
+        self.assertIsNotNone(res.json()['published_at'])
+        # the evaluators see what was published next to the estimate
+        self.assertEqual(self.admin.get('/api/evaluation/').json()['overview']['rows'], [row])
+        # the players with the switch: the name in the game, the avatar and the numbers – no power, no marches
+        self.player.evaluation_overview = True
+        self.player.save()
+        data = self.nelly.get(url).json()
+        self.assertEqual(
+            data['rows'],
+            [{**row, 'name': 'Nelly v hre', 'avatar_url': self.player.avatar_url, 'you': True}],
+        )
+        self.assertFalse(self.admin.get(url).json()['rows'][0]['you'])
+        # approved players only, each once, whole numbers in range – all or nothing
+        for bad in (
+            {},
+            {'rows': 'x'},
+            {'rows': [{**row, 'id': self.newbie.pk}]},
+            {'rows': [{**row, 'id': 999999}]},
+            {'rows': [row, row]},
+            {'rows': [{**row, 'required': -1}]},
+            {'rows': [{**row, 'required': 1.5}]},
+            {'rows': [{**row, 'marches': 99}]},
+            {'rows': [{**row, 'power': 100}]},
+            {'rows': [{'id': self.player.pk}]},
+        ):
+            self.assertEqual(self.call('put', url, bad).status_code, 400, bad)
+        self.assertEqual(EvaluationSettings.load().overview, [row])
+        # a player who loses the approval drops out of the overview
+        self.player.approved = False
+        self.player.save()
+        self.assertEqual(self.admin.get(url).json()['rows'], [])
+        # an empty list takes it back
+        self.player.approved = True
+        self.player.save()
+        self.assertEqual(self.call('put', url, {'rows': []}).json(), {'published_at': None, 'rows': []})
 
     def test_the_formations_of_the_commanders_live_in_the_database(self):
         """Gether 14. 10. 2026 (Slim: "nastaviť každého commandera, akú má mať formáciu")"""
@@ -180,8 +233,8 @@ class EvaluationApiTests(TestCase):
         for bad in ('x', {'Attila': 'wedge'}, {'Attila': ['square']}, {'Attila': ['arch', 'v', 'delta']}):
             res = self.call('put', '/api/evaluation/settings/', {'settings': {}, 'formations': bad, 'formations_version': version})
             self.assertEqual(res.json(), {'formations': 'invalid'}, bad)
-        # the variables only: a player with the table switch only may not
-        self.player.evaluator = True
+        # a player with the overview switch only may not
+        self.player.evaluation_overview = True
         self.player.save()
         self.assertEqual(self.call('put', '/api/evaluation/settings/', body, self.nelly).status_code, 403)
 

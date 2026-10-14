@@ -2,10 +2,11 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { Overview, OverviewPlayer, OverviewRow } from './overview';
 import { EvalPlayer } from './scoring';
 import { PairRow } from './settings';
 
-/** /api/evaluation/ (backend accounts/evaluation_views.py); superuser only, browser only */
+/** /api/evaluation/ (backend accounts/evaluation_views.py); the superuser and the evaluators, browser only */
 export interface EvaluationData {
   /** null = nothing saved, the defaults count */
   settings: Record<string, unknown> | null;
@@ -17,11 +18,13 @@ export interface EvaluationData {
   formations: Record<string, string[]>;
   formations_version: string;
   players: EvalPlayer[];
+  /** the required acclaim the players with the overview switch see now */
+  overview: Overview;
 }
 
 export type SavedSettings = Pick<EvaluationData, 'settings' | 'updated_at' | 'pairs' | 'pairs_version' | 'formations' | 'formations_version'>;
 
-export type RecordChange = Partial<Pick<EvalPlayer, 'power' | 'acclaim' | 't4' | 'power_bonus'>>;
+export type RecordChange = Partial<Pick<EvalPlayer, 'power' | 't4' | 'power_bonus'>>;
 
 @Injectable({ providedIn: 'root' })
 export class EvaluationApi {
@@ -49,6 +52,16 @@ export class EvaluationApi {
       ...(formations ? { formations: formations.map, formations_version: formations.version } : {}),
     };
     return firstValueFrom(this.http.put<SavedSettings>('/api/evaluation/settings/', body));
+  }
+
+  /** "Požadovaný acclaim" as the players see it – the evaluators and the players with the overview switch */
+  overview(when: () => boolean) {
+    return httpResource<Overview<OverviewPlayer>>(() => (this.isBrowser && when() ? '/api/evaluation/overview/' : undefined));
+  }
+
+  /** publishes what the estimate counts now (approved players only, all or nothing; [] takes it back) */
+  publish(rows: OverviewRow[]): Promise<Overview> {
+    return firstValueFrom(this.http.put<Overview>('/api/evaluation/overview/', { rows }));
   }
 
   /** many players at once – all or nothing */

@@ -19,11 +19,11 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     name (typed by the player), the KvK reviewer flag and the approval (marches, KvK sign-ups) can be changed here."""
 
     list_display = [
-        'thumbnail', 'name', 'ingame_name', 'approved', 'kvk_reviewer', 'evaluator', 'evaluation_settings', 'discord_id', 'created_at',
+        'thumbnail', 'name', 'ingame_name', 'approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview', 'discord_id', 'created_at',
         'last_login',
     ]
     list_display_links = ['name']
-    list_filter = ['approved', 'kvk_reviewer', 'evaluator', 'evaluation_settings']
+    list_filter = ['approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview']
     list_select_related = ['user']
     search_fields = ['username', 'global_name', 'ingame_name', 'discord_id']
     fields = [
@@ -33,8 +33,8 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'ingame_name',
         'approved',
         'kvk_reviewer',
-        'evaluator',
         'evaluation_settings',
+        'evaluation_overview',
         'terms_version',
         'terms_accepted_at',
         'discord_id',
@@ -45,7 +45,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'created_at',
         'last_login',
     ]
-    readonly_fields = [f for f in fields if f not in ('ingame_name', 'approved', 'kvk_reviewer', 'evaluator', 'evaluation_settings')]
+    readonly_fields = [f for f in fields if f not in ('ingame_name', 'approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview')]
 
     def has_add_permission(self, request):
         return False

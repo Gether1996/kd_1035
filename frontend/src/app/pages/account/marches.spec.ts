@@ -479,8 +479,8 @@ describe('PlayersAdmin', () => {
       last_login: null,
       marches: 0,
       kvk: [],
-      evaluator: false,
       evaluation_settings: false,
+      evaluation_overview: false,
     };
     http.expectOne('/api/kvk/reviewers/').flush({
       players: [
@@ -565,25 +565,25 @@ describe('PlayersAdmin', () => {
     // R4 of Nelly; the filter R4 shows only her
     const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
     r4().click();
-    const flags = { reviewer: true, approved: true, evaluator: false, evaluation_settings: false };
+    const flags = { reviewer: true, approved: true, evaluation_settings: false, evaluation_overview: false };
     http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, ...flags });
-    // the evaluation of Nelly: its table and its variables, two switches (Gether 13. and 14. 10. 2026)
-    const evaluator = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
-    expect(evaluator.getAttribute('aria-label')).toBe('Tabuľka vyhodnocovania – odhad acclaimu a power hráčov: Nelly');
-    evaluator.click();
+    // the evaluation of Nelly: the evaluation itself and its published overview, two switches (Gether 14. 10. 2026)
+    const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
+    expect(settings.getAttribute('aria-label')).toBe('Nastavenia vyhodnocovania – odhad acclaimu a premenné: Nelly');
+    settings.click();
     const ev = http.expectOne('/api/kvk/reviewers/2/');
-    expect(ev.request.body).toEqual({ evaluator: true });
-    ev.flush({ id: 2, ...flags, evaluator: true });
+    expect(ev.request.body).toEqual({ evaluation_settings: true });
+    ev.flush({ id: 2, ...flags, evaluation_settings: true });
     await settle(fixture);
-    expect(evaluator.checked).toBe(true);
-    const variables = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[7];
-    expect(variables.getAttribute('aria-label')).toBe('Nastavenia vyhodnocovania – premenné a páry commanderov: Nelly');
-    variables.click();
+    expect(settings.checked).toBe(true);
+    const overview = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[7];
+    expect(overview.getAttribute('aria-label')).toBe('Požadovaný acclaim – zverejnený prehľad: Nelly');
+    overview.click();
     const vs = http.expectOne('/api/kvk/reviewers/2/');
-    expect(vs.request.body).toEqual({ evaluation_settings: true });
-    vs.flush({ id: 2, ...flags, evaluator: true, evaluation_settings: true });
+    expect(vs.request.body).toEqual({ evaluation_overview: true });
+    vs.flush({ id: 2, ...flags, evaluation_settings: true, evaluation_overview: true });
     await settle(fixture);
-    expect(variables.checked).toBe(true);
+    expect(overview.checked).toBe(true);
     await settle(fixture);
     filters()[4].click();
     await settle(fixture);

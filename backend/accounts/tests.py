@@ -374,8 +374,8 @@ class MeTests(TestCase):
                     'terms_accepted': False,
                     'is_staff': False,
                     'is_superuser': False,
-                    'evaluator': False,
                     'evaluation_settings': False,
+                    'evaluation_overview': False,
                 },
             },
         )

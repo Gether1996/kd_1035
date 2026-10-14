@@ -67,17 +67,25 @@ class Player(models.Model):
         default=False,
         help_text='Hráč (napr. R4) vidí všetky prihlášky na KvK a marche všetkých hráčov. Nastavuje superadmin.',
     )
-    # two switches since 14. 10. 2026 (Gether: "nastavenia vyhodnocovania" and "tabuľka vyhodnocovania")
+    # Gether 14. 10. 2026: one switch for the evaluation itself (the estimate and the variables), one for the published
+    # overview of the required acclaim. `evaluator` was the table's own switch – not read any more (merged into
+    # evaluation_settings by migration 0031), dropped later with Gether's yes.
     evaluator = models.BooleanField(
-        'tabuľka vyhodnocovania',
+        'tabuľka vyhodnocovania (nepoužíva sa)',
         default=False,
-        help_text='Hráč vidí na /vyhodnocovanie odhad acclaimu schválených hráčov a zapisuje im power, acclaim a T4. '
-        'Nastavuje superadmin.',
+        help_text='Nepoužíva sa od 14. 10. 2026 – tabuľku aj premenné povoľuje „nastavenia vyhodnocovania“.',
     )
     evaluation_settings = models.BooleanField(
         'nastavenia vyhodnocovania',
         default=False,
-        help_text='Hráč mení na /vyhodnocovanie premenné výpočtu a tabuľku párov commanderov (platí pre všetkých). '
+        help_text='Hráč vidí na /vyhodnocovanie odhad acclaimu schválených hráčov, zapisuje im power a T4, mení '
+        'premenné výpočtu, páry a formácie commanderov (platí pre všetkých) a zverejňuje požadovaný acclaim. '
+        'Nastavuje superadmin.',
+    )
+    evaluation_overview = models.BooleanField(
+        'požadovaný acclaim',
+        default=False,
+        help_text='Hráč vidí na /vyhodnocovanie zverejnený požadovaný acclaim schválených hráčov (iba čítanie). '
         'Nastavuje superadmin.',
     )
     approved = models.BooleanField(
@@ -400,6 +408,11 @@ class EvaluationSettings(models.Model):
 
     data = models.JSONField('premenné', default=dict, blank=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
+    # "Požadovaný acclaim" (Gether 14. 10. 2026): what the evaluation counted when it was published – [{id, marches,
+    # missing, required}], the names are joined when read. The players with the overview switch see this, never the
+    # variables, the pairs or anyone's power.
+    overview = models.JSONField('zverejnený požadovaný acclaim', default=list, blank=True)
+    overview_at = models.DateTimeField('zverejnené', null=True, blank=True)
 
     class Meta:
         verbose_name = 'premenné vyhodnocovania'
@@ -415,8 +428,8 @@ class EvaluationSettings(models.Model):
 
 class PlayerEvaluation(models.Model):
     """What is written down about a player for the KvK evaluation and the game has no API for: the power in millions
-    (the player on /ucet too, since 14. 10. 2026), the acclaim reached, T4 troops only and a correction of the
-    recommended power. Seen by the superadmin and the players with the table switch of the evaluation (approved players
+    (the player on /ucet too, since 14. 10. 2026), T4 troops only and a correction of the recommended power. Seen by
+    the superadmin and the players with the switch of the evaluation (approved players
     only), the power by the player too; gone with the account (the privacy page says so)."""
 
     player = models.OneToOneField(Player, on_delete=models.CASCADE, related_name='evaluation', verbose_name='hráč')
@@ -424,8 +437,9 @@ class PlayerEvaluation(models.Model):
         'power (mil.)', max_digits=6, decimal_places=1, null=True, blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(Decimal('9999.9'))],
     )  # fmt: skip
+    # not written down any more (Gether 14. 10. 2026: "aktuálny acclaim dajme preč") – dropped later with Gether's yes
     acclaim = models.PositiveBigIntegerField(
-        'aktuálny acclaim', null=True, blank=True, validators=[MaxValueValidator(10**12)]
+        'aktuálny acclaim (nepoužíva sa)', null=True, blank=True, validators=[MaxValueValidator(10**12)]
     )
     t4 = models.BooleanField('iba T4 jednotky', default=False)
     power_bonus = models.DecimalField(

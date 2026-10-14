@@ -176,7 +176,7 @@ export class PlayersAdmin {
   protected readonly sorts: Sort[] = ['name', 'newest', 'login', 'marches'];
   protected readonly marchFilters: MarchFilter[] = ['all', 'with', 'without'];
   protected readonly kvkFilters: KvkFilter[] = ['all', 'any', 'rally', 'garrison', 'none'];
-  protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluator', 'evaluation_settings'];
+  protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluation_settings', 'evaluation_overview'];
 
   protected readonly data = this.api.reviewers(() => true);
   protected readonly players = linkedSignal<ReviewerRow[]>(() => (this.data.hasValue() ? this.data.value().players : []));

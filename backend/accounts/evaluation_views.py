@@ -1,9 +1,9 @@
 """/vyhodnocovanie – the KvK evaluation of the superadmin (Gether 13. 10. 2026: the "KVK Requirements" spreadsheet on
 the web). The page computes everything itself from the marches the players clicked together and the variables saved
 here, so a changed variable shows at once; the server keeps the variables and what the superadmin writes down about
-a player (power, acclaim reached, T4, a correction of the recommended power). The superuser and the players the
-superuser lets in (switches next to R4 – Gether 13. 10. 2026; since 14. 10. 2026 two: Player.evaluator writes down
-the players' power, acclaim and T4, Player.evaluation_settings changes the variables and the pair table); those see
+a player (power, T4, a correction of the recommended power). The superuser and the players the superuser lets in
+(switches next to R4 – Gether 13. and 14. 10. 2026): Player.evaluation_settings opens the estimate and the variables,
+Player.evaluation_overview only the required acclaim the others published ("Požadovaný acclaim", read only); those see
 only approved players."""
 
 import json
@@ -12,6 +12,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -65,24 +66,18 @@ def allowed(request, *flags: str) -> bool:
 
 
 class CanEvaluate(BasePermission):
-    """Opens /vyhodnocovanie: the table or the variables (Gether 14. 10. 2026: two switches)"""
-
-    def has_permission(self, request, view):
-        return allowed(request, 'evaluator', 'evaluation_settings')
-
-
-class CanEditTable(BasePermission):
-    """Writes down the power, acclaim and T4 of the players"""
-
-    def has_permission(self, request, view):
-        return allowed(request, 'evaluator')
-
-
-class CanEditSettings(BasePermission):
-    """Changes the variables and the commander pair table – for everyone"""
+    """The estimate and the variables (Gether 14. 10. 2026: one switch): the players' marches and power, the pair
+    table – reads and changes them, and publishes the required acclaim"""
 
     def has_permission(self, request, view):
         return allowed(request, 'evaluation_settings')
+
+
+class CanSeeOverview(BasePermission):
+    """The published required acclaim – the evaluators and the players with the overview switch"""
+
+    def has_permission(self, request, view):
+        return allowed(request, 'evaluation_settings', 'evaluation_overview')
 
 
 def visible_players(request):
@@ -90,6 +85,11 @@ def visible_players(request):
     are the superuser's alone, Gether 12. 10. 2026)."""
     players = Player.objects.filter(user__is_active=True)
     return players if request.user.is_superuser else players.filter(APPROVED)
+
+
+def approved_players():
+    """The overview is the approved players' – for the superuser too (a player waiting is nobody's business yet)"""
+    return Player.objects.filter(user__is_active=True).filter(APPROVED)
 
 
 def record_of(player: Player) -> PlayerEvaluation | None:
@@ -102,7 +102,6 @@ def record_of(player: Player) -> PlayerEvaluation | None:
 def record_data(record: PlayerEvaluation | None) -> dict:
     return {
         'power': float(record.power) if record and record.power is not None else None,
-        'acclaim': record.acclaim if record else None,
         't4': record.t4 if record else False,
         'power_bonus': float(record.power_bonus) if record else 0.0,
     }
@@ -121,6 +120,8 @@ def settings_data(row: EvaluationSettings) -> dict:
         # guards a save like the pairs'
         'formations': (formations := formation_map()),
         'formations_version': formations_version(formations),
+        # what the players with the overview switch see now (the page tells what changed since)
+        'overview': overview_data(row),
     }
 
 
@@ -129,9 +130,7 @@ def settings_data(row: EvaluationSettings) -> dict:
 @permission_classes([CanEvaluate])
 def evaluation(request):
     """The variables and every player with their marches and what was written down about them – for the superuser
-    those not approved too (the page leaves them out unless asked), and players without a march. The power, acclaim
-    and T4 only with the table switch: the variables alone do not show them (Gether 14. 10. 2026, two switches)."""
-    table = allowed(request, 'evaluator')
+    those not approved too (the page leaves them out unless asked), and players without a march."""
     players = (
         visible_players(request)
         .select_related('user', 'evaluation')
@@ -146,7 +145,7 @@ def evaluation(request):
                 'avatar_url': p.avatar_url,
                 'approved': p.may_post,
                 'marches': [march_data(m) for m in p.marches.all()],
-                **record_data(record_of(p) if table else None),
+                **record_data(record_of(p)),
             }
             for p in players
         ),
@@ -157,7 +156,7 @@ def evaluation(request):
 
 @never_cache
 @api_view(['PUT'])
-@permission_classes([CanEditSettings])
+@permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_settings(request):
     """PUT {settings: {...}, pairs?: [[primary, secondary, points], …], pairs_version?, formations?: {commander:
@@ -211,7 +210,6 @@ class RecordSerializer(serializers.Serializer):
     power = serializers.DecimalField(
         max_digits=6, decimal_places=1, min_value=Decimal(0), allow_null=True, required=False
     )
-    acclaim = serializers.IntegerField(min_value=0, max_value=10**12, allow_null=True, required=False)
     t4 = serializers.BooleanField(required=False)
     power_bonus = serializers.DecimalField(
         max_digits=5, decimal_places=1, min_value=Decimal('-999.9'), max_value=Decimal('999.9'), required=False
@@ -234,10 +232,10 @@ def save_record(player: Player, values: dict) -> PlayerEvaluation:
 
 @never_cache
 @api_view(['PATCH'])
-@permission_classes([CanEditTable])
+@permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_player(request, player_id):
-    """PATCH {power?, acclaim?, t4?, power_bonus?} – what the superadmin writes down about one player."""
+    """PATCH {power?, t4?, power_bonus?} – what the superadmin writes down about one player."""
     player = get_object_or_404(visible_players(request), pk=player_id)
     form = RecordSerializer(data=request.data)
     form.is_valid(raise_exception=True)
@@ -252,10 +250,10 @@ BULK_MAX = 500
 
 @never_cache
 @api_view(['PATCH'])
-@permission_classes([CanEditTable])
+@permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_players(request):
-    """PATCH {players: [{id, power?, acclaim?, t4?, power_bonus?}, …]} – many players at once (the power of everyone
+    """PATCH {players: [{id, power?, t4?, power_bonus?}, …]} – many players at once (the power of everyone
     pasted from a list). All or nothing: one wrong row or unknown player and nothing is saved."""
     items = request.data.get('players') if isinstance(request.data, dict) else None
     if not isinstance(items, list) or not 1 <= len(items) <= BULK_MAX:
@@ -272,3 +270,73 @@ def evaluation_players(request):
     with transaction.atomic():
         saved = [{'id': player.pk, **record_data(save_record(player, values))} for player, values in changes]
     return Response({'players': saved})
+
+
+# a march count and an acclaim the page can count: far above any real one
+OVERVIEW_MAX_MARCHES = 20
+OVERVIEW_MAX_ACCLAIM = 10**12
+OVERVIEW_KEYS = ('id', 'marches', 'missing', 'required')
+
+
+def overview_row(item) -> dict | None:
+    """{id, marches, missing, required} – whole numbers in range, or None"""
+    if not isinstance(item, dict) or set(item) != set(OVERVIEW_KEYS):
+        return None
+    if any(type(item[key]) is not int for key in OVERVIEW_KEYS):
+        return None
+    if not (0 <= item['marches'] <= OVERVIEW_MAX_MARCHES and 0 <= item['missing'] <= OVERVIEW_MAX_MARCHES):
+        return None
+    if not 0 <= item['required'] <= OVERVIEW_MAX_ACCLAIM:
+        return None
+    return {key: item[key] for key in OVERVIEW_KEYS}
+
+
+def overview_data(row: EvaluationSettings) -> dict:
+    return {'published_at': iso(row.overview_at) if row.overview_at else None, 'rows': row.overview}
+
+
+@never_cache
+@api_view(['GET', 'PUT'])
+@permission_classes([CanSeeOverview])
+@throttle_classes([WriteThrottle])
+def evaluation_overview(request):
+    """"Požadovaný acclaim" (Gether 14. 10. 2026: a plain overview for the players, nothing to edit).
+    GET – what was published, approved players only (a player who left or lost the approval drops out), with the name
+    and avatar; `you` marks the reader. Never the variables, the pairs, the marches or anyone's power.
+    PUT {rows: [{id, marches, missing, required}, …]} – an evaluator publishes what the estimate counts now (the page
+    computes it, the server cannot); approved players only, each once, all or nothing; [] = nothing published."""
+    row = EvaluationSettings.load()
+    if request.method == 'PUT':
+        if not allowed(request, 'evaluation_settings'):
+            return Response({'detail': 'evaluation_settings'}, status=403)
+        items = request.data.get('rows') if isinstance(request.data, dict) else None
+        if not isinstance(items, list) or len(items) > BULK_MAX:
+            return Response({'rows': 'list'}, status=400)
+        rows = [overview_row(item) for item in items]
+        if any(r is None for r in rows):
+            return Response({'rows': 'invalid'}, status=400)
+        ids = [r['id'] for r in rows]
+        known = set(approved_players().filter(pk__in=ids).values_list('pk', flat=True))
+        if len(set(ids)) != len(ids) or known != set(ids):
+            return Response({'rows': 'players'}, status=400)
+        row.overview = rows
+        row.overview_at = timezone.now() if rows else None
+        row.save(update_fields=['overview', 'overview_at'])
+        return Response(overview_data(row))
+    published = [r for r in row.overview if isinstance(r, dict) and type(r.get('id')) is int]
+    players = approved_players().select_related('user').in_bulk([r['id'] for r in published])
+    rows = [
+        {
+            # the name in the game first, Discord as the fallback (like everywhere other players are shown)
+            'id': p.pk,
+            'name': p.ingame_name or p.name,
+            'avatar_url': p.avatar_url,
+            'marches': r['marches'],
+            'missing': r['missing'],
+            'required': r['required'],
+            'you': p.user_id == request.user.pk,
+        }
+        for r in published
+        if (p := players.get(r['id']))
+    ]
+    return Response({**overview_data(row), 'rows': rows})

@@ -238,10 +238,10 @@ def signed_in(request) -> dict | None:
         'is_staff': request.user.is_staff,
         # manages events (admin, irregular dates in the calendar)
         'is_superuser': request.user.is_superuser,
-        # /vyhodnocovanie – the superadmin gives it like R4 (Gether 13. 10. 2026): its table and, apart (14. 10. 2026),
-        # its variables
-        'evaluator': player.evaluator or request.user.is_superuser,
+        # /vyhodnocovanie – the superadmin gives it like R4 (Gether 13. 10. 2026): the estimate with the variables, or
+        # (14. 10. 2026) only the published required acclaim
         'evaluation_settings': player.evaluation_settings or request.user.is_superuser,
+        'evaluation_overview': player.evaluation_overview or player.evaluation_settings or request.user.is_superuser,
     }
 
 
