@@ -285,14 +285,18 @@ class MarchTests(KvkTestCase):
         self.assertEqual(no_token.put(url, '{"ids": []}', content_type='application/json').status_code, 403)
         self.assertEqual(self.call('post', url, {'ids': ids}).status_code, 405)
 
-    def test_reordering_needs_no_approval_or_terms(self):
-        """Like DELETE: it only rearranges the player's own marches and shows nobody anything new."""
-        for discord_id, kwargs in (('42', {'approved': False}), ('43', {'terms': False})):
+    def test_reordering_needs_the_approval_not_the_terms(self):
+        """Like DELETE: it only rearranges the player's own marches – the terms are not needed, the approval is (an
+        un-approved player does nothing about marches, Gether 14. 10. 2026)."""
+        for discord_id, kwargs, ok in (('42', {'approved': False}, False), ('43', {'terms': False}, True)):
             player = make_player(discord_id, **kwargs)
             client = self.login(player.user)
             ids = [March.objects.create(player=player, position=n, kind='archer', primary='Attila').pk for n in (1, 2)]
             res = self.call('put', '/api/me/marches/order/', {'ids': ids[::-1]}, client)
-            self.assertEqual([m['id'] for m in res.json()['marches']], ids[::-1], discord_id)
+            if ok:
+                self.assertEqual([m['id'] for m in res.json()['marches']], ids[::-1], discord_id)
+            else:
+                self.assertEqual((res.status_code, res.json()), (403, {'detail': 'not_approved'}))
 
     def test_the_marches_say_which_ones_the_evaluation_counts(self):
         from .models import EvaluationSettings
@@ -589,17 +593,25 @@ class ApprovalTests(KvkTestCase):
         self.assertEqual((res.status_code, res.json()), (403, {'detail': 'not_approved'}))
         res = self.sign_up(self.new)
         self.assertEqual((res.status_code, res.json()), (403, {'detail': 'not_approved'}))
-        self.assertEqual(self.new.get('/api/marches/').json()['players'], [])
 
-        # a march from before the approval was taken away: deleting works, changing does not
+        # nothing about marches at all until approved (Gether 14. 10. 2026: "nesmie ani marche vidieť, ani editovať,
+        # ani nič ohľadom marchov") – not even a march from before the approval was taken away
         march = March.objects.create(player=self.newbie, position=1, kind='archer', primary='Attila')
         self.newbie.marches_public = True
         self.newbie.save()
-        self.assertEqual(self.call('patch', f'/api/me/marches/{march.pk}/', {'kind': 'cavalry'}, self.new).status_code, 403)
-        # … others do not see it, the player sees only their own
+        refused = [
+            self.new.get('/api/marches/'),
+            self.new.get('/api/me/marches/'),
+            self.call('patch', '/api/me/marches/', {'public': False}, self.new),
+            self.call('patch', f'/api/me/marches/{march.pk}/', {'kind': 'cavalry'}, self.new),
+            self.call('delete', f'/api/me/marches/{march.pk}/', client=self.new),
+            self.call('put', '/api/me/marches/order/', {'ids': [march.pk]}, self.new),
+        ]
+        self.assertEqual([(r.status_code, r.json()) for r in refused], [(403, {'detail': 'not_approved'})] * len(refused))
+        self.assertTrue(March.objects.filter(pk=march.pk, kind='archer').exists())
+        self.assertTrue(Player.objects.get(pk=self.newbie.pk).marches_public)
+        # … and others do not see it
         self.assertEqual([p['me'] for p in self.client.get('/api/marches/').json()['players']], [True])
-        self.assertEqual([p['me'] for p in self.new.get('/api/marches/').json()['players']], [True])
-        self.assertEqual(self.call('delete', f'/api/me/marches/{march.pk}/', client=self.new).status_code, 204)
 
     def test_the_superuser_approves_and_filters(self):
         admin_player = make_player('245662824171438090')

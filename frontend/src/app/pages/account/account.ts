@@ -49,7 +49,7 @@ export class Account {
    * "Moje marche 2 na opravu" – the own marches (browser only, once the player is known); a pair or a formation the KvK
    * evaluation does not like. Nothing when the request fails.
    */
-  private readonly ownMarches = inject(MarchesApi).list(() => !!this.auth.user());
+  private readonly ownMarches = inject(MarchesApi).list(() => !!this.auth.user()?.approved);
   protected readonly marchIssues = computed(() =>
     this.ownMarches.hasValue() ? this.ownMarches.value().marches.filter(marchHasProblem).length : 0,
   );

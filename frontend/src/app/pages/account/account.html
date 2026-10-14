@@ -153,20 +153,23 @@
         <span class="shortcut__go">{{ a.kvk.link }}<svg appIcon="chevron-right"></svg></span>
       </a>
 
-      <a class="shortcut" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'prehlad' }">
-        <span class="shortcut__icon"><svg appIcon="shield"></svg></span>
-        <span class="shortcut__body">
-          <strong
-            >{{ a.marches.title }}
-            <!-- marches the KvK evaluation does not like (red on /marche) -->
-            @if (marchIssues(); as n) {
-              <span class="shortcut__issues">{{ n }}<span class="sr-only"> {{ a.marches.issues }}</span></span>
-            }
-          </strong>
-          <small>{{ a.marches.text }}</small>
-        </span>
-        <span class="shortcut__go">{{ a.marches.link }}<svg appIcon="chevron-right"></svg></span>
-      </a>
+      <!-- marches only once approved (Gether 14. 10. 2026) -->
+      @if (user.approved) {
+        <a class="shortcut" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'prehlad' }">
+          <span class="shortcut__icon"><svg appIcon="shield"></svg></span>
+          <span class="shortcut__body">
+            <strong
+              >{{ a.marches.title }}
+              <!-- marches the KvK evaluation does not like (red on /marche) -->
+              @if (marchIssues(); as n) {
+                <span class="shortcut__issues">{{ n }}<span class="sr-only"> {{ a.marches.issues }}</span></span>
+              }
+            </strong>
+            <small>{{ a.marches.text }}</small>
+          </span>
+          <span class="shortcut__go">{{ a.marches.link }}<svg appIcon="chevron-right"></svg></span>
+        </a>
+      }
 
       @if (user.is_superuser) {
         <!-- superadmin: who sees the KvK sign-ups (R4); the anchor (/ucet#hraci from /kvk) stays outside the deferred block -->

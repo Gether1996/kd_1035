@@ -87,6 +87,22 @@ describe('Account', () => {
     expect(el.querySelector('.shortcut__issues .sr-only')?.textContent?.trim()).toBe('na opravu');
   });
 
+  it('leaves the marches out for a player who is not approved (Gether 14. 10. 2026)', async () => {
+    const fixture = TestBed.createComponent(Account);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/auth/me/').flush({
+      login_enabled: true,
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: false, terms_accepted: true, is_staff: false, is_superuser: false },
+    });
+    await settle();
+    http.expectNone('/api/me/marches/');
+    http.match(() => true).forEach((req) => req.flush('down', { status: 500, statusText: 'Server Error' }));
+    await fixture.whenStable();
+    const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.shortcut'), (a) => a.getAttribute('href'));
+    expect(links.some((href) => href?.startsWith('/marche'))).toBe(false);
+  });
+
   it('shows no count when the marches cannot be loaded', async () => {
     // render() answers every other request with an error
     const el = await render({

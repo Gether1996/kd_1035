@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { Icon } from '../../shared/icon';
@@ -42,7 +43,9 @@ type SortKey = 'name' | 'marches' | 'power' | 'required';
       }
       <div class="ov-bar">
         <p class="ov-note">{{ x.published.replace('{date}', date(o.published_at)) }} {{ x.hint }}</p>
-        <a class="pill-btn pill-btn--quiet ov-link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'prehlad' }">{{ x.marchesLink }}</a>
+        @if (auth.user()?.approved) {
+          <a class="pill-btn pill-btn--quiet ov-link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'prehlad' }">{{ x.marchesLink }}</a>
+        }
       </div>
       <div class="field ov-search">
         <label class="sr-only" for="ov-search">{{ x.search }}</label>
@@ -128,6 +131,7 @@ export class EvalOverviewTab {
   readonly focus = input<number | null>(null);
 
   protected readonly i18n = inject(I18n);
+  protected readonly auth = inject(Auth);
   protected readonly search = signal('');
   /** a phone shows the short header (CSS) – the long one would push the table wider than the screen */
   protected readonly columns: {

@@ -58,7 +58,8 @@ export class Header {
     const t = this.i18n.t().nav;
     return [
       { label: t.account, link: this.i18n.path('account'), icon: 'users' },
-      { label: t.marches, link: this.i18n.path('playersMarches'), icon: 'shield' },
+      // marches only once the superadmin approved the player (Gether 14. 10. 2026: no access to the tab before)
+      ...(this.auth.user()?.approved ? [{ label: t.marches, link: this.i18n.path('playersMarches'), icon: 'shield' as const }] : []),
       { label: t.reminders, link: this.i18n.path('reminders'), icon: 'bell' },
       { label: t.kvk, link: this.i18n.path('kvk'), icon: 'swords' },
       // the KvK evaluation – the superadmin and the players let in (Gether 13. 10. 2026)

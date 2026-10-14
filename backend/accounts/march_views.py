@@ -19,8 +19,8 @@ from .army import BuildSerializer, current_of
 from .kvk_views import IsSuperuser, march_data
 from .models import APPROVED, MAX_MARCHES, March, Player
 from .pair_check import counting, evaluation_marches, march_checker
-from .reminder_views import IsPlayer, WriteThrottle, iso
-from .views import cannot_post, player_of
+from .reminder_views import WriteThrottle, iso
+from .views import cannot_post, not_approved, player_of
 
 
 class MarchSerializer(BuildSerializer):
@@ -60,9 +60,21 @@ def own_marches(player) -> Response:
     )
 
 
+class IsApprovedPlayer(BasePermission):
+    """Signed in with Discord and approved by the superadmin. An un-approved player does nothing about marches – not
+    even sees, reorders or deletes their own (Gether 14. 10. 2026); what they had stays in the database for when the
+    superadmin approves them again."""
+
+    message = 'not_approved'
+
+    def has_permission(self, request, view):
+        player = player_of(request.user)
+        return player is not None and player.may_post
+
+
 @never_cache
 @api_view(['GET', 'POST', 'PATCH'])
-@permission_classes([IsPlayer])
+@permission_classes([IsApprovedPlayer])
 @throttle_classes([WriteThrottle])
 def marches(request):
     """GET: the player's marches in order, who may see them and which the KvK evaluation counts. POST {kind, primary, secondary?}: the next march (at
@@ -91,13 +103,13 @@ def marches(request):
 
 @never_cache
 @api_view(['PUT'])
-@permission_classes([IsPlayer])
+@permission_classes([IsApprovedPlayer])
 @throttle_classes([WriteThrottle])
 def march_order(request):
     """PUT {ids: [march id, …]}: the player's marches in this order – the KvK evaluation counts the first X in the
     player's order. Every own march exactly once: a stale order (another tab added or deleted one) is 400 and nothing
-    moves. Like DELETE it needs no approval or terms – it only rearranges the player's own marches and shows nobody
-    anything new. Returns the same body as GET."""
+    moves. Like DELETE it needs no terms – it only rearranges the player's own marches and shows nobody anything new
+    – but the approval, like everything about marches. Returns the same body as GET."""
     player = request.user.player
     ids = request.data.get('ids') if isinstance(request.data, dict) else None
     if not isinstance(ids, list) or len(ids) > MAX_MARCHES or any(type(i) is not int for i in ids):
@@ -115,7 +127,7 @@ def march_order(request):
 
 @never_cache
 @api_view(['PATCH', 'DELETE'])
-@permission_classes([IsPlayer])
+@permission_classes([IsApprovedPlayer])
 @throttle_classes([WriteThrottle])
 def march(request, march_id):
     """PATCH {kind?, primary?, secondary?, attack?, defense?, health?, damage?, white?, blue?, gold?, gear?, formation?,
@@ -151,14 +163,16 @@ class CanSeeMarches(BasePermission):
 def players_marches(request):
     """/marche: the marches of every player who made them public – for R4 and the superuser of every player – with
     the player's in-game name, Discord name, avatar and when a march changed last. Players without a march are left
-    out. A player the superadmin has not approved yet sees only their own (Gether 12. 10. 2026), and the others – R4
-    too – see only approved players' marches; the superuser sees everyone's, the hidden ones marked."""
+    out. A player the superadmin has not approved yet sees none – not even their own (Gether 14. 10. 2026) – and the
+    others – R4 too – see only approved players' marches; the superuser sees everyone's, the hidden ones marked."""
     reviewer = private_images.can_review(request.user)
     me = player_of(request.user)
+    if me and not me.may_post:
+        return not_approved()
     players = Player.objects.filter(user__is_active=True, marches__isnull=False).distinct()
     mine = Q(pk=me.pk if me else None)
     if not reviewer:
-        players = players.filter((Q(marches_public=True) & APPROVED) | mine if me and me.may_post else mine)
+        players = players.filter((Q(marches_public=True) & APPROVED) | mine if me else mine)
     elif not request.user.is_superuser:
         players = players.filter(APPROVED)
     players = players.select_related('user').prefetch_related('marches')
