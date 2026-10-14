@@ -100,6 +100,23 @@
   }
 }
 
+// the power and the recommended power right next to each other, to compare them at a glance (Gether 14. 10. 2026):
+// both columns only as wide as they need, the number left by the field
+.ev-col-power,
+.ev-col-rec {
+  width: 1%;
+}
+
+.ev-col-power {
+  padding-right: 4px !important;
+}
+
+// (.ev-num aligns numbers right)
+.ev-results .ev-col-rec {
+  padding-left: 6px !important;
+  text-align: left !important;
+}
+
 // a cell's name in a card (a narrow screen); the table has its header
 .ev-label {
   display: none;

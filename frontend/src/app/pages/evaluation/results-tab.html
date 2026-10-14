@@ -95,8 +95,8 @@
         <th scope="col" class="ev-num">{{ c.marches }} <app-eval-tip [text]="tip('results.marches')" [label]="tipLabel(c.marches)" /></th>
         <th scope="col" class="ev-num">{{ c.required }} <app-eval-tip [text]="tip('results.required')" [label]="tipLabel(c.required)" /></th>
         <th scope="col">{{ c.acclaim }} <app-eval-tip [text]="tip('results.acclaim')" [label]="tipLabel(c.acclaim)" /></th>
-        <th scope="col">{{ c.power }} <app-eval-tip [text]="tip('results.power')" [label]="tipLabel(c.power)" /></th>
-        <th scope="col" class="ev-num">
+        <th scope="col" class="ev-col-power">{{ c.power }} <app-eval-tip [text]="tip('results.power')" [label]="tipLabel(c.power)" /></th>
+        <th scope="col" class="ev-col-rec">
           <abbr [title]="c.recommended">{{ c.recommendedShort }}</abbr>
           <app-eval-tip [text]="tip('results.recommended')" [label]="tipLabel(c.recommended)" />
         </th>
@@ -150,7 +150,7 @@
               (change)="setAcclaim(r, $event)"
             />
           </td>
-          <td>
+          <td class="ev-col-power">
             <span class="ev-label" aria-hidden="true">{{ c.power }}</span>
             <input
               class="input ev-input ev-input--cell ev-input--power"
@@ -162,7 +162,7 @@
               (change)="setPower(r, $event)"
             />
           </td>
-          <td class="ev-num" [class.is-over]="over(r)">
+          <td class="ev-num ev-col-rec" [class.is-over]="over(r)">
             <span class="ev-label">{{ c.recommended }}</span>
             {{ r.ownLimit ?? '–' }}
           </td>
