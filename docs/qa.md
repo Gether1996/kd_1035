@@ -15,7 +15,7 @@ Po nasadení: GitHub → Actions → **Live smoke** → Run workflow (iba číta
 ## Pred mergom do main
 
 1. `tools/test.sh all` – zelené.
-2. PR na GitHube → CI (`.github/workflows/ci.yml`) musí byť zelené: backend testy + chýbajúce migrácie, frontend testy + produkčný build, e2e na produkčnom Docker stacku s čerstvou DB (vrátane prihláseného test hráča). Pri zlyhaní: Summary v behu workflowu, artefakt `playwright-report` (report + trace).
+2. PR na GitHube → CI (`.github/workflows/ci.yml`) musí byť zelené: backend testy + chýbajúce migrácie, frontend testy + produkčný build, e2e na produkčnom Docker stacku s čerstvou DB (vrátane prihláseného test hráča – bez neho krok „Test player“ zlyhá). Pri zlyhaní: Summary v behu workflowu, artefakt `playwright-report` (report + trace). **„flaky“ v Summary je chyba, nie šum** – test prešiel až na druhý pokus (`retries: 1`); „dopredu na `/#alliance`“ takto 14× prešiel, kým sa ukázalo, že web je naozaj chybný (v1.32.2).
 3. Zmena UI → `/kd-qa <oblasť>` (telefón + laptop), pozri screenshoty z `tools/qa/out/`.
 4. Merge → po nasadení **Live smoke**.
 
@@ -73,7 +73,7 @@ Claude ovláda skutočný Chrome cez [Chrome DevTools MCP](https://github.com/Ch
 
 **Použitie:** `/kd-qa` (smoke celého webu), `/kd-qa mobil`, `/kd-qa /kalendar`, `/kd-qa PR 12`, `/kd-qa live` (živý web, len čítanie). Skill najprv spustí automatické testy, potom paralelných agentov `kd-qa-tester` (jeden na skupinu zariadení) a vráti jeden zoradený report: Blokujúce → Vážne → Drobné → Nápad, so screenshotmi v `tools/qa/out/`.
 
-- Chrome má vždy dočasný profil (žiadne tvoje cookies). Bez okna: `KD_QA_HEADLESS=1`. Tvoj vlastný Chrome s `--remote-debugging-port=9222`: `KD_QA_BROWSER_URL=http://127.0.0.1:9222`.
+- Chrome má vždy dočasný profil (žiadne tvoje cookies). Bez okna: `KD_QA_HEADLESS=1`. Tvoj vlastný Chrome s `--remote-debugging-port=9222`: `KD_QA_BROWSER_URL=http://127.0.0.1:9222` – spusti ho s osobitným profilom (`--user-data-dir=<prázdny priečinok>`), nikdy nie s tým, kde si prihlásený (admin webu, Discord, GitHub): nástroje z `.claude/settings.json` (aj `evaluate_script`, `navigate_page`) bežia bez pýtania.
 - Prihlásený hráč: `manage.py test_session [--superuser] [--marches] [--new]` – skill ho vytvorí aj zmaže.
 - Vypnuté: štatistiky používania a posielanie URL do Google CrUX.
 

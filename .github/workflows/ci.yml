@@ -12,9 +12,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a PR cancels its running check. On main a started run always finishes, so every commit that may get
+# deployed has a verdict; a run still waiting is replaced by the newer push.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   backend:
@@ -109,7 +111,12 @@ jobs:
           npx playwright install --with-deps chromium webkit
 
       - name: Test player
-        run: echo "SESSION=$(docker compose exec -T -u app backend python manage.py test_session --marches | tr -d '\r')" >> "$GITHUB_ENV"
+        # test_session refuses a DEBUG=0 process (production); only this one command of the throwaway stack gets DEBUG.
+        # Fails the job when there is no session – the signed-in tests would otherwise be skipped without a word.
+        run: |
+          session="$(docker compose exec -T -u app -e DJANGO_DEBUG=1 backend python manage.py test_session --marches | tr -d '\r')"
+          test -n "$session"
+          echo "SESSION=$session" >> "$GITHUB_ENV"
 
       - name: Playwright – every page, device and journey
         working-directory: tools/e2e
