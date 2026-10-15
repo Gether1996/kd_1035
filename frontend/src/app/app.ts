@@ -53,7 +53,8 @@ export class App {
     const scroller = inject(ViewportScroller);
 
     // section links land below the fixed header
-    scroller.setOffset(() => [0, doc.querySelector('app-header')?.clientHeight ?? 0]);
+    const header = () => doc.querySelector('app-header')?.clientHeight ?? 0;
+    scroller.setOffset(() => [0, header()]);
 
     // new page → top; same page in the other language → keep the scroll position;
     // back/forward → where the visitor left that page. The browser's own restoration would run while the previous
@@ -63,11 +64,24 @@ export class App {
     let changed = false;
     let popstate = false;
     let restoring: AbortController | undefined;
+    // Back/forward to a section link (/#alliance) returns to the section, not to the saved position: a visitor who left
+    // before the next events loaded above it saved a position a whole section short. Per history entry: how far below
+    // the section's landing spot the visitor was when they left. The router writes the id of every navigation, back
+    // and forward included, into the entry it lands on (history.state.navigationId), like it keys its own positions.
+    const belowSection = new Map<number, number>();
+    let current = 0; // the id of the navigation the visitor is on = the navigationId of its history entry
+    let returning = 0; // the navigationId of the entry back/forward goes to
     router.events.subscribe((e) => {
       if (e instanceof NavigationStart) {
         popstate = e.navigationTrigger === 'popstate';
+        returning = e.restoredState?.navigationId ?? 0;
         restoring?.abort();
+        // router.url and the page are still the ones being left
+        const fragment = router.parseUrl(router.url).fragment;
+        const section = fragment ? doc.getElementById(fragment) : null;
+        if (section) belowSection.set(current, Math.round(header() - section.getBoundingClientRect().top));
       } else if (e instanceof NavigationEnd) {
+        current = e.id;
         const rest = parseUrl(e.urlAfterRedirects).rest;
         changed = rest !== previous;
         previous = rest;
@@ -79,9 +93,16 @@ export class App {
         const fragment = router.parseUrl(e.urlAfterRedirects).fragment;
         if (e.id === 1 && fragment) restoring = follow(scroller, doc, fragment);
       } else if (e instanceof Scroll && popstate) {
-        // the router saved the position when the visitor left the page; after a reload it has none
-        if (e.position) restoring = restore(scroller, doc, e.position);
-        else if (changed && !e.anchor) scroller.scrollToPosition([0, 0], { behavior: 'instant' });
+        // back to the section – unless the visitor had scrolled up above it (the next events would then come between
+        // them); otherwise the position the router saved when the visitor left the page (after a reload it has none)
+        const below = e.anchor ? belowSection.get(returning) : undefined;
+        if (e.anchor && below !== undefined && below >= -1) {
+          restoring = follow(scroller, doc, e.anchor, { below, position: e.position });
+        } else if (e.position) {
+          restoring = restore(scroller, doc, e.position);
+        } else if (changed && !e.anchor) {
+          scroller.scrollToPosition([0, 0], { behavior: 'instant' });
+        }
       } else if (e instanceof Scroll && e.anchor) {
         // a section link (/#alliance): sections above it that load from the API afterwards would push it away
         restoring?.abort();
@@ -143,11 +164,27 @@ function restore(scroller: ViewportScroller, doc: Document, [x, y]: [number, num
 /**
  * Keeps a section link on its section while the page above it still grows – the home page's next events arrive from
  * the API after the jump and pushed Aliancia/Komunita down by a whole section. Only reacts when the page height
- * changes, so the smooth scroll itself is left alone. Gives up after SETTLE_MS, or as soon as the visitor scrolls or
- * clicks.
+ * changes, so the smooth scroll itself is left alone. Back/forward (`back` given) goes there at once instead,
+ * `back.below` px past the section's landing spot like when the visitor left; until the section is there (the page is
+ * still rendering, or its API failed) it keeps the position the router saved. Gives up after SETTLE_MS, or as soon as
+ * the visitor scrolls or clicks.
  */
-function follow(scroller: ViewportScroller, doc: Document, anchor: string): AbortController {
+function follow(
+  scroller: ViewportScroller,
+  doc: Document,
+  anchor: string,
+  back?: { below: number; position: [number, number] | null },
+): AbortController {
   const following = new AbortController();
+  const go = () => {
+    if (!back || doc.getElementById(anchor)) {
+      scroller.scrollToAnchor(anchor, { behavior: 'instant' });
+      if (back?.below) scroller.scrollToPosition([0, scrollY + back.below], { behavior: 'instant' });
+    } else if (back.position) {
+      scroller.scrollToPosition(back.position, { behavior: 'instant' });
+    }
+  };
+  if (back) go();
   const main = doc.querySelector('main');
   if (!main || typeof ResizeObserver === 'undefined') return following;
   for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
@@ -157,7 +194,7 @@ function follow(scroller: ViewportScroller, doc: Document, anchor: string): Abor
   const observer = new ResizeObserver(() => {
     if (main.offsetHeight === height) return;
     height = main.offsetHeight;
-    scroller.scrollToAnchor(anchor, { behavior: 'instant' });
+    go();
   });
   observer.observe(main);
   const timer = setTimeout(() => following.abort(), SETTLE_MS);
