@@ -342,18 +342,20 @@ describe('evaluation scoring', () => {
     expect(unknown).toEqual(['nobody 50', 'Twin 60', 'no number here']);
   });
 
-  it('counts the first X marches in the player\'s order, or the best X', () => {
+  it('counts the best X marches, whatever their place in the player\'s order (Gether 16. 10. 2026)', () => {
     // seven marches, the later ones better (more inscriptions)
     const marches = [1, 2, 3, 4, 5, 6, 7].map((n) => march({ id: n, position: n, gold: n, gear: gear('gold', false, 0) }));
-    const counted = (settings: EvalSettings) =>
-      evaluate(settings, [player(1, marches)], INDEX).rows[0].marches.filter((m) => m.counted).map((m) => m.march.position);
-    expect(counted(withPairs({ marches: { max: 3 } }))).toEqual([1, 2, 3]);
-    expect(counted(withPairs({ marches: { max: 3, order: 'best' } }))).toEqual([5, 6, 7]);
+    const counted = (settings: EvalSettings, list = marches) =>
+      evaluate(settings, [player(1, list)], INDEX).rows[0].marches.filter((m) => m.counted).map((m) => m.march.position);
+    expect(counted(withPairs({ marches: { max: 3 } }))).toEqual([5, 6, 7]);
     expect(counted(withPairs({ marches: { max: 7 } }))).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    // the strongest one last still counts
+    const strongLast = marches.map((m) => ({ ...m, gold: m.position === 7 ? 9 : 1 }));
+    expect(counted(withPairs({ marches: { max: 5 } }), strongLast)).toEqual([1, 2, 3, 4, 7]);
     // shown in the player's order, the ones over the limit marked
     const row = evaluate(withPairs({ marches: { max: 3 } }), [player(1, marches)], INDEX).rows[0];
     expect(row.marches.map((m) => [m.march.position, m.skipped])).toEqual([
-      [1, null], [2, null], [3, null], [4, 'limit'], [5, 'limit'], [6, 'limit'], [7, 'limit'],
+      [1, 'limit'], [2, 'limit'], [3, 'limit'], [4, 'limit'], [5, null], [6, null], [7, null],
     ]);
   });
 

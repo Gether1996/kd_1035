@@ -44,8 +44,7 @@ export interface PlayerMarches {
 
 /** which marches the KvK evaluation counts (backend accounts/pair_check.py counting(), the saved Premenné) */
 export interface MarchCounting {
-  /** 'position': the first `count` in the player's order, 'best': the best `count` by score */
-  order: 'position' | 'best';
+  /** the best `count` by score */
   count: number;
   kinds: MarchKind[];
 }

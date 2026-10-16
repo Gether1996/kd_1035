@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **16. 10. 2026 – v1.32.3:** Vyhodnocovanie KvK počíta 5 (X) najsilnejších marchov hráča podľa skóre, nie prvých 5 v jeho poradí – silný march na 7. mieste sa už nepreskočí. Voľba „Ktoré marche“ v Premenných je preč, veta na `/marche` hovorí o najsilnejších.
 - **14. 10. 2026 – v1.32.2:** Oprava: späť/dopredu v prehliadači na odkaz na sekciu (`/#alliance`) vráti návštevníka k sekcii aj vtedy, keď stránku opustil skôr, než sa nad ňou načítali Najbližšie eventy (predtým skončil o celú sekciu vedľa; v CI to náhodne padalo na iPhone). CI teraz naozaj testuje aj prihláseného hráča a beh na `main` sa už neruší.
 - **14. 10. 2026 – v1.32.1:** Neschválený hráč s marchmi nerobí nič – nevidí ani vlastné, nemení, nemaže ani nepreusporiada; Marche mu zmizli z menu aj z Môj účet. Jeho marche ostávajú v databáze pre opätovné schválenie.
 - **14. 10. 2026 – v1.32.0:** Schválený hráč dostane od bota súkromnú správu (SK/CZ), že môže pridať marche a prihlášku na KvK, s odkazom na Prehľad marchov – iba raz, iba keď ho superadmin schváli (nie auto-approve), iba so zapnutými správami od bota; „Čakáš na schválenie“ a Ochrana údajov to spomínajú (kolo agentov).

@@ -56,13 +56,10 @@ export class Marches {
   /** who sees the marches: every signed-in player (true) or only R4 and the superuser */
   protected readonly isPublic = linkedSignal(() => (this.data.hasValue() ? this.data.value().public : false));
   protected readonly visibilityFailed = signal(false);
-  /**
-   * "Do vyhodnocovania KvK sa počíta prvých 5 marchov typu …" – only when the evaluation counts the first X in the
-   * player's order (Premenné), not the best X
-   */
+  /** "Do vyhodnocovania KvK sa počíta 5 najsilnejších marchov typu …" (the best X by score, Premenné) */
   protected readonly counted = computed(() => {
     const counting = this.data.hasValue() ? this.data.value().counting : undefined;
-    if (counting?.order !== 'position' || !counting.kinds.length) return null;
+    if (!counting?.kinds.length) return null;
     const t = this.t().order;
     const lang = this.i18n.lang();
     const rule = new Intl.PluralRules(lang).select(counting.count);

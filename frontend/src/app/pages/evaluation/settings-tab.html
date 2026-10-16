@@ -174,17 +174,6 @@
           (change)="setMax($event)"
         />
       </div>
-      <div class="field ev-field">
-        <span class="ev-field__head">
-          <label class="ev-field__label" for="ev-marches-order">{{ s.marches.order }}</label>
-          <app-eval-tip [text]="tip('marches.order')" [label]="tipLabel(s.marches.order)" />
-        </span>
-        <select id="ev-marches-order" class="select ev-input" (change)="setOrder($event)">
-          @for (o of orders; track o) {
-            <option [value]="o" [selected]="v.marches.order === o">{{ s.marches.orders[o] }}</option>
-          }
-        </select>
-      </div>
       @for (f of fs.marches; track f.label) {
         <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
       }

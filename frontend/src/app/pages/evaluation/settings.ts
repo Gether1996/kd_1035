@@ -45,10 +45,8 @@ export interface EvalSettings {
   marches: {
     /** which march types count (open field) */
     kinds: MarchKind[];
-    /** this many count (up to MARCHES_LIMIT, as many as a player may have) */
+    /** the best this many by score count (up to MARCHES_LIMIT, as many as a player may have) */
     max: number;
-    /** which: the first in the player's order (Gether 13. 10. 2026) or the best by score */
-    order: MarchOrder;
     /** the weights of the equipment and the armaments in a march (spreadsheet: 0.75 / 0.25) */
     equipment: number;
     armaments: number;
@@ -111,8 +109,6 @@ export interface EvalSettings {
     wrong: number;
   };
 }
-
-export type MarchOrder = 'position' | 'best';
 
 /** a player has at most 10 marches (backend accounts MAX_MARCHES) */
 export const MARCHES_LIMIT = 10;
@@ -211,7 +207,6 @@ export const DEFAULT_SETTINGS: EvalSettings = {
   marches: {
     kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'],
     max: 5,
-    order: 'position',
     equipment: 0.75,
     armaments: 0.25,
   },
@@ -336,7 +331,6 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
     marches: {
       kinds: MARCH_KINDS.filter((k) => kinds.includes(k)),
       max,
-      order: marches['order'] === 'best' ? 'best' : 'position',
       equipment: num(marches['equipment'], d.marches.equipment, 0, 10),
       armaments: num(marches['armaments'], d.marches.armaments, 0, 10),
     },

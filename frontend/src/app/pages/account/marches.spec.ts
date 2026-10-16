@@ -338,7 +338,7 @@ describe('Marches', () => {
   });
 
   it('moves a march up and down, keeps the focus on the arrow and goes back when saving fails', async () => {
-    const counting = { order: 'position', count: 5, kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'] };
+    const counting = { count: 5, kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'] };
     const three = [1, 2, 3].map((id) => ({ ...MARCH, id, position: id, kind: 'cavalry' as const, primary: 'Attila' }));
     const http = setup();
     const fixture = TestBed.createComponent(Marches);
@@ -349,9 +349,9 @@ describe('Marches', () => {
     http.expectOne('/api/armory/').flush(ARMORY);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    // the evaluation counts the first five in this order
+    // the evaluation counts the five strongest
     expect(el.querySelector('.march-order')?.textContent?.trim()).toBe(
-      'Do vyhodnocovania KvK sa počíta prvých 5 marchov typu pechota, jazda, lukostrelci, mix (leadership) a siege – v tomto poradí. March s párom, ktorý sa nehodnotí, sa preskočí.',
+      'Do vyhodnocovania KvK sa počíta 5 najsilnejších marchov typu pechota, jazda, lukostrelci, mix (leadership) a siege. March s párom, ktorý sa nehodnotí, sa nepočíta.',
     );
     const card = (id: number) => el.querySelector(`[data-march="${id}"]`)!;
     const ids = () => Array.from(el.querySelectorAll('app-march-build'), (c) => Number(c.getAttribute('data-march')));
@@ -400,25 +400,25 @@ describe('Marches', () => {
     http.verify();
   });
 
-  it('says which marches the evaluation counts only when it counts the first ones', async () => {
+  it('says which marches the evaluation counts: the strongest ones', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(Marches);
     fixture.detectChanges();
-    http.expectOne('/api/me/marches/').flush({ marches: [], max: 10, public: false, counting: { order: 'position', count: 1, kinds: ['cavalry'] } });
+    http.expectOne('/api/me/marches/').flush({ marches: [], max: 10, public: false, counting: { count: 1, kinds: ['cavalry'] } });
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.march-order')?.textContent).toContain('sa počíta prvý march typu jazda – v tomto poradí');
+    expect(el.querySelector('.march-order')?.textContent).toContain('sa počíta najsilnejší march typu jazda.');
     http.verify();
 
     TestBed.resetTestingModule();
     const again = setup();
-    const best = TestBed.createComponent(Marches);
-    best.detectChanges();
-    again.expectOne('/api/me/marches/').flush({ marches: [], max: 10, public: false, counting: { order: 'best', count: 5, kinds: ['cavalry'] } });
+    const five = TestBed.createComponent(Marches);
+    five.detectChanges();
+    again.expectOne('/api/me/marches/').flush({ marches: [], max: 10, public: false, counting: { count: 5, kinds: ['cavalry', 'archer'] } });
     again.expectOne('/api/commanders/marches/').flush(COMMANDERS);
-    await settle(best);
-    expect((best.nativeElement as HTMLElement).querySelector('.march-order')).toBeNull();
+    await settle(five);
+    expect((five.nativeElement as HTMLElement).querySelector('.march-order')?.textContent).toContain('5 najsilnejších marchov typu jazda a lukostrelci');
     again.verify();
   });
 

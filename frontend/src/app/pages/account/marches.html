@@ -32,7 +32,7 @@
         </button>
       }
     </div>
-    <!-- the evaluation counts the first X in this order (Premenné "Prvé v poradí hráča"); the arrows move a march -->
+    <!-- the evaluation counts the best X (Premenné); the arrows only order the list -->
     @if (counted(); as text) {
       <p class="march-hint march-order">{{ text }}</p>
     }

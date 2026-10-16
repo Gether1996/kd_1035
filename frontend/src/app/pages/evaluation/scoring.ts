@@ -303,13 +303,13 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
 
   const partial: Draft[] = players.map((player) => {
     const marches = player.marches.map((m) => marchEval(settings, table, m, index, formations));
-    // the first X in the player's order (Gether 13. 10. 2026: "prvých X marchov podľa toho, ako ich má nastavené"),
-    // or the best X
+    // the best X by score, whatever their place in the player's order (Gether 16. 10. 2026: "prvých 5 najsilnejších,
+    // aby to nebolo také, že keď je 7. vyplnený najsilnejší, tak sa skipne"); a tie goes to the player's order
     const byPosition = (a: MarchEval, b: MarchEval) => a.march.position - b.march.position || a.march.id - b.march.id;
     // a march whose pair is not evaluated takes no place – the next one counts instead
     const eligible = marches
       .filter((m) => m.march.kind && kinds.has(m.march.kind) && m.pair.points > 0)
-      .sort(settings.marches.order === 'best' ? (a, b) => b.total - a.total || byPosition(a, b) : byPosition);
+      .sort((a, b) => b.total - a.total || byPosition(a, b));
     eligible.forEach((m, i) => {
       m.counted = i < settings.marches.max;
       m.skipped = m.counted ? null : 'limit';

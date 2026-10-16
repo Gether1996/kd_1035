@@ -15,9 +15,8 @@ from .models import MAX_MARCHES, EvaluationSettings, March
 
 # DEFAULT_SETTINGS.marches.kinds in frontend/src/app/pages/evaluation/settings.ts – until Premenné save their own list
 DEFAULT_KINDS = ('infantry', 'cavalry', 'archer', 'leadership', 'engineering')
-# DEFAULT_SETTINGS.marches.max and .order
+# DEFAULT_SETTINGS.marches.max
 DEFAULT_COUNT = 5
-ORDERS = ('position', 'best')
 
 
 def evaluation_marches() -> dict:
@@ -34,18 +33,17 @@ def counted_kinds(marches: dict | None = None) -> set[str]:
 
 
 def counting(marches: dict | None = None) -> dict:
-    """Which marches the evaluation counts, told to the player on /marche: the first `count` (or the best) of the
-    `kinds` in the player's order – read as parseSettings in settings.ts does (a number is rounded into 1 …
-    MAX_MARCHES, anything else is the default) so the sentence says what scoring.ts does."""
+    """Which marches the evaluation counts, told to the player on /marche: the best `count` of the `kinds` by score
+    (Gether 16. 10. 2026) – read as parseSettings in settings.ts does (a number is rounded into 1 … MAX_MARCHES,
+    anything else is the default) so the sentence says what scoring.ts does."""
     marches = evaluation_marches() if marches is None else marches
-    count, order = marches.get('max'), marches.get('order')
+    count = marches.get('max')
     if isinstance(count, (int, float)) and not isinstance(count, bool) and math.isfinite(count):
         count = min(MAX_MARCHES, max(1, math.floor(count + 0.5)))
     else:
         count = DEFAULT_COUNT
     kinds = counted_kinds(marches)
     return {
-        'order': order if order in ORDERS else ORDERS[0],
         'count': count,
         # the march types in the order of the type picker
         'kinds': [kind for kind in March.Kind.values if kind in kinds],

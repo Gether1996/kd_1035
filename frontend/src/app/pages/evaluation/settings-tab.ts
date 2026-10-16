@@ -21,7 +21,6 @@ import {
   INSCRIPTION_TIERS,
   InscriptionTier,
   MARCHES_LIMIT,
-  MarchOrder,
   PairRow,
   RARITIES,
   SLOTS,
@@ -88,7 +87,6 @@ export class EvalSettingsTab {
   protected readonly slots = SLOTS;
   protected readonly inscriptionTiers = INSCRIPTION_TIERS;
   protected readonly limit = MARCHES_LIMIT;
-  protected readonly orders: MarchOrder[] = ['position', 'best'];
 
   // ---------------------------------------------------------------- values by path
 
@@ -213,10 +211,6 @@ export class EvalSettingsTab {
       draft.marches.max = value;
       draft.power.table = rowsFor(value, draft.power.table);
     });
-  }
-
-  protected setOrder(event: Event): void {
-    this.put(['marches', 'order'], (event.target as HTMLSelectElement).value as MarchOrder);
   }
 
   // ---------------------------------------------------------------- the inscription tier list

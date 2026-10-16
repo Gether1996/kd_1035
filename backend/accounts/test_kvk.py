@@ -302,15 +302,16 @@ class MarchTests(KvkTestCase):
         from .models import EvaluationSettings
 
         counting = lambda: self.client.get('/api/me/marches/').json()['counting']  # noqa: E731
-        default = {'order': 'position', 'count': 5, 'kinds': ['infantry', 'cavalry', 'archer', 'leadership', 'engineering']}
+        default = {'count': 5, 'kinds': ['infantry', 'cavalry', 'archer', 'leadership', 'engineering']}
         self.assertEqual(counting(), default)
-        data = {'marches': {'max': 3, 'order': 'best', 'kinds': ['conquering', 'cavalry', 7]}}
+        # the saved order of the old Premenné ("Prvé v poradí hráča") is left out – the best X count (16. 10. 2026)
+        data = {'marches': {'max': 3, 'order': 'position', 'kinds': ['conquering', 'cavalry', 7]}}
         EvaluationSettings.objects.create(pk=1, data=data)
-        self.assertEqual(counting(), {'order': 'best', 'count': 3, 'kinds': ['cavalry', 'conquering']})
+        self.assertEqual(counting(), {'count': 3, 'kinds': ['cavalry', 'conquering']})
         # read as settings.ts reads it: a number rounded into 1 … MAX_MARCHES, anything else the default
-        for count, order, expected in ((7.6, 'position', (8, 'position')), (40, 'x', (10, 'position')), (0, None, (1, 'position')), ('5', 'best', (5, 'best')), (True, 'best', (5, 'best'))):
-            EvaluationSettings.objects.filter(pk=1).update(data={'marches': {'max': count, 'order': order}})
-            self.assertEqual((counting()['count'], counting()['order']), expected, count)
+        for count, expected in ((7.6, 8), (40, 10), (0, 1), ('5', 5), (True, 5)):
+            EvaluationSettings.objects.filter(pk=1).update(data={'marches': {'max': count}})
+            self.assertEqual(counting()['count'], expected, count)
         EvaluationSettings.objects.filter(pk=1).update(data=['broken'])
         self.assertEqual(counting(), default)
         # one read of the settings for the whole list, however many marches
