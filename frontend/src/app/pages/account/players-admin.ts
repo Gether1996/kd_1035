@@ -4,6 +4,7 @@ import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { KvkApi, PlayerFlag, ReviewerRow } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
 import { MarchNotices } from '../../shared/march-notices';
+import { Icon } from '../../shared/icon';
 import { EvalTip } from '../evaluation/tip';
 
 type AccessFilter = 'all' | 'r4' | 'evaluation_settings' | 'evaluation_overview' | 'none';
@@ -25,7 +26,7 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
  */
 @Component({
   selector: 'app-players-admin',
-  imports: [EvalTip, MarchNotices],
+  imports: [EvalTip, MarchNotices, Icon],
   template: `
     @let k = t();
     <section class="panel" aria-labelledby="players-title">
@@ -133,10 +134,13 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
                 @if (!p.approved && !p.superuser) {
                   <span class="tag tag--pending">{{ k.pending }}</span>
                 }
+                @if (p.local) {
+                  <span class="tag">{{ k.local.tag }}</span>
+                }
               </strong>
               <span>
                 <!-- "· na opravu: 2" red: the marches red on /marche, a wrong pair or formation for the KvK evaluation -->
-                {{ p.ingame_name ? p.name + ' · ' : '' }}{{ p.superuser ? k.superuser + ' · ' : '' }}{{ details(p) }}@if (p.issues) { · <span class="reviewer__issues" [title]="k.issuesHint">{{ k.issues.replace('{n}', '' + p.issues) }}<span class="sr-only"> – {{ k.issuesHint }}</span></span>}
+                {{ p.ingame_name && !p.local ? p.name + ' · ' : '' }}{{ p.superuser ? k.superuser + ' · ' : '' }}{{ details(p) }}@if (p.issues) { · <span class="reviewer__issues" [title]="k.issuesHint">{{ k.issues.replace('{n}', '' + p.issues) }}<span class="sr-only"> – {{ k.issuesHint }}</span></span>}
               </span>
             </span>
             @if (!p.superuser) {
@@ -156,6 +160,31 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
                   </label>
                 }
               </span>
+            }
+            @if (p.local) {
+              <!-- without Discord (Gether 17. 10. 2026): a code for a new password; a waiting one can be deleted -->
+              <div class="reviewer__local">
+                <button type="button" class="pill-btn pill-btn--quiet" [disabled]="busy()" (click)="code(p)">
+                  <svg appIcon="key-round"></svg>{{ k.local.code }}
+                </button>
+                @if (!p.approved) {
+                  <button
+                    type="button"
+                    class="danger"
+                    [class.is-armed]="deleting() === p.id"
+                    [disabled]="busy()"
+                    [attr.aria-label]="(deleting() === p.id ? k.local.confirm : k.local.delete) + ': ' + p.ingame_name"
+                    (click)="remove(p)"
+                  >
+                    <svg appIcon="trash-2"></svg>{{ deleting() === p.id ? k.local.confirm : k.local.delete }}
+                  </button>
+                }
+                @if (codes()[p.id]; as c) {
+                  <p class="reviewer__code" role="status">
+                    {{ k.local.codeIs }} <strong>{{ c.code }}</strong> · {{ k.local.until.replace('{date}', c.until) }}
+                  </p>
+                }
+              </div>
             }
           </li>
         } @empty {
@@ -192,6 +221,11 @@ export class PlayersAdmin {
   protected readonly marchFilter = signal<MarchFilter>('all');
   protected readonly kvkFilter = signal<KvkFilter>('all');
   protected readonly failed = signal(false);
+  protected readonly busy = signal(false);
+  /** a player without Discord waiting for the approval: the first click on "Zmazať" asks, the second deletes */
+  protected readonly deleting = signal<number | null>(null);
+  /** the codes for a new password created now – shown once, the server keeps only their hash */
+  protected readonly codes = signal<Record<number, { code: string; until: string }>>({});
 
   /** the superadmin counts as approved; with no switches of their own, they are in no access filter but "všetci" */
   private readonly approved = (p: ReviewerRow) => p.approved || p.superuser;
@@ -314,6 +348,44 @@ export class PlayersAdmin {
     } catch {
       this.failed.set(true);
       box.checked = !value; // the switch goes back
+    }
+  }
+
+  protected async code(player: ReviewerRow): Promise<void> {
+    await this.act(async () => {
+      const { code, until } = await this.api.resetCode(player.id);
+      const date = new Intl.DateTimeFormat(this.i18n.locale(), {
+        day: 'numeric',
+        month: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: KINGDOM_ZONE,
+      }).format(new Date(until));
+      this.codes.update((codes) => ({ ...codes, [player.id]: { code, until: date } }));
+    });
+  }
+
+  protected async remove(player: ReviewerRow): Promise<void> {
+    if (this.deleting() !== player.id) {
+      this.deleting.set(player.id);
+      return;
+    }
+    await this.act(async () => {
+      await this.api.deleteLocal(player.id);
+      this.players.update((list) => list.filter((p) => p.id !== player.id));
+      this.deleting.set(null);
+    });
+  }
+
+  private async act(action: () => Promise<void>): Promise<void> {
+    this.busy.set(true);
+    this.failed.set(false);
+    try {
+      await action();
+    } catch {
+      this.failed.set(true);
+    } finally {
+      this.busy.set(false);
     }
   }
 }

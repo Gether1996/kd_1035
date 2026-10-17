@@ -46,7 +46,12 @@ type Tab = 'mine' | 'list' | 'settings';
           <span class="login__badge"><svg appIcon="swords"></svg></span>
           <h2 class="login__title" id="kvk-login">{{ k.loginTitle }}</h2>
           <p class="login__text">{{ k.loginText }}</p>
-          <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ t().account.login }}</a>
+@if (auth.discordLogin()) {
+            <a class="btn btn--gold" [href]="auth.loginUrl()"><svg appIcon="discord"></svg> {{ t().account.login }}</a>
+          }
+          <!-- the in-game name and a password on /ucet, then back here -->
+          @let other = auth.accountLink();
+          <a class="login__other" [routerLink]="other.path" [queryParams]="other.query">{{ t().account.local.other }}</a>
           <a class="login__privacy" [routerLink]="i18n.path('privacy')">{{ t().account.privacy }}</a>
         </section>
       } @else if (state.error()) {

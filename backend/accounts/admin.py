@@ -6,6 +6,7 @@ from django.utils.html import format_html
 from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
+from .local_auth import login_key
 from .models import Alarm, EventReminder, KvkSettings, KvkSignup, MarchNotice, Player, PlayerSettings, SentReminder
 from .reminders import duration
 
@@ -15,8 +16,9 @@ REMINDER_LABELS = dict(REMINDER_CHOICES)
 
 @admin.register(Player)
 class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
-    """Players appear by signing in with Discord; their Discord data is refreshed on every sign-in. Only the in-game
-    name (typed by the player), the KvK reviewer flag and the approval (marches, KvK sign-ups) can be changed here."""
+    """Players appear by signing in with Discord (their Discord data is refreshed on every sign-in) or by signing up
+    without Discord (`login`, local_auth.py). Only the in-game name (typed by the player), the KvK reviewer flag and
+    the approval (marches, KvK sign-ups) can be changed here."""
 
     list_display = [
         'thumbnail', 'name', 'ingame_name', 'approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview', 'discord_id', 'created_at',
@@ -38,6 +40,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'terms_version',
         'terms_accepted_at',
         'discord_id',
+        'login',
         'avatar',
         'remind_discord',
         'lang',
@@ -69,6 +72,8 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         was_approved = Player.objects.filter(pk=obj.pk).values_list('approved', flat=True).first()
         if was_approved is not None:
             obj.approval_changed(was_approved)
+        if obj.local:
+            obj.login = login_key(obj.ingame_name)  # a player without Discord signs in with the in-game name
         super().save_model(request, obj, form, change)
 
     # deleting a player removes the whole site account (the user), not just its Discord profile, and the admin

@@ -25,7 +25,7 @@ export interface KvkSignup extends Omit<March, 'position'> {
   updated_at: string;
   /** for reviewers */
   /** approved false: hidden from everyone but the superuser */
-  player?: { id: number; name: string; ingame_name: string; avatar_url: string; discord_id: string; approved: boolean };
+  player?: { id: number; name: string; ingame_name: string; avatar_url: string; discord_id: string | null; approved: boolean };
   /** for reviewers: the player's marches from /ucet */
   marches?: March[];
 }
@@ -140,6 +140,8 @@ export interface ReviewerRow {
   evaluation_settings: boolean;
   evaluation_overview: boolean;
   superuser: boolean;
+  /** without Discord – the superadmin gives a code for a new password and deletes one waiting (Gether 17. 10. 2026) */
+  local?: boolean;
   /** the first sign-in */
   created_at: string;
   /** the last sign-in (null = never recorded) */
@@ -203,6 +205,16 @@ export class KvkApi {
     return firstValueFrom(
       this.http.put<{ auto_approve: boolean }>('/api/kvk/reviewers/auto-approve/', { auto_approve: value }),
     );
+  }
+
+  /** A one-off code for a new password of a player without Discord, valid 3 days (superuser). */
+  resetCode(id: number): Promise<{ code: string; until: string }> {
+    return firstValueFrom(this.http.post<{ code: string; until: string }>(`/api/kvk/reviewers/${id}/reset-code/`, null));
+  }
+
+  /** Deletes a player without Discord waiting for the approval – a bot or someone unknown (superuser). */
+  deleteLocal(id: number): Promise<unknown> {
+    return firstValueFrom(this.http.delete(`/api/kvk/reviewers/${id}/delete/`));
   }
 
   /** R4, the approval and the evaluation switches of a player (superuser) */

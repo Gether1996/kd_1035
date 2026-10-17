@@ -82,6 +82,23 @@
   text-wrap: pretty;
 }
 
+// "Bez Discordu" under the Discord button → /ucet (the in-game name and a password); a quiet text link like the next
+.login__other {
+  margin-top: 16px;
+  padding-block: 4px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gold-300);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.25s;
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
 // "what we store about you" → privacy page; quiet text link like on the account page
 .login__privacy {
   margin-top: 14px;
@@ -107,4 +124,9 @@
   border-radius: var(--radius);
   text-align: center;
   color: var(--text-dim);
+
+  // without Discord: "Prepojiť s Discordom"
+  .btn {
+    margin-top: 20px;
+  }
 }

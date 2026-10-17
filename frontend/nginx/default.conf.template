@@ -88,8 +88,9 @@ server {
 
     include /etc/nginx/snippets/security-headers.conf;
 
-    # the admin's password login and the start of the Discord sign-in: a few attempts a minute per visitor
-    location ~ ^/(admin/login/|api/auth/discord/login/) {
+    # the admin's password login, the start of the Discord sign-in and the sign-in without Discord (sign-up, password,
+    # code): a few attempts a minute per visitor
+    location ~ ^/(admin/login/|api/auth/discord/login/|api/auth/local/) {
         limit_req zone=kd_login burst=5 nodelay;
         proxy_pass http://backend:8000;
         proxy_set_header Host $http_host;

@@ -31,7 +31,7 @@ export const cs: Dict = {
     },
     account: {
       title: 'Můj účet | KD 1035',
-      description: 'Přihlášení hráčů království KD 1035 přes Discord.',
+      description: 'Přihlášení hráčů království KD 1035 přes Discord nebo jménem ve hře.',
     },
     reminders: {
       title: 'Připomínky eventů na Discordu | KD 1035',
@@ -235,8 +235,8 @@ export const cs: Dict = {
     eyebrow: 'KvK',
     title: 'Přihláška na KvK',
     intro: 'Přihlas se na rally nebo garrison a naklikej výbavu – vedení z ní sestaví týmy.',
-    loginTitle: 'Přihlas se přes Discord',
-    loginText: 'Přihlášku na KvK podáš se svým Discord účtem. Žádné nové heslo.',
+    loginTitle: 'Přihlas se',
+    loginText: 'Přihlášku na KvK podáš se svým účtem na webu – přes Discord nebo jménem ve hře.',
     loadError: 'Přihlášky se nepodařilo načíst. Zkus to znovu za chvíli.',
     tabs: { mine: 'Moje přihláška', list: 'Přihlášky', settings: 'Nastavení' },
     signupEyebrow: 'Přihláška',
@@ -296,6 +296,7 @@ export const cs: Dict = {
     none: 'Nikdo nemá u marchů chybu.',
     marches: ['{n} march k opravě', '{n} marche k opravě', '{n} marchů k opravě'],
     muted: 'zprávy od bota vypnuté',
+    local: 'bez Discordu – vidí to na webu',
     told: 'už upozorněný {date}',
     state: { pending: 'čeká na odeslání', sent: 'odesláno', failed: 'neodesláno', skipped: 'mezitím opraveno' },
     send: 'Odeslat ({n})',
@@ -335,6 +336,15 @@ export const cs: Dict = {
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čeká',
+    // a player without Discord (Gether 17. 10. 2026): a one-off code for a new password, delete one waiting
+    local: {
+      tag: 'bez Discordu',
+      code: 'Kód na nové heslo',
+      codeIs: 'Kód:',
+      until: 'platí do {date}, jednou. Pošli mu ho ve hře nebo zprávou.',
+      delete: 'Smazat',
+      confirm: 'Opravdu smazat?',
+    },
     filters: {
       all: 'Všichni',
       approval: 'Schválení',
@@ -380,7 +390,7 @@ export const cs: Dict = {
     eyebrow: 'Hráči',
     title: 'Marche hráčů',
     intro: 'Commandeři, výbava a armamenty hráčů, kteří je ukazují všem.',
-    loginTitle: 'Přihlas se přes Discord',
+    loginTitle: 'Přihlas se',
     loginText: 'Marche hráčů vidí jen hráči přihlášení na webu.',
     error: 'Marche se nepodařilo načíst. Zkus to znovu za chvíli.',
     search: 'Hledat hráče',
@@ -900,6 +910,18 @@ export const cs: Dict = {
         ],
       },
       {
+        title: 'Účet bez Discordu',
+        text: 'Pokud se zaregistruješ jménem ve hře, Discord nepoužijeme vůbec. E-mail nechceme. Ukládáme:',
+        list: [
+          'Jméno ve hře – je zároveň tvým přihlašovacím jménem.',
+          'Heslo jen jako otisk (hash) – samotné heslo nepřečte nikdo, ani správce.',
+          'Jednorázový kód na nové heslo, pokud ti ho správce vytvoří – také jen jako otisk, platí 3 dny nebo do použití.',
+          'Čas registrace a posledního přihlášení, souhlas s podmínkami, schválení a cookie sessionid jako u Discordu.',
+          'Připomínky ani jiné zprávy od bota bez Discordu nedostáváš.',
+          'Účet můžeš později propojit s Discordem – potom platí předchozí část a heslo smažeme.',
+        ],
+      },
+      {
         title: 'Připomínky eventů',
         text: 'Pro připomínky ukládáme:',
         list: [
@@ -924,7 +946,7 @@ export const cs: Dict = {
         title: 'Proč a kdo to vidí',
         text: 'Aby tě vedení poznalo, přišly ti připomínky, které sis zapnul, a vedení mohlo sestavit týmy na KvK.',
         list: [
-          'Údaje vidí správce webu (Gether) v administraci. Když se přihlásíš poprvé, bot mu pošle na Discord tvé jméno a ID, aby tě mohl schválit.',
+          'Údaje vidí správce webu (Gether) v administraci. Když se přihlásíš poprvé, bot mu pošle na Discord tvé jméno a ID (bez Discordu jen jméno ve hře), aby tě mohl schválit.',
           'Přihlášky na KvK a tvé marche vidí i vedení, kterému správce povolí prohlížení (R4) – spolu s tvým jménem ve hře, Discord jménem, avatarem a ID.',
           'Vedení si může seznam přihlášek (jméno ve hře, role, jednotky, commandeři a formace) zkopírovat do Discordu, kde plánuje KvK.',
           'Pokud u marchí zvolíš „Všichni hráči“, uvidí tvé marche spolu se jménem ve hře, Discord jménem a avatarem i všichni schválení hráči přihlášení na webu (stránka Marche hráčů). Změnit to můžeš kdykoli.',
@@ -948,7 +970,7 @@ export const cs: Dict = {
           'Záznam odeslaných připomínek mažeme po 30 dnech a výběr eventu, který se už nebude opakovat, nejpozději druhý den. Odeslaný budík smažeme do dvou dnů.',
           'Přihlášky na KvK uchováváme, dokud je nezrušíš ty nebo superadmin (platí i na další KvK), nebo dokud nesmažeš účet.',
           'Zálohy databáze na serveru vznikají jednou týdně a ponechává se posledních 8, takže smazané údaje zmizí i ze záloh do 8 týdnů.',
-          'Pro limit pokusů o přihlášení používáme IP adresu jen v paměti serveru – do databáze ani do záznamů ji přitom neukládáme.',
+          'Pro limit pokusů o přihlášení a registraci používáme IP adresu jen v paměti serveru – do databáze ani do záznamů ji přitom neukládáme.',
           'Záznamy serveru o návštěvách jsou bez IP adres. Technické chybové záznamy ji výjimečně obsahovat mohou; všechny záznamy mají pevně omezenou velikost (3 × 10 MB na službu) a starší se přepisují.',
         ],
       },
@@ -973,9 +995,9 @@ export const cs: Dict = {
   account: {
     eyebrow: 'Hráčský účet',
     title: 'Můj účet',
-    loginTitle: 'Přihlas se přes Discord',
+    loginTitle: 'Přihlas se',
     stored:
-      'Uložíme jen tvoje Discord ID, jméno a avatar, jméno ve hře (vyplníš ho po prvním přihlášení) a připomínky eventů, pokud si je nastavíš. E-mail ani tvoje servery nevidíme.',
+      'Uložíme tvoje jméno ve hře a přes Discord i Discord ID, jméno a avatar – e-mail ani tvoje servery nevidíme. Bez Discordu heslo, které nikdo nepřečte, ani vedení.',
     privacy: 'Co o tobě ukládáme',
     login: 'Přihlásit přes Discord',
     disabled: 'Přihlášení zatím není zapnuté.',
@@ -1016,6 +1038,8 @@ export const cs: Dict = {
       save: 'Uložit',
       saved: 'Uloženo.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',
+      // without Discord the name is the login – another player's name is refused
+      taken: 'Toto jméno ve hře už má jiný hráč na webu.',
     },
     power: {
       label: 'Aktuální power',
@@ -1026,6 +1050,63 @@ export const cs: Dict = {
       save: 'Uložit',
       saved: 'Uloženo.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',
+    },
+    // without Discord (Gether 17. 10. 2026): the in-game name and a password, pages/account/local-login.ts
+    local: {
+      or: 'nebo bez Discordu',
+      modes: 'Bez Discordu',
+      login: 'Přihlásit',
+      signup: 'Nový účet',
+      name: 'Jméno ve hře',
+      nameHint: 'Přesně jako v Rise of Kingdoms – podle něj tě pozná vedení a jím se i přihlašuješ.',
+      code: 'Kód od vedení',
+      password: 'Heslo',
+      newPassword: 'Nové heslo',
+      passwordHint: 'Aspoň 8 znaků, ne jen číslice.',
+      show: 'Zobrazit heslo',
+      signupNote: 'Účet nejdřív schválí vedení. Připomínky od bota chodí jen na Discord.',
+      submit: { login: 'Přihlásit', signup: 'Vytvořit účet', reset: 'Nastavit heslo' },
+      forgot: 'Zapomněl jsi heslo?',
+      back: 'Zpět na přihlášení',
+      resetLead: 'Napiš vedení ve hře nebo na Discordu – dá ti jednorázový kód, platí 3 dny.',
+      invalid: {
+        login: 'Špatné jméno ve hře nebo heslo.',
+        signup: 'Účet se nepodařilo vytvořit. Zkus to znovu.',
+        reset: 'Jméno nebo kód nesedí, nebo kód už neplatí.',
+      },
+      errors: {
+        required: 'Vyplň všechna pole.',
+        name: 'Jméno ve hře musí mít 2 až 32 znaků.',
+        name_taken: 'Toto jméno ve hře už má účet na webu. Pokud je tvoje, přihlas se nebo napiš vedení.',
+        full: 'Registrace bez Discordu je teď plná – vedení nejdřív schválí čekající. Zkus to později nebo se přihlas přes Discord.',
+        throttled: 'Příliš mnoho pokusů. Zkus to znovu později.',
+        current: 'Současné heslo nesedí.',
+        failed: 'Nepodařilo se to. Zkus to znovu.',
+      },
+      // the password rules of the server (Django's validators)
+      rules: {
+        password_too_short: 'Heslo musí mít aspoň 8 znaků.',
+        password_too_common: 'Toto heslo je příliš běžné.',
+        password_entirely_numeric: 'Heslo nesmí být jen z číslic.',
+        password_too_similar: 'Heslo se příliš podobá jménu ve hře.',
+        password_too_long: 'Heslo může mít nejvýš 128 znaků.',
+        required: 'Zadej heslo.',
+        invalid: 'Toto heslo nejde použít.',
+      },
+      // signed in without Discord
+      account: 'Účet bez Discordu',
+      loginName: 'Tímto jménem ve hře se i přihlašuješ.',
+      change: 'Změnit heslo',
+      current: 'Současné heslo',
+      save: 'Uložit heslo',
+      changed: 'Heslo je změněné.',
+      // under the Discord button on /kvk and /marche
+      other: 'Přihlásit bez Discordu',
+      // the same account linked to Discord
+      link: 'Propojit s Discordem',
+      linkHint: 'Všechno ti zůstane – marche, přihlášky i schválení. Potom se přihlašuješ přes Discord a bot ti posílá připomínky.',
+      linked: 'Účet je propojený s Discordem. Od teď se přihlašuješ přes Discord.',
+      linkTaken: 'Tento Discord účet už má na webu vlastní účet. Napiš vedení.',
     },
   },
   reminders: {
@@ -1040,6 +1121,8 @@ export const cs: Dict = {
     discordOn: 'Zapnuto',
     discordOff: 'Vypnuto – připomínky ti nepřijdou.',
     off: 'Bot zatím není zapnutý.',
+    // signed in without Discord – the bot cannot write to them
+    local: 'Připomínky posílá bot na Discordu – na účtu bez Discordu nefungují.',
     test: {
       send: 'Poslat zkušební zprávu',
       ok: 'Zpráva odeslána – podívej se do soukromých zpráv na Discordu.',

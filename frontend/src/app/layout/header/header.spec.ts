@@ -14,7 +14,8 @@ describe('Header account slot', () => {
   let http: HttpTestingController;
 
   const el = () => fixture.nativeElement as HTMLElement;
-  const loginLinks = () => el().querySelectorAll<HTMLAnchorElement>('a[href^="/api/auth/discord/login/"]');
+  // the sign-in goes to /ucet – Discord or the in-game name and a password (Gether 17. 10. 2026)
+  const loginLinks = () => el().querySelectorAll<HTMLAnchorElement>('a.account__login, a.drawer__login');
 
   const answer = async (me: Me) => {
     http.expectOne('/api/auth/me/').flush(me);
@@ -85,11 +86,11 @@ describe('Header account slot', () => {
     expect(loginLinks().length).toBe(0);
   });
 
-  it('offers Discord login in the bar and in the drawer', async () => {
+  it('offers the sign-in in the bar and in the drawer, back to the page afterwards', async () => {
     await answer({ login_enabled: true, user: null });
     const links = loginLinks();
     expect(links.length).toBe(2);
-    expect(links[0].getAttribute('href')).toBe('/api/auth/discord/login/?next=%2F');
+    expect(links[0].getAttribute('href')).toBe('/ucet?next=%2F');
     expect(links[0].textContent).toContain('Prihlásiť');
   });
 

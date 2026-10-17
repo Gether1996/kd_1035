@@ -24,7 +24,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.throttling import SimpleRateThrottle, UserRateThrottle
 
-from . import discord_oauth, guard
+from . import discord_oauth, guard, local_auth
 from .models import TERMS_VERSION, Player, PlayerSettings
 from .serializers import ProfileSerializer
 
@@ -33,6 +33,8 @@ User = get_user_model()
 
 STATE_KEY = 'discord_oauth_state'
 NEXT_KEY = 'discord_oauth_next'
+# a player without Discord links the account to Discord: the player's pk while the browser is on discord.com
+LINK_KEY = 'discord_oauth_link'
 # Slovak account page; the Czech app passes /cz/ucet itself
 DEFAULT_NEXT = '/ucet'
 AVATAR_HASH = re.compile(r'[0-9A-Za-z_]{1,64}')
@@ -131,6 +133,12 @@ def discord_login(request):
     state = secrets.token_urlsafe(24)
     request.session[STATE_KEY] = state
     request.session[NEXT_KEY] = safe_next(request.GET.get('next'))
+    # ?link=1: the signed-in player without Discord links this account (link_player), no new account
+    player = player_of(request.user)
+    if request.GET.get('link') == '1' and player and player.local:
+        request.session[LINK_KEY] = player.pk
+    else:
+        request.session.pop(LINK_KEY, None)
     return HttpResponseRedirect(discord_oauth.authorize_url(state, redirect_uri(request)))
 
 
@@ -140,6 +148,7 @@ def discord_callback(request):
     # single use: a reloaded or replayed callback finds no state
     expected = request.session.pop(STATE_KEY, '')
     next_url = safe_next(request.session.pop(NEXT_KEY, ''))
+    link = request.session.pop(LINK_KEY, None)
     if not discord_oauth.login_enabled():
         raise Http404
 
@@ -164,6 +173,10 @@ def discord_callback(request):
         log.warning('Discord login failed: %s', exc)
         return back_to(next_url, 'error')
 
+    if link is not None:
+        status = link_player(request, link, profile)
+        if status:
+            return back_to(next_url, status)
     user = save_player(profile)
     if not user.is_active:  # blocked in the admin
         log.warning('Discord login of inactive user %s', user.pk)
@@ -173,7 +186,28 @@ def discord_callback(request):
     guard.prove_discord(request, profile['id'])
     if not user.player.ingame_name.strip():
         return back_to(ask_for_name(next_url))
-    return back_to(next_url)
+    return back_to(next_url, 'linked' if link is not None else '')
+
+
+@transaction.atomic
+def link_player(request, player_pk: int, profile: dict) -> str:
+    """The player without Discord gets this Discord ID (Gether 17. 10. 2026: "všetko naviazané a prepojené"): the same
+    account – marches, KvK sign-ups, the approval, R4 – now with the bot's DMs; signs in with Discord from now on, the
+    password and the code are dropped. '' = linked, else the ?login= status: `taken` when the Discord account already
+    has its own account on the website (two accounts are not merged)."""
+    player = player_of(request.user)
+    if not player or player.pk != player_pk or not player.local:
+        return 'error'
+    if Player.objects.filter(discord_id=profile['id']).exists():
+        return 'taken'
+    player.discord_id = profile['id']
+    player.login, player.reset_code, player.reset_until = None, '', None
+    player.remind_discord = True
+    player.save(update_fields=['discord_id', 'login', 'reset_code', 'reset_until', 'remind_discord'])
+    player.user.set_unusable_password()
+    player.user.save(update_fields=['password'])
+    log.info('Player %s linked to Discord', player.pk)
+    return ''
 
 
 def player_of(user) -> Player | None:
@@ -216,7 +250,18 @@ def me(request):
         return delete_account(request)
     if request.method == 'PATCH':
         update_profile(request)
-    return Response({'login_enabled': discord_oauth.login_enabled(), 'user': signed_in(request)})
+    return Response(me_data(request))
+
+
+def me_data(request) -> dict:
+    """GET /api/auth/me/. Signing in without Discord is always on (local_auth.py); `signup_open` = the sign-up
+    without Discord is not full."""
+    return {
+        'login_enabled': True,
+        'discord_login': discord_oauth.login_enabled(),
+        'signup_open': local_auth.sign_up_open(),
+        'user': signed_in(request),
+    }
 
 
 def signed_in(request) -> dict | None:
@@ -227,6 +272,8 @@ def signed_in(request) -> dict | None:
     evaluation = getattr(player, 'evaluation', None)
     return {
         'discord_id': player.discord_id,
+        # without Discord (local_auth.py): no bot DMs, the password on /ucet
+        'local': player.local,
         'name': player.name,
         'avatar_url': player.avatar_url,
         'ingame_name': player.ingame_name,
@@ -278,7 +325,7 @@ def accept_terms(request):
     player.terms_version = TERMS_VERSION
     player.terms_accepted_at = timezone.now()
     player.save(update_fields=['terms_version', 'terms_accepted_at'])
-    return Response({'login_enabled': discord_oauth.login_enabled(), 'user': signed_in(request)})
+    return Response(me_data(request))
 
 
 @api_view(['POST'])

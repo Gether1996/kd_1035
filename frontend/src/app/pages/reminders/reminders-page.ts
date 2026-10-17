@@ -32,6 +32,14 @@ import { Reminders } from './reminders';
         <p class="state">{{ r.error }}</p>
       } @else if (!auth.enabled()) {
         <p class="state">{{ r.disabled }}</p>
+      } @else if (auth.user()?.local) {
+        <!-- the bot writes on Discord only – a player without Discord gets nothing -->
+        <div class="state">
+          <p>{{ r.local }}</p>
+          @if (auth.discordLogin()) {
+            <a class="btn btn--gold" [href]="auth.linkUrl()"><svg appIcon="discord"></svg> {{ t().account.local.link }}</a>
+          }
+        </div>
       } @else if (auth.user()) {
         <app-reminders />
       } @else {

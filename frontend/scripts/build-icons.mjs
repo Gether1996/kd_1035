@@ -9,8 +9,8 @@ const simpleDir = new URL('simple-icons/icons/', modules);
 
 const LUCIDE = [
   'arrow-left', 'arrow-right', 'arrow-up-right', 'bell', 'bell-off', 'calendar-days', 'calendar-off', 'calendar-plus', 'check',
-  'chevron-down', 'chevron-right', 'chevron-up', 'clock', 'copy', 'crown', 'download', 'eye-off', 'flag', 'flame', 'gift', 'hand-helping', 'info', 'languages', 'lightbulb',
-  'link', 'log-out', 'map', 'menu', 'pencil', 'plus', 'repeat', 'scale', 'search', 'send', 'shield', 'swords', 'trash-2', 'users', 'x',
+  'chevron-down', 'chevron-right', 'chevron-up', 'clock', 'copy', 'crown', 'download', 'eye', 'eye-off', 'flag', 'flame', 'gift', 'hand-helping', 'info', 'key-round', 'languages', 'lightbulb',
+  'link', 'log-in', 'log-out', 'map', 'menu', 'pencil', 'plus', 'repeat', 'scale', 'search', 'send', 'shield', 'swords', 'trash-2', 'users', 'x',
 ];
 const BRANDS = ['discord', 'facebook'];
 

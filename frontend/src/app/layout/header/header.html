@@ -74,8 +74,10 @@
             </nav>
           </div>
         } @else {
-          <a class="account__link" [href]="auth.loginUrl()">
-            <svg appIcon="discord"></svg>
+          <!-- /ucet: Discord or the in-game name and a password, then back here -->
+          @let signIn = auth.accountLink();
+          <a class="account__link account__login" [routerLink]="signIn.path" [queryParams]="signIn.query">
+            <svg appIcon="log-in"></svg>
             <span class="account__label">{{ t.login }}</span>
           </a>
         }
@@ -158,8 +160,9 @@
           }
         </ul>
       } @else {
-        <a class="btn btn--gold drawer__login" [href]="auth.loginUrl()">
-          <svg appIcon="discord"></svg> {{ t.login }}
+        @let drawerSignIn = auth.accountLink();
+        <a class="btn btn--gold drawer__login" [routerLink]="drawerSignIn.path" [queryParams]="drawerSignIn.query" (click)="close()">
+          <svg appIcon="log-in"></svg> {{ t.login }}
         </a>
       }
     </div>

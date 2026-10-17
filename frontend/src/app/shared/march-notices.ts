@@ -17,6 +17,8 @@ export interface NoticePlayer {
   text: string;
   /** the player switched the bot's messages off – nothing can be sent */
   muted: boolean;
+  /** without Discord – the bot cannot write to them, they see the red marches on /marche */
+  local?: boolean;
   /** already told about exactly these problems */
   told_at: string | null;
   last: { state: 'pending' | 'sent' | 'failed' | 'skipped'; at: string; error: string } | null;
@@ -76,7 +78,7 @@ export interface NoticePlayer {
                   </label>
                   <span class="notice__tags">
                     @if (p.muted) {
-                      <span class="tag tag--off">{{ k.muted }}</span>
+                      <span class="tag tag--off">{{ p.local ? k.local : k.muted }}</span>
                     }
                     @if (p.last; as last) {
                       <span class="tag" [class.tag--off]="last.state === 'failed'" [title]="last.error">

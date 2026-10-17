@@ -1,11 +1,14 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, computed, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { I18n } from './i18n/i18n';
 
 export interface Player {
-  discord_id: string;
+  /** null for a player without Discord */
+  discord_id: string | null;
+  /** signed up without Discord – the in-game name and a password (Gether 17. 10. 2026): no bot DMs */
+  local?: boolean;
   name: string;
   avatar_url: string;
   /** typed by the player on /ucet, '' until then */
@@ -26,9 +29,19 @@ export interface Player {
 }
 
 export interface Me {
-  /** false until DISCORD_CLIENT_ID/SECRET are set on the server */
+  /** signing in is on – without Discord always */
   login_enabled: boolean;
+  /** false until DISCORD_CLIENT_ID/SECRET are set on the server */
+  discord_login?: boolean;
+  /** the sign-up without Discord takes new players (at most 10 wait for the approval at once) */
+  signup_open?: boolean;
   user: Player | null;
+}
+
+/** Why the server refused the sign-up, the sign-in or the password: `detail`, and the password rules broken. */
+export interface LocalAuthError {
+  detail: string;
+  errors?: string[];
 }
 
 /**
@@ -48,6 +61,8 @@ export class Auth {
   readonly failed = computed(() => !!this.me.error());
   readonly enabled = computed(() => this.me.hasValue() && this.me.value().login_enabled);
   readonly user = computed(() => (this.me.hasValue() ? this.me.value().user : null));
+  readonly discordLogin = computed(() => this.me.hasValue() && !!this.me.value().discord_login);
+  readonly signupOpen = computed(() => this.me.hasValue() && this.me.value().signup_open !== false);
   /** signed in without an in-game name yet – the header shows a red "!" and the account page asks for it
    * (Gether 11. 10. 2026: required at the first sign-in, a reminder until it is set) */
   readonly needsName = computed(() => {
@@ -71,6 +86,49 @@ export class Auth {
   /** Full navigation to Discord; afterwards the player comes back to `next` (the current page by default). */
   loginUrl(next = this.i18n.switchPath(this.i18n.lang())): string {
     return '/api/auth/discord/login/?next=' + encodeURIComponent(next);
+  }
+
+  /** The signed-in player without Discord links the account to Discord – the same account, then with the bot's DMs. */
+  linkUrl(next = this.i18n.path('account')): string {
+    return '/api/auth/discord/login/?link=1&next=' + encodeURIComponent(next);
+  }
+
+  /** The page with every way to sign in (/ucet), coming back to `next` – the header, KvK and marches link there. */
+  accountLink(next = this.i18n.switchPath(this.i18n.lang())): { path: string; query: { next?: string } } {
+    const path = this.i18n.path('account');
+    return { path, query: next === path ? {} : { next } };
+  }
+
+  /** A new player without Discord (`elapsed` = ms the form was open, `website` = the field hidden from people). */
+  signUp(form: { name: string; password: string; website: string; elapsed: number }): Promise<void> {
+    return this.local('signup', { ...form, lang: this.i18n.lang() });
+  }
+
+  /** Signs in with the in-game name and the password. */
+  signIn(name: string, password: string): Promise<void> {
+    return this.local('login', { name, password });
+  }
+
+  /** A new password with the superadmin's one-off code; signs the player in. */
+  resetPassword(name: string, code: string, password: string): Promise<void> {
+    return this.local('reset', { name, code, password });
+  }
+
+  /** The signed-in player without Discord changes the password. */
+  async changePassword(current: string, password: string): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post('/api/auth/local/password/', { current, password }));
+    } catch (error) {
+      throw localError(error);
+    }
+  }
+
+  private async local(action: string, body: object): Promise<void> {
+    try {
+      this.me.set(await firstValueFrom(this.http.post<Me>(`/api/auth/local/${action}/`, body)));
+    } catch (error) {
+      throw localError(error);
+    }
   }
 
   /** ask the server again – e.g. the KvK sign-up saved the in-game name */
@@ -103,4 +161,14 @@ export class Auth {
     await firstValueFrom(this.http.delete('/api/auth/me/'));
     this.me.reload();
   }
+}
+
+/** The server's reason as LocalAuthError; a lost connection or a server error is `failed`, the limit `throttled`. */
+export function localError(error: unknown): LocalAuthError {
+  if (error instanceof HttpErrorResponse) {
+    if (error.status === 429) return { detail: 'throttled' };
+    const body = error.error as Partial<LocalAuthError> | null;
+    if (error.status < 500 && typeof body?.detail === 'string') return { detail: body.detail, errors: body.errors };
+  }
+  return { detail: 'failed' };
 }

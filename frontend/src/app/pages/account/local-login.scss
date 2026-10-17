@@ -1,0 +1,179 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// "alebo bez Discordu" between the Discord button and the form
+.local {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  width: 100%;
+  margin-top: 28px;
+}
+
+.local__modes button {
+  white-space: nowrap;
+}
+
+.local__or {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+}
+
+.local__form,
+.password__form {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+
+  .btn {
+    justify-self: stretch;
+    min-height: 48px;
+  }
+
+  .field[hidden] {
+    display: none;
+  }
+}
+
+.local__lead,
+.local__note {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+  text-wrap: pretty;
+}
+
+.local__code {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+// the password with the eye button inside the field
+.local__secret {
+  position: relative;
+
+  .input {
+    padding-right: 52px;
+  }
+}
+
+.local__eye {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover,
+  &[aria-pressed='true'] {
+    color: var(--gold-300);
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// bots fill it in, people never see it (not display: none – some bots skip those)
+.local__trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.local__state {
+  min-height: 1.4em;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--gold-300);
+  text-align: center;
+
+  &.is-error {
+    color: var(--red-300);
+  }
+
+  // nothing to say yet: no gap above "Zabudol si heslo?"
+  &:empty {
+    min-height: 0;
+    margin-top: -16px;
+  }
+}
+
+// quiet text button like "Čo o tebe ukladáme"
+.local__link,
+.password__toggle {
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition:
+    color 0.25s,
+    text-decoration-color 0.25s;
+
+  &:hover {
+    color: var(--gold-300);
+    text-decoration-color: currentColor;
+  }
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+// /ucet signed in without Discord: "Zmeniť heslo" opens the form
+.password {
+  width: 100%;
+  margin: 8px 0 20px;
+}
+
+.password__toggle {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.password__form {
+  margin-top: 16px;
+}

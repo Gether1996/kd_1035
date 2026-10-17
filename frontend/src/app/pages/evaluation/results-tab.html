@@ -139,7 +139,7 @@
                 @if (!r.player.approved) {
                   <span class="ev-tag">{{ x.pending }}</span>
                 }
-                @if (r.player.ingame_name) {
+                @if (r.player.ingame_name && r.player.name !== r.player.ingame_name) {
                   <small>{{ r.player.name }}</small>
                 }
               </span>

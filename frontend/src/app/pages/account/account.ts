@@ -12,6 +12,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
@@ -21,16 +22,17 @@ import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { powerMillions } from '../../shared/power';
+import { LocalLogin, PasswordForm } from './local-login';
 import { PlayersAdmin } from './players-admin';
 
 /**
- * /ucet – the player's own account: sign in with Discord, in-game name, current power, sign out, delete; a link to the
- * event reminders (/pripomienky).
+ * /ucet – the player's own account: sign in with Discord or without it (local-login.ts), in-game name, current power,
+ * the password without Discord, sign out, delete; a link to the event reminders (/pripomienky).
  * Not indexed, not in the sitemap.
  */
 @Component({
   selector: 'app-account',
-  imports: [RouterLink, Icon, PageHeader, PlayersAdmin],
+  imports: [RouterLink, Icon, PageHeader, PlayersAdmin, LocalLogin, PasswordForm],
   templateUrl: './account.html',
   styleUrl: './account.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,7 +61,7 @@ export class Account {
   protected readonly busy = signal(false);
   protected readonly result = signal<'deleted' | 'failed' | null>(null);
   protected readonly saving = signal(false);
-  protected readonly nameState = signal<'saved' | 'failed' | 'required' | null>(null);
+  protected readonly nameState = signal<'saved' | 'failed' | 'required' | 'taken' | null>(null);
   protected readonly powerState = signal<'saved' | 'failed' | 'invalid' | null>(null);
 
   protected readonly crumbs = computed(() => [
@@ -74,6 +76,9 @@ export class Account {
     const login = this.login();
     if (login === 'error') return { text: t.loginError, error: true };
     if (login === 'cancelled') return { text: t.loginCancelled, error: false };
+    // the account without Discord linked to Discord, or that Discord account has its own account already
+    if (login === 'linked') return { text: t.local.linked, error: false };
+    if (login === 'taken') return { text: t.local.linkTaken, error: true };
     return null;
   });
 
@@ -119,11 +124,19 @@ export class Account {
       // the first sign-in goes on to the page the player came for
       const next = this.nextPage();
       if (next && !this.auth.needsName()) void this.router.navigateByUrl(next);
-    } catch {
-      this.nameState.set('failed');
+    } catch (error) {
+      // a player without Discord signs in with the name – another player's name is refused
+      const taken = error instanceof HttpErrorResponse && `${error.error?.ingame_name ?? ''}`.includes('name_taken');
+      this.nameState.set(taken ? 'taken' : 'failed');
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** signed in without Discord: on to the page the player came for */
+  protected signedIn(): void {
+    const next = this.nextPage();
+    if (next) void this.router.navigateByUrl(next);
   }
 
   /** the power as the field shows it: millions with a decimal comma, no thousands separator */

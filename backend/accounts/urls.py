@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import alarm_views, evaluation_views, kvk_views, march_views, reminder_views, views
+from . import alarm_views, evaluation_views, kvk_views, local_auth, march_views, reminder_views, views
 
 urlpatterns = [
     path('auth/discord/login/', views.discord_login),
@@ -8,6 +8,10 @@ urlpatterns = [
     path('auth/me/', views.me),
     path('auth/logout/', views.sign_out),
     path('auth/terms/', views.accept_terms),
+    path('auth/local/signup/', local_auth.sign_up),
+    path('auth/local/login/', local_auth.sign_in),
+    path('auth/local/reset/', local_auth.reset),
+    path('auth/local/password/', local_auth.change_password),
     path('me/reminders/', reminder_views.reminders),
     path('me/reminders/test/', reminder_views.test_dm),
     path('me/reminders/<int:event_id>/', reminder_views.event_reminder),
@@ -21,6 +25,8 @@ urlpatterns = [
     path('kvk/reviewers/', kvk_views.reviewers),
     path('kvk/reviewers/<int:player_id>/', kvk_views.reviewer),
     path('kvk/reviewers/auto-approve/', kvk_views.auto_approve),
+    path('kvk/reviewers/<int:player_id>/reset-code/', local_auth.reset_code),
+    path('kvk/reviewers/<int:player_id>/delete/', local_auth.delete_local),
     path('me/marches/', march_views.marches),
     path('me/marches/order/', march_views.march_order),
     path('me/marches/<int:march_id>/', march_views.march),

@@ -214,6 +214,8 @@ def preview() -> list[dict]:
                 'text': '\n'.join(lines(player, problems, markdown=False)),
                 # the player switched the bot's messages off
                 'muted': not player.remind_discord,
+                # without Discord: the bot cannot write, the player sees the red marches on /marche
+                'local': player.local,
                 'told_at': told.sent_at.isoformat() if told and told.sent_at else None,
                 'last': (
                     {

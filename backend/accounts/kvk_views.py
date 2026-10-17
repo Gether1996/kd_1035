@@ -262,6 +262,8 @@ def reviewers(request):
                 'issues': sum(1 for march in p.marches.all() if any(map(check(march).get, PROBLEMS))),
                 'kvk': sorted(signup.role for signup in p.kvk_signups.all()),
                 'superuser': p.user.is_superuser,
+                # without Discord: the superadmin gives a code for a new password, deletes one waiting (local_auth.py)
+                'local': p.local,
             }
             for p in players
         ),

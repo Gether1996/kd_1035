@@ -152,6 +152,32 @@
   }
 }
 
+// without Discord: "Prepojiť s Discordom" under the password
+.link-discord {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+
+  .btn {
+    margin-top: 0;
+  }
+
+  .hint {
+    max-width: 44ch;
+    font-size: 0.875rem;
+    color: var(--text-mute);
+    text-wrap: pretty;
+  }
+}
+
+// without Discord: "you sign in with this name" right under the name form
+.ingame__login {
+  width: 100%;
+  margin-top: -4px;
+  text-align: left;
+}
+
 // the power right under the name – the state line of the name keeps them apart
 .ingame--power {
   margin-top: 4px;

@@ -350,9 +350,11 @@ class LoginFlowTests(TestCase):
 
 class MeTests(TestCase):
     @override_settings(DISCORD_CLIENT_ID='', DISCORD_CLIENT_SECRET='')
-    def test_without_config_login_is_disabled(self):
+    def test_without_config_only_the_login_without_discord_is_on(self):
         response = self.client.get('/api/auth/me/')
-        self.assertEqual(response.json(), {'login_enabled': False, 'user': None})
+        self.assertEqual(
+            response.json(), {'login_enabled': True, 'discord_login': False, 'signup_open': True, 'user': None}
+        )
         self.assertIn('csrftoken', response.cookies)
         self.assertIn('no-store', response['Cache-Control'])
 
@@ -364,8 +366,11 @@ class MeTests(TestCase):
             self.client.get('/api/auth/me/').json(),
             {
                 'login_enabled': True,
+                'discord_login': True,
+                'signup_open': True,
                 'user': {
                     'discord_id': '80351110224678912',
+                    'local': False,
                     'name': 'Nelly',
                     'avatar_url': 'https://cdn.discordapp.com/embed/avatars/5.png',
                     'ingame_name': '',
@@ -386,7 +391,7 @@ class MeTests(TestCase):
     @override_settings(**DISCORD)
     def test_admin_without_discord_is_not_a_site_account(self):
         self.client.force_login(User.objects.create_superuser('boss', password='x'))
-        self.assertEqual(self.client.get('/api/auth/me/').json(), {'login_enabled': True, 'user': None})
+        self.assertIsNone(self.client.get('/api/auth/me/').json()['user'])
 
 
 @override_settings(**DISCORD, DEBUG=True)

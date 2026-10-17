@@ -60,7 +60,8 @@ export class Header {
       { label: t.account, link: this.i18n.path('account'), icon: 'users' },
       // marches only once the superadmin approved the player (Gether 14. 10. 2026: no access to the tab before)
       ...(this.auth.user()?.approved ? [{ label: t.marches, link: this.i18n.path('playersMarches'), icon: 'shield' as const }] : []),
-      { label: t.reminders, link: this.i18n.path('reminders'), icon: 'bell' },
+      // the reminders are bot DMs – not for a player without Discord
+      ...(this.auth.user()?.local ? [] : [{ label: t.reminders, link: this.i18n.path('reminders'), icon: 'bell' as const }]),
       { label: t.kvk, link: this.i18n.path('kvk'), icon: 'swords' },
       // the KvK evaluation – the superadmin and the players let in (Gether 13. 10. 2026)
       ...(this.auth.canEvaluate()

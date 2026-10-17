@@ -512,6 +512,34 @@
   }
 }
 
+// a player without Discord: the code for a new password and deleting one waiting, under the row
+.reviewer__local {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+
+  .pill-btn .icon,
+  .danger .icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.reviewer__code {
+  flex: 1 1 100%;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+
+  strong {
+    color: var(--gold-100);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    user-select: all;
+  }
+}
+
 // "Schválený", "R4" and "Vyhodnocovanie", each a small caption with its switch; on a phone under the name
 // "Hráči" on /ucet: what the switches of a row do, once above the list
 .switch-legend {

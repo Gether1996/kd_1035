@@ -29,7 +29,7 @@ export const sk = {
     },
     account: {
       title: 'Môj účet | KD 1035',
-      description: 'Prihlásenie hráčov kráľovstva KD 1035 cez Discord.',
+      description: 'Prihlásenie hráčov kráľovstva KD 1035 cez Discord alebo menom v hre.',
     },
     reminders: {
       title: 'Pripomienky eventov na Discorde | KD 1035',
@@ -241,8 +241,8 @@ export const sk = {
     eyebrow: 'KvK',
     title: 'Prihláška na KvK',
     intro: 'Prihlás sa na rally alebo garrison a naklikaj výbavu – vedenie z nej zostaví tímy.',
-    loginTitle: 'Prihlás sa cez Discord',
-    loginText: 'Prihlášku na KvK podáš so svojím Discord účtom. Žiadne nové heslo.',
+    loginTitle: 'Prihlás sa',
+    loginText: 'Prihlášku na KvK podáš so svojím účtom na webe – cez Discord alebo menom v hre.',
     loadError: 'Prihlášky sa nepodarilo načítať. Skús to znova o chvíľu.',
     tabs: { mine: 'Moja prihláška', list: 'Prihlášky', settings: 'Nastavenia' },
     signupEyebrow: 'Prihláška',
@@ -303,6 +303,7 @@ export const sk = {
     none: 'Nikto nemá v marchoch chybu.',
     marches: ['{n} march na opravu', '{n} marche na opravu', '{n} marchov na opravu'],
     muted: 'správy od bota vypnuté',
+    local: 'bez Discordu – vidí to na webe',
     told: 'už upozornený {date}',
     state: { pending: 'čaká na odoslanie', sent: 'odoslané', failed: 'neodoslané', skipped: 'medzitým opravené' },
     send: 'Odoslať ({n})',
@@ -344,6 +345,15 @@ export const sk = {
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čaká',
+    // a player without Discord (Gether 17. 10. 2026): a one-off code for a new password, delete one waiting
+    local: {
+      tag: 'bez Discordu',
+      code: 'Kód na nové heslo',
+      codeIs: 'Kód:',
+      until: 'platí do {date}, raz. Pošli mu ho v hre alebo správou.',
+      delete: 'Zmazať',
+      confirm: 'Naozaj zmazať?',
+    },
     filters: {
       all: 'Všetci',
       approval: 'Schválenie',
@@ -389,7 +399,7 @@ export const sk = {
     eyebrow: 'Hráči',
     title: 'Marche hráčov',
     intro: 'Commanderi, výbava a armamenty hráčov, ktorí ich ukazujú všetkým.',
-    loginTitle: 'Prihlás sa cez Discord',
+    loginTitle: 'Prihlás sa',
     loginText: 'Marche hráčov vidia iba hráči prihlásení na webe.',
     error: 'Marche sa nepodarilo načítať. Skús to znova o chvíľu.',
     search: 'Hľadať hráča',
@@ -920,6 +930,18 @@ export const sk = {
         ],
       },
       {
+        title: 'Účet bez Discordu',
+        text: 'Ak sa zaregistruješ menom v hre, Discord nepoužijeme vôbec. E-mail nechceme. Ukladáme:',
+        list: [
+          'Meno v hre – je zároveň tvojím prihlasovacím menom.',
+          'Heslo iba ako odtlačok (hash) – samotné heslo nevie prečítať nikto, ani správca.',
+          'Jednorazový kód na nové heslo, ak ti ho správca vytvorí – tiež iba ako odtlačok, platí 3 dni alebo do použitia.',
+          'Čas registrácie a posledného prihlásenia, súhlas s podmienkami, schválenie a cookie sessionid ako pri Discorde.',
+          'Pripomienky ani iné správy od bota bez Discordu nedostávaš.',
+          'Účet môžeš neskôr prepojiť s Discordom – potom platí predchádzajúca časť a heslo zmažeme.',
+        ],
+      },
+      {
         title: 'Pripomienky eventov',
         text: 'Pre pripomienky ukladáme:',
         list: [
@@ -944,7 +966,7 @@ export const sk = {
         title: 'Prečo a kto to vidí',
         text: 'Aby ťa vedenie spoznalo, prišli ti pripomienky, ktoré si zapol, a vedenie mohlo zostaviť tímy na KvK.',
         list: [
-          'Údaje vidí správca webu (Gether) v administrácii. Keď sa prihlásiš prvýkrát, bot mu pošle na Discord tvoje meno a ID, aby ťa mohol schváliť.',
+          'Údaje vidí správca webu (Gether) v administrácii. Keď sa prihlásiš prvýkrát, bot mu pošle na Discord tvoje meno a ID (bez Discordu iba meno v hre), aby ťa mohol schváliť.',
           'Prihlášky na KvK a tvoje marche vidí aj vedenie, ktorému správca povolí prezeranie (R4) – spolu s tvojím menom v hre, Discord menom, avatarom a ID.',
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
@@ -969,7 +991,7 @@ export const sk = {
           'Záznam odoslaných pripomienok mažeme po 30 dňoch a výber eventu, ktorý sa už nebude opakovať, najneskôr na druhý deň. Odoslaný budík zmažeme do dvoch dní.',
           'Prihlášky na KvK uchovávame, kým ich nezrušíš ty alebo superadmin (platia na ďalšie KvK), alebo kým nezmažeš účet.',
           'Zálohy databázy na serveri vznikajú raz týždenne a necháva sa posledných 8, takže zmazané údaje zmiznú aj zo záloh do 8 týždňov.',
-          'Na limit pokusov o prihlásenie používame IP adresu iba v pamäti servera – do databázy ani do záznamov ju pritom neukladáme.',
+          'Na limit pokusov o prihlásenie a registráciu používame IP adresu iba v pamäti servera – do databázy ani do záznamov ju pritom neukladáme.',
           'Záznamy servera o návštevách sú bez IP adries. Technické chybové záznamy ju výnimočne obsahovať môžu; všetky záznamy majú pevne obmedzenú veľkosť (3 × 10 MB na službu) a staršie sa prepisujú.',
         ],
       },
@@ -994,9 +1016,9 @@ export const sk = {
   account: {
     eyebrow: 'Hráčsky účet',
     title: 'Môj účet',
-    loginTitle: 'Prihlás sa cez Discord',
+    loginTitle: 'Prihlás sa',
     stored:
-      'Uložíme iba tvoje Discord ID, meno a avatar, meno v hre (vyplníš ho po prvom prihlásení) a pripomienky eventov, ak si ich nastavíš. E-mail ani tvoje servery nevidíme.',
+      'Uložíme tvoje meno v hre a cez Discord aj Discord ID, meno a avatar – e-mail ani tvoje servery nevidíme. Bez Discordu heslo, ktoré nevie prečítať nikto, ani vedenie.',
     privacy: 'Čo o tebe ukladáme',
     login: 'Prihlásiť cez Discord',
     disabled: 'Prihlásenie zatiaľ nie je zapnuté.',
@@ -1037,6 +1059,8 @@ export const sk = {
       save: 'Uložiť',
       saved: 'Uložené.',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',
+      // without Discord the name is the login – another player's name is refused
+      taken: 'Toto meno v hre už má iný hráč na webe.',
     },
     power: {
       label: 'Aktuálna power',
@@ -1047,6 +1071,63 @@ export const sk = {
       save: 'Uložiť',
       saved: 'Uložené.',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',
+    },
+    // without Discord (Gether 17. 10. 2026): the in-game name and a password, pages/account/local-login.ts
+    local: {
+      or: 'alebo bez Discordu',
+      modes: 'Bez Discordu',
+      login: 'Prihlásiť',
+      signup: 'Nový účet',
+      name: 'Meno v hre',
+      nameHint: 'Presne ako v Rise of Kingdoms – podľa neho ťa spozná vedenie a ním sa aj prihlasuješ.',
+      code: 'Kód od vedenia',
+      password: 'Heslo',
+      newPassword: 'Nové heslo',
+      passwordHint: 'Aspoň 8 znakov, nie iba číslice.',
+      show: 'Zobraziť heslo',
+      signupNote: 'Účet najprv schváli vedenie. Pripomienky od bota chodia iba na Discord.',
+      submit: { login: 'Prihlásiť', signup: 'Vytvoriť účet', reset: 'Nastaviť heslo' },
+      forgot: 'Zabudol si heslo?',
+      back: 'Späť na prihlásenie',
+      resetLead: 'Napíš vedeniu v hre alebo na Discorde – dá ti jednorazový kód, platí 3 dni.',
+      invalid: {
+        login: 'Nesprávne meno v hre alebo heslo.',
+        signup: 'Účet sa nepodarilo vytvoriť. Skús to znova.',
+        reset: 'Meno alebo kód nesedí, alebo kód už neplatí.',
+      },
+      errors: {
+        required: 'Vyplň všetky polia.',
+        name: 'Meno v hre musí mať 2 až 32 znakov.',
+        name_taken: 'Toto meno v hre už má účet na webe. Ak je tvoje, prihlás sa alebo napíš vedeniu.',
+        full: 'Registrácia bez Discordu je teraz plná – vedenie najprv schváli čakajúcich. Skús to neskôr alebo sa prihlás cez Discord.',
+        throttled: 'Priveľa pokusov. Skús to znova neskôr.',
+        current: 'Súčasné heslo nesedí.',
+        failed: 'Nepodarilo sa to. Skús to znova.',
+      },
+      // the password rules of the server (Django's validators)
+      rules: {
+        password_too_short: 'Heslo musí mať aspoň 8 znakov.',
+        password_too_common: 'Toto heslo je príliš bežné.',
+        password_entirely_numeric: 'Heslo nesmie byť iba z číslic.',
+        password_too_similar: 'Heslo sa príliš podobá na meno v hre.',
+        password_too_long: 'Heslo môže mať najviac 128 znakov.',
+        required: 'Zadaj heslo.',
+        invalid: 'Toto heslo sa nedá použiť.',
+      },
+      // signed in without Discord
+      account: 'Účet bez Discordu',
+      loginName: 'Týmto menom v hre sa aj prihlasuješ.',
+      change: 'Zmeniť heslo',
+      current: 'Súčasné heslo',
+      save: 'Uložiť heslo',
+      changed: 'Heslo je zmenené.',
+      // under the Discord button on /kvk and /marche
+      other: 'Prihlásiť bez Discordu',
+      // the same account linked to Discord
+      link: 'Prepojiť s Discordom',
+      linkHint: 'Všetko ti ostane – marche, prihlášky aj schválenie. Potom sa prihlasuješ cez Discord a bot ti posiela pripomienky.',
+      linked: 'Účet je prepojený s Discordom. Odteraz sa prihlasuješ cez Discord.',
+      linkTaken: 'Tento Discord účet už má na webe vlastný účet. Napíš vedeniu.',
     },
   },
   reminders: {
@@ -1061,6 +1142,8 @@ export const sk = {
     discordOn: 'Zapnuté',
     discordOff: 'Vypnuté – pripomienky ti neprídu.',
     off: 'Bot zatiaľ nie je zapnutý.',
+    // signed in without Discord – the bot cannot write to them
+    local: 'Pripomienky posiela bot na Discorde – na účte bez Discordu nefungujú.',
     // "Poslať skúšobnú správu" under the switch: proves the bot can reach the player now
     test: {
       send: 'Poslať skúšobnú správu',

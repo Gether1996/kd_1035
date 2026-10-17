@@ -43,9 +43,10 @@ def plain(text: str) -> str:
 
 def message(player: Player) -> dict:
     name = f'**{plain(player.ingame_name)}**' if player.ingame_name else 'zatiaľ nevyplnené'
+    account = 'bez Discordu (meno v hre a heslo)' if player.local else f'<@{player.discord_id}> · {plain(player.username)}'
     lines = [
         f'Meno v hre: {name}',
-        f'Discord: <@{player.discord_id}> · {plain(player.username)}',
+        f'Discord: {account}',
         f'Web: {LANGS.get(player.lang, player.lang.upper())}',
         'Kým ho neschváliš, nemôže pridávať marche ani prihlášky na KvK.',
     ]
@@ -55,7 +56,7 @@ def message(player: Player) -> dict:
         'title': f'Nový hráč na webe: {player.ingame_name or player.name}'[:256],
         'description': '\n'.join(lines),
         'color': GOLD,
-        'footer': {'text': 'KD 1035 · prvé prihlásenie cez Discord'},
+        'footer': {'text': 'KD 1035 · ' + ('registrácia bez Discordu' if player.local else 'prvé prihlásenie cez Discord')},
     }
     return {'embeds': [embed]}
 

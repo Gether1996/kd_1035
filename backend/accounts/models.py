@@ -29,9 +29,16 @@ TERMS_VERSION = '2026-10-12'
 APPROVED = models.Q(approved=True) | models.Q(user__is_superuser=True)
 
 
+# the avatar of a player without Discord (frontend/public/img/avatar-local.svg)
+LOCAL_AVATAR = '/img/avatar-local.svg'
+
+
 class Player(models.Model):
     """A member signed in with Discord. Scope identify only: ID, name and avatar – no e-mail, no servers. The player
     adds their in-game name on /ucet themselves, so leadership recognises them.
+
+    Or a member without Discord (Gether 17. 10. 2026, local_auth.py): no Discord ID, signs in with the in-game name
+    (`login` = its casefolded key) and a password (the user's hash). No bot DMs reach them (remind_discord off).
 
     Personal data: these rows (and the discord_<id> users) never go into the git snapshot (kingdom/snapshot.py).
     """
@@ -39,8 +46,9 @@ class Player(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='player', verbose_name='používateľ'
     )
-    discord_id = models.CharField('Discord ID', max_length=24, unique=True)
-    username = models.CharField('Discord meno', max_length=40)
+    # empty for a player without Discord
+    discord_id = models.CharField('Discord ID', max_length=24, unique=True, null=True, blank=True)
+    username = models.CharField('Discord meno', max_length=40, blank=True)
     global_name = models.CharField('zobrazované meno', max_length=64, blank=True)
     avatar = models.CharField('avatar (hash)', max_length=64, blank=True)
     ingame_name = models.CharField(
@@ -108,6 +116,19 @@ class Player(models.Model):
         'verzia podmienok', max_length=10, blank=True, help_text='Dátum podmienok používania, s ktorými hráč súhlasil.'
     )
     terms_accepted_at = models.DateTimeField('súhlas s podmienkami', null=True, blank=True)
+    # a player without Discord: the in-game name they sign in with, casefolded (local_auth.login_key)
+    login = models.CharField(
+        'prihlasovacie meno',
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+        help_text='Iba hráč bez Discordu – meno v hre, ktorým sa prihlasuje.',
+    )
+    # the one-off code for a new password the superadmin gives a player without Discord (sha256 of it), until when
+    reset_code = models.CharField('kód na nové heslo (hash)', max_length=64, blank=True, editable=False)
+    reset_until = models.DateTimeField('kód platí do', null=True, blank=True, editable=False)
 
     class Meta:
         ordering = ['-created_at']
@@ -119,7 +140,12 @@ class Player(models.Model):
 
     @property
     def name(self) -> str:
-        return self.global_name or self.username
+        return self.global_name or self.username or self.ingame_name
+
+    @property
+    def local(self) -> bool:
+        """Signed up without Discord – the in-game name and a password."""
+        return self.discord_id is None
 
     @property
     def terms_accepted(self) -> bool:
@@ -137,11 +163,14 @@ class Player(models.Model):
         the auto-approve at the first sign-in does not come here."""
         if self.approved == was_approved:
             return []
-        self.welcome_due = self.approved and not self.user.is_superuser
+        # the welcome is a bot DM – a player without Discord learns it on the website
+        self.welcome_due = self.approved and not self.user.is_superuser and not self.local
         return ['welcome_due']
 
     @property
     def avatar_url(self) -> str:
+        if self.local:
+            return LOCAL_AVATAR
         if self.avatar:
             return f'{CDN}/avatars/{self.discord_id}/{self.avatar}.png?size=64'
         # Discord's default avatar for accounts with the new username system

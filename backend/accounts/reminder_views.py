@@ -30,10 +30,12 @@ log = logging.getLogger(__name__)
 
 
 class IsPlayer(BasePermission):
-    """Signed in with Discord – anonymous visitors and admins signed in with a password (no Player) get 403."""
+    """Signed in with Discord – anonymous visitors, admins signed in with a password (no Player) and players without
+    Discord (the bot cannot write to them) get 403."""
 
     def has_permission(self, request, view):
-        return player_of(request.user) is not None
+        player = player_of(request.user)
+        return player is not None and not player.local
 
 
 class WriteThrottle(UserRateThrottle):

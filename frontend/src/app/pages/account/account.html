@@ -25,7 +25,11 @@
         <img class="card__avatar" [src]="user.avatar_url" alt="" width="64" height="64" />
         <h2 class="card__title" id="account-name">{{ user.name }}</h2>
         <p class="card__meta">
-          {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
+          @if (user.local) {
+            {{ a.local.account }}
+          } @else {
+            {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
+          }
         </p>
 
         <form id="meno" class="ingame" [class.is-required]="auth.needsName()" novalidate (submit)="saveName($event, nameInput)">
@@ -56,13 +60,17 @@
             class="ingame__state"
             id="ingame-state"
             role="status"
-            [class.is-error]="nameState() === 'failed' || nameState() === 'required'"
+            [class.is-error]="nameState() === 'failed' || nameState() === 'required' || nameState() === 'taken'"
           >
             @if (nameState(); as state) {
               {{ a.ingame[state] }}
             }
           </p>
         </form>
+        @if (user.local) {
+          <!-- signs in with the in-game name above -->
+          <p class="field__hint ingame__login">{{ a.local.loginName }}</p>
+        }
 
         <form id="power" class="ingame ingame--power" [class.is-required]="auth.needsPower()" novalidate (submit)="savePower($event, powerInput)">
           @if (auth.needsPower()) {
@@ -94,6 +102,17 @@
             }
           </p>
         </form>
+
+        @if (user.local) {
+          <app-password-form />
+          @if (auth.discordLogin()) {
+            <!-- the same account with Discord: the bot's reminders and messages (Gether 17. 10. 2026) -->
+            <div class="link-discord">
+              <a class="btn btn--ghost" [href]="auth.linkUrl()"><svg appIcon="discord"></svg> {{ a.local.link }}</a>
+              <p class="hint">{{ a.local.linkHint }}</p>
+            </div>
+          }
+        }
 
         <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="logout()">
           <svg appIcon="log-out"></svg> {{ a.logout }}
@@ -135,15 +154,17 @@
         </div>
       </section>
 
-      <!-- the reminders have their own page (the bell in the header) -->
-      <a class="shortcut" [routerLink]="i18n.path('reminders')">
-        <span class="shortcut__icon"><svg appIcon="bell"></svg></span>
-        <span class="shortcut__body">
-          <strong>{{ a.reminders.title }}</strong>
-          <small>{{ a.reminders.text }}</small>
-        </span>
-        <span class="shortcut__go">{{ a.reminders.link }}<svg appIcon="chevron-right"></svg></span>
-      </a>
+      <!-- the reminders have their own page (the bell in the header); a bot DM – not without Discord -->
+      @if (!user.local) {
+        <a class="shortcut" [routerLink]="i18n.path('reminders')">
+          <span class="shortcut__icon"><svg appIcon="bell"></svg></span>
+          <span class="shortcut__body">
+            <strong>{{ a.reminders.title }}</strong>
+            <small>{{ a.reminders.text }}</small>
+          </span>
+          <span class="shortcut__go">{{ a.reminders.link }}<svg appIcon="chevron-right"></svg></span>
+        </a>
+      }
       <a class="shortcut" [routerLink]="i18n.path('kvk')">
         <span class="shortcut__icon"><svg appIcon="swords"></svg></span>
         <span class="shortcut__body">
@@ -184,13 +205,19 @@
     </div>
   } @else {
     <section class="card" aria-labelledby="account-login">
-      <span class="card__badge"><svg appIcon="discord"></svg></span>
+      @if (auth.discordLogin()) {
+        <span class="card__badge"><svg appIcon="discord"></svg></span>
+      }
       <h2 class="card__title" id="account-login">{{ a.loginTitle }}</h2>
       <p class="card__text">{{ a.stored }}</p>
       <a class="card__privacy" [routerLink]="i18n.path('privacy')">{{ a.privacy }}</a>
-      <a class="btn btn--gold" [href]="auth.loginUrl()"
-        ><svg appIcon="discord"></svg> {{ a.login }}</a
-      >
+      @if (auth.discordLogin()) {
+        <a class="btn btn--gold" [href]="nextPage() ? auth.loginUrl(nextPage()!) : auth.loginUrl()"
+          ><svg appIcon="discord"></svg> {{ a.login }}</a
+        >
+      }
+      <!-- without Discord: the in-game name and a password (Gether 17. 10. 2026) -->
+      <app-local-login (done)="signedIn()" />
     </section>
   }
 </div>

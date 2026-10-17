@@ -28,7 +28,23 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ['ingame_name', 'power']
         extra_kwargs = {'ingame_name': {'allow_blank': False}}
 
+    def validate_ingame_name(self, value):
+        # a player without Discord signs in with it (local_auth.py): it stays unique among all players
+        if self.instance is not None and self.instance.local:
+            from .local_auth import NAME_MAX, clean_name, name_taken
+
+            value = clean_name(value)
+            if not 2 <= len(value) <= NAME_MAX:
+                raise serializers.ValidationError('name', code='name')
+            if name_taken(value, exclude=self.instance):
+                raise serializers.ValidationError('name_taken', code='name_taken')
+        return value
+
     def update(self, instance, validated_data):
+        if instance.local and 'ingame_name' in validated_data:
+            from .local_auth import login_key
+
+            instance.login = login_key(validated_data['ingame_name'])
         if 'power' in validated_data:
             power = validated_data.pop('power')
             PlayerEvaluation.objects.update_or_create(player=instance, defaults={'power': power})
