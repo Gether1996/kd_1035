@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   linkedSignal,
   signal,
@@ -122,9 +121,6 @@ export class Reminders {
   /** the tile or line that opened the dialog gets the focus back */
   private trigger: HTMLElement | null = null;
 
-  /** language the messages are written in – follows the site's language */
-  private readonly savedLang = linkedSignal(() => this.settings()?.lang ?? null);
-
   /** the bot is set up on the server, but the player switched its messages off – no reminder reaches them */
   protected readonly noChannel = computed(() => !!this.settings()?.discord_available && !this.discord());
 
@@ -145,17 +141,7 @@ export class Reminders {
     return last;
   });
 
-  constructor() {
-    effect(() => {
-      const saved = this.savedLang();
-      const lang = this.i18n.lang();
-      if (saved && saved !== lang) {
-        this.savedLang.set(lang);
-        // quiet: on failure the next visit tries again
-        this.api.update({ lang }).catch(() => undefined);
-      }
-    });
-  }
+  // the language of the messages is the player's choice on /ucet (Gether 17. 10. 2026), no longer the site's
 
   // ---------------------------------------------------------------- texts
 

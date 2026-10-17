@@ -1,6 +1,7 @@
 import { ViewportScroller } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DOCUMENT, afterNextRender, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, afterNextRender, effect, inject } from '@angular/core';
 import { NavigationEnd, NavigationStart, Router, RouterOutlet, Scroll } from '@angular/router';
+import { Auth } from './core/auth';
 import { I18n, parseUrl } from './core/i18n/i18n';
 import { Seo } from './core/seo';
 import { SiteUpdate } from './core/site-update';
@@ -118,6 +119,21 @@ export class App {
         const url = this.i18n.switchPath(preferred) + location.search + location.hash;
         router.navigateByUrl(url, { replaceUrl: true });
       }
+    });
+
+    // a signed-in player gets the language picked on /ucet (Gether 17. 10. 2026), once per visit (the language switch
+    // still shows the other one). The browser remembers it like the switch, so the next visit starts in it at once
+    // (above); this first time the page loads again in that language – a router navigation started while the page
+    // still hydrates never finished
+    const auth = inject(Auth);
+    let followed = false;
+    effect(() => {
+      if (followed || !auth.ready()) return;
+      followed = true;
+      const lang = auth.user()?.lang;
+      if (!lang) return;
+      this.i18n.remember(lang);
+      if (lang !== this.i18n.lang()) location.replace(this.i18n.switchPath(lang) + location.search + location.hash);
     });
   }
 }

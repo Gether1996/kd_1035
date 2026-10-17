@@ -374,6 +374,7 @@ class MeTests(TestCase):
                     'name': 'Nelly',
                     'avatar_url': 'https://cdn.discordapp.com/embed/avatars/5.png',
                     'ingame_name': '',
+                    'lang': 'sk',
                     'power': None,
                     'approved': False,
                     'terms_accepted': False,
@@ -768,3 +769,38 @@ class SuperuserGuardTests(TestCase):
         User.objects.create_superuser('boss', password='x')
         self.client.post('/admin/login/', {'username': 'boss', 'password': 'x'})
         self.assertEqual(self.client.get('/admin/').status_code, 302)
+
+
+@override_settings(**DISCORD)
+class LanguageTests(TestCase):
+    """SK/CZ picked on /ucet: the website opens in it and the bot writes in it (Gether 17. 10. 2026)."""
+
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    def test_the_player_picks_the_language(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(make_player().user)
+        token = client.get('/api/auth/me/').cookies['csrftoken'].value
+        self.assertEqual(client.get('/api/auth/me/').json()['user']['lang'], 'sk')
+        response = client.patch('/api/auth/me/', {'lang': 'cs'}, content_type='application/json', HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.json()['user']['lang'], 'cs')
+        self.assertEqual(Player.objects.get().lang, 'cs')
+        response = client.patch('/api/auth/me/', {'lang': 'en'}, content_type='application/json', HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code, 400)
+
+    def test_a_new_discord_player_gets_the_language_of_the_website(self):
+        with mock.patch.object(discord_oauth, 'exchange_code', return_value='tok'), mock.patch.object(
+            discord_oauth, 'fetch_user', return_value=dict(PROFILE)
+        ):
+            response = self.client.get('/api/auth/discord/login/', {'next': '/cz/kalendar'})
+            state = parse_qs(urlsplit(response['Location']).query)['state'][0]
+            self.client.get('/api/auth/discord/callback/', {'state': state, 'code': 'abc'})
+            self.assertEqual(Player.objects.get().lang, 'cs')
+            # later sign-ins keep the player's own choice
+            Player.objects.update(lang='sk')
+            response = self.client.get('/api/auth/discord/login/', {'next': '/cz/kalendar'})
+            state = parse_qs(urlsplit(response['Location']).query)['state'][0]
+            self.client.get('/api/auth/discord/callback/', {'state': state, 'code': 'abc'})
+        self.assertEqual(Player.objects.get().lang, 'sk')

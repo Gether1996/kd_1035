@@ -15,7 +15,7 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
-import { I18n } from '../../core/i18n/i18n';
+import { I18n, Lang } from '../../core/i18n/i18n';
 import { marchHasProblem } from '../../core/kvk-api';
 import { MarchesApi } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
@@ -63,6 +63,12 @@ export class Account {
   protected readonly saving = signal(false);
   protected readonly nameState = signal<'saved' | 'failed' | 'required' | 'taken' | null>(null);
   protected readonly powerState = signal<'saved' | 'failed' | 'invalid' | null>(null);
+  protected readonly langState = signal<'saved' | 'failed' | null>(null);
+  /** the names of the languages in their own language, like the switch in the header */
+  protected readonly langs: { lang: Lang; label: string }[] = [
+    { lang: 'sk', label: 'Slovenčina' },
+    { lang: 'cs', label: 'Čeština' },
+  ];
 
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
@@ -161,6 +167,23 @@ export class Account {
       this.powerState.set('saved');
     } catch {
       this.powerState.set('failed');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  /** SK/CZ for the website and the bot's messages; the page goes on in the language picked */
+  protected async saveLang(lang: Lang): Promise<void> {
+    this.langState.set(null);
+    this.saving.set(true);
+    try {
+      await this.auth.saveLang(lang);
+      this.langState.set('saved');
+      if (lang !== this.i18n.lang()) {
+        void this.router.navigateByUrl(this.i18n.path('account', lang) + location.hash, { replaceUrl: true });
+      }
+    } catch {
+      this.langState.set('failed');
     } finally {
       this.saving.set(false);
     }

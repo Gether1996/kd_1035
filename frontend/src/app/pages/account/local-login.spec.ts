@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Me, Player } from '../../core/auth';
 import { Scroll } from '../../core/scroll';
 import { Account } from './account';
@@ -154,5 +154,24 @@ describe('Signing in without Discord', () => {
     expect(el.querySelector('.password__toggle')?.textContent).toContain('Zmeniť heslo');
     expect(el.querySelector('.link-discord a')?.getAttribute('href')).toBe('/api/auth/discord/login/?link=1&next=%2Fucet');
     expect(el.querySelector('a[href="/pripomienky"]')).toBeNull();
+  });
+
+  it('the language of the website and the messages: saved, the page goes on in it', async () => {
+    const { fixture, el } = await render({ login_enabled: true, discord_login: true, user: { ...LOCAL, lang: 'sk' } });
+    const router = TestBed.inject(Router);
+    const go = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const pressed = () => el.querySelector('.ingame--lang [aria-pressed="true"]')?.textContent?.trim();
+    expect(pressed()).toBe('Slovenčina');
+    button(el, 'Čeština').click();
+    const req = http.expectOne('/api/auth/me/');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ lang: 'cs' });
+    req.flush({ login_enabled: true, user: { ...LOCAL, lang: 'cs' } });
+    await settle();
+    fixture.detectChanges();
+    expect(pressed()).toBe('Čeština');
+    expect(go).toHaveBeenCalledWith('/cz/ucet', { replaceUrl: true });
+    expect(localStorage.getItem('kd1035.lang')).toBe('cs');
+    localStorage.removeItem('kd1035.lang');
   });
 });

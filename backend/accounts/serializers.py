@@ -8,7 +8,7 @@ from .models import MAX_PLAYER_REMINDERS, Player, PlayerEvaluation
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    """What the player edits on /ucet: the in-game name (whitespace trimmed; required since 11. 10. 2026 (Gether) –
+    """What the player edits on /ucet: the language SK/CZ, the in-game name (whitespace trimmed; required since 11. 10. 2026 (Gether) –
     it can be changed, not cleared) and the current power in millions, null = not written down. The power is the one of
     the KvK evaluation (Gether 14. 10. 2026: "aktuálna power, to isté ako vo vyhodnocovaní") – the superadmin may
     have written it down already."""
@@ -25,7 +25,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ['ingame_name', 'power']
+        # lang: the language of the website and of the bot's messages the player picked (Gether 17. 10. 2026)
+        fields = ['ingame_name', 'power', 'lang']
         extra_kwargs = {'ingame_name': {'allow_blank': False}}
 
     def validate_ingame_name(self, value):

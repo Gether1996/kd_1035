@@ -178,6 +178,15 @@
   text-align: left;
 }
 
+// the language under the power: label, SK/CZ, hint
+.ingame--lang {
+  margin-top: 4px;
+
+  .segmented {
+    justify-self: start;
+  }
+}
+
 // the power right under the name – the state line of the name keeps them apart
 .ingame--power {
   margin-top: 4px;

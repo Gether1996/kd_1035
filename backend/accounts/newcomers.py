@@ -47,7 +47,7 @@ def message(player: Player) -> dict:
     lines = [
         f'Meno v hre: {name}',
         f'Discord: {account}',
-        f'Web: {LANGS.get(player.lang, player.lang.upper())}',
+        f'Jazyk: {LANGS.get(player.lang, player.lang.upper())}',
         'Kým ho neschváliš, nemôže pridávať marche ani prihlášky na KvK.',
     ]
     if settings.SITE_URL:

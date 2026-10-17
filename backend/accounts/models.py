@@ -62,7 +62,8 @@ class Player(models.Model):
         max_length=2,
         choices=[('sk', 'slovenčina'), ('cs', 'čeština')],
         default='sk',
-        help_text='Jazyk pripomienok – podľa verzie webu, na ktorej bol hráč naposledy.',
+        help_text='Jazyk webu a správ od bota – vyberá si ho hráč na Môj účet (nový hráč dostane jazyk webu, '
+        'na ktorom sa prvýkrát prihlásil).',
     )
     created_at = models.DateTimeField('registrovaný', auto_now_add=True)
     marches_public = models.BooleanField(

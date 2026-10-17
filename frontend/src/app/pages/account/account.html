@@ -103,6 +103,29 @@
           </p>
         </form>
 
+        <!-- the language of the website and of the bot's messages (Gether 17. 10. 2026) -->
+        <div class="ingame ingame--lang">
+          <span class="field__label" id="account-lang">{{ a.lang.label }}</span>
+          <div class="segmented" role="group" aria-labelledby="account-lang" aria-describedby="lang-hint">
+            @for (option of langs; track option.lang) {
+              <button
+                type="button"
+                [attr.aria-pressed]="(user.lang ?? 'sk') === option.lang"
+                [disabled]="saving()"
+                (click)="saveLang(option.lang)"
+              >
+                {{ option.label }}
+              </button>
+            }
+          </div>
+          <p class="field__hint" id="lang-hint">{{ a.lang.hint }}</p>
+          <p class="ingame__state" role="status" [class.is-error]="langState() === 'failed'">
+            @if (langState(); as state) {
+              {{ a.lang[state] }}
+            }
+          </p>
+        </div>
+
         @if (user.local) {
           <app-password-form />
           @if (auth.discordLogin()) {

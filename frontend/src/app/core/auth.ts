@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, computed, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { I18n } from './i18n/i18n';
+import { I18n, Lang } from './i18n/i18n';
 
 export interface Player {
   /** null for a player without Discord */
@@ -13,6 +13,8 @@ export interface Player {
   avatar_url: string;
   /** typed by the player on /ucet, '' until then */
   ingame_name: string;
+  /** SK/CZ picked on /ucet: the website opens in it, the bot writes in it (Gether 17. 10. 2026) */
+  lang?: Lang;
   /** the current power in millions – the one of the KvK evaluation, typed on /ucet or by the superadmin; null = none */
   power?: number | null;
   /** adds marches and KvK sign-ups – a new player waits for the superadmin (Gether 12. 10. 2026) */
@@ -144,6 +146,12 @@ export class Auth {
   /** The player's name in Rise of Kingdoms, so leadership recognises them ('' clears it). */
   async saveIngameName(name: string): Promise<void> {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { ingame_name: name })));
+  }
+
+  /** The language of the website and of the bot's messages; the browser remembers it too (the language switch). */
+  async saveLang(lang: Lang): Promise<void> {
+    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { lang })));
+    this.i18n.remember(lang);
   }
 
   /** The player's current power in millions (null clears it) – the KvK evaluation counts with it. */

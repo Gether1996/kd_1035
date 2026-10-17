@@ -911,7 +911,7 @@ export const sk = {
         text: 'Nepoužívame analytiku, reklamy ani sledovacie cookies.',
         list: [
           'Cookie csrftoken – chráni formuláre pred podvrhnutými požiadavkami, platí približne 1 rok.',
-          'Zvolený jazyk v úložisku prehliadača (kd1035.lang) – iba ak použiješ prepínač jazyka.',
+          'Zvolený jazyk v úložisku prehliadača (kd1035.lang) – iba ak použiješ prepínač jazyka alebo si jazyk vyberieš na stránke Môj účet.',
           'Commanderi, ktorých si označíš v „Čo môžem postaviť“ (kd1035.commanders) – iba v úložisku tvojho prehliadača, na server sa neposielajú.',
           'Písma, obrázky a skripty webu idú z nášho servera, nie z cudzích služieb.',
         ],
@@ -923,6 +923,7 @@ export const sk = {
           'Discord ID, používateľské a zobrazované meno.',
           'Avatar – uložíme iba jeho kód, obrázok sa načíta priamo z Discordu.',
           'Meno v hre – vyplníš ho po prvom prihlásení.',
+          'Jazyk webu a správ od bota (SK alebo CZ) – na začiatku podľa webu, na ktorom sa prvýkrát prihlásiš, zmeníš ho na stránke Môj účet.',
           'Čas registrácie a posledného prihlásenia.',
           'Kedy si súhlasil s podmienkami používania a s ktorou ich verziou.',
           'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení.',
@@ -1069,6 +1070,13 @@ export const sk = {
       required: 'Doplň svoju aktuálnu power – vedenie s ňou ráta pri KvK.',
       invalid: 'Zadaj power v miliónoch, napr. 101,5.',
       save: 'Uložiť',
+      saved: 'Uložené.',
+      failed: 'Nepodarilo sa uložiť. Skús to znova.',
+    },
+    // the language of the website and of the bot's messages (Gether 17. 10. 2026)
+    lang: {
+      label: 'Jazyk webu a správ',
+      hint: 'Web sa ti otvorí v tomto jazyku a bot ti v ňom píše na Discorde.',
       saved: 'Uložené.',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',
     },

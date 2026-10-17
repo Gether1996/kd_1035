@@ -77,11 +77,17 @@ def back_to(next_url: str, status: str = '') -> HttpResponseRedirect:
     return HttpResponseRedirect(urlunsplit(parts._replace(query=urlencode(query))))
 
 
+def lang_of(next_url: str) -> str:
+    """The language of the page the player signed in from: /cz/… Czech, else Slovak."""
+    path = urlsplit(next_url).path
+    return 'cs' if path == '/cz' or path.startswith('/cz/') else 'sk'
+
+
 def ask_for_name(next_url: str) -> str:
     """A player without an in-game name (the first sign-in) lands on the account page with the name field first
     (Gether 11. 10. 2026: required at the first sign-in); ?next= brings them back where they were going."""
     path = urlsplit(next_url).path
-    account = '/cz/ucet' if path == '/cz' or path.startswith('/cz/') else DEFAULT_NEXT
+    account = '/cz/ucet' if lang_of(next_url) == 'cs' else DEFAULT_NEXT
     query = {'meno': '1'}
     if path.rstrip('/') != account:
         query['next'] = next_url
@@ -89,8 +95,9 @@ def ask_for_name(next_url: str) -> str:
 
 
 @transaction.atomic
-def save_player(profile: dict) -> User:
-    """Creates or refreshes the user + player behind a Discord profile (see discord_oauth.fetch_user)."""
+def save_player(profile: dict, lang: str = 'sk') -> User:
+    """Creates or refreshes the user + player behind a Discord profile (see discord_oauth.fetch_user). A new player
+    gets the language of the website they signed in on; later only the player changes it (/ucet)."""
     discord_id = profile['id']
     username = str(profile['username'])[:40]
     global_name = str(profile.get('global_name') or '')[:64]
@@ -109,7 +116,7 @@ def save_player(profile: dict) -> User:
             user.set_unusable_password()
         # a new player waits for the superadmin's approval and the worker tells the superadmin (newcomers.py) –
         # unless the superadmin lets everyone in for now (PlayerSettings.auto_approve): approved, nobody is told
-        player = Player(user=user, discord_id=discord_id)
+        player = Player(user=user, discord_id=discord_id, lang=lang)
         if PlayerSettings.load().auto_approve:
             player.approved = player.announced = True
     if discord_id in settings.DISCORD_ADMIN_IDS:
@@ -177,7 +184,7 @@ def discord_callback(request):
         status = link_player(request, link, profile)
         if status:
             return back_to(next_url, status)
-    user = save_player(profile)
+    user = save_player(profile, lang=lang_of(next_url))
     if not user.is_active:  # blocked in the admin
         log.warning('Discord login of inactive user %s', user.pk)
         return back_to(next_url, 'error')
@@ -277,6 +284,8 @@ def signed_in(request) -> dict | None:
         'name': player.name,
         'avatar_url': player.avatar_url,
         'ingame_name': player.ingame_name,
+        # SK/CZ: the website opens in it, the bot writes in it (Gether 17. 10. 2026)
+        'lang': player.lang,
         'power': float(evaluation.power) if evaluation and evaluation.power is not None else None,
         # adds marches and KvK sign-ups (a new player waits for the superadmin, Gether 12. 10. 2026)
         'approved': player.may_post,

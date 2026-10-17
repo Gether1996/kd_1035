@@ -891,7 +891,7 @@ export const cs: Dict = {
         text: 'Nepoužíváme analytiku, reklamy ani sledovací cookies.',
         list: [
           'Cookie csrftoken – chrání formuláře před podvrženými požadavky, platí přibližně 1 rok.',
-          'Zvolený jazyk v úložišti prohlížeče (kd1035.lang) – jen když použiješ přepínač jazyka.',
+          'Zvolený jazyk v úložišti prohlížeče (kd1035.lang) – jen když použiješ přepínač jazyka nebo si jazyk vybereš na stránce Můj účet.',
           'Commandeři, které si označíš v „Co můžu postavit“ (kd1035.commanders) – jen v úložišti tvého prohlížeče, na server se neposílají.',
           'Písma, obrázky a skripty webu jdou z našeho serveru, ne z cizích služeb.',
         ],
@@ -903,6 +903,7 @@ export const cs: Dict = {
           'Discord ID, uživatelské a zobrazované jméno.',
           'Avatar – uložíme jen jeho kód, obrázek se načte přímo z Discordu.',
           'Jméno ve hře – vyplníš ho po prvním přihlášení.',
+          'Jazyk webu a zpráv od bota (SK nebo CZ) – na začátku podle webu, na kterém se poprvé přihlásíš, změníš ho na stránce Můj účet.',
           'Čas registrace a posledního přihlášení.',
           'Kdy jsi souhlasil s podmínkami používání a s kterou jejich verzí.',
           'Zda tě správce schválil – nový hráč přidá marche a přihlášku na KvK až po schválení.',
@@ -1048,6 +1049,13 @@ export const cs: Dict = {
       required: 'Doplň svou aktuální power – vedení s ní počítá při KvK.',
       invalid: 'Zadej power v milionech, např. 101,5.',
       save: 'Uložit',
+      saved: 'Uloženo.',
+      failed: 'Nepodařilo se uložit. Zkus to znovu.',
+    },
+    // the language of the website and of the bot's messages (Gether 17. 10. 2026)
+    lang: {
+      label: 'Jazyk webu a zpráv',
+      hint: 'Web se ti otevře v tomto jazyce a bot ti v něm píše na Discordu.',
       saved: 'Uloženo.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',
     },

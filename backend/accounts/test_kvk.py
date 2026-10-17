@@ -690,7 +690,7 @@ class NewcomerTests(TestCase):
         self.assertEqual(embed['title'], 'Nový hráč na webe: Nelly1035')
         self.assertIn('Meno v hre: **Nelly1035**', embed['description'])
         self.assertIn('<@42> · nelly', embed['description'])
-        self.assertIn('Web: CZ', embed['description'])
+        self.assertIn('Jazyk: CZ', embed['description'])
         self.assertIn('https://kd1035.eu/ucet#hraci', embed['description'])
         self.assertEqual(announce_new_players(), 0)
         self.assertEqual(self.send.call_count, 1)
@@ -712,7 +712,7 @@ class NewcomerTests(TestCase):
         embed = self.send.call_args.args[1]['embeds'][0]
         self.assertEqual(embed['title'], 'Nový hráč na webe: Nelly')
         self.assertIn('Meno v hre: zatiaľ nevyplnené', embed['description'])
-        self.assertIn('Web: SK', embed['description'])
+        self.assertIn('Jazyk: SK', embed['description'])
 
     def test_the_players_own_texts_are_not_markdown(self):
         self.newbie(ingame_name='*[x](https://evil.example)*', username='the_nelly')
