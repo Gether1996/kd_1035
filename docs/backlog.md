@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **18. 10. 2026 – v1.34.4:** Pripomienky na Discorde ukážu typ termínu a max. odmenu: správa od bota „20 GH · Training Day“ + „Na max. odmenu: …“, kanál polia Typ a Max. odmena. Typ nastavený po naplánovaní pripomienok sa prejaví v ďalšej správe.
 - **18. 10. 2026 – v1.34.3:** Prepínač SK/CZ v hlavičke prihlásenému hráčovi zmení aj jazyk profilu (web aj správy bota) – predtým ho ďalšia návšteva vrátila do jazyka z Môj účet a stránka sa načítala znova. Spomína to Môj účet aj Ochrana údajov.
 - **18. 10. 2026 – v1.34.2:** Zrušené schválenie vypne aj R4 a vyhodnocovanie (prihlášky na KvK, odhad acclaimu, požadovaný acclaim); prepínače ostanú uložené a nové schválenie ich vráti, v sekcii Hráči riadok ukáže „Neplatí, kým nie je schválený“.
 - **18. 10. 2026 – v1.34.1:** Hráč bez Discordu: dialóg eventu v kalendári už neukáže falošnú chybu pripomienok (API sa nepýta), ale vysvetlenie a tlačidlo Prepojiť s Discordom; čakajúci na schválenie na `/marche` a `/kvk` nečíta sľub o správe bota; `/ucet` ukáže každému čakajúcemu štítok „Čaká na schválenie vedením“.
