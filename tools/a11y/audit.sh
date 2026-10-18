@@ -7,6 +7,7 @@
 # NAME=value pairs are the variables described in audit.mjs (PAGES, SIZES, STATES, SESSION…).
 # Exits 1 when any critical or serious violation exists. Full JSON results → tools/a11y/out/ (git-ignored).
 # --player / --superuser: signed in as a temporary test player (manage.py test_session), deleted again at the end.
+# --new: not approved yet, terms not agreed to; --local: signed up without Discord (both like tools/screenshots/shoot.sh).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 export MSYS_NO_PATHCONV=1  # Git Bash on Windows would rewrite /work and /app
@@ -19,10 +20,12 @@ for arg in "$@"; do
   case "$arg" in
     --player) role=player ;;
     --superuser) role=superuser ;;
-    --marches) seed=--marches ;;  # the test player gets seven sample marches (/marche)
+    --marches) seed="$seed --marches" ;;  # the test player gets seven sample marches (/marche)
+    --new) seed="$seed --new" ;;  # not approved yet, terms of use not agreed to
+    --local) seed="$seed --local" ;;  # signed up without Discord
     *=*) envs+=(-e "$arg") ;;
     *)
-      echo "usage: tools/a11y/audit.sh [--player | --superuser] [--marches] [NAME=value …]" >&2
+      echo "usage: tools/a11y/audit.sh [--player | --superuser] [--marches] [--new] [--local] [NAME=value …]" >&2
       exit 2
       ;;
   esac

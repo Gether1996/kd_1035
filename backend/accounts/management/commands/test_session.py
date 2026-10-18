@@ -66,6 +66,9 @@ class Command(BaseCommand):
         parser.add_argument(
             '--new', action='store_true', help='A new player: not approved yet and not agreed to the terms of use.'
         )
+        parser.add_argument(
+            '--local', action='store_true', help='A player without Discord (no Discord ID, no bot DMs).'
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
@@ -91,7 +94,7 @@ class Command(BaseCommand):
         player, _ = Player.objects.update_or_create(
             user=user,
             defaults={
-                'discord_id': DISCORD_ID,
+                'discord_id': None if options['local'] else DISCORD_ID,
                 'username': 'testplayer',
                 'global_name': 'Test Player',
                 'approved': not options['new'],

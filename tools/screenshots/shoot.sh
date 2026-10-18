@@ -8,6 +8,7 @@
 # NAME=value pairs are the variables described in shoot.mjs (PAGES, SIZES, FULL, SELECTOR, MEASURE, SHOT, SESSION…).
 # --player / --superuser: signed in as a temporary test player (manage.py test_session), deleted again at the end.
 # --new: the test player is new – not approved by the superadmin yet, terms of use not agreed to (the dialog).
+# --local: the test player signed up without Discord (no Discord ID, no reminders).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 export MSYS_NO_PATHCONV=1  # Git Bash on Windows would rewrite /work and /app
@@ -22,9 +23,10 @@ for arg in "$@"; do
     --superuser) role=superuser ;;
     --marches) seed="$seed --marches" ;;
     --new) seed="$seed --new" ;;
+    --local) seed="$seed --local" ;;
     *=*) envs+=(-e "$arg") ;;
     *)
-      echo "usage: tools/screenshots/shoot.sh [--player | --superuser] [--marches] [--new] [NAME=value …]" >&2
+      echo "usage: tools/screenshots/shoot.sh [--player | --superuser] [--marches] [--new] [--local] [NAME=value …]" >&2
       exit 2
       ;;
   esac

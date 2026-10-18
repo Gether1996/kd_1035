@@ -421,6 +421,15 @@ class TestSessionCommandTests(TestCase):
         self.assertIsNone(self.me(second))
         self.assertFalse(User.objects.filter(username='discord_999000111').exists())
 
+    def test_a_player_without_discord(self):
+        key = self.session('--local', '--new')
+        user = self.me(key)
+        self.assertTrue(user['local'])
+        self.assertIsNone(user['discord_id'])
+        self.assertFalse(user['approved'])
+        self.session('--delete')
+        self.assertFalse(Player.objects.exists())
+
     @override_settings(DEBUG=False)
     def test_refused_outside_development(self):
         with self.assertRaises(CommandError):

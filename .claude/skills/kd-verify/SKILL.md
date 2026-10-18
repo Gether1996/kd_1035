@@ -36,6 +36,7 @@ tools/screenshots/shoot.sh PAGES=/ SIZES=360x780,1920x1080 FULL=0  # only the fi
 tools/screenshots/shoot.sh PAGES=/ SELECTOR=.footer                # one element
 tools/screenshots/shoot.sh --player PAGES=/ucet,/pripomienky       # signed in as a test player
 tools/screenshots/shoot.sh --superuser PAGES=/kalendar             # superuser: event management in the calendar
+tools/screenshots/shoot.sh --player --new --local PAGES=/ucet,/marche  # a new player without Discord, waiting for approval
 ```
 - `--player` / `--superuser` create the temporary user `discord_999000111` (`manage.py test_session`) and delete it when the script ends. If the script was killed: `docker compose -f docker-compose.dev.yml exec -T backend python manage.py test_session --delete`. Never make test players by hand – the snapshot skips `discord_*` users, but other test data would go into git.
 - Save tokens: read only the PNGs you need (always 360 and 1920, plus the size the change targets); prefer `FULL=0` or `SELECTOR=` over full pages at 2560.
