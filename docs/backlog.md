@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 
 ## Hotové
 
+- **18. 10. 2026 – v1.34.3:** Prepínač SK/CZ v hlavičke prihlásenému hráčovi zmení aj jazyk profilu (web aj správy bota) – predtým ho ďalšia návšteva vrátila do jazyka z Môj účet a stránka sa načítala znova. Spomína to Môj účet aj Ochrana údajov.
 - **18. 10. 2026 – v1.34.2:** Zrušené schválenie vypne aj R4 a vyhodnocovanie (prihlášky na KvK, odhad acclaimu, požadovaný acclaim); prepínače ostanú uložené a nové schválenie ich vráti, v sekcii Hráči riadok ukáže „Neplatí, kým nie je schválený“.
 - **18. 10. 2026 – v1.34.1:** Hráč bez Discordu: dialóg eventu v kalendári už neukáže falošnú chybu pripomienok (API sa nepýta), ale vysvetlenie a tlačidlo Prepojiť s Discordom; čakajúci na schválenie na `/marche` a `/kvk` nečíta sľub o správe bota; `/ucet` ukáže každému čakajúcemu štítok „Čaká na schválenie vedením“.
 - **18. 10. 2026 – v1.34.0:** Typy opakovaného eventu (20 GH): v admine pri evente „Typy eventu“ (názov, ikona, čo treba na max. odmenu SK/CZ), superadmin v dialógu kalendára vyberie typ konkrétneho termínu. Hráči v kalendári vidia typ a max. odmenu, termín dostane ikonu typu. Prvý typ Training Day (max. odmena za 8 100 minút speedov na tréning jednotiek), ním je označený beh 16.–17. 10. 2026 (migrácia `kingdom/0019`).
