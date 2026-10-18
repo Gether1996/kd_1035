@@ -57,12 +57,15 @@ def clean_settings(value, depth=0):
 
 
 def allowed(request, *flags: str) -> bool:
-    """The superuser, or a player the superuser gave one of these switches (Hráči on /ucet)"""
+    """The superuser, or an approved player the superuser gave one of these switches (Hráči on /ucet) – taking the
+    approval back cuts the evaluation off too, the switches stay for a new approval"""
     user = request.user
     if not user.is_authenticated:
         return False
+    if user.is_superuser:
+        return True
     player = player_of(user)
-    return user.is_superuser or bool(player and any(getattr(player, flag) for flag in flags))
+    return bool(player and player.approved and any(getattr(player, flag) for flag in flags))
 
 
 class CanEvaluate(BasePermission):

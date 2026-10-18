@@ -154,12 +154,17 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
                       type="checkbox"
                       role="switch"
                       [attr.aria-label]="k.flags[f].label + ': ' + (p.ingame_name || p.name)"
+                      [attr.aria-describedby]="f !== 'approved' && inactive(p) ? 'inactive-' + p.id : null"
                       [checked]="p[f]"
                       (change)="set(p, f, box)"
                     />
                   </label>
                 }
               </span>
+              @if (inactive(p)) {
+                <!-- the switches stay stored: a new approval gives the access back with no other click -->
+                <p class="reviewer__inactive" [id]="'inactive-' + p.id">{{ k.flagsInactive }}</p>
+              }
             }
             @if (p.local) {
               <!-- without Discord (Gether 17. 10. 2026): a code for a new password; a waiting one can be deleted -->
@@ -229,6 +234,9 @@ export class PlayersAdmin {
 
   /** the superadmin counts as approved; with no switches of their own, they are in no access filter but "všetci" */
   private readonly approved = (p: ReviewerRow) => p.approved || p.superuser;
+  /** R4 and the evaluation count only while approved (taking the approval back cuts them off) – said when one is on */
+  protected readonly inactive = (p: ReviewerRow) =>
+    !this.approved(p) && (p.reviewer || p.evaluation_settings || p.evaluation_overview);
   private readonly accessMatches = (p: ReviewerRow, f: AccessFilter) =>
     f === 'all' ||
     (!p.superuser &&

@@ -21,13 +21,14 @@ def root() -> Path:
 
 
 def can_review(user) -> bool:
-    """The superuser and the players the superuser marked as reviewers see every player's sign-ups and marches."""
+    """The superuser and the players the superuser marked as reviewers see every player's sign-ups and marches – a
+    reviewer only while approved: taking the approval back cuts R4 off too, the switch stays for a new approval."""
     if not user.is_authenticated:
         return False
     if user.is_superuser:
         return True
     player = player_of(user)
-    return bool(player and player.kvk_reviewer)
+    return bool(player and player.kvk_reviewer and player.approved)
 
 
 def sweep(referenced: set[str], now: float | None = None) -> int:

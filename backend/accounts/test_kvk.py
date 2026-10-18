@@ -903,6 +903,27 @@ class UnapprovedTests(KvkTestCase):
         self.assertEqual(len(r4.get('/api/kvk/signups/').json()['signups']), 1)
         self.assertEqual(len(other.get('/api/marches/').json()['players']), 1)
 
+    def test_taking_the_approval_back_cuts_r4_off(self):
+        """Approval is the one "cut off" switch: an R4 who loses it sees no sign-up and no march, the switch stays"""
+        self.sign_up()
+        reviewer = make_player('43')
+        reviewer.kvk_reviewer = True
+        reviewer.save()
+        r4 = self.login(reviewer.user)
+        self.assertEqual(r4.get('/api/kvk/signups/').status_code, 200)
+        Player.objects.filter(pk=reviewer.pk).update(approved=False)
+
+        self.assertEqual(r4.get('/api/kvk/signups/').status_code, 403)
+        self.assertFalse(r4.get('/api/kvk/').json()['reviewer'])
+        res = r4.get('/api/marches/')
+        self.assertEqual((res.status_code, res.json()), (403, {'detail': 'not_approved'}))
+        self.assertTrue(Player.objects.get(pk=reviewer.pk).kvk_reviewer)
+        # approved again: R4 again with no other click
+        Player.objects.filter(pk=reviewer.pk).update(approved=True)
+        self.assertEqual(len(r4.get('/api/kvk/signups/').json()['signups']), 1)
+        self.assertTrue(r4.get('/api/kvk/').json()['reviewer'])
+        self.assertTrue(r4.get('/api/marches/').json()['reviewer'])
+
 
 class TermsTests(KvkTestCase):
     """A player agrees to the terms of use before adding marches and sign-ups; the version and the time are saved."""

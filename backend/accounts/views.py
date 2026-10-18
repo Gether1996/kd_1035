@@ -295,9 +295,11 @@ def signed_in(request) -> dict | None:
         # manages events (admin, irregular dates in the calendar)
         'is_superuser': request.user.is_superuser,
         # /vyhodnocovanie – the superadmin gives it like R4 (Gether 13. 10. 2026): the estimate with the variables, or
-        # (14. 10. 2026) only the published required acclaim
-        'evaluation_settings': player.evaluation_settings or request.user.is_superuser,
-        'evaluation_overview': player.evaluation_overview or player.evaluation_settings or request.user.is_superuser,
+        # (14. 10. 2026) only the published required acclaim; a player whose approval was taken back has neither
+        'evaluation_settings': (player.evaluation_settings and player.approved) or request.user.is_superuser,
+        'evaluation_overview': (
+            ((player.evaluation_overview or player.evaluation_settings) and player.approved) or request.user.is_superuser
+        ),
     }
 
 

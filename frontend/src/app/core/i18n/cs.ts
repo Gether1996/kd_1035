@@ -333,6 +333,8 @@ export const cs: Dict = {
         tip: 'Požadovaný acclaim: vidí zveřejněný požadovaný acclaim schválených hráčů, nic nemění. U hráčů vidí i power a doporučenou power, ne marche ani proměnné.',
       },
     },
+    // R4 and the evaluation switches of a row that is not approved: kept, but they count only once approved
+    flagsInactive: 'Neplatí, dokud není schválený',
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čeká',

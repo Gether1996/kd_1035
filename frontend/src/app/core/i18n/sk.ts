@@ -342,6 +342,8 @@ export const sk = {
         tip: 'Požadovaný acclaim: vidí zverejnený požadovaný acclaim schválených hráčov, nič nemení. Pri hráčoch vidí aj power a odporúčanú power, nie marche ani premenné.',
       },
     },
+    // R4 and the evaluation switches of a row that is not approved: kept, but they count only once approved
+    flagsInactive: 'Neplatí, kým nie je schválený',
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čaká',

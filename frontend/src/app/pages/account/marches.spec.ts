@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
 import { March } from '../../core/kvk-api';
 import { Marches } from './marches';
@@ -672,4 +672,54 @@ describe('Marches visibility', () => {
     expect(el.querySelector('.visibility__error')?.textContent).toContain('Nepodarilo');
     http.verify();
   });
+});
+
+describe('PlayersAdmin – approval taken back', () => {
+  const row = {
+    avatar_url: '',
+    reviewer: false,
+    approved: true,
+    superuser: false,
+    created_at: '2026-10-01T12:00:00Z',
+    last_login: null,
+    marches: 0,
+    issues: 0,
+    kvk: [],
+    evaluation_settings: false,
+    evaluation_overview: false,
+  };
+  const players = [
+    { ...row, id: 1, name: 'gether', ingame_name: 'Gether', superuser: true, approved: false, reviewer: true },
+    { ...row, id: 2, name: 'nelly', ingame_name: 'Nelly', reviewer: true, evaluation_settings: true },
+    { ...row, id: 3, name: 'odisiel', ingame_name: 'Odišiel', approved: false, evaluation_overview: true },
+    { ...row, id: 4, name: 'nova', ingame_name: 'Nova', approved: false },
+  ];
+
+  for (const [url, hint] of [
+    ['/ucet', 'Neplatí, kým nie je schválený'],
+    ['/cz/ucet', 'Neplatí, dokud není schválený'],
+  ]) {
+    it(`says the switches of a player who is not approved count only once approved (${url})`, async () => {
+      TestBed.configureTestingModule({
+        providers: [provideRouter([{ path: '**', children: [] }]), provideHttpClient(), provideHttpClientTesting()],
+      });
+      const http = TestBed.inject(HttpTestingController);
+      await TestBed.inject(Router).navigateByUrl(url);
+      const fixture = TestBed.createComponent(PlayersAdmin);
+      fixture.detectChanges();
+      http.expectOne('/api/kvk/reviewers/').flush({ players, auto_approve: false });
+      await settle(fixture);
+      const el = fixture.nativeElement as HTMLElement;
+      // only the row that is not approved and has R4 or the evaluation on – not the superadmin, not an approved one
+      const hints = el.querySelectorAll('.reviewer__inactive');
+      expect(hints.length).toBe(1);
+      expect(hints[0].textContent?.trim()).toBe(hint);
+      expect(hints[0].closest('.reviewer')?.querySelector('.reviewer__name strong')?.textContent).toContain('Odišiel');
+      // the switches stay clickable and point screen readers at the hint (not the approval one)
+      const boxes = Array.from(hints[0].closest('.reviewer')!.querySelectorAll<HTMLInputElement>('.switch'));
+      expect(boxes.map((b) => b.disabled)).toEqual([false, false, false, false]);
+      expect(boxes.map((b) => b.getAttribute('aria-describedby'))).toEqual([null, 'inactive-3', 'inactive-3', 'inactive-3']);
+      http.verify();
+    });
+  }
 });

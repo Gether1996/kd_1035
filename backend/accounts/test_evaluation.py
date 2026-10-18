@@ -11,7 +11,7 @@ from guides.meta.sync import sync_guides
 from guides.models import CommanderPair, fold
 from guides.roster import commander_names
 
-from .models import EvaluationSettings, March, PlayerEvaluation
+from .models import EvaluationSettings, March, Player, PlayerEvaluation
 from .test_reminders import PLAIN_STATIC, make_player
 
 
@@ -148,6 +148,36 @@ class EvaluationApiTests(TestCase):
         # the superuser counts as both
         me = self.admin.get('/api/auth/me/').json()['user']
         self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (True, True))
+
+    def test_taking_the_approval_back_cuts_the_evaluation_off(self):
+        """Approval is the one "cut off" switch: a player who loses it loses the evaluation too, the switches stay"""
+        url = f'/api/kvk/reviewers/{self.player.pk}/'
+        self.call('patch', url, {'evaluation_settings': True, 'evaluation_overview': True})
+        self.call('patch', url, {'approved': False})
+        self.player.refresh_from_db()
+        self.assertEqual((self.player.evaluation_settings, self.player.evaluation_overview), (True, True))
+        me = self.nelly.get('/api/auth/me/').json()['user']
+        self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (False, False))
+        self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
+        self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 403)
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 403)
+        self.assertEqual(self.call('put', '/api/evaluation/overview/', {'rows': []}, self.nelly).status_code, 403)
+        # the overview switch alone
+        self.call('patch', url, {'evaluation_settings': False})
+        self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 403)
+        self.assertFalse(self.nelly.get('/api/auth/me/').json()['user']['evaluation_overview'])
+        # approved again: back in with no other click
+        self.call('patch', url, {'approved': True, 'evaluation_settings': True})
+        me = self.nelly.get('/api/auth/me/').json()['user']
+        self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (True, True))
+        self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 200)
+        self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 200)
+        # the superuser does not depend on the approval
+        Player.objects.filter(user__is_superuser=True).update(approved=False)
+        me = self.admin.get('/api/auth/me/').json()['user']
+        self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (True, True))
+        self.assertEqual(self.admin.get('/api/evaluation/').status_code, 200)
+        self.assertEqual(self.admin.get('/api/evaluation/overview/').status_code, 200)
 
     def test_the_required_acclaim_is_published_for_the_players(self):
         """Gether 14. 10. 2026: "Požadovaný acclaim" – a plain overview for the players, nothing to edit"""
