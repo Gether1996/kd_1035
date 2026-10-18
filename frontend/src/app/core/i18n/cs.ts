@@ -424,6 +424,9 @@ export const cs: Dict = {
     pending: {
       title: 'Čekáš na schválení',
       text: 'Superadmin tě ještě neschválil. Až tě schválí, přidáš marche i přihlášku na KvK a uvidíš marche ostatních. Po schválení ti napíše bot na Discordu, pokud máš povolené soukromé zprávy.',
+      // without Discord no bot writes (Gether 17. 10. 2026)
+      textLocal:
+        'Superadmin tě ještě neschválil. Až tě schválí, přidáš marche i přihlášku na KvK – tato stránka se otevře sama, až se na ni vrátíš.',
     },
     loadError: 'Marche se nepodařilo načíst.',
     march: '{n}. march',
@@ -1011,6 +1014,8 @@ export const cs: Dict = {
     loginError: 'Přihlášení se nepodařilo. Zkus to znovu.',
     loginCancelled: 'Přihlášení bylo zrušeno.',
     discordId: 'Discord ID',
+    // a new player the superadmin has not approved yet – one quiet line on the profile card
+    pendingStatus: 'Čeká na schválení vedením',
     logout: 'Odhlásit',
     delete: 'Smazat účet',
     confirmDelete: 'Opravdu smazat?',

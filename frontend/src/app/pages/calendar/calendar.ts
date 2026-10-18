@@ -158,13 +158,19 @@ export class Calendar {
   // ---------------------------------------------------------------- dialog
 
   protected readonly selected = signal<PublicEvent | null>(null);
-  /** the player's reminders – asked once a player is signed in */
-  private readonly reminders = inject(RemindersApi).settings(() => !!this.auth.user());
+  /** the player's reminders – asked once a player with Discord is signed in (the bot sends them, the API refuses
+   * a player without Discord) */
+  private readonly reminders = inject(RemindersApi).settings(
+    () => !!this.auth.user() && !this.auth.user()!.local,
+  );
   protected readonly remind = computed<RemindState>(() => {
     const item = this.selected();
     if (!item || !this.auth.enabled()) return { kind: 'none' };
-    if (!this.auth.user())
-      return { kind: 'login', loginUrl: this.auth.loginUrl(this.returnPath(item)) };
+    const user = this.auth.user();
+    if (!user) return { kind: 'login', loginUrl: this.auth.loginUrl(this.returnPath(item)) };
+    // without Discord: no reminders – the way out is linking the account (when Discord sign-in is set up)
+    if (user.local)
+      return { kind: 'local', linkUrl: this.auth.discordLogin() ? this.auth.linkUrl() : null };
     if (this.reminders.error()) return { kind: 'error' };
     if (!this.reminders.hasValue()) return { kind: 'loading' };
     const s = this.reminders.value();

@@ -31,6 +31,9 @@
             {{ a.discordId }} <span class="card__id">{{ user.discord_id }}</span>
           }
         </p>
+        @if (!user.approved && !user.is_superuser) {
+          <p class="card__status"><svg appIcon="clock"></svg>{{ a.pendingStatus }}</p>
+        }
 
         <form id="meno" class="ingame" [class.is-required]="auth.needsName()" novalidate (submit)="saveName($event, nameInput)">
           @if (auth.needsName()) {

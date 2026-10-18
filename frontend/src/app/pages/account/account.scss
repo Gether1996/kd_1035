@@ -94,6 +94,26 @@
   color: var(--text-mute);
 }
 
+// a new player waiting for the superadmin – the look of .tag--pending in the players' list
+.card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  margin-top: 10px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--gold-400) 55%, transparent);
+  border-radius: 999px;
+  color: var(--gold-300);
+  font: 600 0.8125rem/1.2 var(--font-body);
+
+  .icon {
+    flex: none;
+    width: 13px;
+    height: 13px;
+  }
+}
+
 .card__id {
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;

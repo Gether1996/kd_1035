@@ -137,8 +137,8 @@ describe('Calendar', () => {
     fixture.detectChanges();
     http.expectOne('/api/auth/me/').flush(me);
     await settle(); // the month is set after the first render, in the browser
-    // a signed-in player's reminders are asked as soon as the player is known
-    if (me.user) http.expectOne('/api/me/reminders/').flush(SETTINGS);
+    // a signed-in player's reminders are asked as soon as the player is known (not without Discord – no bot DMs)
+    if (me.user && !me.user.local) http.expectOne('/api/me/reminders/').flush(SETTINGS);
     const events = http.expectOne((req) => req.url === '/api/events/');
     // the month grid in whole weeks and a day more on each side
     expect(events.request.params.get('from')).toBe(range[0]);
@@ -248,6 +248,34 @@ describe('Calendar', () => {
     await open(bar('MGE'));
     expect(dialog()!.querySelector('.switch')).toBeNull();
     expect(dialog()!.textContent).toContain('nebude opakovať');
+  });
+
+  describe('a player without Discord', () => {
+    const LOCAL: Me = {
+      login_enabled: true,
+      discord_login: true,
+      user: { ...PLAYER.user!, discord_id: null, local: true },
+    };
+
+    it('is not asked for reminders: the dialog says why and links the account to Discord', async () => {
+      await render(LOCAL); // http.verify() – no request to /api/me/reminders/
+      await open(bar('Silk Road'));
+      const remind = dialog()!.querySelector('.remind')!;
+      expect(remind.textContent).toContain('na účte bez Discordu nefungujú');
+      expect(remind.querySelector('.is-error')).toBeNull();
+      expect(remind.querySelector('.switch')).toBeNull();
+      const link = remind.querySelector('a.remind__login');
+      expect(link?.getAttribute('href')).toBe('/api/auth/discord/login/?link=1&next=%2Fucet');
+      expect(link?.textContent).toContain('Prepojiť s Discordom');
+    });
+
+    it('without the Discord sign-in on the server there is nothing to link', async () => {
+      await render({ ...LOCAL, discord_login: false });
+      await open(bar('MGE'));
+      const remind = dialog()!.querySelector('.remind')!;
+      expect(remind.textContent).toContain('na účte bez Discordu nefungujú');
+      expect(remind.querySelector('a')).toBeNull();
+    });
   });
 
   it('an irregular event without a date opens too; login off = no reminders part', async () => {

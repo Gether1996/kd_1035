@@ -437,6 +437,9 @@ export const sk = {
     pending: {
       title: 'Čakáš na schválenie',
       text: 'Superadmin ťa ešte neschválil. Keď ťa schváli, pridáš marche aj prihlášku na KvK a uvidíš marche ostatných. Po schválení ti napíše bot na Discorde, ak máš povolené súkromné správy.',
+      // without Discord no bot writes (Gether 17. 10. 2026)
+      textLocal:
+        'Superadmin ťa ešte neschválil. Keď ťa schváli, pridáš marche aj prihlášku na KvK – táto stránka sa otvorí sama, keď sa na ňu vrátiš.',
     },
     loadError: 'Marche sa nepodarilo načítať.',
     march: '{n}. march',
@@ -1032,6 +1035,8 @@ export const sk = {
     loginError: 'Prihlásenie sa nepodarilo. Skús to znova.',
     loginCancelled: 'Prihlásenie bolo zrušené.',
     discordId: 'Discord ID',
+    // a new player the superadmin has not approved yet – one quiet line on the profile card
+    pendingStatus: 'Čaká na schválenie vedením',
     logout: 'Odhlásiť',
     delete: 'Zmazať účet',
     confirmDelete: 'Naozaj zmazať?',

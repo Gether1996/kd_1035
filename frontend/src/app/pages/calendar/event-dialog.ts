@@ -35,8 +35,10 @@ import { clock, dayKey, longDay, numericDay } from './month';
 
 /** The reminders part of the dialog: nothing (login off), a login button, or the player's own choice. */
 export interface RemindState {
-  kind: 'none' | 'login' | 'loading' | 'error' | 'player';
+  kind: 'none' | 'login' | 'local' | 'loading' | 'error' | 'player';
   loginUrl?: string;
+  /** a player without Discord: links the account to Discord, null = Discord sign-in is not set up */
+  linkUrl?: string | null;
   /** the player's choice for this event; null = the event will not run again */
   event?: ReminderEvent | null;
   /** no channel reaches the player (Discord DM off or unavailable and no browser with notifications) */

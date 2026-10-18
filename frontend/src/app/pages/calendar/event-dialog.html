@@ -119,6 +119,14 @@
                 <svg appIcon="discord"></svg> {{ t().account.login }}
               </a>
             }
+            @case ('local') {
+              <p class="remind__text">{{ t().reminders.local }}</p>
+              @if (r.linkUrl) {
+                <a class="btn btn--ghost remind__login" [href]="r.linkUrl">
+                  <svg appIcon="discord"></svg> {{ t().account.local.link }}
+                </a>
+              }
+            }
             @case ('loading') {
               <span class="skeleton" aria-hidden="true"></span>
             }

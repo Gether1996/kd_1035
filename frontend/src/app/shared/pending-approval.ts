@@ -18,7 +18,7 @@ import { reloadOnReturn } from './reload-on-return';
     <section class="pending" aria-labelledby="pending-title">
       <span class="pending__badge"><svg appIcon="clock"></svg></span>
       <h2 class="pending__title" id="pending-title">{{ p.title }}</h2>
-      <p class="pending__text">{{ p.text }}</p>
+      <p class="pending__text">{{ local() ? p.textLocal : p.text }}</p>
     </section>
   `,
   styles: `
@@ -65,11 +65,13 @@ import { reloadOnReturn } from './reload-on-return';
 })
 export class PendingApproval {
   private readonly i18n = inject(I18n);
+  private readonly auth = inject(Auth);
   protected readonly t = computed(() => this.i18n.t().marches.pending);
+  /** without Discord no bot writes after the approval – the text does not promise it */
+  protected readonly local = computed(() => !!this.auth.user()?.local);
 
   constructor() {
-    const auth = inject(Auth);
-    if (isPlatformBrowser(inject(PLATFORM_ID))) auth.reload();
-    reloadOnReturn(() => auth.reload());
+    if (isPlatformBrowser(inject(PLATFORM_ID))) this.auth.reload();
+    reloadOnReturn(() => this.auth.reload());
   }
 }

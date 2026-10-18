@@ -103,6 +103,29 @@ describe('Account', () => {
     expect(links.some((href) => href?.startsWith('/marche'))).toBe(false);
   });
 
+  describe('the waiting status on the profile card', () => {
+    const NELLY = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: false, terms_accepted: true, is_staff: false, is_superuser: false };
+    const status = (el: HTMLElement) => el.querySelector('.profile .card__status')?.textContent?.trim();
+
+    // the superadmin's players list is deferred until it is in view
+    beforeEach(() => vi.stubGlobal('IntersectionObserver', class { observe() {} unobserve() {} disconnect() {} }));
+    afterEach(() => vi.unstubAllGlobals());
+
+    it.each([
+      ['with Discord', NELLY],
+      ['without Discord', { ...NELLY, discord_id: null, local: true }],
+    ])('a player waiting for the approval sees it (%s)', async (_, user) => {
+      expect(status(await render({ login_enabled: true, user }))).toBe('Čaká na schválenie vedením');
+    });
+
+    it.each([
+      ['an approved player', { ...NELLY, approved: true }],
+      ['the superadmin', { ...NELLY, is_staff: true, is_superuser: true }],
+    ])('%s sees nothing', async (_, user) => {
+      expect(status(await render({ login_enabled: true, user }))).toBeUndefined();
+    });
+  });
+
   it('shows no count when the marches cannot be loaded', async () => {
     // render() answers every other request with an error
     const el = await render({
