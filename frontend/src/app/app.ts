@@ -122,7 +122,7 @@ export class App {
     });
 
     // a signed-in player gets the language picked on /ucet (Gether 17. 10. 2026), once per visit (the language switch
-    // still shows the other one). The browser remembers it like the switch, so the next visit starts in it at once
+    // saves the profile too – Auth.followLang – so they only disagree when that failed). The browser remembers it like the switch, so the next visit starts in it at once
     // (above); this first time the page loads again in that language – a router navigation started while the page
     // still hydrates never finished
     const auth = inject(Auth);

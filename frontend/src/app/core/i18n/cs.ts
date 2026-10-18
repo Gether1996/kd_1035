@@ -913,7 +913,7 @@ export const cs: Dict = {
           'Discord ID, uživatelské a zobrazované jméno.',
           'Avatar – uložíme jen jeho kód, obrázek se načte přímo z Discordu.',
           'Jméno ve hře – vyplníš ho po prvním přihlášení.',
-          'Jazyk webu a zpráv od bota (SK nebo CZ) – na začátku podle webu, na kterém se poprvé přihlásíš, změníš ho na stránce Můj účet.',
+          'Jazyk webu a zpráv od bota (SK nebo CZ) – na začátku podle webu, na kterém se poprvé přihlásíš, změníš ho na stránce Můj účet nebo přepínačem jazyka v záhlaví.',
           'Čas registrace a posledního přihlášení.',
           'Kdy jsi souhlasil s podmínkami používání a s kterou jejich verzí.',
           'Zda tě správce schválil – nový hráč přidá marche a přihlášku na KvK až po schválení.',
@@ -1067,7 +1067,7 @@ export const cs: Dict = {
     // the language of the website and of the bot's messages (Gether 17. 10. 2026)
     lang: {
       label: 'Jazyk webu a zpráv',
-      hint: 'Web se ti otevře v tomto jazyce a bot ti v něm píše na Discordu.',
+      hint: 'Web se ti otevře v tomto jazyce a bot ti v něm píše na Discordu. Změníš ho i přepínačem SK/CZ v záhlaví.',
       saved: 'Uloženo.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',
     },

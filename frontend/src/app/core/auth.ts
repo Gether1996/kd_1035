@@ -154,6 +154,15 @@ export class Auth {
     this.i18n.remember(lang);
   }
 
+  /** The language switch in the header saves the profile language too, else the next visit would load the page again
+   * in the old one. Without waiting: the page has switched already, a failure leaves the old profile language.
+   * Nothing for a visitor, an account without a player (the admin signed in with the password) or the same language. */
+  followLang(lang: Lang): void {
+    const current = this.user()?.lang;
+    if (!current || current === lang) return;
+    this.http.patch<Me>('/api/auth/me/', { lang }).subscribe({ next: (me) => this.me.set(me), error: () => undefined });
+  }
+
   /** The player's current power in millions (null clears it) – the KvK evaluation counts with it. */
   async savePower(power: number | null): Promise<void> {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { power })));

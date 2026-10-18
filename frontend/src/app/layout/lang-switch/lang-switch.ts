@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Auth } from '../../core/auth';
 import { I18n, Lang } from '../../core/i18n/i18n';
 
 /** SK / CZ toggle. Real links to the same page in the other language (crawlable, keeps the section and the query). */
@@ -17,7 +18,7 @@ import { I18n, Lang } from '../../core/i18n/i18n';
           [attr.hreflang]="option.lang"
           [attr.lang]="option.lang"
           [attr.aria-current]="i18n.lang() === option.lang ? 'true' : null"
-          (click)="i18n.remember(option.lang)"
+          (click)="pick(option.lang)"
           >{{ option.label }}</a
         >
       }
@@ -28,8 +29,15 @@ import { I18n, Lang } from '../../core/i18n/i18n';
 })
 export class LangSwitch {
   protected readonly i18n = inject(I18n);
+  private readonly auth = inject(Auth);
   protected readonly options: { lang: Lang; label: string }[] = [
     { lang: 'sk', label: 'SK' },
     { lang: 'cs', label: 'CZ' },
   ];
+
+  /** The browser remembers the language; a signed-in player's profile follows it (the bot writes in it too). */
+  protected pick(lang: Lang): void {
+    this.i18n.remember(lang);
+    this.auth.followLang(lang);
+  }
 }

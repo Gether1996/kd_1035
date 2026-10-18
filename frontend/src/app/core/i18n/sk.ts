@@ -933,7 +933,7 @@ export const sk = {
           'Discord ID, používateľské a zobrazované meno.',
           'Avatar – uložíme iba jeho kód, obrázok sa načíta priamo z Discordu.',
           'Meno v hre – vyplníš ho po prvom prihlásení.',
-          'Jazyk webu a správ od bota (SK alebo CZ) – na začiatku podľa webu, na ktorom sa prvýkrát prihlásiš, zmeníš ho na stránke Môj účet.',
+          'Jazyk webu a správ od bota (SK alebo CZ) – na začiatku podľa webu, na ktorom sa prvýkrát prihlásiš, zmeníš ho na stránke Môj účet alebo prepínačom jazyka v hlavičke.',
           'Čas registrácie a posledného prihlásenia.',
           'Kedy si súhlasil s podmienkami používania a s ktorou ich verziou.',
           'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení.',
@@ -1088,7 +1088,7 @@ export const sk = {
     // the language of the website and of the bot's messages (Gether 17. 10. 2026)
     lang: {
       label: 'Jazyk webu a správ',
-      hint: 'Web sa ti otvorí v tomto jazyku a bot ti v ňom píše na Discorde.',
+      hint: 'Web sa ti otvorí v tomto jazyku a bot ti v ňom píše na Discorde. Zmeníš ho aj prepínačom SK/CZ v hlavičke.',
       saved: 'Uložené.',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',
     },
