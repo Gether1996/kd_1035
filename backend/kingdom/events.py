@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .models import EVENING_BEFORE, EventNotification, KingdomEvent
+from .models import EVENING_BEFORE, EventNotification, EventRun, EventVariant, KingdomEvent
 
 LOCAL_TZ = ZoneInfo('Europe/Bratislava')
 # reminders are created this far ahead; the worker plans every few minutes
@@ -111,6 +111,13 @@ def run_on(event: KingdomEvent, day: date, now=None) -> datetime | None:
         if not event.irregular or begin >= now or begin + length > now
     ]
     return next((begin for begin in runs if begin >= start), runs[0] if runs else None)
+
+
+def run_variant(event: KingdomEvent, start: datetime) -> EventVariant | None:
+    """The type leadership gave the run starting at `start` (EventRun), None while it has none. Read when a message
+    goes out, so a type set after the reminder was planned still shows."""
+    run = EventRun.objects.select_related('variant').filter(event=event, start=start).first()
+    return run.variant if run else None
 
 
 def render(event: KingdomEvent, occurrence: datetime) -> str:

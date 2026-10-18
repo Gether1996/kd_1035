@@ -1,12 +1,17 @@
+import json
 from datetime import UTC, datetime
 from importlib import import_module
 from unittest import mock
 
 from django.apps import apps
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
-from .models import EventRun, EventVariant, KingdomEvent
+from accounts import reminders
+from accounts.models import EventReminder, Player
+
+from . import discord, events
+from .models import EVENING_BEFORE, EventRun, EventVariant, KingdomEvent
 from .tests import PLAIN_STATIC
 
 CALENDAR = '/api/events/'
@@ -155,3 +160,131 @@ class TrainingDayMigrationTests(TestCase):
         self.assertEqual(list(EventRun.objects.values_list('event', 'start')), [(gh.pk, utc(2026, 10, 16))])
         # a 20 GH whose date was moved gets the type, but no run is tagged
         self.assertTrue(EventVariant.objects.filter(event=moved).exists())
+
+
+@override_settings(SITE_URL='https://kd1035.test')
+class RunTypeInMessagesTests(TestCase):
+    """The reminder the day before is when a player decides whether to hold speedups, so the bot DM and the channel
+    say which contest the run is and what the top reward takes."""
+
+    def setUp(self):
+        self.gh = make_gh(reminders=[EVENING_BEFORE], message='{name} {relative}')
+        self.training = EventVariant.objects.create(
+            event=self.gh,
+            name_sk='Training Day',
+            max_reward_sk='8 100 minút speedov na tréning jednotiek',
+            max_reward_cs='8 100 minut speedů na trénink jednotek',
+        )
+        self.start = utc(2026, 10, 16)
+
+    def tag(self):
+        EventRun.objects.create(event=self.gh, start=self.start, variant=self.training)
+
+    def dm(self, lang, start=None):
+        return reminders.discord_message(self.gh, start or self.start, lang)['embeds'][0]
+
+    def test_the_dm_names_the_type_and_the_max_reward(self):
+        self.tag()
+        embed = self.dm('sk')
+        self.assertEqual(embed['title'], '20 GH · Training Day')
+        self.assertEqual(
+            embed['description'].split('\n')[1], 'Na max. odmenu: 8 100 minút speedov na tréning jednotiek'
+        )
+        # an empty Czech name falls back to the Slovak one
+        embed = self.dm('cs')
+        self.assertEqual(embed['title'], '20 GH · Training Day')
+        self.assertEqual(
+            embed['description'].split('\n')[1], 'Na max. odměnu: 8 100 minut speedů na trénink jednotek'
+        )
+
+        self.gh.name_cs = '20 GH CZ'
+        self.training.name_cs = 'Training Day CZ'
+        self.training.max_reward_cs = ''
+        self.training.save()
+        embed = self.dm('cs')
+        self.assertEqual(embed['title'], '20 GH CZ · Training Day CZ')
+        self.assertEqual(
+            embed['description'].split('\n')[1], 'Na max. odměnu: 8 100 minút speedov na tréning jednotiek'
+        )
+
+    def test_a_type_without_a_max_reward_adds_no_line(self):
+        self.training.max_reward_sk = self.training.max_reward_cs = ''
+        self.training.save()
+        self.tag()
+        for lang in ('sk', 'cs'):
+            embed = self.dm(lang)
+            self.assertEqual(embed['title'], '20 GH · Training Day')
+            self.assertNotIn('odm', embed['description'])
+
+    def test_the_dm_of_an_untyped_run_is_unchanged(self):
+        self.tag()  # 16. 10. only – the run of 30. 10. has no type
+        start = utc(2026, 10, 30)
+        unix = int(start.timestamp())
+        expected = {
+            'embeds': [
+                {
+                    'title': '20 GH',
+                    'color': reminders.GOLD,
+                    'footer': {'text': 'KD 1035 · pripomienku si nastavil na webe v časti Pripomienky eventov'},
+                    'description': f'Začiatok: <t:{unix}:F> (<t:{unix}:R>)\n'
+                    '[Zmeniť pripomienky](https://kd1035.test/pripomienky)',
+                }
+            ]
+        }
+        self.assertEqual(json.dumps(reminders.discord_message(self.gh, start, 'sk')), json.dumps(expected))
+
+    @override_settings(DISCORD_BOT_TOKEN='bot-secret-token')
+    def test_a_type_set_after_the_reminder_was_picked_reaches_the_dm(self):
+        user = User.objects.create_user('discord_80351110224678912')
+        player = Player.objects.create(user=user, discord_id='80351110224678912', username='nelly', approved=True)
+        reminder = EventReminder.objects.create(player=player, event=self.gh, offsets=[EVENING_BEFORE])
+        EventReminder.objects.filter(pk=reminder.pk).update(updated_at=utc(2026, 10, 1))
+        KingdomEvent.objects.filter(pk=self.gh.pk).update(updated_at=utc(2026, 10, 1))
+        self.tag()
+        with mock.patch('accounts.discord_bot.send_dm') as send_dm:
+            # 18:00 in Bratislava the evening before
+            self.assertEqual(reminders.send_personal_reminders(now=utc(2026, 10, 15, 16)), 1)
+        self.assertEqual(send_dm.call_args.args[1]['embeds'][0]['title'], '20 GH · Training Day')
+
+    @override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', DISCORD_EVENT_ROLE_ID='42', SITE_URL='')
+    def test_the_channel_adds_the_type_set_after_the_notification_was_planned(self):
+        events.plan_reminders(now=utc(2026, 10, 15, 12))
+        notification = self.gh.notifications.get()
+        unix = int(self.start.timestamp())
+        start = {'name': 'Začiatok', 'value': f'<t:{unix}:F> · <t:{unix}:R>'}
+        untyped = {
+            'username': 'Kingdom 1035',
+            'content': '<@&42>',
+            'allowed_mentions': {'parse': [], 'roles': ['42']},
+            'embeds': [
+                {
+                    'title': '20 GH',
+                    'description': f'20 GH <t:{unix}:R>',
+                    'color': discord.GOLD,
+                    'timestamp': notification.send_at.isoformat(),
+                    'footer': {'text': 'KD 1035 · CZ/SK'},
+                    'fields': [start],
+                }
+            ],
+        }
+        self.assertEqual(json.dumps(discord.build_payload(notification)), json.dumps(untyped))
+
+        self.tag()
+        payload = discord.build_payload(notification)
+        self.assertEqual(
+            payload['embeds'][0]['fields'],
+            [
+                start,
+                {'name': 'Typ', 'value': 'Training Day'},
+                {'name': 'Max. odmena', 'value': '8 100 minút speedov na tréning jednotiek'},
+            ],
+        )
+        # the title as written by the notification, the ping untouched
+        self.assertEqual(payload['embeds'][0]['title'], '20 GH')
+        for key in ('username', 'content', 'allowed_mentions'):
+            self.assertEqual(payload[key], untyped[key])
+
+        self.training.max_reward_sk = ''
+        self.training.save()
+        fields = discord.build_payload(notification)['embeds'][0]['fields']
+        self.assertEqual(fields, [start, {'name': 'Typ', 'value': 'Training Day'}])

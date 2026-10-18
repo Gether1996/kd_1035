@@ -14,7 +14,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from kingdom.events import longest_lead, occurrences, send_time
+from kingdom.events import longest_lead, occurrences, run_variant, send_time
 from kingdom.models import KingdomEvent
 
 from . import discord_bot
@@ -35,6 +35,8 @@ REMINDERS_PAGE = '/pripomienky'
 TEXTS = {
     'sk': {
         'start': 'Začiatok: {start} ({relative})',
+        # the run's type (EventVariant): what the top reward takes, so players know how much to save
+        'max_reward': 'Na max. odmenu: {text}',
         'guide': 'Návod k eventu',
         'manage': 'Zmeniť pripomienky',
         'footer': 'KD 1035 · pripomienku si nastavil na webe v časti Pripomienky eventov',
@@ -45,6 +47,7 @@ TEXTS = {
     },
     'cs': {
         'start': 'Začátek: {start} ({relative})',
+        'max_reward': 'Na max. odměnu: {text}',
         'guide': 'Návod k eventu',
         'manage': 'Změnit připomínky',
         'footer': 'KD 1035 · připomínku sis nastavil na webu v části Připomínky eventů',
@@ -75,8 +78,13 @@ def duration(minutes: int, lang: str) -> str:
     return ' '.join(parts)
 
 
+def localized(obj, field: str, lang: str) -> str:
+    """`<field>_cs` for Czech players, the Slovak text when it is empty (event, EventVariant)."""
+    return (getattr(obj, f'{field}_cs') if lang == 'cs' else '') or getattr(obj, f'{field}_sk')
+
+
 def event_name(event: KingdomEvent, lang: str) -> str:
-    return (event.name_cs if lang == 'cs' else '') or event.name_sk
+    return localized(event, 'name', lang)
 
 
 def page_path(event: KingdomEvent, lang: str) -> str:
@@ -89,11 +97,18 @@ def page_path(event: KingdomEvent, lang: str) -> str:
 
 
 def discord_message(event: KingdomEvent, start, lang: str) -> dict:
-    """An embed like the channel reminders; <t:…> shows every player the time in their own time zone."""
+    """An embed like the channel reminders; <t:…> shows every player the time in their own time zone. A typed run
+    adds its type to the title and what the top reward takes ('20 GH · Training Day')."""
     t = texts(lang)
     unix = int(start.timestamp())
     lines = [t['start'].format(start=f'<t:{unix}:F>', relative=f'<t:{unix}:R>')]
-    embed = {'title': event_name(event, lang)[:256], 'color': GOLD, 'footer': {'text': t['footer']}}
+    title = event_name(event, lang)
+    variant = run_variant(event, start)
+    if variant:
+        title = f'{title} · {localized(variant, "name", lang)}'
+        if reward := localized(variant, 'max_reward', lang):
+            lines.append(t['max_reward'].format(text=reward))
+    embed = {'title': title[:256], 'color': GOLD, 'footer': {'text': t['footer']}}
     if settings.SITE_URL:
         guide = event.guide
         if guide and guide.is_published:

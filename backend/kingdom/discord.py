@@ -10,6 +10,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
+from .events import run_variant
 from .models import EventNotification
 
 log = logging.getLogger(__name__)
@@ -53,6 +54,13 @@ def build_payload(notification: EventNotification) -> dict:
         # Discord renders <t:…> in every reader's own time zone; R = "in 2 hours"
         unix = int(notification.event_start.timestamp())
         embed['fields'] = [{'name': 'Začiatok', 'value': f'<t:{unix}:F> · <t:{unix}:R>'}]
+    # the run's type, read at send time (also one set after the row was planned); the channel is Slovak
+    typed = notification.event_id and notification.occurrence_start
+    variant = run_variant(notification.event, notification.occurrence_start) if typed else None
+    if variant:
+        embed.setdefault('fields', []).append({'name': 'Typ', 'value': variant.name_sk})
+        if variant.max_reward_sk:
+            embed['fields'].append({'name': 'Max. odmena', 'value': variant.max_reward_sk})
     guide = notification.event.guide if notification.event else None
     if guide and guide.is_published and settings.SITE_URL:
         embed['url'] = f'{settings.SITE_URL}{guide.get_absolute_url()}'
