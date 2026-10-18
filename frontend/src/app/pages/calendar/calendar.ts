@@ -299,6 +299,11 @@ export class Calendar {
     else this.editing.set({ event: null, day });
   }
 
+  /** the event as the superuser manages it (its types of runs); null otherwise */
+  protected managedEvent(id: number): ManagedEvent | null {
+    return this.manageData()?.events.find((e) => e.id === id) ?? null;
+  }
+
   protected editEvent(id: number | null): void {
     const event = id === null ? null : (this.manageData()?.events.find((e) => e.id === id) ?? null);
     if (id !== null && !event) return; // not loaded yet

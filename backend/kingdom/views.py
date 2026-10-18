@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from . import events, ical
 from .event_icons import icon_url
-from .models import Alliance, KingdomEvent, SocialLink
+from .models import Alliance, EventRun, EventVariant, KingdomEvent, SocialLink
 from .serializers import AllianceSerializer, SocialLinkSerializer
 
 # the calendar page asks for a month grid (at most 6 weeks) and a day more on each side for other time zones
@@ -95,6 +95,27 @@ def event_data(event: KingdomEvent) -> dict:
     }
 
 
+def variant_data(variant: EventVariant) -> dict:
+    """The type of one run (20 GH: Training Day…) and what its top reward takes; icon None = the event's icon."""
+    return {
+        'name_sk': variant.name_sk,
+        'name_cs': variant.name_cs,
+        'icon': icon_url(variant.icon),
+        'max_reward_sk': variant.max_reward_sk,
+        'max_reward_cs': variant.max_reward_cs,
+    }
+
+
+def run_variants(visible, start: datetime, end: datetime) -> dict:
+    """(event id, run start) → EventVariant of the runs leadership has given a type, a run still running at `start`
+    included."""
+    longest = max((e.duration_minutes for e in visible), default=0)
+    runs = EventRun.objects.filter(
+        event__in=visible, start__gte=start - timedelta(minutes=longest), start__lt=end
+    ).select_related('variant')
+    return {(run.event_id, run.start): run.variant for run in runs}
+
+
 class EventCalendar(APIView):
     """Public calendar (/kalendar): occurrences of active events shown on the web that overlap the days asked for
     (Europe/Bratislava), a running multi-day event included, plus every irregular event with its next (or running)
@@ -110,12 +131,20 @@ class EventCalendar(APIView):
         visible = list(KingdomEvent.objects.filter(is_active=True, show_on_web=True).select_related('guide'))
         now = timezone.now()
 
+        variants = run_variants(visible, start, end)
+
         occurrences = []
         for begin, event in events.calendar(visible, start, end, MAX_OCCURRENCES, now):
             length = timedelta(minutes=event.duration_minutes)
+            variant = variants.get((event.pk, begin))
+            data = event_data(event)
+            if variant:
+                # the run's own art in the month and on the home page, when the type has one
+                data['icon'] = icon_url(variant.icon) or data['icon']
             occurrences.append(
                 {
-                    **event_data(event),
+                    **data,
+                    'variant': variant_data(variant) if variant else None,
                     'start': iso(begin),
                     'end': iso(begin + length) if length else None,
                     'repeat_days': event.repeat_days,

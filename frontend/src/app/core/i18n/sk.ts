@@ -737,6 +737,8 @@ export const sk = {
     since: 'od {date}',
     until: 'do {date}',
     gameTime: 'herný čas',
+    variant: 'Typ',
+    maxReward: 'Max. odmena',
     clock: {
       label: 'Herný čas a denný reset',
       gameTime: 'Herný čas',
@@ -781,6 +783,9 @@ export const sk = {
     date: 'Termín',
     dateOf: 'Termín nepravidelného eventu',
     edit: 'Upraviť',
+    variant: 'Typ tohto termínu',
+    noVariant: '— neurčený —',
+    variantError: 'Typ sa nepodarilo uložiť.',
     adminLink: 'Celá administrácia',
     inactive: 'Vypnutý',
     hidden: 'Skrytý na webe',

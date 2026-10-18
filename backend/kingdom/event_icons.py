@@ -29,6 +29,8 @@ ICONS = {
     'egg-hammer': ('egg_hammer', "Holy Knight's Treasure / Hunt for History"),
     'hammer': ('hammer', 'Hunt for History (kladivo)'),
     'gold-head': ('legendary_head', '20 GH (zlatá hlava)'),
+    # a type of 20 GH (EventVariant): the target from the game's event list (Gether's screenshot, 18. 10. 2026)
+    'training-day': (None, 'Training Day (typ 20 GH)'),
     'golden-kingdom': ('golden_kingdom', 'Golden Kingdom'),
     'ceroli': ('ceroli', 'Ceroli / Karuak'),
     'realm-of-mystique': ('realm_of_mystique', 'Realm of Mystique'),
@@ -48,6 +50,7 @@ GUESSES = [
     ('esmeralda', 'esmeralda'),
     ('holy knight', 'egg'),
     ('hunt for history', 'hammer'),
+    ('training day', 'training-day'),
     ('20 gh', 'gold-head'),
     ('gold head', 'gold-head'),
     ('golden kingdom', 'golden-kingdom'),

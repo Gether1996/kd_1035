@@ -1,7 +1,8 @@
 """Event management for superusers straight in the calendar (/kalendar): the same rules as the admin.
 
 /api/events/manage/ (GET list + everything the editor needs, POST create), /api/events/manage/<id>/ (GET, PATCH,
-DELETE) and /api/events/manage/<id>/date/ (PUT/DELETE the next date of an irregular event). Session + CSRF like the
+DELETE), /api/events/manage/<id>/date/ (PUT/DELETE the next date of an irregular event) and
+/api/events/manage/<id>/run/ (PUT/DELETE the type of one run, e.g. 20 GH Training Day). Session + CSRF like the
 rest of the site's API. Every change that alters the schedule plans the Discord reminders again (events.replan).
 """
 
@@ -28,8 +29,8 @@ from guides.models import Guide
 from . import event_icons, events
 from .admin import PLAN_FIELDS
 from .event_templates import NOT_PLANNED
-from .models import REMINDER_CHOICES, KingdomEvent
-from .views import iso
+from .models import REMINDER_CHOICES, EventRun, KingdomEvent
+from .views import iso, variant_data
 
 
 class IsSuperuser(BasePermission):
@@ -124,11 +125,17 @@ class EventSerializer(serializers.ModelSerializer):
             # the hour it usually starts at, in its own time basis: 20:00 in Bratislava, 00:00 UTC…
             'usual_time': event.starts_at.astimezone(basis_zone(event)).strftime('%H:%M'),
             'players': getattr(event, 'players_count', None),
+            # the types its runs can be (EventVariant, edited in the admin)
+            'variants': [{'id': v.pk, **variant_data(v)} for v in event.variants.all()],
         }
 
 
 def managed_events():
-    return KingdomEvent.objects.select_related('guide').annotate(players_count=Count('subscriptions', distinct=True))
+    return (
+        KingdomEvent.objects.select_related('guide')
+        .prefetch_related('variants')
+        .annotate(players_count=Count('subscriptions', distinct=True))
+    )
 
 
 def answer(event: KingdomEvent, code=status.HTTP_200_OK) -> Response:
@@ -216,3 +223,31 @@ def irregular_date(request, pk):
     event.save()
     events.replan(event, now=now)
     return answer(event)
+
+
+@never_cache
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsSuperuser])
+def run_variant(request, pk):
+    """PUT {start: ISO 8601, variant: id}: the type of the run starting at `start` (it replaces the one set before);
+    DELETE {start}: the run has no type again. Answers {start, variant: id | null}."""
+    event = get_object_or_404(KingdomEvent, pk=pk)
+    data = request.data if isinstance(request.data, dict) else {}
+    try:
+        start = parse_datetime(str(data.get('start', '')))
+    except ValueError:  # well-formed, but no such day or hour
+        start = None
+    if not start or not timezone.is_aware(start):
+        raise ValidationError({'start': 'Dátum a čas v ISO 8601 s časovým pásmom.'})
+    start = start.astimezone(UTC)
+    if next(events.occurrences(event, start, start + timedelta(microseconds=1)), None) != start:
+        raise ValidationError({'start': 'Event v tomto čase nezačína.'})
+    if request.method == 'DELETE':
+        EventRun.objects.filter(event=event, start=start).delete()
+        return Response({'start': iso(start), 'variant': None})
+    chosen = data.get('variant')
+    variant = event.variants.filter(pk=chosen).first() if type(chosen) is int else None
+    if not variant:
+        raise ValidationError({'variant': 'Vyber typ tohto eventu.'})
+    EventRun.objects.update_or_create(event=event, start=start, defaults={'variant': variant})
+    return Response({'start': iso(start), 'variant': variant.pk})

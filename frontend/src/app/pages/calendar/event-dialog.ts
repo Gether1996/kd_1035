@@ -8,11 +8,20 @@ import {
   computed,
   inject,
   input,
+  linkedSignal,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EventGuide, PublicEvent, eventName, isOccurrence } from '../../core/events-api';
+import { EventsAdminApi, ManagedEvent } from '../../core/events-admin-api';
+import {
+  EventGuide,
+  EventVariant,
+  PublicEvent,
+  eventName,
+  isOccurrence,
+} from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { ReminderEvent } from '../../core/reminders-api';
 import { googleUrl } from '../../shared/calendar-export';
@@ -58,9 +67,13 @@ export class EventDialog {
   readonly closed = output<void>();
   /** the player changed the reminders of this event (already being saved) */
   readonly changed = output<{ id: number; offsets: number[] | null }>();
+  /** superuser: the event as managed (its types of runs), null = not loaded or not a superuser */
+  readonly managed = input<ManagedEvent | null>(null);
   /** superuser: open the event editor / the date of an irregular event */
   readonly edit = output<number>();
   readonly schedule = output<number>();
+  /** superuser: the type of this run was saved (the calendar loads again) */
+  readonly runChanged = output<void>();
 
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
@@ -72,6 +85,37 @@ export class EventDialog {
     return isOccurrence(item) ? item : null;
   });
   protected readonly name = computed(() => eventName(this.item(), this.i18n.lang()));
+
+  /** the run's type (20 GH: Training Day…); a superuser's change shows at once, before the calendar reloads */
+  protected readonly variant = linkedSignal<EventVariant | null>(
+    () => this.occurrence()?.variant ?? null,
+  );
+  /** a superuser changed the type here: the header shows its icon, or the event's own once it is cleared */
+  private readonly changedHere = linkedSignal({ source: this.item, computation: () => false });
+  protected readonly icon = computed(() =>
+    this.changedHere()
+      ? (this.variant()?.icon ?? this.managed()?.icon_url ?? null)
+      : this.item().icon,
+  );
+  protected readonly variantName = computed(() => {
+    const v = this.variant();
+    return v ? eventName(v, this.i18n.lang()) : '';
+  });
+  protected readonly maxReward = computed(() => {
+    const v = this.variant();
+    return (v && this.i18n.lang() === 'cs' && v.max_reward_cs) || v?.max_reward_sk || '';
+  });
+  /** superuser: the types to choose from for this run (none = no choice shown) */
+  protected readonly variants = computed(() =>
+    this.occurrence() ? (this.managed()?.variants ?? []) : [],
+  );
+  protected readonly variantId = computed(() => {
+    const v = this.variant();
+    return this.variants().find((o) => o.name_sk === v?.name_sk)?.id ?? null;
+  });
+  protected readonly variantSaving = signal(false);
+  protected readonly variantFailed = signal(false);
+  private readonly adminApi = inject(EventsAdminApi);
   protected readonly repeat = computed(() => {
     const o = this.occurrence();
     const texts = this.t().reminders;
@@ -153,6 +197,27 @@ export class EventDialog {
   /** No `await` before this call: the clipboard needs the click's user activation. */
   protected copyLink(): void {
     this.copyStatus.copy(this.link(), this.name());
+  }
+
+  /** superuser: the type of this run from the select ('' = none) */
+  protected async setVariant(value: string): Promise<void> {
+    const o = this.occurrence();
+    if (!o) return;
+    const id = value ? Number(value) : null;
+    const before = this.variant();
+    this.variant.set(this.variants().find((v) => v.id === id) ?? null);
+    this.changedHere.set(true);
+    this.variantSaving.set(true);
+    this.variantFailed.set(false);
+    try {
+      await this.adminApi.setRunVariant(o.id, o.start, id);
+      this.runChanged.emit();
+    } catch {
+      this.variant.set(before);
+      this.variantFailed.set(true);
+    } finally {
+      this.variantSaving.set(false);
+    }
   }
 
   protected guideTitle(guide: EventGuide): string {

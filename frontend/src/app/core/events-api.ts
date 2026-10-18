@@ -24,6 +24,19 @@ export interface PublicEvent {
   guide: EventGuide | null;
 }
 
+/** The type of one run of an event (20 GH: Training Day…) and what its top reward takes. */
+export interface EventVariant {
+  name_sk: string;
+  /** '' = the Slovak name */
+  name_cs: string;
+  /** game art, null = the event's icon */
+  icon: string | null;
+  /** '' = not noted */
+  max_reward_sk: string;
+  /** '' = the Slovak text */
+  max_reward_cs: string;
+}
+
 /** One run of an event. */
 export interface Occurrence extends PublicEvent {
   /** ISO 8601 in UTC */
@@ -34,6 +47,8 @@ export interface Occurrence extends PublicEvent {
   repeat_days: number;
   /** no fixed cycle – leadership sets each date */
   irregular: boolean;
+  /** the type leadership gave this run (its icon is then in `icon`); null/missing = none */
+  variant?: EventVariant | null;
 }
 
 /** An irregular event with its next (or running) date; both null while leadership has not announced one. */

@@ -529,6 +529,9 @@ class KingdomEventAdminTests(TestCase):
             'show_on_web': 'on',
             'is_active': 'on',
             'player_reminders': '10, 60',
+            # the inline of the event's types (EventVariant), empty
+            'variants-TOTAL_FORMS': '0',
+            'variants-INITIAL_FORMS': '0',
             **kwargs,
         }
 
@@ -1084,7 +1087,8 @@ class EventTemplateTests(TestCase):
                 name_sk='More Than Gems', starts_at=utc(2026, 10, 10), repeat_days=28, until=date(2026, 12, 31),
                 guide=guide, reminders=[1440],
             )  # fmt: skip
-            KingdomEvent.objects.create(name_sk='Ark of Osiris', starts_at=utc(2026, 10, 14), repeat_days=14)
+            ark = KingdomEvent.objects.create(name_sk='Ark of Osiris', starts_at=utc(2026, 10, 14), repeat_days=14)
+            ark.variants.create(name_sk='Training Day', max_reward_sk='8 100 min')
             with mock.patch.object(event_templates, 'INITIAL_EVENTS', path):
                 call_command('export_initial_events', stdout=StringIO())
                 rows = json.loads(path.read_text(encoding='utf-8'))
@@ -1096,12 +1100,23 @@ class EventTemplateTests(TestCase):
                     ('2026-10-10T00:00:00+00:00', '2026-12-31', 'more-than-gems'),
                 )
                 self.assertIsNone(rows[0]['guide'])
+                # the types of the runs go along, the event without any has no key
+                self.assertEqual(
+                    rows[0]['variants'],
+                    [{'name_sk': 'Training Day', 'name_cs': '', 'icon': 'training-day', 'max_reward_sk': '8 100 min',
+                      'max_reward_cs': '', 'order': 0}],
+                )  # fmt: skip
+                self.assertNotIn('variants', rows[1])
 
                 before = list(KingdomEvent.objects.order_by('name_sk').values(*event_templates.INITIAL_FIELDS))
                 KingdomEvent.objects.all().delete()
                 self.assertEqual(len(event_templates.create_initial_events()), 2)
             after = list(KingdomEvent.objects.order_by('name_sk').values(*event_templates.INITIAL_FIELDS))
             self.assertEqual(after, before)
+            self.assertEqual(
+                list(KingdomEvent.objects.get(name_sk='Ark of Osiris').variants.values_list('name_sk', 'icon')),
+                [('Training Day', 'training-day')],
+            )
 
     def test_hunt_for_history_is_split_into_hammer_and_egg(self):
         from importlib import import_module

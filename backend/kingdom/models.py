@@ -269,6 +269,65 @@ class KingdomEvent(models.Model):
             raise ValidationError(errors)
 
 
+class EventVariant(models.Model):
+    """A type of a repeating event – the same slot runs as different contests (20 GH: Training Day…). Leadership
+    notes what the top reward takes, so players know how much to save; each run gets its type (EventRun)."""
+
+    event = models.ForeignKey(KingdomEvent, on_delete=models.CASCADE, related_name='variants', verbose_name='event')
+    name_sk = models.CharField('názov (SK)', max_length=80, help_text='Ako v hre, napr. Training Day.')
+    name_cs = models.CharField(
+        'název (CZ)', max_length=80, blank=True, help_text='Prázdne = použije sa slovenský názov.'
+    )
+    icon = models.CharField('ikona', max_length=32, blank=True, help_text='Prázdne = ikona eventu.')
+    max_reward_sk = models.CharField(
+        'max. odmena (SK)',
+        max_length=200,
+        blank=True,
+        help_text='Čo treba na najvyššiu odmenu, napr. „8 100 minút speedov na tréning jednotiek“.',
+    )
+    max_reward_cs = models.CharField(
+        'max. odměna (CZ)', max_length=200, blank=True, help_text='Prázdne = použije sa slovenský text.'
+    )
+    order = models.PositiveSmallIntegerField('poradie', default=0)
+
+    class Meta:
+        ordering = ['order', 'name_sk']
+        verbose_name = 'typ eventu'
+        verbose_name_plural = 'typy eventu'
+        constraints = [models.UniqueConstraint(fields=['event', 'name_sk'], name='one_variant_name_per_event')]
+
+    def __str__(self):
+        return self.name_sk
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.icon:
+            from .event_icons import guess
+
+            self.icon = guess(self.name_sk)
+        super().save(*args, **kwargs)
+
+
+class EventRun(models.Model):
+    """Which type (EventVariant) one run of a repeating event is – set by leadership once the game shows it."""
+
+    event = models.ForeignKey(KingdomEvent, on_delete=models.CASCADE, related_name='runs', verbose_name='event')
+    start = models.DateTimeField('termín', help_text='Začiatok behu (ako v kalendári).')
+    variant = models.ForeignKey(EventVariant, on_delete=models.CASCADE, related_name='runs', verbose_name='typ')
+
+    class Meta:
+        ordering = ['-start']
+        verbose_name = 'typ termínu'
+        verbose_name_plural = 'typy termínov'
+        constraints = [models.UniqueConstraint(fields=['event', 'start'], name='one_type_per_run')]
+
+    def __str__(self):
+        return f'{self.event} {timezone.localtime(self.start):%d. %m. %Y} – {self.variant}'
+
+    def clean(self):
+        if self.variant_id and self.event_id and self.variant.event_id != self.event_id:
+            raise ValidationError({'variant': 'Typ patrí inému eventu.'})
+
+
 class EventNotification(models.Model):
     """A message the worker posts to the Discord channel (webhook) at `send_at`.
 

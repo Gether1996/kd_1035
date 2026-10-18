@@ -1,5 +1,5 @@
 import re
-from datetime import UTC
+from datetime import UTC, timedelta
 
 from django import forms
 from django.conf import settings
@@ -12,7 +12,7 @@ from django.utils.html import format_html, format_html_join
 
 from . import event_icons
 from .discord import MAX_DELAY, deliver
-from .events import HORIZON, LOCAL_TZ, replan, send_time, upcoming
+from .events import HORIZON, LOCAL_TZ, occurrences, replan, send_time, upcoming
 from .models import (
     EVENING_BEFORE,
     MAX_OFFERED_REMINDERS,
@@ -21,6 +21,8 @@ from .models import (
     TWIN_EVENT_ERROR,
     Alliance,
     EventNotification,
+    EventRun,
+    EventVariant,
     KingdomEvent,
     Officer,
     SocialLink,
@@ -190,9 +192,27 @@ class KingdomEventListFormSet(forms.BaseModelFormSet):
             raise forms.ValidationError(TWIN_EVENT_ERROR)
 
 
+class EventVariantForm(forms.ModelForm):
+    icon = forms.ChoiceField(label='Ikona', choices=event_icons.choices, required=False)
+
+    class Meta:
+        model = EventVariant
+        fields = '__all__'
+
+
+class EventVariantInline(admin.TabularInline):
+    """Types of the event's runs (20 GH: Training Day…); which run is which is set in the calendar (/kalendar)."""
+
+    model = EventVariant
+    form = EventVariantForm
+    extra = 0
+    fields = ['order', 'name_sk', 'name_cs', 'icon', 'max_reward_sk', 'max_reward_cs']
+
+
 @admin.register(KingdomEvent)
 class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     form = KingdomEventForm
+    inlines = [EventVariantInline]
     list_display = [
         'icon_tag',
         'name_sk',
@@ -360,6 +380,28 @@ class EventNotificationForm(forms.ModelForm):
             if twins.exists():
                 self.add_error('send_at', 'Rovnaká pripomienka je už naplánovaná na tento čas – zmeň čas.')
         return data
+
+
+class EventRunForm(forms.ModelForm):
+    class Meta:
+        model = EventRun
+        fields = '__all__'
+
+    def clean(self):
+        data = super().clean()
+        event, start = data.get('event'), data.get('start')
+        if event and start and next(occurrences(event, start, start + timedelta(microseconds=1)), None) != start:
+            self.add_error('start', 'Event v tomto čase nezačína – pozri jeho termíny.')
+        return data
+
+
+@admin.register(EventRun)
+class EventRunAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """Which type each run was (set mostly in the calendar's event dialog)."""
+
+    form = EventRunForm
+    list_display = ['start', 'event', 'variant']
+    list_filter = ['event']
 
 
 @admin.register(EventNotification)

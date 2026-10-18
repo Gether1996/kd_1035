@@ -391,6 +391,100 @@ describe('Calendar', () => {
     expect(adds[0].getAttribute('aria-label')).toBe('Pridať event – štvrtok 8. októbra');
   });
 
+  describe('the type of a 20 GH run', () => {
+    const TRAINING_DAY = {
+      name_sk: 'Training Day',
+      name_cs: '',
+      icon: '/static/kingdom/events/training-day.webp',
+      max_reward_sk: '8 100 minút speedov na tréning jednotiek',
+      max_reward_cs: '8 100 minut speedů na trénink jednotek',
+    };
+    const GH = {
+      id: 13,
+      name_sk: '20 GH',
+      name_cs: '',
+      icon: '/static/kingdom/events/gold-head.webp',
+      offered: [60],
+      guide: null,
+      start: '2026-10-16T00:00:00Z',
+      end: '2026-10-18T00:00:00Z',
+      repeat_days: 14,
+      irregular: false,
+    };
+    const typed = (variant: typeof TRAINING_DAY | null): EventCalendar => ({
+      ...DATA,
+      occurrences: [{ ...GH, icon: variant?.icon ?? GH.icon, variant }],
+      irregular: [],
+    });
+
+    it('players see the type and what the top reward takes', async () => {
+      await render({ login_enabled: false, user: null }, typed(TRAINING_DAY));
+      expect(bar('20 GH').querySelector('img')?.getAttribute('src')).toBe(TRAINING_DAY.icon);
+      await open(bar('20 GH'));
+      const variant = dialog()!.querySelector('.variant')!;
+      expect(variant.textContent).toContain('Training Day');
+      expect(variant.textContent).toContain('Max. odmena');
+      expect(variant.textContent).toContain('8 100 minút speedov na tréning jednotiek');
+      expect(dialog()!.querySelector('select')).toBeNull();
+    });
+
+    it('a run without a type shows nothing about it', async () => {
+      await render({ login_enabled: false, user: null }, typed(null));
+      await open(bar('20 GH'));
+      expect(dialog()!.querySelector('.variant')).toBeNull();
+    });
+
+    it('a superuser picks the type of the run in the dialog', async () => {
+      const managed = { id: 13, icon_url: GH.icon, variants: [{ id: 5, ...TRAINING_DAY }] };
+      const manage = { events: [managed], icons: [], guides: [], reminder_choices: [60], webhook: false };
+      fixture = TestBed.createComponent(Calendar);
+      // opened from its link: the address keeps standing for the dialog while the calendar loads again
+      fixture.componentRef.setInput('event', '13');
+      fixture.componentRef.setInput('on', '2026-10-16');
+      fixture.detectChanges();
+      http
+        .expectOne('/api/auth/me/')
+        .flush({ ...PLAYER, user: { ...PLAYER.user!, is_superuser: true } });
+      await settle();
+      http.expectOne('/api/me/reminders/').flush(SETTINGS);
+      http.expectOne('/api/events/manage/').flush(manage);
+      http.expectOne((req) => req.url === '/api/events/').flush(typed(null));
+      await fixture.whenStable();
+      expect(dialog()).not.toBeNull();
+      expect(dialog()!.querySelector('.variant')).toBeNull();
+
+      const select = dialog()!.querySelector<HTMLSelectElement>('.manage__variant select')!;
+      select.value = '5';
+      select.dispatchEvent(new Event('change'));
+      const put = http.expectOne('/api/events/manage/13/run/');
+      expect(put.request.method).toBe('PUT');
+      expect(put.request.body).toEqual({ start: '2026-10-16T00:00:00Z', variant: 5 });
+      put.flush({ start: GH.start, variant: 5 });
+      await settle();
+      // the calendar, the list and the reminders load again; the dialog shows the type at once
+      http.expectOne('/api/events/manage/').flush(manage);
+      http.expectOne('/api/me/reminders/').flush(SETTINGS);
+      http.expectOne((req) => req.url === '/api/events/').flush(typed(TRAINING_DAY));
+      await fixture.whenStable();
+      expect(dialog()!.querySelector('.variant')?.textContent).toContain('Training Day');
+      expect(dialog()!.querySelector('.event-pic img')?.getAttribute('src')).toBe(TRAINING_DAY.icon);
+
+      select.value = '';
+      select.dispatchEvent(new Event('change'));
+      const clear = http.expectOne('/api/events/manage/13/run/');
+      expect(clear.request.method).toBe('DELETE');
+      expect(clear.request.body).toEqual({ start: '2026-10-16T00:00:00Z' });
+      clear.flush({ start: GH.start, variant: null });
+      await settle();
+      http.expectOne('/api/events/manage/').flush(manage);
+      http.expectOne('/api/me/reminders/').flush(SETTINGS);
+      http.expectOne((req) => req.url === '/api/events/').flush(typed(null));
+      await fixture.whenStable();
+      expect(dialog()!.querySelector('.variant')).toBeNull();
+      expect(dialog()!.querySelector('.event-pic img')?.getAttribute('src')).toBe(GH.icon);
+    });
+  });
+
   it('a player sees no "+" and the event management is not asked for', async () => {
     await render(PLAYER);
     expect(el().querySelector('.day__add')).toBeNull();

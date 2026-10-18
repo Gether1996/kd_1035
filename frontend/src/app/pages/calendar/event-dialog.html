@@ -10,7 +10,7 @@
 >
   <div class="modal__body">
     <header class="modal__head">
-      <app-event-icon class="event-pic" [src]="item().icon" [name]="name()" />
+      <app-event-icon class="event-pic" [src]="icon()" [name]="name()" />
       <div class="modal__heading">
         <h2 class="modal__title" id="event-dialog-title">{{ name() }}</h2>
         <p class="modal__eyebrow">{{ repeat() }}</p>
@@ -31,6 +31,20 @@
         </p>
         <p class="when__utc">UTC {{ utc() }} · {{ c.gameTime }}</p>
       </div>
+      @if (variant()) {
+        <dl class="variant">
+          <div class="variant__row">
+            <dt>{{ c.variant }}</dt>
+            <dd class="variant__name">{{ variantName() }}</dd>
+          </div>
+          @if (maxReward(); as reward) {
+            <div class="variant__row">
+              <dt><svg appIcon="gift"></svg>{{ c.maxReward }}</dt>
+              <dd>{{ reward }}</dd>
+            </div>
+          }
+        </dl>
+      }
       @if (exportLinks(); as x) {
         <div class="export" role="group" aria-labelledby="export-label">
           <p class="export__label" id="export-label">{{ c.export.label }}</p>
@@ -132,6 +146,28 @@
             <svg appIcon="pencil"></svg>{{ t().eventAdmin.edit }}
           </button>
         </div>
+        @if (variants().length) {
+          <label class="field manage__variant">
+            <span class="field__label">{{ t().eventAdmin.variant }}</span>
+            <select
+              class="select"
+              [disabled]="variantSaving()"
+              (change)="setVariant($any($event.target).value)"
+            >
+              <option value="" [selected]="variantId() === null">
+                {{ t().eventAdmin.noVariant }}
+              </option>
+              @for (v of variants(); track v.id) {
+                <option [value]="v.id" [selected]="variantId() === v.id">
+                  {{ v.name_sk }}
+                </option>
+              }
+            </select>
+          </label>
+          @if (variantFailed()) {
+            <p class="manage__error" role="alert">{{ t().eventAdmin.variantError }}</p>
+          }
+        }
       </div>
     }
   </div>

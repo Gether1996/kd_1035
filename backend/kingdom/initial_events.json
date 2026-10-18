@@ -322,7 +322,17 @@
       180
     ],
     "guide": null,
-    "is_active": true
+    "is_active": true,
+    "variants": [
+      {
+        "name_sk": "Training Day",
+        "name_cs": "",
+        "icon": "training-day",
+        "max_reward_sk": "8 100 minút speedov na tréning jednotiek",
+        "max_reward_cs": "8 100 minut speedů na trénink jednotek",
+        "order": 0
+      }
+    ]
   },
   {
     "name_sk": "Silk Road",

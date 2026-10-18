@@ -237,10 +237,12 @@
     [now]="now()!"
     [remind]="remind()"
     [admin]="admin()"
+    [managed]="managedEvent(item.id)"
     (closed)="close()"
     (changed)="changed($event)"
     (edit)="editEvent($event)"
     (schedule)="scheduleEvent($event)"
+    (runChanged)="refresh()"
   />
 }
 

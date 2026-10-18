@@ -137,7 +137,8 @@ def create_initial_events() -> list[str]:
     for row in json.loads(INITIAL_EVENTS.read_text(encoding='utf-8')):
         if KingdomEvent.objects.filter(name_sk=row['name_sk']).exists():
             continue
-        KingdomEvent.objects.create(
+        variants = row.pop('variants', [])
+        event = KingdomEvent.objects.create(
             **{
                 **row,
                 'starts_at': datetime.fromisoformat(row['starts_at']),
@@ -145,6 +146,8 @@ def create_initial_events() -> list[str]:
                 'guide': guides.get(row['guide']),
             }
         )
+        for variant in variants:
+            event.variants.create(**variant)
         created.append(row['name_sk'])
     return created
 
@@ -155,6 +158,7 @@ INITIAL_FIELDS = [
     'time_basis', 'reminders', 'mention_role_id', 'mention_role', 'notify_discord', 'show_on_web', 'player_reminders',
     'guide', 'is_active',
 ]  # fmt: skip
+VARIANT_FIELDS = ['name_sk', 'name_cs', 'icon', 'max_reward_sk', 'max_reward_cs', 'order']
 
 
 def export_initial_events() -> int:
@@ -164,7 +168,7 @@ def export_initial_events() -> int:
     """
     order = {row['name_sk']: i for i, row in enumerate(json.loads(INITIAL_EVENTS.read_text(encoding='utf-8')))}
     events = sorted(
-        KingdomEvent.objects.select_related('guide').order_by('pk'), key=lambda e: order.get(e.name_sk, len(order))
+        KingdomEvent.objects.select_related('guide').prefetch_related('variants').order_by('pk'), key=lambda e: order.get(e.name_sk, len(order))
     )
     rows = []
     for event in events:
@@ -172,6 +176,10 @@ def export_initial_events() -> int:
         row['starts_at'] = event.starts_at.astimezone(UTC).isoformat()
         row['until'] = event.until.isoformat() if event.until else None
         row['guide'] = event.guide.slug if event.guide else None
+        # the types of its runs (20 GH: Training Day…), without the runs – those are dates of this server
+        variants = [{field: getattr(v, field) for field in VARIANT_FIELDS} for v in event.variants.all()]
+        if variants:
+            row['variants'] = variants
         rows.append(row)
     INITIAL_EVENTS.write_text(json.dumps(rows, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     return len(rows)

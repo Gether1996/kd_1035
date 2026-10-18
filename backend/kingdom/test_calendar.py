@@ -156,7 +156,7 @@ class EventCalendarTests(TestCase):
         self.assertEqual(set(data), {'from', 'to', 'occurrences', 'irregular'})
         self.assertEqual(
             set(data['occurrences'][0]),
-            {'id', 'name_sk', 'name_cs', 'icon', 'start', 'end', 'repeat_days', 'irregular', 'offered', 'guide'},
+            {'id', 'name_sk', 'name_cs', 'icon', 'start', 'end', 'repeat_days', 'irregular', 'offered', 'guide', 'variant'},
         )
         self.assertEqual(
             set(data['irregular'][0]), {'id', 'name_sk', 'name_cs', 'icon', 'offered', 'guide', 'start', 'end'}

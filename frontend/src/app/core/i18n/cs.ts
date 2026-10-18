@@ -718,6 +718,8 @@ export const cs: Dict = {
     since: 'od {date}',
     until: 'do {date}',
     gameTime: 'herní čas',
+    variant: 'Typ',
+    maxReward: 'Max. odměna',
     clock: {
       label: 'Herní čas a denní reset',
       gameTime: 'Herní čas',
@@ -762,6 +764,9 @@ export const cs: Dict = {
     date: 'Termín',
     dateOf: 'Termín nepravidelného eventu',
     edit: 'Upravit',
+    variant: 'Typ tohoto termínu',
+    noVariant: '— neurčený —',
+    variantError: 'Typ se nepodařilo uložit.',
     adminLink: 'Celá administrace',
     inactive: 'Vypnutý',
     hidden: 'Skrytý na webu',

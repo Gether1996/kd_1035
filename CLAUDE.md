@@ -12,6 +12,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 ## Komunikácia
 - S používateľom (Gether) komunikuj po slovensky.
 - Kód, názvy v kóde a komentáre píš po anglicky. Texty na webe idú výhradne cez i18n (SK/CZ).
+- **S bypass permissions rozhoduj sám** (Gether 18. 10. 2026): nepýtaj sa na návrh ani detaily, zvoľ rozumné riešenie, dotiahni ho a v závere napíš, čo si rozhodol – Gether to skontroluje dodatočne a prípadne sa zmení. Neplatí pre nevratné veci (mazanie dát, produkcia, `.env`).
 
 ## Dizajn a UX
 - **User friendly, ľahko čitateľné, čisté moderné UI.** Herný vzhľad v duchu Rise of Kingdoms: tmavá navy, zlatá, červený akcent, fonty Cinzel (nadpisy) + Barlow (text).

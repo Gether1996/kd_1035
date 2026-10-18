@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { EventVariant } from './events-api';
 
 export type TimeBasis = 'local' | 'utc';
 
@@ -43,6 +44,8 @@ export interface ManagedEvent extends EventFields {
   usual_time: string;
   /** players who picked it for their reminders */
   players: number;
+  /** the types its runs can be (added in the admin) */
+  variants: (EventVariant & { id: number })[];
 }
 
 export interface ManageData {
@@ -88,6 +91,13 @@ export class EventsAdminApi {
   /** The next date of an irregular event (replaces the one set before). */
   setDate(id: number, start: string): Promise<ManagedEvent> {
     return firstValueFrom(this.http.put<ManagedEvent>(`${URL}${id}/date/`, { start }));
+  }
+
+  /** The type of the run starting at `start` (ISO); null = no type. */
+  async setRunVariant(id: number, start: string, variant: number | null): Promise<void> {
+    const url = `${URL}${id}/run/`;
+    if (variant === null) await firstValueFrom(this.http.delete(url, { body: { start } }));
+    else await firstValueFrom(this.http.put(url, { start, variant }));
   }
 
   /** No date: the event waits for the next one again. */
