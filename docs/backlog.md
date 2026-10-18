@@ -1,6 +1,6 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo 7 hotové, v1.24.4. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md). Návrhy nových funkcií pre hráčov (11. 10. 2026, Gether vyberie): [`navrhy.md`](navrhy.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 18. 10. 2026 – kolo 18. 10. hotové, v1.34.4. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md). Návrhy nových funkcií pre hráčov (11. 10. 2026, Gether vyberie): [`navrhy.md`](navrhy.md).
 
 ## Hotové
 
@@ -157,6 +157,10 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - Kolo 14. 10. 2026 (2. kolo) – upraviť: `account-kvk-checklist` Pripravenosť na KvK na /ucet (marche OK = aspoň jeden a `marchIssues() === 0`; riadok KvK skryť bez vyhláseného KvK; znovu použiť `ownMarches`); `power-freshness` kedy a kto zapísal power (bez spätného dopĺňania – staré `power_at` NULL = „dátum neznámy“, porovnanie ako Decimal, len pri skutočnej zmene, `staleDays` v Premenných, Ochrana údajov, MINOR); `missing-data-nudge` pripomenutie chýbajúcich údajov cez bota – až po `account-kvk-checklist` a jednom KvK s upozorneniami na páry, kind='pairs' bez zmeny; `eval-polish-leftovers` drobnosti zo 14. 10. (body 1–5 a 7 ako jeden PATCH; leave guard/`canceledNavigationResolution` zvlášť s celým e2e @journey).
 - Drobnosti po 2. kole 14. 10.: filter „Nad odp. power“ používa power > Odp. power (nie excess > 0); CSV export sleduje aktívny rýchly filter (meno filtra v súbore?); `?tab=premenne&hrac=` odroluje až pri prepnutí na výsledky; `?hrac` resetuje `?f`; scroll v `read` fáze `afterNextRender` → `write`; unit test `Auth.canEvaluate`; zbytočný `WelcomeTests.test_auto_approved_and_earlier_players_get_nothing`; dva prázdne riadky v `PlayerAdminTests`; 4 selecty Hráčov na desktope 3+1 (mriežka 2×2); `docs/ucty.md` ~62 KB – rozdeliť (vyhodnocovanie do `docs/vyhodnocovanie.md`); CLAUDE.md stále opisuje `Player.evaluator` ako živý prepínač.
 
+- Kolo 18. 10. 2026 – schválené, nepostavené: `local-signup-cap-ignores-old-accounts` strop registrácií bez Discordu počíta len čakajúce účty za posledných 14 dní (dnes ho zrušené/staré účty natrvalo zaplnia; docstring `local_auth.py`, `docs/ucty.md`, CLAUDE.md v tom istom commite).
+- Kolo 18. 10. 2026 – upraviť: `run-type-missing-nudge` len riadky v admin Prehľade „Termíny bez typu“ (do 7 dní) a „Typy mimo plánu“ (presunutý plán eventu typ ticho stratí), počítať len eventy s typmi; `run-type-across-the-site` najprv iba názov typu na karte Najbližšie eventy na úvode (stabilná výška, @layout 320 px), `/pripomienky`, .ics a náhľad odkazu neskôr cez `run_variant()`; `e2e-local-account-and-run-types` @local testy (kalendár bez `/api/me/reminders/`, `/ucet`) + dialóg s typom termínu + a11y stavy formulárov registrácie a obnovy hesla, bez anonymnej registrácie (throttle); `unique-ingame-names` meno v hre jedinečné pre všetkých (prázdne meno preskočiť, aj v admine; duplicity najprv zistiť príkazom) – čaká na Gethera; `event-test-dm-with-run-type` ukážka pripomienky termínu do DM superadmina cez nezmenené `discord_message`/`build_payload` – až keď to Gether bude chcieť; `reset-code-ready-message` hotová správa s kódom na nové heslo a predvyplneným menom (`obnova` len predvyplní, nikdy neodošle, `replaceUrl`) – až keď Gether povie, že rozdávanie kódov je otravné.
+- Drobnosti z kola 18. 10.: JSDoc `RemindState` (`event-dialog.ts`) nespomína stav 'local'; Prepojiť s Discordom v dialógu eventu vráti na `/ucet`, nie k eventu (`linkUrl(returnPath(item))`); dlhý riadok komentára v `app.ts:125`; screenshoty CZ `/ucet` ukazujú SK (jazyk profilu testovacieho hráča); webhook testy bez `SITE_URL`; `discord_message()` robí 1 dotaz na DM.
+
 ## Zamietnuté
 
 - Bezpečnostné hlavičky v nginx – už existujú (`security-headers.conf`); plná CSP by mala malý prínos a riziko.
@@ -167,6 +171,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - `picker-scored-partners` Výber commandera najprv s hodnotenými pármi – duplikuje v1.24.6 (meta skupiny), zverejnil by celý zoznam párov vedenia.
 - `published-requirement` Zverejnená požiadavka na KvK na /ucet – politické rozhodnutie, prekrýva sa s `eval-discord-copy`; navrhnúť znova po rozhodnutí Gethera.
 - `event-rsvp` Účasť na evente (idem/možno/nie) – **nie** (Gether 14. 10. 2026: „prepínač na zisťovať účasť nepotrebujem“, rozrobená verzia zahodená). Nenavrhovať znova.
+- `account-overview-shortcut` Skratka Požadovaný acclaim na Môj účet – len duplikuje položku menu, nič nové neukazuje.
 - Ručné pripomenutie chýbajúcej power, marchov či prihlášky na KvK správou od vedenia – **nie** (Gether 14. 10. 2026). Nenavrhovať znova.
 
 ## Čaká na Gethera
@@ -194,3 +199,8 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 12. 10. 2026 – kolo
 - **Hráči – neaktívni:** potvrdiť hranicu 90 dní (až po nasadení).
 - **Upozornenie na pár (v1.29.1):** smú hráči vidieť mená (nie body) až 3 hodnotených partnerov k primárnemu? Ak áno, `pair_hint.partners` ako PATCH.
 - **Vyhodnocovanie:** smú sa požiadavky na acclaim po hráčoch zverejniť (Discord kópia alebo /ucet – vybrať jedno)? Hranica zastaranej power (návrh 21 dní).
+- **Zrušené schválenie (v1.34.2):** potvrdiť, že neschválený hráč so zapnutým R4/vyhodnocovaním stratí prístup (po nasadení sa to prejaví).
+- **Prepínač jazyka (v1.34.3):** potvrdiť, že prepínač v hlavičke smie zmeniť jazyk profilu (aj jazyk bota); inak revert `89e63bb` ako PATCH.
+- **Typy 20 GH (v1.34.4):** v admine doplniť ostatné typy (názov, max. odmena SK/CZ) a skontrolovať texty max. odmeny – idú hráčom aj do kanála.
+- **Strop registrácií:** OK na 14-dňové okno pre čakajúce účty bez Discordu?
+- **Meno v hre:** má byť jedinečné pre všetky účty (aj Discord)?
