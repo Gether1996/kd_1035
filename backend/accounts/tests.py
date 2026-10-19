@@ -382,6 +382,7 @@ class MeTests(TestCase):
                     'is_superuser': False,
                     'evaluation_settings': False,
                     'evaluation_overview': False,
+                    'reviewer': False,
                 },
             },
         )

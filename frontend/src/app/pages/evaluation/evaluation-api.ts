@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { EquipmentData } from './equipment';
 import { Overview, OverviewPlayer, OverviewRow } from './overview';
 import { EvalPlayer } from './scoring';
 import { PairRow } from './settings';
@@ -57,6 +58,11 @@ export class EvaluationApi {
   /** "Požadovaný acclaim" as the players see it – the evaluators and the players with the overview switch */
   overview(when: () => boolean) {
     return httpResource<Overview<OverviewPlayer>>(() => (this.isBrowser && when() ? '/api/evaluation/overview/' : undefined));
+  }
+
+  /** "Top 5 equip" – R4 and the superuser: the approved players' infantry, cavalry and archer marches */
+  equipment(when: () => boolean) {
+    return httpResource<EquipmentData>(() => (this.isBrowser && when() ? '/api/evaluation/equipment/' : undefined));
   }
 
   /** publishes what the estimate counts now (approved players only, all or nothing; [] takes it back) */

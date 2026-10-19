@@ -28,6 +28,8 @@ export interface Player {
    * estimate with the variables, or only the published required acclaim (true with the first one too) */
   evaluation_settings?: boolean;
   evaluation_overview?: boolean;
+  /** R4 (and the superadmin): every sign-up and march, and "Top 5 equip" of /vyhodnocovanie (Gether 19. 10. 2026) */
+  reviewer?: boolean;
 }
 
 export interface Me {
@@ -82,7 +84,7 @@ export class Auth {
   /** opens /vyhodnocovanie – the account menu item and the links to it (/marche) show exactly then */
   readonly canEvaluate = computed(() => {
     const user = this.user();
-    return !!user && (!!user.evaluation_settings || !!user.evaluation_overview || user.is_superuser);
+    return !!user && (!!user.evaluation_settings || !!user.evaluation_overview || !!user.reviewer || user.is_superuser);
   });
 
   /** Full navigation to Discord; afterwards the player comes back to `next` (the current page by default). */

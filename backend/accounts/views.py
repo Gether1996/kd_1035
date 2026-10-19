@@ -300,6 +300,8 @@ def signed_in(request) -> dict | None:
         'evaluation_overview': (
             ((player.evaluation_overview or player.evaluation_settings) and player.approved) or request.user.is_superuser
         ),
+        # R4 (private_images.can_review): every sign-up and march, and "Top 5 equip" of /vyhodnocovanie (Gether 19. 10. 2026)
+        'reviewer': (player.kvk_reviewer and player.approved) or request.user.is_superuser,
     }
 
 

@@ -21,6 +21,7 @@ import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { PageHeader } from '../../shared/page-header';
+import { EvalEquipmentTab } from './equipment-tab';
 import { EvaluationApi, RecordChange } from './evaluation-api';
 import { Overview, overviewChanges, overviewRows } from './overview';
 import { EvalOverviewTab } from './overview-tab';
@@ -30,9 +31,11 @@ import { EvalSettings, normalizeSettings, toSave } from './settings';
 import { EvalSettingsTab } from './settings-tab';
 import { EVAL_TEXTS } from './texts';
 
-type Tab = 'settings' | 'results' | 'overview';
-/** ?tab= of the variables and of the published overview (the table has none, only its quick filter ?f=) */
-const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null, overview: 'prehlad' };
+type Tab = 'settings' | 'results' | 'overview' | 'equipment';
+/** ?tab= of the variables, the published overview and "Top 5 equip" (the table has none, only its quick filter ?f=) */
+const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null, overview: 'prehlad', equipment: 'vybava' };
+/** the order of the tab buttons */
+const TABS: Tab[] = ['settings', 'results', 'overview', 'equipment'];
 
 /**
  * /vyhodnocovanie – the KvK evaluation of the superadmin (Gether 13. 10. 2026: the spreadsheet "KVK Requirements" on
@@ -47,13 +50,15 @@ const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null,
  * reloading the tab gets the browser's own question – so does the full page load of a newer build (core/site-update.ts).
  * ?hrac=<id> (the "Vyhodnocovanie" link of a player on /marche, 14. 10. 2026) opens that player's row of the table, or
  * highlights it in the overview, and scrolls to it once after the load.
+ * "Top 5 equip" (Gether 19. 10. 2026) is R4's (Player.kvk_reviewer, and the superadmin's): the best equipment and
+ * formation of each player per troop type – a tab of its own next to whatever else the reader may see.
  */
 @Component({
   selector: 'app-evaluation-page',
-  imports: [PageHeader, EvalSettingsTab, EvalResultsTab, EvalOverviewTab],
+  imports: [PageHeader, EvalSettingsTab, EvalResultsTab, EvalOverviewTab, EvalEquipmentTab],
   template: `
     @let x = texts();
-    <app-page-header [crumbs]="crumbs()" [eyebrow]="x.eyebrow" [title]="x.title" [intro]="canEdit() || !allowed() ? x.intro : x.introOverview" />
+    <app-page-header [crumbs]="crumbs()" [eyebrow]="x.eyebrow" [title]="x.title" [intro]="intro()" />
 
     <div class="container content is-evaluation">
       @if (!auth.ready()) {
@@ -61,16 +66,30 @@ const QUERY: Record<Tab, string | null> = { settings: 'premenne', results: null,
       } @else if (!allowed()) {
         <p class="state">{{ x.onlySuperuser }}</p>
       } @else {
-        @if (canEdit()) {
+        @if (tabs().length > 1) {
           <div class="segmented ev-tabs" role="group" [attr.aria-label]="x.title">
-            <button type="button" [attr.aria-pressed]="tab() === 'settings'" (click)="showTab('settings')">
-              {{ x.tabs.settings }}@if (dirty()) {<span class="ev-dot" aria-hidden="true"></span>}
-            </button>
-            <button type="button" [attr.aria-pressed]="tab() === 'results'" (click)="showTab('results')">{{ x.tabs.results }}</button>
-            <button type="button" [attr.aria-pressed]="tab() === 'overview'" (click)="showTab('overview')">{{ x.tabs.overview }}</button>
+            @for (t of tabs(); track t) {
+              <button type="button" [attr.aria-pressed]="tab() === t" (click)="showTab(t)">
+                {{ x.tabs[t] }}@if (t === 'settings' && dirty()) {<span class="ev-dot" aria-hidden="true"></span>}
+              </button>
+            }
           </div>
         }
-        @if (tab() === 'overview') {
+        @if (tab() === 'equipment') {
+          @if (equipment.error()) {
+            <p class="state">{{ x.loadError }}</p>
+          } @else if (equipment.hasValue()) {
+            <app-eval-equipment
+              [data]="equipment.value()"
+              [armory]="armory.index()"
+              [armoryFailed]="armory.failed()"
+              [texts]="x"
+              [focus]="focus()"
+            />
+          } @else {
+            <div class="placeholder" aria-hidden="true"></div>
+          }
+        } @else if (tab() === 'overview') {
           @if (overview.error()) {
             <p class="state">{{ x.loadError }}</p>
           } @else if (overview.hasValue()) {
@@ -155,7 +174,14 @@ export class EvaluationPage {
   /** the superadmin and the players let in with the switches in Hráči on /ucet (Gether 13. and 14. 10. 2026): the
    * estimate with the variables (all three tabs), or only the published required acclaim */
   protected readonly canEdit = computed(() => this.superuser() || !!this.auth.user()?.evaluation_settings);
-  protected readonly allowed = computed(() => this.canEdit() || !!this.auth.user()?.evaluation_overview);
+  private readonly canOverview = computed(() => this.canEdit() || !!this.auth.user()?.evaluation_overview);
+  /** R4 (Gether 19. 10. 2026): "Top 5 equip" */
+  private readonly canEquipment = computed(() => this.superuser() || !!this.auth.user()?.reviewer);
+  protected readonly allowed = computed(() => this.canOverview() || this.canEquipment());
+  /** the tabs the reader may open, in the order of the buttons */
+  protected readonly tabs = computed(() =>
+    TABS.filter((t) => (t === 'overview' ? this.canOverview() : t === 'equipment' ? this.canEquipment() : this.canEdit())),
+  );
   protected readonly data = this.api.data(() => this.canEdit());
   private readonly commanders = httpResource<MarchCommander[]>(() => (this.canEdit() ? marchCommandersUrl : undefined));
   protected readonly commanderNames = computed(() => (this.commanders.hasValue() ? this.commanders.value().map((c) => c.name) : []));
@@ -194,14 +220,23 @@ export class EvaluationPage {
     const id = Number(this.playerQuery());
     return Number.isInteger(id) && id > 0 ? id : null;
   });
-  /** the tab in the address; an unknown value = the table, a player with the overview switch only = the overview */
+  /** the tab in the address; an unknown value or a tab the reader may not open = the table, else the first one allowed */
   protected readonly tab = computed<Tab>(() => {
-    if (!this.canEdit()) return 'overview';
+    const tabs = this.tabs();
     const query = this.query();
-    return query === QUERY.settings ? 'settings' : query === QUERY.overview ? 'overview' : 'results';
+    const asked = TABS.find((t) => QUERY[t] !== null && QUERY[t] === query);
+    if (asked && tabs.includes(asked)) return asked;
+    return tabs.includes('results') ? 'results' : (tabs[0] ?? 'overview');
   });
   /** the overview as the players see it – loaded each time its tab opens */
-  protected readonly overview = this.api.overview(() => this.allowed() && this.tab() === 'overview');
+  protected readonly overview = this.api.overview(() => this.canOverview() && this.tab() === 'overview');
+  /** "Top 5 equip" – loaded each time its tab opens */
+  protected readonly equipment = this.api.equipment(() => this.canEquipment() && this.tab() === 'equipment');
+  protected readonly intro = computed(() => {
+    const x = this.texts();
+    if (this.canEdit() || !this.allowed()) return x.intro;
+    return this.tab() === 'equipment' ? x.introEquipment : x.introOverview;
+  });
 
   /** "Rátať s power": off = the estimate from the marches only (a view switch, not saved) */
   protected readonly usePower = signal(true);
@@ -250,7 +285,13 @@ export class EvaluationPage {
       const id = this.focus();
       if (!scroll || id === null) return;
       const tab = this.tab();
-      if (tab === 'overview' ? !this.overview.hasValue() : tab !== 'results' || !this.data.hasValue()) return;
+      const ready =
+        tab === 'overview'
+          ? this.overview.hasValue()
+          : tab === 'equipment'
+            ? this.equipment.hasValue() && !!this.armory.index()
+            : tab === 'results' && this.data.hasValue();
+      if (!ready) return;
       scroll = false;
       afterNextRender({ read: () => scroller.scrollToAnchor(`ev-player-${id}`) }, { injector });
     });

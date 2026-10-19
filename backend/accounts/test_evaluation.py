@@ -11,7 +11,7 @@ from guides.meta.sync import sync_guides
 from guides.models import CommanderPair, fold
 from guides.roster import commander_names
 
-from .models import EvaluationSettings, March, Player, PlayerEvaluation
+from .models import EvaluationSettings, KvkSignup, March, Player, PlayerEvaluation
 from .test_reminders import PLAIN_STATIC, make_player
 
 
@@ -351,6 +351,84 @@ class EvaluationApiTests(TestCase):
 
 
 @override_settings(STORAGES=PLAIN_STATIC)
+class EquipmentRankingTests(TestCase):
+    """"Top 5 equip" (Gether 19. 10. 2026): R4 and the superuser get the approved players' infantry, cavalry and archer
+    marches and only the variables scoring the equipment and the armaments."""
+
+    def setUp(self):
+        cache.clear()
+        self.r4 = make_player('11')
+        self.r4.kvk_reviewer = True
+        self.r4.save()
+        self.player = make_player('12')
+        self.player.ingame_name = 'Nelly CZ'
+        self.player.save()
+        self.newbie = make_player('13', approved=False)
+        for player in (self.player, self.newbie):
+            March.objects.create(player=player, position=1, kind='cavalry', primary='Attila', secondary='Achilles')
+        March.objects.create(player=self.player, position=2, kind='leadership', primary='Charles Martel', secondary='Yi Seong-Gye')
+        March.objects.create(player=self.player, position=3, kind='archer', primary='Yi Seong-Gye', secondary='Ashurbanipal')
+        EvaluationSettings.objects.update_or_create(
+            pk=1,
+            defaults={'data': {
+                'equipment': {'statsWeight': 0.2},
+                'armaments': {'gold': 40},
+                'marches': {'equipment': 0.6, 'armaments': 0.4, 'max': 5},
+                'acclaim': {'benchmark': 5600000},
+            }},
+        )
+
+    def get(self, user):
+        client = Client()
+        client.force_login(user)
+        return client.get('/api/evaluation/equipment/')
+
+    def test_r4_and_the_superuser_only(self):
+        self.assertEqual(Client().get('/api/evaluation/equipment/').status_code, 403)
+        self.assertEqual(self.get(self.player.user).status_code, 403)
+        self.player.evaluation_settings = True
+        self.player.save()
+        self.assertEqual(self.get(self.player.user).status_code, 403)
+        self.assertEqual(self.get(self.r4.user).status_code, 200)
+        # taking the approval back cuts R4 off
+        self.r4.approved = False
+        self.r4.save()
+        self.assertEqual(self.get(self.r4.user).status_code, 403)
+        admin = make_player('14')
+        admin.user.is_superuser = True
+        admin.user.save()
+        self.assertEqual(self.get(admin.user).status_code, 200)
+
+    def test_open_field_marches_of_approved_players(self):
+        KvkSignup.objects.create(player=self.player, role='rally', kind='cavalry', primary='Attila', secondary='Achilles')
+        # a sign-up without troops chosen is left out; a player with a sign-up only is in
+        KvkSignup.objects.create(player=self.player, role='garrison', kind='', primary='Attila')
+        KvkSignup.objects.create(player=self.r4, role='garrison', kind='infantry', primary='Charles Martel')
+        data = self.get(self.r4.user).json()
+        # the player waiting is left out
+        self.assertEqual([p['id'] for p in data['players']], [self.r4.pk, self.player.pk])
+        self.assertEqual([(s['role'], s['kind']) for s in data['players'][0]['signups']], [('garrison', 'infantry')])
+        self.assertEqual(data['players'][0]['marches'], [])
+        row = data['players'][1]
+        self.assertEqual([(s['role'], s['primary']) for s in row['signups']], [('rally', 'Attila')])
+        self.assertEqual(row['name'], 'Nelly CZ')
+        self.assertEqual([m['kind'] for m in row['marches']], ['cavalry', 'archer'])
+        self.assertIn('gear', row['marches'][0])
+        self.assertNotIn('power', row)
+        # never the acclaim, the march count or the pairs
+        self.assertEqual(
+            data['settings'],
+            {'equipment': {'statsWeight': 0.2}, 'armaments': {'gold': 40}, 'marches': {'equipment': 0.6, 'armaments': 0.4}},
+        )
+
+    def test_me_tells_the_reviewer(self):
+        client = Client()
+        client.force_login(self.r4.user)
+        self.assertTrue(client.get('/api/auth/me/').json()['user']['reviewer'])
+        client.force_login(self.player.user)
+        self.assertFalse(client.get('/api/auth/me/').json()['user']['reviewer'])
+
+
 class EvaluationAdminTests(TestCase):
     """The variables in the Django admin (Gether 13. 10. 2026) as readable JSON; the commander pairs as a table with
     many rows at once from a spreadsheet."""

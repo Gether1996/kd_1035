@@ -1,9 +1,10 @@
 # Backlog webu KD 1035
 
-Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 18. 10. 2026 – kolo 18. 10. hotové, v1.34.4. Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md). Návrhy nových funkcií pre hráčov (11. 10. 2026, Gether vyberie): [`navrhy.md`](navrhy.md).
+Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.35.0 (Top 5 equip). Odporúčania pre Gethera: [`odporucania.md`](odporucania.md). Podrobné zadania a verdikty kritika: [`.claude/kd-agents/next-round.json`](../.claude/kd-agents/next-round.json). UX analýza (prečo web používať, čo chýba, čo zámerne nie): [`ux-analyza.md`](ux-analyza.md). Návrhy nových funkcií pre hráčov (11. 10. 2026, Gether vyberie): [`navrhy.md`](navrhy.md).
 
 ## Hotové
 
+- **19. 10. 2026 – v1.35.0:** Vyhodnocovanie má záložku **Top 5 equip** pre R4 (a superadmina): hráči zoradení podľa najlepšej výbavy a formácie na pechotu, jazdu a lukostrelcov – z každého slotu najlepší kus zo všetkých marchov a prihlášok na KvK daného typu, najsilnejšia formácia s armamentmi, body a skóre; karta ukáže sety, armamenty a odkiaľ je každý kus.
 - **18. 10. 2026 – v1.34.4:** Pripomienky na Discorde ukážu typ termínu a max. odmenu: správa od bota „20 GH · Training Day“ + „Na max. odmenu: …“, kanál polia Typ a Max. odmena. Typ nastavený po naplánovaní pripomienok sa prejaví v ďalšej správe.
 - **18. 10. 2026 – v1.34.3:** Prepínač SK/CZ v hlavičke prihlásenému hráčovi zmení aj jazyk profilu (web aj správy bota) – predtým ho ďalšia návšteva vrátila do jazyka z Môj účet a stránka sa načítala znova. Spomína to Môj účet aj Ochrana údajov.
 - **18. 10. 2026 – v1.34.2:** Zrušené schválenie vypne aj R4 a vyhodnocovanie (prihlášky na KvK, odhad acclaimu, požadovaný acclaim); prepínače ostanú uložené a nové schválenie ich vráti, v sekcii Hráči riadok ukáže „Neplatí, kým nie je schválený“.

@@ -4,13 +4,15 @@ here, so a changed variable shows at once; the server keeps the variables and wh
 a player (power, T4, a correction of the recommended power). The superuser and the players the superuser lets in
 (switches next to R4 – Gether 13. and 14. 10. 2026): Player.evaluation_settings opens the estimate and the variables,
 Player.evaluation_overview only the required acclaim the others published ("Požadovaný acclaim", read only); those see
-only approved players."""
+only approved players. R4 (Player.kvk_reviewer) sees "Top 5 equip" – the best equipment and armaments of each player per
+troop type (Gether 19. 10. 2026)."""
 
 import json
 import math
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
@@ -22,8 +24,9 @@ from rest_framework.response import Response
 from guides.formations import check_formations, formation_map, formations_version, replace_formations
 from guides.pairs import check_rows, pair_rows, pairs_version, replace_pairs
 
-from .kvk_views import march_data
-from .models import APPROVED, EvaluationSettings, Player, PlayerEvaluation
+from . import private_images
+from .kvk_views import army_data, march_data
+from .models import APPROVED, EvaluationSettings, KvkSignup, March, Player, PlayerEvaluation
 from .reminder_views import WriteThrottle, iso
 from .views import player_of
 
@@ -81,6 +84,13 @@ class CanSeeOverview(BasePermission):
 
     def has_permission(self, request, view):
         return allowed(request, 'evaluation_settings', 'evaluation_overview')
+
+
+class CanReview(BasePermission):
+    """R4 and the superuser (private_images.can_review) – Top 5 equip"""
+
+    def has_permission(self, request, view):
+        return private_images.can_review(request.user)
 
 
 def visible_players(request):
@@ -359,3 +369,47 @@ def evaluation_overview(request):
         if (p := players.get(r['id']))
     ]
     return Response({**overview_data(row), 'rows': rows})
+
+
+# "Top 5 equip" ranks the open-field troop types only (Gether 19. 10. 2026: "budeme riešiť len inf, arch a cav")
+EQUIPMENT_KINDS = ('infantry', 'cavalry', 'archer')
+
+
+@never_cache
+@api_view(['GET'])
+@permission_classes([CanReview])
+def evaluation_equipment(request):
+    """"Top 5 equip" (Gether 19. 10. 2026, R4 only): every approved player with an infantry, cavalry or archer march
+    or KvK sign-up (rally, garrison – "kto sa hodí najviac na rally / garrison"), with those – the page puts the best
+    piece of each slot of all of a type together, with the strongest formation. Of the variables only what scores the
+    equipment and the armaments goes along (never the pairs, the power or the acclaim)."""
+    data = EvaluationSettings.load().data or {}
+    weights = data.get('marches') if isinstance(data.get('marches'), dict) else {}
+    settings = {
+        **{key: data[key] for key in ('equipment', 'armaments') if key in data},
+        'marches': {key: weights[key] for key in ('equipment', 'armaments') if key in weights},
+    }
+    marches = March.objects.filter(kind__in=EQUIPMENT_KINDS).order_by('position')
+    signups = KvkSignup.objects.filter(kind__in=EQUIPMENT_KINDS).order_by('role')
+    players = (
+        approved_players()
+        .select_related('user')
+        .prefetch_related(Prefetch('marches', queryset=marches), Prefetch('kvk_signups', queryset=signups))
+    )
+    rows = sorted(
+        (
+            {
+                # the name in the game first, Discord as the fallback (like everywhere other players are shown)
+                'id': p.pk,
+                'name': p.ingame_name or p.name,
+                'avatar_url': p.avatar_url,
+                'marches': [march_data(m) for m in p.marches.all()],
+                'signups': [
+                    {'id': s.pk, 'role': s.role, 'kind': s.kind, **army_data(s)} for s in p.kvk_signups.all()
+                ],
+            }
+            for p in players
+        ),
+        key=lambda p: p['name'].casefold(),
+    )
+    return Response({'settings': settings, 'players': [p for p in rows if p['marches'] or p['signups']]})

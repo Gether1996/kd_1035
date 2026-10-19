@@ -1,0 +1,339 @@
+// "Top 5 equip": the best equipment and formation per troop type – a card per player, opened to the gear put together.
+@use 'common';
+
+:host {
+  display: block;
+  max-width: 980px;
+}
+
+.eq-kinds {
+  margin-bottom: 12px;
+}
+
+.eq-hint,
+.eq-legend {
+  margin: 0 0 16px;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--text-mute);
+}
+
+.eq-legend {
+  margin: 16px 0 0;
+  font-size: 0.875rem;
+}
+
+.eq-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eq-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  transition: border-color 0.2s;
+
+  &:hover,
+  &[open] {
+    border-color: var(--line-strong);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// the player of ?hrac=
+.eq-item.is-focus .eq-card {
+  border-color: var(--gold-400);
+}
+
+.eq-summary {
+  display: grid;
+  grid-template-columns: 32px 36px minmax(0, 1fr) 210px 130px 80px 18px;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 16px;
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.eq-rank {
+  font: 700 1.25rem/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--text-dim);
+
+  &.is-top {
+    color: var(--gold-100);
+  }
+}
+
+.eq-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.eq-player,
+.eq-gear,
+.eq-score {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.eq-name {
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.eq-label {
+  font: 600 0.6875rem/1.25 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.eq-meta {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--text-mute);
+}
+
+.eq-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+
+  &.is-none {
+    color: var(--text-mute);
+  }
+}
+
+.eq-tier {
+  color: var(--gold-100);
+}
+
+.eq-formation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  > span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+.eq-formation__icon {
+  width: 36px;
+  height: 36px;
+}
+
+.eq-score {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.eq-total {
+  font: 700 1.25rem/1.2 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-100);
+}
+
+.eq-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-dim);
+  transition: transform 0.2s var(--ease-out);
+
+  [open] > .eq-summary & {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.eq-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--line);
+}
+
+// the equipment, the armaments and the sources side by side, under each other on a narrow card
+.eq-part {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.eq-sources {
+  flex-basis: 260px;
+}
+
+.eq-part__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin: 12px 0 0;
+  font: 600 0.75rem/1.25 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.eq-part__points {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-100);
+}
+
+.eq-grid {
+  width: 150px;
+}
+
+.eq-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.eq-stats__label {
+  color: var(--text-mute);
+}
+
+.eq-arm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.eq-arm__icon {
+  width: 44px;
+  height: 44px;
+}
+
+.eq-arm__name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.eq-inscs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eq-formula {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.eq-sources__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.eq-sources__item {
+  font-size: 0.9375rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.eq-link {
+  align-self: flex-start;
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 0.8125rem;
+}
+
+.eq-more {
+  margin-top: 12px;
+  min-height: 38px;
+  padding: 0 16px;
+  font-size: 0.875rem;
+}
+
+.eq-empty {
+  padding: 32px 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--text-dim);
+}
+
+// a narrow screen: the rank, the player and the chevron on top, the equipment under them, then the formation and
+// the score
+@media (max-width: 900px) {
+  .eq-summary {
+    grid-template-columns: 28px 36px minmax(0, 1fr) auto;
+    padding: 12px;
+  }
+
+  .eq-gear {
+    grid-column: 3 / 5;
+    grid-row: 2;
+  }
+
+  .eq-formation {
+    grid-column: 3 / 4;
+    grid-row: 3;
+  }
+
+  .eq-score {
+    grid-column: 4 / 5;
+    grid-row: 3;
+  }
+
+  .eq-chevron {
+    grid-column: 4;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .eq-detail {
+    padding: 4px 12px 12px;
+  }
+}
