@@ -380,7 +380,7 @@ export const cs: Dict = {
     kvk: 'KvK {roles}',
     // the player's marches red on /marche
     issues: 'k opravě: {n}',
-    issuesHint: 'nesprávný pár nebo formace pro vyhodnocování KvK',
+    issuesHint: 'nesprávný pár, formace nebo bonusy armamentů pro vyhodnocování KvK',
     noMatch: 'Takového hráče tu nemáme.',
     empty: 'Zatím se nepřihlásil žádný hráč.',
     loadError: 'Hráče se nepodařilo načíst.',
@@ -402,7 +402,7 @@ export const cs: Dict = {
     you: 'Ty',
     r4Only: 'jen R4',
     problems: 'K opravě: {n}',
-    problemsHint: 'Špatný pár nebo formace pro vyhodnocování KvK',
+    problemsHint: 'Špatný pár, formace nebo bonusy armamentů pro vyhodnocování KvK',
     hidden: 'neschválený',
     hiddenHint: 'Hráč není schválený – jeho marche a přihlášky vidíš jen ty.',
     count: ['{n} march', '{n} marche', '{n} marchů'],
@@ -467,9 +467,11 @@ export const cs: Dict = {
     },
     pairHint: { swap: 'Hodnotí se opačné pořadí: {secondary} + {primary}.' },
     formationProblem: '{commander} má vést formaci {want}, ne {have} – ve vyhodnocování KvK se armamenty počítají méně.',
+    statsProblem: 'Bonusy armamentů nad maximum: {stats} – zkontroluj je ve hře.',
+    statsOver: '{stat} {value} % (max {max} %)',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, co je u nich červené.',
-    // a pair or a formation the KvK evaluation does not like – a button to the first such march
+    // a pair, a formation or a bonus the KvK evaluation does not like – a button to the first such march
     problemsCount: 'K opravě pro vyhodnocování KvK: {n} – podívej se na červené věty u marchí.',
     choose: 'Vybrat',
     edit: 'Upravit',

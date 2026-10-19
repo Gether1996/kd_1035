@@ -136,7 +136,8 @@
                       autocomplete="off"
                       [value]="bonus(draft().stats[stat])"
                       [placeholder]="stat === 'damage' ? '0' : ''"
-                      [attr.aria-invalid]="(statsMissing() && stat !== 'damage' && draft().stats[stat] === null) || null"
+                      [attr.aria-invalid]="(statsMissing() && stat !== 'damage' && draft().stats[stat] === null) || overCap().includes(stat) || null"
+                      [attr.aria-describedby]="overCap().includes(stat) ? id + '-over' : null"
                       (input)="setStat(stat, $event)"
                     />
                     <span class="be__stat-unit" aria-hidden="true">%</span>
@@ -145,6 +146,10 @@
               }
             </div>
             <p class="field__hint">{{ k.stats.hint }}</p>
+            <!-- over the cap (Gether 19. 10. 2026): a typo – it can be saved, the march then says so in red -->
+            @if (overCapText(); as over) {
+              <p class="field__error" [id]="id + '-over'">{{ over }}</p>
+            }
           </fieldset>
 
           <fieldset class="be__formations">

@@ -255,6 +255,9 @@
                         @if (m.skipped) {
                           <p class="ev-march__skip">{{ d.skipped[m.skipped] }}</p>
                         }
+                        @if (overCap(m); as over) {
+                          <p class="ev-march__skip is-over">{{ over }}</p>
+                        }
                         <dl class="ev-march__parts">
                           <div>
                             <dt>{{ d.pair }}</dt>

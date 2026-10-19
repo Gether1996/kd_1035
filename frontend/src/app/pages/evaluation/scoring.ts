@@ -1,5 +1,5 @@
 import { ArmoryIndex, GEAR_SLOTS, Inscription, buildOf, gearTotals, troopOf, troopStat } from '../../core/armory';
-import { March } from '../../core/kvk-api';
+import { ARMAMENT_CAPS, ArmamentStat, March, overCaps } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
 import { EvalSettings, PowerRow } from './settings';
 
@@ -151,12 +151,14 @@ export function inscriptionValue(settings: EvalSettings, inscription: Pick<Inscr
 
 /**
  * The spreadsheet's armament points: the bonuses over their best, the inscriptions over their best – the ones clicked
- * together by the tier list (Slim 13. 10. 2026), the counts typed in before by colour.
+ * together by the tier list (Slim 13. 10. 2026), the counts typed in before by colour. A bonus over its cap is a typo
+ * and counts as the cap (ARMAMENT_CAPS, Gether 19. 10. 2026).
  */
 export function armamentPoints(settings: EvalSettings, march: March, index: ArmoryIndex | null = null): MarchEval['armaments'] {
   const a = settings.armaments;
   const v = (n: number | null | undefined) => n ?? 0;
-  const bonuses = v(march.attack) / a.attack + v(march.defense) / a.defense + v(march.health) / a.health + v(march.damage) / a.damage;
+  const c = (stat: ArmamentStat) => Math.min(v(march[stat]), ARMAMENT_CAPS[stat]);
+  const bonuses = c('attack') / a.attack + c('defense') / a.defense + c('health') / a.health + c('damage') / a.damage;
   const stats = (bonuses / a.combatMax) * a.statsWeight;
   const clicked = index ? (march.inscriptions ?? []).map((id) => index.inscriptions.get(id)).filter((i) => !!i) : [];
   const tiered = clicked.length > 0;
@@ -455,14 +457,15 @@ export const QUICK_FILTERS: readonly QuickFilter[] = ['all', 'fix', 'nopower', '
 export const POWER_FILTERS: ReadonlySet<string> = new Set<QuickFilter>(['nopower', 'over']);
 
 /**
- * A march the player should change: a pair not evaluated (solo or not in the table – both skipped as 'pair') or a
- * formation its primary commander should not lead with. Counted from the evaluation, not from marchHasProblem() of
- * the server: the table counts with the Premenné being edited, unsaved ones too, and the filter has to agree with it.
- * Not a type that does not count ('kind'), nor a march over the max ('limit') by itself – the player cannot fix
- * either by changing commanders; a march over the max in a wrong formation is one (/marche says so as well).
+ * A march the player should change: a pair not evaluated (solo or not in the table – both skipped as 'pair'), a
+ * formation its primary commander should not lead with or an armament bonus over its cap (any type, like /marche).
+ * Counted from the evaluation, not from marchHasProblem() of the server: the table counts with the Premenné being
+ * edited, unsaved ones too, and the filter has to agree with it. Not a type that does not count ('kind'), nor a march
+ * over the max ('limit') by itself – the player cannot fix either by changing commanders; a march over the max in a
+ * wrong formation is one (/marche says so as well).
  */
 export function marchToFix(m: MarchEval): boolean {
-  return m.skipped === 'pair' || (m.skipped !== 'kind' && m.formation.ok === false);
+  return m.skipped === 'pair' || (m.skipped !== 'kind' && m.formation.ok === false) || overCaps(m.march).length > 0;
 }
 
 /** more power than the player's own counted marches carry ("Odp. power" in red) */

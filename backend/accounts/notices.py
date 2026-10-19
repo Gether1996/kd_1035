@@ -3,7 +3,8 @@ odoslanie discord správy pre užívateľa, ktorý má nejakú chybu … kde je 
 
 Only what /marche shows the player in red (pair_check.march_checker): a pair without a secondary commander, a pair the
 evaluation does not score (and, when it does, the other order – never the points or other partners, Gether: "nie,
-len čo je zlé") and a formation the primary commander should not lead with. The superadmin sees a preview of every
+len čo je zlé"), a formation the primary commander should not lead with and an armament bonus over its cap (Gether
+19. 10. 2026, pair_check.ARMAMENT_CAPS). The superadmin sees a preview of every
 player with such a march and the exact message, unticks whom they like and queues the rest; the worker sends PER_TICK a
 tick, checking the marches again right before (fixed meanwhile = not sent, changed = the message as it is now).
 
@@ -17,6 +18,7 @@ import json
 import logging
 import re
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
@@ -26,7 +28,7 @@ from guides.armory import armory
 
 from . import discord_bot
 from .models import MarchNotice, Player
-from .pair_check import march_checker
+from .pair_check import ARMAMENT_CAPS, march_checker
 from .reminders import GOLD, DiscordPaused
 
 log = logging.getLogger(__name__)
@@ -39,6 +41,8 @@ STUCK = timedelta(minutes=10)
 MARCHES_PAGE = '/marche?tab=prehlad'
 # one preview or one queue: more than the kingdom has players
 MAX_PLAYERS = 500
+# the armament bonuses as the game and the web name them (the same in both languages)
+STAT_NAMES = {'attack': 'ATK', 'defense': 'DEF', 'health': 'HP', 'damage': 'All DMG'}
 
 TEXTS = {
     'sk': {
@@ -50,6 +54,7 @@ TEXTS = {
         'unknown': 'Tento pár sa vo vyhodnocovaní KvK nehodnotí – vyber iný pár.',
         'formation': 'Formácia {have}: {primary} má viesť {want}. Inscriptions sa viažu na formáciu – po zmene ich '
         'naklikaj znova.',
+        'stats': 'Bonusy armamentov nad maximum: {stats}. Skontroluj ich v hre a oprav.',
         'or': ' alebo ',
         'link': 'Opraviť v Prehľade marchov',
         'footer': 'KD 1035 · upozornenie od správcu webu',
@@ -74,6 +79,7 @@ TEXTS = {
         'unknown': 'Tento pár se ve vyhodnocování KvK nehodnotí – vyber jiný pár.',
         'formation': 'Formace {have}: {primary} má vést {want}. Inscriptions se vážou na formaci – po změně je '
         'naklikej znovu.',
+        'stats': 'Bonusy armamentů nad maximum: {stats}. Zkontroluj je ve hře a oprav.',
         'or': ' nebo ',
         'link': 'Opravit v Přehledu marchů',
         'footer': 'KD 1035 · upozornění od správce webu',
@@ -106,12 +112,25 @@ def formation_name(formation_id: str) -> str:
     return names.get(formation_id, formation_id)
 
 
+def percent(value) -> str:
+    """24.0 → "24", 9.7 → "9,7" (a decimal comma like the web)"""
+    return format(Decimal(str(value)).normalize(), 'f').replace('.', ',')
+
+
+def over_cap_text(p: dict) -> str:
+    """"All DMG 24 % (max 8 %)" for each bonus over its cap"""
+    return ', '.join(
+        f'{STAT_NAMES[stat]} {percent(p["stats"][stat])} % (max {percent(ARMAMENT_CAPS[stat])} %)'
+        for stat in p['stats_problem']
+    )
+
+
 def problems_of(player: Player, check) -> list[dict]:
     """The player's marches with a red border on /marche (marchHasProblem in core/kvk-api.ts), in their order"""
     found = []
     for march in sorted(player.marches.all(), key=lambda m: (m.position, m.pk)):
         result = check(march)
-        if result['pair_problem'] or result['formation_problem']:
+        if result['pair_problem'] or result['formation_problem'] or result['stats_problem']:
             found.append(
                 {
                     'id': march.pk,
@@ -120,6 +139,8 @@ def problems_of(player: Player, check) -> list[dict]:
                     'primary': march.primary,
                     'secondary': march.secondary,
                     'formation': march.formation,
+                    # the bonuses over their cap as typed in
+                    'stats': {stat: getattr(march, stat) for stat in result['stats_problem'] or []},
                     **result,
                 }
             )
@@ -127,9 +148,14 @@ def problems_of(player: Player, check) -> list[dict]:
 
 
 def fingerprint(problems: list[dict]) -> str:
-    """What exactly is wrong – another pair with the same kind of problem is a new one to tell"""
+    """What exactly is wrong – another pair with the same kind of problem is a new one to tell. The bonuses over their
+    cap are added only when there are some, so a fingerprint from before them stays the same."""
     keys = ('id', 'kind', 'primary', 'secondary', 'formation', 'pair_problem', 'formation_problem')
-    data = [[p[k] if k != 'formation_problem' else sorted(p[k] or []) for k in keys] for p in problems]
+    data = [
+        [p[k] if k != 'formation_problem' else sorted(p[k] or []) for k in keys]
+        + ([p['stats_problem']] if p.get('stats_problem') else [])
+        for p in problems
+    ]
     return hashlib.sha1(json.dumps(data, ensure_ascii=False).encode()).hexdigest()
 
 
@@ -161,6 +187,8 @@ def lines(player: Player, problems: list[dict], markdown: bool = True) -> list[s
                 .replace('{primary}', name(p['primary']))
                 .replace('{want}', want)
             )
+        if p.get('stats_problem'):
+            out.append(f'• {t["stats"].replace("{stats}", over_cap_text(p))}')
     return out
 
 

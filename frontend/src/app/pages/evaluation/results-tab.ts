@@ -18,6 +18,7 @@ import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { marchIcon } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
+import { overCapText } from '../../shared/stat-label';
 import { RecordChange } from './evaluation-api';
 import {
   Evaluation,
@@ -289,6 +290,12 @@ export class EvalResultsTab {
       );
     }
     return parts.join(' · ');
+  }
+
+  /** an armament bonus over its cap – a typo, counted as the cap (Gether 19. 10. 2026); '' = none */
+  protected overCap(m: MarchEval): string {
+    const text = overCapText(this.i18n.t().marches, m.march);
+    return text ? this.texts().detail.overCap.replace('{stats}', text) : '';
   }
 
   /** the score is not a column any more – the acclaim from the marches says how it was counted */

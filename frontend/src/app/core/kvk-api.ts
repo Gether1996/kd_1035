@@ -52,6 +52,16 @@ export const marchIcon = (kind: MarchKind) => `/static/guides/specialties/${kind
 
 /** the armament bonuses of a march (whole %, rounded up – Gether 11. 10. 2026), read as the bonuses of its troop type */
 export const ARMAMENT_STATS = ['attack', 'defense', 'health', 'damage'] as const;
+export type ArmamentStat = (typeof ARMAMENT_STATS)[number];
+/**
+ * The most an armament bonus can be (Gether 19. 10. 2026: "14 % atk, def, HP a 8 % all dmg"): more is a typo – red
+ * like a wrong pair, and the KvK evaluation counts the cap. The same numbers as ARMAMENT_CAPS in backend
+ * accounts/pair_check.py.
+ */
+export const ARMAMENT_CAPS: Record<ArmamentStat, number> = { attack: 14, defense: 14, health: 14, damage: 8 };
+/** the armament bonuses of a march or a sign-up over their cap */
+export const overCaps = (army: Partial<Record<ArmamentStat, number | null>>): ArmamentStat[] =>
+  ARMAMENT_STATS.filter((stat) => (army[stat] ?? 0) > ARMAMENT_CAPS[stat]);
 /** the inscriptions of the armaments by colour, the rarest first */
 export const INSCRIPTIONS = ['gold', 'blue', 'white'] as const;
 export type MarchStat = (typeof ARMAMENT_STATS)[number] | (typeof INSCRIPTIONS)[number];
@@ -87,13 +97,16 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   pair_hint?: { swap: boolean } | null;
   /** the formations its primary commander should lead with, when the march uses another one – the same people only */
   formation_problem?: string[] | null;
+  /** the armament bonuses over their cap (ARMAMENT_CAPS, any type) – the same people only; a sign-up: its player, R4 */
+  stats_problem?: ArmamentStat[] | null;
 }
 
 /**
- * A march with a pair or a formation the KvK evaluation does not like – the server says so to the superuser and to the
- * player about their own (Gether 14. 10. 2026); for anyone else both fields are missing
+ * A march with a pair, a formation or an armament bonus the KvK evaluation does not like – the server says so to the
+ * superuser and to the player about their own (Gether 14. and 19. 10. 2026); for anyone else the fields are missing
  */
-export const marchHasProblem = (march: March): boolean => !!march.pair_problem || !!march.formation_problem?.length;
+export const marchHasProblem = (march: March): boolean =>
+  !!march.pair_problem || !!march.formation_problem?.length || !!march.stats_problem?.length;
 
 /** a sign-up shown and edited like a march (MarchBuild, BuildEditor) */
 export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 });

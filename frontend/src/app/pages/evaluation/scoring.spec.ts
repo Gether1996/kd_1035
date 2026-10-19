@@ -88,6 +88,12 @@ describe('evaluation scoring', () => {
     expect(armamentPoints(S, march()).filled).toBe(false);
   });
 
+  it('counts an armament bonus over its cap as the cap (Gether 19. 10. 2026: 14 % ATK, DEF, HP, 8 % All DMG)', () => {
+    const capped = armamentPoints(S, march({ attack: 14, defense: 14, health: 14, damage: 8 })).stats;
+    expect(armamentPoints(S, march({ attack: 30, defense: 14.1, health: 99.9, damage: 24 })).stats).toBeCloseTo(capped, 9);
+    expect(armamentPoints(S, march({ attack: 13, defense: 14, health: 14, damage: 8 })).stats).toBeLessThan(capped);
+  });
+
   it('a march total like the spreadsheet: (equipment × 0.75 + armaments × 0.25) × pair / 100', () => {
     // B+ = 72: all legendary, 6 of 8 refined, iconic II–III – here 72 exactly by the slot weights
     const settings = withPairs({ equipment: { statsWeight: 0 } });
@@ -385,12 +391,14 @@ describe('evaluation scoring', () => {
       player(4, [march({ id: 6, position: 1, primary: 'Alexander Nevsky', secondary: 'Achilles' })]),
       // a march over the max in a wrong formation – /marche says so too
       player(5, [ok, march({ id: 7, position: 2, formation: 'arch' })]),
+      // an armament bonus over its cap, even on a type that does not count (Gether 19. 10. 2026)
+      player(6, [ok, march({ id: 8, position: 2, kind: 'garrison', damage: 8.1 })], { power: 60 }),
     ];
     const rows = evaluate(settings, players, INDEX).rows;
     expect(rows[2].marches.map((m) => m.skipped)).toEqual([null, 'limit', 'kind']);
     const ids = (filter: Parameters<typeof quickMatch>[0]) => rows.filter((r) => quickMatch(filter, r)).map((r) => r.player.id);
-    expect(ids('all')).toEqual([1, 2, 3, 4, 5]);
-    expect(ids('fix')).toEqual([1, 2, 4, 5]);
+    expect(ids('all')).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(ids('fix')).toEqual([1, 2, 4, 5, 6]);
     expect(ids('nopower')).toEqual([2, 4, 5]);
     // "Odp. power" in red: more power than the own counted marches carry
     expect(rows[2].ownLimit).not.toBeNull();

@@ -255,6 +255,12 @@
   list-style: none;
   font-weight: 600;
   color: var(--text);
+
+  // an armament bonus over its cap
+  .is-over,
+  .is-over .mb__stat-label {
+    color: var(--red-300);
+  }
 }
 
 .mb__stat-label {

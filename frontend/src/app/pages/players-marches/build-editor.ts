@@ -22,16 +22,15 @@ import {
   troopStat,
 } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
-import { ARMAMENT_STATS, March, REQUIRED_STATS } from '../../core/kvk-api';
+import { ARMAMENT_STATS, ArmamentStat, March, REQUIRED_STATS, overCaps } from '../../core/kvk-api';
 import { MarchChange, MarchesApi } from '../../core/marches-api';
 import { FormationIcon } from '../../shared/formation-icon';
 import { GearGrid } from '../../shared/gear-grid';
 import { SetBonuses } from '../../shared/set-bonuses';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
-import { formatBonus, readBonus, statLabel } from '../../shared/stat-label';
+import { formatBonus, overCapText, readBonus, statLabel } from '../../shared/stat-label';
 
-type ArmamentStat = (typeof ARMAMENT_STATS)[number];
 /** the build and the armament bonuses typed in (null = empty field) */
 type Draft = Build & { stats: Record<ArmamentStat, number | null> };
 
@@ -237,6 +236,13 @@ export class BuildEditor {
 
   /** the required bonuses are still empty after "Uložiť" – their fields are marked */
   protected readonly statsMissing = signal(false);
+
+  /** the bonuses typed over their cap (Gether 19. 10. 2026) – red, but saved: the march then says so in red */
+  protected readonly overCap = computed(() => overCaps(this.draft().stats));
+  protected readonly overCapText = computed(() => {
+    const over = this.overCap();
+    return over.length ? this.t().statsProblem.replace('{stats}', overCapText(this.t(), this.draft().stats, over)) : '';
+  });
 
   /** "Cav ATK" for a cavalry march */
   protected statLabel(stat: ArmamentStat): string {

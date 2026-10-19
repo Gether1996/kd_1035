@@ -551,6 +551,20 @@ class MarchTests(KvkTestCase):
         marches = self.login(admin.user).get('/api/marches/').json()['players'][0]['marches']
         self.assertEqual([m['formation_problem'] for m in marches], expected)
 
+    def test_a_bonus_over_its_cap_is_told_to_the_player_and_the_superuser(self):
+        """Gether 19. 10. 2026: ATK, DEF, HP up to 14 %, All DMG up to 8 % – more is saved, but red, whatever the type."""
+        self.call('patch', '/api/me/marches/', {'public': True})
+        res = self.call('post', '/api/me/marches/', {'kind': 'garrison', 'primary': 'Attila', **STATS, 'attack': 14.1})
+        self.assertEqual(res.status_code, 201, res.content)
+        self.assertEqual(res.json()['stats_problem'], ['attack'])
+        march = res.json()['id']
+        res = self.call('patch', f'/api/me/marches/{march}/', {'attack': 14, 'defense': 14, 'health': 14, 'damage': 8})
+        self.assertIsNone(res.json()['stats_problem'])
+        self.call('patch', f'/api/me/marches/{march}/', {'damage': 24, 'health': 99.9})
+        self.assertEqual(self.client.get('/api/me/marches/').json()['marches'][0]['stats_problem'], ['health', 'damage'])
+        other = self.login(make_player('42').user)
+        self.assertNotIn('stats_problem', other.get('/api/marches/').json()['players'][0]['marches'][0])
+
     def test_public_marches_are_seen_by_every_signed_in_player(self):
         self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
         other = self.login(make_player('42').user)
@@ -870,6 +884,15 @@ class SignupBuildTests(KvkTestCase):
         saved = KvkSignup.objects.get()
         self.assertEqual((saved.primary, saved.primary_skills, saved.note, saved.kind), ('Attila', '5555', 'večer', 'cavalry'))
         self.assertEqual(float(saved.attack), 12.5)
+        self.assertIsNone(res.json()['stats_problem'])
+
+    def test_a_bonus_over_its_cap_is_red_on_the_signup(self):
+        """Gether 19. 10. 2026: like a march – saved, but the player and R4 see which bonus is over its cap."""
+        self.sign_up()
+        res = self.call('patch', '/api/kvk/signup/', {'role': 'rally', **STATS, 'health': 14, 'damage': 24})
+        self.assertEqual(res.status_code, 200, res.content)
+        self.assertEqual(res.json()['stats_problem'], ['damage'])
+        self.assertEqual(self.client.get('/api/kvk/').json()['signups']['rally']['stats_problem'], ['damage'])
 
 
 class UnapprovedTests(KvkTestCase):

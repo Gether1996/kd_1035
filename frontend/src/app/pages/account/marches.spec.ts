@@ -129,6 +129,16 @@ describe('Marches', () => {
     expect(stat(0, '12.5').value).toBe('12,5');
     stat(1, '8');
     stat(2, '0');
+    // over the cap (Gether 19. 10. 2026): red and said under the fields, but nothing stops saving
+    const dmg = stat(3, '9');
+    await settle(fixture);
+    expect(dmg.getAttribute('aria-invalid')).toBe('true');
+    const over = dialog.querySelector(`#${dmg.getAttribute('aria-describedby')}`)!;
+    expect(over.textContent).toContain('Bonusy armamentov nad maximum: All DMG 9 % (max 8 %)');
+    stat(3, '');
+    await settle(fixture);
+    expect(dmg.hasAttribute('aria-invalid')).toBe(false);
+    expect(dialog.querySelector('.be__bonuses .field__error')).toBeNull();
     saveBuild().click();
     const build = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/me/marches/1/');
     expect(build.request.body).toEqual({
@@ -432,6 +442,8 @@ describe('Marches', () => {
       { ...MARCH, id: 1, position: 1, kind: 'cavalry', primary: 'Attila', secondary: 'Takeda Shingen' },
       { ...MARCH, id: 2, position: 2, kind: 'cavalry', primary: 'Attila', secondary: '', pair_problem: 'solo' },
       { ...MARCH, id: 3, position: 3, kind: 'cavalry', primary: 'Attila', secondary: 'Cao Cao', formation_problem: ['Wedge'] },
+      // an armament bonus over its cap (Gether 19. 10. 2026)
+      { ...MARCH, id: 4, position: 4, kind: 'garrison', primary: 'Attila', damage: 24, health: 14.5, stats_problem: ['health', 'damage'] },
     ];
     http.expectOne('/api/me/marches/').flush({ marches, max: 10, public: false });
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
@@ -442,7 +454,12 @@ describe('Marches', () => {
     // one live region for both lines
     expect(el.querySelectorAll('[role="status"] .march-hint--alert').length).toBe(2);
     const fix = el.querySelector<HTMLButtonElement>('button.march-fix')!;
-    expect(fix.textContent).toContain('Na opravu pre vyhodnocovanie KvK: 2');
+    expect(fix.textContent).toContain('Na opravu pre vyhodnocovanie KvK: 3');
+    const over = el.querySelector('app-march-build[data-march="4"]')!;
+    expect(over.classList).toContain('is-bad-pair');
+    expect(over.querySelector('.mb__pair-problem')!.textContent).toContain(
+      'Bonusy armamentov nad maximum: HP 14,5 % (max 14 %), All DMG 24 % (max 8 %)',
+    );
 
     fix.click();
     const second = el.querySelector('[data-march="2"]')!;
@@ -502,12 +519,12 @@ describe('PlayersAdmin', () => {
     expect(details()).toEqual([
       'od 12. 10. 2026 14:00',
       'gether · superadmin · od 1. 10. 2026 14:00 · naposledy 13. 10. 2026 9:05',
-      'nelly · od 5. 10. 2026 14:00 · 3 marche · KvK rally, garrison · na opravu: 2 – nesprávny pár alebo formácia pre vyhodnocovanie KvK',
+      'nelly · od 5. 10. 2026 14:00 · 3 marche · KvK rally, garrison · na opravu: 2 – nesprávny pár, formácia alebo bonusy armamentov pre vyhodnocovanie KvK',
     ]);
     // the marches red on /marche: red, with the reason for screen readers and in the title
     const issues = el.querySelectorAll('.reviewer__issues');
     expect(issues.length).toBe(1);
-    expect(issues[0].getAttribute('title')).toBe('nesprávny pár alebo formácia pre vyhodnocovanie KvK');
+    expect(issues[0].getAttribute('title')).toBe('nesprávny pár, formácia alebo bonusy armamentov pre vyhodnocovanie KvK');
     expect(issues[0].querySelector('.sr-only')).not.toBeNull();
     // sorting keeps the waiting player on top; filters for marches and KvK
     const select = (id: string, value: string) => {

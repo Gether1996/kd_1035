@@ -4,10 +4,13 @@ not. The same rules as frontend/src/app/pages/evaluation/scoring.ts: a march of 
 commander, or with a pair (in this order) that is not in guides.CommanderPair or has 0 points there, is not evaluated
 (pairPoints); a march in another formation than guides.CommanderFormation lists for its primary scores its armaments
 lower (formationOf) – a commander without formations, or a march without one, takes any. Types the evaluation does
-not count (garrison and rally by default) get no warning."""
+not count (garrison and rally by default) get no warning about the pair or the formation. An armament bonus over
+its cap (ARMAMENT_CAPS, Gether 19. 10. 2026) is a typo whatever the type – red as well; the evaluation counts the
+cap."""
 
 import math
 from collections.abc import Callable
+from decimal import Decimal
 
 from guides.models import CommanderFormation, CommanderPair, fold
 
@@ -17,6 +20,15 @@ from .models import MAX_MARCHES, EvaluationSettings, March
 DEFAULT_KINDS = ('infantry', 'cavalry', 'archer', 'leadership', 'engineering')
 # DEFAULT_SETTINGS.marches.max
 DEFAULT_COUNT = 5
+# the most an armament bonus can be (Gether 19. 10. 2026: "14 % atk, def, HP a 8 % all dmg") – ARMAMENT_CAPS in
+# frontend/src/app/core/kvk-api.ts
+ARMAMENT_CAPS = {'attack': Decimal(14), 'defense': Decimal(14), 'health': Decimal(14), 'damage': Decimal(8)}
+
+
+def over_caps(army) -> list[str] | None:
+    """The armament bonuses of a march or a sign-up over their cap, in the order of ARMAMENT_CAPS; None = none"""
+    over = [stat for stat, cap in ARMAMENT_CAPS.items() if (getattr(army, stat) or 0) > cap]
+    return over or None
 
 
 def evaluation_marches() -> dict:
@@ -54,8 +66,8 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
     """One read of the settings (or `marches` already read by evaluation_marches()), the pair table and the
     formations; the returned function says what is wrong with a march: pair_problem 'solo' (no secondary), 'unknown'
     (not in the table or 0 points) or None, pair_hint how to fix an 'unknown' pair ({swap: the other order scores},
-    never the points; else None) and formation_problem the formations its primary should lead with when it uses
-    another one (else None)."""
+    never the points; else None), formation_problem the formations its primary should lead with when it uses
+    another one (else None) and stats_problem the armament bonuses over their cap (over_caps – any type)."""
     kinds = counted_kinds(marches)
     table: dict[tuple[str, str], float] = {}
     for primary, secondary, points in CommanderPair.objects.values_list('primary', 'secondary', 'points'):
@@ -75,11 +87,17 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
         return wanted if wanted and march.formation and march.formation not in wanted else None
 
     def check(march: March) -> dict:
+        stats = over_caps(march)
         if march.kind not in kinds or not march.primary:
-            return {'pair_problem': None, 'pair_hint': None, 'formation_problem': None}
+            return {'pair_problem': None, 'pair_hint': None, 'formation_problem': None, 'stats_problem': stats}
         problem = pair(march)
         # the player cannot see the pair table – say when only the order is wrong (names as on the march)
         hint = {'swap': scores(march.secondary, march.primary)} if problem == 'unknown' else None
-        return {'pair_problem': problem, 'pair_hint': hint, 'formation_problem': formation(march)}
+        return {
+            'pair_problem': problem,
+            'pair_hint': hint,
+            'formation_problem': formation(march),
+            'stats_problem': stats,
+        }
 
     return check

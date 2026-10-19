@@ -11,11 +11,12 @@ import {
   troopStat,
 } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
-import { ARMAMENT_STATS } from '../../core/kvk-api';
+import { ARMAMENT_STATS, overCaps } from '../../core/kvk-api';
 import { FormationIcon } from '../../shared/formation-icon';
 import { GearGrid } from '../../shared/gear-grid';
 import { Icon } from '../../shared/icon';
 import { SetBonuses } from '../../shared/set-bonuses';
+import { overCapText } from '../../shared/stat-label';
 import { Army, EQUIPMENT_KINDS, EquipmentData, EquipmentKind, Kit, equipmentRanking } from './equipment';
 import { normalizeSettings } from './settings';
 import { EvalTexts } from './texts';
@@ -141,9 +142,12 @@ const TOP = 5;
                     @if (v.armamentStats.length) {
                       <ul class="eq-stats">
                         @for (s of v.armamentStats; track s.label) {
-                          <li><span class="eq-stats__label">{{ s.label }}</span> {{ dec(s.value) }}%</li>
+                          <li [class.is-over]="s.over"><span class="eq-stats__label">{{ s.label }}</span> {{ dec(s.value) }}%</li>
                         }
                       </ul>
+                    }
+                    @if (v.overCap) {
+                      <p class="eq-over">{{ v.overCap }}</p>
                     }
                     @if (kit.armaments.filled) {
                       <p class="eq-meta">{{ d.stats.replace('{a}', dec(kit.armaments.stats)).replace('{b}', dec(kit.armaments.inscriptions)) }}</p>
@@ -258,9 +262,16 @@ export class EvalEquipmentTab {
       .map((id) => index.inscriptions.get(id))
       .filter((i): i is Inscription => !!i)
       .sort((a, b) => INSCRIPTION_RARITIES.indexOf(a.rarity) - INSCRIPTION_RARITIES.indexOf(b.rarity));
+    // a bonus over its cap is red and counts as the cap (Gether 19. 10. 2026)
+    const over = from ? overCaps(from) : [];
     const armamentStats = from
-      ? ARMAMENT_STATS.filter((key) => from[key] != null).map((key) => ({ label: t.stats[key], value: from[key]! }))
+      ? ARMAMENT_STATS.filter((key) => from[key] != null).map((key) => ({
+          label: t.stats[key],
+          value: from[key]!,
+          over: over.includes(key),
+        }))
       : [];
+    const overCap = from && over.length ? this.texts().detail.overCap.replace('{stats}', overCapText(t, from, over)) : '';
     const sources = GEAR_SLOTS.flatMap((slot) => {
       const piece = kit.gear[slot];
       const item = piece && index.items.get(piece.item);
@@ -278,6 +289,7 @@ export class EvalEquipmentTab {
       formation: kit.formation ? (index.formations.get(kit.formation) ?? null) : null,
       inscriptions,
       armamentStats,
+      overCap,
       sources,
     };
   }

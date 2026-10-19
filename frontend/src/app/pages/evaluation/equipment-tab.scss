@@ -230,6 +230,19 @@
   color: var(--text-mute);
 }
 
+// an armament bonus over its cap
+.eq-stats .is-over,
+.eq-stats .is-over .eq-stats__label,
+.eq-over {
+  color: var(--red-300);
+}
+
+.eq-over {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .eq-arm {
   display: flex;
   align-items: center;

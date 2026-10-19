@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from decimal import Decimal
 from unittest import mock
 
 from django.core.cache import cache
@@ -92,6 +93,28 @@ class MarchNoticeTests(RedMarches):
         before = notices.fingerprint(notices.problems_of(self.nelly, check))
         March.objects.filter(player=self.nelly, position=2).update(primary='Achilles')
         self.assertNotEqual(notices.fingerprint(notices.problems_of(self.nelly, notices.march_checker())), before)
+
+    def test_a_bonus_over_its_cap_is_told_whatever_the_type(self):
+        """Gether 19. 10. 2026: ATK, DEF and HP over 14 %, All DMG over 8 % is a typo – red like a wrong pair."""
+        before = notices.fingerprint(notices.problems_of(self.nelly, notices.march_checker()))
+        # the caps themselves are fine
+        March.objects.filter(player=self.bob).update(attack=14, defense=14, health=14, damage=8)
+        self.assertEqual(notices.problems_of(self.bob, notices.march_checker()), [])
+        March.objects.filter(player=self.bob).update(damage=Decimal('24'))
+        # the rally march gets no pair warning, but a bonus over its cap all the same
+        March.objects.filter(player=self.nelly, position=4).update(health=Decimal('14.1'), attack=Decimal('20'))
+        check = notices.march_checker()
+        bob = notices.problems_of(self.bob, check)
+        self.assertEqual([(p['position'], p['pair_problem'], p['stats_problem']) for p in bob], [(1, None, ['damage'])])
+        text = notices.message(self.bob, bob)['embeds'][0]['description']
+        self.assertIn('Bonusy armamentov nad maximum: All DMG 24 % (max 8 %).', text)
+        nelly = notices.problems_of(self.nelly, check)
+        self.assertEqual([p['stats_problem'] for p in nelly], [None, None, None, ['attack', 'health']])
+        self.nelly.lang = 'cs'
+        lines = notices.lines(self.nelly, nelly, markdown=False)
+        self.assertIn('• Bonusy armamentů nad maximum: ATK 20 % (max 14 %), HP 14,1 % (max 14 %). Zkontroluj je ve hře a oprav.', lines)
+        # marches without such a bonus keep the fingerprint they had before the caps (no message told twice)
+        self.assertEqual(notices.fingerprint(nelly[:3]), before)
 
     def test_superuser_only(self):
         other = self.login(self.bob.user)
@@ -191,6 +214,11 @@ class ReviewerIssuesTests(RedMarches):
         self.assertEqual((rows[self.bob.pk]['issues'], rows[self.bob.pk]['marches']), (0, 1))
         March.objects.filter(player=self.nelly, position=1).update(secondary='Takeda Shingen')
         self.assertEqual(self.rows()[self.nelly.pk]['issues'], 2)
+        # an armament bonus over its cap (Gether 19. 10. 2026) – also on the rally march
+        March.objects.filter(player=self.nelly, position=4).update(damage=Decimal('8.1'))
+        March.objects.filter(player=self.bob).update(defense=Decimal('15'))
+        rows = self.rows()
+        self.assertEqual((rows[self.nelly.pk]['issues'], rows[self.bob.pk]['issues']), (3, 1))
 
     def test_the_queries_do_not_grow_with_the_players(self):
         self.bob.delete_account()

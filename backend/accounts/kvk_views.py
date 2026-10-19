@@ -21,13 +21,13 @@ from rest_framework.response import Response
 from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
 from .models import APPROVED, MARCH_STATS, KvkSettings, KvkSignup, March, Player, PlayerSettings
-from .pair_check import march_checker
+from .pair_check import march_checker, over_caps
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
 
 log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
-PROBLEMS = ('pair_problem', 'formation_problem')
+PROBLEMS = ('pair_problem', 'formation_problem', 'stats_problem')
 
 
 class IsReviewer(BasePermission):
@@ -75,6 +75,8 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
         'role': signup.role,
         'kind': signup.kind,
         **army_data(signup),
+        # a bonus over its cap – red like on /marche (Gether 19. 10. 2026); the sign-up's own player, R4, the superuser
+        'stats_problem': over_caps(signup),
         'note': signup.note,
         'updated_at': iso(signup.updated_at),
     }
@@ -232,8 +234,8 @@ def settings(request):
 def reviewers(request):
     """Every active player signed in with Discord: the reviewer flag (R4), the approval for marches and KvK sign-ups,
     when they first and last signed in, how many marches they have and which KvK sign-ups (Gether 13. 10. 2026: filters
-    like on /marche), and `issues` – how many of their marches are red on /marche (a wrong pair or formation,
-    march_checker; read once for the whole list, the queries do not grow with the players)."""
+    like on /marche), and `issues` – how many of their marches are red on /marche (a wrong pair or formation, a bonus
+    over its cap, march_checker; read once for the whole list, the queries do not grow with the players)."""
     check = march_checker()
     players = (
         Player.objects.filter(user__is_active=True)
@@ -241,7 +243,12 @@ def reviewers(request):
         .prefetch_related(
             Prefetch('kvk_signups', queryset=KvkSignup.objects.only('player_id', 'role')),
             # only what the checker reads
-            Prefetch('marches', queryset=March.objects.only('player_id', 'kind', 'primary', 'secondary', 'formation')),
+            Prefetch(
+                'marches',
+                queryset=March.objects.only(
+                    'player_id', 'kind', 'primary', 'secondary', 'formation', 'attack', 'defense', 'health', 'damage'
+                ),
+            ),
         )
     )
     rows = sorted(

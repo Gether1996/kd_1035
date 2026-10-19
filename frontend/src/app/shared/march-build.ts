@@ -18,7 +18,7 @@ import { FormationIcon } from './formation-icon';
 import { GearGrid } from './gear-grid';
 import { Icon } from './icon';
 import { SetBonuses } from './set-bonuses';
-import { formatBonus, statLabel } from './stat-label';
+import { formatBonus, overCapText, statLabel } from './stat-label';
 
 let nextId = 0;
 
@@ -64,7 +64,7 @@ export class MarchBuild {
   protected readonly failed = this.armory.failed;
   protected readonly icon = marchIcon;
   protected readonly bonus = formatBonus;
-  /** the red border: a pair or a formation the KvK evaluation does not like */
+  /** the red border: a pair, a formation or an armament bonus the KvK evaluation does not like */
   protected readonly hasProblem = computed(() => marchHasProblem(this.march()));
 
   protected readonly build = computed(() => buildOf(this.march()));
@@ -142,6 +142,17 @@ export class MarchBuild {
       .formationProblem.replace('{have}', name(march.formation))
       .replace('{commander}', march.primary)
       .replace('{want}', wanted.map(name).join(' / '));
+  });
+
+  /**
+   * The armament bonuses over their cap (Gether 19. 10. 2026) – the server tells the player and the superuser (a
+   * sign-up: also R4); their values are red in the detail as well
+   */
+  protected readonly overCap = computed<ReadonlySet<string>>(() => new Set(this.march().stats_problem ?? []));
+  protected readonly statsProblem = computed(() => {
+    const march = this.march();
+    if (!march.stats_problem?.length) return null;
+    return this.t().statsProblem.replace('{stats}', overCapText(this.t(), march, march.stats_problem));
   });
 
   /** how to fix a pair the evaluation does not score: the other order is scored – the names as on the march */

@@ -133,6 +133,8 @@ const sk = {
     stats: 'bonusy {a} + inscriptions {b}',
     tiered: 'podľa tier listu',
     wrongFormation: 'formácia {have}, má byť {want}: ×{f}',
+    // an armament bonus over its cap (Gether 19. 10. 2026) – red under the march and the armaments of Top 5 equip
+    overCap: 'Nad maximum: {stats} – počíta sa maximum.',
     noGear: 'nenaklikaná',
     noArmaments: 'nevyplnené',
     skipped: { kind: 'typ sa nepočíta', pair: 'pár sa nehodnotí', limit: 'nad limit marchov' },
@@ -488,6 +490,7 @@ const cs: EvalTexts = {
     stats: 'bonusy {a} + inscriptions {b}',
     tiered: 'podle tier listu',
     wrongFormation: 'formace {have}, má být {want}: ×{f}',
+    overCap: 'Nad maximum: {stats} – počítá se maximum.',
     noGear: 'nenaklikaná',
     noArmaments: 'nevyplněné',
     skipped: { kind: 'typ se nepočítá', pair: 'pár se nehodnotí', limit: 'nad limit marchů' },

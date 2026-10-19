@@ -321,6 +321,11 @@
   margin: 0;
   font-size: 0.8125rem;
   color: var(--text-mute);
+
+  // an armament bonus over its cap (the stylesheet is at its 8 kB budget)
+  &.is-over {
+    color: var(--red-300);
+  }
 }
 
 .ev-march__parts {

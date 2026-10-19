@@ -47,6 +47,10 @@
 @if (formationProblem(); as text) {
   <p class="mb__pair-problem">{{ text }}</p>
 }
+<!-- an armament bonus over its cap (Gether 19. 10. 2026) – a typo, the evaluation counts the cap -->
+@if (statsProblem(); as text) {
+  <p class="mb__pair-problem">{{ text }}</p>
+}
 
 <!-- no headings (Gether 12. 10. 2026: "čo najmenej textu") – the equipment's bonuses under its diamonds, the armaments' under the inscriptions -->
 <div class="mb__body">
@@ -107,7 +111,7 @@
       <ul class="mb__stats" [attr.aria-label]="k.stats.title" [title]="k.stats.title">
         @if (detail()) {
           @for (s of armamentStats(); track s.key) {
-            <li [title]="s.full"><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
+            <li [title]="s.full" [class.is-over]="overCap().has(s.key)"><span class="mb__stat-label">{{ s.label }}</span> {{ bonus(s.value) }}%</li>
           }
         }
         @if (counts().length) {

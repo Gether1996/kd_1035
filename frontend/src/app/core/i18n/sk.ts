@@ -389,7 +389,7 @@ export const sk = {
     kvk: 'KvK {roles}',
     // the player's marches red on /marche
     issues: 'na opravu: {n}',
-    issuesHint: 'nesprávny pár alebo formácia pre vyhodnocovanie KvK',
+    issuesHint: 'nesprávny pár, formácia alebo bonusy armamentov pre vyhodnocovanie KvK',
     noMatch: 'Takého hráča tu nemáme.',
     empty: 'Zatiaľ sa neprihlásil žiadny hráč.',
     loadError: 'Hráčov sa nepodarilo načítať.',
@@ -410,9 +410,9 @@ export const sk = {
     noMatch: 'Takého hráča tu nemáme.',
     you: 'Ty',
     r4Only: 'len R4',
-    // marches with a wrong pair or formation (the superadmin, the player at their own)
+    // marches with a wrong pair, formation or bonus over its cap (the superadmin, the player at their own)
     problems: 'Na opravu: {n}',
-    problemsHint: 'Nesprávny pár alebo formácia pre vyhodnocovanie KvK',
+    problemsHint: 'Nesprávny pár, formácia alebo bonusy armamentov pre vyhodnocovanie KvK',
     // a player the superadmin has not approved (or un-approved) – only the superadmin sees their things
     hidden: 'neschválený',
     hiddenHint: 'Hráč nie je schválený – jeho marche a prihlášky vidíš iba ty.',
@@ -486,9 +486,12 @@ export const sk = {
     pairHint: { swap: 'Hodnotí sa opačné poradie: {secondary} + {primary}.' },
     // a formation the primary commander should not lead with (Gether 14. 10. 2026) – the player and the superadmin only
     formationProblem: '{commander} má viesť formáciu {want}, nie {have} – vo vyhodnocovaní KvK sa armamenty počítajú menej.',
+    // an armament bonus over its cap (Gether 19. 10. 2026: ATK, DEF, HP 14 %, All DMG 8 %) – on the march and in its editor
+    statsProblem: 'Bonusy armamentov nad maximum: {stats} – skontroluj ich v hre.',
+    statsOver: '{stat} {value} % (max {max} %)',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, čo je pri nich červené.',
-    // a pair or a formation the KvK evaluation does not like – a button to the first such march
+    // a pair, a formation or a bonus the KvK evaluation does not like – a button to the first such march
     problemsCount: 'Na opravu pre vyhodnocovanie KvK: {n} – pozri červené vety pri marchoch.',
     choose: 'Vybrať',
     edit: 'Upraviť',
