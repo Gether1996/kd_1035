@@ -103,6 +103,9 @@ export const cs: Dict = {
     setName: 'Doplň jméno ve hře',
     powerMissing: 'Chybí ti aktuální power',
     setPower: 'Doplň aktuální power',
+    // a KvK sign-up without the survey of the form (Gether 20. 10. 2026)
+    surveyMissing: 'Chybí ti dotazník k přihlášce na KvK',
+    setSurvey: 'Doplň dotazník ke KvK',
   },
   hero: {
     tagline: 'Jediné čistě česko-slovenské království ve hře.',
@@ -249,7 +252,7 @@ export const cs: Dict = {
     ingameName: 'Jméno ve hře',
     role: 'Role',
     note: 'Poznámka pro vedení',
-    notePlaceholder: 'Např. kdy býváš online',
+    notePlaceholder: 'Např. co by vedení mělo vědět',
     submit: 'Přihlásit se a naklikat výbavu',
     edit: 'Upravit jednotky, commandery a poznámku',
     save: 'Uložit změny',
@@ -258,6 +261,7 @@ export const cs: Dict = {
     errors: {
       name: 'Vyplň jméno ve hře.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',
+      survey: 'Vyber, kolik dáváš do KvK, a aspoň jeden čas, kdy jsi online.',
     },
     privacy: 'Přihlášku vidíš ty, vedení, kterému superadmin povolil prohlížení, a superadmin.',
     signedUp: 'přihlášený',
@@ -273,6 +277,24 @@ export const cs: Dict = {
     marches: 'Marche z profilu',
     close: 'Zavřít',
     deleteConfirm: 'Opravdu smazat?',
+    survey: {
+      budget: 'Kolik dávám do KvK',
+      budgets: { to50: 'do 50 €', to100: 'do 100 €', to200: 'do 200 €', over200: 'nad 200 €' },
+      czk: { to50: '≈ 1 250 Kč', to100: '≈ 2 500 Kč', to200: '≈ 5 000 Kč', over200: '≈ 5 000+ Kč' },
+      online: 'Kdy jsem online',
+      onlines: {
+        first_zone: 'Při otevření první zóny (obvykle pátek kolem 15:00 UTC)',
+        mornings: 'Rána',
+        afternoons: 'Odpoledne',
+        evenings: 'Večery',
+        nights: 'Noci',
+        weekends: 'O víkendu i přes den',
+        on_call: 'Na zavolání (ping na Discordu)',
+      },
+      hint: 'Všechno je jen orientační odhad, nic závazného.',
+      missing: 'K přihlášce chybí dotazník – kolik dáváš do KvK a kdy jsi online.',
+      fill: 'Doplnit dotazník',
+    },
     // the roster of the shown sign-ups for the leadership's Discord (pages/kvk/roster-text.ts)
     roster: {
       copy: 'Kopírovat pro Discord',
@@ -953,7 +975,7 @@ export const cs: Dict = {
         title: 'Přihlášky na KvK a marche',
         text: 'Pokud je vyplníš, ukládáme:',
         list: [
-          'Přihlášky na KvK – roli (rally, garrison), typ jednotek, commandery a jejich skilly, naklikanou výbavu, formaci a inscriptions, bonusy armamentů a poznámku.',
+          'Přihlášky na KvK – roli (rally, garrison), typ jednotek, commandery a jejich skilly, naklikanou výbavu, formaci a inscriptions, bonusy armamentů, poznámku a tvůj orientační odhad, kolik dáváš do KvK a kdy jsi online.',
           'Marche na stránce Marche – typ, commandery a jejich skilly, bonusy armamentů a naklikanou výbavu, formaci a inscriptions.',
           'Screenshoty přihlášek a marchů už neukládáme – starší jsme smazali, ze záloh zmizí do 8 týdnů.',
           'Aktuální power, pokud ji zapíšeš na stránce Můj účet. Při vyhodnocování KvK ji může zapsat i správce (nebo vedení, kterému to povolí), spolu s tím, jestli máš jen T4 jednotky.',

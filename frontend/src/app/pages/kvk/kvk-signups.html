@@ -144,6 +144,12 @@
                     @if (one.note) {
                       <p class="signup__line signup__note">{{ one.note }}</p>
                     }
+                    <!-- the survey of the form (Gether 20. 10. 2026); a sign-up from before it has none -->
+                    @if (!missingSurvey(one)) {
+                      @let answers = surveyOf(one);
+                      <p class="signup__line"><span>{{ k.survey.budget }}:</span> {{ answers.budget }}</p>
+                      <p class="signup__line"><span>{{ k.survey.online }}:</span> {{ answers.online }}</p>
+                    }
                   </div>
                 }
               </div>

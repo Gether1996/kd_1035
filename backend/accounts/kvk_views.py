@@ -20,7 +20,7 @@ from rest_framework.response import Response
 
 from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
-from .models import APPROVED, MARCH_STATS, KvkSignup, March, Player, PlayerSettings
+from .models import APPROVED, KVK_ONLINE, MARCH_STATS, KvkSignup, March, Player, PlayerSettings
 from .pair_check import march_checker, over_caps
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
@@ -73,6 +73,9 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
         # a bonus over its cap – red like on /marche (Gether 19. 10. 2026); the sign-up's own player, R4, the superuser
         'stats_problem': over_caps(signup),
         'note': signup.note,
+        # the survey (Gether 20. 10. 2026): '' and [] for a sign-up from before it
+        'budget': signup.budget,
+        'online': signup.online,
         'updated_at': iso(signup.updated_at),
     }
     if with_player:
@@ -102,6 +105,13 @@ class SignupSerializer(BuildSerializer):
     role = serializers.ChoiceField(choices=KvkSignup.Role.choices)
     kind = serializers.ChoiceField(choices=KvkSignup.Kind.choices)
     note = serializers.CharField(max_length=500, allow_blank=True, default='', trim_whitespace=True)
+    # the survey of the form (Gether 20. 10. 2026): how much into the KvK (one) and when online (one or more)
+    budget = serializers.ChoiceField(choices=KvkSignup.Budget.choices)
+    online = serializers.ListField(child=serializers.ChoiceField(choices=KVK_ONLINE), min_length=1)
+
+    def validate_online(self, value):
+        # each once, in the order of the form
+        return [key for key in KVK_ONLINE if key in value]
 
     def validate(self, data):
         # the primary commander is required, like in a march
@@ -134,7 +144,7 @@ def state(request):
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def signup(request):
-    """PUT {ingame_name, role, kind, primary, secondary?, primary_skills?, secondary_skills?, note?}: sign up as rally or
+    """PUT {ingame_name, role, kind, primary, secondary?, primary_skills?, secondary_skills?, note?, budget, online}: sign up as rally or
     garrison, or change that sign-up (the in-game name is saved on the player too). PATCH {role, gear?, formation?,
     inscriptions?, attack?, defense?, health?, damage?}: the build of that sign-up (404 without one). DELETE
     ?role=<rally|garrison>: withdraw that sign-up."""

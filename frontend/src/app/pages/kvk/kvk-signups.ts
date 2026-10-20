@@ -20,13 +20,14 @@ import {
 import { ArmoryApi } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
-import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
+import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon, surveyMissing } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
 import { copyText } from '../../shared/copy-link';
 import { Icon } from '../../shared/icon';
 import { MarchBuild } from '../../shared/march-build';
 import { rosterText } from './roster-text';
+import { surveyText } from './survey';
 
 type Role = 'all' | 'rally' | 'garrison';
 
@@ -108,6 +109,9 @@ export class KvkSignups {
   });
   /** each sign-up as the card of a march */
   protected readonly asMarch = asMarch;
+  /** the survey of a sign-up – how much into the KvK, when online (Gether 20. 10. 2026) */
+  protected readonly missingSurvey = surveyMissing;
+  protected readonly surveyOf = (signup: KvkSignup) => surveyText(signup, this.t().survey);
   /** the numbers on the filters count players (one card each), like the list below */
   protected readonly counts = computed(() => ({
     all: players(this.ofCommander()),

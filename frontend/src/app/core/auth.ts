@@ -30,6 +30,8 @@ export interface Player {
   evaluation_overview?: boolean;
   /** R4 (and the superadmin): every sign-up and march, and "Top 5 equip" of /vyhodnocovanie (Gether 19. 10. 2026) */
   reviewer?: boolean;
+  /** a KvK sign-up without the survey of its form (from before 20. 10. 2026) – the header reminds the player */
+  kvk_survey_missing?: boolean;
 }
 
 export interface Me {
@@ -79,8 +81,10 @@ export class Auth {
     const user = this.user();
     return !!user && (user.power ?? null) === null;
   });
+  /** a KvK sign-up without its survey (Gether 20. 10. 2026) – the same reminder, it leads to /kvk */
+  readonly needsSurvey = computed(() => !!this.user()?.kvk_survey_missing);
   /** the red "!" in the header: something of the profile is missing */
-  readonly needsAttention = computed(() => this.needsName() || this.needsPower());
+  readonly needsAttention = computed(() => this.needsName() || this.needsPower() || this.needsSurvey());
   /** opens /vyhodnocovanie – the account menu item and the links to it (/marche) show exactly then */
   readonly canEvaluate = computed(() => {
     const user = this.user();

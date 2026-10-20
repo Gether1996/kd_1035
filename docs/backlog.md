@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **20. 10. 2026 – v1.37.0:** Prihláška na KvK má krátky dotazník: koľko dávaš do KvK (do 50 / 100 / 200 € alebo viac, s orientačným prepočtom na Kč) a kedy si online (prvá zóna, rána, poobedia, večery, noci, víkend cez deň, na zavolanie). Je to len odhad; vedenie ho vidí v zozname prihlášok. Kto má prihlášku bez dotazníka, dostane červený „!“ v menu účtu.
 - **20. 10. 2026 – v1.36.0:** Zoznam Hráči je vlastná stránka `/hraci` v menu účtu superadmina (z Môj účet zmizol). Nový prepínač **Neaktívny** skryje hráča v zozname, kým nezapneš „Zobraziť neaktívnych“. Správa bota o novom hráčovi má tlačidlo **Schváliť** – schváli ho jedným klikom priamo v Discorde (po nastavení `DISCORD_PUBLIC_KEY` a Interactions Endpoint URL).
 - **20. 10. 2026 – v1.35.5:** Na `/kvk` zmizla záložka Nastavenia (názov prihlasovania): prihlášky platia, kým ich nezruší hráč alebo superadmin, takže názov nič neriadil. Formulár má nadpis „Moja prihláška“, správa „Kopírovať pre Discord“ začína rolou.
 - **20. 10. 2026 – v1.35.4:** Prihlášky na KvK (R4, superadmin) sa rozbaľujú ako Marche hráčov: zatvorená karta ukáže meno, rolu a portréty commanderov, klik ju otvorí, pri filtroch je Rozbaliť / Zbaliť všetky.

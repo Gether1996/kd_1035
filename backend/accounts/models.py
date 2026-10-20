@@ -379,6 +379,10 @@ class ArmyFields(models.Model):
         abstract = True
 
 
+# when the player is online for the KvK – any of them (the labels are on the web, i18n kvk.survey.online)
+KVK_ONLINE = ['first_zone', 'mornings', 'afternoons', 'evenings', 'nights', 'weekends', 'on_call']
+
+
 class KvkSignup(ArmyFields):
     """A player's sign-up for a KvK as rally or garrison, filled in exactly like a march (ArmyFields, no screenshot since
     12. 10. 2026) with a note. A player may sign up for both, each with its own
@@ -397,11 +401,25 @@ class KvkSignup(ArmyFields):
         CAVALRY = 'cavalry', 'jazda'
         ARCHER = 'archer', 'lukostrelci'
 
+    class Budget(models.TextChoices):
+        """how much the player puts into the KvK – one, in euros (the web adds a rough CZK)"""
+
+        TO50 = 'to50', 'do 50 €'
+        TO100 = 'to100', 'do 100 €'
+        TO200 = 'to200', 'do 200 €'
+        OVER200 = 'over200', 'nad 200 €'
+
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kvk_signups', verbose_name='hráč')
     role = models.CharField('rola', max_length=8, choices=Role.choices)
     # empty only for the sign-ups saved before the troops were asked for
     kind = models.CharField('jednotky', max_length=12, choices=Kind.choices, blank=True)
     note = models.CharField('poznámka', max_length=500, blank=True)
+    # the survey of the sign-up form (Gether 20. 10. 2026) – a rough guess, nothing binding; empty only for the sign-ups
+    # saved before it was asked for (the header then reminds the player)
+    budget = models.CharField('koľko dáva do KvK', max_length=10, choices=Budget.choices, blank=True)
+    online = models.JSONField(
+        'kedy je online', default=list, blank=True, help_text=f'Jedna alebo viac z: {", ".join(KVK_ONLINE)}.'
+    )
     created_at = models.DateTimeField('vytvorené', auto_now_add=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)
 

@@ -235,6 +235,8 @@ class KvkSignupAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'blue',
         'white',
         'note',
+        'budget',
+        'online',
         'created_at',
         'updated_at',
     ]

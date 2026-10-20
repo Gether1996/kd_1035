@@ -16,6 +16,8 @@ const signup = (over: Partial<KvkSignup>): KvkSignup => ({
   primary: 'Attila',
   secondary: 'Takeda Shingen',
   note: '',
+  budget: 'to50',
+  online: ['nights'],
   updated_at: '2026-10-12T08:00:00Z',
   ...over,
 });

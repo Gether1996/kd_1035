@@ -105,6 +105,9 @@ export const sk = {
     // the same for the current power (Gether 14. 10. 2026)
     powerMissing: 'Chýba ti aktuálna power',
     setPower: 'Doplň aktuálnu power',
+    // a KvK sign-up without the survey of the form (Gether 20. 10. 2026)
+    surveyMissing: 'Chýba ti dotazník k prihláške na KvK',
+    setSurvey: 'Doplň dotazník ku KvK',
   },
   hero: {
     tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',
@@ -255,7 +258,7 @@ export const sk = {
     ingameName: 'Meno v hre',
     role: 'Rola',
     note: 'Poznámka pre vedenie',
-    notePlaceholder: 'Napr. kedy bývaš online',
+    notePlaceholder: 'Napr. čo by vedenie malo vedieť',
     submit: 'Prihlásiť sa a naklikať výbavu',
     edit: 'Upraviť jednotky, commanderov a poznámku',
     save: 'Uložiť zmeny',
@@ -264,6 +267,7 @@ export const sk = {
     errors: {
       name: 'Vyplň meno v hre.',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',
+      survey: 'Vyber, koľko dávaš do KvK, a aspoň jeden čas, kedy si online.',
     },
     privacy: 'Prihlášku vidíš ty, vedenie, ktorému superadmin povolil prezeranie, a superadmin.',
     signedUp: 'prihlásený',
@@ -279,6 +283,26 @@ export const sk = {
     marches: 'Marche z profilu',
     close: 'Zavrieť',
     deleteConfirm: 'Naozaj zmazať?',
+    // the survey of the sign-up form (Gether 20. 10. 2026) – a rough guess, the CZK only roughly (about 25 Kč for 1 €)
+    survey: {
+      budget: 'Koľko dávam do KvK',
+      budgets: { to50: 'do 50 €', to100: 'do 100 €', to200: 'do 200 €', over200: 'nad 200 €' },
+      czk: { to50: '≈ 1 250 Kč', to100: '≈ 2 500 Kč', to200: '≈ 5 000 Kč', over200: '≈ 5 000+ Kč' },
+      online: 'Kedy som online',
+      onlines: {
+        first_zone: 'Pri otvorení prvej zóny (zvyčajne piatok okolo 15:00 UTC)',
+        mornings: 'Rána',
+        afternoons: 'Poobedia',
+        evenings: 'Večery',
+        nights: 'Noci',
+        weekends: 'Cez víkend aj cez deň',
+        on_call: 'Na zavolanie (ping na Discorde)',
+      },
+      hint: 'Všetko je len orientačný odhad, nič nezáväzné.',
+      // a sign-up from before the survey: the card asks for it
+      missing: 'K prihláške chýba dotazník – koľko dávaš do KvK a kedy si online.',
+      fill: 'Doplniť dotazník',
+    },
     // the roster of the shown sign-ups for the leadership's Discord (pages/kvk/roster-text.ts)
     roster: {
       copy: 'Kopírovať pre Discord',
@@ -974,7 +998,7 @@ export const sk = {
         title: 'Prihlášky na KvK a marche',
         text: 'Ak ich vyplníš, ukladáme:',
         list: [
-          'Prihlášky na KvK – rolu (rally, garrison), typ jednotiek, commanderov a ich skilly, naklikanú výbavu, formáciu a inscriptions, bonusy armamentov a poznámku.',
+          'Prihlášky na KvK – rolu (rally, garrison), typ jednotiek, commanderov a ich skilly, naklikanú výbavu, formáciu a inscriptions, bonusy armamentov, poznámku a tvoj orientačný odhad, koľko dávaš do KvK a kedy si online.',
           'Marche na stránke Marche – typ, commanderov a ich skilly, bonusy armamentov a naklikanú výbavu, formáciu a inscriptions.',
           'Screenshoty prihlášok a marchov už neukladáme – staršie sme zmazali, zo záloh zmiznú do 8 týždňov.',
           'Aktuálnu power, ak ju zapíšeš na stránke Môj účet. Pri vyhodnocovaní KvK ju môže zapísať aj správca (alebo vedenie, ktorému to povolí), spolu s tým, či máš iba T4 jednotky.',

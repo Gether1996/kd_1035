@@ -11,10 +11,22 @@ export const KVK_ROLES: KvkRole[] = ['rally', 'garrison'];
 /** the troops of a sign-up's army – its bonuses are read as theirs (Gether 11. 10. 2026) */
 export const KVK_KINDS: MarchKind[] = ['infantry', 'cavalry', 'archer'];
 
+/** the survey of the sign-up form (Gether 20. 10. 2026): how much the player puts into the KvK – one, a rough guess */
+export type KvkBudget = 'to50' | 'to100' | 'to200' | 'over200';
+export const KVK_BUDGETS: KvkBudget[] = ['to50', 'to100', 'to200', 'over200'];
+/** …and when they are online – any of them (backend models.KVK_ONLINE) */
+export type KvkOnline = 'first_zone' | 'mornings' | 'afternoons' | 'evenings' | 'nights' | 'weekends' | 'on_call';
+export const KVK_ONLINE: KvkOnline[] = ['first_zone', 'mornings', 'afternoons', 'evenings', 'nights', 'weekends', 'on_call'];
+/** a sign-up from before the survey has neither */
+export const surveyMissing = (signup: Pick<KvkSignup, 'budget' | 'online'>) => !signup.budget || !signup.online?.length;
+
 /** filled in exactly like a march (Gether 11. and 12. 10. 2026): the army of March plus the role and a note */
 export interface KvkSignup extends Omit<March, 'position'> {
   role: KvkRole;
   note: string;
+  /** the survey ('' and [] for a sign-up from before it) */
+  budget: KvkBudget | '';
+  online: KvkOnline[];
   updated_at: string;
   /** for reviewers */
   player?: { id: number; name: string; ingame_name: string; avatar_url: string; discord_id: string | null };
@@ -126,6 +138,8 @@ export interface SignupForm {
   primary_skills: string;
   secondary_skills: string;
   note: string;
+  budget: KvkBudget;
+  online: KvkOnline[];
 }
 
 /** the switches of a player in Hráči (/hraci) */

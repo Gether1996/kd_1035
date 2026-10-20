@@ -50,7 +50,13 @@ export class Header {
   /** what the red "!" stands for, for screen readers */
   protected readonly missing = computed(() => {
     const t = this.i18n.t().nav;
-    return [this.auth.needsName() ? t.nameMissing : '', this.auth.needsPower() ? t.powerMissing : ''].filter(Boolean).join(', ');
+    return [
+      this.auth.needsName() ? t.nameMissing : '',
+      this.auth.needsPower() ? t.powerMissing : '',
+      this.auth.needsSurvey() ? t.surveyMissing : '',
+    ]
+      .filter(Boolean)
+      .join(', ');
   });
 
   /** the signed-in player's pages: the account menu (desktop) and the mobile menu */

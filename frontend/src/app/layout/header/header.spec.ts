@@ -179,6 +179,19 @@ describe('Header account slot', () => {
     expect(alerts('.account__dropdown .is-alert')).toEqual([['/ucet#power', '!Doplň aktuálnu power']]);
     expect(alerts('.drawer__page.is-alert').map(([href]) => href)).toEqual(['/ucet#power']);
   });
+
+  it('asks for the survey of a KvK sign-up from before it, leading to /kvk (Gether 20. 10. 2026)', async () => {
+    await answer({
+      login_enabled: true,
+      user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', power: 90, approved: true, terms_accepted: true, is_staff: false, is_superuser: false, kvk_survey_missing: true },
+    });
+    const link = el().querySelector<HTMLAnchorElement>('.account__link');
+    expect(link?.querySelector('.alert-badge')).not.toBeNull();
+    expect(link?.textContent).toContain('Chýba ti dotazník k prihláške na KvK');
+    const alerts = (selector: string) => Array.from(el().querySelectorAll(selector), (a) => [a.getAttribute('href'), a.textContent?.trim()]);
+    expect(alerts('.account__dropdown .is-alert')).toEqual([['/kvk', '!Doplň dotazník ku KvK']]);
+    expect(alerts('.drawer__page.is-alert').map(([href]) => href)).toEqual(['/kvk']);
+  });
 });
 
 describe('Header active item', () => {

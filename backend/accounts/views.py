@@ -12,6 +12,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from django.conf import settings
 from django.contrib.auth import get_user_model, login, logout
 from django.db import transaction
+from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -302,6 +303,10 @@ def signed_in(request) -> dict | None:
         ),
         # R4 (private_images.can_review): every sign-up and march, and "Top 5 equip" of /vyhodnocovanie (Gether 19. 10. 2026)
         'reviewer': (player.kvk_reviewer and player.approved) or request.user.is_superuser,
+        # a KvK sign-up without the survey of the form (from before it, 20. 10. 2026): the red "!" of the header, while
+        # the player may still change it
+        'kvk_survey_missing': player.may_post
+        and player.kvk_signups.filter(Q(budget='') | Q(online=[])).exists(),
     }
 
 

@@ -67,7 +67,15 @@ class KvkTestCase(TestCase):
         return getattr(client, method)(url, body, content_type='application/json', HTTP_X_CSRFTOKEN=client.token, **extra)
 
     def sign_up(self, client=None, **data):
-        body = {'ingame_name': 'Nelly', 'role': 'rally', 'kind': 'cavalry', 'primary': 'Attila', **data}
+        body = {
+            'ingame_name': 'Nelly',
+            'role': 'rally',
+            'kind': 'cavalry',
+            'primary': 'Attila',
+            'budget': 'to100',
+            'online': ['evenings'],
+            **data,
+        }
         return self.call('put', '/api/kvk/signup/', body, client)
 
 
@@ -877,6 +885,48 @@ class WelcomeTests(KvkTestCase):
         # the migration's default and views.save_player with auto-approve leave welcome_due False
         self.assertEqual(send_welcomes(), 0)
         self.send.assert_not_called()
+
+
+class SurveyTests(KvkTestCase):
+    """The survey of the sign-up form (Gether 20. 10. 2026): how much into the KvK, when online – a rough guess."""
+
+    def test_the_form_asks_both(self):
+        for data, error in (
+            ({'budget': ''}, 'budget'),
+            ({'budget': 'to1000'}, 'budget'),
+            ({'online': []}, 'online'),
+            ({'online': ['always']}, 'online'),
+        ):
+            res = self.sign_up(**data)
+            self.assertEqual(res.status_code, 400, data)
+            self.assertIn(error, res.json())
+        # each once, in the order of the form
+        res = self.sign_up(budget='over200', online=['nights', 'first_zone', 'nights']).json()
+        self.assertEqual((res['budget'], res['online']), ('over200', ['first_zone', 'nights']))
+        self.assertEqual(self.client.get('/api/kvk/').json()['signups']['rally']['online'], ['first_zone', 'nights'])
+        # R4 and the superuser read it with the sign-up
+        reviewer = make_player('43')
+        reviewer.kvk_reviewer = True
+        reviewer.save()
+        [row] = self.login(reviewer.user).get('/api/kvk/signups/').json()['signups']
+        self.assertEqual((row['budget'], row['online']), ('over200', ['first_zone', 'nights']))
+
+    def test_a_signup_from_before_reminds_the_player(self):
+        me = lambda: self.client.get('/api/auth/me/').json()['user']['kvk_survey_missing']  # noqa: E731
+        self.assertFalse(me())  # no sign-up, nothing to fill in
+        self.sign_up()
+        self.assertFalse(me())
+        KvkSignup.objects.update(budget='', online=[])
+        self.assertTrue(me())
+        KvkSignup.objects.update(budget='to50')
+        self.assertTrue(me())
+        # filled in with the form again: gone
+        self.sign_up(online=['mornings', 'on_call'])
+        self.assertFalse(me())
+        # not approved any more: nothing the player could change
+        KvkSignup.objects.update(online=[])
+        Player.objects.filter(pk=self.player.pk).update(approved=False)
+        self.assertFalse(me())
 
 
 class SignupBuildTests(KvkTestCase):

@@ -66,6 +66,31 @@
         ></textarea>
       </div>
 
+      <!-- the survey (Gether 20. 10. 2026): how much into the KvK – one; when online – any; only a rough guess -->
+      <fieldset class="survey" [attr.aria-invalid]="(formError() === 'survey' && !budget()) || null">
+        <legend class="field__label">{{ k.survey.budget }}</legend>
+        <div class="choices survey__budgets">
+          @for (b of budgetChoices; track b) {
+            <label class="choice">
+              <input type="radio" name="kvk-budget" [value]="b" [checked]="budget() === b" (change)="setBudget(b)" />
+              <span>{{ k.survey.budgets[b] }} <small>{{ k.survey.czk[b] }}</small></span>
+            </label>
+          }
+        </div>
+      </fieldset>
+      <fieldset class="survey" [attr.aria-invalid]="(formError() === 'survey' && !online().length) || null">
+        <legend class="field__label">{{ k.survey.online }}</legend>
+        <div class="chips">
+          @for (o of onlineChoices; track o) {
+            <label class="chip">
+              <input type="checkbox" [checked]="online().includes(o)" (change)="toggleOnline(o)" />
+              <span><svg [appIcon]="online().includes(o) ? 'check' : 'plus'"></svg>{{ k.survey.onlines[o] }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+      <p class="survey__hint">{{ k.survey.hint }}</p>
+
       <div class="form__actions">
         <button type="submit" class="pill-btn" [attr.aria-disabled]="saving() || null">
           {{ saving() ? k.saving : signup() ? k.save : k.submit }}
@@ -103,6 +128,25 @@
     </app-march-build>
     @if (s.note) {
       <p class="kvk-note">{{ s.note }}</p>
+    }
+    @if (missingSurvey(s)) {
+      <!-- a sign-up from before the survey: the pencil's form asks for it -->
+      <div class="survey-missing">
+        <p><span class="survey-missing__badge" aria-hidden="true">!</span>{{ k.survey.missing }}</p>
+        <button type="button" class="pill-btn" (click)="edit()">{{ k.survey.fill }}</button>
+      </div>
+    } @else {
+      @let answers = surveyOf(s);
+      <dl class="survey-answers">
+        <div>
+          <dt>{{ k.survey.budget }}</dt>
+          <dd>{{ answers.budget }}</dd>
+        </div>
+        <div>
+          <dt>{{ k.survey.online }}</dt>
+          <dd>{{ answers.online }}</dd>
+        </div>
+      </dl>
     }
     <p class="form__state" role="status">{{ saved() ? k.saved : '' }}</p>
   }

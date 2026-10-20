@@ -63,6 +63,13 @@
                     </a>
                   </li>
                 }
+                @if (auth.needsSurvey()) {
+                  <li>
+                    <a class="is-alert" [routerLink]="i18n.path('kvk')">
+                      <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>{{ t.setSurvey }}
+                    </a>
+                  </li>
+                }
                 @for (item of accountItems(); track item.link) {
                   <li>
                     <a [routerLink]="item.link" routerLinkActive="is-active" ariaCurrentWhenActive="page">
@@ -145,6 +152,15 @@
               <a class="drawer__page is-alert" [routerLink]="i18n.path('account')" fragment="power" (click)="close()">
                 <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>
                 <span>{{ t.setPower }}</span>
+                <svg appIcon="chevron-right"></svg>
+              </a>
+            </li>
+          }
+          @if (auth.needsSurvey()) {
+            <li>
+              <a class="drawer__page is-alert" [routerLink]="i18n.path('kvk')" (click)="close()">
+                <span class="alert-badge alert-badge--inline" aria-hidden="true">!</span>
+                <span>{{ t.setSurvey }}</span>
                 <svg appIcon="chevron-right"></svg>
               </a>
             </li>

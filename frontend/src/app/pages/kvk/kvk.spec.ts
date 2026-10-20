@@ -26,6 +26,8 @@ const SIGNUP: KvkSignup = {
   primary: 'Attila',
   secondary: 'Takeda Shingen',
   note: '',
+  budget: 'to100',
+  online: ['evenings'],
   updated_at: '2026-10-11T11:00:00Z',
   primary_skills: '5555',
   secondary_skills: '5555',
@@ -102,6 +104,24 @@ describe('KvkForm', () => {
     note.value = ' večer online ';
     note.dispatchEvent(new Event('input'));
     expect(el.querySelector('form .pill-btn')?.textContent?.trim()).toBe('Prihlásiť sa a naklikať výbavu');
+    // the survey (Gether 20. 10. 2026): how much into the KvK – one of four, with a rough CZK; when online – any
+    submit();
+    await flushAll(fixture);
+    expect(state()).toContain('Vyber, koľko dávaš do KvK, a aspoň jeden čas, kedy si online.');
+    const budgets = el.querySelectorAll<HTMLInputElement>('input[name="kvk-budget"]');
+    expect(Array.from(budgets, (b) => b.closest('label')?.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'do 50 € ≈ 1 250 Kč',
+      'do 100 € ≈ 2 500 Kč',
+      'do 200 € ≈ 5 000 Kč',
+      'nad 200 € ≈ 5 000+ Kč',
+    ]);
+    budgets[1].click();
+    const online = el.querySelectorAll<HTMLInputElement>('.survey .chip input');
+    expect(online.length).toBe(7);
+    online[3].click();
+    online[0].click();
+    await flushAll(fixture);
+    expect(el.querySelector('.survey__hint')?.textContent).toBe('Všetko je len orientačný odhad, nič nezáväzné.');
     submit();
     const req = http.expectOne('/api/kvk/signup/');
     expect(req.request.method).toBe('PUT');
@@ -114,14 +134,21 @@ describe('KvkForm', () => {
       primary_skills: '5555',
       secondary_skills: '5555',
       note: 'večer online',
+      budget: 'to100',
+      // in the order of the form
+      online: ['first_zone', 'evenings'],
     });
-    req.flush({ ...SIGNUP, secondary: '', note: 'večer online' });
+    req.flush({ ...SIGNUP, secondary: '', note: 'večer online', online: ['first_zone', 'evenings'] });
     await flushAll(fixture);
     http.expectOne('/api/armory/').flush(ARMORY);
     await flushAll(fixture);
     // the sign-up is a card like a march, its build editor opens right away
     expect(el.querySelector('.kvk-card .mb__primary')?.textContent?.trim()).toBe('Attila');
     expect(el.querySelector('.kvk-note')?.textContent).toBe('večer online');
+    expect(Array.from(el.querySelectorAll('.survey-answers dd'), (d) => d.textContent?.trim())).toEqual([
+      'do 100 € (≈ 2 500 Kč)',
+      'Pri otvorení prvej zóny (zvyčajne piatok okolo 15:00 UTC), Večery',
+    ]);
     const dialog = el.querySelector('dialog.be')!;
     expect(dialog.hasAttribute('open')).toBe(true);
     dialog.querySelector<HTMLButtonElement>('.be__item')!.click();
@@ -145,7 +172,7 @@ describe('KvkForm', () => {
       health: 6,
       damage: 0,
     });
-    build.flush({ ...SIGNUP, secondary: '', note: 'večer online', ...build.request.body });
+    build.flush({ ...SIGNUP, secondary: '', note: 'večer online', online: ['first_zone', 'evenings'], ...build.request.body });
     await flushAll(fixture);
     expect(el.querySelector('.kvk-card .gear__icon')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
     expect(el.querySelector('.kvk-card .march__build')?.textContent?.trim()).toBe('Upraviť výbavu');
@@ -157,6 +184,31 @@ describe('KvkForm', () => {
     expect(el.querySelector('.tile')).toBeNull();
     expect(el.querySelector('.kind-first')?.textContent?.trim()).toBe('Najprv vyber typ marchu.');
     expect(el.querySelector('.kvk-card')).toBeNull();
+    // …with the survey of the rally sign-up (the same player, the same KvK)
+    expect(el.querySelector<HTMLInputElement>('input[name="kvk-budget"]:checked')?.value).toBe('to100');
+    expect(Array.from(el.querySelectorAll<HTMLInputElement>('.survey .chip input'), (b) => b.checked)).toEqual([
+      true, false, false, true, false, false, false,
+    ]);
+    http.verify();
+  });
+
+  it('a sign-up from before the survey asks for it on its card', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(KvkForm);
+    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: { ...SIGNUP, budget: '', online: [] }, garrison: null } });
+    fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.survey-answers')).toBeNull();
+    expect(el.querySelector('.survey-missing p')?.textContent?.trim()).toBe('!K prihláške chýba dotazník – koľko dávaš do KvK a kedy si online.');
+    el.querySelector<HTMLButtonElement>('.survey-missing button')!.click();
+    await flushAll(fixture);
+    expect(el.querySelector('form .survey')).not.toBeNull();
+    expect(el.querySelector('input[name="kvk-budget"]:checked')).toBeNull();
     http.verify();
   });
 
