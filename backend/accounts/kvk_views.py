@@ -240,6 +240,8 @@ def reviewers(request):
                 'evaluation_settings': p.evaluation_settings,
                 'evaluation_overview': p.evaluation_overview,
                 'approved': p.approved,
+                # hidden in the list until "Zobraziť neaktívnych" (Gether 20. 10. 2026)
+                'inactive': p.inactive,
                 'created_at': iso(p.created_at),
                 'last_login': iso(p.user.last_login) if p.user.last_login else None,
                 'marches': len(p.marches.all()),
@@ -276,9 +278,10 @@ def auto_approve(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def reviewer(request, player_id):
-    """PATCH {reviewer?: bool, approved?: bool, evaluation_settings?: bool, evaluation_overview?: bool} – R4 (sees
-    the sign-ups), approved (adds marches and sign-ups), /vyhodnocovanie (the estimate and the variables) and its
-    published required acclaim only (Gether 14. 10. 2026)."""
+    """PATCH {reviewer?: bool, approved?: bool, evaluation_settings?: bool, evaluation_overview?: bool, inactive?:
+    bool} – R4 (sees the sign-ups), approved (adds marches and sign-ups), /vyhodnocovanie (the estimate and the
+    variables) and its published required acclaim only (Gether 14. 10. 2026), and "Neaktívny" – hidden in the
+    superadmin's list on /hraci, nothing else (Gether 20. 10. 2026)."""
     player = get_object_or_404(Player, pk=player_id)
     body = request.data if isinstance(request.data, dict) else {}
     fields = {
@@ -286,10 +289,11 @@ def reviewer(request, player_id):
         'approved': 'approved',
         'evaluation_settings': 'evaluation_settings',
         'evaluation_overview': 'evaluation_overview',
+        'inactive': 'inactive',
     }
     changes = {name: body[name] for name in fields if name in body}
     if not changes:
-        return Response({'detail': 'reviewer, approved, evaluation_settings or evaluation_overview'}, status=400)
+        return Response({'detail': 'reviewer, approved, evaluation_settings, evaluation_overview or inactive'}, status=400)
     was_approved = player.approved
     for name, value in changes.items():
         if type(value) is not bool:

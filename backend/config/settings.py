@@ -142,6 +142,9 @@ SUPERUSER_GUARD = env.bool('SUPERUSER_GUARD', default=not DEBUG)
 # --- Personal event reminders (accounts app, sent by the worker as Discord DMs); empty = switched off ---
 # bot user of the same Discord application → private messages
 DISCORD_BOT_TOKEN = env('DISCORD_BOT_TOKEN', default='')
+# the application's public key: Discord signs the clicks on the bot's buttons with it ("Schváliť" in the message
+# about a new player, accounts/discord_interactions.py); empty = no buttons, the endpoint answers 404
+DISCORD_PUBLIC_KEY = env('DISCORD_PUBLIC_KEY', default='')
 
 # --- Database backups (worker container, folder is bind-mounted to the host) ---
 BACKUP_DIR = Path(env('BACKUP_DIR', default=str(BASE_DIR / 'backups')))

@@ -650,8 +650,15 @@ class ApprovalTests(KvkTestCase):
         self.assertEqual(self.call('patch', url, {'approved': 'yes'}, admin).status_code, 400)
         self.assertEqual(self.call('patch', url, {'approved': True}, self.client).status_code, 403)
         res = self.call('patch', url, {'approved': True}, admin)
-        self.assertEqual(res.json(), {'id': self.newbie.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': False, 'evaluation_overview': False})
+        self.assertEqual(res.json(), {'id': self.newbie.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': False, 'evaluation_overview': False, 'inactive': False})
         self.assertEqual(self.sign_up(self.new).status_code, 200)
+        self.assertEqual(len(self.new.get('/api/marches/').json()['players']), 1)
+        # "Neaktívny" (Gether 20. 10. 2026): only the superadmin's list knows it – the player goes on as before
+        self.assertFalse(rows[self.newbie.pk]['inactive'])
+        self.assertEqual(self.call('patch', url, {'inactive': 1}, admin).status_code, 400)
+        self.assertTrue(self.call('patch', url, {'inactive': True}, admin).json()['inactive'])
+        rows = {p['id']: p for p in admin.get('/api/kvk/reviewers/').json()['players']}
+        self.assertEqual((rows[self.newbie.pk]['inactive'], rows[self.newbie.pk]['approved']), (True, True))
         self.assertEqual(len(self.new.get('/api/marches/').json()['players']), 1)
         # the superuser needs no approval
         admin_player.approved = False
@@ -703,7 +710,9 @@ class NewcomerTests(TestCase):
         self.assertIn('Meno v hre: **Nelly1035**', embed['description'])
         self.assertIn('<@42> · nelly', embed['description'])
         self.assertIn('Jazyk: CZ', embed['description'])
-        self.assertIn('https://kd1035.eu/ucet#hraci', embed['description'])
+        self.assertIn('https://kd1035.eu/hraci', embed['description'])
+        # no DISCORD_PUBLIC_KEY: no button, the link only
+        self.assertEqual(message['components'], [])
         self.assertEqual(announce_new_players(), 0)
         self.assertEqual(self.send.call_count, 1)
 

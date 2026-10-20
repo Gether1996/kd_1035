@@ -6,18 +6,10 @@
   max-width: 560px;
   padding-bottom: clamp(80px, 12vw, 140px);
 
-  // signed in: room for the players section of the superuser
+  // signed in: the profile and the shortcuts
   &.is-wide {
     max-width: 760px;
   }
-}
-
-.marches-placeholder {
-  min-height: 240px;
-}
-
-.anchor {
-  scroll-margin-top: calc(var(--header-h) + 16px);
 }
 
 // signed in: the profile, and under it the way to the reminders

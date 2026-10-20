@@ -104,6 +104,12 @@ class Player(models.Model):
         help_text='Môže pridávať marche a prihlášky na KvK a vidí marche ostatných hráčov. Nového hráča schvaľuje '
         'superadmin (hráči z čias pred schvaľovaním sú schválení).',
     )
+    # the superadmin's own list only (Gether 20. 10. 2026: "zneviditeľním určitých hráčov v zozname") – nothing else
+    inactive = models.BooleanField(
+        'neaktívny',
+        default=False,
+        help_text='Superadmin ho nevidí v zozname Hráči, kým nezapne „Zobraziť neaktívnych“. Na nič iné nemá vplyv.',
+    )
     announced = models.BooleanField(
         'superadmin upozornený',
         default=False,

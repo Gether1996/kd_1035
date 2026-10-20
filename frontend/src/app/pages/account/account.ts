@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n, Lang } from '../../core/i18n/i18n';
 import { marchHasProblem } from '../../core/kvk-api';
@@ -23,7 +23,6 @@ import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
 import { powerMillions } from '../../shared/power';
 import { LocalLogin, PasswordForm } from './local-login';
-import { PlayersAdmin } from './players-admin';
 
 /**
  * /ucet – the player's own account: sign in with Discord or without it (local-login.ts), in-game name, current power,
@@ -32,7 +31,7 @@ import { PlayersAdmin } from './players-admin';
  */
 @Component({
   selector: 'app-account',
-  imports: [RouterLink, Icon, PageHeader, PlayersAdmin, LocalLogin, PasswordForm],
+  imports: [RouterLink, Icon, PageHeader, LocalLogin, PasswordForm],
   templateUrl: './account.html',
   styleUrl: './account.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,6 +95,13 @@ export class Account {
       if (!isBrowser || this.asked || !input || !this.auth.needsName()) return;
       this.asked = true;
       input.focus();
+    });
+    // the Hráči list was /ucet#hraci until 20. 10. 2026 (older Discord messages link there): on to its own page
+    const fragment = inject(ActivatedRoute).snapshot.fragment;
+    effect(() => {
+      if (fragment === 'hraci' && this.auth.user()?.is_superuser) {
+        void this.router.navigateByUrl(this.i18n.path('players'), { replaceUrl: true });
+      }
     });
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.account, noindex: true }));

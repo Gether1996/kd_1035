@@ -217,17 +217,6 @@
           <span class="shortcut__go">{{ a.marches.link }}<svg appIcon="chevron-right"></svg></span>
         </a>
       }
-
-      @if (user.is_superuser) {
-        <!-- superadmin: who sees the KvK sign-ups (R4); the anchor (/ucet#hraci from /kvk) stays outside the deferred block -->
-        <div id="hraci" class="anchor">
-          @defer (on viewport) {
-            <app-players-admin />
-          } @placeholder {
-            <div class="marches-placeholder" aria-hidden="true"></div>
-          }
-        </div>
-      }
     </div>
   } @else {
     <section class="card" aria-labelledby="account-login">

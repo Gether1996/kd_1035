@@ -25,7 +25,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'last_login',
     ]
     list_display_links = ['name']
-    list_filter = ['approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview']
+    list_filter = ['approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview', 'inactive']
     list_select_related = ['user']
     search_fields = ['username', 'global_name', 'ingame_name', 'discord_id']
     fields = [
@@ -37,6 +37,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'kvk_reviewer',
         'evaluation_settings',
         'evaluation_overview',
+        'inactive',
         'terms_version',
         'terms_accepted_at',
         'discord_id',
@@ -48,7 +49,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'created_at',
         'last_login',
     ]
-    readonly_fields = [f for f in fields if f not in ('ingame_name', 'approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview')]
+    readonly_fields = [f for f in fields if f not in ('ingame_name', 'approved', 'kvk_reviewer', 'evaluation_settings', 'evaluation_overview', 'inactive')]
 
     def has_add_permission(self, request):
         return False

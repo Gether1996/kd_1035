@@ -1,6 +1,6 @@
 // Accessibility audit (axe-core, WCAG 2.1 A + AA) of the running site at several viewport sizes.
 // Run it through tools/a11y/audit.sh (dev server must be up), which passes these variables to the container:
-//   PAGES=/,/kalendar           paths, comma separated (default: every public page, plus /ucet and /pripomienky when signed in)
+//   PAGES=/,/kalendar           paths, comma separated (default: every public page, plus /ucet, /pripomienky and /hraci when signed in)
 //   SIZES=360x780,1280x800      viewports (default 360x780 and 1280x800)
 //   STATES=0                    skip the interactive states (event dialog, commander finder, mobile menu)
 //   SESSION=<sessionid>         signed in as that user (audit.sh --player / --superuser makes a test player)
@@ -30,7 +30,7 @@ const PUBLIC = [
   '/ochrana-udajov',
   '/xyz',
 ];
-const PAGES = process.env.PAGES ? process.env.PAGES.split(',') : [...PUBLIC, ...(SESSION ? ['/ucet', '/pripomienky'] : [])];
+const PAGES = process.env.PAGES ? process.env.PAGES.split(',') : [...PUBLIC, ...(SESSION ? ['/ucet', '/pripomienky', '/hraci'] : [])];
 const SIZES = (process.env.SIZES ?? '360x780,1280x800').split(',').map((s) => s.split('x').map(Number));
 const STATES = process.env.STATES !== '0';
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];

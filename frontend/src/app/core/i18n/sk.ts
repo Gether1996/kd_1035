@@ -39,6 +39,10 @@ export const sk = {
       title: 'Marche hráčov | KD 1035',
       description: 'Marche hráčov kráľovstva KD 1035 – commanderi, výbava a armamenty.',
     },
+    players: {
+      title: 'Hráči | KD 1035',
+      description: 'Zoznam hráčov webu kráľovstva KD 1035 pre superadmina.',
+    },
     evaluation: {
       title: 'Vyhodnocovanie KvK | KD 1035',
       description: 'Odhad acclaimu hráčov kráľovstva KD 1035 na KvK.',
@@ -92,6 +96,8 @@ export const sk = {
     kvk: 'Prihláška na KvK',
     // the superadmin only (/vyhodnocovanie)
     evaluation: 'Vyhodnocovanie',
+    // the superadmin's list of players (/hraci, Gether 20. 10. 2026)
+    players: 'Hráči',
     accountMenu: 'Stránky hráča',
     // the in-game name is missing: the red "!" in the header (screen readers) and the menu item to set it
     nameMissing: 'Chýba ti meno v hre',
@@ -303,6 +309,8 @@ export const sk = {
   },
   players: {
     title: 'Hráči',
+    eyebrow: 'Superadmin',
+    onlySuperuser: 'Zoznam hráčov vidí iba superadmin.',
     lead: 'Nového hráča schváľ – až potom pridá marche a prihlášku na KvK a uvidí marche ostatných. R4 vidí všetky prihlášky aj marche.',
     search: 'Hľadať hráča',
     auto: 'Schvaľovať automaticky',
@@ -332,12 +340,20 @@ export const sk = {
         label: 'Požadovaný acclaim – zverejnený prehľad',
         tip: 'Požadovaný acclaim: vidí zverejnený požadovaný acclaim schválených hráčov, nič nemení. Pri hráčoch vidí aj power a odporúčanú power, nie marche ani premenné.',
       },
+      // hidden in the list until "Zobraziť neaktívnych" (Gether 20. 10. 2026) – nothing else
+      inactive: {
+        short: 'Neaktívny',
+        label: 'Neaktívny – skrytý v zozname',
+        tip: 'Neaktívneho hráča v zozname nevidíš, kým nezapneš „Zobraziť neaktívnych“. Na nič iné to nemá vplyv – schválenie, R4 aj marche ostávajú.',
+      },
     },
     // R4 and the evaluation switches of a row that is not approved: kept, but they count only once approved
     flagsInactive: 'Neplatí, kým nie je schválený',
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čaká',
+    showInactive: 'Zobraziť neaktívnych',
+    inactiveTag: 'neaktívny',
     // a player without Discord (Gether 17. 10. 2026): a one-off code for a new password, delete one waiting
     local: {
       tag: 'bez Discordu',
@@ -927,7 +943,7 @@ export const sk = {
           'Jazyk webu a správ od bota (SK alebo CZ) – na začiatku podľa webu, na ktorom sa prvýkrát prihlásiš, zmeníš ho na stránke Môj účet alebo prepínačom jazyka v hlavičke.',
           'Čas registrácie a posledného prihlásenia.',
           'Kedy si súhlasil s podmienkami používania a s ktorou ich verziou.',
-          'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení.',
+          'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení – a či ťa vo svojom zozname hráčov skryl ako neaktívneho (vidí to iba on).',
           'Cookie sessionid – udrží ťa prihláseného 2 týždne, nastaví sa už na začiatku prihlásenia.',
         ],
       },

@@ -3,8 +3,9 @@ superadmin schváliť na pridávanie marchov, vždy keď sa prihlási úplne nov
 
 A player signing in for the first time is saved with approved=False and announced=False (views.save_player). Every
 tick the worker sends each superadmin in DISCORD_ADMIN_IDS a private message from the bot about such a player, with a
-link to the Hráči list on /ucet where the superadmin approves them. Players from before the approval count as announced
-and approved (migration accounts/0023).
+link to the Hráči list on /hraci where the superadmin approves them, and with DISCORD_PUBLIC_KEY a "Schváliť" button
+that approves them right in Discord (discord_interactions.py). Players from before the approval count as announced and
+approved (migration accounts/0023).
 
 The web asks for the in-game name only after the first sign-in, so the message waits for it: a player is announced as
 soon as they save the in-game name, or NAME_GRACE after the first sign-in without it ("zatiaľ nevyplnené").
@@ -20,15 +21,20 @@ from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 
-from . import discord_bot
+from . import discord_bot, discord_interactions
 from .models import Player
 from .notices import page_url
 from .reminders import GOLD, DiscordPaused
 
 log = logging.getLogger(__name__)
 
-# the superadmin's list of players on /ucet
-PLAYERS_PAGE = '/ucet#hraci'
+# the superadmin's list of players (a page of its own since 20. 10. 2026, before /ucet#hraci)
+PLAYERS_PAGE = '/hraci'
+# the message once the player is approved (the button rewrote it)
+GREEN = 0x3BA55D
+# Discord components: an action row, a button; a green button
+ROW, BUTTON = 1, 2
+SUCCESS = 3
 # a burst of sign-ins (an announcement on Discord) goes out over a few ticks
 PER_TICK = 5
 # how long the message waits for the player's in-game name
@@ -42,23 +48,30 @@ def plain(text: str) -> str:
 
 
 def message(player: Player) -> dict:
+    """The superadmin's message about a new player: with DISCORD_PUBLIC_KEY a "Schváliť" button under it. Approved
+    (the button rewrites the message with this) it says so and has no button."""
     name = f'**{plain(player.ingame_name)}**' if player.ingame_name else 'zatiaľ nevyplnené'
     account = 'bez Discordu (meno v hre a heslo)' if player.local else f'<@{player.discord_id}> · {plain(player.username)}'
     lines = [
         f'Meno v hre: {name}',
         f'Discord: {account}',
         f'Jazyk: {LANGS.get(player.lang, player.lang.upper())}',
-        'Kým ho neschváliš, nemôže pridávať marche ani prihlášky na KvK.',
+        '**Schválený** – môže pridávať marche a prihlášky na KvK.'
+        if player.approved
+        else 'Kým ho neschváliš, nemôže pridávať marche ani prihlášky na KvK.',
     ]
     if settings.SITE_URL:
-        lines.append(f'[Schváliť v zozname Hráči]({settings.SITE_URL}{PLAYERS_PAGE})')
+        lines.append(f'[Zoznam Hráči]({settings.SITE_URL}{PLAYERS_PAGE})')
     embed = {
         'title': f'Nový hráč na webe: {player.ingame_name or player.name}'[:256],
         'description': '\n'.join(lines),
-        'color': GOLD,
+        'color': GREEN if player.approved else GOLD,
         'footer': {'text': 'KD 1035 · ' + ('registrácia bez Discordu' if player.local else 'prvé prihlásenie cez Discord')},
     }
-    return {'embeds': [embed]}
+    buttons = []
+    if discord_interactions.enabled() and not player.approved:
+        buttons.append({'type': BUTTON, 'style': SUCCESS, 'label': 'Schváliť', 'custom_id': discord_interactions.approve_id(player)})
+    return {'embeds': [embed], 'components': [{'type': ROW, 'components': buttons}] if buttons else []}
 
 
 def announce_new_players(now: datetime | None = None) -> int:

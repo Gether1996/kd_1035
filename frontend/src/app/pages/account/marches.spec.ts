@@ -5,7 +5,7 @@ import { provideRouter, Router } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
 import { March } from '../../core/kvk-api';
 import { Marches } from './marches';
-import { PlayersAdmin } from './players-admin';
+import { PlayersAdmin } from '../players/players-admin';
 
 const MARCH: March = { id: 1, position: 1, kind: '', primary: '', secondary: '' };
 const COMMANDERS = [
@@ -499,6 +499,7 @@ describe('PlayersAdmin', () => {
       kvk: [],
       evaluation_settings: false,
       evaluation_overview: false,
+      inactive: false,
     };
     http.expectOne('/api/kvk/reviewers/').flush({
       players: [
@@ -559,10 +560,10 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova', 'Gether']);
     select('#players-kvk', 'all');
     await settle(fixture);
-    // approved, R4 and the two of the evaluation for each player but the superuser, explained once above the list
-    expect(el.querySelectorAll('.reviewer .switch').length).toBe(8);
-    expect(el.querySelectorAll('.switch-legend li').length).toBe(4);
-    expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(4);
+    // approved, R4, the two of the evaluation and "Neaktívny" for each player but the superuser, explained once above
+    expect(el.querySelectorAll('.reviewer .switch').length).toBe(10);
+    expect(el.querySelectorAll('.switch-legend li').length).toBe(5);
+    expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(5);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
     expect(filters().map((b) => b.textContent?.trim())).toEqual(['Všetci · 3', 'Čakajú · 1', 'Schválení · 2']);
     // by the switches; the superadmin is only under "všetci"
@@ -599,7 +600,7 @@ describe('PlayersAdmin', () => {
     select('#players-access', 'none');
     await settle(fixture);
     expect(names()).toEqual(['nova', 'Nelly']);
-    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
+    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
     r4().click();
     const flags = { reviewer: true, approved: true, evaluation_settings: false, evaluation_overview: false };
     http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, ...flags });
@@ -609,7 +610,7 @@ describe('PlayersAdmin', () => {
     select('#players-access', 'all');
     await settle(fixture);
     // the evaluation of Nelly: the evaluation itself and its published overview, two switches (Gether 14. 10. 2026)
-    const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
+    const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[7];
     expect(settings.getAttribute('aria-label')).toBe('Nastavenia vyhodnocovania – odhad acclaimu a premenné: Nelly');
     settings.click();
     const ev = http.expectOne('/api/kvk/reviewers/2/');
@@ -617,7 +618,7 @@ describe('PlayersAdmin', () => {
     ev.flush({ id: 2, ...flags, evaluation_settings: true });
     await settle(fixture);
     expect(settings.checked).toBe(true);
-    const overview = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[7];
+    const overview = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[8];
     expect(overview.getAttribute('aria-label')).toBe('Požadovaný acclaim – zverejnený prehľad: Nelly');
     overview.click();
     const vs = http.expectOne('/api/kvk/reviewers/2/');
@@ -691,6 +692,66 @@ describe('Marches visibility', () => {
   });
 });
 
+describe('PlayersAdmin – Neaktívny', () => {
+  it('hides the inactive players until "Zobraziť neaktívnych", a switched one keeps its row until a filter changes', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(PlayersAdmin);
+    fixture.detectChanges();
+    const row = {
+      avatar_url: '',
+      reviewer: false,
+      approved: true,
+      superuser: false,
+      created_at: '2026-10-01T12:00:00Z',
+      last_login: null,
+      marches: 0,
+      issues: 0,
+      kvk: [],
+      evaluation_settings: false,
+      evaluation_overview: false,
+      inactive: false,
+    };
+    http.expectOne('/api/kvk/reviewers/').flush({
+      players: [
+        { ...row, id: 1, name: 'arno', ingame_name: 'Arno', inactive: true },
+        { ...row, id: 2, name: 'bela', ingame_name: 'Bela' },
+        { ...row, id: 3, name: 'cyril', ingame_name: 'Cyril' },
+      ],
+      auto_approve: false,
+    });
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const names = () => Array.from(el.querySelectorAll('.reviewer__name strong'), (n) => n.childNodes[0].textContent?.trim());
+    const show = () => el.querySelector<HTMLInputElement>('.show-inactive .switch')!;
+    // off by default: the count of the heading and the filters leave the inactive player out
+    expect(names()).toEqual(['Bela', 'Cyril']);
+    expect(el.querySelector('#players-title .count')?.textContent).toBe('2');
+    expect(el.querySelector('.show-inactive')?.textContent?.trim()).toBe('Zobraziť neaktívnych · 1');
+    expect(el.querySelector('.list__filters button')?.textContent?.trim()).toBe('Všetci · 2');
+    // shown: at the end, with its tag
+    show().click();
+    await settle(fixture);
+    expect(names()).toEqual(['Bela', 'Cyril', 'Arno']);
+    expect(el.querySelector('.reviewer.is-inactive .tag')?.textContent).toBe('neaktívny');
+    show().click();
+    await settle(fixture);
+
+    // Bela marked inactive: the row stays (tagged) until a filter changes
+    const bela = el.querySelectorAll('.reviewer')[0];
+    bela.querySelectorAll<HTMLInputElement>('.switch')[4].click();
+    const req = http.expectOne('/api/kvk/reviewers/2/');
+    expect(req.request.body).toEqual({ inactive: true });
+    req.flush({ id: 2, inactive: true });
+    await settle(fixture);
+    expect(names()).toEqual(['Bela', 'Cyril']);
+    expect(el.querySelector('.show-inactive')?.textContent?.trim()).toBe('Zobraziť neaktívnych · 2');
+    el.querySelectorAll<HTMLButtonElement>('.list__filters button')[2].click();
+    await settle(fixture);
+    expect(names()).toEqual(['Cyril']);
+    http.verify();
+  });
+});
+
 describe('PlayersAdmin – approval taken back', () => {
   const row = {
     avatar_url: '',
@@ -704,6 +765,7 @@ describe('PlayersAdmin – approval taken back', () => {
     kvk: [],
     evaluation_settings: false,
     evaluation_overview: false,
+    inactive: false,
   };
   const players = [
     { ...row, id: 1, name: 'gether', ingame_name: 'Gether', superuser: true, approved: false, reviewer: true },
@@ -734,8 +796,9 @@ describe('PlayersAdmin – approval taken back', () => {
       expect(hints[0].closest('.reviewer')?.querySelector('.reviewer__name strong')?.textContent).toContain('Odišiel');
       // the switches stay clickable and point screen readers at the hint (not the approval one)
       const boxes = Array.from(hints[0].closest('.reviewer')!.querySelectorAll<HTMLInputElement>('.switch'));
-      expect(boxes.map((b) => b.disabled)).toEqual([false, false, false, false]);
-      expect(boxes.map((b) => b.getAttribute('aria-describedby'))).toEqual([null, 'inactive-3', 'inactive-3', 'inactive-3']);
+      expect(boxes.map((b) => b.disabled)).toEqual([false, false, false, false, false]);
+      // "Neaktívny" is about the list only – it never points at the hint
+      expect(boxes.map((b) => b.getAttribute('aria-describedby'))).toEqual([null, 'inactive-3', 'inactive-3', 'inactive-3', null]);
       http.verify();
     });
   }

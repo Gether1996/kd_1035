@@ -14,7 +14,8 @@ type MarchFilter = 'all' | 'with' | 'without' | 'fix';
 type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
 
 /**
- * "Hráči" on /ucet – superuser only (Gether 11. and 12. 10. 2026): every player signed in with Discord with two
+ * "Hráči" on /hraci – superuser only (Gether 11. and 12. 10. 2026; a page of its own since 20. 10. 2026, before a section
+ * of /ucet): every player signed in with Discord with two
  * switches – "Schválený" (a new player adds marches and KvK sign-ups only once approved; the superadmin gets a Discord
  * message about each new one) and "R4" (sees every KvK sign-up and every player's marches). Filters for R4 and the
  * approval, sorting and filters for marches and KvK sign-ups like on /marche; "Vyh. tabuľka" and "Vyh. nastavenia" let
@@ -22,7 +23,8 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
  * explains the four switches with an "i" each; the players waiting
  * for the approval come first. "Prístup" filters by the switches; "Na opravu" and the red count in a row are the
  * player's marches with a wrong pair or formation, red on /marche too (Gether 14. 10. 2026). "Schvaľovať automaticky" lets every new player in at once, without
- * the Discord message.
+ * the Discord message. "Neaktívny" (Gether 20. 10. 2026: "zneviditeľním určitých hráčov v zozname") hides a player from
+ * the list until "Zobraziť neaktívnych" is on (off by default) – nothing else changes for them.
  */
 @Component({
   selector: 'app-players-admin',
@@ -31,9 +33,8 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
     @let k = t();
     <section class="panel" aria-labelledby="players-title">
       <h2 class="panel__title panel__title--small" id="players-title">
-        {{ k.title }} <span class="count">{{ players().length }}</span>
+        {{ k.title }} <span class="count">{{ activeCount() }}</span>
       </h2>
-      <p class="panel__lead">{{ k.lead }}</p>
       @if (data.hasValue()) {
         <label class="auto-approve">
           <span class="auto-approve__text">
@@ -76,6 +77,11 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
               </button>
             }
           </div>
+          <!-- the players hidden with "Neaktívny" (off by default) -->
+          <label class="reviewer__switch show-inactive">
+            <span>{{ k.showInactive }} · {{ inactiveCount() }}</span>
+            <input #showAll class="switch" type="checkbox" role="switch" [checked]="showInactive()" (change)="showInactive.set(showAll.checked)" />
+          </label>
         </div>
         <div class="players-bar__selects">
           <div class="field players-bar__select">
@@ -126,7 +132,7 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
       </ul>
       <ul class="reviewers">
         @for (p of shown(); track p.id) {
-          <li class="reviewer" [class.is-pending]="!p.approved && !p.superuser">
+          <li class="reviewer" [class.is-pending]="!p.approved && !p.superuser" [class.is-inactive]="p.inactive">
             <img class="signup__avatar" [src]="p.avatar_url" alt="" width="36" height="36" />
             <span class="reviewer__name">
               <strong>
@@ -136,6 +142,9 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
                 }
                 @if (p.local) {
                   <span class="tag">{{ k.local.tag }}</span>
+                }
+                @if (p.inactive) {
+                  <span class="tag">{{ k.inactiveTag }}</span>
                 }
               </strong>
               <span>
@@ -154,14 +163,14 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
                       type="checkbox"
                       role="switch"
                       [attr.aria-label]="k.flags[f].label + ': ' + (p.ingame_name || p.name)"
-                      [attr.aria-describedby]="f !== 'approved' && inactive(p) ? 'inactive-' + p.id : null"
+                      [attr.aria-describedby]="f !== 'approved' && f !== 'inactive' && cutOff(p) ? 'inactive-' + p.id : null"
                       [checked]="p[f]"
                       (change)="set(p, f, box)"
                     />
                   </label>
                 }
               </span>
-              @if (inactive(p)) {
+              @if (cutOff(p)) {
                 <!-- the switches stay stored: a new approval gives the access back with no other click -->
                 <p class="reviewer__inactive" [id]="'inactive-' + p.id">{{ k.flagsInactive }}</p>
               }
@@ -213,7 +222,7 @@ export class PlayersAdmin {
   protected readonly sorts: Sort[] = ['name', 'newest', 'login', 'marches'];
   protected readonly marchFilters: MarchFilter[] = ['all', 'with', 'without', 'fix'];
   protected readonly kvkFilters: KvkFilter[] = ['all', 'any', 'rally', 'garrison', 'none'];
-  protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluation_settings', 'evaluation_overview'];
+  protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluation_settings', 'evaluation_overview', 'inactive'];
 
   protected readonly data = this.api.reviewers(() => true);
   protected readonly players = linkedSignal<ReviewerRow[]>(() => (this.data.hasValue() ? this.data.value().players : []));
@@ -225,6 +234,8 @@ export class PlayersAdmin {
   protected readonly sort = signal<Sort>('name');
   protected readonly marchFilter = signal<MarchFilter>('all');
   protected readonly kvkFilter = signal<KvkFilter>('all');
+  /** the players marked "Neaktívny" are left out unless this is on */
+  protected readonly showInactive = signal(false);
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);
   /** a player without Discord waiting for the approval: the first click on "Zmazať" asks, the second deletes */
@@ -235,7 +246,7 @@ export class PlayersAdmin {
   /** the superadmin counts as approved; with no switches of their own, they are in no access filter but "všetci" */
   private readonly approved = (p: ReviewerRow) => p.approved || p.superuser;
   /** R4 and the evaluation count only while approved (taking the approval back cuts them off) – said when one is on */
-  protected readonly inactive = (p: ReviewerRow) =>
+  protected readonly cutOff = (p: ReviewerRow) =>
     !this.approved(p) && (p.reviewer || p.evaluation_settings || p.evaluation_overview);
   private readonly accessMatches = (p: ReviewerRow, f: AccessFilter) =>
     f === 'all' ||
@@ -249,13 +260,22 @@ export class PlayersAdmin {
   private readonly kvkMatches = (p: ReviewerRow, f: KvkFilter) =>
     f === 'all' || (f === 'any' ? p.kvk.length > 0 : f === 'none' ? !p.kvk.length : p.kvk.includes(f));
 
-  /** the search, marches and KvK – the counts of the approval filter follow the access one and the other way round */
+  protected readonly activeCount = computed(() => this.players().filter((p) => !p.inactive).length);
+  protected readonly inactiveCount = computed(() => this.players().filter((p) => p.inactive).length);
+
+  /**
+   * The search, marches, KvK and "Neaktívny" – the counts of the approval filter follow the access one and the other way
+   * round. A player switched to "Neaktívny" keeps the row (with its tag) until a filter changes, like the other switches.
+   */
   private readonly found = computed(() => {
     const query = fold(this.search());
     const marches = this.marchFilter();
     const kvk = this.kvkFilter();
+    const all = this.showInactive();
+    const filtered = this.filtered();
     return this.players().filter(
       (p) =>
+        (all || !(filtered.get(p.id) ?? p).inactive) &&
         (!query || fold(`${p.ingame_name} ${p.name}`).includes(query)) &&
         this.marchMatches(p, marches) &&
         this.kvkMatches(p, kvk),
@@ -283,6 +303,9 @@ export class PlayersAdmin {
       .sort((a, b) => {
         const waiting = Number(this.approved(a.p)) - Number(this.approved(b.p));
         if (waiting) return waiting;
+        // shown with "Zobraziť neaktívnych": at the end
+        const inactive = Number(a.p.inactive) - Number(b.p.inactive);
+        if (inactive) return inactive;
         if (!this.approved(a.p)) return b.p.created_at.localeCompare(a.p.created_at);
         return by(a.p, b.p) || a.i - b.i;
       });
@@ -294,7 +317,7 @@ export class PlayersAdmin {
    * access filter keeps its row until the next filter change – the counts on the buttons follow at once.
    */
   private readonly filtered = linkedSignal({
-    source: () => [this.access(), this.approval(), this.data.hasValue() ? this.data.value() : null] as const,
+    source: () => [this.access(), this.approval(), this.showInactive(), this.data.hasValue() ? this.data.value() : null] as const,
     computation: () => new Map(untracked(this.players).map((p) => [p.id, p])),
   });
 

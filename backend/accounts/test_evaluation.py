@@ -114,7 +114,7 @@ class EvaluationApiTests(TestCase):
         res = self.call('patch', url, {'evaluation_settings': True})
         self.assertEqual(
             res.json(),
-            {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': True, 'evaluation_overview': False},
+            {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': True, 'evaluation_overview': False, 'inactive': False},
         )
         rows = {p['id']: p for p in self.admin.get('/api/kvk/reviewers/').json()['players']}
         self.assertTrue(rows[self.player.pk]['evaluation_settings'])

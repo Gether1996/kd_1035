@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **20. 10. 2026 – v1.36.0:** Zoznam Hráči je vlastná stránka `/hraci` v menu účtu superadmina (z Môj účet zmizol). Nový prepínač **Neaktívny** skryje hráča v zozname, kým nezapneš „Zobraziť neaktívnych“. Správa bota o novom hráčovi má tlačidlo **Schváliť** – schváli ho jedným klikom priamo v Discorde (po nastavení `DISCORD_PUBLIC_KEY` a Interactions Endpoint URL).
 - **20. 10. 2026 – v1.35.5:** Na `/kvk` zmizla záložka Nastavenia (názov prihlasovania): prihlášky platia, kým ich nezruší hráč alebo superadmin, takže názov nič neriadil. Formulár má nadpis „Moja prihláška“, správa „Kopírovať pre Discord“ začína rolou.
 - **20. 10. 2026 – v1.35.4:** Prihlášky na KvK (R4, superadmin) sa rozbaľujú ako Marche hráčov: zatvorená karta ukáže meno, rolu a portréty commanderov, klik ju otvorí, pri filtroch je Rozbaliť / Zbaliť všetky.
 - **20. 10. 2026 – v1.35.3:** Detail návodu má už v prvom HTML (bez JavaScriptu) vlastný titulok, popis, canonical, hreflang a og:* – Google ho prestane brať ako kópiu úvodu; neznámy návod vráti zo servera 404 s noindex, návod v inej kategórii 301.

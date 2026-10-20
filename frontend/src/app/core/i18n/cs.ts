@@ -41,6 +41,10 @@ export const cs: Dict = {
       title: 'Marche hráčů | KD 1035',
       description: 'Marche hráčů království KD 1035 – commandeři, výbava a armamenty.',
     },
+    players: {
+      title: 'Hráči | KD 1035',
+      description: 'Seznam hráčů webu království KD 1035 pro superadmina.',
+    },
     evaluation: {
       title: 'Vyhodnocování KvK | KD 1035',
       description: 'Odhad acclaimu hráčů království KD 1035 na KvK.',
@@ -92,6 +96,8 @@ export const cs: Dict = {
     kvk: 'Přihláška na KvK',
     // the superadmin only (/vyhodnocovanie)
     evaluation: 'Vyhodnocování',
+    // the superadmin's list of players (/hraci, Gether 20. 10. 2026)
+    players: 'Hráči',
     accountMenu: 'Stránky hráče',
     nameMissing: 'Chybí ti jméno ve hře',
     setName: 'Doplň jméno ve hře',
@@ -296,6 +302,8 @@ export const cs: Dict = {
   },
   players: {
     title: 'Hráči',
+    eyebrow: 'Superadmin',
+    onlySuperuser: 'Seznam hráčů vidí jen superadmin.',
     lead: 'Nového hráče schval – až pak přidá marche a přihlášku na KvK a uvidí marche ostatních. R4 vidí všechny přihlášky i marche.',
     search: 'Hledat hráče',
     auto: 'Schvalovat automaticky',
@@ -323,12 +331,19 @@ export const cs: Dict = {
         label: 'Požadovaný acclaim – zveřejněný přehled',
         tip: 'Požadovaný acclaim: vidí zveřejněný požadovaný acclaim schválených hráčů, nic nemění. U hráčů vidí i power a doporučenou power, ne marche ani proměnné.',
       },
+      inactive: {
+        short: 'Neaktivní',
+        label: 'Neaktivní – skrytý v seznamu',
+        tip: 'Neaktivního hráče v seznamu nevidíš, dokud nezapneš „Zobrazit neaktivní“. Na nic jiného to nemá vliv – schválení, R4 i marche zůstávají.',
+      },
     },
     // R4 and the evaluation switches of a row that is not approved: kept, but they count only once approved
     flagsInactive: 'Neplatí, dokud není schválený',
     superuser: 'superadmin',
     since: 'od {date}',
     pending: 'Čeká',
+    showInactive: 'Zobrazit neaktivní',
+    inactiveTag: 'neaktivní',
     // a player without Discord (Gether 17. 10. 2026): a one-off code for a new password, delete one waiting
     local: {
       tag: 'bez Discordu',
@@ -907,7 +922,7 @@ export const cs: Dict = {
           'Jazyk webu a zpráv od bota (SK nebo CZ) – na začátku podle webu, na kterém se poprvé přihlásíš, změníš ho na stránce Můj účet nebo přepínačem jazyka v záhlaví.',
           'Čas registrace a posledního přihlášení.',
           'Kdy jsi souhlasil s podmínkami používání a s kterou jejich verzí.',
-          'Zda tě správce schválil – nový hráč přidá marche a přihlášku na KvK až po schválení.',
+          'Zda tě správce schválil – nový hráč přidá marche a přihlášku na KvK až po schválení – a zda tě ve svém seznamu hráčů skryl jako neaktivního (vidí to jen on).',
           'Cookie sessionid – udrží tě přihlášeného 2 týdny, nastaví se už na začátku přihlášení.',
         ],
       },
