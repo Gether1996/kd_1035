@@ -246,11 +246,11 @@ describe('KvkSignups', () => {
     let changed = 0;
     fixture.componentInstance.changed.subscribe(() => changed++);
     fixture.detectChanges();
-    const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42', approved: true };
+    const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42' };
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
       signups: [
         { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', attack: 12, defense: 9, health: 8, damage: 0, gold: 1, blue: 2, white: 3 }] },
-        { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer', attack: 8, defense: 7, health: 6, player: { ...player, id: 2, ingame_name: 'Bob', approved: false } },
+        { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer', attack: 8, defense: 7, health: 6, player: { ...player, id: 2, ingame_name: 'Bob' } },
       ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
@@ -259,8 +259,6 @@ describe('KvkSignups', () => {
     await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.signup').length).toBe(2);
-    // an un-approved player's sign-up (only the superuser gets it) is marked
-    expect(Array.from(el.querySelectorAll('.signup .tag--pending'), (t) => t.textContent?.trim())).toEqual(['neschválený – Hráč nie je schválený – jeho marche a prihlášky vidíš iba ty.']);
     expect(el.querySelector('.signup__contact')?.getAttribute('href')).toBe('https://discord.com/users/42');
     // the profile marches as cards, the bonuses of their troop type in the title
     expect(el.querySelector('.mini-marches .mb__primary')?.textContent?.trim()).toBe('Attila');
@@ -312,7 +310,7 @@ describe('KvkSignups', () => {
     const fixture = TestBed.createComponent(KvkSignups);
     fixture.componentRef.setInput('data', data);
     fixture.detectChanges();
-    const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42', approved: true };
+    const player = { id: 1, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', discord_id: '42' };
     const marches = [{ id: 5, position: 1, kind: 'cavalry' as const, primary: 'Attila', secondary: '' }];
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
       signups: [
@@ -346,7 +344,7 @@ describe('KvkSignups', () => {
     const fixture = TestBed.createComponent(KvkSignups);
     fixture.componentRef.setInput('data', data);
     fixture.detectChanges();
-    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(id), approved: true });
+    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(id) });
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
       signups: [
         { ...SIGNUP, player: player(1, 'Nelly') },
@@ -392,7 +390,7 @@ describe('KvkSignups', () => {
     fixture.componentRef.setInput('data', data);
     fixture.componentRef.setInput('heading', { title_sk: '20.11. najbližšie KvK', title_cs: '' });
     fixture.detectChanges();
-    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(900 + id), approved: true });
+    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(900 + id) });
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
       signups: [
         { ...SIGNUP, player: player(1, 'Nelly'), note: 'večer online' },
@@ -506,7 +504,7 @@ describe('KvkPage', () => {
       const answers: Record<string, unknown> = {
         '/api/auth/me/': { login_enabled: true, user },
         '/api/kvk/': { ...STATE, reviewer },
-        '/api/kvk/signups/': { signups: [{ ...SIGNUP, player: { id: 2, name: 'bob', ingame_name: 'Bob', avatar_url: '', discord_id: '2', approved: true } }] },
+        '/api/kvk/signups/': { signups: [{ ...SIGNUP, player: { id: 2, name: 'bob', ingame_name: 'Bob', avatar_url: '', discord_id: '2' } }] },
         '/api/commanders/marches/': COMMANDERS,
         '/api/armory/': ARMORY,
       };

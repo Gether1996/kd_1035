@@ -88,7 +88,6 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
             'ingame_name': player.ingame_name,
             'avatar_url': player.avatar_url,
             'discord_id': player.discord_id,
-            'approved': player.may_post,
         }
         data['marches'] = [march_data(march) for march in player.marches.all()]
     return data
@@ -186,10 +185,12 @@ def signup(request):
 @permission_classes([IsReviewer])
 def all_signups(request):
     """Every sign-up with the player (name, in-game name, Discord ID for "Kontaktovať") and their marches. The sign-ups
-    of players the superadmin has not approved (or un-approved) only the superuser sees, marked."""
-    signups = KvkSignup.objects.select_related('player__user').prefetch_related('player__marches')
-    if not request.user.is_superuser:
-        signups = signups.filter(player__in=Player.objects.filter(APPROVED))
+    of players the superadmin has not approved (or un-approved) nobody sees, the superuser neither (Gether 20. 10. 2026)."""
+    signups = (
+        KvkSignup.objects.filter(player__in=Player.objects.filter(APPROVED))
+        .select_related('player__user')
+        .prefetch_related('player__marches')
+    )
     rows = sorted(
         (signup_data(s, with_player=True) for s in signups),
         # by player, the rally sign-up before the garrison one (one card per player on /kvk)

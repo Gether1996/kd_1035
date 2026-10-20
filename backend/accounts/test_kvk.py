@@ -896,9 +896,10 @@ class SignupBuildTests(KvkTestCase):
 
 
 class UnapprovedTests(KvkTestCase):
-    """An un-approved player keeps their marches and sign-ups; only the superuser sees them (Gether 12. 10. 2026)."""
+    """An un-approved player keeps their marches and sign-ups in the database; nobody sees them, the superuser neither,
+    until approved again (Gether 20. 10. 2026)."""
 
-    def test_only_the_superuser_sees_an_unapproved_players_things(self):
+    def test_nobody_sees_an_unapproved_players_things(self):
         self.call('post', '/api/me/marches/', {'kind': 'cavalry', 'primary': 'Attila', **STATS})
         self.call('patch', '/api/me/marches/', {'public': True})
         self.sign_up()
@@ -917,12 +918,12 @@ class UnapprovedTests(KvkTestCase):
         self.assertEqual(other.get('/api/marches/').json()['players'], [])
         self.assertEqual(r4.get('/api/marches/').json()['players'], [])
         self.assertEqual(r4.get('/api/kvk/signups/').json()['signups'], [])
-        players = admin.get('/api/marches/').json()['players']
-        self.assertEqual([(p['id'], p['approved']) for p in players], [(self.player.pk, False)])
-        signups = admin.get('/api/kvk/signups/').json()['signups']
-        self.assertEqual([s['player']['approved'] for s in signups], [False])
+        self.assertEqual(admin.get('/api/marches/').json()['players'], [])
+        self.assertEqual(admin.get('/api/kvk/signups/').json()['signups'], [])
         # nothing was deleted; approved again, everyone sees it again
         Player.objects.filter(pk=self.player.pk).update(approved=True)
+        self.assertEqual(len(admin.get('/api/marches/').json()['players']), 1)
+        self.assertEqual(len(admin.get('/api/kvk/signups/').json()['signups']), 1)
         self.assertEqual(len(r4.get('/api/kvk/signups/').json()['signups']), 1)
         self.assertEqual(len(other.get('/api/marches/').json()['players']), 1)
 

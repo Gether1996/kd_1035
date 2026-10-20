@@ -413,9 +413,6 @@ export const sk = {
     // marches with a wrong pair, formation or bonus over its cap (the superadmin, the player at their own)
     problems: 'Na opravu: {n}',
     problemsHint: 'Nesprávny pár, formácia alebo bonusy armamentov pre vyhodnocovanie KvK',
-    // a player the superadmin has not approved (or un-approved) – only the superadmin sees their things
-    hidden: 'neschválený',
-    hiddenHint: 'Hráč nie je schválený – jeho marche a prihlášky vidíš iba ty.',
     count: ['{n} march', '{n} marche', '{n} marchov'],
     expandAll: 'Rozbaliť všetky',
     collapseAll: 'Zbaliť všetky',

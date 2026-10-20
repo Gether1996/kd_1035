@@ -164,7 +164,8 @@ def players_marches(request):
     """/marche: the marches of every player who made them public – for R4 and the superuser of every player – with
     the player's in-game name, Discord name, avatar and when a march changed last. Players without a march are left
     out. A player the superadmin has not approved yet sees none – not even their own (Gether 14. 10. 2026) – and the
-    others – R4 too – see only approved players' marches; the superuser sees everyone's, the hidden ones marked."""
+    others – R4 and the superuser too – see only approved players' marches (Gether 20. 10. 2026: an un-approved
+    player's marches stay in the database, hidden from everyone until approved again)."""
     reviewer = private_images.can_review(request.user)
     me = player_of(request.user)
     if me and not me.may_post:
@@ -173,7 +174,7 @@ def players_marches(request):
     mine = Q(pk=me.pk if me else None)
     if not reviewer:
         players = players.filter((Q(marches_public=True) & APPROVED) | mine if me else mine)
-    elif not request.user.is_superuser:
+    else:
         players = players.filter(APPROVED)
     players = players.select_related('user').prefetch_related('marches')
     # a pair the KvK evaluation does not score, a wrong formation: only the player and the superuser are told
@@ -193,8 +194,6 @@ def players_marches(request):
                 'ingame_name': p.ingame_name,
                 'avatar_url': p.avatar_url,
                 'public': p.marches_public,
-                # false: hidden from everyone but the superuser
-                'approved': p.may_post,
                 'me': bool(me and p.pk == me.pk),
                 'marches': data_for(p),
                 'updated_at': iso(max(m.updated_at for m in p.marches.all())),

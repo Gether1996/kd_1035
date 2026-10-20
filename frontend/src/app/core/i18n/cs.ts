@@ -403,8 +403,6 @@ export const cs: Dict = {
     r4Only: 'jen R4',
     problems: 'K opravě: {n}',
     problemsHint: 'Špatný pár, formace nebo bonusy armamentů pro vyhodnocování KvK',
-    hidden: 'neschválený',
-    hiddenHint: 'Hráč není schválený – jeho marche a přihlášky vidíš jen ty.',
     count: ['{n} march', '{n} marche', '{n} marchů'],
     expandAll: 'Rozbalit všechny',
     collapseAll: 'Sbalit všechny',

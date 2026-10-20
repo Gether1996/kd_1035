@@ -24,8 +24,9 @@ def validate_offsets(value):
 # (frontend pages/terms/terms.ts validFrom) – change both together, every player is then asked again
 TERMS_VERSION = '2026-10-12'
 
-# players whose marches and KvK sign-ups the web shows to others: approved, or the superadmin themself. A player
-# the superadmin un-approves keeps everything in the database, only the superadmin still sees it (Gether 12. 10. 2026).
+# players whose marches and KvK sign-ups the web shows: approved, or the superadmin themself. A player the superadmin
+# un-approves keeps everything in the database, but nobody sees it – the superadmin neither – until approved again
+# (Gether 20. 10. 2026; from 12. 10. the superadmin still saw it, marked).
 APPROVED = models.Q(approved=True) | models.Q(user__is_superuser=True)
 
 

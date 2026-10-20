@@ -127,9 +127,7 @@
             @if (player.me) {
               <span class="tag">{{ p.you }}</span>
             }
-            @if (!player.approved) {
-              <span class="tag tag--private" [title]="p.hiddenHint"><svg appIcon="eye-off"></svg>{{ p.hidden }}<span class="sr-only"> – {{ p.hiddenHint }}</span></span>
-            } @else if (!player.public) {
+            @if (!player.public) {
               <span class="tag tag--private"><svg appIcon="eye-off"></svg>{{ p.r4Only }}</span>
             }
             @if (wrong) {
@@ -149,8 +147,8 @@
             }
           </button>
           @if (open) {
-            <!-- to the player's row of the KvK evaluation – whoever has it in the account menu; it shows approved players only -->
-            @if (auth.canEvaluate() && player.approved) {
+            <!-- to the player's row of the KvK evaluation – whoever has it in the account menu (only approved players are listed) -->
+            @if (auth.canEvaluate()) {
               <p class="player__links">
                 <a class="pill-btn pill-btn--quiet" [routerLink]="i18n.path('evaluation')" [queryParams]="{ hrac: player.id }">
                   <svg appIcon="scale"></svg>{{ p.evaluationLink }}<span class="sr-only">: {{ name(player) }}</span>

@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **20. 10. 2026 – v1.35.2:** Marche a prihlášky na KvK hráča so zrušeným schválením už nevidí nikto, ani superadmin – ostanú v databáze a po novom schválení sa vrátia.
 - **19. 10. 2026 – v1.35.1:** Strop bonusov armamentov – ATK, DEF a HP najviac 14 %, All DMG 8 %. Vyššia hodnota (preklep) je pri marchi aj prihláške na KvK červená ako zlý pár či formácia: rám, veta s hodnotou a maximom, „Na opravu“, počet v Hráčoch a Discord upozornenie; editor ju označí hneď pri písaní. Vyhodnocovanie ju počíta ako maximum (odhad acclaimu, Top 5 equip).
 - **19. 10. 2026 – v1.35.0:** Vyhodnocovanie má záložku **Top 5 equip** pre R4 (a superadmina): hráči zoradení podľa najlepšej výbavy a formácie na pechotu, jazdu a lukostrelcov – z každého slotu najlepší kus zo všetkých marchov a prihlášok na KvK daného typu, najsilnejšia formácia s armamentmi, body a skóre; karta ukáže sety, armamenty a odkiaľ je každý kus.
 - **18. 10. 2026 – v1.34.4:** Pripomienky na Discorde ukážu typ termínu a max. odmenu: správa od bota „20 GH · Training Day“ + „Na max. odmenu: …“, kanál polia Typ a Max. odmena. Typ nastavený po naplánovaní pripomienok sa prejaví v ďalšej správe.

@@ -71,7 +71,7 @@ describe('PlayersMarches', () => {
           marches: [MARCH, { ...MARCH, id: 3, position: 2, kind: 'archer' }],
           updated_at: '2026-10-10T12:00:00Z',
         },
-        { id: 2, name: 'bob', ingame_name: '', avatar_url: '', public: true, approved: true, me: false, marches: [MARCH], updated_at: '2026-10-12T12:00:00Z' },
+        { id: 2, name: 'bob', ingame_name: '', avatar_url: '', public: true, me: false, marches: [MARCH], updated_at: '2026-10-12T12:00:00Z' },
       ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
@@ -144,7 +144,7 @@ describe('PlayersMarches', () => {
     fixture.detectChanges();
     const march = (id: number, kind: string, primary: string, secondary: string) => ({ ...MARCH, id, position: id, kind, primary, secondary });
     const player = (id: number, name: string, updated_at: string, marches: object[]) =>
-      ({ id, name, ingame_name: '', avatar_url: '', public: true, approved: true, me: false, marches, updated_at });
+      ({ id, name, ingame_name: '', avatar_url: '', public: true, me: false, marches, updated_at });
     http.expectOne('/api/marches/').flush({
       reviewer: false,
       players: [
@@ -240,7 +240,7 @@ describe('PlayersMarches', () => {
       { ...MARCH, id: 4, position: 4, primary: 'Takeda Shingen', secondary: 'Attila', pair_problem: 'unknown', pair_hint: { swap: true }, formation_problem: null },
       { ...MARCH, id: 5, position: 5, pair_problem: 'unknown', pair_hint: { swap: false }, formation_problem: null },
     ];
-    const player = { name: 'bob', ingame_name: 'Bob', avatar_url: '', public: true, approved: true, me: false, updated_at: '2026-10-12T12:00:00Z' };
+    const player = { name: 'bob', ingame_name: 'Bob', avatar_url: '', public: true, me: false, updated_at: '2026-10-12T12:00:00Z' };
     http.expectOne('/api/marches/').flush({
       reviewer: true,
       players: [
@@ -297,7 +297,6 @@ describe('PlayersMarches', () => {
       ingame_name: '',
       avatar_url: '',
       public: true,
-      approved: true,
       me: false,
       marches: [MARCH],
       updated_at: '2026-10-12T12:00:00Z',
@@ -358,8 +357,8 @@ describe('PlayersMarches', () => {
       expect(router.url).toBe('/?cmd=Attila');
     });
 
-    it('links an approved player to /vyhodnocovanie only for the ones with it in the account menu', async () => {
-      const players = [player(1, 'nelly'), player(2, 'nova', { approved: false })];
+    it('links a player to /vyhodnocovanie only for the ones with it in the account menu', async () => {
+      const players = [player(1, 'nelly'), player(2, 'nova')];
       const links = (el: HTMLElement) =>
         Array.from(el.querySelectorAll<HTMLAnchorElement>('.player__links a'), (a) => a.getAttribute('href'));
       const openAll = async (fixture: { detectChanges(): void }, el: HTMLElement) => {
@@ -367,11 +366,11 @@ describe('PlayersMarches', () => {
         await tick(fixture);
       };
 
-      // with "Vyh. nastavenia": the approved player only
+      // with "Vyh. nastavenia": every player (the API lists approved players only)
       let page = await load({ name: 'Slim', approved: true, evaluation_settings: true }, undefined, players);
       await openAll(page.fixture, page.el);
       expect(page.el.querySelectorAll('.player.is-open').length).toBe(2);
-      expect(links(page.el)).toEqual(['/vyhodnocovanie?hrac=1']);
+      expect(links(page.el)).toEqual(['/vyhodnocovanie?hrac=1', '/vyhodnocovanie?hrac=2']);
       TestBed.resetTestingModule();
 
       // a regular approved player and an R4 without the evaluation: no link

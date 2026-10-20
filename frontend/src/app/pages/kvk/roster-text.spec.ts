@@ -8,7 +8,6 @@ const player = (id: number, ingame_name: string) => ({
   ingame_name,
   avatar_url: '',
   discord_id: String(1000 + id),
-  approved: true,
 });
 const signup = (over: Partial<KvkSignup>): KvkSignup => ({
   id: 1,
