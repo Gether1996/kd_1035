@@ -109,9 +109,12 @@ export class KvkSignups {
   });
   /** each sign-up as the card of a march */
   protected readonly asMarch = asMarch;
-  /** the survey of a sign-up – how much into the KvK, when online (Gether 20. 10. 2026) */
-  protected readonly missingSurvey = surveyMissing;
-  protected readonly surveyOf = (signup: KvkSignup) => surveyText(signup, this.t().survey);
+  /** the survey of a player – how much into the KvK, when online (Gether 20. 10. 2026); one for both sign-ups, taken
+   * from the first that has it; null = none (a sign-up from before it) */
+  protected surveyOfPlayer(signups: KvkSignup[]): { budget: string; online: string } | null {
+    const filled = signups.find((s) => !surveyMissing(s));
+    return filled ? surveyText(filled, this.t().survey) : null;
+  }
   /** the numbers on the filters count players (one card each), like the list below */
   protected readonly counts = computed(() => ({
     all: players(this.ofCommander()),

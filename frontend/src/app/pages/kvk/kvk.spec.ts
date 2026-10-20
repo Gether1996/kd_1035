@@ -424,6 +424,11 @@ describe('KvkSignups', () => {
     expect(el.querySelector(`#${toggle.getAttribute('aria-controls')}`)).not.toBeNull();
     expect(el.querySelectorAll('.signup__marches').length).toBe(1);
     expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Rally', 'Garrison']);
+    // one survey for both sign-ups: shown once for the player
+    expect(Array.from(el.querySelectorAll('.signup__survey .signup__line'), (l) => l.textContent?.trim())).toEqual([
+      'Koľko dávam do KvK: do 100 € (≈ 2 500 Kč)',
+      'Kedy som online: Večery',
+    ]);
     // the newest change of the two
     expect(el.querySelector('.signup__meta')?.textContent).toContain('12. 10.');
     // a filter keeps only the matching sign-up in the card
