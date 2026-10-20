@@ -3,6 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
+import { cs } from '../../core/i18n/cs';
+import { sk } from '../../core/i18n/sk';
 import { March } from '../../core/kvk-api';
 import { Marches } from './marches';
 import { PlayersAdmin } from '../players/players-admin';
@@ -693,6 +695,11 @@ describe('Marches visibility', () => {
 });
 
 describe('PlayersAdmin – Neaktívny', () => {
+  it('the tip of the switch says it hides the player only in this list – not in the KvK sign-ups nor Top 5 equip', () => {
+    expect(sk.players.flags.inactive.tip).toContain('v prihláškach na KvK aj v Top 5 equip');
+    expect(cs.players.flags.inactive.tip).toContain('v přihláškách na KvK i v Top 5 equip');
+  });
+
   it('hides the inactive players until "Zobraziť neaktívnych", a switched one keeps its row until a filter changes', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(PlayersAdmin);

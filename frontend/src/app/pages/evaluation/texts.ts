@@ -35,6 +35,10 @@ const sk = {
     showAll: 'Zobraziť všetkých ({n})',
     showTop: 'Iba top 5',
     empty: 'Žiadny schválený hráč nemá march tohto typu.',
+    // a view switch: only the players signed up for the KvK with these troops, and the link to their sign-ups on /kvk
+    signedUp: 'Len prihlásení na KvK',
+    emptySignedUp: 'Na KvK sa s týmto typom jednotiek zatiaľ neprihlásil žiadny schválený hráč.',
+    kvkLink: 'Prihláška na KvK',
     legend: 'Body výbavy a armamentov aj ich váhy sú tie isté ako v odhade acclaimu, bez páru a skillov commanderov. Rozkliknutím hráča uvidíš sety, armamenty a odkiaľ je každý kus.',
   },
 
@@ -395,6 +399,9 @@ const cs: EvalTexts = {
     showAll: 'Zobrazit všechny ({n})',
     showTop: 'Jen top 5',
     empty: 'Žádný schválený hráč nemá march tohoto typu.',
+    signedUp: 'Jen přihlášení na KvK',
+    emptySignedUp: 'Na KvK se s tímto typem jednotek zatím nepřihlásil žádný schválený hráč.',
+    kvkLink: 'Přihláška na KvK',
     legend: 'Body výbavy a armamentů i jejich váhy jsou stejné jako v odhadu acclaimu, bez páru a skillů commanderů. Rozkliknutím hráče uvidíš sety, armamenty a odkud je každý kus.',
   },
 

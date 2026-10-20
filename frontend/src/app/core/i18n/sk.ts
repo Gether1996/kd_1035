@@ -281,6 +281,11 @@ export const sk = {
     updated: 'upravené',
     contact: 'Kontaktovať',
     marches: 'Marche z profilu',
+    // the online filter of the list (Gether 20. 10. 2026) and the links of an opened card
+    onlineFilter: 'Kedy je online',
+    onlineAny: 'Online kedykoľvek',
+    playerMarches: 'Marche hráča',
+    playerEquipment: 'Top 5 equip',
     close: 'Zavrieť',
     deleteConfirm: 'Naozaj zmazať?',
     // the survey of the sign-up form (Gether 20. 10. 2026) – a rough guess, the CZK only roughly (about 25 Kč for 1 €)
@@ -368,7 +373,7 @@ export const sk = {
       inactive: {
         short: 'Neaktívny',
         label: 'Neaktívny – skrytý v zozname',
-        tip: 'Neaktívneho hráča v zozname nevidíš, kým nezapneš „Zobraziť neaktívnych“. Na nič iné to nemá vplyv – schválenie, R4 aj marche ostávajú.',
+        tip: 'Neaktívneho hráča v zozname nevidíš, kým nezapneš „Zobraziť neaktívnych“. Na nič iné to nemá vplyv – schválenie, R4 aj marche ostávajú a hráč je ďalej v prihláškach na KvK aj v Top 5 equip.',
       },
     },
     // R4 and the evaluation switches of a row that is not approved: kept, but they count only once approved

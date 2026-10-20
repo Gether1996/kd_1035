@@ -33,6 +33,16 @@
     [value]="commander()"
     (valueChange)="commander.set($event); armed.set(null)"
   />
+  <!-- when the players are online, from the survey (Gether 20. 10. 2026) – players, like the other counts -->
+  <div class="field list__online">
+    <label class="sr-only" for="kvk-online">{{ k.onlineFilter }}</label>
+    <select #onlinePick class="select" id="kvk-online" (change)="setOnline(onlinePick.value)">
+      <option value="all" [selected]="onlineFilter() === 'all'">{{ k.onlineAny }} · {{ onlineCounts()['all'] }}</option>
+      @for (key of onlineKeys; track key) {
+        <option [value]="key" [selected]="onlineFilter() === key">{{ k.survey.onlines[key] }} · {{ onlineCounts()[key] }}</option>
+      }
+    </select>
+  </div>
   @if (shown().length) {
     <div class="list__tools">
       <button type="button" class="pill-btn pill-btn--quiet list__expand" (click)="toggleAll()">
@@ -73,7 +83,7 @@
       @for (g of players(); track g.first.id) {
         @let s = g.first;
         @let open = isOpen(g.key);
-        <li class="signup" [class.is-open]="open">
+        <li class="signup" [id]="'kvk-player-' + g.key" [class.is-open]="open" [class.is-focus]="g.key === focus()">
           <div class="signup__head">
             <!-- the whole head opens and closes the player's sign-ups, like a player on /marche (Gether 20. 10. 2026) -->
             <button
@@ -153,6 +163,19 @@
                   <p class="signup__line"><span>{{ k.survey.budget }}:</span> {{ answers.budget }}</p>
                   <p class="signup__line"><span>{{ k.survey.online }}:</span> {{ answers.online }}</p>
                 </div>
+              }
+              @if (s.player; as p) {
+                <!-- the same player elsewhere: their marches, and how their gear ranks (Top 5 equip) -->
+                <p class="signup__links">
+                  <a class="pill-btn pill-btn--quiet" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ hrac: p.id }">
+                    <svg appIcon="shield"></svg>{{ k.playerMarches }}<span class="sr-only">: {{ name(s) }}</span>
+                  </a>
+                  @if (canEvaluate()) {
+                    <a class="pill-btn pill-btn--quiet" [routerLink]="i18n.path('evaluation')" [queryParams]="{ tab: 'vybava', hrac: p.id }">
+                      <svg appIcon="scale"></svg>{{ k.playerEquipment }}<span class="sr-only">: {{ name(s) }}</span>
+                    </a>
+                  }
+                </p>
               }
               @if (s.marches?.length) {
                 <details class="signup__marches">

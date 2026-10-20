@@ -275,6 +275,10 @@ export const cs: Dict = {
     updated: 'upraveno',
     contact: 'Kontaktovat',
     marches: 'Marche z profilu',
+    onlineFilter: 'Kdy je online',
+    onlineAny: 'Online kdykoli',
+    playerMarches: 'Marche hráče',
+    playerEquipment: 'Top 5 equip',
     close: 'Zavřít',
     deleteConfirm: 'Opravdu smazat?',
     survey: {
@@ -356,7 +360,7 @@ export const cs: Dict = {
       inactive: {
         short: 'Neaktivní',
         label: 'Neaktivní – skrytý v seznamu',
-        tip: 'Neaktivního hráče v seznamu nevidíš, dokud nezapneš „Zobrazit neaktivní“. Na nic jiného to nemá vliv – schválení, R4 i marche zůstávají.',
+        tip: 'Neaktivního hráče v seznamu nevidíš, dokud nezapneš „Zobrazit neaktivní“. Na nic jiného to nemá vliv – schválení, R4 i marche zůstávají a hráč je dál v přihláškách na KvK i v Top 5 equip.',
       },
     },
     // R4 and the evaluation switches of a row that is not approved: kept, but they count only once approved

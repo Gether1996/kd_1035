@@ -135,7 +135,9 @@ class Command(BaseCommand):
             # the rally one clicked together like the first march, the garrison one without its build yet
             build = SAMPLE_BUILDS[0] if role == 'rally' else {}
             KvkSignup.objects.create(
-                player=player, role=role, kind=kind, primary=primary, secondary=secondary, **dict(zip(MARCH_STATS, (11, 9, 8, 3, 5, 2, 1))), **build
+                player=player, role=role, kind=kind, primary=primary, secondary=secondary, **dict(zip(MARCH_STATS, (11, 9, 8, 3, 5, 2, 1))), **build,
+                # the survey, one for both sign-ups (the online filter of the list)
+                budget='to100', online=['evenings', 'weekends'],
             )
 
     @staticmethod

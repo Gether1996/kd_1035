@@ -29,7 +29,8 @@ const TOP = 5;
  * cavalry and archers – the best piece of each slot of all marches and KvK sign-ups of the type put together (a player
  * may wear the best pieces on two commanders of the same type) and the strongest formation, in points: who fits a
  * rally or a garrison best. The top five, all on request; a card opens to the gear put together with its set bonuses,
- * the armaments and where each piece is worn.
+ * the armaments and where each piece is worn. "Len prihlásení na KvK" keeps the players signed up with these troops (a
+ * rally or garrison candidate who said yes); a card links to the player's sign-ups on /kvk.
  */
 @Component({
   selector: 'app-eval-equipment',
@@ -43,6 +44,10 @@ const TOP = 5;
         <button type="button" [attr.aria-pressed]="kind() === k" (click)="pick(k)">{{ texts().kinds[k] }}</button>
       }
     </div>
+    <label class="ev-switch eq-signed">
+      <input #signed class="switch" type="checkbox" role="switch" [checked]="signedUp()" (change)="setSignedUp(signed.checked)" />
+      <span>{{ x.signedUp }}</span>
+    </label>
     <p class="eq-hint">{{ x.hint }}</p>
     @if (ix) {
       <ol class="eq-list">
@@ -179,15 +184,27 @@ const TOP = 5;
                         .replace('{t}', dec(kit.total))
                     }}
                   </p>
-                  <a class="pill-btn pill-btn--quiet eq-link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ hrac: kit.player.id }">
-                    {{ d.marchesLink }}
-                  </a>
+                  <p class="eq-links">
+                    <a class="pill-btn pill-btn--quiet eq-link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ hrac: kit.player.id }">
+                      {{ d.marchesLink }}<span class="sr-only">: {{ kit.player.name }}</span>
+                    </a>
+                    @if (kit.player.signups?.length) {
+                      <!-- the reviewers' list of /kvk – only R4 and the superadmin see this tab, as that list -->
+                      <a
+                        class="pill-btn pill-btn--quiet eq-link"
+                        [routerLink]="i18n.path('kvk')"
+                        [queryParams]="{ tab: 'prihlasky', hrac: kit.player.id }"
+                      >
+                        {{ x.kvkLink }}<span class="sr-only">: {{ kit.player.name }}</span>
+                      </a>
+                    }
+                  </p>
                 </section>
               </div>
             </details>
           </li>
         } @empty {
-          <li class="eq-empty">{{ x.empty }}</li>
+          <li class="eq-empty">{{ signedUp() ? x.emptySignedUp : x.empty }}</li>
         }
       </ol>
       @if (ranking().length > top) {
@@ -218,11 +235,14 @@ export class EvalEquipmentTab {
   protected readonly top = TOP;
   protected readonly kind = signal<EquipmentKind>('infantry');
   protected readonly all = signal(false);
+  /** only the players signed up for the KvK with these troops (a view switch, not saved) */
+  protected readonly signedUp = signal(false);
 
   protected readonly settings = computed(() => normalizeSettings(this.data().settings));
   protected readonly ranking = computed(() => {
     const index = this.armory();
-    return index ? equipmentRanking(this.settings(), index, this.kind(), this.data().players) : [];
+    const ranking = index ? equipmentRanking(this.settings(), index, this.kind(), this.data().players) : [];
+    return this.signedUp() ? ranking.filter((kit) => kit.signups.length > 0) : ranking;
   });
   /** the top five – or everyone, also when ?hrac= points below them – with what their cards show */
   protected readonly shown = computed(() => {
@@ -234,6 +254,11 @@ export class EvalEquipmentTab {
 
   protected pick(kind: EquipmentKind): void {
     this.kind.set(kind);
+    this.all.set(false);
+  }
+
+  protected setSignedUp(on: boolean): void {
+    this.signedUp.set(on);
     this.all.set(false);
   }
 

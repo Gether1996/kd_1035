@@ -15,16 +15,17 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
 
 /**
  * "Hráči" on /hraci – superuser only (Gether 11. and 12. 10. 2026; a page of its own since 20. 10. 2026, before a section
- * of /ucet): every player signed in with Discord with two
- * switches – "Schválený" (a new player adds marches and KvK sign-ups only once approved; the superadmin gets a Discord
- * message about each new one) and "R4" (sees every KvK sign-up and every player's marches). Filters for R4 and the
- * approval, sorting and filters for marches and KvK sign-ups like on /marche; "Vyh. tabuľka" and "Vyh. nastavenia" let
- * a player into /vyhodnocovanie – its table, its variables (Gether 13. and 14. 10. 2026), a legend above the list
- * explains the four switches with an "i" each; the players waiting
- * for the approval come first. "Prístup" filters by the switches; "Na opravu" and the red count in a row are the
- * player's marches with a wrong pair or formation, red on /marche too (Gether 14. 10. 2026). "Schvaľovať automaticky" lets every new player in at once, without
- * the Discord message. "Neaktívny" (Gether 20. 10. 2026: "zneviditeľním určitých hráčov v zozname") hides a player from
- * the list until "Zobraziť neaktívnych" is on (off by default) – nothing else changes for them.
+ * of /ucet): every active player – with Discord or with an in-game name and a password (17. 10. 2026) – with five
+ * switches: "Schválený" (a new player adds marches and KvK sign-ups only once approved; the superadmin gets a Discord
+ * message about each new one), "R4" (sees every KvK sign-up and every player's marches), "Vyh. nastavenia" and
+ * "Pož. acclaim" (/vyhodnocovanie – its estimate and variables, or only the published overview; Gether 14. 10. 2026)
+ * and "Neaktívny"; a legend above the list explains them with an "i" each. Sorting and filters for marches and KvK
+ * sign-ups like on /marche; the players waiting for the approval come first. "Prístup" filters by the switches;
+ * "Na opravu" and the red count in a row are the player's marches with a wrong pair or formation, red on /marche too
+ * (Gether 14. 10. 2026). "Schvaľovať automaticky" lets every new player in at once, without the Discord message.
+ * "Neaktívny" (Gether 20. 10. 2026: "zneviditeľním určitých hráčov v zozname") hides a player from this list until
+ * "Zobraziť neaktívnych" is on (off by default) – nothing else changes for them: they stay in the KvK sign-ups, on
+ * /marche and in "Top 5 equip".
  */
 @Component({
   selector: 'app-players-admin',

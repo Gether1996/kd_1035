@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
 import { KvkApi, KvkSignup, KvkState } from '../../core/kvk-api';
 import { Scroll } from '../../core/scroll';
@@ -483,6 +483,144 @@ describe('KvkSignups', () => {
     http.verify();
   });
 
+  it('filters by when the players are online, counting players, together with the role and troops; ?online= in the address', async () => {
+    const http = setup();
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
+    const fixture = TestBed.createComponent(KvkSignups);
+    fixture.componentRef.setInput('data', data);
+    fixture.detectChanges();
+    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(id) });
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
+      signups: [
+        // one survey for both sign-ups of Nelly: one player in the counts
+        { ...SIGNUP, player: player(1, 'Nelly'), online: ['evenings', 'nights'] },
+        { ...SIGNUP, id: 10, role: 'garrison', kind: 'infantry', player: player(1, 'Nelly'), online: ['evenings', 'nights'] },
+        { ...SIGNUP, id: 11, role: 'garrison', kind: 'archer', player: player(2, 'Bob'), online: ['mornings', 'evenings'] },
+        // a sign-up from before the survey: under no time
+        { ...SIGNUP, id: 12, player: player(3, 'Cara'), budget: '', online: [] },
+      ],
+    });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const text = (b: Element) => b.textContent?.replace(/\s+/g, ' ').trim();
+    const names = () => Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent);
+    const roles = () => [...el.querySelectorAll('.list__filter:not(.list__filter--troops) button')].map(text);
+    const select = el.querySelector<HTMLSelectElement>('#kvk-online')!;
+    const options = () => [...select.options].map(text);
+    expect(el.querySelector('label[for="kvk-online"]')?.textContent).toBe('Kedy je online');
+    expect(options()).toEqual([
+      'Online kedykoľvek · 3',
+      'Pri otvorení prvej zóny (zvyčajne piatok okolo 15:00 UTC) · 0',
+      'Rána · 1',
+      'Poobedia · 0',
+      'Večery · 2',
+      'Noci · 1',
+      'Cez víkend aj cez deň · 0',
+      'Na zavolanie (ping na Discorde) · 0',
+    ]);
+    select.value = 'evenings';
+    select.dispatchEvent(new Event('change'));
+    await flushAll(fixture);
+    expect(names()).toEqual(['Nelly', 'Bob']);
+    expect(roles()).toEqual(['Všetci · 2', 'Rally · 1', 'Garrison · 2']);
+    // in the address, the rest of the query stays
+    expect(TestBed.inject(Router).url).toBe('/?online=evenings');
+    // the role narrows the counts of the times: Rally = Nelly and Cara
+    el.querySelectorAll<HTMLButtonElement>('.list__filter:not(.list__filter--troops) button')[1].click();
+    await flushAll(fixture);
+    expect(names()).toEqual(['Nelly']);
+    expect(options().slice(0, 3)).toEqual(['Online kedykoľvek · 2', expect.stringContaining('· 0'), 'Rána · 0']);
+    // the roster for Discord stays without the times (Gether decides)
+    expect(el.querySelector('.list__copy')).not.toBeNull();
+    select.value = 'all';
+    select.dispatchEvent(new Event('change'));
+    await flushAll(fixture);
+    expect(names()).toEqual(['Nelly', 'Cara']);
+    expect(TestBed.inject(Router).url).toBe('/');
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    http.verify();
+  });
+
+  it('?online= of the page filters at once; an unknown key shows everyone', async () => {
+    const http = setup();
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
+    const fixture = TestBed.createComponent(KvkSignups);
+    fixture.componentRef.setInput('data', data);
+    fixture.componentRef.setInput('online', 'mornings');
+    fixture.detectChanges();
+    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(id) });
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
+      signups: [
+        { ...SIGNUP, player: player(1, 'Nelly') },
+        { ...SIGNUP, id: 11, player: player(2, 'Bob'), online: ['mornings'] },
+      ],
+    });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const names = () => Array.from(el.querySelectorAll('.signup__name'), (n) => n.textContent);
+    expect(names()).toEqual(['Bob']);
+    expect(el.querySelector<HTMLSelectElement>('#kvk-online')!.value).toBe('mornings');
+    fixture.componentRef.setInput('online', 'sometimes');
+    await flushAll(fixture);
+    expect(names()).toEqual(['Nelly', 'Bob']);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    http.verify();
+  });
+
+  it("?hrac= opens and highlights that player's card; an open card links to the marches and, for evaluators, Top 5 equip", async () => {
+    const http = setup();
+    const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
+    const fixture = TestBed.createComponent(KvkSignups);
+    fixture.componentRef.setInput('data', data);
+    fixture.componentRef.setInput('focus', 2);
+    // no scrolling in the test (a back/forward visit)
+    fixture.componentRef.setInput('scrollToFocus', false);
+    fixture.detectChanges();
+    const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(id) });
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
+      signups: [
+        { ...SIGNUP, player: player(1, 'Nelly') },
+        { ...SIGNUP, id: 11, player: player(2, 'Bob') },
+      ],
+    });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const card = el.querySelector('#kvk-player-2')!;
+    expect(card.classList).toContain('is-focus');
+    expect(card.classList).toContain('is-open');
+    expect(el.querySelector('#kvk-player-1')?.classList).not.toContain('is-open');
+    const links = () => Array.from(card.querySelectorAll<HTMLAnchorElement>('.signup__links a'), (a) => [a.getAttribute('href'), a.textContent?.trim()]);
+    expect(links()).toEqual([['/marche?hrac=2', 'Marche hráča: Bob']]);
+    fixture.componentRef.setInput('canEvaluate', true);
+    await flushAll(fixture);
+    expect(links()).toEqual([
+      ['/marche?hrac=2', 'Marche hráča: Bob'],
+      ['/vyhodnocovanie?tab=vybava&hrac=2', 'Top 5 equip: Bob'],
+    ]);
+    // closed by hand, the card stays closed when the list is asked again
+    card.querySelector<HTMLButtonElement>('.signup__toggle')!.click();
+    await flushAll(fixture);
+    data.reload();
+    await flushAll(fixture);
+    http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
+      signups: [
+        { ...SIGNUP, player: player(1, 'Nelly') },
+        { ...SIGNUP, id: 11, player: player(2, 'Bob'), note: 'new' },
+      ],
+    });
+    await flushAll(fixture);
+    expect(el.querySelector('#kvk-player-2')?.classList).not.toContain('is-open');
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    http.verify();
+  });
+
   it('copies exactly the filtered sign-ups as a Discord roster, and shows the text to copy by hand when the clipboard is denied', async () => {
     const http = setup();
     const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
@@ -584,6 +722,57 @@ describe('KvkPage', () => {
     await settle();
     expect(requested).toEqual(['/api/kvk/signups/']);
     expect(fixture.debugElement.query(By.directive(KvkForm)).componentInstance).toBe(form.componentInstance);
+  });
+
+  it('?tab=prihlasky opens the reviewers\' list; a tab click writes the address; a player keeps the own sign-up', async () => {
+    const open = async (reviewer: boolean) => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([]),
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          { provide: Scroll, useValue: { scrolled: signal(false), reducedMotion: true } },
+        ],
+      });
+      const http = TestBed.inject(HttpTestingController);
+      const fixture = TestBed.createComponent(KvkPage);
+      fixture.componentRef.setInput('tab', 'prihlasky');
+      const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: true, terms_accepted: true, is_staff: false, is_superuser: false, reviewer };
+      const answers: Record<string, unknown> = {
+        '/api/auth/me/': { login_enabled: true, user },
+        '/api/kvk/': { ...STATE, reviewer },
+        '/api/kvk/signups/': { signups: [] },
+        '/api/commanders/marches/': COMMANDERS,
+        '/api/armory/': ARMORY,
+      };
+      const settle = async () => {
+        for (let round = 0; round < 5; round++) {
+          fixture.detectChanges();
+          TestBed.tick();
+          for (const req of http.match(() => true)) req.flush(answers[req.request.url] ?? []);
+          await new Promise((resolve) => setTimeout(resolve));
+        }
+      };
+      await settle();
+      return { el: fixture.nativeElement as HTMLElement, settle };
+    };
+
+    const r4 = await open(true);
+    expect(r4.el.querySelector('app-kvk-signups')).not.toBeNull();
+    expect(r4.el.querySelectorAll('.kvk-tabs button')[1].getAttribute('aria-pressed')).toBe('true');
+    r4.el.querySelectorAll<HTMLButtonElement>('.kvk-tabs button')[0].click();
+    await r4.settle();
+    expect(r4.el.querySelector('app-kvk-form')).not.toBeNull();
+    expect(TestBed.inject(Router).url).toBe('/');
+    r4.el.querySelectorAll<HTMLButtonElement>('.kvk-tabs button')[1].click();
+    await r4.settle();
+    expect(TestBed.inject(Router).url).toBe('/?tab=prihlasky');
+
+    // only the reviewers have the list
+    const player = await open(false);
+    expect(player.el.querySelector('app-kvk-signups')).toBeNull();
+    expect(player.el.querySelector('app-kvk-form')).not.toBeNull();
   });
 
   it('offers "Kopírovať pre Discord" only on the list of the reviewers, never to a player', async () => {

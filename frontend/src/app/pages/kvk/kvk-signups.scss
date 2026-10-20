@@ -99,3 +99,26 @@
     transition: none;
   }
 }
+
+// the player of ?hrac= (a link from "Top 5 equip")
+.signup.is-focus {
+  border-color: var(--gold-400);
+}
+
+// an open card: the player's marches and "Top 5 equip"
+.signup__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+// when online: next to the commander, a row of its own on a phone
+.list__online {
+  flex: 0 1 280px;
+  min-width: 0;
+
+  @media (max-width: 480px) {
+    flex: 1 1 100%;
+  }
+}

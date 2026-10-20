@@ -10,6 +10,12 @@
   margin-bottom: 12px;
 }
 
+// "Len prihlásení na KvK"
+.eq-signed {
+  width: fit-content;
+  margin-bottom: 12px;
+}
+
 .eq-hint,
 .eq-legend {
   margin: 0 0 16px;
@@ -293,6 +299,14 @@
   font-size: 0.9375rem;
   color: var(--text);
   overflow-wrap: anywhere;
+}
+
+// the player's marches and their KvK sign-ups
+.eq-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
 }
 
 .eq-link {

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, linkedSignal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { KvkApi } from '../../core/kvk-api';
@@ -12,12 +12,15 @@ import { KvkForm } from './kvk-form';
 import { KvkSignups } from './kvk-signups';
 
 type Tab = 'mine' | 'list';
+/** ?tab= of each tab – the own sign-up has none */
+const QUERY: Record<Tab, string | null> = { mine: null, list: 'prihlasky' };
 
 /**
  * /kvk – KvK sign-ups for rally and garrison (Gether 11. 10. 2026). A player signs up with screenshots; the sign-ups
  * stay until withdrawn (no rounds, no heading – Gether 20. 10. 2026). The reviewers (R4) and the superuser see every
- * sign-up; the superuser withdraws sign-ups and picks the reviewers (Hráči on /ucet). A prerendered shell,
- * not indexed, not in the sitemap.
+ * sign-up; the superuser withdraws sign-ups and picks the reviewers (Hráči on /hraci). A prerendered shell,
+ * not indexed, not in the sitemap. The list is in the address (?tab=prihlasky, with ?online= and ?hrac=), so a reload
+ * or a link from "Top 5 equip" shows the same.
  */
 @Component({
   selector: 'app-kvk-page',
@@ -60,14 +63,15 @@ type Tab = 'mine' | 'list';
         @if (s.reviewer || s.superuser) {
           <div class="segmented kvk-tabs" role="group" [attr.aria-label]="k.title">
             @if (s.player) {
-              <button type="button" [attr.aria-pressed]="tab() === 'mine'" (click)="tab.set('mine')">{{ k.tabs.mine }}</button>
+              <button type="button" [attr.aria-pressed]="tab() === 'mine'" (click)="showTab('mine')">{{ k.tabs.mine }}</button>
             }
-            <button type="button" [attr.aria-pressed]="tab() === 'list' || (!s.player && tab() === 'mine')" (click)="tab.set('list')">
+            <button type="button" [attr.aria-pressed]="tab() === 'list' || (!s.player && tab() === 'mine')" (click)="showTab('list')">
               {{ k.tabs.list }}
             </button>
           </div>
         }
-        @switch (s.player || tab() !== 'mine' ? tab() : 'list') {
+        <!-- only the reviewers have the list – a player with ?tab=prihlasky gets the own sign-up -->
+        @switch (!(s.reviewer || s.superuser) ? 'mine' : s.player || tab() !== 'mine' ? tab() : 'list') {
           @case ('mine') {
             @if (s.approved) {
               <app-kvk-form [state]="s" (changed)="reloadSignups()" />
@@ -77,7 +81,15 @@ type Tab = 'mine' | 'list';
             }
           }
           @case ('list') {
-            <app-kvk-signups [data]="signups" [superuser]="s.superuser" (changed)="reloadSignups()" />
+            <app-kvk-signups
+              [data]="signups"
+              [superuser]="s.superuser"
+              [online]="online()"
+              [focus]="focus()"
+              [scrollToFocus]="!back"
+              [canEvaluate]="auth.canEvaluate()"
+              (changed)="reloadSignups()"
+            />
           }
         }
       } @else {
@@ -91,11 +103,20 @@ type Tab = 'mine' | 'list';
 export class KvkPage {
   /** ?login=error|cancelled – set by the backend after an unsuccessful Discord sign-in */
   readonly login = input<string>();
+  /** ?tab=prihlasky – the reviewers' list (no query = the own sign-up) */
+  readonly tabQuery = input<string>(undefined, { alias: 'tab' });
+  /** ?online=evenings – the list's filter by the survey's times (read by the list) */
+  readonly online = input<string>();
+  /** ?hrac=12 – that player's card in the list opens and is scrolled to (the link from "Top 5 equip") */
+  readonly hrac = input<string>();
 
   protected readonly i18n = inject(I18n);
   protected readonly auth = inject(Auth);
   private readonly api = inject(KvkApi);
   protected readonly t = this.i18n.t;
+  private readonly router = inject(Router);
+  /** back/forward: App puts the page where the visitor left it, the list does not scroll to ?hrac= */
+  protected readonly back = this.router.currentNavigation()?.trigger === 'popstate';
 
   // a boolean: a new user object (the in-game name saved) must not ask again
   private readonly signedIn = computed(() => !!this.auth.user());
@@ -105,7 +126,12 @@ export class KvkPage {
     return !!s && (s.reviewer || s.superuser);
   });
   protected readonly signups = this.api.signups(() => this.canReview());
-  protected readonly tab = signal<Tab>('mine');
+  /** the tab of the address; a click sets it at once and writes the address after it */
+  protected readonly tab = linkedSignal<Tab>(() => (this.tabQuery() === QUERY.list ? 'list' : 'mine'));
+  protected readonly focus = computed(() => {
+    const id = Number(this.hrac());
+    return Number.isInteger(id) && id > 0 ? id : null;
+  });
 
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
@@ -128,6 +154,12 @@ export class KvkPage {
     const seo = inject(Seo);
     effect(() => seo.set({ ...this.t().seo.kvk, noindex: true }));
     inject(DestroyRef).onDestroy(() => seo.set(null));
+  }
+
+  /** the tab in the address without a new history entry – back leaves the page, not the tab; ?online= and ?hrac= stay */
+  protected showTab(tab: Tab): void {
+    this.tab.set(tab);
+    void this.router.navigate([], { queryParams: { tab: QUERY[tab] }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   /** a sign-up changed: the reviewers' list asks again (the form keeps its own state) */

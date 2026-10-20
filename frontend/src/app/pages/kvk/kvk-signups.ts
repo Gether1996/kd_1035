@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { ViewportScroller, isPlatformBrowser } from '@angular/common';
 import { HttpResourceRef, httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -12,15 +12,17 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
   untracked,
   viewChild,
 } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { ArmoryApi } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
-import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon, surveyMissing } from '../../core/kvk-api';
+import { KVK_KINDS, KVK_ONLINE, KvkApi, KvkOnline, KvkSignup, MarchKind, asMarch, marchIcon, surveyMissing } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
 import { copyText } from '../../shared/copy-link';
@@ -31,20 +33,26 @@ import { surveyText } from './survey';
 
 type Role = 'all' | 'rally' | 'garrison';
 
+/** the card a sign-up belongs to: its player (a sign-up without one – never sent today – is a card of its own) */
+const keyOf = (signup: KvkSignup) => signup.player?.id ?? -signup.id;
 /** how many players (cards) these sign-ups are */
-const players = (signups: KvkSignup[]) => new Set(signups.map((s) => s.player?.id ?? -s.id)).size;
+const players = (signups: KvkSignup[]) => new Set(signups.map(keyOf)).size;
+/** ?online= of the address: a key of the survey, anything else = everyone */
+const onlineOf = (query: string | undefined): KvkOnline | 'all' => KVK_ONLINE.find((key) => key === query) ?? 'all';
 
 /**
  * "Prihlášky" on /kvk for the reviewers (R4) and the superuser: one card per player (Gether 11. 10. 2026: a player
  * signed up for rally and garrison is one card, not two) with the name, contact and profile marches once and each of
  * their sign-ups below – role, the army as the card of a march (equipment, armaments, bonuses – no screenshots since
  * 12. 10. 2026), note; the profile marches as cards too. The
- * filters (role, troops, commander) keep the sign-ups that match; the superuser may withdraw a sign-up.
- * "Kopírovať pre Discord" copies what the filters show as a roster for the leadership's Discord (roster-text.ts).
+ * filters (role, troops, commander, when online) keep the sign-ups that match; the superuser may withdraw a sign-up.
+ * "Kopírovať pre Discord" copies what the filters show as a roster for the leadership's Discord (roster-text.ts) –
+ * without the survey (Gether has not decided yet whether the times go to Discord). ?online= is in the address, ?hrac=
+ * opens a player's card and scrolls to it once; an open card links to the player's marches and "Top 5 equip".
  */
 @Component({
   selector: 'app-kvk-signups',
-  imports: [Icon, MarchBuild, CommanderFilter],
+  imports: [RouterLink, Icon, MarchBuild, CommanderFilter],
   templateUrl: './kvk-signups.html',
   styleUrls: ['./kvk.scss', './kvk-signups.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,9 +62,18 @@ export class KvkSignups {
   readonly data = input.required<HttpResourceRef<{ signups: KvkSignup[] } | undefined>>();
   /** the superuser may withdraw a sign-up */
   readonly superuser = input(false);
+  /** ?online= of the page – the filter by the survey's times (a shared link shows the same players) */
+  readonly online = input<string>();
+  /** ?hrac= of the page – that player's card opens, is highlighted and scrolled to once */
+  readonly focus = input<number | null>(null);
+  /** false when the page came back from the history – App puts it where the visitor left it, no scroll to ?hrac= */
+  readonly scrollToFocus = input(true);
+  /** the visitor opens /vyhodnocovanie (Auth.canEvaluate, as the account menu) – an open card links to "Top 5 equip" */
+  readonly canEvaluate = input(false);
   readonly changed = output<void>();
 
   private readonly api = inject(KvkApi);
+  private readonly router = inject(Router);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().kvk);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -79,15 +96,30 @@ export class KvkSignups {
   /** only the sign-ups with this commander, primary or secondary ('' = all; "who can garrison with Gorgo?") */
   protected readonly commander = signal('');
   protected readonly commanders = computed(() => marchCommanders(this.all()));
-  /** the sign-ups of the chosen commander – the role and troops counts are of these */
+  /** when the players are online – one key of the survey (Gether 20. 10. 2026: "kedy je online"), in ?online= */
+  protected readonly onlineKeys = KVK_ONLINE;
+  protected readonly onlineFilter = linkedSignal(() => onlineOf(this.online()));
+  /** each player's times: one survey for both sign-ups, from the first that has it (as on the card) */
+  private readonly onlineByPlayer = computed(() => {
+    const times = new Map<number, readonly KvkOnline[]>();
+    for (const s of this.all()) if (!times.has(keyOf(s)) && !surveyMissing(s)) times.set(keyOf(s), s.online);
+    return times;
+  });
+  private readonly isOnline = (s: KvkSignup, key: KvkOnline) => !!this.onlineByPlayer().get(keyOf(s))?.includes(key);
+  /** the sign-ups of the chosen commander */
   private readonly ofCommander = computed(() => {
     const commander = this.commander();
     return this.all().filter((s) => !commander || s.primary === commander || s.secondary === commander);
   });
+  /** …and of the chosen time online – the role and troops counts are of these */
+  private readonly ofOnline = computed(() => {
+    const online = this.onlineFilter();
+    return this.ofCommander().filter((s) => online === 'all' || this.isOnline(s, online));
+  });
   /** the sign-ups of the chosen role – the troops counts are of these */
   private readonly ofRole = computed(() => {
     const role = this.role();
-    return this.ofCommander().filter((s) => role === 'all' || s.role === role);
+    return this.ofOnline().filter((s) => role === 'all' || s.role === role);
   });
   protected readonly shown = computed(() => {
     const troops = this.troops();
@@ -97,7 +129,7 @@ export class KvkSignups {
   protected readonly players = computed(() => {
     const groups = new Map<number, KvkSignup[]>();
     for (const s of this.shown()) {
-      const key = s.player?.id ?? -s.id;
+      const key = keyOf(s);
       groups.set(key, [...(groups.get(key) ?? []), s]);
     }
     return [...groups.entries()].map(([key, signups]) => ({
@@ -117,10 +149,19 @@ export class KvkSignups {
   }
   /** the numbers on the filters count players (one card each), like the list below */
   protected readonly counts = computed(() => ({
-    all: players(this.ofCommander()),
-    rally: players(this.ofCommander().filter((s) => s.role === 'rally')),
-    garrison: players(this.ofCommander().filter((s) => s.role === 'garrison')),
+    all: players(this.ofOnline()),
+    rally: players(this.ofOnline().filter((s) => s.role === 'rally')),
+    garrison: players(this.ofOnline().filter((s) => s.role === 'garrison')),
   }));
+  /** the times online count the players the other filters (commander, role, troops) leave */
+  protected readonly onlineCounts = computed(() => {
+    const role = this.role();
+    const troops = this.troops();
+    const base = this.ofCommander().filter((s) => (role === 'all' || s.role === role) && (troops === 'all' || s.kind === troops));
+    const counts: Record<string, number> = { all: players(base) };
+    for (const key of KVK_ONLINE) counts[key] = players(base.filter((s) => this.isOnline(s, key)));
+    return counts;
+  });
   protected readonly troopCounts = computed(() => {
     const counts: Record<string, number> = { all: players(this.ofRole()) };
     for (const kind of KVK_KINDS) counts[kind] = players(this.ofRole().filter((s) => s.kind === kind));
@@ -160,9 +201,38 @@ export class KvkSignups {
     effect(() => {
       if (this.commander()) this.opened.set(new Set(untracked(this.players).map((g) => g.key)));
     });
+    // ?hrac= (a link from "Top 5 equip"): the player's card opens once the list is there and the page scrolls to it
+    // once – one render after it, no timers; back/forward is left to App, which puts the page where the visitor left it
+    const injector = inject(Injector);
+    const scroller = inject(ViewportScroller);
+    let scroll: boolean | undefined;
+    let openedFor: number | null = null;
+    effect(() => {
+      const id = this.focus();
+      // decided with the address the list was opened with
+      scroll ??= untracked(this.scrollToFocus);
+      if (id === null || id === openedFor || !this.players().some((g) => g.key === id)) return;
+      openedFor = id;
+      this.opened.update((opened) => new Set(opened).add(id));
+      if (!scroll) return;
+      scroll = false;
+      afterNextRender({ read: () => scroller.scrollToAnchor(`kvk-player-${id}`) }, { injector });
+    });
     inject(DestroyRef).onDestroy(() => {
       clearTimeout(this.copiedTimer);
       clearTimeout(this.disarm);
+    });
+  }
+
+  /** the time online in the address without a new history entry; the other query (?tab=, ?hrac=) stays */
+  protected setOnline(value: string): void {
+    const online = onlineOf(value);
+    this.onlineFilter.set(online);
+    this.armed.set(null);
+    void this.router.navigate([], {
+      queryParams: { online: online === 'all' ? null : online },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 

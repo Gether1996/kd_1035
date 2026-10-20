@@ -1,8 +1,12 @@
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { ArmoryData, GEAR_SLOTS, Gear, armoryIndex, itemSlot } from '../../core/armory';
 import { March } from '../../core/kvk-api';
 import { EquipmentPlayer, bestGear, equipmentRanking, kitOf } from './equipment';
+import { EvalEquipmentTab } from './equipment-tab';
 import { equipmentPoints } from './scoring';
 import { normalizeSettings } from './settings';
+import { EVAL_TEXTS } from './texts';
 
 // a legendary (iconic), an epic and a second legendary accessory; one set of two cavalry pieces
 const CATALOG: ArmoryData = {
@@ -115,5 +119,61 @@ describe('Top 5 equip', () => {
     const archer = player([march({ kind: 'archer', gear: all('gold') })], 'Arch');
     expect(equipmentRanking(S, INDEX, 'cavalry', [low, archer, top]).map((k) => k.player.name)).toEqual(['Top', 'Low']);
     expect(equipmentRanking(S, INDEX, 'infantry', [low, archer, top]).map((k) => [k.player.name, k.marches])).toEqual([['Low', 1]]);
+  });
+});
+
+describe('Top 5 equip – the tab', () => {
+  async function open() {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const signed = player([march({ gear: all('epic') })], 'Signed');
+    signed.signups = [{ id: 95, role: 'garrison', kind: 'cavalry', primary: 'Attila', secondary: '', gear: all('epic') }];
+    const best = player([march({ gear: all('gold', 5) })], 'Best');
+    // signed up, but with other troops: not a cavalry sign-up
+    const infantry = player([march({ gear: all('gold', 1) })], 'Infantry');
+    infantry.signups = [{ id: 96, role: 'rally', kind: 'infantry', primary: 'Gorgo', secondary: '', gear: {} }];
+    const fixture = TestBed.createComponent(EvalEquipmentTab);
+    fixture.componentRef.setInput('data', { settings: {}, players: [signed, best, infantry] });
+    fixture.componentRef.setInput('armory', INDEX);
+    fixture.componentRef.setInput('texts', EVAL_TEXTS.sk);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    // cavalry
+    el.querySelectorAll<HTMLButtonElement>('.eq-kinds button')[1].click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    return { fixture, el, signed, infantry };
+  }
+  const names = (el: HTMLElement) => Array.from(el.querySelectorAll('.eq-name'), (n) => n.textContent);
+
+  it('"Len prihlásení na KvK" keeps the players signed up with these troops', async () => {
+    const { fixture, el } = await open();
+    expect(names(el)).toEqual(['Best', 'Infantry', 'Signed']);
+    const toggle = el.querySelector<HTMLInputElement>('.eq-signed input')!;
+    expect(el.querySelector('.eq-signed')?.textContent?.trim()).toBe('Len prihlásení na KvK');
+    expect(toggle.checked).toBe(false);
+    toggle.click();
+    fixture.detectChanges();
+    expect(names(el)).toEqual(['Signed']);
+    // the rank is of the shown players
+    expect(el.querySelector('.eq-rank')?.textContent?.trim()).toBe('1');
+    // infantry: nobody signed up with them but Infantry
+    el.querySelectorAll<HTMLButtonElement>('.eq-kinds button')[0].click();
+    fixture.detectChanges();
+    expect(names(el)).toEqual(['Infantry']);
+    el.querySelectorAll<HTMLButtonElement>('.eq-kinds button')[2].click();
+    fixture.detectChanges();
+    expect(el.querySelector('.eq-empty')?.textContent).toBe('Na KvK sa s týmto typom jednotiek zatiaľ neprihlásil žiadny schválený hráč.');
+  });
+
+  it("a card links to the player's KvK sign-ups on /kvk – only a player who has some", async () => {
+    const { el, signed, infantry } = await open();
+    const links = (name: string) => {
+      const card = [...el.querySelectorAll('.eq-item')].find((c) => c.querySelector('.eq-name')?.textContent === name)!;
+      return Array.from(card.querySelectorAll<HTMLAnchorElement>('.eq-links a'), (a) => a.getAttribute('href'));
+    };
+    expect(links('Signed')).toEqual([`/marche?hrac=${signed.id}`, `/kvk?tab=prihlasky&hrac=${signed.id}`]);
+    // a sign-up with other troops is a sign-up too
+    expect(links('Infantry')).toEqual([`/marche?hrac=${infantry.id}`, `/kvk?tab=prihlasky&hrac=${infantry.id}`]);
+    expect(links('Best')).toHaveLength(1);
   });
 });

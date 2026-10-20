@@ -222,7 +222,7 @@ def delete_signup(request, signup_id):
 @api_view(['GET'])
 @permission_classes([IsSuperuser])
 def reviewers(request):
-    """Every active player signed in with Discord: the reviewer flag (R4), the approval for marches and KvK sign-ups,
+    """Every active player (with Discord or with an in-game name and a password): the reviewer flag (R4), the approval for marches and KvK sign-ups,
     when they first and last signed in, how many marches they have and which KvK sign-ups (Gether 13. 10. 2026: filters
     like on /marche), and `issues` – how many of their marches are red on /marche (a wrong pair or formation, a bonus
     over its cap, march_checker; read once for the whole list, the queries do not grow with the players)."""
