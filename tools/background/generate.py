@@ -5,6 +5,7 @@ Outputs (into frontend/public):
   img/scenery/{far,near}.svg                         night landscape behind every page, 2560x720 viewBox
   favicon.svg                                       logo mark
   og-image.jpg, icons/icon-{180,192,512}.png         raster versions (--raster, needs cairosvg)
+  favicon.ico (16, 32, 48 px)                        raster favicon for Google results and old browsers (--raster)
   tools/background/discord/{banner,avatar}.png       Discord bot / app profile (--discord, needs cairosvg)
 
 Run from the repo root (Docker, no local Python needed):
@@ -564,6 +565,11 @@ def write_raster(layers):
         mark = logo_mark(64, bg=PAGE_BG).replace('viewBox="0 0 64 64"', 'viewBox="-10 -10 84 84"')
         mark = mark.replace('<rect width="64" height="64"', '<rect x="-10" y="-10" width="84" height="84"')
         cairosvg.svg2png(bytestring=mark.encode(), write_to=str(icons / f'icon-{size}.png'), output_width=size, output_height=size)
+
+    # favicon.ico next to favicon.svg: Google shows a favicon in its results only from a size that is a multiple of
+    # 48 px, and crawlers ask for /favicon.ico; the transparent mark like favicon.svg
+    png = cairosvg.svg2png(bytestring=logo_mark().encode(), output_width=192, output_height=192)
+    Image.open(io.BytesIO(png)).save(PUBLIC / 'favicon.ico', sizes=[(16, 16), (32, 32), (48, 48)])
 
 
 def write_discord(layers):
