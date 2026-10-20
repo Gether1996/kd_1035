@@ -41,7 +41,7 @@ Rovnaké v e2e (`tools/e2e/playwright.config.ts`, projekty) aj pri manuálnom QA
 |---|---|---|
 | `tests/smoke.spec.ts` | `@smoke` | každá stránka SK + CZ: stav 200, `lang`, jeden `h1`, title, description, canonical + hreflang (alebo `noindex` pri účte), hlavička, pätička s verziou, žiadny posun do strany; 404 stránky |
 | `tests/layout.spec.ts` | `@layout` | každá stránka na každom zariadení + mobilné menu, dialóg eventu, výsledky hľadania: posun do strany (s vinníkom), časti riadku mimo spoločnej osi (`ALIGNED` v `tests/layout.ts`), orezaný text, roztiahnuté obrázky. **Varovania** (nezhodia test): dotykové plochy pod 24 × 24 px, písmo pod 11 px |
-| `tests/journeys.spec.ts` | `@journey` | mobilné menu (Esc, fokus), lišta, zdieľaný odkaz na sekciu, späť/dopredu (PR #1), nová stránka hore, skip link, prepínač jazyka, český prehliadač → `/cz`, návody (hub → kategória → návod → breadcrumbs), hľadanie, kalendár (dialóg, Esc, mesiace), web bez API; s `PROD=1` aj cache hlavičky, sitemap, robots, náhľad pre Discord, 404 zo servera |
+| `tests/journeys.spec.ts` | `@journey` | mobilné menu (Esc, fokus), lišta, zdieľaný odkaz na sekciu, späť/dopredu (PR #1), nová stránka hore, skip link, prepínač jazyka, český prehliadač → `/cz`, návody (hub → kategória → návod → breadcrumbs), hľadanie, kalendár (dialóg, Esc, mesiace), web bez API; s `PROD=1` aj cache hlavičky, sitemap, robots, náhľad pre Discord, meta návodu v prvom HTML (SK, CZ, neznámy = 404), 404 zo servera |
 | `tests/player.spec.ts` | `@player` | s test hráčom: `/ucet`, `/pripomienky`, `/marche`, `/kvk` – prihlásený, rozloženie, ukážkové marche |
 
 Každý test navyše zlyhá pri chybe JS, chybe v konzole, odpovedi 5xx alebo zlyhanej požiadavke (`tests/fixtures.ts`).

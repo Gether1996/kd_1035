@@ -1,4 +1,6 @@
 import importlib
+import json
+import re
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -825,6 +827,131 @@ class LinkPreviewTests(TestCase):
         self.assertIn('<link rel="canonical" href="https://kd1035.test/cz/navody/commanderi/pary-pre-jazdu">', html)
         self.assertIn('<meta property="og:url" content="https://kd1035.test/cz/navody/commanderi/pary-pre-jazdu">', html)
         self.assertIn('<meta property="og:image" content="https://kd1035.test/og-image.jpg">', html)
+
+
+class GuidePageTests(TestCase):
+    """The first HTML of a guide page (nginx proxies /[cz/]navody/<category>/<slug> to /api/guide-page/… with SSI)."""
+
+    def setUp(self):
+        Guide.objects.all().delete()  # drop the seeded guides
+        self.guide = Guide.objects.create(
+            category='commanderi',
+            title_sk='Páry pre jazdu',
+            title_cs='Páry pro jízdu',
+            slug='pary-pre-jazdu',
+            html_sk='<h2>Úvod</h2><p>Najlepšie páry <b>pre jazdu</b>.</p>',
+            html_cs='<p>Nejlepší páry pro jízdu.</p>',
+        )
+
+    def page(self, path):
+        response = self.client.get(f'/api/guide-page/{path}')
+        return response, response.content.decode()
+
+    def json_ld(self, html):
+        return json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html)[1])
+
+    def test_slovak_guide(self):
+        response, html = self.page('navody/commanderi/pary-pre-jazdu')
+        self.assertEqual(response.status_code, 200)
+        # the deployed shell around the guide's tags, in the language of the address
+        self.assertTrue(html.startswith('<!--# include virtual="/guide-shell/sk.head.html" -->'))
+        self.assertIn('<!--# include virtual="/guide-shell/sk.tail.html" -->', html)
+        self.assertIn('<title>Páry pre jazdu | KD 1035</title>', html)
+        self.assertIn('<meta name="description" content="Najlepšie páry pre jazdu.">', html)
+        self.assertIn('<meta property="og:title" content="Páry pre jazdu | KD 1035">', html)
+        self.assertIn('<meta property="og:description" content="Najlepšie páry pre jazdu.">', html)
+        self.assertIn('<meta property="og:url" content="http://testserver/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<meta property="og:image" content="http://testserver/og-image.jpg">', html)
+        self.assertIn('<meta property="og:locale" content="sk_SK">', html)
+        self.assertIn('<link rel="canonical" href="http://testserver/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<link rel="alternate" hreflang="sk" href="http://testserver/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<link rel="alternate" hreflang="cs" href="http://testserver/cz/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn(
+            '<link rel="alternate" hreflang="x-default" href="http://testserver/navody/commanderi/pary-pre-jazdu">', html
+        )
+        self.assertNotIn('robots', html)
+        crumbs = next(n for n in self.json_ld(html)['@graph'] if n['@type'] == 'BreadcrumbList')['itemListElement']
+        self.assertEqual(
+            [(c['name'], c['item']) for c in crumbs],
+            [
+                ('Domov', 'http://testserver/'),
+                ('Návody', 'http://testserver/navody'),
+                ('Commanderi', 'http://testserver/navody/commanderi'),
+                ('Páry pre jazdu', 'http://testserver/navody/commanderi/pary-pre-jazdu'),
+            ],
+        )
+        self.assertEqual(response['Cache-Control'], 'no-cache')
+        self.assertIn('User-Agent', response['Vary'])
+        self.assertFalse(response.has_header('X-Frame-Options'))  # nginx sends the site's own
+        self.assertFalse(response.has_header('X-Robots-Tag'))
+
+    def test_czech_guide(self):
+        response, html = self.page('cz/navody/commanderi/pary-pre-jazdu/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(html.startswith('<!--# include virtual="/guide-shell/cs.head.html" -->'))
+        self.assertIn('<!--# include virtual="/guide-shell/cs.tail.html" -->', html)
+        self.assertIn('<title>Páry pro jízdu | KD 1035</title>', html)
+        self.assertIn('<meta name="description" content="Nejlepší páry pro jízdu.">', html)
+        self.assertIn('<meta property="og:locale" content="cs_CZ">', html)
+        self.assertIn('<meta property="og:locale:alternate" content="sk_SK">', html)
+        self.assertIn('<link rel="canonical" href="http://testserver/cz/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<link rel="alternate" hreflang="sk" href="http://testserver/navody/commanderi/pary-pre-jazdu">', html)
+        crumbs = next(n for n in self.json_ld(html)['@graph'] if n['@type'] == 'BreadcrumbList')['itemListElement']
+        self.assertEqual(
+            [c['name'] for c in crumbs], ['Domů', 'Návody', 'Commandeři', 'Páry pro jízdu']
+        )
+        self.assertEqual(crumbs[0]['item'], 'http://testserver/cz')
+
+    def test_czech_falls_back_to_slovak_title_and_excerpt(self):
+        Guide.objects.filter(pk=self.guide.pk).update(title_cs='', html_cs='')
+        _, html = self.page('cz/navody/commanderi/pary-pre-jazdu')
+        self.assertIn('<title>Páry pre jazdu | KD 1035</title>', html)
+        self.assertIn('<meta name="description" content="Najlepšie páry pre jazdu.">', html)
+
+    def test_moved_guide_redirects_to_its_current_category(self):
+        response = self.client.get('/api/guide-page/cz/navody/vybava/pary-pre-jazdu')
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['Location'], '/cz/navody/commanderi/pary-pre-jazdu')
+
+    def test_unpublished_or_unknown_guide_is_a_404_with_noindex(self):
+        Guide.objects.filter(pk=self.guide.pk).update(is_published=False)
+        for path, lang, title in (
+            ('navody/commanderi/pary-pre-jazdu', 'sk', 'Táto stránka neexistuje | KD 1035'),
+            ('navody/commanderi/neexistuje', 'sk', 'Táto stránka neexistuje | KD 1035'),
+            ('cz/navody/tipy/neexistuje', 'cs', 'Tato stránka neexistuje | KD 1035'),
+            ('cz/navody/commanderi', 'cs', 'Tato stránka neexistuje | KD 1035'),
+        ):
+            with self.subTest(path):
+                response, html = self.page(path)
+                self.assertEqual(response.status_code, 404)
+                # the app still starts and shows its 404 page with the links home and to the guides
+                self.assertTrue(html.startswith(f'<!--# include virtual="/guide-shell/{lang}.head.html" -->'))
+                self.assertIn(f'<title>{title}</title>', html)
+                self.assertIn('<meta name="robots" content="noindex">', html)
+                self.assertIn(f'<meta property="og:url" content="http://testserver/{path}">', html)
+                # nothing about the hidden guide leaks out (its address is in og:url, as in the browser)
+                for leak in ('Páry', 'Najlepšie', 'canonical', 'hreflang', 'BreadcrumbList'):
+                    self.assertNotIn(leak, html)
+
+    def test_title_and_excerpt_are_escaped(self):
+        Guide.objects.filter(pk=self.guide.pk).update(
+            title_sk='</script><!--# include virtual="/x" --> "páry"', html_sk='<p>A &lt;b&gt; &amp; "B"</p>'
+        )
+        _, html = self.page('navody/commanderi/pary-pre-jazdu')
+        # only the two includes of the template reach nginx's SSI, and nothing closes the JSON-LD script early
+        self.assertEqual(html.count('<!--#'), 2)
+        self.assertEqual(html.count('</script>'), 1)
+        self.assertIn('<title>&lt;/script&gt;&lt;!--# include virtual=&quot;/x&quot; --&gt; &quot;páry&quot; | KD 1035</title>', html)
+        self.assertIn('<meta name="description" content="A &lt;b&gt; &amp; &quot;B&quot;">', html)
+        crumbs = next(n for n in self.json_ld(html)['@graph'] if n['@type'] == 'BreadcrumbList')['itemListElement']
+        self.assertEqual(crumbs[-1]['name'], '</script><!--# include virtual="/x" --> "páry"')
+
+    @override_settings(SITE_URL='https://kd1035.test')
+    def test_urls_use_site_url(self):
+        _, html = self.page('cz/navody/commanderi/pary-pre-jazdu')
+        self.assertIn('<link rel="canonical" href="https://kd1035.test/cz/navody/commanderi/pary-pre-jazdu">', html)
+        self.assertIn('<meta property="og:image" content="https://kd1035.test/og-image.jpg">', html)
+        self.assertEqual(self.json_ld(html)['@graph'][0]['url'], 'https://kd1035.test/')
 
 
 class ArmoryTests(TestCase):

@@ -156,10 +156,32 @@ server {
         if ($kd_link_bot) {
             rewrite ^/(.*)$ /api/link-preview/$1 last;
         }
-        try_files /index.csr.html =404;
-        add_header Cache-Control "no-cache";
-        add_header Vary "User-Agent";
-        include /etc/nginx/snippets/security-headers.conf;
+        # everyone else: Django (guides.views.guide_page) writes the guide's title, description, canonical, hreflang,
+        # Open Graph and JSON-LD – or a 404 with noindex – between two SSI includes of the deployed app shell
+        # (/guide-shell/, scripts/guide-shell.mjs), so search engines do not see the home page's meta here
+        limit_req zone=kd_api burst=40 nodelay;
+        rewrite ^/(.*)$ /api/guide-page/$1 break;
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $kd_proto;
+        proxy_read_timeout 30s;
+        # the same security headers as every other page (security-headers.conf), not Django's
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Referrer-Policy;
+        proxy_hide_header X-Content-Type-Options;
+        proxy_hide_header Cross-Origin-Opener-Policy;
+        ssi on;
+        # Django down: the bare app shell (the guide loads from the API once it is back); the 5xx status stays, so
+        # search engines come back later instead of indexing the shell. Django's own 404 passes through.
+        proxy_intercept_errors on;
+        error_page 502 503 504 /index.csr.html;
+    }
+
+    # halves of the app shell for the guide pages above, only for their SSI includes
+    location ^~ /guide-shell/ {
+        internal;
     }
 
     # the calendar: a copy of `location /` below, except that a preview bot asking for one event gets Django's

@@ -12,4 +12,6 @@ urlpatterns = [
     path('guides/<slug:slug>/', views.GuideDetail.as_view()),
     # nginx rewrites guide pages here for link-preview bots: /api/link-preview/[cz/]navody/<category>/<slug>
     path('link-preview/<path:path>', views.link_preview),
+    # nginx proxies guide pages here for everyone else (SSI around the app shell): /api/guide-page/[cz/]navody/…
+    path('guide-page/<path:path>', views.guide_page),
 ]

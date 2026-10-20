@@ -122,7 +122,8 @@ export class GuidePage {
     });
 
     effect(() => {
-      // unknown or unpublished slug: the app shell answers 200 here, so keep the page out of search results
+      // unknown or unpublished slug: the server answered 404 with noindex (guides.views.guide_page) – the same here,
+      // also for a guide hidden while the page was open
       if (this.notFound()) {
         seo.set(notFoundMeta(this.i18n.t()));
         return;

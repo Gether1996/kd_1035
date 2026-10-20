@@ -4,7 +4,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
-RUN npx ng build
+# the split app shell for the guide pages (scripts/guide-shell.mjs, nginx SSI)
+RUN npx ng build && node scripts/guide-shell.mjs
 
 # --- serve: nginx (static pages + proxy to Django) --------------------------
 FROM nginx:1.29-alpine

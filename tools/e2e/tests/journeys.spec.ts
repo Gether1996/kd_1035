@@ -276,6 +276,47 @@ test.describe('production server', () => {
     expect(await preview.text()).toMatch(/<meta property="og:title" content="Páry commanderov pre jazdu/);
   });
 
+  test('a guide page has its own meta before any JavaScript, SK and CZ @journey', async ({ request }) => {
+    // guide pages are rendered in the browser; Django puts their head into the app shell (nginx SSI)
+    for (const [path, lang, title] of [
+      ['/navody/commanderi/pary-pre-jazdu', 'sk', 'Páry commanderov pre jazdu'],
+      ['/cz/navody/commanderi/pary-pre-jazdu', 'cs', 'Páry commanderů pro jízdu'],
+    ]) {
+      const response = await request.get(path);
+      expect(response.status(), path).toBe(200);
+      const html = await response.text();
+      expect(html).toContain(`<html lang="${lang}"`);
+      expect(html.match(/<title>[^<]*<\/title>/g), path).toEqual([expect.stringContaining(title)]);
+      expect(html).not.toContain('Slovenské a české kráľovstvo v Rise of Kingdoms</title>');
+      expect(html).toMatch(/<meta name="description" content="[^"]{20,}">/);
+      expect(html).toMatch(new RegExp(`<link rel="canonical" href="https?://[^"]+${path}">`));
+      expect(html).toMatch(/<link rel="alternate" hreflang="cs" href="https?:\/\/[^"]+\/cz\/navody\/commanderi\/pary-pre-jazdu">/);
+      expect(html).toMatch(new RegExp(`<meta property="og:title" content="${title}`));
+      expect(html).not.toContain('__SITE_ORIGIN__');
+      expect(html).not.toContain('<!--#');
+      expect(html).toMatch(/<script src="main-[A-Z0-9]+\.js"/);
+    }
+  });
+
+  test('a guide page still renders in the browser @journey', async ({ page }) => {
+    await open(page, '/cz/navody/commanderi/pary-pre-jazdu');
+    await expect(page.locator('h1')).toContainText('Páry commanderů pro jízdu');
+    await expect(page).toHaveTitle(/Páry commanderů pro jízdu/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
+  });
+
+  test('an unknown guide answers 404 with noindex @journey', async ({ request }) => {
+    for (const path of ['/navody/commanderi/neexistuje', '/cz/navody/vybava/neexistuje']) {
+      const response = await request.get(path);
+      expect(response.status(), path).toBe(404);
+      const html = await response.text();
+      expect(html).toContain('<meta name="robots" content="noindex">');
+      expect(html).not.toContain('rel="canonical"');
+      expect(html).toMatch(/<script src="main-[A-Z0-9]+\.js"/); // the app shows its 404 page
+    }
+  });
+
   test('an unknown address answers 404 @journey', async ({ request }) => {
     expect((await request.get('/xyz')).status()).toBe(404);
     expect((await request.get('/cz/xyz')).status()).toBe(404);

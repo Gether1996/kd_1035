@@ -1,13 +1,16 @@
+import json
 import re
 from datetime import date
 from xml.sax.saxutils import escape
 
 from django.conf import settings
 from django.db.models import Max
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.cache import patch_vary_headers
+from django.utils.safestring import mark_safe
+from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -35,6 +38,28 @@ SITE_META = {
         'Kingdom 1035 je jediné čistě CZ/SK království v Rise of Kingdoms. Hrajeme česky a slovensky – společné KvK, '
         'Discord a pomoc nováčkům.',
     ),
+}
+# What the head of a guide page needs from the app's dictionaries (sk.ts, cs.ts): the breadcrumbs (nav.home,
+# nav.guides, guides.categories.*.title) and the meta of a missing guide (notFound.title, notFound.text)
+GUIDE_PAGE_TEXT = {
+    'sk': {
+        'home': 'Domov',
+        'guides': 'Návody',
+        'categories': {'commanderi': 'Commanderi', 'vybava': 'Výbava', 'eventy': 'Eventy', 'tipy': 'Tipy a triky'},
+        'not_found': (
+            'Táto stránka neexistuje',
+            'Odkaz je zrejme zastaraný alebo s preklepom – pokračuj na úvod alebo do návodov.',
+        ),
+    },
+    'cs': {
+        'home': 'Domů',
+        'guides': 'Návody',
+        'categories': {'commanderi': 'Commandeři', 'vybava': 'Výbava', 'eventy': 'Eventy', 'tipy': 'Tipy a triky'},
+        'not_found': (
+            'Tato stránka neexistuje',
+            'Odkaz je nejspíš zastaralý nebo s překlepem – pokračuj na úvod nebo do návodů.',
+        ),
+    },
 }
 # Calendar page title and description (seo.calendar in sk.ts and cs.ts): the preview of an unknown or hidden event
 CALENDAR_META = {
@@ -179,6 +204,92 @@ def link_preview(request, path):
         og_type='article',
         modified=guide.updated_at,
     )
+
+
+@xframe_options_exempt  # nginx sends the site's own X-Frame-Options (security-headers.conf)
+def guide_page(request, path):
+    """
+    The head of a guide page for everyone – search engines get the guide's meta without running JavaScript.
+
+    Guide pages are rendered in the browser, so the app shell alone would carry the home page's title. nginx proxies
+    /[cz/]navody/<category>/<slug> here with SSI on (frontend/nginx/default.conf.template): the template includes the
+    deployed shell (guide-shell/<lang>.head.html and .tail.html, frontend/scripts/guide-shell.mjs) around the
+    title, description, canonical, hreflang, Open Graph and JSON-LD that the app's Seo service sets in the browser.
+    An unknown or hidden guide is a real 404 with noindex; a guide moved to another category redirects (301).
+    """
+    match = GUIDE_PATH.match(path)
+    lang = 'cs' if path.startswith('cz/') else 'sk'
+    prefix = '/cz' if lang == 'cs' else ''
+    origin = settings.SITE_URL or f'{request.scheme}://{request.get_host()}'
+    guide = Guide.objects.filter(is_published=True, slug=match[3]).first() if match else None
+    text = GUIDE_PAGE_TEXT[lang]
+    graph = [
+        {
+            '@type': 'WebSite',
+            '@id': f'{origin}/#website',
+            'name': 'Kingdom 1035',
+            'alternateName': ['KD 1035', 'Rise of Kingdoms KD 1035', 'CZ/SK Kingdom 1035'],
+            'url': f'{origin}/',
+            'inLanguage': ['sk', 'cs'],
+        },
+        {
+            '@type': 'Organization',
+            '@id': f'{origin}/#kingdom',
+            'name': 'Kingdom 1035 – Rise of Kingdoms CZ/SK',
+            'url': f'{origin}/',
+            'logo': f'{origin}/icons/icon-512.png',
+            'description': SITE_META[lang][1],
+        },
+    ]
+    context = {
+        'lang': lang,
+        'image': f'{origin}/og-image.jpg',
+        'locale': 'cs_CZ' if lang == 'cs' else 'sk_SK',
+        'locale_alternate': 'sk_SK' if lang == 'cs' else 'cs_CZ',
+    }
+
+    if not guide:
+        title, description = text['not_found']
+        context.update(title=f'{title} | KD 1035', description=description, url=f'{origin}/{path}', noindex=True)
+        status = 404
+    else:
+        if match[2] != guide.category:
+            return HttpResponsePermanentRedirect(prefix + guide.get_absolute_url())
+        title = guide.title_cs if lang == 'cs' and guide.title_cs else guide.title_sk
+        guide_path = guide.get_absolute_url()
+        crumbs = [
+            (text['home'], prefix or '/'),
+            (text['guides'], f'{prefix}/navody'),
+            (text['categories'].get(guide.category, guide.get_category_display()), f'{prefix}/navody/{guide.category}'),
+            (title, prefix + guide_path),
+        ]
+        graph.append(
+            {
+                '@type': 'BreadcrumbList',
+                'itemListElement': [
+                    {'@type': 'ListItem', 'position': i, 'name': name, 'item': origin + link}
+                    for i, (name, link) in enumerate(crumbs, 1)
+                ],
+            }
+        )
+        context.update(
+            title=f'{title} | KD 1035',
+            description=guide.excerpt(lang) or SITE_META[lang][1],
+            url=origin + prefix + guide_path,
+            url_sk=origin + guide_path,
+            url_cs=origin + '/cz' + guide_path,
+        )
+        status = 200
+
+    # like Django's json_script: no "</script>" (or an SSI comment) can come out of a guide title
+    ld = json.dumps({'@context': 'https://schema.org', '@graph': graph}, ensure_ascii=False)
+    context['json_ld'] = mark_safe(ld.translate({ord('<'): '\\u003C', ord('>'): '\\u003E', ord('&'): '\\u0026'}))
+    response = render(request, 'guide_page.html', context, status=status)
+    # the shell names the build's hashed scripts: never serve an old one after a deploy (like the other pages)
+    response['Cache-Control'] = 'no-cache'
+    # link-preview bots get another page under the same address (link_preview)
+    patch_vary_headers(response, ['User-Agent'])
+    return response
 
 
 def preview_page(request, lang: str, origin: str, status: int, **context):

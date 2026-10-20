@@ -58,6 +58,10 @@ Aktualizácia: `git pull && docker compose up -d --build`. Dáta zostanú.
    ```bash
    curl -s -A 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)' https://kd1035.eu/navody/commanderi/pary-pre-jazdu | grep og:
    ```
+   Detail návodu tak, ako ho dostane Google (titulok návodu, nie úvodu):
+   ```bash
+   curl -s https://kd1035.eu/cz/navody/commanderi/pary-pre-jazdu | grep -E '<title>|canonical'
+   ```
 5. **Google:** [Search Console](https://search.google.com/search-console) → pridaj doménu `kd1035.eu` (overenie TXT záznamom v DNS) → Sitemaps → `https://kd1035.eu/sitemap.xml`.
 
 ## Dáta a zálohy

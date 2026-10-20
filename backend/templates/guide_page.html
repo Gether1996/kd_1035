@@ -1,0 +1,16 @@
+<!--# include virtual="/guide-shell/{{ lang }}.head.html" -->{# guides.views.guide_page: nginx (SSI) puts the deployed app shell around these tags; the app's Seo service updates the same tags in the browser #}
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ description }}">
+  <meta property="og:url" content="{{ url }}">
+  <meta property="og:locale" content="{{ locale }}">
+  <meta property="og:locale:alternate" content="{{ locale_alternate }}">
+  <meta property="og:image" content="{{ image }}">
+{% if noindex %}  <meta name="robots" content="noindex">
+{% else %}  <link rel="canonical" href="{{ url }}">
+  <link rel="alternate" hreflang="sk" href="{{ url_sk }}">
+  <link rel="alternate" hreflang="cs" href="{{ url_cs }}">
+  <link rel="alternate" hreflang="x-default" href="{{ url_sk }}">
+{% endif %}  <script type="application/ld+json">{{ json_ld }}</script>
+<!--# include virtual="/guide-shell/{{ lang }}.tail.html" -->

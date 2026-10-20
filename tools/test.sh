@@ -75,12 +75,12 @@ build() {
   echo "== build${REF:+ ($REF)}"
   source_of frontend --exclude=node_modules --exclude=.angular --exclude=dist |
     docker run -i --rm -e NO_COLOR=1 -v kd1035-dev_frontend_node_modules:/app/node_modules -w /app node:24-alpine \
-      sh -c 'tar -x && npx ng build' 2>&1 | strip >"$log"
+      sh -c 'tar -x && npx ng build && node scripts/guide-shell.mjs' 2>&1 | strip >"$log"
   local code=${PIPESTATUS[1]}
   if grep -q '\[ERROR\]' "$log"; then
     sed -n '/\[ERROR\]/,$p' "$log" | head -n 60
   else
-    grep -E '\[WARNING\]|Initial total|Prerendered' "$log" || tail -n 40 "$log"
+    grep -E '\[WARNING\]|Initial total|Prerendered|guide-shell' "$log" || tail -n 40 "$log"
   fi
   echo "   log: $log"
   return $code
