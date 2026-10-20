@@ -234,11 +234,15 @@
   font-size: 0.75rem;
 }
 
-// "Kopírovať pre Discord" (or its parts) at the end of the filter row; on a phone a row of its own
+// "Rozbaliť všetky" and "Kopírovať pre Discord" (or its parts) at the end of the filter row; on a phone a row of its own
+.list__tools,
 .list__copy {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.list__tools {
   margin-left: auto;
 
   @media (max-width: 480px) {
@@ -287,17 +291,21 @@
 }
 
 .signup {
-  padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: rgba(4, 10, 23, 0.35);
+  transition: border-color 0.2s;
+
+  &:has(.signup__toggle:hover) {
+    border-color: var(--line-strong);
+  }
 }
 
 .signup__head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
+  gap: 0 12px;
 }
 
 .signup__avatar {

@@ -9,10 +9,12 @@ import {
   PLATFORM_ID,
   afterNextRender,
   computed,
+  effect,
   inject,
   input,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { ArmoryApi } from '../../core/armory';
@@ -43,7 +45,7 @@ const players = (signups: KvkSignup[]) => new Set(signups.map((s) => s.player?.i
   selector: 'app-kvk-signups',
   imports: [Icon, MarchBuild, CommanderFilter],
   templateUrl: './kvk-signups.html',
-  styleUrl: './kvk.scss',
+  styleUrls: ['./kvk.scss', './kvk-signups.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KvkSignups {
@@ -99,7 +101,8 @@ export class KvkSignups {
       const key = s.player?.id ?? -s.id;
       groups.set(key, [...(groups.get(key) ?? []), s]);
     }
-    return [...groups.values()].map((signups) => ({
+    return [...groups.entries()].map(([key, signups]) => ({
+      key,
       first: signups[0],
       signups,
       updated: signups.map((s) => s.updated_at).sort().at(-1)!,
@@ -117,6 +120,13 @@ export class KvkSignups {
     const counts: Record<string, number> = { all: players(this.ofRole()) };
     for (const kind of KVK_KINDS) counts[kind] = players(this.ofRole().filter((s) => s.kind === kind));
     return counts;
+  });
+
+  /** the players whose sign-ups are open – closed at first, like the players on /marche (Gether 20. 10. 2026) */
+  protected readonly opened = signal<ReadonlySet<number>>(new Set());
+  protected readonly allOpen = computed(() => {
+    const opened = this.opened();
+    return this.players().length > 0 && this.players().every((g) => opened.has(g.key));
   });
 
   private disarm?: ReturnType<typeof setTimeout>;
@@ -143,10 +153,31 @@ export class KvkSignups {
   private copiedTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
+    // "who can garrison with Gorgo?": a picked commander opens the players it leaves, as on /marche
+    effect(() => {
+      if (this.commander()) this.opened.set(new Set(untracked(this.players).map((g) => g.key)));
+    });
     inject(DestroyRef).onDestroy(() => {
       clearTimeout(this.copiedTimer);
       clearTimeout(this.disarm);
     });
+  }
+
+  protected isOpen(key: number): boolean {
+    return this.opened().has(key);
+  }
+
+  protected toggle(key: number): void {
+    this.opened.update((opened) => {
+      const next = new Set(opened);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }
+
+  /** "Rozbaliť všetky" / "Zbaliť všetky" – the players the filters show */
+  protected toggleAll(): void {
+    this.opened.set(this.allOpen() ? new Set() : new Set(this.players().map((g) => g.key)));
   }
 
   /** No `await` before copyText(): the clipboard needs the click's user activation. */

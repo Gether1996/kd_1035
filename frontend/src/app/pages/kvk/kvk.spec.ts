@@ -260,6 +260,19 @@ describe('KvkSignups', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.signup').length).toBe(2);
     expect(el.querySelector('.signup__contact')?.getAttribute('href')).toBe('https://discord.com/users/42');
+    // closed at first like the players on /marche: the role and the portraits of the commanders only
+    expect(el.querySelector('.signup__body')).toBeNull();
+    expect(el.querySelector('.signup__preview .signup__mini')?.getAttribute('alt')).toBe('Attila');
+    const expand = () => el.querySelector<HTMLButtonElement>('.list__expand')!;
+    expect(expand().textContent?.trim()).toBe('Rozbaliť všetky');
+    expand().click();
+    await flushAll(fixture);
+    // the cards of the marches ask for the armory once they are on screen
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    expect(el.querySelectorAll('.signup__body').length).toBe(2);
+    expect(el.querySelector('.signup__preview')).toBeNull();
+    expect(expand().textContent?.trim()).toBe('Zbaliť všetky');
     // the profile marches as cards, the bonuses of their troop type in the title
     expect(el.querySelector('.mini-marches .mb__primary')?.textContent?.trim()).toBe('Attila');
     el.querySelector<HTMLButtonElement>('.mini-marches .mb__detail')!.click();
@@ -327,6 +340,16 @@ describe('KvkSignups', () => {
     expect(el.querySelectorAll('.signup__contact').length).toBe(1);
     // the filters count players (cards), not sign-ups
     expect(el.querySelector('.list__filter button')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Všetci · 1');
+    // closed: both roles at a glance; the head opens the card
+    expect([...el.querySelectorAll('.signup__preview .tag')].map((t) => t.textContent?.trim())).toEqual(['Rally', 'Garrison']);
+    const toggle = el.querySelector<HTMLButtonElement>('.signup__toggle')!;
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    toggle.click();
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(el.querySelector(`#${toggle.getAttribute('aria-controls')}`)).not.toBeNull();
     expect(el.querySelectorAll('.signup__marches').length).toBe(1);
     expect([...el.querySelectorAll('.signup__entry .tag:not(.tag--warn)')].map((t) => t.textContent?.trim())).toEqual(['Rally', 'Garrison']);
     // the newest change of the two

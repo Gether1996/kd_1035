@@ -33,14 +33,19 @@
     [value]="commander()"
     (valueChange)="commander.set($event); armed.set(null)"
   />
-  <!-- what the filters show, as a message for the leadership's Discord; a long list in parts of 1900 characters -->
   @if (shown().length) {
-    <div class="list__copy">
-      @for (text of roster(); track $index) {
-        <button type="button" class="pill-btn pill-btn--quiet" (click)="copy($index)">
-          <svg appIcon="copy"></svg>{{ roster().length > 1 ? part($index) : k.roster.copy }}
-        </button>
-      }
+    <div class="list__tools">
+      <button type="button" class="pill-btn pill-btn--quiet list__expand" (click)="toggleAll()">
+        <svg appIcon="chevron-down" class="list__chevron" [class.is-up]="allOpen()"></svg>{{ allOpen() ? i18n.t().playersMarches.collapseAll : i18n.t().playersMarches.expandAll }}
+      </button>
+      <!-- what the filters show, as a message for the leadership's Discord; a long list in parts of 1900 characters -->
+      <div class="list__copy">
+        @for (text of roster(); track $index) {
+          <button type="button" class="pill-btn pill-btn--quiet" (click)="copy($index)">
+            <svg appIcon="copy"></svg>{{ roster().length > 1 ? part($index) : k.roster.copy }}
+          </button>
+        }
+      </div>
     </div>
   }
   </div>
@@ -67,18 +72,44 @@
     <ul class="signups">
       @for (g of players(); track g.first.id) {
         @let s = g.first;
-        <li class="signup">
+        @let open = isOpen(g.key);
+        <li class="signup" [class.is-open]="open">
           <div class="signup__head">
-            @if (s.player; as p) {
-              <img class="signup__avatar" [src]="p.avatar_url" alt="" width="40" height="40" />
-            }
-            <div class="signup__who">
-              <strong class="signup__name">{{ name(s) }}</strong>
-              <span class="signup__meta">
-                <!-- the Discord name – a player without Discord has only the in-game name -->
-                {{ s.player?.name !== name(s) ? s.player?.name + ' · ' : '' }}{{ k.updated }} {{ date(g.updated) }}
+            <!-- the whole head opens and closes the player's sign-ups, like a player on /marche (Gether 20. 10. 2026) -->
+            <button
+              type="button"
+              class="signup__toggle"
+              [attr.aria-expanded]="open"
+              [attr.aria-controls]="'signup-' + g.key"
+              (click)="toggle(g.key)"
+            >
+              @if (s.player; as p) {
+                <img class="signup__avatar" [src]="p.avatar_url" alt="" width="40" height="40" />
+              }
+              <span class="signup__who">
+                <strong class="signup__name">{{ name(s) }}</strong>
+                <span class="signup__meta">
+                  <!-- the Discord name – a player without Discord has only the in-game name -->
+                  {{ s.player?.name !== name(s) ? s.player?.name + ' · ' : '' }}{{ k.updated }} {{ date(g.updated) }}
+                </span>
               </span>
-            </div>
+              <svg class="signup__chevron" appIcon="chevron-down"></svg>
+              @if (!open) {
+                <!-- closed: each sign-up's role and its commanders -->
+                <span class="signup__preview">
+                  @for (one of g.signups; track one.id) {
+                    <span class="signup__glance">
+                      <span class="tag"><svg [appIcon]="one.role === 'rally' ? 'swords' : 'shield'"></svg>{{ one.role === 'rally' ? 'Rally' : 'Garrison' }}</span>
+                      @for (commander of [one.primary, one.secondary]; track $index) {
+                        @if (commander && portraits().get(commander); as src) {
+                          <img class="signup__mini" [src]="src" [alt]="commander" [title]="commander" width="64" height="64" loading="lazy" />
+                        }
+                      }
+                    </span>
+                  }
+                </span>
+              }
+            </button>
             <!-- a player without Discord has no contact here – leadership writes to them in the game -->
             @if (s.player?.discord_id; as discordId) {
               <a
@@ -91,40 +122,44 @@
               </a>
             }
           </div>
-          <!-- each sign-up of the player: rally and / or garrison, each with its own army -->
-          <div class="signup__entries">
-            @for (one of g.signups; track one.id) {
-              <div class="signup__entry">
-                <p class="signup__roles">
-                  @if (one.role === 'rally') {
-                    <span class="tag"><svg appIcon="swords"></svg>Rally</span>
-                  } @else {
-                    <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
-                  }
-                  @if (superuser()) {
-                    <button type="button" class="danger signup__remove" [class.is-armed]="armed() === one.id" (click)="remove(one)">
-                      <svg appIcon="trash-2"></svg>{{ armed() === one.id ? k.deleteConfirm : k.withdraw }}
-                    </button>
-                  }
-                </p>
-                <app-march-build class="signup__army is-flat" [march]="asMarch(one)" [portraits]="portraits()" [numbered]="false" [statsRequired]="true" />
-                @if (one.note) {
-                  <p class="signup__line signup__note">{{ one.note }}</p>
+          @if (open) {
+            <div class="signup__body" [id]="'signup-' + g.key">
+              <!-- each sign-up of the player: rally and / or garrison, each with its own army -->
+              <div class="signup__entries">
+                @for (one of g.signups; track one.id) {
+                  <div class="signup__entry">
+                    <p class="signup__roles">
+                      @if (one.role === 'rally') {
+                        <span class="tag"><svg appIcon="swords"></svg>Rally</span>
+                      } @else {
+                        <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
+                      }
+                      @if (superuser()) {
+                        <button type="button" class="danger signup__remove" [class.is-armed]="armed() === one.id" (click)="remove(one)">
+                          <svg appIcon="trash-2"></svg>{{ armed() === one.id ? k.deleteConfirm : k.withdraw }}
+                        </button>
+                      }
+                    </p>
+                    <app-march-build class="signup__army is-flat" [march]="asMarch(one)" [portraits]="portraits()" [numbered]="false" [statsRequired]="true" />
+                    @if (one.note) {
+                      <p class="signup__line signup__note">{{ one.note }}</p>
+                    }
+                  </div>
                 }
               </div>
-            }
-          </div>
-          @if (s.marches?.length) {
-            <details class="signup__marches">
-              <summary>{{ k.marches }} · {{ s.marches!.length }}</summary>
-              <ol class="mini-marches">
-                @for (march of s.marches; track march.id) {
-                  <li>
-                    <app-march-build class="is-flat" [march]="march" [portraits]="portraits()" [statsRequired]="true" />
-                  </li>
-                }
-              </ol>
-            </details>
+              @if (s.marches?.length) {
+                <details class="signup__marches">
+                  <summary>{{ k.marches }} · {{ s.marches!.length }}</summary>
+                  <ol class="mini-marches">
+                    @for (march of s.marches; track march.id) {
+                      <li>
+                        <app-march-build class="is-flat" [march]="march" [portraits]="portraits()" [statsRequired]="true" />
+                      </li>
+                    }
+                  </ol>
+                </details>
+              }
+            </div>
           }
         </li>
       }

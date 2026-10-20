@@ -1,0 +1,101 @@
+// the sign-ups of the players open and close like the players on /marche (Gether 20. 10. 2026); the rest of the list
+// is in kvk.scss
+
+// the whole head but "Kontaktovať" is the button that opens the player's sign-ups
+.signup__toggle {
+  position: relative;
+  display: flex;
+  flex: 1 1 260px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  // room for the chevron on the name row
+  padding: 14px 44px 14px 16px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.signup__chevron {
+  position: absolute;
+  top: 24px; // the middle of the 40 px avatar
+  right: 14px;
+  width: 20px;
+  height: 20px;
+  color: var(--text-dim);
+  pointer-events: none;
+  transition: transform 0.25s var(--ease-out);
+
+  .is-open & {
+    transform: rotate(180deg);
+  }
+
+  .signup__toggle:hover & {
+    color: var(--gold-300);
+  }
+}
+
+// "Rozbaliť všetky": the arrow turns like the one of a card
+.list__chevron {
+  transition: transform 0.25s var(--ease-out);
+
+  &.is-up {
+    transform: rotate(180deg);
+  }
+}
+
+// closed: each sign-up's role and its commanders
+.signup__preview {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding-left: 52px;
+
+  // a phone: under the avatar too
+  @media (max-width: 400px) {
+    padding-left: 0;
+  }
+}
+
+.signup__glance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.signup__mini {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-raised);
+  object-fit: cover;
+}
+
+.signup__head .signup__contact {
+  margin: 0 16px 0 auto;
+
+  // a phone: its own row under the head
+  @media (max-width: 480px) {
+    margin: 0 16px 14px;
+  }
+}
+
+.signup__body {
+  padding: 0 16px 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signup,
+  .signup__chevron,
+  .list__chevron {
+    transition: none;
+  }
+}

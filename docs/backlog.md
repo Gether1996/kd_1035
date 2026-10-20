@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **20. 10. 2026 – v1.35.4:** Prihlášky na KvK (R4, superadmin) sa rozbaľujú ako Marche hráčov: zatvorená karta ukáže meno, rolu a portréty commanderov, klik ju otvorí, pri filtroch je Rozbaliť / Zbaliť všetky.
 - **20. 10. 2026 – v1.35.3:** Detail návodu má už v prvom HTML (bez JavaScriptu) vlastný titulok, popis, canonical, hreflang a og:* – Google ho prestane brať ako kópiu úvodu; neznámy návod vráti zo servera 404 s noindex, návod v inej kategórii 301.
 - **20. 10. 2026 – v1.35.2:** Marche a prihlášky na KvK hráča so zrušeným schválením už nevidí nikto, ani superadmin – ostanú v databáze a po novom schválení sa vrátia.
 - **19. 10. 2026 – v1.35.1:** Strop bonusov armamentov – ATK, DEF a HP najviac 14 %, All DMG 8 %. Vyššia hodnota (preklep) je pri marchi aj prihláške na KvK červená ako zlý pár či formácia: rám, veta s hodnotou a maximom, „Na opravu“, počet v Hráčoch a Discord upozornenie; editor ju označí hneď pri písaní. Vyhodnocovanie ju počíta ako maximum (odhad acclaimu, Top 5 equip).
