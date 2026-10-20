@@ -19,7 +19,6 @@ urlpatterns = [
     path('me/alarms/<int:alarm_id>/', alarm_views.alarm),
     path('kvk/', kvk_views.state),
     path('kvk/signup/', kvk_views.signup),
-    path('kvk/settings/', kvk_views.settings),
     path('kvk/signups/', kvk_views.all_signups),
     path('kvk/signups/<int:signup_id>/', kvk_views.delete_signup),
     path('kvk/reviewers/', kvk_views.reviewers),

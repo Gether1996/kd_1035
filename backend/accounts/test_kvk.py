@@ -16,7 +16,7 @@ from django.test.utils import CaptureQueriesContext
 from PIL import Image
 
 from . import cleanup, discord_bot, private_images
-from .models import MAX_MARCHES, TERMS_VERSION, KvkSettings, KvkSignup, March, Player, PlayerSettings
+from .models import MAX_MARCHES, TERMS_VERSION, KvkSignup, March, Player, PlayerSettings
 from .newcomers import NAME_GRACE, announce_new_players, send_welcomes
 from .reminder_views import iso
 from .reminders import DiscordPaused
@@ -48,7 +48,6 @@ class KvkTestCase(TestCase):
         override = override_settings(PRIVATE_MEDIA_ROOT=self.media)
         override.enable()
         self.addCleanup(override.disable)
-        KvkSettings.objects.update_or_create(pk=1, defaults={'title_sk': '20.11. najbližšie KvK'})
         self.player = make_player()
         self.client = self.login(self.player.user)
 
@@ -76,7 +75,8 @@ class KvkTestCase(TestCase):
 class SignupTests(KvkTestCase):
     def test_state_signup_and_withdraw(self):
         state = self.client.get('/api/kvk/').json()
-        self.assertEqual(state['title_sk'], '20.11. najbližšie KvK')
+        # no heading any more (Gether 20. 10. 2026: the Nastavenia tab of /kvk is gone)
+        self.assertNotIn('title_sk', state)
         self.assertEqual(state['signups'], {'rally': None, 'garrison': None})
         self.assertFalse(state['reviewer'])
 
@@ -141,8 +141,8 @@ class SignupTests(KvkTestCase):
         self.assertEqual(self.sign_up(kind='garrison').status_code, 400)
         self.assertEqual(self.sign_up(kind='archer').json()['kind'], 'archer')
         self.assertEqual(self.sign_up(ingame_name='').status_code, 400)
-        # anyone sees the heading
-        self.assertEqual(Client().get('/api/kvk/').json()['title_sk'], '20.11. najbližšie KvK')
+        # anyone may ask
+        self.assertEqual(Client().get('/api/kvk/').json()['signups'], {'rally': None, 'garrison': None})
 
     def test_anonymous_and_password_admins_cannot_sign_up(self):
         anonymous = Client()
@@ -165,19 +165,17 @@ class ReviewTests(KvkTestCase):
         self.assertEqual([s['player']['ingame_name'] for s in data['signups']], ['Nelly'])
         self.assertEqual(data['signups'][0]['player']['discord_id'], self.player.discord_id)
         # reviewers may not manage
-        self.assertEqual(self.call('put', '/api/kvk/settings/', {'title_sk': 'X'}, client).status_code, 403)
         self.assertEqual(self.call('delete', f'/api/kvk/signups/{data["signups"][0]["id"]}/', client=client).status_code, 403)
         self.assertEqual(client.get('/api/kvk/reviewers/').status_code, 403)
 
-    def test_superuser_sets_the_heading_withdraws_signups_and_picks_reviewers(self):
+    def test_superuser_withdraws_signups_and_picks_reviewers(self):
         admin_player = make_player('245662824171438090')
         admin_player.user.is_superuser = True
         admin_player.user.save()
         admin = self.login(admin_player.user)
 
-        res = self.call('put', '/api/kvk/settings/', {'title_sk': ' 4.12. KvK ', 'title_cs': '4. 12. KvK'}, admin)
-        self.assertEqual(res.json(), {'title_sk': '4.12. KvK', 'title_cs': '4. 12. KvK'})
-        self.assertEqual(self.client.get('/api/kvk/').json()['title_cs'], '4. 12. KvK')
+        # the heading of the sign-ups is gone
+        self.assertEqual(self.call('put', '/api/kvk/settings/', {'title_sk': 'X'}, admin).status_code, 404)
 
         # a sign-up stays until the player or the superuser withdraws it
         signup = self.sign_up().json()

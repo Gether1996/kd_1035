@@ -7,7 +7,7 @@ from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
 from .local_auth import login_key
-from .models import Alarm, EventReminder, KvkSettings, KvkSignup, MarchNotice, Player, PlayerSettings, SentReminder
+from .models import Alarm, EventReminder, KvkSignup, MarchNotice, Player, PlayerSettings, SentReminder
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -198,19 +198,6 @@ class AlarmAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     @admin.display(description='hráč', ordering='player__global_name')
     def player_name(self, obj):
         return obj.player.ingame_name or obj.player.name
-
-
-@admin.register(KvkSettings)
-class KvkSettingsAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
-    """The heading of the KvK sign-ups – normally set on /kvk (Nastavenia); one row."""
-
-    fields = ['title_sk', 'title_cs']
-
-    def has_add_permission(self, request):
-        return super().has_add_permission(request) and not KvkSettings.objects.exists()
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 @admin.register(PlayerSettings)

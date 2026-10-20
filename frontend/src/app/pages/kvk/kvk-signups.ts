@@ -20,7 +20,7 @@ import {
 import { ArmoryApi } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
-import { KVK_KINDS, KvkApi, KvkHeading, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
+import { KVK_KINDS, KvkApi, KvkSignup, MarchKind, asMarch, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
 import { copyText } from '../../shared/copy-link';
@@ -53,8 +53,6 @@ export class KvkSignups {
   readonly data = input.required<HttpResourceRef<{ signups: KvkSignup[] } | undefined>>();
   /** the superuser may withdraw a sign-up */
   readonly superuser = input(false);
-  /** the heading set by the superuser – the first line of the roster */
-  readonly heading = input<KvkHeading | null>(null);
   readonly changed = output<void>();
 
   private readonly api = inject(KvkApi);
@@ -135,11 +133,9 @@ export class KvkSignups {
   private readonly injector = inject(Injector);
   /** the shown sign-ups as Discord messages (one, or parts of at most 1900 characters) */
   protected readonly roster = computed(() => {
-    const heading = this.heading();
     const t = this.i18n.t();
     const formations = this.armory.index()?.formations;
     return rosterText(this.shown(), {
-      heading: (heading && ((this.i18n.lang() === 'cs' && heading.title_cs) || heading.title_sk)) || '',
       kinds: t.marches.kinds,
       noKind: t.kvk.roster.noKind,
       formation: (id) => formations?.get(id)?.name ?? '',

@@ -2,10 +2,7 @@
 @let m = i18n.t().marches;
 <section class="panel" aria-labelledby="kvk-form-title">
   <header class="panel__head">
-    <div>
-      <p class="panel__eyebrow">{{ k.signupEyebrow }}</p>
-      <h2 class="panel__title" id="kvk-form-title">{{ title() || k.title }}</h2>
-    </div>
+    <h2 class="panel__title" id="kvk-form-title">{{ k.tabs.mine }}</h2>
   </header>
   <p class="panel__lead">{{ k.lead }}</p>
 
@@ -51,7 +48,7 @@
         [commanders]="commanders()"
         [kinds]="kinds"
         [error]="armyProblem()"
-        [heading]="(title() || k.title) + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
+        [heading]="k.title + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
         [idPrefix]="'kvk-' + role()"
       />
 

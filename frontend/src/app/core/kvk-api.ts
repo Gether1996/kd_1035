@@ -11,13 +11,6 @@ export const KVK_ROLES: KvkRole[] = ['rally', 'garrison'];
 /** the troops of a sign-up's army – its bonuses are read as theirs (Gether 11. 10. 2026) */
 export const KVK_KINDS: MarchKind[] = ['infantry', 'cavalry', 'archer'];
 
-/** the heading of the sign-ups – the superuser writes the date of the next KvK into it; '' = the page's own title */
-export interface KvkHeading {
-  title_sk: string;
-  /** '' = the Slovak title */
-  title_cs: string;
-}
-
 /** filled in exactly like a march (Gether 11. and 12. 10. 2026): the army of March plus the role and a note */
 export interface KvkSignup extends Omit<March, 'position'> {
   role: KvkRole;
@@ -111,7 +104,7 @@ export const marchHasProblem = (march: March): boolean =>
 export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 });
 
 /** No rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026). */
-export interface KvkState extends KvkHeading {
+export interface KvkState {
   /** the player's rally and garrison sign-ups */
   signups: Record<KvkRole, KvkSignup | null>;
   /** signed in with Discord */
@@ -200,10 +193,6 @@ export class KvkApi {
   /** the superuser withdraws someone's sign-up */
   deleteSignup(id: number): Promise<unknown> {
     return firstValueFrom(this.http.delete(`/api/kvk/signups/${id}/`));
-  }
-
-  saveHeading(heading: KvkHeading): Promise<KvkHeading> {
-    return firstValueFrom(this.http.put<KvkHeading>('/api/kvk/settings/', heading));
   }
 
   reviewers(when: () => boolean) {

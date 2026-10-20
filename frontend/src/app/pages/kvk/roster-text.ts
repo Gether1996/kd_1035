@@ -4,8 +4,6 @@ import { KVK_KINDS, KVK_ROLES, KvkSignup, MarchKind } from '../../core/kvk-api';
 export const ROSTER_CHUNK = 1900;
 
 export interface RosterLabels {
-  /** the heading of the sign-ups (the date of the next KvK), '' = none */
-  heading: string;
   /** the troop names of the site (marches.kinds) */
   kinds: Record<MarchKind, string>;
   /** a sign-up saved before the troops were required */
@@ -30,26 +28,24 @@ export function discordPlain(text: string): string {
 /**
  * "Kopírovať pre Discord" on the reviewers' list: the sign-ups the filters show as a compact roster – role, troops,
  * player and commander pair (formation when set). Notes, Discord names and IDs, bonuses and equipment stay out. Split
- * into messages of at most ROSTER_CHUNK characters at line boundaries; a heading never ends a message.
+ * into messages of at most ROSTER_CHUNK characters at line boundaries; a role or troops heading never ends a message.
  */
 export function rosterText(signups: readonly KvkSignup[], labels: RosterLabels): string[] {
   if (!signups.length) return [];
   // each block starts with its heading lines and the first player, so they never part
   const blocks: string[][] = [];
-  // the heading of the sign-ups opens the first block
-  let top = labels.heading.trim() ? [`**${discordPlain(labels.heading)}**`] : [];
   for (const role of KVK_ROLES) {
     const ofRole = signups.filter((s) => s.role === role);
     if (!ofRole.length) continue;
     // an empty line before each role (dropped at the top of a message)
-    let head = [...top, '', `**${role === 'rally' ? 'Rally' : 'Garrison'} (${ofRole.length})**`];
+    let head = ['', `**${role === 'rally' ? 'Rally' : 'Garrison'} (${ofRole.length})**`];
     // the troops in the order of the filters, then any other (an older sign-up without troops)
     const kinds = [...new Set<MarchKind | ''>([...KVK_KINDS, ...ofRole.map((s) => s.kind)])];
     for (const kind of kinds) {
       const lines = ofRole.filter((s) => s.kind === kind).map((s) => line(s, labels));
       if (!lines.length) continue;
       blocks.push([...head, `__${kind ? labels.kinds[kind] : labels.noKind}__`, lines[0]], ...lines.slice(1).map((l) => [l]));
-      head = top = [];
+      head = [];
     }
   }
   return pack(blocks);

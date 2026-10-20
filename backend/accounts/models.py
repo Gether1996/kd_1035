@@ -285,9 +285,9 @@ class Alarm(models.Model):
 
 
 class KvkSettings(models.Model):
-    """The heading of the KvK sign-ups (one row) – the superuser writes the date of the next KvK into it on /kvk. No
-    rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026: "nech to nemusia
-    rally a garrisoni vypĺňať každé jedno KvK")."""
+    """No longer read (Gether 20. 10. 2026: the Nastavenia tab of /kvk "nesluzi to na nic"): once the heading of the
+    KvK sign-ups the superuser set on /kvk. The table waits for a migration that drops it (docs/odporucania.md). No
+    rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026)."""
 
     title_sk = models.CharField('názov (SK)', max_length=80, blank=True)
     title_cs = models.CharField('názov (CZ)', max_length=80, blank=True, help_text='Prázdne = slovenský názov.')

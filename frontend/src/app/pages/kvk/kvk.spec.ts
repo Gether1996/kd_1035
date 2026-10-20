@@ -12,8 +12,6 @@ import { KvkPage } from './kvk-page';
 import { KvkSignups } from './kvk-signups';
 
 const STATE: KvkState = {
-  title_sk: '20.11. najbližšie KvK',
-  title_cs: '',
   signups: { rally: null, garrison: null },
   player: true,
   ingame_name: 'Nelly',
@@ -77,8 +75,8 @@ describe('KvkForm', () => {
     const submit = () => el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     const state = () => el.querySelector('.form__state')?.textContent;
     expect(el.querySelector<HTMLInputElement>('#kvk-name')!.value).toBe('Nelly');
-    // the heading set by the superuser
-    expect(el.querySelector('#kvk-form-title')?.textContent).toContain('20.11. najbližšie KvK');
+    // no heading set by the superuser any more (Gether 20. 10. 2026)
+    expect(el.querySelector('#kvk-form-title')?.textContent?.trim()).toBe('Moja prihláška');
     // cavalry, infantry or archers; no screenshots, no bonuses in the form (they are clicked together after it)
     expect(el.querySelectorAll('.kind').length).toBe(3);
     expect(el.querySelector('input[type="file"]')).toBeNull();
@@ -411,7 +409,6 @@ describe('KvkSignups', () => {
     const data = TestBed.runInInjectionContext(() => TestBed.inject(KvkApi).signups(() => true));
     const fixture = TestBed.createComponent(KvkSignups);
     fixture.componentRef.setInput('data', data);
-    fixture.componentRef.setInput('heading', { title_sk: '20.11. najbližšie KvK', title_cs: '' });
     fixture.detectChanges();
     const player = (id: number, ingame_name: string) => ({ id, name: ingame_name.toLowerCase(), ingame_name, avatar_url: '', discord_id: String(900 + id) });
     http.expectOne((r) => r.url === '/api/kvk/signups/').flush({
@@ -437,7 +434,7 @@ describe('KvkSignups', () => {
       expect(el.querySelectorAll('.list__copy button').length).toBe(1);
       expect(copy().textContent?.trim()).toBe('Kopírovať pre Discord');
       copy().click();
-      expect(writeText).toHaveBeenCalledWith('**20.11. najbližšie KvK**\n\n**Rally (1)**\n__Jazda__\n• Nelly – Attila / Takeda Shingen');
+      expect(writeText).toHaveBeenCalledWith('**Rally (1)**\n__Jazda__\n• Nelly – Attila / Takeda Shingen');
       await flushAll(fixture);
       expect(el.querySelector('.list__copied[role="status"]')?.textContent?.trim()).toBe('Skopírované – vlož to do Discordu.');
       expect(el.querySelector('.list__manual')).toBeNull();

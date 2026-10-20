@@ -1,7 +1,7 @@
 """KvK sign-ups (/api/kvk/…): players sign up for rally and / or garrison, each filled in exactly like a march (Gether
 11. and 12. 10. 2026) – troop type, commanders with their skills, the build clicked together, armament bonuses – plus a
-note; no screenshots since 12. 10. 2026. No rounds: a sign-up stays until the player or the superuser withdraws it; the
-superuser only sets the heading (KvkSettings, e.g. the date of the next KvK) and picks the reviewers. Reviewers
+note; no screenshots since 12. 10. 2026. No rounds and no heading (Gether 20. 10. 2026): a sign-up stays until the
+player or the superuser withdraws it; the superuser picks the reviewers. Reviewers
 (Player.kvk_reviewer, e.g. R4) and the superuser see every sign-up with the player's marches. Session + CSRF like the
 rest of the player API.
 """
@@ -20,7 +20,7 @@ from rest_framework.response import Response
 
 from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
-from .models import APPROVED, MARCH_STATS, KvkSettings, KvkSignup, March, Player, PlayerSettings
+from .models import APPROVED, MARCH_STATS, KvkSignup, March, Player, PlayerSettings
 from .pair_check import march_checker, over_caps
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
@@ -41,11 +41,6 @@ class IsSuperuser(BasePermission):
 
 
 # ---------------------------------------------------------------- data
-
-
-def settings_data() -> dict:
-    heading = KvkSettings.load()
-    return {'title_sk': heading.title_sk, 'title_cs': heading.title_cs}
 
 
 def army_data(army) -> dict:
@@ -118,13 +113,12 @@ class SignupSerializer(BuildSerializer):
 @never_cache
 @api_view(['GET'])
 def state(request):
-    """The heading, the player's rally and garrison sign-ups and what the visitor may do. Anyone may ask (anonymous
-    visitors get the heading only)."""
+    """The player's rally and garrison sign-ups and what the visitor may do. Anyone may ask (anonymous visitors get
+    nothing of their own)."""
     player = player_of(request.user)
     mine = signups_of(player) if player else []
     return Response(
         {
-            **settings_data(),
             'signups': {role: next((signup_data(s) for s in mine if s.role == role), None) for role in ROLES},
             'player': bool(player),
             'ingame_name': player.ingame_name if player else '',
@@ -207,23 +201,6 @@ def delete_signup(request, signup_id):
     """The superuser withdraws someone's sign-up."""
     get_object_or_404(KvkSignup, pk=signup_id).delete()
     return Response(status=204)
-
-
-class SettingsSerializer(serializers.Serializer):
-    title_sk = serializers.CharField(max_length=80, allow_blank=True, trim_whitespace=True)
-    title_cs = serializers.CharField(max_length=80, allow_blank=True, default='', trim_whitespace=True)
-
-
-@never_cache
-@api_view(['PUT'])
-@permission_classes([IsSuperuser])
-@throttle_classes([WriteThrottle])
-def settings(request):
-    """PUT {title_sk, title_cs?}: the heading of the sign-ups (e.g. the date of the next KvK)."""
-    form = SettingsSerializer(data=request.data)
-    form.is_valid(raise_exception=True)
-    KvkSettings.objects.update_or_create(pk=1, defaults=form.validated_data)
-    return Response(settings_data())
 
 
 # ---------------------------------------------------------------- superuser: who sees the sign-ups

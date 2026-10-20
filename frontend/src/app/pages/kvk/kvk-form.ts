@@ -90,12 +90,6 @@ export class KvkForm {
   /** the role whose withdraw waits for the confirmation */
   protected readonly confirmWithdraw = signal<KvkRole | null>(null);
 
-  /** the heading set by the superuser (e.g. "20.11. najbližšie KvK"); '' = none */
-  protected readonly title = computed(() => {
-    const s = this.state();
-    return (this.i18n.lang() === 'cs' && s.title_cs) || s.title_sk;
-  });
-
   protected readonly asMarch = asMarch;
   protected readonly built = hasBuild;
 

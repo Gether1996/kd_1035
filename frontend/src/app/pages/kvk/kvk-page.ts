@@ -9,20 +9,19 @@ import { PageHeader } from '../../shared/page-header';
 import { PendingApproval } from '../../shared/pending-approval';
 import { reloadOnReturn } from '../../shared/reload-on-return';
 import { KvkForm } from './kvk-form';
-import { KvkSettings } from './kvk-settings';
 import { KvkSignups } from './kvk-signups';
 
-type Tab = 'mine' | 'list' | 'settings';
+type Tab = 'mine' | 'list';
 
 /**
  * /kvk – KvK sign-ups for rally and garrison (Gether 11. 10. 2026). A player signs up with screenshots; the sign-ups
- * stay until withdrawn (no rounds). The reviewers (R4) and the superuser see every sign-up; the superuser sets the
- * heading (the date of the next KvK), withdraws sign-ups and picks the reviewers. A prerendered shell,
+ * stay until withdrawn (no rounds, no heading – Gether 20. 10. 2026). The reviewers (R4) and the superuser see every
+ * sign-up; the superuser withdraws sign-ups and picks the reviewers (Hráči on /ucet). A prerendered shell,
  * not indexed, not in the sitemap.
  */
 @Component({
   selector: 'app-kvk-page',
-  imports: [RouterLink, Icon, PageHeader, KvkForm, KvkSignups, KvkSettings, PendingApproval],
+  imports: [RouterLink, Icon, PageHeader, KvkForm, KvkSignups, PendingApproval],
   template: `
     @let k = t().kvk;
 
@@ -66,9 +65,6 @@ type Tab = 'mine' | 'list' | 'settings';
             <button type="button" [attr.aria-pressed]="tab() === 'list' || (!s.player && tab() === 'mine')" (click)="tab.set('list')">
               {{ k.tabs.list }}
             </button>
-            @if (s.superuser) {
-              <button type="button" [attr.aria-pressed]="tab() === 'settings'" (click)="tab.set('settings')">{{ k.tabs.settings }}</button>
-            }
           </div>
         }
         @switch (s.player || tab() !== 'mine' ? tab() : 'list') {
@@ -81,10 +77,7 @@ type Tab = 'mine' | 'list' | 'settings';
             }
           }
           @case ('list') {
-            <app-kvk-signups [data]="signups" [superuser]="s.superuser" [heading]="s" (changed)="reloadSignups()" />
-          }
-          @case ('settings') {
-            <app-kvk-settings [heading]="s" (changed)="reloadState()" />
+            <app-kvk-signups [data]="signups" [superuser]="s.superuser" (changed)="reloadSignups()" />
           }
         }
       } @else {
@@ -140,10 +133,5 @@ export class KvkPage {
   /** a sign-up changed: the reviewers' list asks again (the form keeps its own state) */
   protected reloadSignups(): void {
     if (this.canReview()) this.signups.reload();
-  }
-
-  /** the heading changed */
-  protected reloadState(): void {
-    this.state.reload();
   }
 }

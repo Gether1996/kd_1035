@@ -35,6 +35,7 @@ Stav k **10. 10. 2026** (v1.6.3, po 6. kole agentov). Kritik v 5. aj 6. kole uvi
 - **Stav migrácie na webe** (otvorená / po dohode / zatvorená) – iba ak ho vedenie bude udržiavať aktuálny.
 - **Text prevádzkovateľa** na stránke Ochrana údajov („Gether, R4 kráľovstva 1035, kontakt cez Discord“) – potvrdiť alebo upraviť.
 - **Repo:** zvážiť vrátenie GitHub repa na privátne (snapshot databázy je v gite).
+- **Tabuľka `KvkSettings`** (zrušený názov prihlasovania na KvK, v1.35.5): web ju už nečíta; zmazať ju môže migrácia (`DeleteModel`) – zmaže len uložený názov, napr. „20.11.“. Povedz, ak ju mám odstrániť.
 
 ## 6. Riziká a údržba
 
