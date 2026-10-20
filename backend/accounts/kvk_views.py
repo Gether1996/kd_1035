@@ -178,6 +178,8 @@ def signup(request):
         player.ingame_name = data.pop('ingame_name')
         player.save(update_fields=['ingame_name'])
         mine, _ = KvkSignup.objects.update_or_create(player=player, role=data.pop('role'), defaults=data)
+        # one survey for both sign-ups (Gether 20. 10. 2026): the other one gets the same answers (its "upravené" stays)
+        KvkSignup.objects.filter(player=player).exclude(pk=mine.pk).update(budget=mine.budget, online=mine.online)
     return Response(signup_data(mine))
 
 

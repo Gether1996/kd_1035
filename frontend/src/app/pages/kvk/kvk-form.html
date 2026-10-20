@@ -129,14 +129,14 @@
     @if (s.note) {
       <p class="kvk-note">{{ s.note }}</p>
     }
-    @if (missingSurvey(s)) {
+    @if (!survey()) {
       <!-- a sign-up from before the survey: the pencil's form asks for it -->
       <div class="survey-missing">
         <p><span class="survey-missing__badge" aria-hidden="true">!</span>{{ k.survey.missing }}</p>
         <button type="button" class="pill-btn" (click)="edit()">{{ k.survey.fill }}</button>
       </div>
     } @else {
-      @let answers = surveyOf(s);
+      @let answers = surveyOf(survey()!);
       <dl class="survey-answers">
         <div>
           <dt>{{ k.survey.budget }}</dt>

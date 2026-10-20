@@ -192,6 +192,28 @@ describe('KvkForm', () => {
     http.verify();
   });
 
+  it('one survey counts for both sign-ups (Gether 20. 10. 2026)', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(KvkForm);
+    const garrison = { ...SIGNUP, id: 10, role: 'garrison' as const, kind: 'archer' as const, budget: '' as const, online: [] };
+    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: SIGNUP, garrison } });
+    fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    el.querySelectorAll<HTMLButtonElement>('.role-tabs button')[1].click();
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    // the garrison sign-up shows the answers of the rally one, no reminder
+    expect(el.querySelector('.survey-missing')).toBeNull();
+    expect(el.querySelector('.survey-answers dd')?.textContent?.trim()).toBe('do 100 € (≈ 2 500 Kč)');
+    http.verify();
+  });
+
   it('a sign-up from before the survey asks for it on its card', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);

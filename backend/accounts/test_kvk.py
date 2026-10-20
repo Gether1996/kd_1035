@@ -923,6 +923,15 @@ class SurveyTests(KvkTestCase):
         # filled in with the form again: gone
         self.sign_up(online=['mornings', 'on_call'])
         self.assertFalse(me())
+        # one survey for both sign-ups (Gether 20. 10. 2026): the garrison one takes the answers of the rally one, and
+        # the next answers go to both
+        self.sign_up(role='garrison', kind='archer', budget='to50', online=['nights'])
+        self.assertEqual(
+            sorted(KvkSignup.objects.values_list('role', 'budget', 'online')),
+            [('garrison', 'to50', ['nights']), ('rally', 'to50', ['nights'])],
+        )
+        KvkSignup.objects.filter(role='garrison').update(budget='', online=[])
+        self.assertFalse(me())  # the rally one has it
         # not approved any more: nothing the player could change
         KvkSignup.objects.update(online=[])
         Player.objects.filter(pk=self.player.pk).update(approved=False)

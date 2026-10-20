@@ -54,7 +54,7 @@ const perRole = <T,>(make: (role: KvkRole) => T): PerRole<T> => ({ rally: make('
  * stays for every KvK until the player or the superuser withdraws it.
  * The form also asks a short survey (Gether 20. 10. 2026): how much the player puts into the KvK (one) and when they are
  * online (any) – a rough guess; the second sign-up starts with the answers of the first. A sign-up from before the
- * survey asks for it on its card (and the header's red "!" leads here).
+ * survey asks for it on its card (and the header's red "!" leads here); one survey counts for both sign-ups.
  */
 @Component({
   selector: 'app-kvk-form',
@@ -78,7 +78,6 @@ export class KvkForm {
   protected readonly kinds = KVK_KINDS;
   protected readonly budgetChoices = KVK_BUDGETS;
   protected readonly onlineChoices = KVK_ONLINE;
-  protected readonly missingSurvey = surveyMissing;
   protected readonly surveyOf = (signup: KvkSignup) => surveyText(signup, this.t().survey);
   private readonly buildEditor = viewChild.required(BuildEditor);
 
@@ -98,17 +97,19 @@ export class KvkForm {
   /** the form of a role with a sign-up is open (the pencil) */
   protected readonly editing = signal<KvkRole | null>(null);
 
-  /** the tab: rally, or garrison when the player signed up only for that – or when only its survey is missing (the
-   * header's "!" leads here) */
-  protected readonly role = linkedSignal<KvkRole>(() => {
-    const { rally, garrison } = this.state().signups;
-    if (garrison && surveyMissing(garrison) && !(rally && surveyMissing(rally))) return 'garrison';
-    return !rally && garrison ? 'garrison' : 'rally';
-  });
+  /** the tab: rally, or garrison when the player signed up only for that */
+  protected readonly role = linkedSignal<KvkRole>(() =>
+    !this.state().signups.rally && this.state().signups.garrison ? 'garrison' : 'rally',
+  );
   protected readonly signup = computed(() => this.signups()[this.role()]);
   protected readonly army = computed(() => this.armies()[this.role()]);
   protected readonly note = computed(() => this.notes()[this.role()]);
   protected readonly budget = computed(() => this.budgets()[this.role()]);
+  /** one survey counts for both sign-ups (Gether 20. 10. 2026): the shown one's, else the other's; null = none yet */
+  protected readonly survey = computed(() => {
+    const all = this.signups();
+    return [all[this.role()], all.rally, all.garrison].find((s) => s && !surveyMissing(s)) ?? null;
+  });
   protected readonly online = computed(() => this.onlines()[this.role()]);
   /** the form shows without a sign-up and while the pencil is on */
   protected readonly formOpen = computed(() => !this.signup() || this.editing() === this.role());
@@ -241,7 +242,16 @@ export class KvkForm {
   /** a sign-up saved by the form or the build editor */
   protected store(signup: KvkSignup | March): void {
     const role = (signup as KvkSignup).role ?? this.role();
-    this.signups.update((all) => ({ ...all, [role]: { ...(all[role] ?? {}), ...signup } as KvkSignup }));
+    this.signups.update((all) => {
+      const next = { ...all, [role]: { ...(all[role] ?? {}), ...signup } as KvkSignup };
+      // the form's survey goes to the other sign-up too, as on the server
+      const other: KvkRole = role === 'rally' ? 'garrison' : 'rally';
+      const saved = signup as KvkSignup;
+      if (next[other] && saved.budget && saved.online?.length) {
+        next[other] = { ...next[other]!, budget: saved.budget, online: saved.online };
+      }
+      return next;
+    });
   }
 
   /** the player's sign-up of a role */
