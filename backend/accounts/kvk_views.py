@@ -27,6 +27,8 @@ from .views import cannot_post, player_of
 
 log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
+# up to two sign-ups per role (Gether 22. 10. 2026)
+SLOTS = (1, 2)
 PROBLEMS = ('pair_problem', 'formation_problem', 'stats_problem')
 
 
@@ -68,6 +70,7 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
     data = {
         'id': signup.pk,
         'role': signup.role,
+        'slot': signup.slot,
         'kind': signup.kind,
         **army_data(signup),
         # a bonus over its cap – red like on /marche (Gether 19. 10. 2026); the sign-up's own player, R4, the superuser
@@ -89,6 +92,13 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
         }
         data['marches'] = [march_data(march) for march in player.marches.all()]
     return data
+
+
+def slot_of(value) -> int | None:
+    """1 or 2 from the body or the query ("2" too); anything else None"""
+    if str(value).strip() not in ('1', '2') or isinstance(value, bool):
+        return None
+    return int(value)
 
 
 def signups_of(player: Player) -> list[KvkSignup]:
@@ -129,7 +139,8 @@ def state(request):
     mine = signups_of(player) if player else []
     return Response(
         {
-            'signups': {role: next((signup_data(s) for s in mine if s.role == role), None) for role in ROLES},
+            # rally before garrison, the first before the second
+            'signups': [signup_data(s) for s in sorted(mine, key=lambda s: (s.role != 'rally', s.slot))],
             'player': bool(player),
             'ingame_name': player.ingame_name if player else '',
             'approved': bool(player and player.may_post),
@@ -144,22 +155,30 @@ def state(request):
 @permission_classes([IsPlayer])
 @throttle_classes([WriteThrottle])
 def signup(request):
-    """PUT {ingame_name, role, kind, primary, secondary?, primary_skills?, secondary_skills?, note?, budget, online}: sign up as rally or
-    garrison, or change that sign-up (the in-game name is saved on the player too). PATCH {role, gear?, formation?,
-    inscriptions?, attack?, defense?, health?, damage?}: the build of that sign-up (404 without one). DELETE
-    ?role=<rally|garrison>: withdraw that sign-up."""
+    """PUT {ingame_name, role, slot?, kind, primary, secondary?, primary_skills?, secondary_skills?, note?, budget, online}:
+    sign up as rally or garrison, or change that sign-up (the in-game name is saved on the player too). PATCH {role,
+    slot?, gear?, formation?, inscriptions?, attack?, defense?, health?, damage?}: the build of that sign-up (404 without
+    one). DELETE ?role=<rally|garrison>&slot=<1|2>: withdraw that sign-up. Up to two per role (Gether 22. 10. 2026),
+    slot 1 when left out; a second one only next to a first, and withdrawing the first makes the second the first."""
     player = request.user.player
     if request.method == 'DELETE':
         role = request.query_params.get('role')
-        if role not in ROLES:
+        slot = slot_of(request.query_params.get('slot', 1))
+        if role not in ROLES or not slot:
             return Response({'role': 'invalid'}, status=400)
-        KvkSignup.objects.filter(player=player, role=role).delete()
+        with transaction.atomic():
+            KvkSignup.objects.filter(player=player, role=role, slot=slot).delete()
+            # the second one moves up – a role never has only a "second" sign-up
+            KvkSignup.objects.filter(player=player, role=role, slot__gt=slot).update(slot=slot)
         return Response(status=204)
     if blocked := cannot_post(player):
         return blocked
     body = request.data if isinstance(request.data, dict) else {}
     role = body.get('role')
-    saved = KvkSignup.objects.filter(player=player, role=role).first() if role in ROLES else None
+    slot = slot_of(body.get('slot', 1))
+    if not slot:
+        return Response({'slot': 'invalid'}, status=400)
+    saved = KvkSignup.objects.filter(player=player, role=role, slot=slot).first() if role in ROLES else None
     if request.method == 'PATCH':
         if not saved:
             return Response(status=404)
@@ -174,11 +193,14 @@ def signup(request):
     form = SignupSerializer(data=body, context={'current': current_of(saved), 'creating': saved is None})
     form.is_valid(raise_exception=True)
     data = form.validated_data
+    if not saved and slot > 1 and not KvkSignup.objects.filter(player=player, role=role, slot=slot - 1).exists():
+        return Response({'slot': 'first'}, status=400)
     with transaction.atomic():
         player.ingame_name = data.pop('ingame_name')
         player.save(update_fields=['ingame_name'])
-        mine, _ = KvkSignup.objects.update_or_create(player=player, role=data.pop('role'), defaults=data)
-        # one survey for both sign-ups (Gether 20. 10. 2026): the other one gets the same answers (its "upravené" stays)
+        mine, _ = KvkSignup.objects.update_or_create(player=player, role=data.pop('role'), slot=slot, defaults=data)
+        # one survey for all the player's sign-ups (Gether 20. 10. 2026): the others get the same answers (their
+        # "upravené" stays)
         KvkSignup.objects.filter(player=player).exclude(pk=mine.pk).update(budget=mine.budget, online=mine.online)
     return Response(signup_data(mine))
 
@@ -199,8 +221,8 @@ def all_signups(request):
     )
     rows = sorted(
         (signup_data(s, with_player=True) for s in signups),
-        # by player, the rally sign-up before the garrison one (one card per player on /kvk)
-        key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role'] != 'rally'),
+        # by player, the rally sign-ups before the garrison ones, the first before the second (one card per player)
+        key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role'] != 'rally', s['slot']),
     )
     return Response({'signups': rows})
 
@@ -259,7 +281,8 @@ def reviewers(request):
                 'marches': len(p.marches.all()),
                 # red on /marche (marchHasProblem in core/kvk-api.ts)
                 'issues': sum(1 for march in p.marches.all() if any(map(check(march).get, PROBLEMS))),
-                'kvk': sorted(signup.role for signup in p.kvk_signups.all()),
+                # the roles signed up for, each once (two rally sign-ups are one "rally")
+                'kvk': sorted({signup.role for signup in p.kvk_signups.all()}),
                 'superuser': p.user.is_superuser,
                 # without Discord: the superadmin gives a code for a new password, deletes one waiting (local_auth.py)
                 'local': p.local,

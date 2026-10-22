@@ -12,6 +12,7 @@ const player = (id: number, ingame_name: string) => ({
 const signup = (over: Partial<KvkSignup>): KvkSignup => ({
   id: 1,
   role: 'rally',
+  slot: 1,
   kind: 'cavalry',
   primary: 'Attila',
   secondary: 'Takeda Shingen',

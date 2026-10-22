@@ -41,9 +41,15 @@ import { ArmyDraft, ArmyError, MarchFields, armyDraft, armyError } from '../../s
 import { BuildEditor } from '../players-marches/build-editor';
 import { surveyText } from './survey';
 
-type PerRole<T> = Record<KvkRole, T>;
+/** up to two sign-ups per role (Gether 22. 10. 2026): rally 1, rally 2, garrison 1, garrison 2 */
+type Slot = KvkSignup['slot'];
+type Key = `${KvkRole}-${Slot}`;
+type PerKey<T> = Record<Key, T>;
+const KEYS: Key[] = ['rally-1', 'rally-2', 'garrison-1', 'garrison-2'];
+const keyOf = (role: KvkRole, slot: Slot): Key => `${role}-${slot}`;
 
-const perRole = <T,>(make: (role: KvkRole) => T): PerRole<T> => ({ rally: make('rally'), garrison: make('garrison') });
+const perKey = <T,>(make: (key: Key) => T): PerKey<T> =>
+  Object.fromEntries(KEYS.map((key) => [key, make(key)])) as PerKey<T>;
 
 /**
  * The player's KvK sign-ups on /kvk – filled in exactly like "Moje marche" (Gether 12. 10. 2026: "žiadne screenshoty
@@ -54,7 +60,9 @@ const perRole = <T,>(make: (role: KvkRole) => T): PerRole<T> => ({ rally: make('
  * stays for every KvK until the player or the superuser withdraws it.
  * The form also asks a short survey (Gether 20. 10. 2026): how much the player puts into the KvK (one) and when they are
  * online (any) – a rough guess; the second sign-up starts with the answers of the first. A sign-up from before the
- * survey asks for it on its card (and the header's red "!" leads here); one survey counts for both sign-ups.
+ * survey asks for it on its card (and the header's red "!" leads here); one survey counts for all the sign-ups.
+ * Up to two sign-ups per role (Gether 22. 10. 2026: "2x rally a 2x garrison"): under the role tabs "1. prihláška" and
+ * "2. prihláška" (or "+ 2. prihláška" once the first is saved); withdrawing the first makes the second the first.
  */
 @Component({
   selector: 'app-kvk-form',
@@ -87,49 +95,75 @@ export class KvkForm {
   protected readonly portraits = computed(() => new Map(this.commanders().map((c) => [c.name, c.icon])));
 
   /** the player's sign-ups – the forms start from them */
-  protected readonly signups = linkedSignal<PerRole<KvkSignup | null>>(() => this.state().signups);
+  protected readonly signups = linkedSignal<PerKey<KvkSignup | null>>(() => {
+    const all = this.state().signups;
+    return perKey((key) => all.find((s) => keyOf(s.role, s.slot ?? 1) === key) ?? null);
+  });
   protected readonly ingameName = linkedSignal(() => this.state().ingame_name);
-  protected readonly notes = linkedSignal(() => perRole((role) => this.state().signups[role]?.note ?? ''));
-  protected readonly armies = linkedSignal(() => perRole((role) => armyDraft(this.state().signups[role])));
-  /** the survey of each role: its own answers, else those of the other sign-up (the same player, the same KvK) */
-  protected readonly budgets = linkedSignal(() => perRole((role) => this.surveyStart(role).budget));
-  protected readonly onlines = linkedSignal(() => perRole((role) => this.surveyStart(role).online));
-  /** the form of a role with a sign-up is open (the pencil) */
-  protected readonly editing = signal<KvkRole | null>(null);
+  protected readonly notes = linkedSignal(() => perKey((key) => this.signups()[key]?.note ?? ''));
+  protected readonly armies = linkedSignal(() => perKey((key) => armyDraft(this.signups()[key])));
+  /** the survey of each form: its own answers, else those of another sign-up (the same player, the same KvK) */
+  protected readonly budgets = linkedSignal(() => perKey((key) => this.surveyStart(key).budget));
+  protected readonly onlines = linkedSignal(() => perKey((key) => this.surveyStart(key).online));
+  /** the form of a sign-up is open (the pencil) */
+  protected readonly editing = signal<Key | null>(null);
 
   /** the tab: rally, or garrison when the player signed up only for that */
   protected readonly role = linkedSignal<KvkRole>(() =>
-    !this.state().signups.rally && this.state().signups.garrison ? 'garrison' : 'rally',
+    !this.state().signups.some((s) => s.role === 'rally') && this.state().signups.some((s) => s.role === 'garrison')
+      ? 'garrison'
+      : 'rally',
   );
-  protected readonly signup = computed(() => this.signups()[this.role()]);
-  protected readonly army = computed(() => this.armies()[this.role()]);
-  protected readonly note = computed(() => this.notes()[this.role()]);
-  protected readonly budget = computed(() => this.budgets()[this.role()]);
-  /** one survey counts for both sign-ups (Gether 20. 10. 2026): the shown one's, else the other's; null = none yet */
+  /** the first or the second sign-up of the role */
+  protected readonly slot = linkedSignal<KvkRole, Slot>({ source: this.role, computation: () => 1 });
+  protected readonly key = computed(() => keyOf(this.role(), this.slot()));
+  protected readonly signup = computed(() => this.signups()[this.key()]);
+  /** the role has its first sign-up – it may add a second one */
+  protected readonly hasFirst = computed(() => !!this.signups()[keyOf(this.role(), 1)]);
+  protected readonly hasSecond = computed(() => !!this.signups()[keyOf(this.role(), 2)]);
+  protected readonly army = computed(() => this.armies()[this.key()]);
+  protected readonly note = computed(() => this.notes()[this.key()]);
+  protected readonly budget = computed(() => this.budgets()[this.key()]);
+  /** one survey counts for all the sign-ups (Gether 20. 10. 2026): the shown one's, else another's; null = none yet */
   protected readonly survey = computed(() => {
     const all = this.signups();
-    return [all[this.role()], all.rally, all.garrison].find((s) => s && !surveyMissing(s)) ?? null;
+    return [all[this.key()], ...KEYS.map((key) => all[key])].find((s) => s && !surveyMissing(s)) ?? null;
   });
-  protected readonly online = computed(() => this.onlines()[this.role()]);
+  protected readonly online = computed(() => this.onlines()[this.key()]);
   /** the form shows without a sign-up and while the pencil is on */
-  protected readonly formOpen = computed(() => !this.signup() || this.editing() === this.role());
+  protected readonly formOpen = computed(() => !this.signup() || this.editing() === this.key());
+  /** "Rally", "Garrison 2" – the heading of the form and the withdraw button */
+  protected readonly label = computed(
+    () => (this.role() === 'rally' ? 'Rally' : 'Garrison') + (this.slot() > 1 ? ` ${this.slot()}` : ''),
+  );
 
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly formError = signal<'name' | 'survey' | 'failed' | null>(null);
   protected readonly armyProblem = signal<ArmyError | null>(null);
-  /** the role whose withdraw waits for the confirmation */
-  protected readonly confirmWithdraw = signal<KvkRole | null>(null);
+  /** the sign-up whose withdraw waits for the confirmation */
+  protected readonly confirmWithdraw = signal<Key | null>(null);
 
   protected readonly asMarch = asMarch;
   protected readonly built = hasBuild;
 
   /** the build editor saves into the sign-up it was opened for */
-  protected readonly saveBuild = (march: March, change: MarchChange): Promise<March> =>
-    this.api.saveBuild((march as Partial<KvkSignup>).role ?? this.role(), change).then(asMarch);
+  protected readonly saveBuild = (march: March, change: MarchChange): Promise<March> => {
+    const signup = march as Partial<KvkSignup>;
+    return this.api.saveBuild(signup.role ?? this.role(), signup.slot ?? this.slot(), change).then(asMarch);
+  };
+
+  protected hasRole(role: KvkRole): boolean {
+    return !!this.signups()[keyOf(role, 1)];
+  }
 
   protected showRole(role: KvkRole): void {
     this.role.set(role);
+    this.showSlot(1);
+  }
+
+  protected showSlot(slot: Slot): void {
+    this.slot.set(slot);
     this.editing.set(null);
     this.formError.set(null);
     this.armyProblem.set(null);
@@ -137,51 +171,51 @@ export class KvkForm {
   }
 
   protected setArmy(value: ArmyDraft): void {
-    this.armies.update((all) => ({ ...all, [this.role()]: value }));
+    this.armies.update((all) => ({ ...all, [this.key()]: value }));
     this.armyProblem.set(null);
   }
 
   protected setNote(value: string): void {
-    this.notes.update((all) => ({ ...all, [this.role()]: value }));
+    this.notes.update((all) => ({ ...all, [this.key()]: value }));
   }
 
   protected setBudget(value: KvkBudget): void {
-    this.budgets.update((all) => ({ ...all, [this.role()]: value }));
+    this.budgets.update((all) => ({ ...all, [this.key()]: value }));
     if (this.formError() === 'survey') this.formError.set(null);
   }
 
   protected toggleOnline(value: KvkOnline): void {
     this.onlines.update((all) => {
-      const now = all[this.role()];
-      return { ...all, [this.role()]: now.includes(value) ? now.filter((v) => v !== value) : [...now, value] };
+      const now = all[this.key()];
+      return { ...all, [this.key()]: now.includes(value) ? now.filter((v) => v !== value) : [...now, value] };
     });
     if (this.formError() === 'survey') this.formError.set(null);
   }
 
-  /** the answers a role's form starts with */
-  private surveyStart(role: KvkRole): { budget: KvkBudget | ''; online: KvkOnline[] } {
-    // the saved sign-ups – a sign-up just sent gives its answers to the other tab
+  /** the answers a form starts with */
+  private surveyStart(key: Key): { budget: KvkBudget | ''; online: KvkOnline[] } {
+    // the saved sign-ups – a sign-up just sent gives its answers to the other tabs
     const signups = this.signups();
-    const own = signups[role];
-    const other = signups[role === 'rally' ? 'garrison' : 'rally'];
-    const from = own && !surveyMissing(own) ? own : other && !surveyMissing(other) ? other : own;
+    const own = signups[key];
+    const other = KEYS.map((k) => signups[k]).find((s) => s && !surveyMissing(s));
+    const from = own && !surveyMissing(own) ? own : (other ?? own);
     return { budget: from?.budget ?? '', online: [...(from?.online ?? [])] };
   }
 
   /** the pencil: the form of the sign-up shown */
   protected edit(): void {
-    this.editing.set(this.role());
+    this.editing.set(this.key());
   }
 
   /** "Zrušiť" in the form of a saved sign-up: back to its card, the changes dropped */
   protected cancel(): void {
-    const role = this.role();
-    const signup = this.signups()[role];
-    this.armies.update((all) => ({ ...all, [role]: armyDraft(signup) }));
-    this.notes.update((all) => ({ ...all, [role]: signup?.note ?? '' }));
-    const start = this.surveyStart(role);
-    this.budgets.update((all) => ({ ...all, [role]: start.budget }));
-    this.onlines.update((all) => ({ ...all, [role]: start.online }));
+    const key = this.key();
+    const signup = this.signups()[key];
+    this.armies.update((all) => ({ ...all, [key]: armyDraft(signup) }));
+    this.notes.update((all) => ({ ...all, [key]: signup?.note ?? '' }));
+    const start = this.surveyStart(key);
+    this.budgets.update((all) => ({ ...all, [key]: start.budget }));
+    this.onlines.update((all) => ({ ...all, [key]: start.online }));
     this.editing.set(null);
     this.armyProblem.set(null);
     this.formError.set(null);
@@ -191,6 +225,7 @@ export class KvkForm {
     event.preventDefault();
     if (this.saving()) return;
     const role = this.role();
+    const slot = this.slot();
     const army = this.army();
     this.formError.set(null);
     this.armyProblem.set(null);
@@ -206,6 +241,7 @@ export class KvkForm {
       const signup = await this.api.saveSignup({
         ingame_name: this.ingameName().trim(),
         role,
+        slot,
         kind: army.kind,
         primary: army.primary,
         secondary: army.secondary,
@@ -241,27 +277,38 @@ export class KvkForm {
 
   /** a sign-up saved by the form or the build editor */
   protected store(signup: KvkSignup | March): void {
-    const role = (signup as KvkSignup).role ?? this.role();
+    const saved = signup as KvkSignup;
+    const key = keyOf(saved.role ?? this.role(), saved.slot ?? this.slot());
     this.signups.update((all) => {
-      const next = { ...all, [role]: { ...(all[role] ?? {}), ...signup } as KvkSignup };
-      // the form's survey goes to the other sign-up too, as on the server
-      const other: KvkRole = role === 'rally' ? 'garrison' : 'rally';
-      const saved = signup as KvkSignup;
-      if (next[other] && saved.budget && saved.online?.length) {
-        next[other] = { ...next[other]!, budget: saved.budget, online: saved.online };
+      const next = { ...all, [key]: { ...(all[key] ?? {}), ...signup } as KvkSignup };
+      // the form's survey goes to the other sign-ups too, as on the server
+      if (saved.budget && saved.online?.length) {
+        for (const other of KEYS) {
+          if (other !== key && next[other]) next[other] = { ...next[other]!, budget: saved.budget, online: saved.online };
+        }
       }
       return next;
     });
   }
 
-  /** the player's sign-up of a role */
-  protected async withdraw(role: KvkRole): Promise<void> {
+  /** the player's sign-up shown; the second one of the role moves up when the first goes, as on the server */
+  protected async withdraw(): Promise<void> {
+    const role = this.role();
+    const slot = this.slot();
     try {
-      await this.api.withdraw(role);
+      await this.api.withdraw(role, slot);
       this.confirmWithdraw.set(null);
-      this.signups.update((all) => ({ ...all, [role]: null }));
-      this.armies.update((all) => ({ ...all, [role]: armyDraft() }));
-      this.notes.update((all) => ({ ...all, [role]: '' }));
+      const [first, second] = [keyOf(role, 1), keyOf(role, 2)];
+      if (slot === 1) {
+        this.signups.update((all) => ({ ...all, [first]: all[second] && { ...all[second]!, slot: 1 }, [second]: null }));
+        this.armies.update((all) => ({ ...all, [first]: all[second], [second]: armyDraft() }));
+        this.notes.update((all) => ({ ...all, [first]: all[second], [second]: '' }));
+      } else {
+        this.signups.update((all) => ({ ...all, [second]: null }));
+        this.armies.update((all) => ({ ...all, [second]: armyDraft() }));
+        this.notes.update((all) => ({ ...all, [second]: '' }));
+      }
+      this.slot.set(1);
       this.editing.set(null);
       this.changed.emit();
     } catch {

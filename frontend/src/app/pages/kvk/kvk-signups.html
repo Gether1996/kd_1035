@@ -109,7 +109,7 @@
                 <span class="signup__preview">
                   @for (one of g.signups; track one.id) {
                     <span class="signup__glance">
-                      <span class="tag"><svg [appIcon]="one.role === 'rally' ? 'swords' : 'shield'"></svg>{{ one.role === 'rally' ? 'Rally' : 'Garrison' }}</span>
+                      <span class="tag"><svg [appIcon]="one.role === 'rally' ? 'swords' : 'shield'"></svg>{{ one.role === 'rally' ? 'Rally' : 'Garrison' }}{{ one.slot > 1 ? ' ' + one.slot : '' }}</span>
                       @for (commander of [one.primary, one.secondary]; track $index) {
                         @if (commander && portraits().get(commander); as src) {
                           <img class="signup__mini" [src]="src" [alt]="commander" [title]="commander" width="64" height="64" loading="lazy" />
@@ -140,9 +140,9 @@
                   <div class="signup__entry">
                     <p class="signup__roles">
                       @if (one.role === 'rally') {
-                        <span class="tag"><svg appIcon="swords"></svg>Rally</span>
+                        <span class="tag"><svg appIcon="swords"></svg>Rally{{ one.slot > 1 ? ' ' + one.slot : '' }}</span>
                       } @else {
-                        <span class="tag"><svg appIcon="shield"></svg>Garrison</span>
+                        <span class="tag"><svg appIcon="shield"></svg>Garrison{{ one.slot > 1 ? ' ' + one.slot : '' }}</span>
                       }
                       @if (superuser()) {
                         <button type="button" class="danger signup__remove" [class.is-armed]="armed() === one.id" (click)="remove(one)">

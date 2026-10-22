@@ -411,6 +411,8 @@ class KvkSignup(ArmyFields):
 
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='kvk_signups', verbose_name='hráč')
     role = models.CharField('rola', max_length=8, choices=Role.choices)
+    # up to two sign-ups per role (Gether 22. 10. 2026: "2x rally a 2x garrison"); 1 = the first, 2 = the second
+    slot = models.PositiveSmallIntegerField('poradie', default=1, choices=[(1, '1'), (2, '2')])
     # empty only for the sign-ups saved before the troops were asked for
     kind = models.CharField('jednotky', max_length=12, choices=Kind.choices, blank=True)
     note = models.CharField('poznámka', max_length=500, blank=True)
@@ -427,10 +429,10 @@ class KvkSignup(ArmyFields):
         ordering = ['-updated_at']
         verbose_name = 'KvK prihláška'
         verbose_name_plural = 'KvK prihlášky'
-        constraints = [models.UniqueConstraint(fields=['player', 'role'], name='one_kvk_signup_per_role')]
+        constraints = [models.UniqueConstraint(fields=['player', 'role', 'slot'], name='two_kvk_signups_per_role')]
 
     def __str__(self):
-        return f'{self.player} · {self.get_role_display()}'
+        return f'{self.player} · {self.get_role_display()}' + (f' {self.slot}' if self.slot > 1 else '')
 
 
 # Gether 12. 10. 2026: up to 10 (players with 9 marches could not fill them in; 7 before)

@@ -281,6 +281,7 @@ export const cs: Dict = {
     playerEquipment: 'Top 5 equip',
     close: 'Zavřít',
     deleteConfirm: 'Opravdu smazat?',
+    slots: { label: 'Pořadí přihlášky', first: '1. přihláška', second: '2. přihláška', add: 'přidat' },
     survey: {
       budget: 'Kolik dávám do KvK',
       budgets: { to50: 'do 50 €', to100: 'do 100 €', to200: 'do 200 €', over200: 'nad 200 €' },

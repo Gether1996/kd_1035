@@ -288,6 +288,8 @@ export const sk = {
     playerEquipment: 'Top 5 equip',
     close: 'Zavrieť',
     deleteConfirm: 'Naozaj zmazať?',
+    // up to two sign-ups per role (Gether 22. 10. 2026)
+    slots: { label: 'Poradie prihlášky', first: '1. prihláška', second: '2. prihláška', add: 'pridať' },
     // the survey of the sign-up form (Gether 20. 10. 2026) – a rough guess, the CZK only roughly (about 25 Kč for 1 €)
     survey: {
       budget: 'Koľko dávam do KvK',

@@ -23,6 +23,8 @@ export const surveyMissing = (signup: Pick<KvkSignup, 'budget' | 'online'>) => !
 /** filled in exactly like a march (Gether 11. and 12. 10. 2026): the army of March plus the role and a note */
 export interface KvkSignup extends Omit<March, 'position'> {
   role: KvkRole;
+  /** up to two sign-ups per role (Gether 22. 10. 2026): the first or the second */
+  slot: 1 | 2;
   note: string;
   /** the survey ('' and [] for a sign-up from before it) */
   budget: KvkBudget | '';
@@ -117,8 +119,8 @@ export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 }
 
 /** No rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026). */
 export interface KvkState {
-  /** the player's rally and garrison sign-ups */
-  signups: Record<KvkRole, KvkSignup | null>;
+  /** the player's sign-ups: rally before garrison, the first before the second (up to two per role) */
+  signups: KvkSignup[];
   /** signed in with Discord */
   player: boolean;
   ingame_name: string;
@@ -132,6 +134,7 @@ export interface KvkState {
 export interface SignupForm {
   ingame_name: string;
   role: KvkRole;
+  slot: 1 | 2;
   kind: MarchKind | '';
   primary: string;
   secondary: string;
@@ -191,14 +194,14 @@ export class KvkApi {
     return firstValueFrom(this.http.put<KvkSignup>('/api/kvk/signup/', form));
   }
 
-  /** the player's sign-up of that role */
-  withdraw(role: KvkRole): Promise<unknown> {
-    return firstValueFrom(this.http.delete('/api/kvk/signup/', { params: { role } }));
+  /** the player's sign-up of that role and slot (the second one moves up when the first goes) */
+  withdraw(role: KvkRole, slot: 1 | 2): Promise<unknown> {
+    return firstValueFrom(this.http.delete('/api/kvk/signup/', { params: { role, slot } }));
   }
 
-  /** the build of the player's sign-up of that role: equipment, formation, inscriptions, armament bonuses */
-  saveBuild(role: KvkRole, change: MarchChange): Promise<KvkSignup> {
-    return firstValueFrom(this.http.patch<KvkSignup>('/api/kvk/signup/', { role, ...change }));
+  /** the build of the player's sign-up of that role and slot: equipment, formation, inscriptions, armament bonuses */
+  saveBuild(role: KvkRole, slot: 1 | 2, change: MarchChange): Promise<KvkSignup> {
+    return firstValueFrom(this.http.patch<KvkSignup>('/api/kvk/signup/', { role, slot, ...change }));
   }
 
   /** every sign-up (reviewers and the superuser); must run in an injection context – `.reload()` after a change */

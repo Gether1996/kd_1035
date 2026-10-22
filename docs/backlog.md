@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **22. 10. 2026 – v1.39.0:** Každý hráč môže mať 2 prihlášky na rally a 2 na garrison (napr. dva rôzne páry commanderov). Vo formulári pod rolou prepínač „1. prihláška · 2. prihláška“, vedenie vidí v zozname „Rally 2“ / „Garrison 2“.
 - **20. 10. 2026 – v1.38.0:** Prihlášky na KvK sa dajú filtrovať podľa času online (počty hráčov), záložka, filter a hráč sú v adrese (`/kvk?tab=prihlasky&online=&hrac=`), otvorená karta má prekliky na Marche hráča a Top 5 equip; Top 5 equip má prepínač „Len prihlásení na KvK“ a odkaz na prihlášku hráča.
 - **20. 10. 2026 – v1.37.2:** Zoznam Prihlášky ukazuje dotazník (suma, čas online) raz pri hráčovi, nie pri rally aj garrison zvlášť.
 - **20. 10. 2026 – v1.37.1:** Dotazník ku KvK je jeden spoločný pre rally aj garrison – vyplnený pri jednej prihláške platí aj pre druhú a upozornenie „!“ už nesvieti.

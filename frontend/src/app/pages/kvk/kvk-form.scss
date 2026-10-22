@@ -101,3 +101,23 @@
   color: var(--text);
   font: 700 0.6875rem/1 var(--font-body);
 }
+
+// "1. prihláška · 2. prihláška" under the role (Gether 22. 10. 2026)
+.slot-tabs {
+  justify-self: start;
+  margin-top: 12px;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 16px;
+    white-space: nowrap;
+  }
+
+  .icon {
+    width: 15px;
+    height: 15px;
+  }
+}

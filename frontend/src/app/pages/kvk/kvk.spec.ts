@@ -12,7 +12,7 @@ import { KvkPage } from './kvk-page';
 import { KvkSignups } from './kvk-signups';
 
 const STATE: KvkState = {
-  signups: { rally: null, garrison: null },
+  signups: [],
   player: true,
   ingame_name: 'Nelly',
   approved: true,
@@ -22,6 +22,7 @@ const STATE: KvkState = {
 const SIGNUP: KvkSignup = {
   id: 9,
   role: 'rally',
+  slot: 1,
   kind: 'cavalry',
   primary: 'Attila',
   secondary: 'Takeda Shingen',
@@ -128,6 +129,7 @@ describe('KvkForm', () => {
     expect(req.request.body).toEqual({
       ingame_name: 'Nelly',
       role: 'rally',
+      slot: 1,
       kind: 'cavalry',
       primary: 'Attila',
       secondary: '',
@@ -164,6 +166,7 @@ describe('KvkForm', () => {
     const build = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/kvk/signup/');
     expect(build.request.body).toEqual({
       role: 'rally',
+      slot: 1,
       gear: { weapon: { item: 'sacred-dominion', crit: false, iconic: 1 } },
       formation: '',
       inscriptions: [],
@@ -196,7 +199,7 @@ describe('KvkForm', () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
     const garrison = { ...SIGNUP, id: 10, role: 'garrison' as const, kind: 'archer' as const, budget: '' as const, online: [] };
-    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: SIGNUP, garrison } });
+    fixture.componentRef.setInput('state', { ...STATE, signups: [SIGNUP, garrison] });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
@@ -217,7 +220,7 @@ describe('KvkForm', () => {
   it('a sign-up from before the survey asks for it on its card', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
-    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: { ...SIGNUP, budget: '', online: [] }, garrison: null } });
+    fixture.componentRef.setInput('state', { ...STATE, signups: [{ ...SIGNUP, budget: '', online: [] }] });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
@@ -237,7 +240,7 @@ describe('KvkForm', () => {
   it('a saved sign-up is its card; the pencil opens the form and Zrušiť drops the changes', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);
-    fixture.componentRef.setInput('state', { ...STATE, signups: { rally: null, garrison: { ...SIGNUP, role: 'garrison', note: 'mesto' } } });
+    fixture.componentRef.setInput('state', { ...STATE, signups: [{ ...SIGNUP, role: 'garrison', note: 'mesto' }] });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
@@ -268,7 +271,7 @@ describe('KvkForm', () => {
     const fixture = TestBed.createComponent(KvkForm);
     fixture.componentRef.setInput('state', {
       ...STATE,
-      signups: { rally: SIGNUP, garrison: { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer' } },
+      signups: [SIGNUP, { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer' }],
     });
     fixture.detectChanges();
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
@@ -285,10 +288,61 @@ describe('KvkForm', () => {
     buttons()[0].click();
     const req = http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/kvk/signup/');
     expect(req.request.params.get('role')).toBe('rally');
+    expect(req.request.params.get('slot')).toBe('1');
     req.flush(null, { status: 204, statusText: '' });
     await flushAll(fixture);
     expect(el.querySelectorAll('.role-tabs__done').length).toBe(1);
     expect(el.querySelector('.withdraw')).toBeNull();
+    http.verify();
+  });
+
+  it('two sign-ups per role: the second one next to the first, it moves up when the first goes (Gether 22. 10. 2026)', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(KvkForm);
+    // no second slot without a first one
+    fixture.componentRef.setInput('state', { ...STATE, signups: [] });
+    fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.slot-tabs')).toBeNull();
+
+    const second = { ...SIGNUP, id: 11, slot: 2 as const, primary: 'Takeda Shingen', secondary: 'Attila' };
+    fixture.componentRef.setInput('state', { ...STATE, signups: [SIGNUP, second] });
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const slots = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.slot-tabs button'));
+    expect(slots().map((b) => b.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['1. prihláška', '2. prihláška']);
+    expect(el.querySelector('.kvk-card .mb__primary')?.textContent?.trim()).toBe('Attila');
+    slots()[1].click();
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    expect(el.querySelector('.kvk-card .mb__primary')?.textContent?.trim()).toBe('Takeda Shingen');
+    expect(el.querySelector('.withdraw button')?.textContent?.trim()).toBe('Zrušiť prihlášku · Rally 2');
+
+    // the first one withdrawn: the second one is the first now, no second tab yet ("+ 2. prihláška")
+    slots()[0].click();
+    await flushAll(fixture);
+    const withdraw = () => el.querySelector<HTMLButtonElement>('.withdraw button')!;
+    withdraw().click();
+    await flushAll(fixture);
+    withdraw().click();
+    const req = http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/kvk/signup/');
+    expect([req.request.params.get('role'), req.request.params.get('slot')]).toEqual(['rally', '1']);
+    req.flush(null, { status: 204, statusText: '' });
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    expect(el.querySelector('.kvk-card .mb__primary')?.textContent?.trim()).toBe('Takeda Shingen');
+    expect(slots()[1].textContent?.replace(/\s+/g, ' ').trim()).toBe('2. prihláška – pridať');
+    // a new second one: an empty form that saves as slot 2
+    slots()[1].click();
+    await flushAll(fixture);
+    expect(el.querySelector('.kvk-card')).toBeNull();
+    expect(el.querySelector('form')).not.toBeNull();
     http.verify();
   });
 });

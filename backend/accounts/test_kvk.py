@@ -85,7 +85,7 @@ class SignupTests(KvkTestCase):
         state = self.client.get('/api/kvk/').json()
         # no heading any more (Gether 20. 10. 2026: the Nastavenia tab of /kvk is gone)
         self.assertNotIn('title_sk', state)
-        self.assertEqual(state['signups'], {'rally': None, 'garrison': None})
+        self.assertEqual(state['signups'], [])
         self.assertFalse(state['reviewer'])
 
         res = self.sign_up(note=' prvý rally ')
@@ -106,10 +106,42 @@ class SignupTests(KvkTestCase):
         self.sign_up(primary='Attila')
         self.sign_up(role='garrison', primary='Takeda Shingen', note='mesto')
         signups = self.client.get('/api/kvk/').json()['signups']
-        self.assertEqual((signups['rally']['primary'], signups['garrison']['primary']), ('Attila', 'Takeda Shingen'))
+        self.assertEqual([(s['role'], s['slot'], s['primary']) for s in signups], [('rally', 1, 'Attila'), ('garrison', 1, 'Takeda Shingen')])
         # withdrawing the garrison keeps the rally
         self.assertEqual(self.call('delete', '/api/kvk/signup/?role=garrison').status_code, 204)
         self.assertEqual(list(KvkSignup.objects.values_list('role', flat=True)), ['rally'])
+
+    def test_two_sign_ups_per_role(self):
+        """Gether 22. 10. 2026: "2x rally a 2x garrison" – a second one next to the first, never a third."""
+        self.assertEqual(self.sign_up(slot=2).json(), {'slot': 'first'})  # not without the first
+        for slot in (0, 3, 'x', True):
+            self.assertEqual(self.sign_up(slot=slot).status_code, 400, slot)
+        self.sign_up(primary='Attila')
+        res = self.sign_up(slot=2, primary='Takeda Shingen')
+        self.assertEqual((res.status_code, res.json()['slot']), (200, 2))
+        self.sign_up(role='garrison', primary='Attila')
+        # rally before garrison, the first before the second
+        signups = self.client.get('/api/kvk/').json()['signups']
+        self.assertEqual([(s['role'], s['slot'], s['primary']) for s in signups], [
+            ('rally', 1, 'Attila'), ('rally', 2, 'Takeda Shingen'), ('garrison', 1, 'Attila'),
+        ])
+        # the second one's own build
+        res = self.call('patch', '/api/kvk/signup/', {'role': 'rally', 'slot': 2, **STATS, 'attack': 9})
+        self.assertEqual((res.status_code, res.json()['attack']), (200, 9))
+        self.assertIsNone(KvkSignup.objects.get(role='rally', slot=1).attack)
+        self.assertEqual(self.call('patch', '/api/kvk/signup/', {'role': 'garrison', 'slot': 2, **STATS}).status_code, 404)
+        # the reviewers see each, the Hráči list counts the role once
+        reviewer = make_player('43')
+        reviewer.kvk_reviewer = True
+        reviewer.save()
+        rows = self.login(reviewer.user).get('/api/kvk/signups/').json()['signups']
+        self.assertEqual([(s['role'], s['slot']) for s in rows], [('rally', 1), ('rally', 2), ('garrison', 1)])
+        # withdrawing the first rally: the second one is the first now
+        self.assertEqual(self.call('delete', '/api/kvk/signup/?role=rally&slot=1').status_code, 204)
+        self.assertEqual(
+            list(KvkSignup.objects.filter(role='rally').values_list('slot', 'primary')), [(1, 'Takeda Shingen')]
+        )
+        self.assertEqual(self.call('delete', '/api/kvk/signup/?role=rally&slot=5').status_code, 400)
 
     def test_filled_in_like_a_march(self):
         # the form: troops, commanders with their skills, note (Gether 12. 10. 2026: exactly like a march)
@@ -150,7 +182,7 @@ class SignupTests(KvkTestCase):
         self.assertEqual(self.sign_up(kind='archer').json()['kind'], 'archer')
         self.assertEqual(self.sign_up(ingame_name='').status_code, 400)
         # anyone may ask
-        self.assertEqual(Client().get('/api/kvk/').json()['signups'], {'rally': None, 'garrison': None})
+        self.assertEqual(Client().get('/api/kvk/').json()['signups'], [])
 
     def test_anonymous_and_password_admins_cannot_sign_up(self):
         anonymous = Client()
@@ -903,7 +935,7 @@ class SurveyTests(KvkTestCase):
         # each once, in the order of the form
         res = self.sign_up(budget='over200', online=['nights', 'first_zone', 'nights']).json()
         self.assertEqual((res['budget'], res['online']), ('over200', ['first_zone', 'nights']))
-        self.assertEqual(self.client.get('/api/kvk/').json()['signups']['rally']['online'], ['first_zone', 'nights'])
+        self.assertEqual(self.client.get('/api/kvk/').json()['signups'][0]['online'], ['first_zone', 'nights'])
         # R4 and the superuser read it with the sign-up
         reviewer = make_player('43')
         reviewer.kvk_reviewer = True
@@ -958,7 +990,7 @@ class SignupBuildTests(KvkTestCase):
         res = self.call('patch', '/api/kvk/signup/', {'role': 'rally', **STATS, 'health': 14, 'damage': 24})
         self.assertEqual(res.status_code, 200, res.content)
         self.assertEqual(res.json()['stats_problem'], ['damage'])
-        self.assertEqual(self.client.get('/api/kvk/').json()['signups']['rally']['stats_problem'], ['damage'])
+        self.assertEqual(self.client.get('/api/kvk/').json()['signups'][0]['stats_problem'], ['damage'])
 
 
 class UnapprovedTests(KvkTestCase):

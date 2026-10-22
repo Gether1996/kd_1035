@@ -30,7 +30,7 @@
         @for (r of roles; track r) {
           <button type="button" [attr.aria-pressed]="role() === r" (click)="showRole(r)">
             <svg [appIcon]="r === 'rally' ? 'swords' : 'shield'"></svg>{{ r === 'rally' ? 'Rally' : 'Garrison' }}
-            @if (signups()[r]) {
+            @if (hasRole(r)) {
               <svg class="role-tabs__done" appIcon="check"></svg><span class="sr-only">· {{ k.signedUp }}</span>
             }
           </button>
@@ -38,6 +38,20 @@
       </div>
     </div>
   </div>
+
+  <!-- up to two sign-ups per role (Gether 22. 10. 2026): the second one once the first is saved -->
+  @if (hasFirst()) {
+    <div class="segmented slot-tabs" role="group" [attr.aria-label]="k.slots.label">
+      <button type="button" [attr.aria-pressed]="slot() === 1" (click)="showSlot(1)">{{ k.slots.first }}</button>
+      <button type="button" [attr.aria-pressed]="slot() === 2" (click)="showSlot(2)">
+        @if (hasSecond()) {
+          {{ k.slots.second }}
+        } @else {
+          <svg appIcon="plus"></svg>{{ k.slots.second }}<span class="sr-only"> – {{ k.slots.add }}</span>
+        }
+      </button>
+    </div>
+  }
 
   @if (formOpen()) {
     <!-- like a new march: troops, commanders with their skills – plus the note; the build in the editor after it -->
@@ -48,8 +62,8 @@
         [commanders]="commanders()"
         [kinds]="kinds"
         [error]="armyProblem()"
-        [heading]="k.title + ' · ' + (role() === 'rally' ? 'Rally' : 'Garrison')"
-        [idPrefix]="'kvk-' + role()"
+        [heading]="k.title + ' · ' + label()"
+        [idPrefix]="'kvk-' + key()"
       />
 
       <div class="field">
@@ -160,13 +174,13 @@
 
 @if (signup()) {
   <div class="withdraw">
-    @if (confirmWithdraw() === role()) {
+    @if (confirmWithdraw() === key()) {
       <p>{{ k.withdrawConfirm }}</p>
-      <button type="button" class="danger" (click)="withdraw(role())">{{ k.withdrawYes }}</button>
+      <button type="button" class="danger" (click)="withdraw()">{{ k.withdrawYes }}</button>
       <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(null)">{{ k.withdrawNo }}</button>
     } @else {
-      <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(role())">
-        {{ k.withdraw }} · {{ role() === 'rally' ? 'Rally' : 'Garrison' }}
+      <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmWithdraw.set(key())">
+        {{ k.withdraw }} · {{ label() }}
       </button>
     }
   </div>
