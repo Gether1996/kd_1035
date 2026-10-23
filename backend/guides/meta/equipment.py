@@ -20,6 +20,17 @@ RKG_EQUIP = ('Rise of Kingdoms Guides: Equipment Guide', 'https://riseofkingdoms
 ROKGUIDE = ('rok.guide: Equipment Guide (archív)', 'https://web.archive.org/web/20240725162405/https://www.rok.guide/equipment-guide/')
 PATCHES = ('Lilith: oficiálne patch notes', 'https://rok-club.lilith.com/')
 LD_ACC = ('LDShop: Accessory Tier List (07/2026)', 'https://www.ldshop.gg/blog/rise-of-kingdoms/accessory-tier-list.html')
+# the accessories by troop type and situation (23. 10. 2026) – videos read from their transcripts
+CH_ACC = ('WarDaddyChadski: Equipment Accessory Guide (12/2025)', 'https://www.youtube.com/watch?v=BGRXDboiU_0')
+CH_RALLY = ('WarDaddyChadski: Best Rally / Garrison Equipment (01/2025)', 'https://www.youtube.com/watch?v=JaAIW9HyCPM')
+CH_CAV = ('WarDaddyChadski: New Cavalry Guide (10/2026)', 'https://www.youtube.com/watch?v=xWsT2Rvah3c')
+ST_ACC = ('Sttuu: Accessories Tier List (03/2026)', 'https://www.youtube.com/watch?v=1e5euQAsM_c')
+ST_CAV = ('Sttuu: výbava pre jazdu (02/2026)', 'https://www.youtube.com/watch?v=JV-IAVOAX-I')
+ST_ARCH = ('Sttuu: výbava pre lukostrelcov (02/2026)', 'https://www.youtube.com/watch?v=dIFR2LIjZFA')
+OM_ACC = ('Omniarch: Best and Worst Accessories 2026 (06/2026)', 'https://www.youtube.com/watch?v=XtAI7SO0t_I')
+HX_ACC = ('Hallux: Accessory Tier List for 2026 (12/2025)', 'https://www.youtube.com/watch?v=y8fivxVd1QI')
+# the accessories by situation: what, which two, why (the table of each troop guide)
+SITUATION = ['what', 'accessory', 'why']
 
 GUIDES = [
     {
@@ -142,7 +153,29 @@ GUIDES = [
                 t('Útočnejšia verzia: zbraň, nohavice aj topánky s útokom jazdy (Lance a Tassets of the Hellish Wasteland, Mountain Crushers).',
                   'Útočnější verze: zbraň, kalhoty i boty s útokem jízdy (Lance a Tassets of the Hellish Wasteland, Mountain Crushers).'),
             ]),
-            ('sources', [ROKSTATS, ('AllClash: Achilles Builds', 'https://www.allclash.com/best-achilles-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), RKG_EQUIP]),
+            ('h2', t('Doplnky podľa situácie', 'Doplňky podle situace')),
+            ('table', SITUATION, [
+                {'what': t('Pole, dvaja combo commanderi (napr. Arthur + Achilles)', 'Pole, dva combo commandeři (např. Arthur + Achilles)'),
+                 'accessory': "Hero's Hilt + Karuak's War Drums",
+                 'why': t('Až +15 % combo poškodenia a combo útoky spúšťajú drums.',
+                          'Až +15 % combo poškození a combo útoky spouštějí drums.')},
+                {'what': t('Pole, všeobecne', 'Pole, obecně'), 'accessory': 'Horn of Fury + Ring of Doom',
+                 'why': t('Stále veľmi dobrá dvojica. Drums aj Greatest Glory sú tiež dobré.',
+                          'Pořád velmi dobrá dvojice. Drums i Greatest Glory jsou také dobré.')},
+                {'what': t('Attila, keď ho čaká swarm', 'Attila, když ho čeká swarm'), 'accessory': 'Greatest Glory',
+                 'why': t('Dáva sa Attilovi, keď ho čaká swarm.',
+                          'Dává se Attilovi, když ho čeká swarm.')},
+                {'what': t('Rally a garrison – vodca', 'Rally a garrison – vůdce'),
+                 'accessory': t("Ring of Doom + Horn of Fury, pri combo páre Hero's Hilt", "Ring of Doom + Horn of Fury, u combo páru Hero's Hilt"),
+                 'why': t('Ring je najlepší, ústup útok nepreruší. Hilt je meta na combo rally aj garrison.',
+                          'Ring je nejlepší, ústup útok nepřeruší. Hilt je meta na combo rally i garrison.')},
+            ]),
+            ('p', t(
+                'Pri Hero’s Hilt na poli sa zdroje nezhodujú: jedny ho pri dvoch combo commanderoch dávajú najvyššie, iné skôr na rally a garrison, lebo pri boji dnu a von sa stacky stratia. Bez druhého combo commandera (napr. Arthur + Philip) Hilt nepomáha.',
+                'U Hero’s Hilt na poli se zdroje neshodují: jedny ho u dvou combo commanderů dávají nejvýš, jiné spíš na rally a garrison, protože při boji dovnitř a ven se stacky ztratí. Bez druhého combo commandera (např. Arthur + Philip) Hilt nepomáhá.',
+            )),
+            ('sources', [ROKSTATS, ('AllClash: Achilles Builds', 'https://www.allclash.com/best-achilles-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), RKG_EQUIP,
+                         ST_ACC, ST_CAV, CH_ACC, CH_CAV, OM_ACC, HX_ACC]),
         ],
     },
     {
@@ -184,10 +217,34 @@ GUIDES = [
                   'Celý 6kusový Eternal Empire je dobrý mezikrok, dokud nemáš KvK helmu a zbraň.'),
                 t('Pri nohaviciach sa zdroje nezhodujú: Eternal Night, alebo epické Karuak’s Humility so zdravím na úrovni legendárnych kusov.',
                   'U kalhot se zdroje neshodují: Eternal Night, nebo epické Karuak’s Humility se zdravím na úrovni legendárních kusů.'),
-                t('Na <strong>garrison</strong> použi rovnakú výbavu, len doplnky vymeň za Vengeance (+8 % poškodenie protiútoku) a Scolas’ Lucky Coin (šanca na štít pri zásahu).',
-                  'Na <strong>garrison</strong> použij stejnou výbavu, jen doplňky vyměň za Vengeance (+8 % poškození protiútoku) a Scolas’ Lucky Coin (šance na štít při zásahu).'),
             ]),
-            ('sources', [ROKSTATS, ('AllClash: Scipio Prime Builds', 'https://www.allclash.com/best-scipio-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), ('AllClash: Gorgo Builds', 'https://www.allclash.com/best-gorgo-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), RKG_EQUIP]),
+            ('h2', t('Doplnky podľa situácie', 'Doplňky podle situace')),
+            ('table', SITUATION, [
+                {'what': t('Pole', 'Pole'), 'accessory': 'Horn of Fury + Ring of Doom',
+                 'why': t('Oba bonusy sú percentuálne, nezastarajú. Horn sa oplatí na každý march.',
+                          'Oba bonusy jsou procentuální, nezastarají. Horn se vyplatí na každý march.')},
+                {'what': t('Pole, boj dnu a von', 'Pole, boj dovnitř a ven'), 'accessory': 'Horn of Fury + Greatest Glory',
+                 'why': t('V krátkom boji (do ~7 kôl) je GG istejšia, v dlhšom Ring. Pri smite GG posilní skoro všetko poškodenie.',
+                          'V krátkém boji (do ~7 kol) je GG jistější, v delším Ring. U smite GG posílí skoro všechno poškození.')},
+                {'what': 'Liu Che', 'accessory': t("jeden z doplnkov Karuak's War Drums", "jeden z doplňků Karuak's War Drums"),
+                 'why': t('Extra bežný útok z jeho expertízy spúšťa drums častejšie.',
+                          'Extra běžný útok z jeho expertízy spouští drums častěji.')},
+                {'what': t('Lacná verzia', 'Levná varianta'), 'accessory': 'Silent Trial + Wind Scars',
+                 'why': t('Silent Trial je najlepší epický doplnok, Wind Scars pridá pechote rýchlosť pochodu. Po rozobratí sa vrátia všetky materiály.',
+                          'Silent Trial je nejlepší epický doplněk, Wind Scars přidá pěchotě rychlost pochodu. Po rozebrání se vrátí všechny materiály.')},
+                {'what': t('Rally a garrison – vodca', 'Rally a garrison – vůdce'), 'accessory': 'Ring of Doom + Horn of Fury',
+                 'why': t('Ring je základ, si stále v boji s cieľom. Proti rally je Ring lepší.',
+                          'Ring je základ, jsi stále v boji s cílem. Proti rally je Ring lepší.')},
+                {'what': t('Garrison pod swarmom', 'Garrison pod swarmem'), 'accessory': t('Greatest Glory namiesto Ring of Doom', 'Greatest Glory místo Ring of Doom'),
+                 'why': t('GG je dobrá proti swarmu (napr. David v garrisone). Vengeance len pre úzku skupinu, napr. Gorgo, Martel.',
+                          'GG je dobrá proti swarmu (např. David v garrisonu). Vengeance jen pro úzkou skupinu, např. Gorgo, Martel.')},
+            ]),
+            ('p', t(
+                'Pole pod swarmom a doplnky hráčov, ktorí sa k rally či garrisonu pripájajú, videá nepokrývajú.',
+                'Pole pod swarmem a doplňky hráčů, kteří se k rally či garrisonu připojují, videa nepokrývají.',
+            )),
+            ('sources', [ROKSTATS, ('AllClash: Scipio Prime Builds', 'https://www.allclash.com/best-scipio-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), ('AllClash: Gorgo Builds', 'https://www.allclash.com/best-gorgo-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/'), RKG_EQUIP,
+                         ST_ACC, CH_ACC, CH_RALLY, OM_ACC, HX_ACC]),
         ],
     },
     {
@@ -231,7 +288,28 @@ GUIDES = [
                 t('S menším rozpočtom začni hruďou a rukavicami zo setu. Pri väčšom zbieraj 4 kusy kvôli skill poškodeniu.',
                   'S menším rozpočtem začni hrudí a rukavicemi ze setu. Při větším sbírej 4 kusy kvůli skill poškození.'),
             ]),
-            ('sources', [ROKSTATS, ('AllClash: Alp Arslan Builds (05/2026)', 'https://www.allclash.com/best-alp-arslan-builds-talent-tree-skill-order-best-pairing-in-rise-of-kingdoms/'), RKG_EQUIP]),
+            ('h2', t('Doplnky podľa situácie', 'Doplňky podle situace')),
+            ('table', SITUATION, [
+                {'what': t('Pole (napr. Zhuge Liang + Hermann)', 'Pole (např. Zhuge Liang + Hermann)'), 'accessory': 'Ring of Doom + Horn of Fury',
+                 'why': t('Ring je best in slot, k nemu horn.',
+                          'Ring je best in slot, k němu horn.')},
+                {'what': 'Qin Shi Huang', 'accessory': 'Ring of Doom + Pendant of Eternal Night',
+                 'why': t('Horn nepotrebuje, rage má z vlastného kitu a od partnera (Zhuge Liang, Yi Seong-Gye).',
+                          'Horn nepotřebuje, rage má z vlastního kitu a od partnera (Zhuge Liang, Yi Seong-Gye).')},
+                {'what': t('Qin Shi Huang, keď march nemá dosť rage', 'Qin Shi Huang, když march nemá dost rage'),
+                 'accessory': t('Horn of Fury + Pendant of Eternal Night alebo Horn of Fury + Ring of Doom', 'Horn of Fury + Pendant of Eternal Night nebo Horn of Fury + Ring of Doom'),
+                 'why': t('Podľa toho, koľko rage march získa. Treba ešte vyskúšať.',
+                          'Podle toho, kolik rage march získá. Je potřeba ještě vyzkoušet.')},
+                {'what': t('Rally a garrison – vodca', 'Rally a garrison – vůdce'), 'accessory': 'Ring of Doom + Horn of Fury',
+                 'why': t('Aj na rally Ring a Horn.',
+                          'I na rally Ring a Horn.')},
+            ]),
+            ('p', t(
+                'Greatest Glory lukostrelcom nepomôže, posilní len bežné útoky a lukostrelci robia skill poškodenie. Pole pod swarmom a doplnky hráčov, ktorí sa k rally či garrisonu pripájajú, videá nepokrývajú.',
+                'Greatest Glory lučištníkům nepomůže, posílí jen běžné útoky a lučištníci dělají skill poškození. Pole pod swarmem a doplňky hráčů, kteří se k rally či garrisonu připojují, videa nepokrývají.',
+            )),
+            ('sources', [ROKSTATS, ('AllClash: Alp Arslan Builds (05/2026)', 'https://www.allclash.com/best-alp-arslan-builds-talent-tree-skill-order-best-pairing-in-rise-of-kingdoms/'), RKG_EQUIP,
+                         ST_ACC, ST_ARCH, CH_ACC, CH_RALLY, OM_ACC, HX_ACC]),
         ],
     },
     {
@@ -289,10 +367,13 @@ GUIDES = [
                 {'tier': 'S', 'accessory': 'Horn of Fury',
                  'effect': t('30 % šanca, že bežný útok obnoví 50 rage', '30 % šance, že běžný útok obnoví 50 rage')},
                 {'tier': 'A', 'accessory': "Karuak's War Drums",
-                 'effect': t('50 rage až dvom spojencom v okolí, nie nositeľovi', '50 rage až dvěma spojencům v okolí, ne nositeli')},
+                 'effect': t('pri bežnom útoku 10 % šanca dať 50 rage sebe a až dvom spojencom v okolí, cooldown 3 s',
+                             'při běžném útoku 10 % šance dát 50 rage sobě a až dvěma spojencům v okolí, cooldown 3 s')},
                 {'tier': 'A', 'accessory': 'Greatest Glory', 'effect': t('+5 % poškodenie bežného útoku', '+5 % poškození běžného útoku')},
                 {'tier': 'A', 'accessory': 'Pendant of Eternal Night', 'effect': t('+5 % skill poškodenie', '+5 % skill poškození')},
-                {'tier': 'A', 'accessory': "Hero's Hilt", 'effect': t('posilňuje combo', 'posiluje combo')},
+                {'tier': 'A', 'accessory': "Hero's Hilt",
+                 'effect': t('pri combo útoku 50 % šanca na +3 % combo poškodenia na 5 s, najviac 5× (15 %)',
+                             'při combo útoku 50 % šance na +3 % combo poškození na 5 s, nejvýš 5× (15 %)')},
                 {'tier': 'B', 'accessory': 'Vengeance', 'effect': t('+8 % poškodenie protiútoku', '+8 % poškození protiútoku')},
                 {'tier': 'B', 'accessory': "Scolas' Lucky Coin",
                  'effect': t('10 % šanca na štít pri zásahu na 2 s, najviac raz za 5 s', '10 % šance na štít při zásahu na 2 s, nejvýš jednou za 5 s')},
@@ -302,17 +383,23 @@ GUIDES = [
             ('h2', t('Kombinácie', 'Kombinace')),
             ('ul', [
                 t('<strong>Otvorené pole:</strong> Horn of Fury + Ring of Doom', '<strong>Otevřené pole:</strong> Horn of Fury + Ring of Doom'),
-                t('<strong>Rally – vodca:</strong> Ring of Doom + Hero’s Hilt', '<strong>Rally – vůdce:</strong> Ring of Doom + Hero’s Hilt'),
-                t('<strong>Rally – pripojení:</strong> Concealed Dagger + Mora’s Web', '<strong>Rally – připojení:</strong> Concealed Dagger + Mora’s Web'),
-                t('<strong>Garrison:</strong> Vengeance + Scolas’ Lucky Coin', '<strong>Garrison:</strong> Vengeance + Scolas’ Lucky Coin'),
-                t('<strong>Lacná verzia:</strong> epické Silent Trial (bežné útoky berú cieľu 10 rage) + Delane’s Amulet (−5 % prijaté poškodenie protiútoku)',
-                  '<strong>Levná varianta:</strong> epické Silent Trial (běžné útoky berou cíli 10 rage) + Delane’s Amulet (−5 % přijaté poškození protiútoku)'),
+                t('<strong>Pole, jazda s dvoma combo commandermi:</strong> Hero’s Hilt + Karuak’s War Drums (niektoré zdroje dávajú Hilt skôr na rally a garrison)',
+                  '<strong>Pole, jízda se dvěma combo commandery:</strong> Hero’s Hilt + Karuak’s War Drums (některé zdroje dávají Hilt spíš na rally a garrison)'),
+                t('<strong>Rally a garrison – vodca:</strong> Ring of Doom + Horn of Fury, pri combo páre Hero’s Hilt',
+                  '<strong>Rally a garrison – vůdce:</strong> Ring of Doom + Horn of Fury, u combo páru Hero’s Hilt'),
+                t('<strong>Garrison pod swarmom:</strong> Greatest Glory', '<strong>Garrison pod swarmem:</strong> Greatest Glory'),
+                t('<strong>Lacná verzia:</strong> epické Silent Trial (bežné útoky berú cieľu 10 rage) + Wind Scars (+8 % rýchlosť pochodu pechoty) alebo Delane’s Amulet (−5 % prijaté poškodenie protiútoku)',
+                  '<strong>Levná varianta:</strong> epické Silent Trial (běžné útoky berou cíli 10 rage) + Wind Scars (+8 % rychlost pochodu pěchoty) nebo Delane’s Amulet (−5 % přijaté poškození protiútoku)'),
             ]),
+            ('p', t(
+                'Concealed Dagger, Mora’s Web a Scolas’ Lucky Coin všetky štyri videá (12/2025 až 06/2026) neodporúčajú vyrábať. Iba LDShop (07/2026) dával Dagger a Web hráčom, ktorí sa pripájajú do rally. Kombinácie podľa jednotiek sú v návodoch na výbavu pre jazdu, pechotu a lukostrelcov.',
+                'Concealed Dagger, Mora’s Web a Scolas’ Lucky Coin všechna čtyři videa (12/2025 až 06/2026) nedoporučují vyrábět. Jen LDShop (07/2026) dával Dagger a Web hráčům, kteří se připojují do rally. Kombinace podle jednotek jsou v návodech na výbavu pro jízdu, pěchotu a lučištníky.',
+            )),
             ('p', t(
                 'Tiery sú podľa LDShop (júl 2026). Omniarch (jún 2026) považuje Horn of Fury za najlepší doplnok. Epické doplnky sa dajú rozobrať a vrátia sa všetky materiály.',
                 'Tiery jsou podle LDShop (červenec 2026). Omniarch (červen 2026) považuje Horn of Fury za nejlepší doplněk. Epické doplňky se dají rozebrat a vrátí se všechny materiály.',
             )),
-            ('sources', [LD_ACC, ('Omniarch: Best Accessories 2026 (YouTube)', 'https://www.youtube.com/watch?v=XtAI7SO0t_I'), ROKSTATS]),
+            ('sources', [LD_ACC, OM_ACC, ST_ACC, CH_ACC, CH_RALLY, HX_ACC, ROKSTATS]),
         ],
     },
     {
