@@ -114,7 +114,7 @@ class EvaluationApiTests(TestCase):
         res = self.call('patch', url, {'evaluation_settings': True})
         self.assertEqual(
             res.json(),
-            {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': True, 'evaluation_overview': False, 'inactive': False},
+            {'id': self.player.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': True, 'inactive': False},
         )
         rows = {p['id']: p for p in self.admin.get('/api/kvk/reviewers/').json()['players']}
         self.assertTrue(rows[self.player.pk]['evaluation_settings'])
@@ -132,8 +132,10 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.newbie.pk}/', {'power': 90}, self.nelly).status_code, 404)
         bulk = {'players': [{'id': self.newbie.pk, 'power': 1}]}
         self.assertEqual(self.call('patch', '/api/evaluation/players/', bulk, self.nelly).status_code, 400)
-        # the overview only: nothing of the evaluation itself
-        self.call('patch', url, {'evaluation_settings': False, 'evaluation_overview': True})
+        # the overview only (every approved player, Gether 23. 10. 2026): nothing of the evaluation itself
+        self.call('patch', url, {'evaluation_settings': False})
+        # the switch of the overview is gone
+        self.assertEqual(self.call('patch', url, {'evaluation_overview': True}).status_code, 400)
         me = self.nelly.get('/api/auth/me/').json()['user']
         self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (False, True))
         self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
@@ -141,10 +143,10 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 2}}, self.nelly).status_code, 403)
         self.assertEqual(self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 80}, self.nelly).status_code, 403)
         self.assertEqual(self.call('put', '/api/evaluation/overview/', {'rows': []}, self.nelly).status_code, 403)
-        # both off again: no way in
-        self.call('patch', url, {'evaluation_overview': False})
-        self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
-        self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 403)
+        # not approved: no way in
+        self.newbie_client = self.login(self.newbie.user)
+        self.assertEqual(self.newbie_client.get('/api/evaluation/overview/').status_code, 403)
+        self.assertFalse(self.newbie_client.get('/api/auth/me/').json()['user']['evaluation_overview'])
         # the superuser counts as both
         me = self.admin.get('/api/auth/me/').json()['user']
         self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (True, True))
@@ -152,20 +154,16 @@ class EvaluationApiTests(TestCase):
     def test_taking_the_approval_back_cuts_the_evaluation_off(self):
         """Approval is the one "cut off" switch: a player who loses it loses the evaluation too, the switches stay"""
         url = f'/api/kvk/reviewers/{self.player.pk}/'
-        self.call('patch', url, {'evaluation_settings': True, 'evaluation_overview': True})
+        self.call('patch', url, {'evaluation_settings': True})
         self.call('patch', url, {'approved': False})
         self.player.refresh_from_db()
-        self.assertEqual((self.player.evaluation_settings, self.player.evaluation_overview), (True, True))
+        self.assertTrue(self.player.evaluation_settings)
         me = self.nelly.get('/api/auth/me/').json()['user']
         self.assertEqual((me['evaluation_settings'], me['evaluation_overview']), (False, False))
         self.assertEqual(self.nelly.get('/api/evaluation/').status_code, 403)
         self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 403)
         self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'a': 1}}, self.nelly).status_code, 403)
         self.assertEqual(self.call('put', '/api/evaluation/overview/', {'rows': []}, self.nelly).status_code, 403)
-        # the overview switch alone
-        self.call('patch', url, {'evaluation_settings': False})
-        self.assertEqual(self.nelly.get('/api/evaluation/overview/').status_code, 403)
-        self.assertFalse(self.nelly.get('/api/auth/me/').json()['user']['evaluation_overview'])
         # approved again: back in with no other click
         self.call('patch', url, {'approved': True, 'evaluation_settings': True})
         me = self.nelly.get('/api/auth/me/').json()['user']
@@ -194,9 +192,7 @@ class EvaluationApiTests(TestCase):
         self.assertIsNotNone(res.json()['published_at'])
         # the evaluators see what was published next to the estimate
         self.assertEqual(self.admin.get('/api/evaluation/').json()['overview']['rows'], [row])
-        # the players with the switch: the name in the game, the avatar and the numbers with the power – no marches
-        self.player.evaluation_overview = True
-        self.player.save()
+        # every approved player: the name in the game, the avatar and the numbers with the power – no marches
         data = self.nelly.get(url).json()
         self.assertEqual(
             data['rows'],
@@ -269,9 +265,7 @@ class EvaluationApiTests(TestCase):
         for bad in ('x', {'Attila': 'wedge'}, {'Attila': ['square']}, {'Attila': ['arch', 'v', 'delta']}):
             res = self.call('put', '/api/evaluation/settings/', {'settings': {}, 'formations': bad, 'formations_version': version})
             self.assertEqual(res.json(), {'formations': 'invalid'}, bad)
-        # a player with the overview switch only may not
-        self.player.evaluation_overview = True
-        self.player.save()
+        # a player who only sees the overview may not
         self.assertEqual(self.call('put', '/api/evaluation/settings/', body, self.nelly).status_code, 403)
 
     def test_the_commander_pairs_live_in_the_database(self):

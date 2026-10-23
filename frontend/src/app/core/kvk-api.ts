@@ -117,6 +117,13 @@ export const marchHasProblem = (march: March): boolean =>
 /** a sign-up shown and edited like a march (MarchBuild, BuildEditor) */
 export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 });
 
+/** every sign-up for the reviewers, with what scores the equipment ("Top 3" per troop type, Gether 23. 10. 2026) */
+export interface KvkSignupList {
+  signups: KvkSignup[];
+  /** the equipment and armament variables of the KvK evaluation; missing in an older response */
+  settings?: Record<string, unknown>;
+}
+
 /** No rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026). */
 export interface KvkState {
   /** the player's sign-ups: rally before garrison, the first before the second (up to two per role) */
@@ -146,7 +153,7 @@ export interface SignupForm {
 }
 
 /** the switches of a player in Hráči (/hraci) */
-export type PlayerFlag = 'reviewer' | 'approved' | 'evaluation_settings' | 'evaluation_overview' | 'inactive';
+export type PlayerFlag = 'reviewer' | 'approved' | 'evaluation_settings' | 'inactive';
 
 export interface ReviewerRow {
   id: number;
@@ -159,10 +166,9 @@ export interface ReviewerRow {
   approved: boolean;
   /** hidden in the superadmin's list until "Zobraziť neaktívnych" (Gether 20. 10. 2026) – nothing else */
   inactive: boolean;
-  /** /vyhodnocovanie (Gether 13. and 14. 10. 2026): the estimate with the variables, or only the published required
-   * acclaim */
+  /** /vyhodnocovanie (Gether 13. and 14. 10. 2026): the estimate with the variables (the published required acclaim
+   * every approved player sees, 23. 10. 2026) */
   evaluation_settings: boolean;
-  evaluation_overview: boolean;
   superuser: boolean;
   /** without Discord – the superadmin gives a code for a new password and deletes one waiting (Gether 17. 10. 2026) */
   local?: boolean;
@@ -206,7 +212,7 @@ export class KvkApi {
 
   /** every sign-up (reviewers and the superuser); must run in an injection context – `.reload()` after a change */
   signups(when: () => boolean) {
-    return httpResource<{ signups: KvkSignup[] }>(() => (this.isBrowser && when() ? '/api/kvk/signups/' : undefined));
+    return httpResource<KvkSignupList>(() => (this.isBrowser && when() ? '/api/kvk/signups/' : undefined));
   }
 
   /** the superuser withdraws someone's sign-up */

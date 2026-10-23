@@ -282,6 +282,12 @@ export const cs: Dict = {
     close: 'Zavřít',
     deleteConfirm: 'Opravdu smazat?',
     slots: { label: 'Pořadí přihlášky', first: '1. přihláška', second: '2. přihláška', add: 'přidat' },
+    top: {
+      title: 'Top 3 podle výbavy',
+      hint: 'Výbava a armamenty přihlášky, bodované jako Top 5 equip ve Vyhodnocování. Počítá se s filtry role, commandera a času online.',
+      score: 'Body za výbavu a armamenty',
+      none: 'Zatím nikdo s naklikanou výbavou.',
+    },
     survey: {
       budget: 'Kolik dávám do KvK',
       budgets: { to50: 'do 50 €', to100: 'do 100 €', to200: 'do 200 €', over200: 'nad 200 €' },
@@ -341,7 +347,7 @@ export const cs: Dict = {
       approved: {
         short: 'Schválený',
         label: 'Schválený – přidává marche a přihlášky na KvK',
-        tip: 'Přidává marche a přihlášky na KvK a vidí marche ostatních hráčů.',
+        tip: 'Přidává marche a přihlášky na KvK, vidí marche ostatních hráčů a zveřejněný požadovaný acclaim.',
       },
       reviewer: {
         short: 'R4',
@@ -352,11 +358,6 @@ export const cs: Dict = {
         short: 'Vyh. nastavení',
         label: 'Nastavení vyhodnocování – odhad acclaimu a proměnné',
         tip: 'Nastavení vyhodnocování: vidí odhad acclaimu schválených hráčů a jejich marche, zapisuje jim power a T4, mění proměnné, páry a formace commanderů (platí pro všechny) a zveřejňuje požadovaný acclaim.',
-      },
-      evaluation_overview: {
-        short: 'Pož. acclaim',
-        label: 'Požadovaný acclaim – zveřejněný přehled',
-        tip: 'Požadovaný acclaim: vidí zveřejněný požadovaný acclaim schválených hráčů, nic nemění. U hráčů vidí i power a doporučenou power, ne marche ani proměnné.',
       },
       inactive: {
         short: 'Neaktivní',
@@ -397,7 +398,6 @@ export const cs: Dict = {
       all: 'Přístup: všichni',
       r4: 'R4',
       evaluation_settings: 'Vyh. nastavení',
-      evaluation_overview: 'Pož. acclaim',
       none: 'Bez přístupu',
     },
     kvkFilter: 'Přihláška na KvK',
@@ -995,7 +995,7 @@ export const cs: Dict = {
           'Vedení si může seznam přihlášek (jméno ve hře, role, jednotky, commandeři a formace) zkopírovat do Discordu, kde plánuje KvK.',
           'Pokud u marchí zvolíš „Všichni hráči“, uvidí tvé marche spolu se jménem ve hře, Discord jménem a avatarem i všichni schválení hráči přihlášení na webu (stránka Marche hráčů). Změnit to můžeš kdykoli.',
           'Dokud tě správce neschválí nebo pokud schválení zruší, tvé marche a přihlášky zůstanou uložené, ale vidí je jen on.',
-          'Z tvých marchů (a power, pokud je zapsaná) web spočítá odhad acclaimu na KvK. Odhad i zapsanou power a T4 vidí jen správce a vedení, kterému povolí vyhodnocování (to vidí jen schválené hráče); svou power vidíš i ty na stránce Můj účet. Když vedení zveřejní požadovaný acclaim, hráči, kterým to správce povolí, uvidí u schválených hráčů jméno, avatar, počet marchů, power (jak byla při zveřejnění), doporučenou power a požadovaný acclaim – marche ne.',
+          'Z tvých marchů (a power, pokud je zapsaná) web spočítá odhad acclaimu na KvK. Odhad i zapsanou power a T4 vidí jen správce a vedení, kterému povolí vyhodnocování (to vidí jen schválené hráče); svou power vidíš i ty na stránce Můj účet. Když vedení zveřejní požadovaný acclaim, všichni schválení hráči uvidí u schválených hráčů jméno, avatar, počet marchů, power (jak byla při zveřejnění), doporučenou power a požadovaný acclaim – marche ne.',
           'Nic nezveřejňujeme, neprodáváme ani nepředáváme dál – kromě služeb v následujícím bodě.',
         ],
       },

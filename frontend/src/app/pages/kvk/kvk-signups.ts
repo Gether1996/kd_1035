@@ -22,13 +22,26 @@ import { Router, RouterLink } from '@angular/router';
 import { ArmoryApi } from '../../core/armory';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
-import { KVK_KINDS, KVK_ONLINE, KvkApi, KvkOnline, KvkSignup, MarchKind, asMarch, marchIcon, surveyMissing } from '../../core/kvk-api';
+import {
+  KVK_KINDS,
+  KVK_ONLINE,
+  KvkApi,
+  KvkOnline,
+  KvkSignup,
+  KvkSignupList,
+  MarchKind,
+  asMarch,
+  marchIcon,
+  surveyMissing,
+} from '../../core/kvk-api';
+import { normalizeSettings } from '../evaluation/settings';
 import { MarchCommander, marchCommandersUrl } from '../../core/marches-api';
 import { CommanderFilter, marchCommanders } from '../../shared/commander-filter';
 import { copyText } from '../../shared/copy-link';
 import { Icon } from '../../shared/icon';
 import { MarchBuild } from '../../shared/march-build';
 import { rosterText } from './roster-text';
+import { topSignups } from './top';
 import { surveyText } from './survey';
 
 type Role = 'all' | 'rally' | 'garrison';
@@ -59,7 +72,7 @@ const onlineOf = (query: string | undefined): KvkOnline | 'all' => KVK_ONLINE.fi
 })
 export class KvkSignups {
   /** every sign-up – loaded by the page, which asks again after a change */
-  readonly data = input.required<HttpResourceRef<{ signups: KvkSignup[] } | undefined>>();
+  readonly data = input.required<HttpResourceRef<KvkSignupList | undefined>>();
   /** the superuser may withdraw a sign-up */
   readonly superuser = input(false);
   /** ?online= of the page – the filter by the survey's times (a shared link shows the same players) */
@@ -179,6 +192,28 @@ export class KvkSignups {
 
   private readonly armory = inject(ArmoryApi);
   private readonly injector = inject(Injector);
+  private readonly scroller = inject(ViewportScroller);
+  /**
+   * "Top 3" of each troop type above the list (Gether 23. 10. 2026: like "Top 5 equip"): the sign-ups the role,
+   * commander and online filters leave, scored by their own equipment and armaments; empty until the armory loads
+   */
+  protected readonly top = computed(() => {
+    const index = this.armory.index();
+    if (!index) return [];
+    const settings = normalizeSettings(this.data().hasValue() ? this.data().value()!.settings : null);
+    return KVK_KINDS.map((kind) => ({ kind, best: topSignups(this.ofRole(), settings, index, kind) }));
+  });
+  protected readonly hasTop = computed(() => this.top().some((t) => t.best.length));
+
+  /** a player of the "Top 3": their card opens and the page scrolls to it */
+  protected showPlayer(id: number): void {
+    this.opened.update((opened) => new Set(opened).add(id));
+    afterNextRender({ read: () => this.scroller.scrollToAnchor(`kvk-player-${id}`) }, { injector: this.injector });
+  }
+
+  protected score(total: number): string {
+    return new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 1 }).format(total);
+  }
   /** the shown sign-ups as Discord messages (one, or parts of at most 1900 characters) */
   protected readonly roster = computed(() => {
     const t = this.i18n.t();

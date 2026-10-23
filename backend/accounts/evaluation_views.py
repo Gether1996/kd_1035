@@ -3,8 +3,8 @@ the web). The page computes everything itself from the marches the players click
 here, so a changed variable shows at once; the server keeps the variables and what the superadmin writes down about
 a player (power, T4, a correction of the recommended power). The superuser and the players the superuser lets in
 (switches next to R4 – Gether 13. and 14. 10. 2026): Player.evaluation_settings opens the estimate and the variables,
-Player.evaluation_overview only the required acclaim the others published ("Požadovaný acclaim", read only); those see
-only approved players. R4 (Player.kvk_reviewer) sees "Top 5 equip" – the best equipment and armaments of each player per
+the required acclaim the others published ("Požadovaný acclaim", read only) every approved player (Gether 23. 10.
+2026, before the switch Player.evaluation_overview); those see only approved players. R4 (Player.kvk_reviewer) sees "Top 5 equip" – the best equipment and armaments of each player per
 troop type (Gether 19. 10. 2026)."""
 
 import json
@@ -25,7 +25,7 @@ from guides.formations import check_formations, formation_map, formations_versio
 from guides.pairs import check_rows, pair_rows, pairs_version, replace_pairs
 
 from . import private_images
-from .kvk_views import army_data, march_data
+from .kvk_views import army_data, equipment_settings, march_data
 from .models import APPROVED, EvaluationSettings, KvkSignup, March, Player, PlayerEvaluation
 from .reminder_views import WriteThrottle, iso
 from .views import player_of
@@ -80,10 +80,12 @@ class CanEvaluate(BasePermission):
 
 
 class CanSeeOverview(BasePermission):
-    """The published required acclaim – the evaluators and the players with the overview switch"""
+    """The published required acclaim – every approved player and the superuser (Gether 23. 10. 2026: "každý schválený
+    hráč bude na to vidieť"; before only the players with a switch of their own)"""
 
     def has_permission(self, request, view):
-        return allowed(request, 'evaluation_settings', 'evaluation_overview')
+        player = player_of(request.user)
+        return bool(request.user.is_authenticated and (request.user.is_superuser or (player and player.may_post)))
 
 
 class CanReview(BasePermission):
@@ -383,12 +385,7 @@ def evaluation_equipment(request):
     or KvK sign-up (rally, garrison – "kto sa hodí najviac na rally / garrison"), with those – the page puts the best
     piece of each slot of all of a type together, with the strongest formation. Of the variables only what scores the
     equipment and the armaments goes along (never the pairs, the power or the acclaim)."""
-    data = EvaluationSettings.load().data or {}
-    weights = data.get('marches') if isinstance(data.get('marches'), dict) else {}
-    settings = {
-        **{key: data[key] for key in ('equipment', 'armaments') if key in data},
-        'marches': {key: weights[key] for key in ('equipment', 'armaments') if key in weights},
-    }
+    settings = equipment_settings()
     marches = March.objects.filter(kind__in=EQUIPMENT_KINDS).order_by('position')
     signups = KvkSignup.objects.filter(kind__in=EQUIPMENT_KINDS).order_by('role')
     players = (

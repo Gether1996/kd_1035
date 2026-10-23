@@ -44,7 +44,8 @@ const TABS: Tab[] = ['settings', 'results', 'overview', 'equipment'];
  * (not asked from the players yet): when the superadmin writes it down, the marches it asks for and the excess count.
  * "Požadovaný acclaim" (Gether 14. 10. 2026) is what an evaluator published from the table: a plain overview, the only
  * tab of a player with the overview switch. In the account menu of the superadmin and the players the superadmin lets
- * in (Player.evaluation_settings, Player.evaluation_overview – they see approved players only); a prerendered shell,
+ * in (Player.evaluation_settings; the published overview every approved player, Gether 23. 10. 2026 – they see approved
+ * players only); a prerendered shell,
  * not indexed, not in the sitemap.
  * Unsaved Premenné are not lost by leaving (14. 10. 2026): a link or back asks first (leave-guard.ts), closing or
  * reloading the tab gets the browser's own question – so does the full page load of a newer build (core/site-update.ts).

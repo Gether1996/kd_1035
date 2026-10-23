@@ -297,9 +297,8 @@ def signed_in(request) -> dict | None:
         # /vyhodnocovanie – the superadmin gives it like R4 (Gether 13. 10. 2026): the estimate with the variables, or
         # (14. 10. 2026) only the published required acclaim; a player whose approval was taken back has neither
         'evaluation_settings': (player.evaluation_settings and player.approved) or request.user.is_superuser,
-        'evaluation_overview': (
-            ((player.evaluation_overview or player.evaluation_settings) and player.approved) or request.user.is_superuser
-        ),
+        # the published required acclaim: every approved player (Gether 23. 10. 2026)
+        'evaluation_overview': player.may_post,
         # R4 (private_images.can_review): every sign-up and march, and "Top 5 equip" of /vyhodnocovanie (Gether 19. 10. 2026)
         'reviewer': (player.kvk_reviewer and player.approved) or request.user.is_superuser,
         # KvK sign-ups without the survey of the form (from before it, 20. 10. 2026) – one survey counts for both: the

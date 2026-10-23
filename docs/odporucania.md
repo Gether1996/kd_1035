@@ -36,6 +36,7 @@ Stav k **10. 10. 2026** (v1.6.3, po 6. kole agentov). Kritik v 5. aj 6. kole uvi
 - **Text prevádzkovateľa** na stránke Ochrana údajov („Gether, R4 kráľovstva 1035, kontakt cez Discord“) – potvrdiť alebo upraviť.
 - **Repo:** zvážiť vrátenie GitHub repa na privátne (snapshot databázy je v gite).
 - **Tlačidlo Schváliť v Discorde** (v1.36.0): do produkčného `.env` pridaj `DISCORD_PUBLIC_KEY` (Developer Portál → aplikácia → General Information → Public Key), nasaď a potom v tom istom mieste nastav Interactions Endpoint URL `https://kd1035.eu/api/discord/interactions/`. Kým to nie je, správa má len odkaz na zoznam Hráči.
+- **Stĺpec `Player.evaluation_overview`** (zrušený prepínač „Pož. acclaim“, v1.40.0): nečíta sa, môže ísť preč spolu s `KvkSettings` jednou migráciou.
 - **Tabuľka `KvkSettings`** (zrušený názov prihlasovania na KvK, v1.35.5): web ju už nečíta; zmazať ju môže migrácia (`DeleteModel`) – zmaže len uložený názov, napr. „20.11.“. Povedz, ak ju mám odstrániť.
 
 ## 6. Riziká a údržba

@@ -20,7 +20,7 @@ from rest_framework.response import Response
 
 from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
-from .models import APPROVED, KVK_ONLINE, MARCH_STATS, KvkSignup, March, Player, PlayerSettings
+from .models import APPROVED, KVK_ONLINE, MARCH_STATS, EvaluationSettings, KvkSignup, March, Player, PlayerSettings
 from .pair_check import march_checker, over_caps
 from .reminder_views import IsPlayer, WriteThrottle, iso
 from .views import cannot_post, player_of
@@ -92,6 +92,17 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
         }
         data['marches'] = [march_data(march) for march in player.marches.all()]
     return data
+
+
+def equipment_settings() -> dict:
+    """Of the variables of the KvK evaluation only what scores the equipment and the armaments – "Top 5 equip" and the
+    "Top 3" of the sign-ups (Gether 23. 10. 2026) score with it; never the pairs, the power or the acclaim."""
+    data = EvaluationSettings.load().data or {}
+    weights = data.get('marches') if isinstance(data.get('marches'), dict) else {}
+    return {
+        **{key: data[key] for key in ('equipment', 'armaments') if key in data},
+        'marches': {key: weights[key] for key in ('equipment', 'armaments') if key in weights},
+    }
 
 
 def slot_of(value) -> int | None:
@@ -224,7 +235,8 @@ def all_signups(request):
         # by player, the rally sign-ups before the garrison ones, the first before the second (one card per player)
         key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role'] != 'rally', s['slot']),
     )
-    return Response({'signups': rows})
+    # the scoring of the equipment for the "Top 3" per troop type above the list (Gether 23. 10. 2026)
+    return Response({'signups': rows, 'settings': equipment_settings()})
 
 
 @never_cache
@@ -272,7 +284,6 @@ def reviewers(request):
                 'avatar_url': p.avatar_url,
                 'reviewer': p.kvk_reviewer,
                 'evaluation_settings': p.evaluation_settings,
-                'evaluation_overview': p.evaluation_overview,
                 'approved': p.approved,
                 # hidden in the list until "Zobraziť neaktívnych" (Gether 20. 10. 2026)
                 'inactive': p.inactive,
@@ -313,7 +324,7 @@ def auto_approve(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def reviewer(request, player_id):
-    """PATCH {reviewer?: bool, approved?: bool, evaluation_settings?: bool, evaluation_overview?: bool, inactive?:
+    """PATCH {reviewer?: bool, approved?: bool, evaluation_settings?: bool, inactive?:
     bool} – R4 (sees the sign-ups), approved (adds marches and sign-ups), /vyhodnocovanie (the estimate and the
     variables) and its published required acclaim only (Gether 14. 10. 2026), and "Neaktívny" – hidden in the
     superadmin's list on /hraci, nothing else (Gether 20. 10. 2026)."""
@@ -323,12 +334,11 @@ def reviewer(request, player_id):
         'reviewer': 'kvk_reviewer',
         'approved': 'approved',
         'evaluation_settings': 'evaluation_settings',
-        'evaluation_overview': 'evaluation_overview',
         'inactive': 'inactive',
     }
     changes = {name: body[name] for name in fields if name in body}
     if not changes:
-        return Response({'detail': 'reviewer, approved, evaluation_settings, evaluation_overview or inactive'}, status=400)
+        return Response({'detail': 'reviewer, approved, evaluation_settings or inactive'}, status=400)
     was_approved = player.approved
     for name, value in changes.items():
         if type(value) is not bool:

@@ -500,7 +500,6 @@ describe('PlayersAdmin', () => {
       issues: 0,
       kvk: [],
       evaluation_settings: false,
-      evaluation_overview: false,
       inactive: false,
     };
     http.expectOne('/api/kvk/reviewers/').flush({
@@ -562,10 +561,11 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova', 'Gether']);
     select('#players-kvk', 'all');
     await settle(fixture);
-    // approved, R4, the two of the evaluation and "Neaktívny" for each player but the superuser, explained once above
-    expect(el.querySelectorAll('.reviewer .switch').length).toBe(10);
-    expect(el.querySelectorAll('.switch-legend li').length).toBe(5);
-    expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(5);
+    // approved, R4, the evaluation and "Neaktívny" for each player but the superuser, explained once above (the
+    // published required acclaim comes with the approval since 23. 10. 2026)
+    expect(el.querySelectorAll('.reviewer .switch').length).toBe(8);
+    expect(el.querySelectorAll('.switch-legend li').length).toBe(4);
+    expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(4);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
     expect(filters().map((b) => b.textContent?.trim())).toEqual(['Všetci · 3', 'Čakajú · 1', 'Schválení · 2']);
     // by the switches; the superadmin is only under "všetci"
@@ -574,7 +574,6 @@ describe('PlayersAdmin', () => {
       'Prístup: všetci · 3',
       'R4 · 0',
       'Vyh. nastavenia · 0',
-      'Pož. acclaim · 0',
       'Bez prístupu · 2',
     ]);
     select('#players-access', 'none');
@@ -602,17 +601,17 @@ describe('PlayersAdmin', () => {
     select('#players-access', 'none');
     await settle(fixture);
     expect(names()).toEqual(['nova', 'Nelly']);
-    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
+    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
     r4().click();
-    const flags = { reviewer: true, approved: true, evaluation_settings: false, evaluation_overview: false };
+    const flags = { reviewer: true, approved: true, evaluation_settings: false };
     http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, ...flags });
     await settle(fixture);
     expect(names()).toEqual(['nova', 'Nelly']);
-    expect(access()[4]).toBe('Bez prístupu · 1');
+    expect(access()[3]).toBe('Bez prístupu · 1');
     select('#players-access', 'all');
     await settle(fixture);
-    // the evaluation of Nelly: the evaluation itself and its published overview, two switches (Gether 14. 10. 2026)
-    const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[7];
+    // the evaluation of Nelly
+    const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
     expect(settings.getAttribute('aria-label')).toBe('Nastavenia vyhodnocovania – odhad acclaimu a premenné: Nelly');
     settings.click();
     const ev = http.expectOne('/api/kvk/reviewers/2/');
@@ -620,16 +619,8 @@ describe('PlayersAdmin', () => {
     ev.flush({ id: 2, ...flags, evaluation_settings: true });
     await settle(fixture);
     expect(settings.checked).toBe(true);
-    const overview = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[8];
-    expect(overview.getAttribute('aria-label')).toBe('Požadovaný acclaim – zverejnený prehľad: Nelly');
-    overview.click();
-    const vs = http.expectOne('/api/kvk/reviewers/2/');
-    expect(vs.request.body).toEqual({ evaluation_overview: true });
-    vs.flush({ id: 2, ...flags, evaluation_settings: true, evaluation_overview: true });
     await settle(fixture);
-    expect(overview.checked).toBe(true);
-    await settle(fixture);
-    for (const f of ['r4', 'evaluation_settings', 'evaluation_overview']) {
+    for (const f of ['r4', 'evaluation_settings']) {
       select('#players-access', f);
       await settle(fixture);
       expect(names()).toEqual(['Nelly']);
@@ -715,7 +706,6 @@ describe('PlayersAdmin – Neaktívny', () => {
       issues: 0,
       kvk: [],
       evaluation_settings: false,
-      evaluation_overview: false,
       inactive: false,
     };
     http.expectOne('/api/kvk/reviewers/').flush({
@@ -745,7 +735,7 @@ describe('PlayersAdmin – Neaktívny', () => {
 
     // Bela marked inactive: the row stays (tagged) until a filter changes
     const bela = el.querySelectorAll('.reviewer')[0];
-    bela.querySelectorAll<HTMLInputElement>('.switch')[4].click();
+    bela.querySelectorAll<HTMLInputElement>('.switch')[3].click();
     const req = http.expectOne('/api/kvk/reviewers/2/');
     expect(req.request.body).toEqual({ inactive: true });
     req.flush({ id: 2, inactive: true });
@@ -771,13 +761,12 @@ describe('PlayersAdmin – approval taken back', () => {
     issues: 0,
     kvk: [],
     evaluation_settings: false,
-    evaluation_overview: false,
     inactive: false,
   };
   const players = [
     { ...row, id: 1, name: 'gether', ingame_name: 'Gether', superuser: true, approved: false, reviewer: true },
     { ...row, id: 2, name: 'nelly', ingame_name: 'Nelly', reviewer: true, evaluation_settings: true },
-    { ...row, id: 3, name: 'odisiel', ingame_name: 'Odišiel', approved: false, evaluation_overview: true },
+    { ...row, id: 3, name: 'odisiel', ingame_name: 'Odišiel', approved: false, evaluation_settings: true },
     { ...row, id: 4, name: 'nova', ingame_name: 'Nova', approved: false },
   ];
 
@@ -803,9 +792,9 @@ describe('PlayersAdmin – approval taken back', () => {
       expect(hints[0].closest('.reviewer')?.querySelector('.reviewer__name strong')?.textContent).toContain('Odišiel');
       // the switches stay clickable and point screen readers at the hint (not the approval one)
       const boxes = Array.from(hints[0].closest('.reviewer')!.querySelectorAll<HTMLInputElement>('.switch'));
-      expect(boxes.map((b) => b.disabled)).toEqual([false, false, false, false, false]);
+      expect(boxes.map((b) => b.disabled)).toEqual([false, false, false, false]);
       // "Neaktívny" is about the list only – it never points at the hint
-      expect(boxes.map((b) => b.getAttribute('aria-describedby'))).toEqual([null, 'inactive-3', 'inactive-3', 'inactive-3', null]);
+      expect(boxes.map((b) => b.getAttribute('aria-describedby'))).toEqual([null, 'inactive-3', 'inactive-3', null]);
       http.verify();
     });
   }

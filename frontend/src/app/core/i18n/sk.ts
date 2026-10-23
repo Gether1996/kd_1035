@@ -290,6 +290,13 @@ export const sk = {
     deleteConfirm: 'Naozaj zmazať?',
     // up to two sign-ups per role (Gether 22. 10. 2026)
     slots: { label: 'Poradie prihlášky', first: '1. prihláška', second: '2. prihláška', add: 'pridať' },
+    // "Top 3" of each troop type above the reviewers' list (Gether 23. 10. 2026)
+    top: {
+      title: 'Top 3 podľa výbavy',
+      hint: 'Výbava a armamenty prihlášky, bodované ako Top 5 equip vo Vyhodnocovaní. Ráta sa s filtrami roly, commandera a času online.',
+      score: 'Body za výbavu a armamenty',
+      none: 'Zatiaľ nikto s naklikanou výbavou.',
+    },
     // the survey of the sign-up form (Gether 20. 10. 2026) – a rough guess, the CZK only roughly (about 25 Kč for 1 €)
     survey: {
       budget: 'Koľko dávam do KvK',
@@ -353,7 +360,7 @@ export const sk = {
       approved: {
         short: 'Schválený',
         label: 'Schválený – pridáva marche a prihlášky na KvK',
-        tip: 'Pridáva marche a prihlášky na KvK a vidí marche ostatných hráčov.',
+        tip: 'Pridáva marche a prihlášky na KvK, vidí marche ostatných hráčov a zverejnený požadovaný acclaim.',
       },
       reviewer: {
         short: 'R4',
@@ -365,11 +372,6 @@ export const sk = {
         short: 'Vyh. nastavenia',
         label: 'Nastavenia vyhodnocovania – odhad acclaimu a premenné',
         tip: 'Nastavenia vyhodnocovania: vidí odhad acclaimu schválených hráčov a ich marche, zapisuje im power a T4, mení premenné, páry a formácie commanderov (platí pre všetkých) a zverejňuje požadovaný acclaim.',
-      },
-      evaluation_overview: {
-        short: 'Pož. acclaim',
-        label: 'Požadovaný acclaim – zverejnený prehľad',
-        tip: 'Požadovaný acclaim: vidí zverejnený požadovaný acclaim schválených hráčov, nič nemení. Pri hráčoch vidí aj power a odporúčanú power, nie marche ani premenné.',
       },
       // hidden in the list until "Zobraziť neaktívnych" (Gether 20. 10. 2026) – nothing else
       inactive: {
@@ -411,7 +413,6 @@ export const sk = {
       all: 'Prístup: všetci',
       r4: 'R4',
       evaluation_settings: 'Vyh. nastavenia',
-      evaluation_overview: 'Pož. acclaim',
       none: 'Bez prístupu',
     },
     kvkFilter: 'Prihláška na KvK',
@@ -1020,7 +1021,7 @@ export const sk = {
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
-          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Keď vedenie zverejní požadovaný acclaim, hráči, ktorým to správca povolí, uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
+          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Keď vedenie zverejní požadovaný acclaim, všetci schválení hráči uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

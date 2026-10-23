@@ -92,6 +92,8 @@ class Player(models.Model):
         'premenné výpočtu, páry a formácie commanderov (platí pre všetkých) a zverejňuje požadovaný acclaim. '
         'Nastavuje superadmin.',
     )
+    # no longer read (Gether 23. 10. 2026): every approved player sees the published required acclaim; the column waits
+    # for a migration that drops it (docs/odporucania.md)
     evaluation_overview = models.BooleanField(
         'požadovaný acclaim',
         default=False,

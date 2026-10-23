@@ -79,6 +79,43 @@
   } @else if (!shown().length) {
     <p class="panel__lead">{{ k.noSignups }}</p>
   } @else {
+    <!-- "Top 3" per troop type by the equipment and armaments of the sign-ups (Gether 23. 10. 2026) -->
+    @if (hasTop()) {
+      <section class="top" aria-labelledby="kvk-top-title">
+        <h3 class="top__title" id="kvk-top-title">{{ k.top.title }}</h3>
+        <p class="top__hint">{{ k.top.hint }}</p>
+        <div class="top__kinds">
+          @for (t of top(); track t.kind) {
+            <div class="top__kind">
+              <h4 class="top__kind-name"><img [src]="icon(t.kind)" alt="" width="96" height="96" />{{ i18n.t().marches.kinds[t.kind] }}</h4>
+              @if (t.best.length) {
+                <ol class="top__list">
+                  @for (one of t.best; track one.signup.id; let i = $index) {
+                    <li>
+                      <button type="button" class="top__row" (click)="showPlayer(one.signup.player?.id ?? -one.signup.id)">
+                        <span class="top__rank">{{ i + 1 }}.</span>
+                        @if (one.signup.player; as p) {
+                          <img class="top__avatar" [src]="p.avatar_url" alt="" width="28" height="28" />
+                        }
+                        <span class="top__name">{{ name(one.signup) }}</span>
+                        @let role = (one.signup.role === 'rally' ? 'Rally' : 'Garrison') + (one.signup.slot > 1 ? ' ' + one.signup.slot : '');
+                        <!-- the role as its icon (narrow phones), named for screen readers and in the title -->
+                        <span class="top__role" [title]="role"
+                          ><svg [appIcon]="one.signup.role === 'rally' ? 'swords' : 'shield'"></svg>{{ one.signup.slot > 1 ? one.signup.slot : '' }}<span class="sr-only">{{ role }}</span></span
+                        >
+                        <strong class="top__score" [title]="k.top.score">{{ score(one.total) }}</strong>
+                      </button>
+                    </li>
+                  }
+                </ol>
+              } @else {
+                <p class="top__none">{{ k.top.none }}</p>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    }
     <ul class="signups">
       @for (g of players(); track g.first.id) {
         @let s = g.first;

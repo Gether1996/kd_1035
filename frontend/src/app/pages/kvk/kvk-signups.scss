@@ -122,3 +122,134 @@
     flex: 1 1 100%;
   }
 }
+
+// "Top 3 podľa výbavy" of each troop type above the list (Gether 23. 10. 2026)
+.top {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 10, 23, 0.35);
+}
+
+.top__title {
+  margin: 0;
+  font: 700 1.0625rem/1.3 var(--font-display);
+  color: var(--gold-100);
+}
+
+.top__hint {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.top__kinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px 20px;
+  margin-top: 12px;
+}
+
+.top__kind-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font: 600 0.9375rem/1.2 var(--font-body);
+  color: var(--text);
+
+  img {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.top__kind {
+  min-width: 0;
+}
+
+.top__list {
+  display: grid;
+  // the rows shrink to the column: the name gets the ellipsis, the role and the score stay
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.top__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: var(--line-strong);
+  }
+}
+
+.top__rank {
+  width: 1.5em;
+  flex-shrink: 0;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.top__avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.top__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.top__role {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-dim);
+  font-size: 0.8125rem;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    color: var(--gold-400);
+  }
+}
+
+.top__score {
+  flex-shrink: 0;
+  color: var(--gold-300);
+  font-variant-numeric: tabular-nums;
+}
+
+.top__none {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top__row {
+    transition: none;
+  }
+}
