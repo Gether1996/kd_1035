@@ -235,10 +235,10 @@ describe('evaluation scoring', () => {
     expect(row.ownLimit).toBe(row.recommended);
     expect(row.excess).toBe(100 - row.recommended!);
     expect(row.acclaim.excess).toBe(row.excess * 32_000);
-    // the three parts: power 50 %, march count 30 %, quality 20 % of the benchmark's 5 600 000
-    expect(row.acclaim.power).toBeCloseTo(5_600_000 * 0.5 * (100 / 102), 3);
-    expect(row.acclaim.marches).toBeCloseTo(5_600_000 * 0.3 * (2 / 5), 3);
-    expect(row.acclaim.quality).toBeCloseTo(5_600_000 * 0.2 * (row.quality / (286.53 / 5)), 3);
+    // the three parts: power 50 % (above 60 M), march count 40 %, quality 10 % of the benchmark's 5 600 000
+    expect(row.acclaim.power).toBeCloseTo(5_600_000 * 0.5 * ((100 - 60) / (102 - 60)), 3);
+    expect(row.acclaim.marches).toBeCloseTo(5_600_000 * 0.4 * (2 / 5), 3);
+    expect(row.acclaim.quality).toBeCloseTo(5_600_000 * 0.1 * (row.quality / (286.53 / 5)), 3);
     const { power, marches: count, quality, excess } = row.acclaim;
     expect(row.acclaim.required).toBe(Math.round((power + count + quality + excess) / 1000) * 1000);
   });
@@ -255,8 +255,12 @@ describe('evaluation scoring', () => {
     // 2 marches: a low recommended power (at most the row's upper bound 72 M), the power above it costs extra
     expect(two.recommended).toBeLessThanOrEqual(72);
     expect(two.excess).toBeGreaterThan(4);
-    // 3 marches and 14 M more: well over a million more – the spreadsheet's way made it a few hundred thousand
-    expect(five.acclaim.required - two.acclaim.required).toBeGreaterThan(1_000_000);
+    // 3 marches and 14 M more: far more – the spreadsheet's way made it a few hundred thousand; about 5 : 3 (Gether)
+    expect(five.acclaim.required - two.acclaim.required).toBeGreaterThan(1_500_000);
+    expect(five.acclaim.required / two.acclaim.required).toBeGreaterThan(1.5);
+    // below 60 M everyone is equal: 40 M and 55 M owe the same for the power
+    const low = evaluate(settings, [player(4, [same(8)], { power: 40 }), player(5, [same(9)], { power: 55 })], INDEX).rows;
+    expect([low[0].acclaim.power, low[1].acclaim.power]).toEqual([0, 0]);
     // the quality still counts: better marches, more acclaim
     const better = evaluate(settings, [player(3, [6, 7].map((id) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', true, 3) })), { power: 77 })], INDEX).rows[0];
     expect(better.acclaim.required).toBeGreaterThan(two.acclaim.required);
@@ -277,7 +281,7 @@ describe('evaluation scoring', () => {
     expect([none.expected, none.missing, none.score, none.power, none.acclaim.required]).toEqual([null, 0, 0, null, 200_000]);
     // 100 M and no march: the power part only, at least 50 000 per million
     expect(floor.score).toBe(0);
-    expect(floor.acclaim.power).toBeCloseTo(5_600_000 * 0.5 * (100 / 102), 3);
+    expect(floor.acclaim.power).toBeCloseTo(5_600_000 * 0.5 * ((100 - 60) / (102 - 60)), 3);
     expect(floor.acclaim.floor).toBe(5_000_000);
     expect(floor.acclaim.required).toBe(5_000_000);
     expect(t4.acclaim.required).toBe(Math.round((floor.acclaim.required * 0.89) / 1000) * 1000);

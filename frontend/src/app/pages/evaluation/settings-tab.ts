@@ -148,6 +148,7 @@ export class EvalSettingsTab {
       acclaim: [
         f(['acclaim', 'benchmark'], s.acclaim.benchmark),
         // the three parts and their weights (Gether 23. 10. 2026)
+        f(['acclaim', 'powerBase'], s.acclaim.powerBase),
         f(['acclaim', 'weights', 'power'], s.acclaim.weights.power),
         f(['acclaim', 'weights', 'marches'], s.acclaim.weights.marches),
         f(['acclaim', 'weights', 'quality'], s.acclaim.weights.quality),

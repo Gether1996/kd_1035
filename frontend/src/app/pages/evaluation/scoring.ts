@@ -86,7 +86,7 @@ export interface PlayerEval {
 export interface Evaluation {
   rows: PlayerEval[];
   /** the benchmark the parts are measured against: its power, the full number of marches and its average march */
-  benchmark: { power: number; marches: number; quality: number };
+  benchmark: { power: number; marches: number; quality: number; powerBase: number };
   /** the score range of 1–5 marches used for the recommended power; auto = from the players */
   ranges: { min: number; max: number; auto: boolean; players: number }[];
 }
@@ -307,7 +307,7 @@ interface Draft {
  * Every player (Gether 23. 10. 2026: "power a počet marchov najdôležitejší faktor … keď má hráč 2 marche, mal odporúčaný
  * power nízky"): the best counted marches, the recommended power their count carries (the quality moves it within a
  * share of the row), and the required acclaim = the benchmark's acclaim × the weighted shares of
- *   power / the benchmark's power,
+ *   power above the base everyone has / the benchmark's power above it,
  *   counted marches / the full number,
  *   average march score / the benchmark's average march,
  * plus the excess power over the recommended one, at least the power floor and the minimum, T4 less. Without a power
@@ -364,14 +364,19 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
   // the benchmark: the picked player's average march and power, else the numbers of the variables
   const a = settings.acclaim;
   const picked = a.player !== null ? partial.find((x) => x.player.id === a.player && x.counted > 0) : undefined;
+  const benchmarkPower = (picked && picked.player.power) || a.power;
   const benchmark = {
-    power: (picked && picked.player.power) || a.power,
+    power: benchmarkPower,
     marches: max,
     quality: picked ? picked.marchScore / picked.counted : a.score / max,
+    powerBase: benchmarkPower > a.powerBase ? a.powerBase : 0,
   };
   const w = a.weights;
   const weights = w.power + w.marches + w.quality || 1;
   const share = (value: number, of: number) => (of > 0 ? value / of : 0);
+  // the power above what everyone has (Gether 23. 10. 2026: "do 60 M sú si všetci rovní"); a base at or above the
+  // benchmark's power would leave nothing to compare – then the whole power
+  const above = (power: number) => Math.max(0, power - benchmark.powerBase);
 
   const rows = partial.map((x): PlayerEval => {
     const recommended = recommendedOf(x);
@@ -380,17 +385,17 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     const quality = x.counted ? x.marchScore / x.counted : 0;
     const part = (weight: number, value: number, of: number) => (a.benchmark * weight * share(value, of)) / weights;
     const parts = {
-      power: power !== null ? part(w.power, power, benchmark.power) : 0,
+      power: power !== null ? part(w.power, above(power), above(benchmark.power)) : 0,
       marches: part(w.marches, x.counted, benchmark.marches),
       quality: part(w.quality, quality, benchmark.quality),
     };
     const excess = written !== null && recommended !== null ? Math.max(0, written - recommended) : 0;
     const excessAcclaim = excess * p.excess;
     const floor = written !== null ? written * p.floor : 0;
-    const base = Math.max(parts.power + parts.marches + parts.quality + excessAcclaim, floor);
-    const t4 = x.player.t4 ? base * (a.t4 / 100) : 0;
+    const sum = Math.max(parts.power + parts.marches + parts.quality + excessAcclaim, floor);
+    const t4 = x.player.t4 ? sum * (a.t4 / 100) : 0;
     const step = a.round;
-    const required = Math.max(a.minimum, Math.round((base - t4) / step) * step);
+    const required = Math.max(a.minimum, Math.round((sum - t4) / step) * step);
     return {
       player: x.player,
       marches: x.marches,

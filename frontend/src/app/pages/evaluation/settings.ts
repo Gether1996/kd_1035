@@ -16,6 +16,11 @@ export interface EvalSettings {
     score: number;
     /** the benchmark's power in millions when no player is picked or the picked one has none (Slim Dejvid: 102) */
     power: number;
+    /**
+     * The power everyone has, M (Gether 23. 10. 2026: "do 60 M sú si všetci rovní, dôležité je od 60 M vyššie") – the
+     * power part counts only what is above it, for the player and the benchmark alike
+     */
+    powerBase: number;
     /** a player whose score and power are the benchmark (null = the numbers above) */
     player: number | null;
     /**
@@ -197,8 +202,10 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     benchmark: 5_600_000,
     score: 286.53,
     power: 102,
+    powerBase: 60,
     player: null,
-    weights: { power: 50, marches: 30, quality: 20 },
+    // Gether 23. 10. 2026: "Ales 5 M a Syel 3 M" – 5 marches 91 M vs 2 marches 77 M come out 5 : 3
+    weights: { power: 50, marches: 40, quality: 10 },
     minimum: 200_000,
     t4: 11,
     round: 1000,
@@ -329,6 +336,7 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
       benchmark: num(acclaim['benchmark'], d.acclaim.benchmark, 0),
       score: num(acclaim['score'], d.acclaim.score, 0.01),
       power: num(acclaim['power'], d.acclaim.power, 1, 1000),
+      powerBase: num(acclaim['powerBase'], d.acclaim.powerBase, 0, 1000),
       player: typeof player === 'number' && Number.isInteger(player) ? player : null,
       weights: group(acclaim['weights'], d.acclaim.weights, 0, 100),
       minimum: num(acclaim['minimum'], d.acclaim.minimum, 0),

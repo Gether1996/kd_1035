@@ -304,7 +304,11 @@ export class EvalResultsTab {
     const total = w.power + w.marches + w.quality || 1;
     const pct = (n: number) => this.dec((100 * n) / total);
     if (part === 'power') {
-      return d.partPower.replace('{p}', this.dec(r.power ?? 0)).replace('{b}', this.dec(b.power)).replace('{w}', pct(w.power));
+      return d.partPower
+        .replace('{p}', this.dec(r.power ?? 0))
+        .replace('{b}', this.dec(b.power))
+        .replace('{base}', this.dec(b.powerBase))
+        .replace('{w}', pct(w.power));
     }
     if (part === 'marches') {
       return d.partMarches.replace('{n}', String(r.counted)).replace('{b}', String(b.marches)).replace('{w}', pct(w.marches));
