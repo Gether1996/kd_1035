@@ -59,25 +59,34 @@ export interface PlayerEval {
   /** counted marches and their score */
   counted: number;
   marchScore: number;
-  /** marches the power asks for (null = no power written down) and the missing ones counted on top */
+  /** marches the power asks for (null = no power written down) and how many of them the player has not clicked */
   expected: number | null;
   missing: number;
-  missingScore: number;
-  /** the total score: the counted marches and the missing ones */
+  /** the score of the counted marches (their sum) and the average march – the quality */
   score: number;
-  /** the recommended power for the total score, and the most power the player's own marches carry */
+  quality: number;
+  /**
+   * The power the player's own counted marches carry (Gether 23. 10. 2026: 2 marches = a low recommended power) – both
+   * the same number, `recommended` kept for the published overview
+   */
   recommended: number | null;
   ownLimit: number | null;
+  /** the power the acclaim counts with: the one written down, else the recommended one (null = neither) */
+  power: number | null;
   /** millions above the recommended power */
   excess: number;
-  acclaim: { marches: number; excess: number; floor: number; t4: number; required: number };
+  /**
+   * The parts of the acclaim (Gether 23. 10. 2026: "power a počet marchov najdôležitejší faktor"): the power, the number
+   * of marches and their quality, each its weighted share of the benchmark's acclaim; then the excess power on top,
+   * the floor, T4 less
+   */
+  acclaim: { power: number; marches: number; quality: number; excess: number; floor: number; t4: number; required: number };
 }
 
 export interface Evaluation {
   rows: PlayerEval[];
-  /** acclaim for one point of the score */
-  perPoint: number;
-  benchmarkScore: number;
+  /** the benchmark the parts are measured against: its power, the full number of marches and its average march */
+  benchmark: { power: number; marches: number; quality: number };
   /** the score range of 1–5 marches used for the recommended power; auto = from the players */
   ranges: { min: number; max: number; auto: boolean; players: number }[];
 }
@@ -268,10 +277,19 @@ export function expectedMarches(settings: EvalSettings, power: number): number {
   return expected;
 }
 
-/** the spreadsheet's recommended power: the range of the march count, spread over its score range */
-export function recommendedPower(row: PowerRow, range: { min: number; max: number }, score: number, bonus: number): number {
+/**
+ * The recommended power of a march count: the row's lowest power, plus up to `spread` % of the row's range for the
+ * score within its score range (Gether 23. 10. 2026: the march count first, the quality only within this share)
+ */
+export function recommendedPower(
+  row: PowerRow,
+  range: { min: number; max: number },
+  score: number,
+  bonus: number,
+  spread = 100,
+): number {
   const t = range.max > range.min ? Math.min(1, Math.max(0, (score - range.min) / (range.max - range.min))) : 0;
-  return Math.round(row.min + t * (row.max - row.min) + bonus);
+  return Math.round(row.min + t * (row.max - row.min) * (spread / 100) + bonus);
 }
 
 // ---------------------------------------------------------------- everyone
@@ -283,17 +301,18 @@ interface Draft {
   marchScore: number;
   expected: number | null;
   missing: number;
-  missingScore: number;
-  score: number;
-  /** the march count the power table is read for */
-  group: number;
 }
 
 /**
- * Every player: the march scores, the total with the marches their power asks for, the recommended power, the
- * required acclaim (score × the benchmark's acclaim per point + the excess power, at least the power floor and the
- * minimum, T4 less). The score ranges of the power table come from the players when a
- * group has enough of them (the spreadsheet did the same from its own results).
+ * Every player (Gether 23. 10. 2026: "power a počet marchov najdôležitejší faktor … keď má hráč 2 marche, mal odporúčaný
+ * power nízky"): the best counted marches, the recommended power their count carries (the quality moves it within a
+ * share of the row), and the required acclaim = the benchmark's acclaim × the weighted shares of
+ *   power / the benchmark's power,
+ *   counted marches / the full number,
+ *   average march score / the benchmark's average march,
+ * plus the excess power over the recommended one, at least the power floor and the minimum, T4 less. Without a power
+ * written down the recommended power stands in. The score ranges of the power table come from the players when a group
+ * has enough of them (the spreadsheet did the same from its own results).
  */
 export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: ArmoryIndex | null, usePower = true): Evaluation {
   // "Rátať s power" off (Gether 13. 10. 2026): the estimate from the marches only, the power written down stays
@@ -302,6 +321,7 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
   const formations = formationTable(settings);
   const kinds = new Set(settings.marches.kinds);
   const p = settings.power;
+  const max = settings.marches.max;
 
   const partial: Draft[] = players.map((player) => {
     const marches = player.marches.map((m) => marchEval(settings, table, m, index, formations));
@@ -313,7 +333,7 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
       .filter((m) => m.march.kind && kinds.has(m.march.kind) && m.pair.points > 0)
       .sort((a, b) => b.total - a.total || byPosition(a, b));
     eligible.forEach((m, i) => {
-      m.counted = i < settings.marches.max;
+      m.counted = i < max;
       m.skipped = m.counted ? null : 'limit';
     });
     marches.forEach((m) => {
@@ -324,41 +344,53 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     const power = powerOf(player);
     const expected = power !== null && p.expected ? expectedMarches(settings, power) : null;
     const missing = expected !== null ? Math.max(0, expected - counted.length) : 0;
-    const missingScore = counted.length ? (marchScore / counted.length) * (p.phantom / 100) : p.emptyMarch;
-    const score = marchScore + missing * missingScore;
-    const group = Math.min(settings.marches.max, Math.max(counted.length, expected ?? 0));
     sortMarches(marches);
-    return { player, marches, counted: counted.length, marchScore, expected, missing, missingScore, score, group };
+    return { player, marches, counted: counted.length, marchScore, expected, missing };
   });
 
-  // the score ranges of 1–5 marches: percentiles of the approved players with that many (counted or expected)
+  // the score ranges of 1–5 marches: percentiles of the approved players with that many counted marches
   const ranges = p.table.map((row, i) => {
-    const scores = partial.filter((x) => x.player.approved && x.group === i + 1 && x.score > 0).map((x) => x.score);
+    const scores = partial.filter((x) => x.player.approved && x.counted === i + 1 && x.marchScore > 0).map((x) => x.marchScore);
     const auto = p.auto && scores.length >= p.samples;
     return auto
       ? { min: percentile(scores, p.low), max: percentile(scores, p.high), auto, players: scores.length }
       : { min: row.scoreMin, max: row.scoreMax, auto, players: scores.length };
   });
+  const recommendedOf = (x: Draft) => {
+    const n = Math.min(max, x.counted);
+    return n ? recommendedPower(p.table[n - 1], ranges[n - 1], x.marchScore, x.player.power_bonus, p.spread) : null;
+  };
 
-  const benchmark = settings.acclaim.player !== null ? partial.find((x) => x.player.id === settings.acclaim.player) : undefined;
-  const benchmarkScore = benchmark && benchmark.score > 0 ? benchmark.score : settings.acclaim.score;
-  const perPoint = settings.acclaim.benchmark / benchmarkScore;
+  // the benchmark: the picked player's average march and power, else the numbers of the variables
+  const a = settings.acclaim;
+  const picked = a.player !== null ? partial.find((x) => x.player.id === a.player && x.counted > 0) : undefined;
+  const benchmark = {
+    power: (picked && picked.player.power) || a.power,
+    marches: max,
+    quality: picked ? picked.marchScore / picked.counted : a.score / max,
+  };
+  const w = a.weights;
+  const weights = w.power + w.marches + w.quality || 1;
+  const share = (value: number, of: number) => (of > 0 ? value / of : 0);
 
   const rows = partial.map((x): PlayerEval => {
-    const power = powerOf(x.player);
-    const row = x.group ? p.table[x.group - 1] : null;
-    const recommended = row ? recommendedPower(row, ranges[x.group - 1], x.score, x.player.power_bonus) : null;
-    // the most power the player's own marches carry: their count and score, nothing missing added
-    const own = Math.min(settings.marches.max, x.counted);
-    const ownLimit = own ? recommendedPower(p.table[own - 1], ranges[own - 1], x.marchScore, x.player.power_bonus) : null;
-    const excess = power !== null && recommended !== null ? Math.max(0, power - recommended) : 0;
-    const marches = x.score * perPoint;
+    const recommended = recommendedOf(x);
+    const written = powerOf(x.player);
+    const power = written ?? recommended;
+    const quality = x.counted ? x.marchScore / x.counted : 0;
+    const part = (weight: number, value: number, of: number) => (a.benchmark * weight * share(value, of)) / weights;
+    const parts = {
+      power: power !== null ? part(w.power, power, benchmark.power) : 0,
+      marches: part(w.marches, x.counted, benchmark.marches),
+      quality: part(w.quality, quality, benchmark.quality),
+    };
+    const excess = written !== null && recommended !== null ? Math.max(0, written - recommended) : 0;
     const excessAcclaim = excess * p.excess;
-    const floor = power !== null ? power * p.floor : 0;
-    const base = Math.max(marches + excessAcclaim, floor);
-    const t4 = x.player.t4 ? base * (settings.acclaim.t4 / 100) : 0;
-    const step = settings.acclaim.round;
-    const required = Math.max(settings.acclaim.minimum, Math.round((base - t4) / step) * step);
+    const floor = written !== null ? written * p.floor : 0;
+    const base = Math.max(parts.power + parts.marches + parts.quality + excessAcclaim, floor);
+    const t4 = x.player.t4 ? base * (a.t4 / 100) : 0;
+    const step = a.round;
+    const required = Math.max(a.minimum, Math.round((base - t4) / step) * step);
     return {
       player: x.player,
       marches: x.marches,
@@ -366,15 +398,16 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
       marchScore: x.marchScore,
       expected: x.expected,
       missing: x.missing,
-      missingScore: x.missingScore,
-      score: x.score,
+      score: x.marchScore,
+      quality,
       recommended,
-      ownLimit,
+      ownLimit: recommended,
+      power,
       excess,
-      acclaim: { marches, excess: excessAcclaim, floor, t4, required },
+      acclaim: { ...parts, excess: excessAcclaim, floor, t4, required },
     };
   });
-  return { rows, perPoint, benchmarkScore, ranges };
+  return { rows, benchmark, ranges };
 }
 
 /** in the player's order, as on /marche */

@@ -59,6 +59,7 @@
       </div>
       @if (v.acclaim.player === null) {
         <ng-container *ngTemplateOutlet="num; context: { $implicit: fs.score }" />
+        <ng-container *ngTemplateOutlet="num; context: { $implicit: fs.benchmarkPower }" />
       }
       @for (f of fs.acclaim.slice(1); track f.label) {
         <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />

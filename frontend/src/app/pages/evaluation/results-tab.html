@@ -198,11 +198,13 @@
                 <!-- how the acclaim adds up -->
                 <p class="ev-detail__sum">
                   <strong>{{ d.acclaim }}:</strong>
-                  {{ int(r.acclaim.marches) }} {{ d.fromMarches }} ({{ scoreText(r) }})
+                  {{ int(r.acclaim.power) }} ({{ partText(r, 'power') }})
+                  + {{ int(r.acclaim.marches) }} ({{ partText(r, 'marches') }})
+                  + {{ int(r.acclaim.quality) }} ({{ partText(r, 'quality') }})
                   @if (r.acclaim.excess) {
                     + {{ int(r.acclaim.excess) }} ({{ excessText(r) }})
                   }
-                  @if (r.acclaim.floor > r.acclaim.marches + r.acclaim.excess) {
+                  @if (r.acclaim.floor > r.acclaim.power + r.acclaim.marches + r.acclaim.quality + r.acclaim.excess) {
                     → {{ int(r.acclaim.floor) }} ({{ d.floor }})
                   }
                   @if (r.acclaim.t4) {

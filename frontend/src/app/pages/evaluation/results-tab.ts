@@ -230,7 +230,6 @@ export class EvalResultsTab {
   protected missingText(r: PlayerEval): string {
     return this.texts()
       .detail.missing.replace('{n}', String(r.missing))
-      .replace('{score}', this.dec(r.missingScore))
       .replace('{power}', this.dec(r.player.power ?? 0))
       .replace('{expected}', String(r.expected ?? 0));
   }
@@ -239,7 +238,6 @@ export class EvalResultsTab {
     return this.texts()
       .detail.fromExcess.replace('{m}', this.dec(r.excess))
       .replace('{rec}', String(r.recommended ?? 0))
-      .replace('{n}', String(r.counted + r.missing))
       .replace('{per}', this.int(this.settings().power.excess));
   }
 
@@ -298,9 +296,20 @@ export class EvalResultsTab {
     return text ? this.texts().detail.overCap.replace('{stats}', text) : '';
   }
 
-  /** the score is not a column any more – the acclaim from the marches says how it was counted */
-  protected scoreText(r: PlayerEval): string {
-    return this.texts().detail.fromScore.replace('{s}', this.dec(r.score)).replace('{per}', this.int(this.evaluation().perPoint));
+  /** a part of the acclaim against the benchmark: "power 91 M z 102 M · 50 %" (Gether 23. 10. 2026) */
+  protected partText(r: PlayerEval, part: 'power' | 'marches' | 'quality'): string {
+    const d = this.texts().detail;
+    const b = this.evaluation().benchmark;
+    const w = this.settings().acclaim.weights;
+    const total = w.power + w.marches + w.quality || 1;
+    const pct = (n: number) => this.dec((100 * n) / total);
+    if (part === 'power') {
+      return d.partPower.replace('{p}', this.dec(r.power ?? 0)).replace('{b}', this.dec(b.power)).replace('{w}', pct(w.power));
+    }
+    if (part === 'marches') {
+      return d.partMarches.replace('{n}', String(r.counted)).replace('{b}', String(b.marches)).replace('{w}', pct(w.marches));
+    }
+    return d.partQuality.replace('{q}', this.dec(r.quality)).replace('{b}', this.dec(b.quality)).replace('{w}', pct(w.quality));
   }
 
   // ---------------------------------------------------------------- explanations

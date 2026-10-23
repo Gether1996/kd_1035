@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **23. 10. 2026 – v1.41.0:** Nový výpočet požadovaného acclaimu vo Vyhodnocovaní: najviac váži power (50 %) a počet marchov (30 %), kvalita marchov 20 % – váhy sa dajú meniť v Premenných. Odporúčaná power sa ráta podľa počtu naklikaných marchov (pri 2 marchoch nízka), power nad ňu pridá acclaim. Detail hráča ukáže, z čoho sa acclaim skladá.
 - **23. 10. 2026 (obsah):** Návody na výbavu pre jazdu, pechotu a lukostrelcov majú tabuľku **Doplnky podľa situácie** (pole, rally, garrison, swarm) podľa datovaných videí; Najlepšie doplnky opravené (Karuak’s War Drums, Dagger/Web/Coin).
 - **23. 10. 2026 – v1.40.0:** Nad zoznamom Prihlášky na KvK je **Top 3 podľa výbavy** pre pechotu, jazdu a lukostrelcov (výbava a armamenty prihlášky, bodované ako Top 5 equip; ráta s filtrami roly, commandera a času online). Záložku Požadovaný acclaim na `/vyhodnocovanie` vidí každý schválený hráč (Vyhodnocovanie je v jeho menu); samostatný prepínač „Pož. acclaim“ v zozname Hráči je zrušený.
 - **22. 10. 2026 – v1.39.0:** Každý hráč môže mať 2 prihlášky na rally a 2 na garrison (napr. dva rôzne páry commanderov). Vo formulári pod rolou prepínač „1. prihláška · 2. prihláška“, vedenie vidí v zozname „Rally 2“ / „Garrison 2“.

@@ -12,10 +12,18 @@ export interface EvalSettings {
   acclaim: {
     /** the acclaim of the benchmark player (spreadsheet: Slim Dejvid, 5 600 000) */
     benchmark: number;
-    /** the benchmark's total score when no player is picked (spreadsheet: 286.53) */
+    /** the benchmark's total score of its marches when no player is picked (spreadsheet: 286.53) */
     score: number;
-    /** a player whose score is the benchmark (null = the number above) */
+    /** the benchmark's power in millions when no player is picked or the picked one has none (Slim Dejvid: 102) */
+    power: number;
+    /** a player whose score and power are the benchmark (null = the numbers above) */
     player: number | null;
+    /**
+     * How much each part weighs, % (Gether 23. 10. 2026: "power a počet marchov najdôležitejší faktor"): the power, the
+     * number of counted marches and their quality (the average score of a march – equipment, armaments, pair, skills),
+     * each against the benchmark's; they are shares of the benchmark's acclaim
+     */
+    weights: { power: number; marches: number; quality: number };
     /** nobody goes below this (spreadsheet: 200 000) */
     minimum: number;
     /** a player with T4 troops only gets this much less, % (spreadsheet note: 11 %) */
@@ -28,12 +36,13 @@ export interface EvalSettings {
     excess: number;
     /** at least this much acclaim for each million of power, 0 = off */
     floor: number;
-    /** a player is expected to have as many marches as the power table says for their power */
+    /** the marches the power table says a power asks for are shown as missing ("3 +2") */
     expected: boolean;
-    /** a missing march counts as this % of the player's average counted march */
-    phantom: number;
-    /** a missing march of a player with no counted march at all */
-    emptyMarch: number;
+    /**
+     * How much of a row's power range the quality of the marches moves the recommended power, % (Gether 23. 10. 2026:
+     * "keď má hráč 2 marche, mal odporúčaný power nízky" – the march count first, the quality only within this share)
+     */
+    spread: number;
     /** 1–5 marches: the power range and the score range it is spread over */
     table: PowerRow[];
     /** the score ranges from the players themselves (percentiles below), when a group has enough of them */
@@ -184,13 +193,21 @@ export const DEFAULT_INSCRIPTIONS: Record<string, InscriptionTier> = Object.from
 );
 
 export const DEFAULT_SETTINGS: EvalSettings = {
-  acclaim: { benchmark: 5_600_000, score: 286.53, player: null, minimum: 200_000, t4: 11, round: 1000 },
+  acclaim: {
+    benchmark: 5_600_000,
+    score: 286.53,
+    power: 102,
+    player: null,
+    weights: { power: 50, marches: 30, quality: 20 },
+    minimum: 200_000,
+    t4: 11,
+    round: 1000,
+  },
   power: {
     excess: 32_000,
     floor: 0,
     expected: true,
-    phantom: 100,
-    emptyMarch: 40,
+    spread: 50,
     // sheet Constants: power 63–66 … 88–105 M; the score ranges are its percentiles 10 and 90 of the last KvK
     table: [
       { min: 63, max: 66, scoreMin: 2.06, scoreMax: 39.23 },
@@ -311,7 +328,9 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
     acclaim: {
       benchmark: num(acclaim['benchmark'], d.acclaim.benchmark, 0),
       score: num(acclaim['score'], d.acclaim.score, 0.01),
+      power: num(acclaim['power'], d.acclaim.power, 1, 1000),
       player: typeof player === 'number' && Number.isInteger(player) ? player : null,
+      weights: group(acclaim['weights'], d.acclaim.weights, 0, 100),
       minimum: num(acclaim['minimum'], d.acclaim.minimum, 0),
       t4: num(acclaim['t4'], d.acclaim.t4, 0, 100),
       round: num(acclaim['round'], d.acclaim.round, 1),
@@ -320,8 +339,7 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
       excess: num(power['excess'], d.power.excess, 0),
       floor: num(power['floor'], d.power.floor, 0),
       expected: typeof power['expected'] === 'boolean' ? power['expected'] : d.power.expected,
-      phantom: num(power['phantom'], d.power.phantom, 0, 200),
-      emptyMarch: num(power['emptyMarch'], d.power.emptyMarch, 0, 1000),
+      spread: num(power['spread'], d.power.spread, 0, 100),
       table: [],
       auto: typeof power['auto'] === 'boolean' ? power['auto'] : d.power.auto,
       low: num(power['low'], d.power.low, 0, 100),
