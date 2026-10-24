@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **24. 10. 2026 – v1.43.0:** Prihláška na KvK sa dá vyplniť z vlastného marchu (výber „Vyplniť z marchu“): typ, commanderi, skilly hneď vo formulári, výbava, formácia, inscriptions a armamenty sa uložia s prihláškou; poznámka a dotazník ostanú z formulára, vyplnenú prihlášku prepíše až druhý klik.
 - **24. 10. 2026 – v1.42.1:** Strop 10 registrácií bez Discordu počíta len čakajúce účty z posledných 14 dní – opustené staršie ho už natrvalo nezavrú (otvorená otázka z kola 18. 10. rozhodnutá: 14 dní).
 - **24. 10. 2026 (oprava, bez verzie):** História zmien vo Vyhodnocovaní zapisuje aj power, ktorú si hráč zmení sám na `/ucet` (autor = hráč) – stránka Ochrana údajov to sľubovala, superadmin teraz vidí aj vlastné zníženie power.
 - **24. 10. 2026 – v1.42.0:** Požadovaný acclaim je súčin: power (pod 60 M ako 60) × marche (−10 % za chýbajúci, ale marche, ktoré očakáva power, sa rátajú) × kvalita ±20 % – kvalita už nevyváži chýbajúce marche ani nižšiu power. Superadmin má **Históriu zmien** v Premenných aj v Odhade acclaimu (kto, kedy, čo zmenil).
