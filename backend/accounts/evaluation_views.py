@@ -24,9 +24,9 @@ from rest_framework.response import Response
 from guides.formations import check_formations, formation_map, formations_version, replace_formations
 from guides.pairs import check_rows, pair_rows, pairs_version, replace_pairs
 
-from . import private_images
+from . import evaluation_history, private_images
 from .kvk_views import army_data, equipment_settings, march_data
-from .models import APPROVED, EvaluationSettings, KvkSignup, March, Player, PlayerEvaluation
+from .models import APPROVED, EvaluationChange, EvaluationSettings, KvkSignup, March, Player, PlayerEvaluation
 from .reminder_views import WriteThrottle, iso
 from .views import player_of
 
@@ -212,11 +212,15 @@ def evaluation_settings(request):
         if formations is not None and body.get('formations_version') != formations_version(formation_map()):
             return Response({'formations': 'stale'}, status=409)
         row = EvaluationSettings.load()
+        # the history (Gether 24. 10. 2026): what was before and what after, with who and when
+        evaluation_history.settings_changed(request.user, row.data, value or {})
         row.data = value or {}
         row.save()
         if pairs is not None:
+            evaluation_history.pairs_changed(request.user, pair_rows(), pairs)
             replace_pairs(pairs)
         if formations is not None:
+            evaluation_history.formations_changed(request.user, formation_map(), formations)
             replace_formations(formations)
     return Response(settings_data(row))
 
@@ -237,11 +241,14 @@ class RecordSerializer(serializers.Serializer):
         return value
 
 
-def save_record(player: Player, values: dict) -> PlayerEvaluation:
+def save_record(player: Player, values: dict, user=None) -> PlayerEvaluation:
     record = record_of(player) or PlayerEvaluation(player=player)
+    before = {field: getattr(record, field) for field in values}
     for field, value in values.items():
         setattr(record, field, value)
     record.save()
+    # the history: the power, T4 or the correction of one player (Gether 24. 10. 2026)
+    evaluation_history.record_changed(user, player, before, {field: getattr(record, field) for field in values})
     return record
 
 
@@ -256,7 +263,7 @@ def evaluation_player(request, player_id):
     form.is_valid(raise_exception=True)
     if not form.validated_data:
         return Response({'detail': 'empty'}, status=400)
-    return Response({'id': player.pk, **record_data(save_record(player, form.validated_data))})
+    return Response({'id': player.pk, **record_data(save_record(player, form.validated_data, request.user))})
 
 
 # a paste of the whole kingdom fits easily
@@ -283,7 +290,7 @@ def evaluation_players(request):
             return Response({'players': 'invalid', 'id': item['id']}, status=400)
         changes.append((players[item['id']], form.validated_data))
     with transaction.atomic():
-        saved = [{'id': player.pk, **record_data(save_record(player, values))} for player, values in changes]
+        saved = [{'id': player.pk, **record_data(save_record(player, values, request.user))} for player, values in changes]
     return Response({'players': saved})
 
 
@@ -347,6 +354,7 @@ def evaluation_overview(request):
         known = set(approved_players().filter(pk__in=ids).values_list('pk', flat=True))
         if len(set(ids)) != len(ids) or known != set(ids):
             return Response({'rows': 'players'}, status=400)
+        evaluation_history.published(request.user, len(row.overview), len(rows))
         row.overview = rows
         row.overview_at = timezone.now() if rows else None
         row.save(update_fields=['overview', 'overview_at'])
@@ -410,3 +418,58 @@ def evaluation_equipment(request):
         key=lambda p: p['name'].casefold(),
     )
     return Response({'settings': settings, 'players': [p for p in rows if p['marches'] or p['signups']]})
+
+
+class IsSuperuser(BasePermission):
+    """The history is the superadmin's alone (Gether 24. 10. 2026: "históriu len pre mňa, superadmina")"""
+
+    def has_permission(self, request, view):
+        return bool(request.user.is_authenticated and request.user.is_superuser)
+
+
+@never_cache
+@api_view(['GET'])
+@permission_classes([IsSuperuser])
+def evaluation_changes(request):
+    """GET ?kind=settings|players – the history of the evaluation for the superadmin only (Gether 24. 10. 2026), the
+    newest first, at most
+    HISTORY_LIMIT entries: who (the in-game name, else the Discord name, else the admin's user name), when, what.
+    `settings` = the variables, the pairs, the formations and the publications; `players` = power, T4, the
+    correction of a player (approved players only, as on the page)."""
+    kinds = {
+        'settings': [
+            EvaluationChange.Kind.SETTINGS,
+            EvaluationChange.Kind.PAIRS,
+            EvaluationChange.Kind.FORMATIONS,
+            EvaluationChange.Kind.PUBLISH,
+        ],
+        'players': [EvaluationChange.Kind.PLAYER],
+    }.get(request.query_params.get('kind', 'settings'))
+    if kinds is None:
+        return Response({'kind': 'invalid'}, status=400)
+    rows = EvaluationChange.objects.filter(kind__in=kinds).select_related('author__player', 'player__user')
+    if EvaluationChange.Kind.PLAYER in kinds:
+        rows = rows.filter(player__in=visible_players(request))
+    return Response({'changes': [change_data(c) for c in rows[:HISTORY_LIMIT]]})
+
+
+HISTORY_LIMIT = 200
+
+
+def who(user) -> str:
+    if user is None:
+        return ''
+    player = getattr(user, 'player', None)
+    return (player and (player.ingame_name or player.name)) or user.get_username()
+
+
+def change_data(change: EvaluationChange) -> dict:
+    return {
+        'id': change.pk,
+        'at': iso(change.created_at),
+        'author': who(change.author),
+        'kind': change.kind,
+        'player': {'id': change.player.pk, 'name': change.player.ingame_name or change.player.name} if change.player else None,
+        'changes': change.changes,
+        'more': change.truncated,
+    }

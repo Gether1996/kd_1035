@@ -7,7 +7,7 @@ from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
 from .local_auth import login_key
-from .models import Alarm, EventReminder, KvkSignup, MarchNotice, Player, PlayerSettings, SentReminder
+from .models import Alarm, EvaluationChange, EventReminder, KvkSignup, MarchNotice, Player, PlayerSettings, SentReminder
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -254,3 +254,20 @@ class KvkSignupAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
 # the variables of /vyhodnocovanie (registered there)
 from . import evaluation_admin  # noqa: E402, F401
+
+
+@admin.register(EvaluationChange)
+class EvaluationChangeAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """The history of the KvK evaluation, read only (Gether 24. 10. 2026) – the same list as on /vyhodnocovanie."""
+
+    list_display = ['created_at', 'author', 'kind', 'player']
+    list_filter = ['kind']
+    list_select_related = ['author', 'player']
+    fields = ['created_at', 'author', 'kind', 'player', 'changes', 'truncated']
+    readonly_fields = fields
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

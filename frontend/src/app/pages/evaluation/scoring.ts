@@ -73,14 +73,14 @@ export interface PlayerEval {
   ownLimit: number | null;
   /** the power the acclaim counts with: the one written down, else the recommended one (null = neither) */
   power: number | null;
-  /** millions above the recommended power */
+  /** millions above the recommended power (shown, the quick filter "Nad odp. power") */
   excess: number;
   /**
-   * The parts of the acclaim (Gether 23. 10. 2026: "power a počet marchov najdôležitejší faktor"): the power, the number
-   * of marches and their quality, each its weighted share of the benchmark's acclaim; then the excess power on top,
-   * the floor, T4 less
+   * The benchmark's acclaim × the three factors (Gether 24. 10. 2026: multiplied, so strong marches never make up for
+   * missing ones or less power): the power against the benchmark's, the marches (less for each missing one) and the
+   * quality within ± its band; then the floor, T4 less
    */
-  acclaim: { power: number; marches: number; quality: number; excess: number; floor: number; t4: number; required: number };
+  acclaim: { power: number; marches: number; quality: number; floor: number; t4: number; required: number };
 }
 
 export interface Evaluation {
@@ -304,15 +304,16 @@ interface Draft {
 }
 
 /**
- * Every player (Gether 23. 10. 2026: "power a počet marchov najdôležitejší faktor … keď má hráč 2 marche, mal odporúčaný
- * power nízky"): the best counted marches, the recommended power their count carries (the quality moves it within a
- * share of the row), and the required acclaim = the benchmark's acclaim × the weighted shares of
- *   power above the base everyone has / the benchmark's power above it,
- *   counted marches / the full number,
- *   average march score / the benchmark's average march,
- * plus the excess power over the recommended one, at least the power floor and the minimum, T4 less. Without a power
- * written down the recommended power stands in. The score ranges of the power table come from the players when a group
- * has enough of them (the spreadsheet did the same from its own results).
+ * Every player (Gether 24. 10. 2026: "férovosť + pomer power + sila equipu a armamentov + commander pár … nemôže predsa
+ * človek s 5 marchami a väčšou power mať 4,5 M acclaim a Syel 4,1"): the best counted marches, the recommended power their
+ * count carries (the quality moves it within a share of the row), and the required acclaim = the benchmark's acclaim ×
+ *   power / the benchmark's power (below the base everyone counts as the base),
+ *   the march factor (1 − missingMarch % for each march missing to the full number; the marches the power asks for
+ *   count as there – a high power with few marches is the player's fault, Gether 24. 10. 2026),
+ *   the quality factor (the average march against the benchmark's, within ± qualityBand %),
+ * at least the power floor and the minimum, T4 less. Multiplied, the quality never makes up for missing marches or less
+ * power. Without a power written down the recommended power stands in. The score ranges of the power table come from
+ * the players when a group has enough of them (the spreadsheet did the same from its own results).
  */
 export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: ArmoryIndex | null, usePower = true): Evaluation {
   // "Rátať s power" off (Gether 13. 10. 2026): the estimate from the marches only, the power written down stays
@@ -369,30 +370,31 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     power: benchmarkPower,
     marches: max,
     quality: picked ? picked.marchScore / picked.counted : a.score / max,
-    powerBase: benchmarkPower > a.powerBase ? a.powerBase : 0,
+    powerBase: a.powerBase,
   };
-  const w = a.weights;
-  const weights = w.power + w.marches + w.quality || 1;
-  const share = (value: number, of: number) => (of > 0 ? value / of : 0);
-  // the power above what everyone has (Gether 23. 10. 2026: "do 60 M sú si všetci rovní"); a base at or above the
-  // benchmark's power would leave nothing to compare – then the whole power
-  const above = (power: number) => Math.max(0, power - benchmark.powerBase);
+  // a lower power counts as the base (Gether 23. 10. 2026: "do 60 M sú si všetci rovní")
+  const effective = (power: number) => Math.max(power, a.powerBase);
 
   const rows = partial.map((x): PlayerEval => {
     const recommended = recommendedOf(x);
     const written = powerOf(x.player);
     const power = written ?? recommended;
     const quality = x.counted ? x.marchScore / x.counted : 0;
-    const part = (weight: number, value: number, of: number) => (a.benchmark * weight * share(value, of)) / weights;
-    const parts = {
-      power: power !== null ? part(w.power, above(power), above(benchmark.power)) : 0,
-      marches: part(w.marches, x.counted, benchmark.marches),
-      quality: part(w.quality, quality, benchmark.quality),
+    // the three factors: the power, the marches (less for each missing to the full number), the quality (± its band).
+    // The marches the power asks for count as there (Gether 24. 10. 2026: "človek so 100 M power má len 2 marche, čo je
+    // jeho chyba a mal by znížiť power") – only a low power with few marches owes less
+    const marchCount = Math.min(benchmark.marches, Math.max(x.counted, x.counted + x.missing));
+    const factors = {
+      power: power !== null ? effective(power) / effective(benchmark.power) : 0,
+      marches: Math.max(0, 1 - (a.missingMarch / 100) * (benchmark.marches - marchCount)),
+      quality:
+        benchmark.quality > 0
+          ? Math.min(1 + a.qualityBand / 100, Math.max(1 - a.qualityBand / 100, 1 + (a.qualityBand / 100) * (quality / benchmark.quality - 1)))
+          : 1,
     };
     const excess = written !== null && recommended !== null ? Math.max(0, written - recommended) : 0;
-    const excessAcclaim = excess * p.excess;
     const floor = written !== null ? written * p.floor : 0;
-    const sum = Math.max(parts.power + parts.marches + parts.quality + excessAcclaim, floor);
+    const sum = Math.max(a.benchmark * factors.power * factors.marches * factors.quality, floor);
     const t4 = x.player.t4 ? sum * (a.t4 / 100) : 0;
     const step = a.round;
     const required = Math.max(a.minimum, Math.round((sum - t4) / step) * step);
@@ -409,7 +411,7 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
       ownLimit: recommended,
       power,
       excess,
-      acclaim: { ...parts, excess: excessAcclaim, floor, t4, required },
+      acclaim: { ...factors, floor, t4, required },
     };
   });
   return { rows, benchmark, ranges };

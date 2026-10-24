@@ -37,5 +37,6 @@ urlpatterns = [
     path('evaluation/overview/', evaluation_views.evaluation_overview),
     path('evaluation/equipment/', evaluation_views.evaluation_equipment),
     path('evaluation/players/', evaluation_views.evaluation_players),
+    path('evaluation/changes/', evaluation_views.evaluation_changes),
     path('evaluation/players/<int:player_id>/', evaluation_views.evaluation_player),
 ]

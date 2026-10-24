@@ -27,6 +27,7 @@ import {
   rowsFor,
 } from './settings';
 import { EvalTexts } from './texts';
+import { EvalHistory } from './history';
 import { EvalTip } from './tip';
 
 type Path = readonly (string | number)[];
@@ -64,7 +65,7 @@ function readOpen(): Set<string> {
  */
 @Component({
   selector: 'app-eval-settings',
-  imports: [Icon, NgTemplateOutlet, EvalTip],
+  imports: [Icon, NgTemplateOutlet, EvalTip, EvalHistory],
   templateUrl: './settings-tab.html',
   styleUrls: ['./settings-tab.scss', './settings-tables.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -147,11 +148,10 @@ export class EvalSettingsTab {
     return {
       acclaim: [
         f(['acclaim', 'benchmark'], s.acclaim.benchmark),
-        // the three parts and their weights (Gether 23. 10. 2026)
+        // the factors (Gether 24. 10. 2026)
         f(['acclaim', 'powerBase'], s.acclaim.powerBase),
-        f(['acclaim', 'weights', 'power'], s.acclaim.weights.power),
-        f(['acclaim', 'weights', 'marches'], s.acclaim.weights.marches),
-        f(['acclaim', 'weights', 'quality'], s.acclaim.weights.quality),
+        f(['acclaim', 'missingMarch'], s.acclaim.missingMarch),
+        f(['acclaim', 'qualityBand'], s.acclaim.qualityBand),
         f(['acclaim', 'minimum'], s.acclaim.minimum),
         f(['acclaim', 'round'], s.acclaim.round),
         f(['acclaim', 't4'], s.acclaim.t4),
@@ -160,7 +160,6 @@ export class EvalSettingsTab {
       benchmarkPower: f(['acclaim', 'power'], s.acclaim.power),
       power: [
         f(['power', 'spread'], s.power.spread),
-        f(['power', 'excess'], s.power.excess),
         f(['power', 'floor'], s.power.floor),
       ],
       powerAuto: [f(['power', 'low'], s.power.low), f(['power', 'high'], s.power.high), f(['power', 'samples'], s.power.samples)],

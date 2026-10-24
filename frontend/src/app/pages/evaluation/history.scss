@@ -1,0 +1,125 @@
+// "História zmien" of the superadmin (Gether 24. 10. 2026) – at the end of Premenné and Odhad acclaimu
+
+:host {
+  display: block;
+  margin-top: 16px;
+}
+
+.ev-history {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 10, 23, 0.35);
+}
+
+.ev-history__summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 16px;
+  font-weight: 600;
+  color: var(--gold-100);
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--gold-400);
+  }
+}
+
+.ev-history__chevron {
+  margin-left: auto;
+  transition: transform 0.25s var(--ease-out);
+
+  .ev-history[open] & {
+    transform: rotate(180deg);
+  }
+}
+
+.ev-history__body {
+  padding: 0 16px 16px;
+}
+
+.ev-history__hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.ev-history__refresh {
+  min-height: 36px;
+}
+
+.ev-history__state {
+  margin: 0;
+  color: var(--text-dim);
+
+  &.is-error {
+    color: var(--red-300);
+  }
+}
+
+.ev-history__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-history__entry {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.ev-history__head {
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+
+  strong {
+    color: var(--text);
+  }
+}
+
+.ev-history__lines {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+
+  strong {
+    color: var(--text);
+  }
+}
+
+.ev-history__what {
+  color: var(--text-mute);
+
+  &::after {
+    content: ':';
+  }
+}
+
+.ev-history__more {
+  color: var(--text-mute);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-history__chevron {
+    transition: none;
+  }
+}

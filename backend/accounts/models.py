@@ -473,6 +473,39 @@ class March(ArmyFields):
         return f'{self.player} · {self.position}. march'
 
 
+class EvaluationChange(models.Model):
+    """One save in the KvK evaluation (Gether 24. 10. 2026: "aby som videl, čo kto kedy zmení"): who, when, what –
+    [path or pair or field, before, after]; written by the server (evaluation_history.py), deleted after 180 days."""
+
+    class Kind(models.TextChoices):
+        SETTINGS = 'settings', 'premenné'
+        PAIRS = 'pairs', 'páry commanderov'
+        FORMATIONS = 'formations', 'formácie commanderov'
+        PLAYER = 'player', 'power a T4 hráča'
+        PUBLISH = 'publish', 'zverejnenie'
+
+    created_at = models.DateTimeField('kedy', auto_now_add=True, db_index=True)
+    # kept when the account goes – "zmazaný účet"
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+', verbose_name='kto'
+    )
+    kind = models.CharField('čo', max_length=12, choices=Kind.choices)
+    # the player whose power / T4 changed
+    player = models.ForeignKey(
+        Player, on_delete=models.CASCADE, null=True, blank=True, related_name='+', verbose_name='hráč'
+    )
+    changes = models.JSONField('zmeny', default=list)
+    truncated = models.PositiveIntegerField('ďalšie zmeny', default=0)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+        verbose_name = 'zmena vyhodnocovania'
+        verbose_name_plural = 'história vyhodnocovania'
+
+    def __str__(self):
+        return f'{self.created_at:%d. %m. %Y %H:%M} · {self.get_kind_display()}'
+
+
 class EvaluationSettings(models.Model):
     """The variables of the KvK evaluation on /vyhodnocovanie (one row; Gether 13. 10. 2026: the "KVK Requirements"
     spreadsheet on the web, every variable adjustable). `data` is the JSON the page edits – the page fills in its

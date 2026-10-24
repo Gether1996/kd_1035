@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from accounts.alarms import prune_alarms, send_alarms
 from accounts.cleanup import sweep_files
+from accounts.evaluation_history import prune as prune_evaluation_history
 from accounts.newcomers import announce_new_players, send_welcomes
 from accounts.notices import send_march_notices
 from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
@@ -111,6 +112,11 @@ class Command(BaseCommand):
                     prune_alarms()
                 except Exception:
                     log.exception('Pruning sent reminders failed')
+                try:
+                    # the history of the KvK evaluation after 180 days (privacy page)
+                    prune_evaluation_history()
+                except Exception:
+                    log.exception('Pruning the evaluation history failed')
                 try:
                     # screenshot files without a row (privacy page)
                     sweep_files()

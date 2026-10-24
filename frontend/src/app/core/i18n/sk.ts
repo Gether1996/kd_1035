@@ -1021,7 +1021,7 @@ export const sk = {
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
-          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Keď vedenie zverejní požadovaný acclaim, všetci schválení hráči uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
+          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Kto a kedy zmenil premenné vyhodnocovania alebo zapísanú power a T4 hráča, sa zapisuje do histórie, ktorú vidí iba správca; záznamy sa mažú po 180 dňoch. Keď vedenie zverejní požadovaný acclaim, všetci schválení hráči uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

@@ -33,6 +33,7 @@ import {
 } from './scoring';
 import { EvalSettings } from './settings';
 import { EvalTexts } from './texts';
+import { EvalHistory } from './history';
 import { EvalTip } from './tip';
 
 type Show = 'marches' | 'approved' | 'all';
@@ -51,7 +52,7 @@ const asQuick = (query: string | undefined): QuickFilter =>
  */
 @Component({
   selector: 'app-eval-results',
-  imports: [RouterLink, Icon, EvalTip],
+  imports: [RouterLink, Icon, EvalTip, EvalHistory],
   templateUrl: './results-tab.html',
   styleUrl: './results-tab.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -234,13 +235,6 @@ export class EvalResultsTab {
       .replace('{expected}', String(r.expected ?? 0));
   }
 
-  protected excessText(r: PlayerEval): string {
-    return this.texts()
-      .detail.fromExcess.replace('{m}', this.dec(r.excess))
-      .replace('{rec}', String(r.recommended ?? 0))
-      .replace('{per}', this.int(this.settings().power.excess));
-  }
-
   /**
    * "Odp. power" is the power the player's own counted marches carry (Gether 14. 10. 2026: 3 marches cannot recommend
    * 104 M) – the recommended power of the marches counted with the missing ones is in the computation of the detail
@@ -296,24 +290,22 @@ export class EvalResultsTab {
     return text ? this.texts().detail.overCap.replace('{stats}', text) : '';
   }
 
-  /** a part of the acclaim against the benchmark: "power 91 M z 102 M · 50 %" (Gether 23. 10. 2026) */
+  /** a factor of the acclaim against the benchmark: "power 91 / 102 M = 0,89" (Gether 24. 10. 2026) */
   protected partText(r: PlayerEval, part: 'power' | 'marches' | 'quality'): string {
     const d = this.texts().detail;
     const b = this.evaluation().benchmark;
-    const w = this.settings().acclaim.weights;
-    const total = w.power + w.marches + w.quality || 1;
-    const pct = (n: number) => this.dec((100 * n) / total);
+    const f = (n: number) => new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(n);
     if (part === 'power') {
       return d.partPower
-        .replace('{p}', this.dec(r.power ?? 0))
-        .replace('{b}', this.dec(b.power))
-        .replace('{base}', this.dec(b.powerBase))
-        .replace('{w}', pct(w.power));
+        .replace('{p}', this.dec(Math.max(r.power ?? 0, b.powerBase)))
+        .replace('{b}', this.dec(Math.max(b.power, b.powerBase)))
+        .replace('{f}', f(r.acclaim.power));
     }
     if (part === 'marches') {
-      return d.partMarches.replace('{n}', String(r.counted)).replace('{b}', String(b.marches)).replace('{w}', pct(w.marches));
+      const n = Math.min(b.marches, r.counted + r.missing);
+      return d.partMarches.replace('{n}', String(n)).replace('{b}', String(b.marches)).replace('{f}', f(r.acclaim.marches));
     }
-    return d.partQuality.replace('{q}', this.dec(r.quality)).replace('{b}', this.dec(b.quality)).replace('{w}', pct(w.quality));
+    return d.partQuality.replace('{q}', this.dec(r.quality)).replace('{b}', this.dec(b.quality)).replace('{f}', f(r.acclaim.quality));
   }
 
   // ---------------------------------------------------------------- explanations

@@ -198,13 +198,9 @@
                 <!-- how the acclaim adds up -->
                 <p class="ev-detail__sum">
                   <strong>{{ d.acclaim }}:</strong>
-                  {{ int(r.acclaim.power) }} ({{ partText(r, 'power') }})
-                  + {{ int(r.acclaim.marches) }} ({{ partText(r, 'marches') }})
-                  + {{ int(r.acclaim.quality) }} ({{ partText(r, 'quality') }})
-                  @if (r.acclaim.excess) {
-                    + {{ int(r.acclaim.excess) }} ({{ excessText(r) }})
-                  }
-                  @if (r.acclaim.floor > r.acclaim.power + r.acclaim.marches + r.acclaim.quality + r.acclaim.excess) {
+                  {{ int(settings().acclaim.benchmark) }} × {{ partText(r, 'power') }} × {{ partText(r, 'marches') }} ×
+                  {{ partText(r, 'quality') }}
+                  @if (r.acclaim.floor > settings().acclaim.benchmark * r.acclaim.power * r.acclaim.marches * r.acclaim.quality) {
                     → {{ int(r.acclaim.floor) }} ({{ d.floor }})
                   }
                   @if (r.acclaim.t4) {
@@ -303,3 +299,6 @@
     </tbody>
   </table>
 </div>
+
+<!-- who changed a power, T4 or the correction and when – the superadmin only (Gether 24. 10. 2026) -->
+<app-eval-history kind="players" />

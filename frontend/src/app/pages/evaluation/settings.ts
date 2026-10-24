@@ -16,19 +16,18 @@ export interface EvalSettings {
     score: number;
     /** the benchmark's power in millions when no player is picked or the picked one has none (Slim Dejvid: 102) */
     power: number;
-    /**
-     * The power everyone has, M (Gether 23. 10. 2026: "do 60 M sú si všetci rovní, dôležité je od 60 M vyššie") – the
-     * power part counts only what is above it, for the player and the benchmark alike
-     */
+    /** a lower power counts as this, M (Gether 23. 10. 2026: "do 60 M sú si všetci rovní") */
     powerBase: number;
     /** a player whose score and power are the benchmark (null = the numbers above) */
     player: number | null;
     /**
-     * How much each part weighs, % (Gether 23. 10. 2026: "power a počet marchov najdôležitejší faktor"): the power, the
-     * number of counted marches and their quality (the average score of a march – equipment, armaments, pair, skills),
-     * each against the benchmark's; they are shares of the benchmark's acclaim
+     * The required acclaim is the benchmark's × power / its power × the march factor × the quality (Gether 24. 10. 2026:
+     * "férovosť + pomer power + sila equipu a armamentov + commander pár" – multiplied, so strong marches never make up
+     * for missing ones): % less for each march missing to the full number
      */
-    weights: { power: number; marches: number; quality: number };
+    missingMarch: number;
+    /** how far the quality (the average march against the benchmark's) moves it, ± % */
+    qualityBand: number;
     /** nobody goes below this (spreadsheet: 200 000) */
     minimum: number;
     /** a player with T4 troops only gets this much less, % (spreadsheet note: 11 %) */
@@ -37,11 +36,12 @@ export interface EvalSettings {
     round: number;
   };
   power: {
-    /** acclaim for each million of power above the recommended power (spreadsheet: 16 000 × 2) */
-    excess: number;
     /** at least this much acclaim for each million of power, 0 = off */
     floor: number;
-    /** the marches the power table says a power asks for are shown as missing ("3 +2") */
+    /**
+     * The marches the power table says a power asks for count as there for the march factor and are shown as missing
+     * ("3 +2") – Gether 24. 10. 2026: a high power with few marches owes as much as its power asks for
+     */
     expected: boolean;
     /**
      * How much of a row's power range the quality of the marches moves the recommended power, % (Gether 23. 10. 2026:
@@ -205,13 +205,13 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     powerBase: 60,
     player: null,
     // Gether 23. 10. 2026: "Ales 5 M a Syel 3 M" – 5 marches 91 M vs 2 marches 77 M come out 5 : 3
-    weights: { power: 50, marches: 40, quality: 10 },
+    missingMarch: 10,
+    qualityBand: 20,
     minimum: 200_000,
     t4: 11,
     round: 1000,
   },
   power: {
-    excess: 32_000,
     floor: 0,
     expected: true,
     spread: 50,
@@ -338,13 +338,13 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
       power: num(acclaim['power'], d.acclaim.power, 1, 1000),
       powerBase: num(acclaim['powerBase'], d.acclaim.powerBase, 0, 1000),
       player: typeof player === 'number' && Number.isInteger(player) ? player : null,
-      weights: group(acclaim['weights'], d.acclaim.weights, 0, 100),
+      missingMarch: num(acclaim['missingMarch'], d.acclaim.missingMarch, 0, 100),
+      qualityBand: num(acclaim['qualityBand'], d.acclaim.qualityBand, 0, 100),
       minimum: num(acclaim['minimum'], d.acclaim.minimum, 0),
       t4: num(acclaim['t4'], d.acclaim.t4, 0, 100),
       round: num(acclaim['round'], d.acclaim.round, 1),
     },
     power: {
-      excess: num(power['excess'], d.power.excess, 0),
       floor: num(power['floor'], d.power.floor, 0),
       expected: typeof power['expected'] === 'boolean' ? power['expected'] : d.power.expected,
       spread: num(power['spread'], d.power.spread, 0, 100),

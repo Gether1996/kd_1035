@@ -46,6 +46,46 @@ class EvaluationApiTests(TestCase):
         url = f'/api/evaluation/players/{self.player.pk}/'
         self.assertEqual(self.call('patch', url, {'t4': True}, self.nelly).status_code, 403)
 
+    def test_the_history_of_changes_is_the_superadmins(self):
+        """Gether 24. 10. 2026: "históriu zmien … aby som videl, čo kto kedy zmení" – written by the server, read by the
+        superadmin only"""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from . import evaluation_history
+        from .models import EvaluationChange
+
+        # an evaluator (the colleague) changes a variable and a power
+        Player.objects.filter(pk=self.player.pk).update(evaluation_settings=True)
+        self.assertEqual(self.call('put', '/api/evaluation/settings/', {'settings': {'acclaim': {'benchmark': 5}}}, self.nelly).status_code, 200)
+        self.call('put', '/api/evaluation/settings/', {'settings': {'acclaim': {'benchmark': 6, 'round': 10}}}, self.nelly)
+        self.call('put', '/api/evaluation/settings/', {'settings': {'acclaim': {'benchmark': 6, 'round': 10}}}, self.nelly)
+        self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 91.5}, self.nelly)
+        self.call('patch', f'/api/evaluation/players/{self.player.pk}/', {'power': 91.5, 't4': True}, self.nelly)
+        # the colleague cannot read it, the superadmin can
+        url = '/api/evaluation/changes/'
+        self.assertEqual(self.nelly.get(url).status_code, 403)
+        self.assertEqual(Client().get(url).status_code, 403)
+        self.assertEqual(self.admin.get(url + '?kind=nope').status_code, 400)
+        settings = self.admin.get(url + '?kind=settings').json()['changes']
+        # the newest first; saving the same again writes nothing
+        self.assertEqual([c['changes'] for c in settings], [
+            [['acclaim.benchmark', 5, 6], ['acclaim.round', None, 10]],
+            [['acclaim.benchmark', None, 5]],
+        ])
+        self.assertEqual({c['author'] for c in settings}, {'Nelly'})
+        players = self.admin.get(url + '?kind=players').json()['changes']
+        self.assertEqual([c['changes'] for c in players], [[['t4', False, True]], [['power', None, 91.5]]])
+        self.assertEqual(players[0]['player'], {'id': self.player.pk, 'name': 'Nelly'})
+        # published and the pairs
+        self.call('put', '/api/evaluation/overview/', {'rows': []})
+        self.assertEqual(self.admin.get(url).json()['changes'][0]['kind'], 'publish')
+        # gone after 180 days
+        EvaluationChange.objects.update(created_at=timezone.now() - timedelta(days=181))
+        self.assertGreater(evaluation_history.prune(), 0)
+        self.assertFalse(EvaluationChange.objects.exists())
+
     def test_lists_every_player_with_marches_and_notes(self):
         data = self.admin.get('/api/evaluation/').json()
         # nothing saved: the page uses its defaults
