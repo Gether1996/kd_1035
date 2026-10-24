@@ -121,3 +121,12 @@
     height: 15px;
   }
 }
+
+// "Vyplniť z marchu" above the form; its confirmation sits right under the select
+.from-march .select {
+  max-width: 420px;
+}
+
+.from-march__confirm {
+  margin-top: 4px;
+}

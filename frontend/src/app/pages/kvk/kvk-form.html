@@ -56,6 +56,35 @@
   @if (formOpen()) {
     <!-- like a new march: troops, commanders with their skills – plus the note; the build in the editor after it -->
     <form class="form" (submit)="save($event)" novalidate>
+      <!-- "Vyplniť z marchu" (24. 10. 2026): only with marches – hidden while they load or when the request failed -->
+      @if (marches().length) {
+        <div class="field from-march">
+          <label class="field__label" for="kvk-from-march">{{ k.fromMarch.label }}</label>
+          <select
+            #marchSelect
+            id="kvk-from-march"
+            class="select"
+            aria-describedby="kvk-from-march-hint"
+            (change)="pickMarch(marchSelect)"
+          >
+            <option value="" [selected]="!copy()">{{ k.fromMarch.none }}</option>
+            @for (march of marches(); track march.id) {
+              <option [value]="march.id" [selected]="copy()?.id === march.id">{{ marchLabel(march) }}</option>
+            }
+          </select>
+          <p class="field__hint" id="kvk-from-march-hint">{{ k.fromMarch.hint }}</p>
+          @if (confirmCopy(); as pending) {
+            <div class="withdraw from-march__confirm">
+              <p>{{ k.fromMarch.confirm }}</p>
+              <button type="button" class="danger" (click)="copyMarch(pending)">{{ k.fromMarch.yes }}</button>
+              <button type="button" class="pill-btn pill-btn--quiet" (click)="confirmCopy.set(null)">
+                {{ k.withdrawNo }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+
       <app-march-fields
         [value]="army()"
         (valueChange)="setArmy($event)"

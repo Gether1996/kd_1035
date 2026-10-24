@@ -282,6 +282,14 @@ export const cs: Dict = {
     close: 'Zavřít',
     deleteConfirm: 'Opravdu smazat?',
     slots: { label: 'Pořadí přihlášky', first: '1. přihláška', second: '2. přihláška', add: 'přidat' },
+    // the form filled in from one of the player's marches (24. 10. 2026)
+    fromMarch: {
+      label: 'Vyplnit z marche',
+      none: 'Vybrat march',
+      hint: 'Commandery, výbavu i armamenty zkopíruje jednou – pozdější změna marche přihlášku nezmění.',
+      confirm: 'Přepsat vyplněnou přihlášku tímto marchem?',
+      yes: 'Ano, přepsat',
+    },
     top: {
       title: 'Top 3 podle výbavy',
       hint: 'Výbava a armamenty přihlášky, bodované jako Top 5 equip ve Vyhodnocování. Počítá se s filtry role, commandera a času online.',

@@ -290,6 +290,14 @@ export const sk = {
     deleteConfirm: 'Naozaj zmazať?',
     // up to two sign-ups per role (Gether 22. 10. 2026)
     slots: { label: 'Poradie prihlášky', first: '1. prihláška', second: '2. prihláška', add: 'pridať' },
+    // the form filled in from one of the player's marches (24. 10. 2026)
+    fromMarch: {
+      label: 'Vyplniť z marchu',
+      none: 'Vybrať march',
+      hint: 'Commanderov, výbavu aj armamenty skopíruje raz – neskoršia zmena marchu prihlášku nezmení.',
+      confirm: 'Prepísať vyplnenú prihlášku týmto marchom?',
+      yes: 'Áno, prepísať',
+    },
     // "Top 3" of each troop type above the reviewers' list (Gether 23. 10. 2026)
     top: {
       title: 'Top 3 podľa výbavy',

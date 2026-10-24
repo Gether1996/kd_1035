@@ -34,11 +34,12 @@ import {
   asMarch,
   surveyMissing,
 } from '../../core/kvk-api';
-import { MarchChange, MarchCommander, marchCommandersUrl } from '../../core/marches-api';
+import { MarchChange, MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
 import { Icon } from '../../shared/icon';
 import { MarchBuild } from '../../shared/march-build';
 import { ArmyDraft, ArmyError, MarchFields, armyDraft, armyError } from '../../shared/march-fields';
 import { BuildEditor } from '../players-marches/build-editor';
+import { buildChange, draftOf } from './from-march';
 import { surveyText } from './survey';
 
 /** up to two sign-ups per role (Gether 22. 10. 2026): rally 1, rally 2, garrison 1, garrison 2 */
@@ -63,6 +64,7 @@ const perKey = <T,>(make: (key: Key) => T): PerKey<T> =>
  * survey asks for it on its card (and the header's red "!" leads here); one survey counts for all the sign-ups.
  * Up to two sign-ups per role (Gether 22. 10. 2026: "2x rally a 2x garrison"): under the role tabs "1. prihláška" and
  * "2. prihláška" (or "+ 2. prihláška" once the first is saved); withdrawing the first makes the second the first.
+ * "Vyplniť z marchu" (24. 10. 2026) fills the form from one of the player's marches and copies its build on saving.
  */
 @Component({
   selector: 'app-kvk-form',
@@ -77,6 +79,7 @@ export class KvkForm {
   readonly changed = output<void>();
 
   private readonly api = inject(KvkApi);
+  private readonly marchesApi = inject(MarchesApi);
   private readonly auth = inject(Auth);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
@@ -137,6 +140,20 @@ export class KvkForm {
     () => (this.role() === 'rally' ? 'Rally' : 'Garrison') + (this.slot() > 1 ? ` ${this.slot()}` : ''),
   );
 
+  /** the player's marches for "Vyplniť z marchu" – asked once the form shows for the first time */
+  private readonly wantMarches = linkedSignal<boolean, boolean>({
+    source: () => this.formOpen() && this.state().approved,
+    computation: (now, previous) => now || !!previous?.value,
+  });
+  private readonly marchData = this.marchesApi.list(() => this.wantMarches());
+  /** none while loading or when the request failed – the select stays hidden */
+  protected readonly marches = computed(() => (this.marchData.hasValue() ? (this.marchData.value().marches ?? []) : []));
+  /** the march each form copies its build from on saving */
+  protected readonly copies = signal(perKey<March | null>(() => null));
+  protected readonly copy = computed(() => this.copies()[this.key()]);
+  /** the march whose copy waits for the confirmation – it would overwrite a filled form */
+  protected readonly confirmCopy = signal<March | null>(null);
+
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly formError = signal<'name' | 'survey' | 'failed' | null>(null);
@@ -168,6 +185,32 @@ export class KvkForm {
     this.formError.set(null);
     this.armyProblem.set(null);
     this.confirmWithdraw.set(null);
+    this.confirmCopy.set(null);
+  }
+
+  /** "Infantry · Primary + Secondary" */
+  protected marchLabel(march: March): string {
+    const kind = march.kind ? `${this.i18n.t().marches.kinds[march.kind]} · ` : '';
+    return kind + [march.primary, march.secondary].filter(Boolean).join(' + ');
+  }
+
+  /** a march picked in "Vyplniť z marchu": a filled form asks first (the second click, like withdrawing) */
+  protected pickMarch(select: HTMLSelectElement): void {
+    const march = this.marches().find((m) => String(m.id) === select.value) ?? null;
+    select.value = String(this.copy()?.id ?? '');
+    if (!march) {
+      this.copies.update((all) => ({ ...all, [this.key()]: null }));
+      return this.confirmCopy.set(null);
+    }
+    const army = this.army();
+    if (army.kind || army.primary || army.secondary) return this.confirmCopy.set(march);
+    this.copyMarch(march);
+  }
+
+  protected copyMarch(march: March): void {
+    this.confirmCopy.set(null);
+    this.setArmy(draftOf(march));
+    this.copies.update((all) => ({ ...all, [this.key()]: march }));
   }
 
   protected setArmy(value: ArmyDraft): void {
@@ -216,6 +259,8 @@ export class KvkForm {
     const start = this.surveyStart(key);
     this.budgets.update((all) => ({ ...all, [key]: start.budget }));
     this.onlines.update((all) => ({ ...all, [key]: start.online }));
+    this.copies.update((all) => ({ ...all, [key]: null }));
+    this.confirmCopy.set(null);
     this.editing.set(null);
     this.armyProblem.set(null);
     this.formError.set(null);
@@ -227,7 +272,9 @@ export class KvkForm {
     const role = this.role();
     const slot = this.slot();
     const army = this.army();
+    const copy = this.copy();
     this.formError.set(null);
+    this.confirmCopy.set(null);
     this.armyProblem.set(null);
     if (!this.ingameName().trim()) return this.formError.set('name');
     const missing = armyError(army);
@@ -254,11 +301,23 @@ export class KvkForm {
       // the sign-up saved the in-game name on the player too, and the survey: the header drops its red "!"
       if (this.auth.needsName() || this.auth.needsSurvey()) this.auth.reload();
       this.store(signup);
+      // "Vyplniť z marchu": the march's build and armaments, checked by the server like the build editor's
+      const change = copy && buildChange(copy);
+      let copied = false;
+      if (change) {
+        try {
+          this.store(await this.api.saveBuild(role, slot, change));
+          copied = true;
+        } catch {
+          // the sign-up is saved – the build editor below lets the player click the build instead
+        }
+      }
+      this.copies.update((all) => ({ ...all, [keyOf(role, slot)]: null }));
       this.editing.set(null);
       this.saved.set(true);
       setTimeout(() => this.saved.set(false), 3000);
-      if (first) {
-        this.changed.emit();
+      if (first) this.changed.emit();
+      if ((first || change) && !copied) {
         // like a new march: its equipment and armaments right away; the card's button gets the focus back
         afterNextRender(
           () => {
@@ -310,6 +369,7 @@ export class KvkForm {
       }
       this.slot.set(1);
       this.editing.set(null);
+      this.copies.set(perKey(() => null));
       this.changed.emit();
     } catch {
       this.formError.set('failed');

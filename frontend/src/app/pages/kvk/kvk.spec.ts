@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
-import { KvkApi, KvkSignup, KvkState } from '../../core/kvk-api';
+import { KvkApi, KvkSignup, KvkState, March } from '../../core/kvk-api';
 import { Scroll } from '../../core/scroll';
 import { KvkForm } from './kvk-form';
 import { KvkPage } from './kvk-page';
@@ -53,6 +53,10 @@ const flushAll = async (fixture: { detectChanges(): void }) => {
   }
 };
 
+/** "Vyplniť z marchu" asks for the player's marches once the form shows */
+const flushMarches = (http: HttpTestingController, marches: March[] = []) =>
+  http.match('/api/me/marches/').forEach((r) => r.flush({ marches, max: 10, public: false }));
+
 describe('KvkForm', () => {
   beforeEach(() => {
     URL.createObjectURL ??= () => 'blob:preview';
@@ -74,10 +78,14 @@ describe('KvkForm', () => {
     http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
     await flushAll(fixture);
+    flushMarches(http);
+    await flushAll(fixture);
     const el = fixture.nativeElement as HTMLElement;
     const submit = () => el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     const state = () => el.querySelector('.form__state')?.textContent;
     expect(el.querySelector<HTMLInputElement>('#kvk-name')!.value).toBe('Nelly');
+    // no marches – no "Vyplniť z marchu"
+    expect(el.querySelector('#kvk-from-march')).toBeNull();
     // no heading set by the superuser any more (Gether 20. 10. 2026)
     expect(el.querySelector('#kvk-form-title')?.textContent?.trim()).toBe('Moja prihláška');
     // cavalry, infantry or archers; no screenshots, no bonuses in the form (they are clicked together after it)
@@ -192,6 +200,112 @@ describe('KvkForm', () => {
     expect(Array.from(el.querySelectorAll<HTMLInputElement>('.survey .chip input'), (b) => b.checked)).toEqual([
       true, false, false, true, false, false, false,
     ]);
+    flushMarches(http);
+    http.verify();
+  });
+
+  it('"Vyplniť z marchu" fills the form from a march and copies its build on saving; note and survey stay', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(KvkForm);
+    fixture.componentRef.setInput('state', STATE);
+    fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    // hidden while the marches load
+    expect(el.querySelector('#kvk-from-march')).toBeNull();
+    const leadership: March = { ...SIGNUP, id: 4, position: 1, kind: 'leadership', primary: 'Takeda Shingen', secondary: '' };
+    const infantry: March = {
+      ...SIGNUP,
+      id: 5,
+      position: 2,
+      kind: 'infantry',
+      primary: 'Attila',
+      secondary: 'Takeda Shingen',
+      primary_skills: '5511',
+      secondary_skills: '5555',
+      gear: { weapon: { item: 'sacred-dominion', crit: true, iconic: 3 } },
+      formation: 'delta',
+      inscriptions: ['delta-scroll-thrasher', 'u-emblem-enduring'],
+      attack: 14,
+      defense: 9,
+      health: 7,
+      damage: null,
+    };
+    flushMarches(http, [leadership, infantry]);
+    await flushAll(fixture);
+    const select = el.querySelector<HTMLSelectElement>('#kvk-from-march')!;
+    expect(Array.from(select.options, (o) => o.textContent?.trim())).toEqual([
+      'Vybrať march',
+      'Mix (leadership) · Takeda Shingen',
+      'Pechota · Attila + Takeda Shingen',
+    ]);
+    const pick = (id: number) => {
+      select.value = String(id);
+      select.dispatchEvent(new Event('change'));
+    };
+    // a type the sign-up does not offer stays empty for the player to pick
+    pick(4);
+    await flushAll(fixture);
+    expect(el.querySelector('.kind[aria-pressed="true"]')).toBeNull();
+    expect(el.querySelector('.tile__caption')?.textContent?.trim()).toBe('Takeda Shingen');
+    // the form is filled: another march waits for the second click
+    pick(5);
+    await flushAll(fixture);
+    expect(el.querySelector('.from-march__confirm p')?.textContent).toBe('Prepísať vyplnenú prihlášku týmto marchom?');
+    expect(select.value).toBe('4');
+    el.querySelector<HTMLButtonElement>('.from-march__confirm .danger')!.click();
+    await flushAll(fixture);
+    expect(el.querySelector('.from-march__confirm')).toBeNull();
+    expect(el.querySelector('.kind[aria-pressed="true"]')?.getAttribute('aria-label')).toBe('Pechota');
+    expect([...el.querySelectorAll('.tile__caption')].map((c) => c.textContent?.trim())).toEqual(['Attila', 'Takeda Shingen']);
+    // the note and the survey come from the form
+    const note = el.querySelector<HTMLTextAreaElement>('#kvk-note')!;
+    note.value = 'z marchu';
+    note.dispatchEvent(new Event('input'));
+    el.querySelectorAll<HTMLInputElement>('input[name="kvk-budget"]')[2].click();
+    el.querySelectorAll<HTMLInputElement>('.survey .chip input')[5].click();
+    await flushAll(fixture);
+    el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    const req = http.expectOne((r) => r.method === 'PUT' && r.url === '/api/kvk/signup/');
+    expect(req.request.body).toEqual({
+      ingame_name: 'Nelly',
+      role: 'rally',
+      slot: 1,
+      kind: 'infantry',
+      primary: 'Attila',
+      secondary: 'Takeda Shingen',
+      primary_skills: '5511',
+      secondary_skills: '5555',
+      note: 'z marchu',
+      budget: 'to200',
+      online: ['weekends'],
+    });
+    const saved = { ...SIGNUP, ...req.request.body, gear: {}, formation: '', inscriptions: [] };
+    req.flush(saved);
+    await flushAll(fixture);
+    // …then the build and the armaments of the march, checked by the server like the build editor's
+    const build = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/kvk/signup/');
+    expect(build.request.body).toEqual({
+      role: 'rally',
+      slot: 1,
+      gear: { weapon: { item: 'sacred-dominion', crit: true, iconic: 3 } },
+      formation: 'delta',
+      inscriptions: ['delta-scroll-thrasher', 'u-emblem-enduring'],
+      attack: 14,
+      defense: 9,
+      health: 7,
+      damage: 0,
+    });
+    build.flush({ ...saved, ...build.request.body });
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    // the card shows the copied build; no build editor to click it again
+    expect(el.querySelector('.kvk-card .gear__icon')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
+    expect(el.querySelector('.kvk-note')?.textContent).toBe('z marchu');
+    expect(el.querySelector('dialog.be')?.hasAttribute('open')).toBe(false);
     http.verify();
   });
 
@@ -214,6 +328,7 @@ describe('KvkForm', () => {
     // the garrison sign-up shows the answers of the rally one, no reminder
     expect(el.querySelector('.survey-missing')).toBeNull();
     expect(el.querySelector('.survey-answers dd')?.textContent?.trim()).toBe('do 100 € (≈ 2 500 Kč)');
+    flushMarches(http);
     http.verify();
   });
 
@@ -234,6 +349,7 @@ describe('KvkForm', () => {
     await flushAll(fixture);
     expect(el.querySelector('form .survey')).not.toBeNull();
     expect(el.querySelector('input[name="kvk-budget"]:checked')).toBeNull();
+    flushMarches(http);
     http.verify();
   });
 
@@ -263,6 +379,7 @@ describe('KvkForm', () => {
     expect(el.querySelector('form')).toBeNull();
     expect(el.querySelector('.kvk-note')?.textContent).toBe('mesto');
     http.expectNone('/api/kvk/signup/');
+    flushMarches(http);
     http.verify();
   });
 
@@ -293,6 +410,7 @@ describe('KvkForm', () => {
     await flushAll(fixture);
     expect(el.querySelectorAll('.role-tabs__done').length).toBe(1);
     expect(el.querySelector('.withdraw')).toBeNull();
+    flushMarches(http);
     http.verify();
   });
 
@@ -343,6 +461,7 @@ describe('KvkForm', () => {
     await flushAll(fixture);
     expect(el.querySelector('.kvk-card')).toBeNull();
     expect(el.querySelector('form')).not.toBeNull();
+    flushMarches(http);
     http.verify();
   });
 });
