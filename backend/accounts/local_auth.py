@@ -2,8 +2,9 @@
 
 Bots are kept out by the superadmin's approval (a new player does nothing before it, also with auto-approve on – that
 is for Discord players only) and in front of it by:
-- PENDING_CAP: at most this many players without Discord wait for the approval at once; then the sign-up is closed
-  until the superadmin approves or deletes some (the Hráči list on /ucet) – whatever number of IPs a bot has,
+- PENDING_CAP: at most this many players without Discord who signed up in the last PENDING_WINDOW wait for the
+  approval at once; then the sign-up is closed until the superadmin approves or deletes some (the Hráči list on
+  /hraci) or they grow old – whatever number of IPs a bot has; abandoned accounts never close it for good,
 - per-IP limits (SignupThrottle here, kd_login in nginx), counted in memory – no IP is stored,
 - a field hidden from people (`website`) and the time the form was open (`elapsed`, ms) – naive bots fill in the one
   and post at once.
@@ -44,6 +45,8 @@ User = get_user_model()
 
 # players without Discord waiting for the approval at once (Gether 17. 10. 2026: "strop 10")
 PENDING_CAP = 10
+# only the recent ones count: ten abandoned sign-ups would otherwise close it until somebody noticed
+PENDING_WINDOW = timedelta(days=14)
 NAME_MAX = 32
 PASSWORD_MAX = 128
 # a person needs a few seconds to type a name and a password twice
@@ -305,6 +308,7 @@ def sign_up_open() -> bool:
 
 
 def waiting() -> int:
-    """Players without Discord waiting for the approval."""
-    return Player.objects.filter(discord_id=None, approved=False).count()
+    """Players without Discord waiting for the approval who signed up in the last PENDING_WINDOW."""
+    since = timezone.now() - PENDING_WINDOW
+    return Player.objects.filter(discord_id=None, approved=False, created_at__gte=since).count()
 

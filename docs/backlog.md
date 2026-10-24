@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **24. 10. 2026 – v1.42.1:** Strop 10 registrácií bez Discordu počíta len čakajúce účty z posledných 14 dní – opustené staršie ho už natrvalo nezavrú (otvorená otázka z kola 18. 10. rozhodnutá: 14 dní).
 - **24. 10. 2026 (oprava, bez verzie):** História zmien vo Vyhodnocovaní zapisuje aj power, ktorú si hráč zmení sám na `/ucet` (autor = hráč) – stránka Ochrana údajov to sľubovala, superadmin teraz vidí aj vlastné zníženie power.
 - **24. 10. 2026 – v1.42.0:** Požadovaný acclaim je súčin: power (pod 60 M ako 60) × marche (−10 % za chýbajúci, ale marche, ktoré očakáva power, sa rátajú) × kvalita ±20 % – kvalita už nevyváži chýbajúce marche ani nižšiu power. Superadmin má **Históriu zmien** v Premenných aj v Odhade acclaimu (kto, kedy, čo zmenil).
 - **23. 10. 2026 – v1.41.1:** Vo Vyhodnocovaní sa power ráta až nad 60 M (do 60 M sú si všetci rovní) a počet marchov váži viac: power 50 %, počet marchov 40 %, kvalita 10 %. Hráč s 5 marchami a 91 M vychádza zhruba 5 : 3 oproti hráčovi s 2 marchami a 77 M.
@@ -221,5 +222,4 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - **Zrušené schválenie (v1.34.2):** potvrdiť, že neschválený hráč so zapnutým R4/vyhodnocovaním stratí prístup (po nasadení sa to prejaví).
 - **Prepínač jazyka (v1.34.3):** potvrdiť, že prepínač v hlavičke smie zmeniť jazyk profilu (aj jazyk bota); inak revert `89e63bb` ako PATCH.
 - **Typy 20 GH (v1.34.4):** v admine doplniť ostatné typy (názov, max. odmena SK/CZ) a skontrolovať texty max. odmeny – idú hráčom aj do kanála.
-- **Strop registrácií:** OK na 14-dňové okno pre čakajúce účty bez Discordu?
 - **Meno v hre:** má byť jedinečné pre všetky účty (aj Discord)?

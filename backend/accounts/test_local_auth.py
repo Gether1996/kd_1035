@@ -127,6 +127,21 @@ class SignUpTests(LocalAuthTestCase):
         self.assertTrue(self.client.get('/api/auth/me/').json()['signup_open'])
         self.assertEqual(self.sign_up().status_code, 201)
 
+    def test_only_the_last_two_weeks_count(self):
+        for i in range(local_auth.PENDING_CAP):
+            user = User.objects.create_user(f'local_{i}')
+            Player.objects.create(user=user, ingame_name=f'Bot {i}', login=f'bot {i}')
+        # abandoned for 15 days: the sign-up opens again by itself
+        Player.objects.update(created_at=timezone.now() - timedelta(days=15))
+        self.assertTrue(self.client.get('/api/auth/me/').json()['signup_open'])
+        self.assertEqual(self.sign_up().status_code, 201)
+
+        # one day short of the window they still count
+        Player.objects.update(created_at=timezone.now() - local_auth.PENDING_WINDOW + timedelta(days=1))
+        self.fresh_client()
+        self.assertFalse(self.client.get('/api/auth/me/').json()['signup_open'])
+        self.assertEqual(self.sign_up(name='Druhý Kráľ').json(), {'detail': 'full'})
+
     def test_three_accounts_an_hour_from_one_address(self):
         for i in range(3):
             self.fresh_client()
