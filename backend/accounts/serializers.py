@@ -1,9 +1,11 @@
 from decimal import Decimal
 
+from django.db import transaction
 from rest_framework import serializers
 
 from kingdom.models import is_reminder_minutes, lead_order
 
+from . import evaluation_history
 from .models import MAX_PLAYER_REMINDERS, Player, PlayerEvaluation
 
 
@@ -46,10 +48,15 @@ class ProfileSerializer(serializers.ModelSerializer):
             from .local_auth import login_key
 
             instance.login = login_key(validated_data['ingame_name'])
-        if 'power' in validated_data:
-            power = validated_data.pop('power')
-            PlayerEvaluation.objects.update_or_create(player=instance, defaults={'power': power})
-        return super().update(instance, validated_data)
+        with transaction.atomic():
+            if 'power' in validated_data:
+                power = validated_data.pop('power')
+                before = PlayerEvaluation.objects.filter(player=instance).values_list('power', flat=True).first()
+                PlayerEvaluation.objects.update_or_create(player=instance, defaults={'power': power})
+                # the player's own power in the history too (the privacy page promises every change of it; since
+                # v1.42 it multiplies the required acclaim) – the same value again writes nothing
+                evaluation_history.record_changed(self.context['request'].user, instance, {'power': before}, {'power': power})
+            return super().update(instance, validated_data)
 
 
 class Minutes(serializers.IntegerField):

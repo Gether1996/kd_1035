@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **24. 10. 2026 (oprava, bez verzie):** História zmien vo Vyhodnocovaní zapisuje aj power, ktorú si hráč zmení sám na `/ucet` (autor = hráč) – stránka Ochrana údajov to sľubovala, superadmin teraz vidí aj vlastné zníženie power.
 - **24. 10. 2026 – v1.42.0:** Požadovaný acclaim je súčin: power (pod 60 M ako 60) × marche (−10 % za chýbajúci, ale marche, ktoré očakáva power, sa rátajú) × kvalita ±20 % – kvalita už nevyváži chýbajúce marche ani nižšiu power. Superadmin má **Históriu zmien** v Premenných aj v Odhade acclaimu (kto, kedy, čo zmenil).
 - **23. 10. 2026 – v1.41.1:** Vo Vyhodnocovaní sa power ráta až nad 60 M (do 60 M sú si všetci rovní) a počet marchov váži viac: power 50 %, počet marchov 40 %, kvalita 10 %. Hráč s 5 marchami a 91 M vychádza zhruba 5 : 3 oproti hráčovi s 2 marchami a 77 M.
 - **23. 10. 2026 – v1.41.0:** Nový výpočet požadovaného acclaimu vo Vyhodnocovaní: najviac váži power (50 %) a počet marchov (30 %), kvalita marchov 20 % – váhy sa dajú meniť v Premenných. Odporúčaná power sa ráta podľa počtu naklikaných marchov (pri 2 marchoch nízka), power nad ňu pridá acclaim. Detail hráča ukáže, z čoho sa acclaim skladá.

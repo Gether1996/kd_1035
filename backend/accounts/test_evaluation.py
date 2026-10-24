@@ -86,6 +86,40 @@ class EvaluationApiTests(TestCase):
         self.assertGreater(evaluation_history.prune(), 0)
         self.assertFalse(EvaluationChange.objects.exists())
 
+    def test_the_players_own_power_on_the_account_page_is_in_the_history(self):
+        """Since v1.42 the power multiplies the required acclaim: the player's own change on /ucet is written down like
+        one on /vyhodnocovanie (the privacy page promises every change of the power)"""
+        from decimal import Decimal
+        from unittest import mock
+
+        from . import evaluation_history
+        from .models import EvaluationChange
+
+        url = '/api/evaluation/changes/?kind=players'
+        # the first power ever
+        self.assertEqual(self.call('patch', '/api/auth/me/', {'power': 80}, self.nelly).status_code, 200)
+        change = EvaluationChange.objects.get()
+        self.assertEqual(
+            (change.kind, change.author, change.player, change.changes),
+            ('player', self.player.user, self.player, [['power', None, 80.0]]),
+        )
+        # the same power (also written as a string, or stored with more decimals) writes nothing
+        PlayerEvaluation.objects.filter(player=self.player).update(power=Decimal('80.00'))
+        self.call('patch', '/api/auth/me/', {'power': '80'}, self.nelly)
+        self.call('patch', '/api/auth/me/', {'power': 80.0, 'lang': 'cs'}, self.nelly)
+        self.assertEqual(EvaluationChange.objects.count(), 1)
+        # the language or the name alone does not even look at the power
+        with mock.patch.object(evaluation_history, 'record_changed') as record:
+            self.assertEqual(self.call('patch', '/api/auth/me/', {'lang': 'sk', 'ingame_name': 'Nelly'}, self.nelly).status_code, 200)
+        record.assert_not_called()
+        self.assertEqual(EvaluationChange.objects.count(), 1)
+        # lowered: one line 80 -> 70, the superadmin sees the player as the author
+        self.call('patch', '/api/auth/me/', {'power': 70}, self.nelly)
+        changes = self.admin.get(url).json()['changes']
+        self.assertEqual([c['changes'] for c in changes], [[['power', 80.0, 70.0]], [['power', None, 80.0]]])
+        self.assertEqual(changes[0]['author'], 'Nelly')
+        self.assertEqual(changes[0]['player'], {'id': self.player.pk, 'name': 'Nelly'})
+
     def test_lists_every_player_with_marches_and_notes(self):
         data = self.admin.get('/api/evaluation/').json()
         # nothing saved: the page uses its defaults

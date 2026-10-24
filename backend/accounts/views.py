@@ -314,7 +314,8 @@ def update_profile(request):
     if not player:
         # anonymous, or an admin signed in with a password (no Discord profile)
         raise PermissionDenied() if request.user.is_authenticated else NotAuthenticated()
-    profile = ProfileSerializer(player, data=request.data, partial=True)
+    # the request: the author of the power change in the history of the evaluation
+    profile = ProfileSerializer(player, data=request.data, partial=True, context={'request': request})
     profile.is_valid(raise_exception=True)
     profile.save()
 
