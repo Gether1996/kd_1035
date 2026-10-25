@@ -21,6 +21,7 @@ export type Page =
   | 'playersMarches'
   | 'evaluation'
   | 'players'
+  | 'forum'
   | 'guides'
   | 'guide';
 export type GuideCategory = 'commanderi' | 'vybava' | 'eventy' | 'tipy';
@@ -47,6 +48,7 @@ const FIXED_PATHS = {
   playersMarches: '/marche',
   evaluation: '/vyhodnocovanie',
   players: '/hraci',
+  forum: '/forum',
 } satisfies Partial<Record<Page, string>>;
 type FixedPage = keyof typeof FIXED_PATHS;
 

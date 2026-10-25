@@ -133,6 +133,7 @@ describe('Header account slot', () => {
       ['/marche', 'Marche'],
       ['/pripomienky', 'Pripomienky eventov'],
       ['/kvk', 'Prihláška na KvK'],
+      ['/forum', 'Fórum'],
     ]);
     expect(link?.querySelector('.alert-badge')).not.toBeNull();
     expect(link?.textContent).toContain('Chýba ti meno v hre');
@@ -144,6 +145,7 @@ describe('Header account slot', () => {
       '/marche',
       '/pripomienky',
       '/kvk',
+      '/forum',
     ]);
   });
 
@@ -162,8 +164,8 @@ describe('Header account slot', () => {
       user: { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', power: 90, approved: false, terms_accepted: true, is_staff: false, is_superuser: false },
     });
     const hrefs = (selector: string) => Array.from(el().querySelectorAll(selector), (a) => a.getAttribute('href'));
-    expect(hrefs('.account__dropdown a')).toEqual(['/ucet', '/pripomienky', '/kvk']);
-    expect(hrefs('.drawer__page')).toEqual(['/pripomienky', '/kvk']);
+    expect(hrefs('.account__dropdown a')).toEqual(['/ucet', '/pripomienky', '/kvk', '/forum']);
+    expect(hrefs('.drawer__page')).toEqual(['/pripomienky', '/kvk', '/forum']);
   });
 
   it('asks for the current power like for the name (Gether 14. 10. 2026)', async () => {

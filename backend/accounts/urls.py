@@ -1,6 +1,16 @@
 from django.urls import path
 
-from . import alarm_views, discord_interactions, evaluation_views, kvk_views, local_auth, march_views, reminder_views, views
+from . import (
+    alarm_views,
+    discord_interactions,
+    evaluation_views,
+    forum_views,
+    kvk_views,
+    local_auth,
+    march_views,
+    reminder_views,
+    views,
+)
 
 urlpatterns = [
     path('auth/discord/login/', views.discord_login),
@@ -39,4 +49,7 @@ urlpatterns = [
     path('evaluation/players/', evaluation_views.evaluation_players),
     path('evaluation/changes/', evaluation_views.evaluation_changes),
     path('evaluation/players/<int:player_id>/', evaluation_views.evaluation_player),
+    path('forum/', forum_views.threads),
+    path('forum/<int:thread_id>/', forum_views.thread),
+    path('forum/posts/<int:post_id>/', forum_views.post),
 ]

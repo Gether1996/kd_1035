@@ -35,6 +35,7 @@ export type IconName =
   | 'log-out'
   | 'map'
   | 'menu'
+  | 'messages-square'
   | 'pencil'
   | 'plus'
   | 'repeat'

@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **25. 10. 2026 – v1.44.0:** Anonymné **Fórum** (`/forum`, menu účtu; odkaz funguje aj bez prihlásenia): vlákna a správy ako chat, „Anonym 1, 2…“ vo vlákne, v databáze žiadna väzba na hráča (svoje správy pozná len podpísaná cookie prehliadača), 5 minút medzi správami podľa cookie, ochrana proti botom (skryté pole, čas formulára, limit na IP v pamäti, bez odkazov od neprihlásených, strop na hodinu), superadmin maže.
 - **24. 10. 2026 – v1.43.0:** Prihláška na KvK sa dá vyplniť z vlastného marchu (výber „Vyplniť z marchu“): typ, commanderi, skilly hneď vo formulári, výbava, formácia, inscriptions a armamenty sa uložia s prihláškou; poznámka a dotazník ostanú z formulára, vyplnenú prihlášku prepíše až druhý klik.
 - **24. 10. 2026 – v1.42.1:** Strop 10 registrácií bez Discordu počíta len čakajúce účty z posledných 14 dní – opustené staršie ho už natrvalo nezavrú (otvorená otázka z kola 18. 10. rozhodnutá: 14 dní).
 - **24. 10. 2026 – oprava bez verzie:** vlastná power, ktorú hráč zmení na `/ucet`, sa zapíše do Histórie zmien vyhodnocovania (autor = hráč).

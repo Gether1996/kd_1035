@@ -595,3 +595,44 @@ class MarchNotice(models.Model):
 
     def __str__(self):
         return f'{self.player} · {self.get_state_display()}'
+
+
+# the forum on /forum (Gether 25. 10. 2026: "spoločná inkognito roomka … nikto nevedel, kto čo pridal")
+MAX_FORUM_TITLE = 120
+MAX_FORUM_POST = 1000
+
+
+class ForumThread(models.Model):
+    """A thread of the anonymous forum of the approved players. Nothing links it or its posts to a player – which
+    ones are yours only your browser knows (a signed cookie, accounts/forum_views.py)."""
+
+    title = models.CharField('názov', max_length=MAX_FORUM_TITLE)
+    created_at = models.DateTimeField('založené', auto_now_add=True)
+    last_post_at = models.DateTimeField('posledný príspevok', db_index=True)
+    # the last "Anonym N" handed out in the thread
+    aliases = models.PositiveIntegerField('anonymov', default=0)
+
+    class Meta:
+        ordering = ['-last_post_at', '-pk']
+        verbose_name = 'vlákno fóra'
+        verbose_name_plural = 'vlákna fóra'
+
+    def __str__(self):
+        return self.title
+
+
+class ForumPost(models.Model):
+    """A message in a thread – the text, when, and the writer's number in the thread ("Anonym 2"), no player."""
+
+    thread = models.ForeignKey(ForumThread, on_delete=models.CASCADE, related_name='posts', verbose_name='vlákno')
+    alias = models.PositiveIntegerField('anonym')
+    body = models.TextField('text', max_length=MAX_FORUM_POST)
+    created_at = models.DateTimeField('napísané', auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['created_at', 'pk']
+        verbose_name = 'príspevok fóra'
+        verbose_name_plural = 'príspevky fóra'
+
+    def __str__(self):
+        return f'{self.thread} · {self.created_at:%d. %m. %Y %H:%M}'

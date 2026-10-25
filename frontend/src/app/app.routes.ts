@@ -26,6 +26,8 @@ const pages = (): Routes => [
   },
   { path: 'kvk', loadComponent: () => import('./pages/kvk/kvk-page').then((m) => m.KvkPage) },
   // the superadmin's list of players (Gether 20. 10. 2026: its own page, before a section of /ucet)
+  // the anonymous forum (Gether 25. 10. 2026): in the account menu, the link works for everyone
+  { path: 'forum', loadComponent: () => import('./pages/forum/forum-page').then((m) => m.ForumPage) },
   { path: 'hraci', loadComponent: () => import('./pages/players/players-page').then((m) => m.PlayersPage) },
   // the superadmin's KvK evaluation (Gether 13. 10. 2026)
   {

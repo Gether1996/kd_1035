@@ -69,6 +69,8 @@ export class Header {
       // the reminders are bot DMs – not for a player without Discord
       ...(this.auth.user()?.local ? [] : [{ label: t.reminders, link: this.i18n.path('reminders'), icon: 'bell' as const }]),
       { label: t.kvk, link: this.i18n.path('kvk'), icon: 'swords' },
+      // the anonymous forum – every signed-in player (Gether 25. 10. 2026); the address works without signing in too
+      { label: t.forum, link: this.i18n.path('forum'), icon: 'messages-square' },
       // the KvK evaluation – the superadmin and the players let in (Gether 13. 10. 2026)
       ...(this.auth.canEvaluate()
         ? [{ label: t.evaluation, link: this.i18n.path('evaluation'), icon: 'scale' as const }]

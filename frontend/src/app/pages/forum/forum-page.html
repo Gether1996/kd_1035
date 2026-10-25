@@ -1,0 +1,215 @@
+@let f = t().forum;
+<app-page-header [crumbs]="crumbs()" [eyebrow]="f.eyebrow" [title]="f.title" [intro]="f.intro" />
+
+<div class="container content">
+  <!-- said where everyone sees it first (Gether 25. 10. 2026: "zdôrazni, že všetky príspevky sú anonymné") -->
+  <aside class="anon" [attr.aria-label]="f.anonymousTitle">
+    <span class="anon__badge" aria-hidden="true"><svg appIcon="eye-off"></svg></span>
+    <div>
+      <p class="anon__title">{{ f.anonymousTitle }}</p>
+      <p class="anon__text">{{ f.anonymousText }}</p>
+      <p class="anon__text">{{ f.pauseText }}</p>
+    </div>
+  </aside>
+
+  @if (threadId()) {
+    <a class="back" [routerLink]="i18n.path('forum')"><svg appIcon="arrow-left"></svg>{{ f.back }}</a>
+
+    @switch (threadState()) {
+      @case ('loading') {
+        <div class="placeholder" aria-hidden="true"></div>
+      }
+      @case ('gone') {
+        <p class="state">{{ f.gone }}</p>
+      }
+      @case ('failed') {
+        <p class="state">{{ f.error }}</p>
+      }
+      @default {
+        @let th = thread()!;
+        <section class="room" aria-labelledby="forum-thread-title">
+          <header class="room__head">
+            <h2 class="room__title" id="forum-thread-title">{{ th.title }}</h2>
+            @if (canDeleteThread()) {
+              @if (confirm() === 'thread') {
+                <span class="confirm">
+                  {{ f.confirm }}
+                  <button type="button" class="danger" (click)="deleteThread()">{{ f.yes }}</button>
+                  <button type="button" class="pill-btn pill-btn--quiet" (click)="confirm.set(null)">{{ f.no }}</button>
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  class="icon-btn"
+                  [attr.aria-label]="f.deleteThread"
+                  [title]="f.deleteThread"
+                  (click)="confirm.set('thread')"
+                >
+                  <svg appIcon="trash-2"></svg>
+                </button>
+              }
+            }
+          </header>
+
+          <ol class="chat" #chat [attr.aria-label]="th.title">
+            @if (th.posts > posts().length) {
+              <li class="chat__older">{{ f.older }}</li>
+            }
+            @for (p of posts(); track p.id) {
+              <li class="msg" [class.is-mine]="p.mine">
+                <p class="msg__head">
+                  <span class="msg__who">{{ who(p) }}</span>
+                  <time class="msg__time" [attr.datetime]="p.at">{{ when(p.at) }}</time>
+                  @if (p.mine || superuser()) {
+                    @if (confirm() === p.id) {
+                      <span class="confirm">
+                        <button type="button" class="danger" (click)="deletePost(p)">{{ f.yes }}</button>
+                        <button type="button" class="pill-btn pill-btn--quiet" (click)="confirm.set(null)">
+                          {{ f.no }}
+                        </button>
+                      </span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="msg__delete"
+                        [attr.aria-label]="f.deletePost"
+                        [title]="f.deletePost"
+                        (click)="confirm.set(p.id)"
+                      >
+                        <svg appIcon="trash-2"></svg>
+                      </button>
+                    }
+                  }
+                </p>
+                <p class="msg__body">{{ p.body }}</p>
+              </li>
+            }
+          </ol>
+
+          <form class="composer" (submit)="send($event, trap)" novalidate>
+            <div class="trap" aria-hidden="true">
+              <label for="forum-website">Website</label>
+              <input #trap id="forum-website" type="text" name="website" tabindex="-1" autocomplete="off" />
+            </div>
+            <label class="sr-only" for="forum-message">{{ f.message }}</label>
+            <textarea
+              #box
+              id="forum-message"
+              class="input textarea composer__box"
+              rows="2"
+              maxlength="1000"
+              [placeholder]="f.placeholder"
+              [value]="message()"
+              (input)="message.set(box.value)"
+              (keydown)="keydown($event, trap)"
+            ></textarea>
+            <button
+              type="submit"
+              class="pill-btn composer__send"
+              [attr.aria-disabled]="sending() || !!wait() || !message().trim() || null"
+            >
+              <svg appIcon="send"></svg><span>{{ sending() ? f.sending : f.send }}</span>
+            </button>
+          </form>
+          <p class="status" role="status" [class.is-error]="!!error() && error() !== 'cooldown'">
+            @if (error(); as e) {
+              @if (e !== 'cooldown' || !wait()) {
+                {{ f.errors[e] }}
+              }
+            }
+            @if (wait()) {
+              {{ waitText() }}
+            }
+          </p>
+        </section>
+      }
+    }
+  } @else {
+    <div class="bar">
+      @if (!composing()) {
+        <button type="button" class="pill-btn" (click)="compose(true)"><svg appIcon="plus"></svg>{{ f.newThread }}</button>
+      }
+    </div>
+
+    @if (composing()) {
+      <form class="form new" (submit)="create($event, trap)" novalidate>
+        <div class="trap" aria-hidden="true">
+          <label for="forum-new-website">Website</label>
+          <input #trap id="forum-new-website" type="text" name="website" tabindex="-1" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="forum-title">{{ f.titleLabel }}</label>
+          <input
+            #titleInput
+            id="forum-title"
+            class="input"
+            type="text"
+            maxlength="120"
+            autocomplete="off"
+            [value]="newTitle()"
+            (input)="newTitle.set(titleInput.value)"
+          />
+        </div>
+        <div class="field">
+          <label class="field__label" for="forum-body">{{ f.bodyLabel }}</label>
+          <textarea
+            #bodyInput
+            id="forum-body"
+            class="input textarea"
+            rows="4"
+            maxlength="1000"
+            [placeholder]="f.placeholder"
+            [value]="newBody()"
+            (input)="newBody.set(bodyInput.value)"
+          ></textarea>
+        </div>
+        <div class="form__actions">
+          <button type="submit" class="pill-btn" [attr.aria-disabled]="sending() || !!wait() || null">
+            {{ sending() ? f.sending : f.create }}
+          </button>
+          <button type="button" class="pill-btn pill-btn--quiet" (click)="compose(false)">{{ f.cancel }}</button>
+        </div>
+        <p class="status" role="status" [class.is-error]="!!error() && error() !== 'cooldown'">
+          @if (error(); as e) {
+            @if (e !== 'cooldown' || !wait()) {
+              {{ f.errors[e] }}
+            }
+          }
+          @if (wait()) {
+            {{ waitText() }}
+          }
+        </p>
+      </form>
+    }
+
+    @if (listFailed()) {
+      <p class="state">{{ f.error }}</p>
+    } @else if (threads(); as list) {
+      @if (!list.length) {
+        <p class="state">{{ f.empty }}</p>
+      } @else {
+        <ul class="threads">
+          @for (th of list; track th.id) {
+            <li>
+              <a class="thread" [routerLink]="i18n.path('forum')" [queryParams]="{ vlakno: th.id }">
+                <span class="thread__title">{{ th.title }}</span>
+                <span class="thread__meta">
+                  {{ count(th) }} · <time [attr.datetime]="th.last_post_at">{{ when(th.last_post_at) }}</time>
+                  @if (isNew(th)) {
+                    <span class="tag tag--new">{{ f.fresh }}</span>
+                  }
+                  @if (th.mine) {
+                    <span class="tag">{{ f.mineThread }}</span>
+                  }
+                </span>
+                <svg class="thread__go" appIcon="chevron-right"></svg>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
+      <div class="placeholder" aria-hidden="true"></div>
+    }
+  }
+</div>
