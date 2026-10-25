@@ -177,3 +177,18 @@ class Forum(TestCase):
         self.thread()
         self.nelly.delete_account()
         self.assertEqual(ForumPost.objects.count(), 1)
+
+    def test_authors_edit(self):
+        tid = self.thread().json()['id']
+        first = ForumPost.objects.get().pk
+        seen = self.as_bob.get(f'/api/forum/{tid}/').json()['now']
+        self.assertEqual(self.send(self.as_bob, 'patch', f'/api/forum/posts/{first}/', {'body': 'Bob'}).status_code, 403)
+        self.assertEqual(self.send(self.as_bob, 'patch', f'/api/forum/{tid}/', {'title': 'Bob'}).status_code, 403)
+        edited = self.send(self.as_nelly, 'patch', f'/api/forum/posts/{first}/', {'body': ' Ahoj všetci '})
+        self.assertEqual((edited.json()['body'], edited.json()['edited'] is not None), ('Ahoj všetci', True))
+        renamed = self.send(self.as_nelly, 'patch', f'/api/forum/{tid}/', {'title': 'Rally o 21:00'})
+        self.assertEqual(renamed.json()['title'], 'Rally o 21:00')
+        # the open room gets the edit at its next question
+        polled = self.as_bob.get(f'/api/forum/{tid}/?after={first}&since={seen}').json()
+        self.assertEqual(([p['body'] for p in polled['edited']], polled['posts']), (['Ahoj všetci'], []))
+        self.assertEqual(self.send(self.as_nelly, 'patch', f'/api/forum/posts/{first}/', {'body': ' '}).status_code, 400)

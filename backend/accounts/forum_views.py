@@ -26,6 +26,7 @@ from django.db import transaction
 from django.db.models import Count, F, Max
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -69,8 +70,12 @@ class PostSerializer(serializers.Serializer):
     body = serializers.CharField(max_length=MAX_FORUM_POST, trim_whitespace=True)
 
 
-class ThreadSerializer(PostSerializer):
+class TitleSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=MAX_FORUM_TITLE, trim_whitespace=True)
+
+
+class ThreadSerializer(PostSerializer, TitleSerializer):
+    pass
 
 
 class Mine:
@@ -139,7 +144,15 @@ def post_data(post: ForumPost, mine: Mine) -> dict:
         'at': iso(post.created_at),
         'alias': post.alias,
         'mine': post.pk in mine.posts,
+        'edited': iso(post.edited_at) if post.edited_at else None,
     }
+
+
+def no_links(request, texts: list[str]) -> Response | None:
+    """a visitor who is not signed in sends no addresses – in a new message nor in an edit"""
+    if not request.user.is_authenticated and any(LINK.search(t) for t in texts):
+        return Response({'detail': 'links'}, status=400)
+    return None
 
 
 def refused(request, mine: Mine, texts: list[str], thread: bool = False) -> Response | None:
@@ -152,8 +165,8 @@ def refused(request, mine: Mine, texts: list[str], thread: bool = False) -> Resp
         return Response({'detail': 'invalid'}, status=400)
     if wait := mine.wait():
         return Response({'detail': 'cooldown', 'wait': wait}, status=429)
-    if not request.user.is_authenticated and any(LINK.search(t) for t in texts):
-        return Response({'detail': 'links'}, status=400)
+    if links := no_links(request, texts):
+        return links
     hour = timezone.now() - timedelta(hours=1)
     busy = ForumPost.objects.filter(created_at__gte=hour).count() >= BUSY_POSTS or (
         thread and ForumThread.objects.filter(created_at__gte=hour).count() >= BUSY_THREADS
@@ -200,29 +213,52 @@ def threads(request):
 
 
 @never_cache
-@api_view(['GET', 'POST', 'DELETE'])
+@api_view(['GET', 'POST', 'PATCH', 'DELETE'])
 @authentication_classes([Csrf])
 @permission_classes([AllowAny])
 def thread(request, thread_id):
-    """GET ?after=<message id>: the thread and its latest messages (only the newer ones with after – the open room
-    asks again every few seconds). POST {body}: a message. DELETE: the whole thread with every message in it – only
-    its author or the superadmin (Gether 25. 10. 2026)."""
+    """GET ?after=<message id>&since=<time>: the thread and its latest messages (with after only the newer ones, with
+    since also the older ones edited from then on – the open room asks again every few seconds; `now` is the next
+    since). POST {body}: a message. PATCH {title}: a new title – its author only. DELETE: the whole thread with every
+    message in it – only its author or the superadmin (Gether 25. 10. 2026)."""
     mine = Mine(request)
     item = get_object_or_404(ForumThread, pk=thread_id)
 
     if request.method == 'GET':
+        now = timezone.now()
         posts = item.posts.all()
+        edited = []
         after = request.query_params.get('after', '')
         if after.isdigit():
             posts = posts.filter(pk__gt=int(after))
+            try:
+                since = parse_datetime(request.query_params.get('since', ''))
+            except ValueError:
+                since = None
+            if since:
+                edited = item.posts.filter(pk__lte=int(after), edited_at__gte=since)
         latest = list(posts.order_by('-created_at', '-pk')[:MAX_POSTS])[::-1]
         return Response(
             {
                 'thread': thread_data(item, mine, item.posts.count()),
                 'posts': [post_data(p, mine) for p in latest],
+                'edited': [post_data(p, mine) for p in edited],
+                'now': iso(now),
                 'wait': mine.wait(),
             }
         )
+
+    if request.method == 'PATCH':
+        if item.pk not in mine.threads:
+            return Response({'detail': 'forbidden'}, status=403)
+        serializer = TitleSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        if links := no_links(request, [serializer.validated_data['title']]):
+            return links
+        item.title = serializer.validated_data['title']
+        item.save(update_fields=['title'])
+        return Response(thread_data(item, mine, item.posts.count()))
 
     if request.method == 'DELETE':
         if not (request.user.is_superuser or item.pk in mine.threads):
@@ -243,13 +279,28 @@ def thread(request, thread_id):
     return mine.save(Response({**post_data(post, mine), 'wait': mine.wait()}, status=201))
 
 
-@api_view(['DELETE'])
+@api_view(['PATCH', 'DELETE'])
 @authentication_classes([Csrf])
 @permission_classes([AllowAny])
 def post(request, post_id):
-    """DELETE: one message – its author or the superadmin. A thread left without messages goes with it."""
+    """PATCH {body}: a new text – its author only (Gether 25. 10. 2026: "edit nech majú autori povolený"); no pause,
+    marked "upravené". DELETE: one message – its author or the superadmin. A thread left without messages goes with
+    it."""
     mine = Mine(request)
     item = get_object_or_404(ForumPost, pk=post_id)
+    if request.method == 'PATCH':
+        if item.pk not in mine.posts:
+            return Response({'detail': 'forbidden'}, status=403)
+        serializer = PostSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        if links := no_links(request, [serializer.validated_data['body']]):
+            return links
+        if serializer.validated_data['body'] != item.body:
+            item.body = serializer.validated_data['body']
+            item.edited_at = timezone.now()
+            item.save(update_fields=['body', 'edited_at'])
+        return Response(post_data(item, mine))
     if not (request.user.is_superuser or item.pk in mine.posts):
         return Response({'detail': 'forbidden'}, status=403)
     with transaction.atomic():

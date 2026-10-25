@@ -628,6 +628,8 @@ class ForumPost(models.Model):
     alias = models.PositiveIntegerField('anonym')
     body = models.TextField('text', max_length=MAX_FORUM_POST)
     created_at = models.DateTimeField('napísané', auto_now_add=True, db_index=True)
+    # its author changed the text (Gether 25. 10. 2026) – "upravené" next to the time
+    edited_at = models.DateTimeField('upravené', null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ['created_at', 'pk']

@@ -29,7 +29,38 @@
         @let th = thread()!;
         <section class="room" aria-labelledby="forum-thread-title">
           <header class="room__head">
-            <h2 class="room__title" id="forum-thread-title">{{ th.title }}</h2>
+            @if (editing() === 'title') {
+              <form class="edit edit--title" (submit)="saveEdit($event)" novalidate>
+                <label class="sr-only" for="forum-edit-title">{{ f.titleLabel }}</label>
+                <input
+                  #titleEdit
+                  id="forum-edit-title"
+                  class="input"
+                  type="text"
+                  maxlength="120"
+                  autocomplete="off"
+                  [value]="draft()"
+                  (input)="draft.set(titleEdit.value)"
+                />
+                <span class="edit__actions">
+                  <button type="submit" class="pill-btn" [attr.aria-disabled]="sending() || null">{{ f.save }}</button>
+                  <button type="button" class="pill-btn pill-btn--quiet" (click)="editing.set(null)">{{ f.cancel }}</button>
+                </span>
+              </form>
+            } @else {
+              <h2 class="room__title" id="forum-thread-title">{{ th.title }}</h2>
+              @if (th.mine) {
+                <button
+                  type="button"
+                  class="icon-btn"
+                  [attr.aria-label]="f.editTitle"
+                  [title]="f.editTitle"
+                  (click)="startEdit('title')"
+                >
+                  <svg appIcon="pencil"></svg>
+                </button>
+              }
+            }
             @if (canDeleteThread()) {
               @if (confirm() === 'thread') {
                 <span class="confirm">
@@ -60,6 +91,20 @@
                 <p class="msg__head">
                   <span class="msg__who">{{ who(p) }}</span>
                   <time class="msg__time" [attr.datetime]="p.at">{{ when(p.at) }}</time>
+                  @if (p.edited) {
+                    <span class="msg__edited">· {{ f.edited }}</span>
+                  }
+                  @if (p.mine && editing() !== p.id) {
+                    <button
+                      type="button"
+                      class="msg__tool msg__tool--first"
+                      [attr.aria-label]="f.editPost"
+                      [title]="f.editPost"
+                      (click)="startEdit(p)"
+                    >
+                      <svg appIcon="pencil"></svg>
+                    </button>
+                  }
                   @if (p.mine || superuser()) {
                     @if (confirm() === p.id) {
                       <span class="confirm">
@@ -71,7 +116,8 @@
                     } @else {
                       <button
                         type="button"
-                        class="msg__delete"
+                        class="msg__tool msg__tool--bin"
+                        [class.msg__tool--first]="!p.mine || editing() === p.id"
                         [attr.aria-label]="f.deletePost"
                         [title]="f.deletePost"
                         (click)="confirm.set(p.id)"
@@ -81,7 +127,28 @@
                     }
                   }
                 </p>
-                <p class="msg__body">{{ p.body }}</p>
+                @if (editing() === p.id) {
+                  <form class="edit" (submit)="saveEdit($event)" novalidate>
+                    <label class="sr-only" [for]="'forum-edit-' + p.id">{{ f.editPost }}</label>
+                    <textarea
+                      #postEdit
+                      class="input textarea"
+                      rows="3"
+                      maxlength="1000"
+                      [id]="'forum-edit-' + p.id"
+                      [value]="draft()"
+                      (input)="draft.set(postEdit.value)"
+                    ></textarea>
+                    <span class="edit__actions">
+                      <button type="submit" class="pill-btn" [attr.aria-disabled]="sending() || null">{{ f.save }}</button>
+                      <button type="button" class="pill-btn pill-btn--quiet" (click)="editing.set(null)">
+                        {{ f.cancel }}
+                      </button>
+                    </span>
+                  </form>
+                } @else {
+                  <p class="msg__body">{{ p.body }}</p>
+                }
               </li>
             }
           </ol>

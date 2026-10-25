@@ -266,12 +266,17 @@
   color: var(--text-dim);
 }
 
-.msg__delete {
+.msg__edited {
+  color: var(--text-mute);
+}
+
+// pencil and bin – at the right edge of the bubble
+.msg__tool {
   display: grid;
   place-items: center;
   width: 32px;
   height: 32px;
-  margin: -6px -8px -6px auto;
+  margin: -6px -8px -6px 0;
   border: 0;
   border-radius: 50%;
   background: none;
@@ -280,12 +285,43 @@
 
   &:hover,
   &:focus-visible {
+    color: var(--gold-300);
+  }
+
+  &--bin:hover,
+  &--bin:focus-visible {
     color: var(--red-300);
   }
 
   .icon {
     width: 15px;
     height: 15px;
+  }
+}
+
+.msg__tool--first {
+  margin-left: auto;
+}
+
+.edit {
+  display: grid;
+  gap: 8px;
+  min-width: min(100%, 280px);
+  margin-top: 4px;
+}
+
+.edit--title {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+.edit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  button {
+    min-height: 36px;
   }
 }
 

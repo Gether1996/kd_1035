@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **25. 10. 2026 – v1.44.2:** Fórum: autor si upraví svoju správu (značka „upravené“, ostatným sa zmena načíta sama) a zakladateľ názov vlákna.
 - **25. 10. 2026 – v1.44.1:** Fórum: celé vlákno zmaže jeho zakladateľ kedykoľvek (aj s odpoveďami ostatných), správu jej autor, všetko superadmin – nikto iný.
 - **25. 10. 2026 – v1.44.0:** Anonymné **Fórum** (`/forum`, menu účtu; odkaz funguje aj bez prihlásenia): vlákna a správy ako chat, „Anonym 1, 2…“ vo vlákne, v databáze žiadna väzba na hráča (svoje správy pozná len podpísaná cookie prehliadača), 5 minút medzi správami podľa cookie, ochrana proti botom (skryté pole, čas formulára, limit na IP v pamäti, bez odkazov od neprihlásených, strop na hodinu), superadmin maže.
 - **24. 10. 2026 – v1.43.0:** Prihláška na KvK sa dá vyplniť z vlastného marchu (výber „Vyplniť z marchu“): typ, commanderi, skilly hneď vo formulári, výbava, formácia, inscriptions a armamenty sa uložia s prihláškou; poznámka a dotazník ostanú z formulára, vyplnenú prihlášku prepíše až druhý klik.

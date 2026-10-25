@@ -43,6 +43,8 @@ export interface ForumPost {
   /** "Anonym 2" – the writer's number in the thread */
   alias: number;
   mine: boolean;
+  /** when its author last changed the text */
+  edited: string | null;
 }
 
 type ErrorKey = 'empty' | 'invalid' | 'cooldown' | 'links' | 'busy' | 'failed';
@@ -93,6 +95,11 @@ export class ForumPage {
   protected readonly threadState = signal<'loading' | 'ready' | 'gone' | 'failed'>('loading');
   protected readonly message = signal('');
   protected readonly confirm = signal<number | 'thread' | null>(null);
+  /** the author's edit open: a message (its id) or the thread's title */
+  protected readonly editing = signal<number | 'title' | null>(null);
+  protected readonly draft = signal('');
+  /** the server's time of the last question – edits made from then on come with the next one */
+  private since = '';
 
   // writing
   protected readonly sending = signal(false);
@@ -138,6 +145,7 @@ export class ForumPage {
       untracked(() => {
         this.error.set(null);
         this.confirm.set(null);
+        this.editing.set(null);
         this.opened = Date.now();
         if (id) void this.loadThread(id);
         else void this.loadList();
@@ -213,11 +221,15 @@ export class ForumPage {
 
   private async fetchThread(id: number, after?: number) {
     this.polled = Date.now();
-    const params: Record<string, string> = after ? { after: String(after) } : {};
+    const params: Record<string, string> = after ? { after: String(after), since: this.since } : {};
     const res = await firstValueFrom(
-      this.http.get<{ thread: ForumThread; posts: ForumPost[]; wait: number }>(`${API}${id}/`, { params }),
+      this.http.get<{ thread: ForumThread; posts: ForumPost[]; edited?: ForumPost[]; now: string; wait: number }>(
+        `${API}${id}/`,
+        { params },
+      ),
     );
     this.thread.set(res.thread);
+    this.since = res.now;
     this.setWait(res.wait);
     return res;
   }
@@ -229,7 +241,11 @@ export class ForumPage {
     const last = this.posts().at(-1)?.id;
     try {
       const res = await this.fetchThread(id, last);
-      if (this.threadId() !== id || !res.posts.length) return;
+      if (this.threadId() !== id) return;
+      // texts their authors changed meanwhile
+      const edited = new Map((res.edited ?? []).map((p) => [p.id, p]));
+      if (edited.size) this.posts.update((posts) => posts.map((p) => edited.get(p.id) ?? p));
+      if (!res.posts.length) return;
       const known = new Set(this.posts().map((p) => p.id));
       const fresh = res.posts.filter((p) => !known.has(p.id));
       if (!fresh.length) return;
@@ -283,6 +299,43 @@ export class ForumPage {
       void this.router.navigate([], { queryParams: {} });
     } catch {
       this.error.set('failed');
+    }
+  }
+
+  protected startEdit(target: ForumPost | 'title'): void {
+    this.confirm.set(null);
+    this.error.set(null);
+    this.editing.set(target === 'title' ? 'title' : target.id);
+    this.draft.set(target === 'title' ? (this.thread()?.title ?? '') : target.body);
+  }
+
+  /** the author's new text or title – no pause, the server marks a message "upravené" */
+  protected async saveEdit(event: Event): Promise<void> {
+    event.preventDefault();
+    const target = this.editing();
+    const id = this.threadId();
+    const text = this.draft().trim();
+    if (target === null || !id || this.sending()) return;
+    if (!text) {
+      this.error.set('empty');
+      return;
+    }
+    this.sending.set(true);
+    this.error.set(null);
+    try {
+      if (target === 'title') {
+        const thread = await firstValueFrom(this.http.patch<ForumThread>(`${API}${id}/`, { title: text }));
+        this.thread.set(thread);
+      } else {
+        const post = await firstValueFrom(this.http.patch<ForumPost>(`${API}posts/${target}/`, { body: text }));
+        this.posts.update((posts) => posts.map((p) => (p.id === post.id ? post : p)));
+      }
+      this.editing.set(null);
+    } catch (err) {
+      const detail = err instanceof HttpErrorResponse ? err.error?.detail : undefined;
+      this.error.set(detail === 'links' ? 'links' : 'failed');
+    } finally {
+      this.sending.set(false);
     }
   }
 
