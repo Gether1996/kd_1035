@@ -87,7 +87,7 @@
               <li class="chat__older">{{ f.older }}</li>
             }
             @for (p of posts(); track p.id) {
-              <li class="msg" [class.is-mine]="p.mine">
+              <li class="msg" [id]="'forum-post-' + p.id" [class.is-mine]="p.mine" [class.is-flash]="flash() === p.id">
                 <p class="msg__head">
                   <span class="msg__who">{{ who(p) }}</span>
                   <time class="msg__time" [attr.datetime]="p.at">{{ when(p.at) }}</time>
@@ -127,6 +127,12 @@
                     }
                   }
                 </p>
+                @if (p.reply; as r) {
+                  <button type="button" class="quote" [attr.aria-label]="f.showOriginal" (click)="jump(r.id)">
+                    <span class="quote__who"><svg appIcon="reply"></svg>{{ replyWho(r) }}</span>
+                    <span class="quote__body">{{ r.body }}</span>
+                  </button>
+                }
                 @if (editing() === p.id) {
                   <form class="edit" (submit)="saveEdit($event)" novalidate>
                     <label class="sr-only" [for]="'forum-edit-' + p.id">{{ f.editPost }}</label>
@@ -149,11 +155,54 @@
                 } @else {
                   <p class="msg__body">{{ p.body }}</p>
                 }
+                <div class="msg__foot">
+                  @if (p.mine) {
+                    @if (p.likes) {
+                      <span class="like is-own"><svg appIcon="heart"></svg>{{ p.likes }}</span>
+                    }
+                  } @else {
+                    <button
+                      type="button"
+                      class="like"
+                      [class.is-on]="p.liked"
+                      [attr.aria-pressed]="p.liked"
+                      [attr.aria-label]="f.like"
+                      [title]="f.like"
+                      (click)="toggleLike(p)"
+                    >
+                      <svg appIcon="heart"></svg>
+                      @if (p.likes) {
+                        <span>{{ p.likes }}</span>
+                      }
+                    </button>
+                  }
+                  <button type="button" class="reply-btn" (click)="startReply(p)">
+                    <svg appIcon="reply"></svg>{{ f.reply }}
+                  </button>
+                </div>
               </li>
             }
           </ol>
 
-          <form class="composer" (submit)="send($event, trap)" novalidate>
+          @if (replyTo(); as r) {
+            <div class="replying">
+              <svg appIcon="reply"></svg>
+              <p class="replying__text">
+                <strong>{{ f.replyingTo.replace('{who}', who(r)) }}</strong>
+                <span>{{ r.body }}</span>
+              </p>
+              <button
+                type="button"
+                class="msg__tool"
+                [attr.aria-label]="f.cancelReply"
+                [title]="f.cancelReply"
+                (click)="replyTo.set(null)"
+              >
+                <svg appIcon="x"></svg>
+              </button>
+            </div>
+          }
+          <form class="composer" #composer (submit)="send($event, trap)" novalidate>
             <div class="trap" aria-hidden="true">
               <label for="forum-website">Website</label>
               <input #trap id="forum-website" type="text" name="website" tabindex="-1" autocomplete="off" />
@@ -169,6 +218,7 @@
               [value]="message()"
               (input)="message.set(box.value)"
               (keydown)="keydown($event, trap)"
+              (focus)="keepVisible()"
             ></textarea>
             <button
               type="submit"

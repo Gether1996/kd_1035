@@ -52,4 +52,5 @@ urlpatterns = [
     path('forum/', forum_views.threads),
     path('forum/<int:thread_id>/', forum_views.thread),
     path('forum/posts/<int:post_id>/', forum_views.post),
+    path('forum/posts/<int:post_id>/like/', forum_views.like),
 ]

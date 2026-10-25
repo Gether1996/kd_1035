@@ -630,6 +630,12 @@ class ForumPost(models.Model):
     created_at = models.DateTimeField('napísané', auto_now_add=True, db_index=True)
     # its author changed the text (Gether 25. 10. 2026) – "upravené" next to the time
     edited_at = models.DateTimeField('upravené', null=True, blank=True, db_index=True)
+    # the message it answers (Gether 25. 10. 2026: "reagovať na určitý príspevok"); gone with it
+    reply_to = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True, related_name='+', verbose_name='odpoveď na'
+    )
+    # how many browsers like it – which ones only their own cookie knows
+    likes = models.PositiveIntegerField('páči sa', default=0)
 
     class Meta:
         ordering = ['created_at', 'pk']

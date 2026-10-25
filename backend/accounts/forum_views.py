@@ -49,6 +49,9 @@ SALT = 'accounts.forum'
 # what the cookie remembers at most – the newest win (a browser cookie holds about 4 kB)
 KEEP_POSTS = 150
 KEEP_THREADS = 60
+KEEP_LIKES = 300
+# the quoted message above a reply
+QUOTE = 140
 # the whole forum in the last hour – a bot with many IPs and fresh cookies still stops here
 BUSY_POSTS = 120
 BUSY_THREADS = 15
@@ -70,6 +73,20 @@ class PostSerializer(serializers.Serializer):
     body = serializers.CharField(max_length=MAX_FORUM_POST, trim_whitespace=True)
 
 
+class ReplySerializer(PostSerializer):
+    reply_to = serializers.IntegerField(required=False, allow_null=True)
+
+
+class LikeThrottle(SimpleRateThrottle):
+    """Likes per IP (in memory, per process) – a browser that throws its cookie away cannot pile them up"""
+
+    scope = 'forum_like'
+    rate = '120/hour'
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {'scope': self.scope, 'ident': self.get_ident(request)}
+
+
 class TitleSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=MAX_FORUM_TITLE, trim_whitespace=True)
 
@@ -80,7 +97,7 @@ class ThreadSerializer(PostSerializer, TitleSerializer):
 
 class Mine:
     """The browser's own forum cookie: {u: the signed-in user it belongs to (another account in the same browser starts
-    empty), p: my message ids, t: my thread ids, a: {thread id: my number in it}, l: when I last wrote (unix)}"""
+    empty), p: my message ids, t: my thread ids, a: {thread id: my number in it}, l: when I last wrote (unix), k: the messages I like}"""
 
     def __init__(self, request):
         self.user = request.user.pk
@@ -94,6 +111,7 @@ class Mine:
         self.threads: list[int] = data.get('t', [])
         self.aliases: dict[str, int] = data.get('a', {})
         self.last: float = data.get('l', 0)
+        self.likes: list[int] = data.get('k', [])
         self.superuser = request.user.is_superuser
 
     def wait(self) -> int:
@@ -113,7 +131,16 @@ class Mine:
 
     def save(self, response: Response) -> Response:
         value = signing.dumps(
-            {'u': self.user, 'p': self.posts, 't': self.threads, 'a': self.aliases, 'l': int(self.last)}, salt=SALT
+            {
+                'u': self.user,
+                'p': self.posts,
+                't': self.threads,
+                'a': self.aliases,
+                'l': int(self.last),
+                'k': self.likes,
+            },
+            salt=SALT,
+            compress=True,
         )
         response.set_cookie(
             COOKIE,
@@ -145,7 +172,16 @@ def post_data(post: ForumPost, mine: Mine) -> dict:
         'alias': post.alias,
         'mine': post.pk in mine.posts,
         'edited': iso(post.edited_at) if post.edited_at else None,
+        'likes': post.likes,
+        'liked': post.pk in mine.likes,
+        'reply': quote(post.reply_to, mine) if post.reply_to_id else None,
     }
+
+
+def quote(post: ForumPost, mine: Mine) -> dict:
+    """the answered message as the reply shows it above its text"""
+    body = post.body if len(post.body) <= QUOTE else post.body[: QUOTE - 1] + '…'
+    return {'id': post.pk, 'alias': post.alias, 'mine': post.pk in mine.posts, 'body': body}
 
 
 def no_links(request, texts: list[str]) -> Response | None:
@@ -226,7 +262,7 @@ def thread(request, thread_id):
 
     if request.method == 'GET':
         now = timezone.now()
-        posts = item.posts.all()
+        posts = item.posts.select_related('reply_to')
         edited = []
         after = request.query_params.get('after', '')
         if after.isdigit():
@@ -236,13 +272,16 @@ def thread(request, thread_id):
             except ValueError:
                 since = None
             if since:
-                edited = item.posts.filter(pk__lte=int(after), edited_at__gte=since)
+                edited = item.posts.select_related('reply_to').filter(pk__lte=int(after), edited_at__gte=since)
         latest = list(posts.order_by('-created_at', '-pk')[:MAX_POSTS])[::-1]
+        # the open room refreshes the hearts of the messages it already shows
+        likes = item.posts.filter(likes__gt=0).order_by('-pk').values_list('pk', 'likes')[:MAX_POSTS]
         return Response(
             {
                 'thread': thread_data(item, mine, item.posts.count()),
                 'posts': [post_data(p, mine) for p in latest],
                 'edited': [post_data(p, mine) for p in edited],
+                'likes': {str(pk): count for pk, count in likes},
                 'now': iso(now),
                 'wait': mine.wait(),
             }
@@ -266,14 +305,18 @@ def thread(request, thread_id):
         item.delete()
         return Response(status=204)
 
-    serializer = PostSerializer(data=request.data)
+    serializer = ReplySerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
     if refusal := refused(request, mine, [serializer.validated_data['body']]):
         return refusal
+    # an answer to a message of this thread; a gone one is no answer
+    answered = item.posts.filter(pk=serializer.validated_data.get('reply_to') or 0).first()
     with transaction.atomic():
         alias = alias_in(item, mine)
-        post = ForumPost.objects.create(thread=item, alias=alias, body=serializer.validated_data['body'])
+        post = ForumPost.objects.create(
+            thread=item, alias=alias, body=serializer.validated_data['body'], reply_to=answered
+        )
         ForumThread.objects.filter(pk=item.pk).update(last_post_at=post.created_at)
     mine.wrote(post)
     return mine.save(Response({**post_data(post, mine), 'wait': mine.wait()}, status=201))
@@ -312,3 +355,28 @@ def post(request, post_id):
         else:
             ForumThread.objects.filter(pk=thread.pk).update(last_post_at=last)
     return Response({'thread_deleted': last is None})
+
+
+@api_view(['POST'])
+@authentication_classes([Csrf])
+@permission_classes([AllowAny])
+def like(request, post_id):
+    """POST {liked: true|false}: a heart for someone else's message, or taken back (Gether 25. 10. 2026). Which
+    messages this browser likes only its cookie knows – the database keeps the count."""
+    mine = Mine(request)
+    item = get_object_or_404(ForumPost, pk=post_id)
+    if item.pk in mine.posts:
+        return Response({'detail': 'own'}, status=400)
+    liked = request.data.get('liked') is True if isinstance(request.data, dict) else False
+    if liked != (item.pk in mine.likes):
+        if not LikeThrottle().allow_request(request, None):
+            return Response({'detail': 'busy'}, status=429)
+        if liked:
+            ForumPost.objects.filter(pk=item.pk).update(likes=F('likes') + 1)
+            mine.likes = [*mine.likes, item.pk][-KEEP_LIKES:]
+        else:
+            ForumPost.objects.filter(pk=item.pk, likes__gt=0).update(likes=F('likes') - 1)
+            mine.likes = [pk for pk in mine.likes if pk != item.pk]
+        item.refresh_from_db(fields=['likes'])
+    return mine.save(Response({'likes': item.likes, 'liked': liked}))
+

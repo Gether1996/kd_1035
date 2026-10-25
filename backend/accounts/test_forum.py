@@ -192,3 +192,31 @@ class Forum(TestCase):
         polled = self.as_bob.get(f'/api/forum/{tid}/?after={first}&since={seen}').json()
         self.assertEqual(([p['body'] for p in polled['edited']], polled['posts']), (['Ahoj všetci'], []))
         self.assertEqual(self.send(self.as_nelly, 'patch', f'/api/forum/posts/{first}/', {'body': ' '}).status_code, 400)
+
+    def test_likes(self):
+        tid = self.thread().json()['id']
+        first = ForumPost.objects.get().pk
+        like = lambda client, liked: self.send(client, 'post', f'/api/forum/posts/{first}/like/', {'liked': liked})
+        self.assertEqual(like(self.as_nelly, True).json(), {'detail': 'own'})
+        self.assertEqual(like(self.as_bob, True).json(), {'likes': 1, 'liked': True})
+        # the same browser once only
+        self.assertEqual(like(self.as_bob, True).json(), {'likes': 1, 'liked': True})
+        self.assertEqual(like(self.as_eve, True).json()['likes'], 2)
+        post = self.as_bob.get(f'/api/forum/{tid}/').json()['posts'][0]
+        self.assertEqual((post['likes'], post['liked']), (2, True))
+        self.assertEqual(self.as_nelly.get(f'/api/forum/{tid}/?after={first}').json()['likes'], {str(first): 2})
+        self.assertEqual(like(self.as_bob, False).json(), {'likes': 1, 'liked': False})
+
+    def test_replies(self):
+        tid = self.thread(body='Kto ide?').json()['id']
+        first = ForumPost.objects.get().pk
+        reply = self.send(self.as_bob, 'post', f'/api/forum/{tid}/', {'body': 'Ja', 'reply_to': first}).json()
+        self.assertEqual(reply['reply'], {'id': first, 'alias': 1, 'mine': False, 'body': 'Kto ide?'})
+        # a message of another thread is no answer
+        other = self.thread(self.as_eve, title='Iné').json()['id']
+        stray = self.send(self.as_admin, 'post', f'/api/forum/{other}/', {'body': 'X', 'reply_to': first}).json()
+        self.assertIsNone(stray['reply'])
+        # the answered message goes – the reply stays without the quote
+        self.send(self.as_nelly, 'delete', f'/api/forum/posts/{first}/')
+        self.assertIsNone(self.as_bob.get(f'/api/forum/{tid}/').json()['posts'][0]['reply'])
+

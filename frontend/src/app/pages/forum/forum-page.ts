@@ -45,6 +45,11 @@ export interface ForumPost {
   mine: boolean;
   /** when its author last changed the text */
   edited: string | null;
+  likes: number;
+  /** this browser likes it */
+  liked: boolean;
+  /** the message it answers, shortened */
+  reply: { id: number; alias: number; mine: boolean; body: string } | null;
 }
 
 type ErrorKey = 'empty' | 'invalid' | 'cooldown' | 'links' | 'busy' | 'failed';
@@ -100,6 +105,12 @@ export class ForumPage {
   protected readonly draft = signal('');
   /** the server's time of the last question – edits made from then on come with the next one */
   private since = '';
+  /** the message the next one answers */
+  protected readonly replyTo = signal<ForumPost | null>(null);
+  /** the answered message lights up for a moment after a click on its quote */
+  protected readonly flash = signal<number | null>(null);
+  private readonly composer = viewChild<ElementRef<HTMLElement>>('composer');
+  private readonly box = viewChild<ElementRef<HTMLTextAreaElement>>('box');
 
   // writing
   protected readonly sending = signal(false);
@@ -146,6 +157,7 @@ export class ForumPage {
         this.error.set(null);
         this.confirm.set(null);
         this.editing.set(null);
+        this.replyTo.set(null);
         this.opened = Date.now();
         if (id) void this.loadThread(id);
         else void this.loadList();
@@ -223,7 +235,14 @@ export class ForumPage {
     this.polled = Date.now();
     const params: Record<string, string> = after ? { after: String(after), since: this.since } : {};
     const res = await firstValueFrom(
-      this.http.get<{ thread: ForumThread; posts: ForumPost[]; edited?: ForumPost[]; now: string; wait: number }>(
+      this.http.get<{
+        thread: ForumThread;
+        posts: ForumPost[];
+        edited?: ForumPost[];
+        likes?: Record<string, number>;
+        now: string;
+        wait: number;
+      }>(
         `${API}${id}/`,
         { params },
       ),
@@ -245,6 +264,11 @@ export class ForumPage {
       // texts their authors changed meanwhile
       const edited = new Map((res.edited ?? []).map((p) => [p.id, p]));
       if (edited.size) this.posts.update((posts) => posts.map((p) => edited.get(p.id) ?? p));
+      // the hearts others gave meanwhile
+      const likes = res.likes ?? {};
+      this.posts.update((posts) =>
+        posts.map((p) => ((likes[p.id] ?? 0) === p.likes ? p : { ...p, likes: likes[p.id] ?? 0 })),
+      );
       if (!res.posts.length) return;
       const known = new Set(this.posts().map((p) => p.id));
       const fresh = res.posts.filter((p) => !known.has(p.id));
@@ -262,9 +286,11 @@ export class ForumPage {
     const id = this.threadId();
     const body = this.message().trim();
     if (!id || !body || this.sending() || this.wait()) return;
-    const post = await this.write<ForumPost>(`${API}${id}/`, { body, website: trap.value });
+    const reply = this.replyTo()?.id ?? null;
+    const post = await this.write<ForumPost>(`${API}${id}/`, { body, website: trap.value, reply_to: reply });
     if (!post || this.threadId() !== id) return;
     this.message.set('');
+    this.replyTo.set(null);
     this.posts.update((posts) => [...posts.filter((p) => p.id !== post.id), post]);
     this.thread.update((t) => (t ? { ...t, posts: t.posts + 1, last_post_at: post.at } : t));
     this.markSeen(this.thread());
@@ -339,6 +365,61 @@ export class ForumPage {
     }
   }
 
+  /** a heart for someone else's message, or taken back – shown at once, the server's count after */
+  protected async toggleLike(post: ForumPost): Promise<void> {
+    if (post.mine) return;
+    const liked = !post.liked;
+    const set = (likes: number, on: boolean) =>
+      this.posts.update((posts) => posts.map((p) => (p.id === post.id ? { ...p, likes, liked: on } : p)));
+    set(Math.max(0, post.likes + (liked ? 1 : -1)), liked);
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{ likes: number; liked: boolean }>(`${API}posts/${post.id}/like/`, { liked }),
+      );
+      set(res.likes, res.liked);
+    } catch {
+      set(post.likes, post.liked);
+    }
+  }
+
+  protected startReply(post: ForumPost): void {
+    this.replyTo.set(post);
+    this.box()?.nativeElement.focus();
+  }
+
+  /** a click on a quote: the answered message in the room, lit up for a moment */
+  protected jump(id: number): void {
+    const target = this.chat()?.nativeElement.querySelector<HTMLElement>(`#forum-post-${id}`);
+    if (!target) return;
+    target.scrollIntoView({ block: 'center', behavior: this.motion() });
+    this.flash.set(id);
+    setTimeout(() => this.flash.set(null), 1600);
+  }
+
+  /**
+   * A phone's keyboard covers the lower half of the screen (Gether 25. 10. 2026: "nevidím, čo píšem"): the message box
+   * goes up above it once the keyboard is out, and again while the visible part of the page changes.
+   */
+  protected keepVisible(): void {
+    const view = window.visualViewport;
+    const lift = () => this.composer()?.nativeElement.scrollIntoView({ block: 'end', behavior: this.motion() });
+    setTimeout(lift, 350);
+    if (!view) return;
+    const resize = () => {
+      if (document.activeElement === this.box()?.nativeElement) lift();
+      else view.removeEventListener('resize', resize);
+    };
+    view.addEventListener('resize', resize);
+  }
+
+  private motion(): ScrollBehavior {
+    return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  }
+
+  protected replyWho(reply: { alias: number; mine: boolean }): string {
+    return reply.mine ? this.t().forum.you : this.t().forum.alias.replace('{n}', String(reply.alias));
+  }
+
   protected who(post: ForumPost): string {
     return post.mine ? this.t().forum.you : this.t().forum.alias.replace('{n}', String(post.alias));
   }
@@ -346,7 +427,7 @@ export class ForumPage {
   // ---------------------------------------------------------------- shared
 
   /** POST with the bot guard: the hidden field and how long the form was open */
-  private async write<T>(url: string, body: Record<string, string>): Promise<T | null> {
+  private async write<T>(url: string, body: Record<string, unknown>): Promise<T | null> {
     this.sending.set(true);
     this.error.set(null);
     try {
