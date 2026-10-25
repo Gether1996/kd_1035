@@ -107,9 +107,8 @@ export class ForumPage {
   private readonly chat = viewChild<ElementRef<HTMLElement>>('chat');
 
   protected readonly superuser = computed(() => !!this.auth.user()?.is_superuser);
-  protected readonly canDeleteThread = computed(
-    () => this.superuser() || (!!this.thread()?.mine && this.posts().every((p) => p.mine)),
-  );
+  /** the whole thread: its author or the superadmin; a message: its author or the superadmin */
+  protected readonly canDeleteThread = computed(() => this.superuser() || !!this.thread()?.mine);
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
     { label: this.t().forum.title, link: this.i18n.path('forum') },

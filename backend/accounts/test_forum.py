@@ -150,8 +150,6 @@ class Forum(TestCase):
         self.send(self.as_bob, 'post', f'/api/forum/{tid}/', {'body': 'Bob'})
         bobs = ForumPost.objects.get(body='Bob').pk
         self.assertEqual(self.send(self.as_nelly, 'delete', f'/api/forum/posts/{bobs}/').status_code, 403)
-        # the thread's author cannot drop it once someone else wrote in it; the superadmin can
-        self.assertEqual(self.send(self.as_nelly, 'delete', f'/api/forum/{tid}/').status_code, 403)
         deleted = self.send(self.as_bob, 'delete', f'/api/forum/posts/{bobs}/')
         self.assertEqual(deleted.json(), {'thread_deleted': False})
         # the last message goes – the thread goes with it
@@ -159,9 +157,11 @@ class Forum(TestCase):
         self.assertEqual(self.send(self.as_admin, 'delete', f'/api/forum/posts/{nellys}/').json(), {'thread_deleted': True})
         self.assertFalse(ForumThread.objects.exists())
 
-    def test_the_author_deletes_a_thread_nobody_answered(self):
+    def test_only_the_author_or_the_superadmin_deletes_a_thread(self):
         tid = self.thread().json()['id']
+        self.send(self.as_bob, 'post', f'/api/forum/{tid}/', {'body': 'Bob'})
         self.assertEqual(self.send(self.as_bob, 'delete', f'/api/forum/{tid}/').status_code, 403)
+        self.assertEqual(self.send(self.as_eve, 'delete', f'/api/forum/{tid}/').status_code, 403)
         self.assertEqual(self.send(self.as_nelly, 'delete', f'/api/forum/{tid}/').status_code, 204)
 
     def test_another_browser_cannot_delete_my_posts(self):

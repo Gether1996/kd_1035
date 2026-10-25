@@ -205,8 +205,8 @@ def threads(request):
 @permission_classes([AllowAny])
 def thread(request, thread_id):
     """GET ?after=<message id>: the thread and its latest messages (only the newer ones with after – the open room
-    asks again every few seconds). POST {body}: a message. DELETE: the whole thread – its author while all its
-    messages are theirs, the superadmin always."""
+    asks again every few seconds). POST {body}: a message. DELETE: the whole thread with every message in it – only
+    its author or the superadmin (Gether 25. 10. 2026)."""
     mine = Mine(request)
     item = get_object_or_404(ForumThread, pk=thread_id)
 
@@ -225,8 +225,7 @@ def thread(request, thread_id):
         )
 
     if request.method == 'DELETE':
-        own = item.pk in mine.threads and not item.posts.exclude(pk__in=mine.posts).exists()
-        if not (request.user.is_superuser or own):
+        if not (request.user.is_superuser or item.pk in mine.threads):
             return Response({'detail': 'forbidden'}, status=403)
         item.delete()
         return Response(status=204)
