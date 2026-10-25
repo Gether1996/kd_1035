@@ -18,6 +18,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { Auth } from '../../core/auth';
+import { FORUM_SEEN_KEY, ForumSeen, ForumUnreadCount, forumUnread, readForumSeen } from '../../core/forum-unread';
 import { I18n } from '../../core/i18n/i18n';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { Seo } from '../../core/seo';
@@ -34,7 +35,21 @@ export interface ForumThread {
   posts: number;
   /** started in this browser */
   mine: boolean;
+  /** the superadmin keeps it on top */
+  pinned: boolean;
+  /** the newest message, shortened (the list) */
+  last: string;
 }
+
+type Seen = ForumSeen;
+
+/** a message's text cut into plain text and web addresses (made links) */
+interface Part {
+  text: string;
+  href?: string;
+}
+
+const URL_RE = /\bhttps?:\/\/[^\s<>"]+/g;
 
 export interface ForumPost {
   id: number;
@@ -57,9 +72,12 @@ type ErrorKey = 'empty' | 'invalid' | 'cooldown' | 'links' | 'busy' | 'failed';
 const API = '/api/forum/';
 /** the open room asks for new messages this often (only while the tab is visible) */
 const POLL_MS = 10_000;
-/** when this browser last opened each thread – the "nové" badge in the list; a per-viewer convenience only */
-const SEEN_KEY = 'kd1035.forum.seen';
-
+/** what is typed in a thread and not sent yet – kept while the tab lives (the 5-minute pause, a look elsewhere) */
+const DRAFT_KEY = 'kd1035.forum.draft.';
+/** the list asks again this often while it is open and the tab visible */
+const LIST_POLL_MS = 30_000;
+/** the message box counts the characters from here on */
+const COUNT_FROM = 800;
 /**
  * /forum – the kingdom's anonymous room (Gether 25. 10. 2026: "spoločná inkognito roomka … ako na WhatsAppe alebo
  * Discorde, nič komplikované"): the threads, and a thread (?vlakno=<id>) as a chat. In the account menu of signed-in
@@ -79,6 +97,7 @@ export class ForumPage {
   protected readonly t = this.i18n.t;
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly unread = inject(ForumUnreadCount);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   /** the open thread from ?vlakno= */
@@ -120,7 +139,11 @@ export class ForumPage {
   private readonly now = signal(Date.now());
   protected readonly wait = computed(() => Math.max(0, Math.ceil((this.until() - this.now()) / 1000)));
   private opened = Date.now();
-  private readonly seen = signal<Record<string, string>>({});
+  private readonly seen = signal<Record<string, Seen>>({});
+  /** the first message that came since this browser last read the thread – "Nové správy" above it */
+  protected readonly unreadFrom = signal<number | null>(null);
+  private listPolled = 0;
+  protected readonly countFrom = COUNT_FROM;
 
   private readonly chat = viewChild<ElementRef<HTMLElement>>('chat');
 
@@ -142,9 +165,9 @@ export class ForumPage {
       this.seen.set(this.readSeen());
       const tick = setInterval(() => {
         this.now.set(Date.now());
-        if (this.threadId() && document.visibilityState === 'visible' && Date.now() - this.polled >= POLL_MS) {
-          void this.poll();
-        }
+        if (document.visibilityState !== 'visible') return;
+        if (this.threadId() && Date.now() - this.polled >= POLL_MS) void this.poll();
+        if (!this.threadId() && this.threads() && Date.now() - this.listPolled >= LIST_POLL_MS) void this.loadList(true);
       }, 1000);
       destroyRef.onDestroy(() => clearInterval(tick));
     });
@@ -167,14 +190,17 @@ export class ForumPage {
 
   // ---------------------------------------------------------------- list
 
-  private async loadList(): Promise<void> {
-    this.listFailed.set(false);
+  /** the threads; `quiet` = the list asking again on its own – a failure keeps what is shown */
+  private async loadList(quiet = false): Promise<void> {
+    this.listPolled = Date.now();
+    if (!quiet) this.listFailed.set(false);
     try {
       const res = await firstValueFrom(this.http.get<{ threads: ForumThread[]; wait: number }>(API));
       this.threads.set(res.threads);
+      this.seen.set(this.readSeen());
       this.setWait(res.wait);
     } catch {
-      this.listFailed.set(true);
+      if (!quiet) this.listFailed.set(true);
     }
   }
 
@@ -200,9 +226,16 @@ export class ForumPage {
     void this.router.navigate([], { queryParams: { vlakno: created.id } });
   }
 
+  /** messages since this browser last read the thread – also in my own thread when someone answered */
   protected isNew(thread: ForumThread): boolean {
+    return forumUnread(thread, this.seen());
+  }
+
+  /** "3 nové" when the count is known, else just "nové" */
+  protected newLabel(thread: ForumThread): string {
     const seen = this.seen()[thread.id];
-    return !thread.mine && (!seen || seen < thread.last_post_at);
+    const fresh = seen && seen.n >= 0 ? thread.posts - seen.n : 0;
+    return fresh > 0 ? plural(fresh, this.t().forum.freshCount) : this.t().forum.fresh;
   }
 
   protected count(thread: ForumThread): string {
@@ -217,14 +250,20 @@ export class ForumPage {
     this.threadState.set('loading');
     this.thread.set(null);
     this.posts.set([]);
-    this.message.set('');
+    this.message.set(this.readDraft(id));
+    this.unreadFrom.set(null);
     try {
       const res = await this.fetchThread(id);
       if (this.threadId() !== id) return;
       this.posts.set(res.posts);
       this.threadState.set('ready');
+      // "Nové správy" above the first message from someone else since the last visit (none on the first one)
+      const before = this.readSeen()[id]?.at;
+      const first = before ? res.posts.find((p) => !p.mine && p.at > before) : undefined;
+      this.unreadFrom.set(first?.id ?? null);
       this.markSeen(res.thread);
-      this.scrollDown(true);
+      if (first) this.scrollTo(first.id);
+      else this.scrollDown(true);
     } catch (err) {
       if (this.threadId() !== id) return;
       this.threadState.set(err instanceof HttpErrorResponse && err.status === 404 ? 'gone' : 'failed');
@@ -240,6 +279,7 @@ export class ForumPage {
         posts: ForumPost[];
         edited?: ForumPost[];
         likes?: Record<string, number>;
+        window?: number;
         now: string;
         wait: number;
       }>(
@@ -264,10 +304,13 @@ export class ForumPage {
       // texts their authors changed meanwhile
       const edited = new Map((res.edited ?? []).map((p) => [p.id, p]));
       if (edited.size) this.posts.update((posts) => posts.map((p) => edited.get(p.id) ?? p));
-      // the hearts others gave meanwhile
+      // the hearts others gave meanwhile, and the messages their authors deleted (missing from the window)
       const likes = res.likes ?? {};
+      const window = res.window ?? 0;
       this.posts.update((posts) =>
-        posts.map((p) => ((likes[p.id] ?? 0) === p.likes ? p : { ...p, likes: likes[p.id] ?? 0 })),
+        posts
+          .filter((p) => p.id < window || p.id in likes || p.id > (last ?? 0))
+          .map((p) => (p.id in likes && likes[p.id] !== p.likes ? { ...p, likes: likes[p.id] } : p)),
       );
       if (!res.posts.length) return;
       const known = new Set(this.posts().map((p) => p.id));
@@ -289,7 +332,7 @@ export class ForumPage {
     const reply = this.replyTo()?.id ?? null;
     const post = await this.write<ForumPost>(`${API}${id}/`, { body, website: trap.value, reply_to: reply });
     if (!post || this.threadId() !== id) return;
-    this.message.set('');
+    this.setMessage('');
     this.replyTo.set(null);
     this.posts.update((posts) => [...posts.filter((p) => p.id !== post.id), post]);
     this.thread.update((t) => (t ? { ...t, posts: t.posts + 1, last_post_at: post.at } : t));
@@ -326,6 +369,53 @@ export class ForumPage {
     } catch {
       this.error.set('failed');
     }
+  }
+
+  /** the superadmin keeps the thread on top of the list, or lets it go */
+  protected async togglePin(): Promise<void> {
+    const thread = this.thread();
+    if (!thread) return;
+    try {
+      this.thread.set(await firstValueFrom(this.http.patch<ForumThread>(`${API}${thread.id}/`, { pinned: !thread.pinned })));
+    } catch {
+      this.error.set('failed');
+    }
+  }
+
+  protected setMessage(text: string): void {
+    this.message.set(text);
+    const id = this.threadId();
+    if (!id) return;
+    try {
+      if (text.trim()) sessionStorage.setItem(DRAFT_KEY + id, text);
+      else sessionStorage.removeItem(DRAFT_KEY + id);
+    } catch {
+      // private mode – nothing kept
+    }
+  }
+
+  private readDraft(id: number): string {
+    try {
+      return sessionStorage.getItem(DRAFT_KEY + id) ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** a message's text with its web addresses as links (rel="nofollow ugc", a new tab) */
+  protected parts(body: string): Part[] {
+    const parts: Part[] = [];
+    let from = 0;
+    for (const match of body.matchAll(URL_RE)) {
+      // a full stop or a bracket after an address is the sentence's, not the address's
+      const href = match[0].replace(/[.,;:!?)\]]+$/, '');
+      const at = match.index ?? 0;
+      if (at > from) parts.push({ text: body.slice(from, at) });
+      parts.push({ text: href, href });
+      from = at + href.length;
+    }
+    if (from < body.length) parts.push({ text: body.slice(from) });
+    return parts;
   }
 
   protected startEdit(target: ForumPost | 'title'): void {
@@ -473,6 +563,15 @@ export class ForumPage {
     }).format(date);
   }
 
+  /** the room scrolled so that this message (the first unread one) is near its top */
+  private scrollTo(id: number): void {
+    setTimeout(() => {
+      const box = this.chat()?.nativeElement;
+      const target = box?.querySelector<HTMLElement>(`#forum-post-${id}`);
+      if (box && target) box.scrollTop = Math.max(0, target.offsetTop - box.offsetTop - 48);
+    });
+  }
+
   private scrollDown(always: boolean): void {
     setTimeout(() => {
       const box = this.chat()?.nativeElement;
@@ -482,25 +581,21 @@ export class ForumPage {
     });
   }
 
-  private readSeen(): Record<string, string> {
-    try {
-      const value = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}');
-      return value && typeof value === 'object' ? value : {};
-    } catch {
-      return {};
-    }
+  private readSeen(): Record<string, Seen> {
+    return readForumSeen();
   }
 
   private markSeen(thread: ForumThread | null): void {
     if (!thread || !this.isBrowser) return;
-    const seen: Record<string, string> = { ...this.readSeen(), [thread.id]: thread.last_post_at };
+    const seen: Record<string, Seen> = { ...this.readSeen(), [thread.id]: { at: thread.last_post_at, n: thread.posts } };
     // the newest 200 threads are enough
-    const kept: Record<string, string> = Object.fromEntries(Object.entries(seen).slice(-200));
+    const kept: Record<string, Seen> = Object.fromEntries(Object.entries(seen).slice(-200));
     this.seen.set(kept);
     try {
-      localStorage.setItem(SEEN_KEY, JSON.stringify(kept));
+      localStorage.setItem(FORUM_SEEN_KEY, JSON.stringify(kept));
     } catch {
       // private mode – the badge just shows again
     }
+    this.unread.recount();
   }
 }

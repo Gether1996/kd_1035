@@ -23,7 +23,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core import signing
 from django.db import transaction
-from django.db.models import Count, F, Max
+from django.db.models import Count, F, Max, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -50,8 +50,9 @@ SALT = 'accounts.forum'
 KEEP_POSTS = 150
 KEEP_THREADS = 60
 KEEP_LIKES = 300
-# the quoted message above a reply
+# the quoted message above a reply, the last message under a thread's title in the list
 QUOTE = 140
+PREVIEW = 90
 # the whole forum in the last hour – a bot with many IPs and fresh cookies still stops here
 BUSY_POSTS = 120
 BUSY_THREADS = 15
@@ -97,7 +98,8 @@ class ThreadSerializer(PostSerializer, TitleSerializer):
 
 class Mine:
     """The browser's own forum cookie: {u: the signed-in user it belongs to (another account in the same browser starts
-    empty), p: my message ids, t: my thread ids, a: {thread id: my number in it}, l: when I last wrote (unix), k: the messages I like}"""
+    empty), p: my message ids, t: my thread ids, a: {thread id: my number in it}, l: when I last wrote (unix), k: the
+    messages I like}"""
 
     def __init__(self, request):
         self.user = request.user.pk
@@ -153,7 +155,7 @@ class Mine:
         return response
 
 
-def thread_data(thread: ForumThread, mine: Mine, posts: int) -> dict:
+def thread_data(thread: ForumThread, mine: Mine, posts: int, last: str = '') -> dict:
     return {
         'id': thread.pk,
         'title': thread.title,
@@ -161,7 +163,13 @@ def thread_data(thread: ForumThread, mine: Mine, posts: int) -> dict:
         'last_post_at': iso(thread.last_post_at),
         'posts': posts,
         'mine': thread.pk in mine.threads,
+        'pinned': thread.pinned,
+        'last': shorten(last, PREVIEW),
     }
+
+
+def shorten(text: str, length: int) -> str:
+    return text if len(text) <= length else text[: length - 1].rstrip() + '…'
 
 
 def post_data(post: ForumPost, mine: Mine) -> dict:
@@ -180,8 +188,7 @@ def post_data(post: ForumPost, mine: Mine) -> dict:
 
 def quote(post: ForumPost, mine: Mine) -> dict:
     """the answered message as the reply shows it above its text"""
-    body = post.body if len(post.body) <= QUOTE else post.body[: QUOTE - 1] + '…'
-    return {'id': post.pk, 'alias': post.alias, 'mine': post.pk in mine.posts, 'body': body}
+    return {'id': post.pk, 'alias': post.alias, 'mine': post.pk in mine.posts, 'body': shorten(post.body, QUOTE)}
 
 
 def no_links(request, texts: list[str]) -> Response | None:
@@ -226,12 +233,23 @@ def alias_in(thread: ForumThread, mine: Mine) -> int:
 @authentication_classes([Csrf])
 @permission_classes([AllowAny])
 def threads(request):
-    """GET: the threads, the latest activity first. POST {title, body}: a new thread with its first message."""
+    """GET: the threads, pinned and the latest activity first (?brief=1: only id, time and mine – the account menu).
+    POST {title, body}: a new thread with its first message."""
     mine = Mine(request)
+    if request.method == 'GET' and request.query_params.get('brief'):
+        # the account menu's "new messages" (core/forum-unread.ts): no counts, no texts
+        rows = ForumThread.objects.order_by('-last_post_at', '-pk')[:MAX_THREADS]
+        return Response(
+            {'threads': [{'id': t.pk, 'last_post_at': iso(t.last_post_at), 'mine': t.pk in mine.threads} for t in rows]}
+        )
     if request.method == 'GET':
-        # an aggregate drops Meta.ordering – the latest activity first, said again
-        rows = ForumThread.objects.annotate(count=Count('posts')).order_by('-last_post_at', '-pk')[:MAX_THREADS]
-        return Response({'threads': [thread_data(t, mine, t.count) for t in rows], 'wait': mine.wait()})
+        newest = ForumPost.objects.filter(thread=OuterRef('pk')).order_by('-created_at', '-pk').values('body')[:1]
+        # an aggregate drops Meta.ordering – pinned, then the latest activity first, said again
+        rows = (
+            ForumThread.objects.annotate(count=Count('posts'), last=Subquery(newest))
+            .order_by('-pinned', '-last_post_at', '-pk')[:MAX_THREADS]
+        )
+        return Response({'threads': [thread_data(t, mine, t.count, t.last or '') for t in rows], 'wait': mine.wait()})
 
     serializer = ThreadSerializer(data=request.data)
     if not serializer.is_valid():
@@ -255,8 +273,9 @@ def threads(request):
 def thread(request, thread_id):
     """GET ?after=<message id>&since=<time>: the thread and its latest messages (with after only the newer ones, with
     since also the older ones edited from then on – the open room asks again every few seconds; `now` is the next
-    since). POST {body}: a message. PATCH {title}: a new title – its author only. DELETE: the whole thread with every
-    message in it – only its author or the superadmin (Gether 25. 10. 2026)."""
+    since). POST {body}: a message. PATCH {title}: a new title – its author only; PATCH {pinned}: on top of the list
+    – the superadmin only. DELETE: the whole thread with every message in it – only its author or the superadmin
+    (Gether 25. 10. 2026)."""
     mine = Mine(request)
     item = get_object_or_404(ForumThread, pk=thread_id)
 
@@ -274,18 +293,28 @@ def thread(request, thread_id):
             if since:
                 edited = item.posts.select_related('reply_to').filter(pk__lte=int(after), edited_at__gte=since)
         latest = list(posts.order_by('-created_at', '-pk')[:MAX_POSTS])[::-1]
-        # the open room refreshes the hearts of the messages it already shows
-        likes = item.posts.filter(likes__gt=0).order_by('-pk').values_list('pk', 'likes')[:MAX_POSTS]
+        # every message of the window with its hearts: the open room refreshes the counts and drops the deleted ones
+        # (those from `window` on that are missing here)
+        likes = list(item.posts.order_by('-pk').values_list('pk', 'likes')[:MAX_POSTS])
+        window = likes[-1][0] if len(likes) == MAX_POSTS else 0
         return Response(
             {
                 'thread': thread_data(item, mine, item.posts.count()),
                 'posts': [post_data(p, mine) for p in latest],
                 'edited': [post_data(p, mine) for p in edited],
                 'likes': {str(pk): count for pk, count in likes},
+                'window': window,
                 'now': iso(now),
                 'wait': mine.wait(),
             }
         )
+
+    if request.method == 'PATCH' and 'pinned' in request.data:
+        if not request.user.is_superuser:
+            return Response({'detail': 'forbidden'}, status=403)
+        item.pinned = request.data['pinned'] is True
+        item.save(update_fields=['pinned'])
+        return Response(thread_data(item, mine, item.posts.count()))
 
     if request.method == 'PATCH':
         if item.pk not in mine.threads:

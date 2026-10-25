@@ -74,6 +74,10 @@
                   <li>
                     <a [routerLink]="item.link" routerLinkActive="is-active" ariaCurrentWhenActive="page">
                       <svg [appIcon]="item.icon"></svg>{{ item.label }}
+                      @if (item.badge) {
+                        <span class="count-badge" aria-hidden="true">{{ item.badge > 99 ? '99+' : item.badge }}</span>
+                        <span class="sr-only">({{ t.unread }}: {{ item.badge }})</span>
+                      }
                     </a>
                   </li>
                 }
@@ -170,6 +174,10 @@
               <a class="drawer__page" [routerLink]="item.link" (click)="close()">
                 <svg [appIcon]="item.icon"></svg>
                 <span>{{ item.label }}</span>
+                @if (item.badge) {
+                  <span class="count-badge" aria-hidden="true">{{ item.badge > 99 ? '99+' : item.badge }}</span>
+                  <span class="sr-only">({{ t.unread }}: {{ item.badge }})</span>
+                }
                 <svg appIcon="chevron-right"></svg>
               </a>
             </li>

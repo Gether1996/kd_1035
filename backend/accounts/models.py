@@ -611,9 +611,11 @@ class ForumThread(models.Model):
     last_post_at = models.DateTimeField('posledný príspevok', db_index=True)
     # the last "Anonym N" handed out in the thread
     aliases = models.PositiveIntegerField('anonymov', default=0)
+    # the superadmin keeps it on top of the list (rules, a KvK thread)
+    pinned = models.BooleanField('pripnuté', default=False)
 
     class Meta:
-        ordering = ['-last_post_at', '-pk']
+        ordering = ['-pinned', '-last_post_at', '-pk']
         verbose_name = 'vlákno fóra'
         verbose_name_plural = 'vlákna fóra'
 

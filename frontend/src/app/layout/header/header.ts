@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth } from '../../core/auth';
+import { ForumUnreadCount } from '../../core/forum-unread';
 import { I18n } from '../../core/i18n/i18n';
 import { Scroll } from '../../core/scroll';
 import { Icon, IconName } from '../../shared/icon';
@@ -43,6 +44,7 @@ export class Header {
   protected readonly i18n = inject(I18n);
   protected readonly scroll = inject(Scroll);
   protected readonly auth = inject(Auth);
+  private readonly forumUnread = inject(ForumUnreadCount);
   protected readonly menuOpen = signal(false);
   private readonly burger = viewChild<ElementRef<HTMLButtonElement>>('burger');
   /** Escape in the account menu hides it until the pointer or the focus leaves */
@@ -60,7 +62,7 @@ export class Header {
   });
 
   /** the signed-in player's pages: the account menu (desktop) and the mobile menu */
-  protected readonly accountItems = computed<{ label: string; link: string; icon: IconName }[]>(() => {
+  protected readonly accountItems = computed<{ label: string; link: string; icon: IconName; badge?: number }[]>(() => {
     const t = this.i18n.t().nav;
     return [
       { label: t.account, link: this.i18n.path('account'), icon: 'users' },
@@ -70,7 +72,7 @@ export class Header {
       ...(this.auth.user()?.local ? [] : [{ label: t.reminders, link: this.i18n.path('reminders'), icon: 'bell' as const }]),
       { label: t.kvk, link: this.i18n.path('kvk'), icon: 'swords' },
       // the anonymous forum – every signed-in player (Gether 25. 10. 2026); the address works without signing in too
-      { label: t.forum, link: this.i18n.path('forum'), icon: 'messages-square' },
+      { label: t.forum, link: this.i18n.path('forum'), icon: 'messages-square', badge: this.forumUnread.count() },
       // the KvK evaluation – the superadmin and the players let in (Gether 13. 10. 2026)
       ...(this.auth.canEvaluate()
         ? [{ label: t.evaluation, link: this.i18n.path('evaluation'), icon: 'scale' as const }]

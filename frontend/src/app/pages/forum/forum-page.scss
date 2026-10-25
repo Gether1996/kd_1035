@@ -66,6 +66,22 @@
   }
 }
 
+// in a thread: one line instead of the box
+.anon-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  color: var(--gold-300);
+
+  .icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+}
+
 // ---------------------------------------------------------------- the list
 
 .bar {
@@ -130,8 +146,24 @@
   overflow-wrap: anywhere;
 }
 
+.thread__title .thread__pin {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 4px;
+  vertical-align: -2px;
+  color: var(--gold-400);
+}
+
+.thread__last {
+  overflow: hidden;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .thread__meta {
-  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -152,7 +184,7 @@
 }
 
 .thread__go {
-  grid-row: 1 / span 2;
+  grid-row: 1 / span 3;
   grid-column: 2;
   width: 18px;
   height: 18px;
@@ -224,6 +256,25 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;
+}
+
+// "Nové správy" above the first message since the last visit
+.chat__new {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red-300);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid color-mix(in srgb, var(--red-500) 60%, transparent);
+  }
 }
 
 .chat__older {
@@ -460,6 +511,36 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.msg__body a {
+  color: var(--gold-300);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.status__count {
+  float: right;
+  font-variant-numeric: tabular-nums;
+
+  &.is-full {
+    color: var(--red-300);
+  }
+}
+
+// a phone has no Ctrl
+.status__hint {
+  float: right;
+  color: var(--text-mute);
+
+  @media (hover: none) {
+    display: none;
+  }
+}
+
+.icon-btn.is-on {
+  border-color: var(--line-strong);
+  color: var(--gold-300);
 }
 
 .msg__body {

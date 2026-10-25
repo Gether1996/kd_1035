@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **25. 10. 2026 – v1.46.0:** Odpočet do začiatku KvK (20. 11. 2026 00:00 UTC) pod „1035“ na úvode, po štarte sa schová. Fórum: počet nových správ pri „Fórum“ v menu účtu, „3 nové“ pri vláknach a predel „Nové správy“, náhľad poslednej správy, pripnuté vlákna (superadmin), klikateľné odkazy, zmazané správy zmiznú aj ostatným, rozpísaná správa sa nestratí, kratší riadok o anonymite vo vlákne, počítadlo znakov.
 - **25. 10. 2026 – v1.45.0:** Fórum: lajky správ (srdiečko s počtom), odpoveď na konkrétnu správu s citáciou a na mobile sa pole na písanie posunie nad klávesnicu.
 - **25. 10. 2026 – v1.44.2:** Fórum: autor si upraví svoju správu (značka „upravené“, ostatným sa zmena načíta sama) a zakladateľ názov vlákna.
 - **25. 10. 2026 – v1.44.1:** Fórum: celé vlákno zmaže jeho zakladateľ kedykoľvek (aj s odpoveďami ostatných), správu jej autor, všetko superadmin – nikto iný.

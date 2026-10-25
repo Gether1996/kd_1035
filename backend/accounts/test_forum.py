@@ -220,3 +220,27 @@ class Forum(TestCase):
         self.send(self.as_nelly, 'delete', f'/api/forum/posts/{first}/')
         self.assertIsNone(self.as_bob.get(f'/api/forum/{tid}/').json()['posts'][0]['reply'])
 
+    def test_the_list_shows_the_last_message_and_pinned_threads_first(self):
+        old = self.thread(title='Pravidlá', body='Buďte slušní.').json()['id']
+        self.thread(self.as_bob, title='Rally', body='x' * 200)
+        listed = self.as_eve.get('/api/forum/').json()['threads']
+        self.assertEqual([t['title'] for t in listed], ['Rally', 'Pravidlá'])
+        self.assertEqual((len(listed[0]['last']), listed[1]['last']), (90, 'Buďte slušní.'))
+        self.assertEqual(self.send(self.as_nelly, 'patch', f'/api/forum/{old}/', {'pinned': True}).status_code, 403)
+        self.assertTrue(self.send(self.as_admin, 'patch', f'/api/forum/{old}/', {'pinned': True}).json()['pinned'])
+        self.assertEqual([t['title'] for t in self.as_eve.get('/api/forum/').json()['threads']], ['Pravidlá', 'Rally'])
+
+    def test_the_open_room_learns_of_deleted_messages(self):
+        """every message of the window comes with its hearts – one missing there was deleted"""
+        tid = self.thread().json()['id']
+        self.send(self.as_bob, 'post', f'/api/forum/{tid}/', {'body': 'Bob'})
+        first, bobs = ForumPost.objects.values_list('pk', flat=True)
+        self.send(self.as_bob, 'delete', f'/api/forum/posts/{bobs}/')
+        polled = self.as_nelly.get(f'/api/forum/{tid}/?after={bobs}').json()
+        self.assertEqual((polled['likes'], polled['window']), ({str(first): 0}, 0))
+
+    def test_the_brief_list_of_the_account_menu(self):
+        tid = self.thread().json()['id']
+        brief = self.as_nelly.get('/api/forum/?brief=1').json()['threads']
+        self.assertEqual([(t['id'], t['mine'], set(t)) for t in brief], [(tid, True, {'id', 'last_post_at', 'mine'})])
+

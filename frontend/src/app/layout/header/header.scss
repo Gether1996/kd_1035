@@ -483,6 +483,25 @@
   pointer-events: none;
 }
 
+// new forum messages next to "Fórum" (Gether 25. 10. 2026)
+.count-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--red-500);
+  color: var(--text);
+  font: 700 0.6875rem/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.drawer__page .count-badge {
+  margin-left: 0;
+}
+
 .alert-badge--inline {
   position: static;
   flex-shrink: 0;

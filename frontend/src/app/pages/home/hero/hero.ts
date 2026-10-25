@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { I18n } from '../../../core/i18n/i18n';
 import { Icon } from '../../../shared/icon';
 import { ScrollFx } from '../../../shared/scroll-fx';
+import { KvkCountdown } from './kvk-countdown';
 
 interface Layer {
   src: string;
@@ -13,7 +14,7 @@ interface Layer {
 
 @Component({
   selector: 'app-hero',
-  imports: [RouterLink, ScrollFx, Icon],
+  imports: [RouterLink, ScrollFx, Icon, KvkCountdown],
   templateUrl: './hero.html',
   styleUrl: './hero.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

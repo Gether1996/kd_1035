@@ -38,6 +38,7 @@ export type IconName =
   | 'menu'
   | 'messages-square'
   | 'pencil'
+  | 'pin'
   | 'plus'
   | 'repeat'
   | 'reply'

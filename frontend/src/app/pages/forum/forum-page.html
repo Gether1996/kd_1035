@@ -2,15 +2,20 @@
 <app-page-header [crumbs]="crumbs()" [eyebrow]="f.eyebrow" [title]="f.title" [intro]="f.intro" />
 
 <div class="container content">
-  <!-- said where everyone sees it first (Gether 25. 10. 2026: "zdôrazni, že všetky príspevky sú anonymné") -->
-  <aside class="anon" [attr.aria-label]="f.anonymousTitle">
-    <span class="anon__badge" aria-hidden="true"><svg appIcon="eye-off"></svg></span>
-    <div>
-      <p class="anon__title">{{ f.anonymousTitle }}</p>
-      <p class="anon__text">{{ f.anonymousText }}</p>
-      <p class="anon__text">{{ f.pauseText }}</p>
-    </div>
-  </aside>
+  <!-- said where everyone sees it first (Gether 25. 10. 2026: "zdôrazni, že všetky príspevky sú anonymné");
+       in a thread one line, so a phone keeps room for the chat -->
+  @if (threadId()) {
+    <p class="anon-line"><svg appIcon="eye-off"></svg>{{ f.anonymousShort }}</p>
+  } @else {
+    <aside class="anon" [attr.aria-label]="f.anonymousTitle">
+      <span class="anon__badge" aria-hidden="true"><svg appIcon="eye-off"></svg></span>
+      <div>
+        <p class="anon__title">{{ f.anonymousTitle }}</p>
+        <p class="anon__text">{{ f.anonymousText }}</p>
+        <p class="anon__text">{{ f.pauseText }}</p>
+      </div>
+    </aside>
+  }
 
   @if (threadId()) {
     <a class="back" [routerLink]="i18n.path('forum')"><svg appIcon="arrow-left"></svg>{{ f.back }}</a>
@@ -61,6 +66,19 @@
                 </button>
               }
             }
+            @if (superuser()) {
+              <button
+                type="button"
+                class="icon-btn"
+                [class.is-on]="th.pinned"
+                [attr.aria-pressed]="th.pinned"
+                [attr.aria-label]="th.pinned ? f.unpin : f.pin"
+                [title]="th.pinned ? f.unpin : f.pin"
+                (click)="togglePin()"
+              >
+                <svg appIcon="pin"></svg>
+              </button>
+            }
             @if (canDeleteThread()) {
               @if (confirm() === 'thread') {
                 <span class="confirm">
@@ -82,11 +100,14 @@
             }
           </header>
 
-          <ol class="chat" #chat [attr.aria-label]="th.title">
+          <ol class="chat" #chat [attr.aria-label]="th.title" aria-live="polite" aria-relevant="additions">
             @if (th.posts > posts().length) {
               <li class="chat__older">{{ f.older }}</li>
             }
             @for (p of posts(); track p.id) {
+              @if (p.id === unreadFrom()) {
+                <li class="chat__new"><span>{{ f.unread }}</span></li>
+              }
               <li class="msg" [id]="'forum-post-' + p.id" [class.is-mine]="p.mine" [class.is-flash]="flash() === p.id">
                 <p class="msg__head">
                   <span class="msg__who">{{ who(p) }}</span>
@@ -153,7 +174,7 @@
                     </span>
                   </form>
                 } @else {
-                  <p class="msg__body">{{ p.body }}</p>
+                  <p class="msg__body">@for (part of parts(p.body); track $index) {@if (part.href) {<a [href]="part.href" target="_blank" rel="noopener noreferrer nofollow ugc">{{ part.text }}</a>} @else {{{ part.text }}}}</p>
                 }
                 <div class="msg__foot">
                   @if (p.mine) {
@@ -216,7 +237,7 @@
               maxlength="1000"
               [placeholder]="f.placeholder"
               [value]="message()"
-              (input)="message.set(box.value)"
+              (input)="setMessage(box.value)"
               (keydown)="keydown($event, trap)"
               (focus)="keepVisible()"
             ></textarea>
@@ -236,6 +257,11 @@
             }
             @if (wait()) {
               {{ waitText() }}
+            }
+            @if (message().length > countFrom) {
+              <span class="status__count" [class.is-full]="message().length >= 1000">{{ message().length }}/1000</span>
+            } @else if (!wait() && !error()) {
+              <span class="status__hint">{{ f.sendHint }}</span>
             }
           </p>
         </section>
@@ -309,11 +335,19 @@
           @for (th of list; track th.id) {
             <li>
               <a class="thread" [routerLink]="i18n.path('forum')" [queryParams]="{ vlakno: th.id }">
-                <span class="thread__title">{{ th.title }}</span>
+                <span class="thread__title">
+                  @if (th.pinned) {
+                    <svg class="thread__pin" appIcon="pin" [attr.aria-label]="f.pinned"></svg>
+                  }
+                  {{ th.title }}
+                </span>
+                @if (th.last) {
+                  <span class="thread__last">{{ th.last }}</span>
+                }
                 <span class="thread__meta">
                   {{ count(th) }} · <time [attr.datetime]="th.last_post_at">{{ when(th.last_post_at) }}</time>
                   @if (isNew(th)) {
-                    <span class="tag tag--new">{{ f.fresh }}</span>
+                    <span class="tag tag--new">{{ newLabel(th) }}</span>
                   }
                   @if (th.mine) {
                     <span class="tag">{{ f.mineThread }}</span>
