@@ -262,8 +262,9 @@ export class ForumPage {
       const first = before ? res.posts.find((p) => !p.mine && p.at > before) : undefined;
       this.unreadFrom.set(first?.id ?? null);
       this.markSeen(res.thread);
-      if (first) this.scrollTo(first.id);
-      else this.scrollDown(true);
+      // the first visit reads from the top (long posts); back in the thread: the new messages, or the newest one
+      if (first) this.settle(() => this.scrollTo(first.id, false));
+      else if (before) this.settle(() => this.scrollDown(true, false));
     } catch (err) {
       if (this.threadId() !== id) return;
       this.threadState.set(err instanceof HttpErrorResponse && err.status === 404 ? 'gone' : 'failed');
@@ -563,22 +564,40 @@ export class ForumPage {
     }).format(date);
   }
 
-  /** the room scrolled so that this message (the first unread one) is near its top */
-  private scrollTo(id: number): void {
-    setTimeout(() => {
-      const box = this.chat()?.nativeElement;
-      const target = box?.querySelector<HTMLElement>(`#forum-post-${id}`);
-      if (box && target) box.scrollTop = Math.max(0, target.offsetTop - box.offsetTop - 48);
-    });
+  /** the page scrolled so that this message (the first unread one) is just under the header */
+  private scrollTo(id: number, later = true): void {
+    const go = () => this.chat()?.nativeElement.querySelector(`#forum-post-${id}`)?.scrollIntoView({ block: 'start' });
+    if (later) setTimeout(go);
+    else go();
   }
 
-  private scrollDown(always: boolean): void {
-    setTimeout(() => {
+  /** the newest message above the message box – always, or when the reader is already near the end */
+  private scrollDown(always: boolean, later = true): void {
+    const go = () => {
       const box = this.chat()?.nativeElement;
-      if (!box) return;
-      const near = box.scrollHeight - box.scrollTop - box.clientHeight < 160;
-      if (always || near) box.scrollTop = box.scrollHeight;
-    });
+      const last = box?.lastElementChild;
+      if (!box || !last) return;
+      const near = box.getBoundingClientRect().bottom - innerHeight < 320;
+      if (always || near) last.scrollIntoView({ block: 'end', behavior: always ? 'auto' : this.motion() });
+    };
+    if (later) setTimeout(go);
+    else go();
+  }
+
+  /**
+   * A scroll on opening a thread: once the messages are on the page, and once more a moment later – the app puts a new
+   * page at the top when its navigation ends, which can come after the messages. Not once the reader scrolled.
+   */
+  private settle(scroll: () => void): void {
+    let moved = false;
+    const stop = () => (moved = true);
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'] as const;
+    events.forEach((e) => addEventListener(e, stop, { once: true, passive: true }));
+    setTimeout(scroll);
+    setTimeout(() => {
+      if (!moved) scroll();
+      events.forEach((e) => removeEventListener(e, stop));
+    }, 450);
   }
 
   private readSeen(): Record<string, Seen> {
