@@ -200,8 +200,8 @@
                   <strong>{{ d.acclaim }}:</strong>
                   {{ int(settings().acclaim.benchmark) }} × {{ partText(r, 'power') }} × {{ partText(r, 'marches') }} ×
                   {{ partText(r, 'quality') }}
-                  @if (r.acclaim.floor > settings().acclaim.benchmark * r.acclaim.power * r.acclaim.marches * r.acclaim.quality) {
-                    → {{ int(r.acclaim.floor) }} ({{ d.floor }})
+                  @if (r.acclaim.surcharge) {
+                    + {{ surplusText(r) }}
                   }
                   @if (r.acclaim.t4) {
                     − {{ int(r.acclaim.t4) }} ({{ t4Text() }})

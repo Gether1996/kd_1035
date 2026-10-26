@@ -10,7 +10,6 @@ import {
   missingPairs,
   parsePowerList,
   pairTable,
-  percentile,
   quickMatch,
   skillFactor,
 } from './scoring';
@@ -197,55 +196,116 @@ describe('evaluation scoring', () => {
     expect(armamentPoints(S, m, null)).toMatchObject({ tiered: false, inscriptions: ((2 * 50 + 2 * 25 + 10) / 200) * 70 });
   });
 
-  it('PERCENTILE like the spreadsheet', () => {
-    expect(percentile([1, 2, 3, 4, 5], 10)).toBeCloseTo(1.4, 9);
-    expect(percentile([1, 2, 3, 4, 5], 90)).toBeCloseTo(4.6, 9);
-    expect(percentile([], 50)).toBe(0);
-  });
-
-  it('expects more marches with more power', () => {
-    expect([50, 63, 66, 72, 81.9, 82, 88, 120].map((p) => expectedMarches(S, p))).toEqual([1, 1, 2, 3, 3, 4, 5, 5]);
+  it('expects more marches with more power: the fewest whose recommended power carries it', () => {
+    // 66, 72, 82, 93, 105 M carry 1 … 5 marches
+    expect([50, 66, 66.5, 72, 81.9, 82, 88, 93, 94, 120].map((p) => expectedMarches(S, p))).toEqual([1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
     expect(expectedMarches(withPairs({ marches: { max: 3 } }), 120)).toBe(3);
   });
 
-  it('counts the best open-field marches; the acclaim is the benchmark × power × marches × quality', () => {
-    const settings = withPairs({ power: { auto: false } });
+  it('counts the best open-field marches; the acclaim is the benchmark × power^1.35 × marches^0.8 × quality', () => {
     // a pair of 50 points, legendary pieces without refine or iconic (50)
     const good = (id: number, kind: March['kind'] = 'archer') =>
       march({ id, kind, primary: 'Ivan IV', secondary: 'Achilles', attack: 10.1, defense: 9.5, health: 7, damage: 3.3, gold: 1, blue: 1, white: 2, gear: gear('gold', false, 0) });
     const marches = [good(1), good(2), good(3, 'garrison')];
-    const { rows, benchmark } = evaluate(settings, [player(1, marches, { power: 100 })], INDEX);
+    const { rows, benchmark } = evaluate(S, [player(1, marches, { power: 100 })], INDEX);
     const row = rows[0];
     // the benchmark of the variables: 102 M, 5 marches, the average march of the score 286.53
-    expect(benchmark).toEqual({ power: 102, marches: 5, quality: 286.53 / 5, powerBase: 60 });
+    expect(benchmark).toEqual({ power: 102, marches: 5, quality: 286.53 / 5 });
     // the garrison does not count
     expect(row.counted).toBe(2);
     expect(row.marches.map((m) => [m.march.id, m.counted, m.skipped])).toEqual([[1, true, null], [2, true, null], [3, false, 'kind']]);
     const one = (50 * 0.75 + 56.9157 * 0.25) * 0.5;
     expect(row.marchScore).toBeCloseTo(2 * one, 2);
     expect(row.quality).toBeCloseTo(one, 2);
-    // 100 M power asks for 5 marches: 3 missing – shown
-    expect([row.expected, row.missing]).toEqual([5, 3]);
-    // 2 marches: 66–72 M; the score moves it over half of the range at most (the spread 50 %)
-    const t = (2 * one - 20.95) / (78.51 - 20.95);
-    expect(row.recommended).toBe(Math.round(66 + t * 6 * 0.5));
-    expect(row.excess).toBe(100 - row.recommended!);
-    // the factors: power 100 / 102; the 5 marches 100 M asks for count as there (the player's fault, Gether
-    // 24. 10. 2026); the quality within ± 20 %
-    expect(row.acclaim.power).toBeCloseTo(100 / 102, 9);
+    // 2 marches carry 72 M – whatever their quality (Gether 26. 10. 2026); 100 M asks for 5: 3 missing
+    expect(row.recommended).toBe(72);
+    expect(row.excess).toBe(28);
+    expect([row.expected, row.missing, row.marchCount]).toEqual([5, 3, 5]);
+    // the factors: (100 / 102)^1.35; the 5 marches 100 M asks for count as there; the quality within ± 20 %
+    expect(row.acclaim.power).toBeCloseTo(Math.pow(100 / 102, 1.35), 9);
     expect(row.acclaim.marches).toBeCloseTo(1, 9);
     expect(row.acclaim.quality).toBeCloseTo(1 + 0.2 * (row.quality / (286.53 / 5) - 1), 9);
     const { power, marches: count, quality } = row.acclaim;
     expect(row.acclaim.required).toBe(Math.round((5_600_000 * power * count * quality) / 1000) * 1000);
   });
 
+  it('gives everyone with the same number of marches the same recommended power', () => {
+    const weak = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('epic', false, 0) });
+    const strong = (id: number) =>
+      march({ id, primary: 'Ivan IV', secondary: 'Achilles', attack: 12, defense: 12, health: 12, damage: 6, gold: 4, gear: gear('gold', true, 5) });
+    const rows = evaluate(
+      S,
+      [
+        player(1, [1, 2, 3, 4, 5].map(weak), { power: 95 }),
+        player(2, [6, 7, 8, 9, 10].map(strong), { power: 170 }),
+        player(3, [11, 12, 13].map(strong), { power: 107 }),
+        player(4, [14].map(weak), { power: 39, power_bonus: 2 }),
+      ],
+      INDEX,
+    ).rows;
+    expect(rows.map((r) => r.recommended)).toEqual([105, 105, 82, 68]);
+    // more power than the marches carry: red, and the marches the power asks for count (3 +2)
+    expect(rows.map((r) => r.missing)).toEqual([0, 0, 2, 0]);
+  });
+
+  it('adds acclaim for the power not even the full number of marches carries (Gether 26. 10. 2026: SKAPALS 170 M)', () => {
+    const same = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', false, 0) });
+    const marches = (n: number, from: number) => Array.from({ length: n }, (_, i) => same(from + i));
+    const [skapals, twoBig, full] = evaluate(
+      S,
+      [player(1, marches(5, 1), { power: 170 }), player(2, marches(2, 10), { power: 100 }), player(3, marches(5, 20), { power: 105 })],
+      INDEX,
+    ).rows;
+    // 5 marches carry 105 M: 65 M of it is surplus, 32 000 each on top of the curves
+    expect([skapals.acclaim.surplus, skapals.acclaim.surcharge]).toEqual([65, 65 * 32_000]);
+    const base = 5_600_000 * skapals.acclaim.power * skapals.acclaim.marches * skapals.acclaim.quality;
+    expect(skapals.acclaim.required).toBe(Math.round((base + 65 * 32_000) / 1000) * 1000);
+    // 100 M with 2 marches owes the 5 marches the power asks for, but no surplus – they carry it; 105 M is no surplus
+    expect([twoBig.acclaim.surplus, full.acclaim.surplus]).toEqual([0, 0]);
+    // not counting the missing marches: the power above the 72 M of the two marches is the surplus
+    const [counted] = evaluate(withPairs({ power: { expected: false } }), [player(4, marches(2, 30), { power: 100 })], INDEX).rows;
+    expect(counted.acclaim.surplus).toBe(28);
+    // switched off
+    const [off] = evaluate(withPairs({ power: { surplus: 0 } }), [player(5, marches(5, 40), { power: 170 })], INDEX).rows;
+    expect(off.acclaim.surcharge).toBe(0);
+    expect(off.acclaim.required).toBe(Math.round(base / 1000) * 1000);
+  });
+
+  it('is fair to small accounts (Gether 26. 10. 2026: a T4 player with 1 march and 40 M close to bigger ones)', () => {
+    const same = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', false, 0) });
+    const marches = (n: number, from: number) => Array.from({ length: n }, (_, i) => same(from + i));
+    const [small, legend, hanz, slim] = evaluate(
+      S,
+      [
+        player(1, marches(1, 1), { power: 39, t4: true }),
+        player(2, marches(2, 10), { power: 61, t4: true }),
+        player(3, marches(3, 20), { power: 80.5 }),
+        player(4, marches(5, 30), { power: 102 }),
+      ],
+      INDEX,
+    ).rows;
+    // no power counts as more than it is: 39 M is 39 M
+    expect(small.acclaim.power).toBeCloseTo(Math.pow(39 / 102, 1.35), 9);
+    expect(small.acclaim.marches).toBeCloseTo(Math.pow(1 / 5, 0.8), 9);
+    // the same quality: the parts multiply – a seventh of the 3-march T5 player at 80 M, a tenth of 5 marches at 102 M
+    expect(small.acclaim.required / hanz.acclaim.required).toBeCloseTo(Math.pow(39 / 80.5, 1.35) * Math.pow(1 / 3, 0.8) * 0.89, 2);
+    expect(small.acclaim.required / hanz.acclaim.required).toBeLessThan(0.2);
+    expect(small.acclaim.required / slim.acclaim.required).toBeLessThan(0.1);
+    // more power, more marches – more acclaim, every step
+    expect(small.acclaim.required).toBeLessThan(legend.acclaim.required);
+    expect(legend.acclaim.required).toBeLessThan(hanz.acclaim.required);
+    expect(hanz.acclaim.required).toBeLessThan(slim.acclaim.required);
+    // 40 M and 55 M with one march each do not owe the same any more
+    const [p40, p55] = evaluate(S, [player(5, [same(40)], { power: 40 }), player(6, [same(41)], { power: 55 })], INDEX).rows;
+    expect(p55.acclaim.required / p40.acclaim.required).toBeCloseTo(Math.pow(55 / 40, 1.35), 1);
+  });
+
   it('puts the power and the march count first (Gether 24. 10. 2026: 5 marches and more power vs 2 strong marches)', () => {
-    const settings = withPairs({ power: { auto: false } });
     const same = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', false, 0) });
     const strong = (id: number) =>
       march({ id, primary: 'Ivan IV', secondary: 'Achilles', attack: 12, defense: 12, health: 12, damage: 6, gold: 4, gear: gear('gold', true, 3) });
     const [five, two, twoStrong] = evaluate(
-      settings,
+      S,
       [
         player(1, [1, 2, 3, 4, 5].map(same), { power: 91 }),
         player(2, [same(6), same(7)], { power: 77 }),
@@ -253,33 +313,26 @@ describe('evaluation scoring', () => {
       ],
       INDEX,
     ).rows;
-    // 2 marches: a low recommended power (at most the row's upper bound 72 M)
-    expect(two.recommended).toBeLessThanOrEqual(72);
-    // the same quality: 77 M asks for 3 marches – 91 / 77 × 1 / 0.8
+    // 77 M asks for 3 marches: one missing
     expect(two.missing).toBe(1);
-    expect(two.acclaim.marches).toBeCloseTo(0.8, 9);
-    expect(five.acclaim.required / two.acclaim.required).toBeCloseTo((91 / 77) * (1 / 0.8), 1);
+    expect(two.acclaim.marches).toBeCloseTo(Math.pow(3 / 5, 0.8), 9);
+    expect(five.acclaim.required / two.acclaim.required).toBeCloseTo(Math.pow(91 / 77, 1.35) * Math.pow(5 / 3, 0.8), 1);
     // 100 M with 2 marches: the player's fault – owes as with the 5 marches the power asks for
-    const [big] = evaluate(settings, [player(6, [same(12), same(13)], { power: 100 })], INDEX).rows;
+    const [big] = evaluate(S, [player(6, [same(12), same(13)], { power: 100 })], INDEX).rows;
     expect(big.acclaim.marches).toBe(1);
     // a low power with 2 marches owes less for the 3 missing
-    const [small] = evaluate(settings, [player(7, [same(14), same(15)], { power: 68 })], INDEX).rows;
-    expect(small.acclaim.marches).toBeCloseTo(0.7, 9);
+    const [small] = evaluate(S, [player(7, [same(14), same(15)], { power: 68 })], INDEX).rows;
+    expect(small.acclaim.marches).toBeCloseTo(Math.pow(2 / 5, 0.8), 9);
     // far better marches move it at most by the quality band – never up to the five marches and more power
     expect(twoStrong.quality).toBeGreaterThan(two.quality);
     expect(twoStrong.acclaim.required).toBeGreaterThan(two.acclaim.required);
     expect(twoStrong.acclaim.quality).toBeLessThanOrEqual(1.2);
     expect(five.acclaim.required).toBeGreaterThan(twoStrong.acclaim.required * 1.25);
-    // below 60 M everyone is equal: 40 M and 55 M owe the same
-    const low = evaluate(settings, [player(4, [same(10)], { power: 40 }), player(5, [same(11)], { power: 55 })], INDEX).rows;
-    expect(low[0].acclaim.required).toBe(low[1].acclaim.required);
-    expect(low[0].acclaim.power).toBeCloseTo(60 / 102, 9);
   });
 
-  it('without power: the recommended power stands in; the minimum, the power floor and T4', () => {
-    const settings = withPairs({ power: { auto: false, floor: 50_000 } });
-    const [none, floor, t4, estimate] = evaluate(
-      settings,
+  it('without power: the recommended power stands in; the minimum and T4', () => {
+    const [none, bare, t4, estimate] = evaluate(
+      S,
       [
         player(1, []),
         player(2, [], { power: 100 }),
@@ -289,31 +342,27 @@ describe('evaluation scoring', () => {
       INDEX,
     ).rows;
     expect([none.expected, none.missing, none.score, none.power, none.acclaim.required]).toEqual([null, 0, 0, null, 200_000]);
-    // 100 M and no march: the power and the 5 marches it asks for count, the lowest quality; at least 50 000 per million
-    expect(floor.acclaim.marches).toBeCloseTo(1, 9);
-    expect(floor.acclaim.quality).toBeCloseTo(0.8, 9);
-    expect(floor.acclaim.floor).toBe(5_000_000);
-    expect(floor.acclaim.required).toBe(5_000_000);
-    expect(t4.acclaim.required).toBe(Math.round((floor.acclaim.required * 0.89) / 1000) * 1000);
-    // one march and no power written down: the recommended power counts, nothing above it
+    // 100 M and no march: the power and the 5 marches it asks for count, the lowest quality
+    expect(bare.acclaim.marches).toBeCloseTo(1, 9);
+    expect(bare.acclaim.quality).toBeCloseTo(0.8, 9);
+    const sum = 5_600_000 * Math.pow(100 / 102, 1.35) * 0.8;
+    expect(bare.acclaim.required).toBe(Math.round(sum / 1000) * 1000);
+    expect(t4.acclaim.required).toBe(Math.round((sum * 0.89) / 1000) * 1000);
+    // one march and no power written down: the recommended power of one march counts, nothing above it
+    expect(estimate.power).toBe(66);
     expect(estimate.power).toBe(estimate.recommended);
     expect(estimate.excess).toBe(0);
   });
 
-  it('takes the benchmark from a player and the score ranges from the players', () => {
+  it('takes the benchmark from a player', () => {
     const players = [1, 2, 3, 4, 5].map((id) => player(id, [march({ id, gear: gear('gold', false, id) })]));
-    const auto = evaluate(withPairs({ power: { samples: 5, expected: false }, acclaim: { player: 3 } }), players, INDEX);
-    expect(auto.ranges[0].auto).toBe(true);
-    expect(auto.ranges[0].players).toBe(5);
+    const picked = evaluate(withPairs({ power: { expected: false }, acclaim: { player: 3 } }), players, INDEX);
     // the picked player's average march; without a power of their own the benchmark power of the variables
-    expect(auto.benchmark.quality).toBe(auto.rows[2].quality);
-    expect(auto.benchmark.power).toBe(102);
-    // too few players: the spreadsheet's ranges
-    const fixed = evaluate(withPairs({ power: { samples: 6 } }), players, INDEX);
-    expect(fixed.ranges[0]).toEqual({ min: 2.06, max: 39.23, auto: false, players: 5 });
+    expect(picked.benchmark.quality).toBe(picked.rows[2].quality);
+    expect(picked.benchmark.power).toBe(102);
     // a player like the benchmark – its power, the full number of marches, its average march – has its acclaim
     const like = evaluate(
-      withPairs({ power: { auto: false }, acclaim: { power: 100, score: 5 * auto.rows[2].quality } }),
+      withPairs({ acclaim: { power: 100, score: 5 * picked.rows[2].quality } }),
       [player(9, [1, 2, 3, 4, 5].map((id) => march({ id, gear: gear('gold', false, 3) })), { power: 100 })],
       INDEX,
     ).rows[0];
@@ -340,11 +389,12 @@ describe('evaluation scoring', () => {
     expect(normalizeSettings(null)).toEqual(DEFAULT_SETTINGS);
     const s = normalizeSettings(
       {
-        acclaim: { benchmark: 'x', score: 0, player: 7 },
         marches: { kinds: ['cavalry', 'nope'], max: 9 },
         // the pairs of the JSON do not count – they have a table of their own
         pairs: { rows: [['Qin Shi Huang', 'Zhuge Liang', 120]], unknown: 50, reversed: 0.9 },
-        power: { table: [{ min: 60 }], low: 250 },
+        // a row saved before 26. 10. 2026 ({min, max, …}: its highest power), a number, a broken one
+        power: { table: [{ min: 60, max: 70, scoreMin: 1 }, 80, 'x'], spread: 50 },
+        acclaim: { benchmark: 'x', score: 0, player: 7, powerBase: 60, missingMarch: 10, powerCurve: 9 },
         armaments: { inscriptions: { Charge: 'S', Fury: 'Z', ' ': 'A' }, tiers: { A: -5 } },
         extra: 1,
       },
@@ -361,8 +411,12 @@ describe('evaluation scoring', () => {
     expect(s.armaments.tiers).toEqual({ ...DEFAULT_SETTINGS.armaments.tiers, A: 0 });
     // saved before the tier list: the default one
     expect(normalizeSettings({ armaments: { gold: 40 } }).armaments).toMatchObject({ gold: 40, inscriptions: DEFAULT_INSCRIPTIONS });
-    expect(s.power.table[0]).toEqual({ ...DEFAULT_SETTINGS.power.table[0], min: 60 });
-    expect(s.power.low).toBe(100);
+    // the old row's highest power, the number, the default; past 5 marches by the last step
+    expect(s.power).toEqual({ expected: true, table: [70, 80, 82, 93, 105, 117, 129, 141, 153], surplus: 32_000 });
+    // the variables of the model before 26. 10. 2026 are dropped, a curve kept within its bounds
+    expect(s.acclaim.powerCurve).toBe(4);
+    expect(s.acclaim.marchCurve).toBe(0.8);
+    expect('powerBase' in s.acclaim || 'missingMarch' in s.acclaim).toBe(false);
     expect('extra' in s).toBe(false);
   });
 
@@ -375,10 +429,9 @@ describe('evaluation scoring', () => {
 
 
   it('can leave the power out', () => {
-    const settings = withPairs({ power: { auto: false } });
     const players = [player(1, [march({ gear: gear('gold', false, 0) })], { power: 120 })];
-    const off = evaluate(settings, players, INDEX, false).rows[0];
-    const on = evaluate(settings, players, INDEX).rows[0];
+    const off = evaluate(S, players, INDEX, false).rows[0];
+    const on = evaluate(S, players, INDEX).rows[0];
     expect([off.expected, off.missing, off.excess]).toEqual([null, 0, 0]);
     expect(on.missing).toBe(4);
     expect(on.acclaim.required).toBeGreaterThan(off.acclaim.required);
@@ -425,9 +478,9 @@ describe('evaluation scoring', () => {
   });
 
   it('goes on with the power table past 5 marches', () => {
-    const table = rowsFor(7, DEFAULT_SETTINGS.power.table);
-    expect(table[5]).toEqual({ min: 105, max: 122, scoreMin: 288.17, scoreMax: 288.17 + (288.17 - 141.36) });
-    expect(table[6].min).toBe(122);
+    // by the last step of the spreadsheet's table (93 → 105: +12)
+    expect(rowsFor(7, DEFAULT_SETTINGS.power.table)).toEqual([66, 72, 82, 93, 105, 117, 129]);
+    expect(rowsFor(2, [])).toEqual([66, 72]);
     // 7 marches counted: 125 M of power asks for all seven
     const settings = withPairs({ marches: { max: 7 } });
     expect(expectedMarches(settings, 125)).toBe(7);

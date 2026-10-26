@@ -290,22 +290,26 @@ export class EvalResultsTab {
     return text ? this.texts().detail.overCap.replace('{stats}', text) : '';
   }
 
-  /** a factor of the acclaim against the benchmark: "power 91 / 102 M = 0,89" (Gether 24. 10. 2026) */
+  /** a factor of the acclaim against the benchmark: "power 91 / 102 M (0,86)" (Gether 24. 10. 2026) */
   protected partText(r: PlayerEval, part: 'power' | 'marches' | 'quality'): string {
     const d = this.texts().detail;
     const b = this.evaluation().benchmark;
     const f = (n: number) => new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(n);
     if (part === 'power') {
-      return d.partPower
-        .replace('{p}', this.dec(Math.max(r.power ?? 0, b.powerBase)))
-        .replace('{b}', this.dec(Math.max(b.power, b.powerBase)))
-        .replace('{f}', f(r.acclaim.power));
+      return d.partPower.replace('{p}', this.dec(r.power ?? 0)).replace('{b}', this.dec(b.power)).replace('{f}', f(r.acclaim.power));
     }
     if (part === 'marches') {
-      const n = Math.min(b.marches, r.counted + r.missing);
-      return d.partMarches.replace('{n}', String(n)).replace('{b}', String(b.marches)).replace('{f}', f(r.acclaim.marches));
+      return d.partMarches.replace('{n}', String(r.marchCount)).replace('{b}', String(b.marches)).replace('{f}', f(r.acclaim.marches));
     }
     return d.partQuality.replace('{q}', this.dec(r.quality)).replace('{b}', this.dec(b.quality)).replace('{f}', f(r.acclaim.quality));
+  }
+
+  /** "zbytočná power 65 M × 32 000 (2 080 000)" – the power not even the marches counted with the missing ones carry */
+  protected surplusText(r: PlayerEval): string {
+    return this.texts()
+      .detail.surplus.replace('{m}', this.dec(r.acclaim.surplus))
+      .replace('{a}', this.int(this.settings().power.surplus))
+      .replace('{s}', this.int(r.acclaim.surcharge));
   }
 
   // ---------------------------------------------------------------- explanations

@@ -1,7 +1,7 @@
 import { ArmoryIndex, GEAR_SLOTS, Inscription, buildOf, gearTotals, troopOf, troopStat } from '../../core/armory';
 import { ARMAMENT_CAPS, ArmamentStat, March, overCaps } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
-import { EvalSettings, PowerRow } from './settings';
+import { EvalSettings } from './settings';
 
 /** a player as /api/evaluation/ sends them: the marches and what the superadmin wrote down */
 export interface EvalPlayer {
@@ -66,8 +66,9 @@ export interface PlayerEval {
   score: number;
   quality: number;
   /**
-   * The power the player's own counted marches carry (Gether 23. 10. 2026: 2 marches = a low recommended power) – both
-   * the same number, `recommended` kept for the published overview
+   * The power the player's own counted marches carry – the power table's row of their count, the same for everyone
+   * with that many (Gether 26. 10. 2026) plus the player's own correction; both the same number, `recommended` kept for
+   * the published overview
    */
   recommended: number | null;
   ownLimit: number | null;
@@ -75,20 +76,20 @@ export interface PlayerEval {
   power: number | null;
   /** millions above the recommended power (shown, the quick filter "Nad odp. power") */
   excess: number;
+  /** the marches the acclaim counts with: the counted ones and the missing ones the power asks for, up to the max */
+  marchCount: number;
   /**
-   * The benchmark's acclaim × the three factors (Gether 24. 10. 2026: multiplied, so strong marches never make up for
-   * missing ones or less power): the power against the benchmark's, the marches (less for each missing one) and the
-   * quality within ± its band; then the floor, T4 less
+   * The benchmark's acclaim × the three factors, multiplied (Gether 24. 10. 2026: strong marches never make up for
+   * missing ones or less power): (power / the benchmark's)^curve, (marches / the full number)^curve and the quality
+   * within ± its band; + the surcharge for the power above what those marches carry (surplus, M); then T4 less
    */
-  acclaim: { power: number; marches: number; quality: number; floor: number; t4: number; required: number };
+  acclaim: { power: number; marches: number; quality: number; surplus: number; surcharge: number; t4: number; required: number };
 }
 
 export interface Evaluation {
   rows: PlayerEval[];
   /** the benchmark the parts are measured against: its power, the full number of marches and its average march */
-  benchmark: { power: number; marches: number; quality: number; powerBase: number };
-  /** the score range of 1–5 marches used for the recommended power; auto = from the players */
-  ranges: { min: number; max: number; auto: boolean; players: number }[];
+  benchmark: { power: number; marches: number; quality: number };
 }
 
 // ---------------------------------------------------------------- one march
@@ -258,38 +259,32 @@ export function marchEval(
 
 // ---------------------------------------------------------------- power
 
-/** PERCENTILE of the spreadsheet (inclusive, linear between the values) */
-export function percentile(values: number[], p: number): number {
-  if (!values.length) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const rank = (Math.min(100, Math.max(0, p)) / 100) * (sorted.length - 1);
-  const low = Math.floor(rank);
-  const high = Math.ceil(rank);
-  return sorted[low] + (sorted[high] - sorted[low]) * (rank - low);
-}
-
-/** how many marches a power asks for: the most whose lowest power it reaches (at least 1) */
+/** how many marches a power asks for: the fewest whose recommended power carries it (more than all of them = the max) */
 export function expectedMarches(settings: EvalSettings, power: number): number {
-  let expected = 1;
-  settings.power.table.forEach((row, i) => {
-    if (i < settings.marches.max && power >= row.min) expected = i + 1;
-  });
-  return expected;
+  const rows = settings.power.table.slice(0, settings.marches.max);
+  const n = rows.findIndex((carried) => power <= carried + 1e-9);
+  return n < 0 ? Math.max(1, rows.length) : n + 1;
 }
 
 /**
- * The recommended power of a march count: the row's lowest power, plus up to `spread` % of the row's range for the
- * score within its score range (Gether 23. 10. 2026: the march count first, the quality only within this share)
+ * The recommended power of a march count: its row of the power table, the same for everyone with that many marches
+ * (Gether 26. 10. 2026: "niekto má 5 marchov a iný má 5 marchov, ale odporúčaná power je iná") – plus the player's
+ * own correction set by the leadership
  */
-export function recommendedPower(
-  row: PowerRow,
-  range: { min: number; max: number },
-  score: number,
-  bonus: number,
-  spread = 100,
-): number {
-  const t = range.max > range.min ? Math.min(1, Math.max(0, (score - range.min) / (range.max - range.min))) : 0;
-  return Math.round(row.min + t * (row.max - row.min) * (spread / 100) + bonus);
+export function recommendedPower(settings: EvalSettings, count: number, bonus = 0): number | null {
+  const n = Math.min(settings.marches.max, count);
+  return n > 0 ? Math.round(settings.power.table[n - 1] + bonus) : null;
+}
+
+/** (power / the benchmark's power)^curve – what the acclaim a power can reach is against the benchmark's */
+export function powerFactor(settings: EvalSettings, power: number, benchmarkPower: number): number {
+  return benchmarkPower > 0 ? Math.pow(Math.max(0, power) / benchmarkPower, settings.acclaim.powerCurve) : 0;
+}
+
+/** (marches / the full number)^curve */
+export function marchFactor(settings: EvalSettings, count: number): number {
+  const max = settings.marches.max;
+  return max > 0 ? Math.pow(Math.min(max, Math.max(0, count)) / max, settings.acclaim.marchCurve) : 0;
 }
 
 // ---------------------------------------------------------------- everyone
@@ -304,16 +299,21 @@ interface Draft {
 }
 
 /**
- * Every player (Gether 24. 10. 2026: "férovosť + pomer power + sila equipu a armamentov + commander pár … nemôže predsa
- * človek s 5 marchami a väčšou power mať 4,5 M acclaim a Syel 4,1"): the best counted marches, the recommended power their
- * count carries (the quality moves it within a share of the row), and the required acclaim = the benchmark's acclaim ×
- *   power / the benchmark's power (below the base everyone counts as the base),
- *   the march factor (1 − missingMarch % for each march missing to the full number; the marches the power asks for
- *   count as there – a high power with few marches is the player's fault, Gether 24. 10. 2026),
+ * Every player: the best counted marches, the recommended power their count carries (the same for everyone with that
+ * many), and the required acclaim = the benchmark's acclaim ×
+ *   (power / the benchmark's power)^powerCurve,
+ *   (marches / the full number)^marchCurve – the marches the power asks for count as there (a high power with few
+ *   marches is the player's fault, Gether 24. 10. 2026),
  *   the quality factor (the average march against the benchmark's, within ± qualityBand %),
- * at least the power floor and the minimum, T4 less. Multiplied, the quality never makes up for missing marches or less
- * power. Without a power written down the recommended power stands in. The score ranges of the power table come from
- * the players when a group has enough of them (the spreadsheet did the same from its own results).
+ * + power.surplus for each million above the recommended power of those marches – the power not even the full number
+ * of marches carries (Gether 26. 10. 2026: "SKAPALS a Maros … majú zbytočne 170 M power, ktorú treba znížiť"),
+ * T4 less, at least the minimum. Multiplied, so the quality never makes up for missing marches or less power.
+ *
+ * Why curves (Gether 26. 10. 2026: "T4 hráč s jedným marchom a 40 M power má taký vysoký acclaim, len o trochu nižší
+ * ako hráči nad ním s viacerými marchami a T5 … čo najviac fér"): in the last KvK the acclaim the players reached grew
+ * like power^1.35 × marches^0.8 (57 players of the spreadsheet). A straight line with every power under 60 M counted as
+ * 60 M asked the small accounts for four times what they reached and the big ones for half; with the curves the
+ * reached / required is about the same at every size. Without a power written down the recommended power stands in.
  */
 export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: ArmoryIndex | null, usePower = true): Evaluation {
   // "Rátať s power" off (Gether 13. 10. 2026): the estimate from the marches only, the power written down stays
@@ -349,52 +349,36 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     return { player, marches, counted: counted.length, marchScore, expected, missing };
   });
 
-  // the score ranges of 1–5 marches: percentiles of the approved players with that many counted marches
-  const ranges = p.table.map((row, i) => {
-    const scores = partial.filter((x) => x.player.approved && x.counted === i + 1 && x.marchScore > 0).map((x) => x.marchScore);
-    const auto = p.auto && scores.length >= p.samples;
-    return auto
-      ? { min: percentile(scores, p.low), max: percentile(scores, p.high), auto, players: scores.length }
-      : { min: row.scoreMin, max: row.scoreMax, auto, players: scores.length };
-  });
-  const recommendedOf = (x: Draft) => {
-    const n = Math.min(max, x.counted);
-    return n ? recommendedPower(p.table[n - 1], ranges[n - 1], x.marchScore, x.player.power_bonus, p.spread) : null;
-  };
-
   // the benchmark: the picked player's average march and power, else the numbers of the variables
   const a = settings.acclaim;
   const picked = a.player !== null ? partial.find((x) => x.player.id === a.player && x.counted > 0) : undefined;
-  const benchmarkPower = (picked && picked.player.power) || a.power;
   const benchmark = {
-    power: benchmarkPower,
+    power: (picked && picked.player.power) || a.power,
     marches: max,
     quality: picked ? picked.marchScore / picked.counted : a.score / max,
-    powerBase: a.powerBase,
   };
-  // a lower power counts as the base (Gether 23. 10. 2026: "do 60 M sú si všetci rovní")
-  const effective = (power: number) => Math.max(power, a.powerBase);
+  const band = a.qualityBand / 100;
 
   const rows = partial.map((x): PlayerEval => {
-    const recommended = recommendedOf(x);
+    const recommended = recommendedPower(settings, x.counted, x.player.power_bonus);
     const written = powerOf(x.player);
     const power = written ?? recommended;
     const quality = x.counted ? x.marchScore / x.counted : 0;
-    // the three factors: the power, the marches (less for each missing to the full number), the quality (± its band).
-    // The marches the power asks for count as there (Gether 24. 10. 2026: "človek so 100 M power má len 2 marche, čo je
-    // jeho chyba a mal by znížiť power") – only a low power with few marches owes less
-    const marchCount = Math.min(benchmark.marches, Math.max(x.counted, x.counted + x.missing));
+    // the marches the power asks for count as there (Gether 24. 10. 2026: "človek so 100 M power má len 2 marche, čo je
+    // jeho chyba") – only a low power with few marches owes less
+    const marchCount = Math.min(max, x.counted + x.missing);
     const factors = {
-      power: power !== null ? effective(power) / effective(benchmark.power) : 0,
-      marches: Math.max(0, 1 - (a.missingMarch / 100) * (benchmark.marches - marchCount)),
-      quality:
-        benchmark.quality > 0
-          ? Math.min(1 + a.qualityBand / 100, Math.max(1 - a.qualityBand / 100, 1 + (a.qualityBand / 100) * (quality / benchmark.quality - 1)))
-          : 1,
+      power: power !== null ? powerFactor(settings, power, benchmark.power) : 0,
+      marches: marchFactor(settings, marchCount),
+      quality: benchmark.quality > 0 ? Math.min(1 + band, Math.max(1 - band, 1 + band * (quality / benchmark.quality - 1))) : 1,
     };
     const excess = written !== null && recommended !== null ? Math.max(0, written - recommended) : 0;
-    const floor = written !== null ? written * p.floor : 0;
-    const sum = Math.max(a.benchmark * factors.power * factors.marches * factors.quality, floor);
+    // the power above what the marches counted with the missing ones carry: with the missing ones counted only the
+    // power over the full number's row (unless the leadership corrected the player's recommended power)
+    const carried = recommendedPower(settings, marchCount, x.player.power_bonus);
+    const surplus = power !== null && carried !== null ? Math.max(0, power - carried) : 0;
+    const surcharge = surplus * p.surplus;
+    const sum = a.benchmark * factors.power * factors.marches * factors.quality + surcharge;
     const t4 = x.player.t4 ? sum * (a.t4 / 100) : 0;
     const step = a.round;
     const required = Math.max(a.minimum, Math.round((sum - t4) / step) * step);
@@ -411,10 +395,11 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
       ownLimit: recommended,
       power,
       excess,
-      acclaim: { ...factors, floor, t4, required },
+      marchCount,
+      acclaim: { ...factors, surplus, surcharge, t4, required },
     };
   });
-  return { rows, benchmark, ranges };
+  return { rows, benchmark };
 }
 
 /** in the player's order, as on /marche */

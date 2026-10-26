@@ -15,7 +15,17 @@ import { ArmoryIndex, InscriptionRarity } from '../../core/armory';
 import { MARCH_KINDS, MarchKind, March } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
-import { EvalPlayer, Evaluation, formationOf, formationTable, inscriptionValue, missingPairs, skillFactor } from './scoring';
+import {
+  EvalPlayer,
+  Evaluation,
+  formationOf,
+  formationTable,
+  inscriptionValue,
+  marchFactor,
+  missingPairs,
+  powerFactor,
+  skillFactor,
+} from './scoring';
 import {
   EvalSettings,
   INSCRIPTION_TIERS,
@@ -148,9 +158,9 @@ export class EvalSettingsTab {
     return {
       acclaim: [
         f(['acclaim', 'benchmark'], s.acclaim.benchmark),
-        // the factors (Gether 24. 10. 2026)
-        f(['acclaim', 'powerBase'], s.acclaim.powerBase),
-        f(['acclaim', 'missingMarch'], s.acclaim.missingMarch),
+        // the factors (Gether 24. and 26. 10. 2026)
+        f(['acclaim', 'powerCurve'], s.acclaim.powerCurve),
+        f(['acclaim', 'marchCurve'], s.acclaim.marchCurve),
         f(['acclaim', 'qualityBand'], s.acclaim.qualityBand),
         f(['acclaim', 'minimum'], s.acclaim.minimum),
         f(['acclaim', 'round'], s.acclaim.round),
@@ -158,11 +168,7 @@ export class EvalSettingsTab {
       ],
       score: f(['acclaim', 'score'], s.acclaim.score),
       benchmarkPower: f(['acclaim', 'power'], s.acclaim.power),
-      power: [
-        f(['power', 'spread'], s.power.spread),
-        f(['power', 'floor'], s.power.floor),
-      ],
-      powerAuto: [f(['power', 'low'], s.power.low), f(['power', 'high'], s.power.high), f(['power', 'samples'], s.power.samples)],
+      power: [f(['power', 'surplus'], s.power.surplus)],
       marches: [
         f(['marches', 'equipment'], s.marches.equipment),
         f(['marches', 'armaments'], s.marches.armaments),
@@ -190,6 +196,40 @@ export class EvalSettingsTab {
   protected setBenchmarkPlayer(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.put(['acclaim', 'player'], value ? Number(value) : null);
+  }
+
+  private percent(n: number): string {
+    return `${Math.round(n * 100)} %`;
+  }
+
+  /** what the curves mean with the variables now: "40 M → 27 %, …" and "1 → 28 %, …" of the benchmark's acclaim */
+  protected readonly curves = computed(() => {
+    const s = this.settings();
+    const benchmark = this.evaluation().benchmark.power;
+    const t = this.texts().sections.acclaim;
+    const powers = [40, 60, 80, Math.round(benchmark), 150].filter((p, i, all) => all.indexOf(p) === i).sort((a, b) => a - b);
+    const marches = Array.from({ length: s.marches.max }, (_, i) => i + 1);
+    return {
+      power: t.powerExample.replace(
+        '{list}',
+        powers.map((p) => `${p} M → ${this.percent(powerFactor(s, p, benchmark))}`).join(', '),
+      ),
+      marches: t.marchExample.replace(
+        '{list}',
+        marches.map((n) => `${n} → ${this.percent(marchFactor(s, n))}`).join(', '),
+      ),
+    };
+  });
+
+  /**
+   * The acclaim of a T5 player with that many marches at exactly their recommended power and the benchmark's quality –
+   * how the power table and the curves work together, row by row
+   */
+  protected rowAcclaim(i: number): string {
+    const s = this.settings();
+    const sum = s.acclaim.benchmark * powerFactor(s, s.power.table[i], this.evaluation().benchmark.power) * marchFactor(s, i + 1);
+    const step = s.acclaim.round || 1;
+    return new Intl.NumberFormat('sk-SK').format(Math.max(s.acclaim.minimum, Math.round(sum / step) * step));
   }
 
   // ---------------------------------------------------------------- marches
@@ -413,16 +453,5 @@ export class EvalSettingsTab {
       // in the order the page loads them, so a change made and undone is not "unsaved"
       draft.formations.byCommander = Object.fromEntries(Object.entries(table).sort(([a], [b]) => a.localeCompare(b)));
     });
-  }
-
-  // ---------------------------------------------------------------- power
-
-  protected rangeNow(i: number): string {
-    const range = this.evaluation().ranges[i];
-    const s = this.texts().sections.power;
-    const format = (n: number) => n.toFixed(1).replace('.', ',');
-    return range.auto
-      ? s.autoNow.replace('{min}', format(range.min)).replace('{max}', format(range.max)).replace('{n}', String(range.players))
-      : s.fixedNow.replace('{n}', String(range.players));
   }
 }

@@ -16,16 +16,16 @@ export interface EvalSettings {
     score: number;
     /** the benchmark's power in millions when no player is picked or the picked one has none (Slim Dejvid: 102) */
     power: number;
-    /** a lower power counts as this, M (Gether 23. 10. 2026: "do 60 M sú si všetci rovní") */
-    powerBase: number;
     /** a player whose score and power are the benchmark (null = the numbers above) */
     player: number | null;
     /**
-     * The required acclaim is the benchmark's × power / its power × the march factor × the quality (Gether 24. 10. 2026:
-     * "férovosť + pomer power + sila equipu a armamentov + commander pár" – multiplied, so strong marches never make up
-     * for missing ones): % less for each march missing to the full number
+     * The required acclaim is the benchmark's × (power / its power)^powerCurve × (marches / the full number)^marchCurve
+     * × the quality (Gether 26. 10. 2026: "čo najviac fér"). The curves are fitted on what the players reached in the
+     * last KvK (Troy, Aug–Sept 2026: acclaim ≈ power^1.35 × marches^0.8) – the acclaim a player can reach grows faster
+     * than the power, so a small account owes much less than a straight line would ask.
      */
-    missingMarch: number;
+    powerCurve: number;
+    marchCurve: number;
     /** how far the quality (the average march against the benchmark's) moves it, ± % */
     qualityBand: number;
     /** nobody goes below this (spreadsheet: 200 000) */
@@ -36,25 +36,22 @@ export interface EvalSettings {
     round: number;
   };
   power: {
-    /** at least this much acclaim for each million of power, 0 = off */
-    floor: number;
     /**
      * The marches the power table says a power asks for count as there for the march factor and are shown as missing
      * ("3 +2") – Gether 24. 10. 2026: a high power with few marches owes as much as its power asks for
      */
     expected: boolean;
     /**
-     * How much of a row's power range the quality of the marches moves the recommended power, % (Gether 23. 10. 2026:
-     * "keď má hráč 2 marche, mal odporúčaný power nízky" – the march count first, the quality only within this share)
+     * 1 … marches.max: the recommended power of that many marches, M – the most they carry. The same for everyone with
+     * the same count (Gether 26. 10. 2026: "pre počet marchov by mal byť rovnaký"); a higher power asks for more marches.
      */
-    spread: number;
-    /** 1–5 marches: the power range and the score range it is spread over */
-    table: PowerRow[];
-    /** the score ranges from the players themselves (percentiles below), when a group has enough of them */
-    auto: boolean;
-    low: number;
-    high: number;
-    samples: number;
+    table: number[];
+    /**
+     * Acclaim for each million above the recommended power of the marches counted with the missing ones – the power
+     * not even the full number of marches carries (Gether 26. 10. 2026: "SKAPALS a Maros musí byť vysoký, lebo majú
+     * zbytočne 170 M power, ktorú treba znížiť"); the spreadsheet's "Dodatočný acclaim kvôli power" 16 000 × 2
+     */
+    surplus: number;
   };
   marches: {
     /** which march types count (open field) */
@@ -127,13 +124,6 @@ export interface EvalSettings {
 /** a player has at most 10 marches (backend accounts MAX_MARCHES) */
 export const MARCHES_LIMIT = 10;
 
-export interface PowerRow {
-  min: number;
-  max: number;
-  scoreMin: number;
-  scoreMax: number;
-}
-
 export interface Tier {
   tier: string;
   points: number;
@@ -202,31 +192,20 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     benchmark: 5_600_000,
     score: 286.53,
     power: 102,
-    powerBase: 60,
     player: null,
-    // Gether 23. 10. 2026: "Ales 5 M a Syel 3 M" – 5 marches 91 M vs 2 marches 77 M come out 5 : 3
-    missingMarch: 10,
+    // the last KvK (sheet "Výsledky 2026AugSept Troy kvk", 57 players): log acclaim ≈ 1.35 log power + 0.78 log marches
+    powerCurve: 1.35,
+    marchCurve: 0.8,
     qualityBand: 20,
     minimum: 200_000,
     t4: 11,
     round: 1000,
   },
   power: {
-    floor: 0,
     expected: true,
-    spread: 50,
-    // sheet Constants: power 63–66 … 88–105 M; the score ranges are its percentiles 10 and 90 of the last KvK
-    table: [
-      { min: 63, max: 66, scoreMin: 2.06, scoreMax: 39.23 },
-      { min: 66, max: 72, scoreMin: 20.95, scoreMax: 78.51 },
-      { min: 72, max: 82, scoreMin: 89.2, scoreMax: 145.67 },
-      { min: 82, max: 93, scoreMin: 139.29, scoreMax: 219.97 },
-      { min: 88, max: 105, scoreMin: 141.36, scoreMax: 288.17 },
-    ],
-    auto: true,
-    low: 10,
-    high: 90,
-    samples: 5,
+    // sheet Constants: the highest power of 1 … 5 marches ("Max Power" 66, 72, 82, 93, 105 M)
+    table: [66, 72, 82, 93, 105],
+    surplus: 32_000,
   },
   marches: {
     kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'],
@@ -270,18 +249,14 @@ export const DEFAULT_SETTINGS: EvalSettings = {
 // ---------------------------------------------------------------- more marches than the spreadsheet's 5
 
 /**
- * The power table for 1 … count marches. Rows the spreadsheet does not have (6 and more marches) go on from the
- * last one: the next power range starts where the last one ends and is as wide, the same for the score range – a
- * starting point, every value is editable. (The fund of the battle support went with the acclaim reached, Gether
- * 14. 10. 2026.)
+ * The recommended power of 1 … count marches. Rows the spreadsheet does not have (6 and more marches) go on from the
+ * last one by its last step – a starting point, every value is editable.
  */
-export function rowsFor(count: number, table: PowerRow[]): PowerRow[] {
+export function rowsFor(count: number, table: number[]): number[] {
   const rows = table.slice(0, count);
   while (rows.length < count) {
-    const last = rows[rows.length - 1] ?? { min: 63, max: 66, scoreMin: 0, scoreMax: 40 };
-    const width = Math.max(1, last.max - last.min);
-    const scoreWidth = Math.max(1, last.scoreMax - last.scoreMin);
-    rows.push({ min: last.max, max: last.max + width, scoreMin: last.scoreMax, scoreMax: last.scoreMax + scoreWidth });
+    const n = rows.length;
+    rows.push(n === 0 ? 66 : rows[n - 1] + (n > 1 ? Math.max(1, rows[n - 1] - rows[n - 2]) : 6));
   }
   return rows;
 }
@@ -305,6 +280,10 @@ const list = (value: unknown, defaults: number[], min = 0, max = 1e12): number[]
   return defaults.map((d, i) => num(raw[i], d, min, max));
 };
 
+/** a row of the power table: a number, or a row saved before 26. 10. 2026 ({min, max, …}: its highest power) */
+const powerRow = (value: unknown, fallback: number): number =>
+  num(value !== null && typeof value === 'object' ? (value as Record<string, unknown>)['max'] : value, fallback, 0, 10_000);
+
 /**
  * The saved variables merged into the defaults: every value checked (a number within its bounds, the right length
  * of a list) – something missing or wrong takes the default, keys the page does not know are dropped. The commander
@@ -327,32 +306,24 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
   const player = acclaim['player'];
   const max = Math.round(num(marches['max'], d.marches.max, 1, MARCHES_LIMIT));
   // the saved rows of the power table, as many as the marches counted
-  const sized = rowsFor(
-    max,
-    rowsFor(max, d.power.table).map((row, i) => group(table[i], row)),
-  );
+  const sized = rowsFor(max, d.power.table).map((row, i) => powerRow(table[i], row));
   const result: EvalSettings = {
     acclaim: {
       benchmark: num(acclaim['benchmark'], d.acclaim.benchmark, 0),
       score: num(acclaim['score'], d.acclaim.score, 0.01),
       power: num(acclaim['power'], d.acclaim.power, 1, 1000),
-      powerBase: num(acclaim['powerBase'], d.acclaim.powerBase, 0, 1000),
       player: typeof player === 'number' && Number.isInteger(player) ? player : null,
-      missingMarch: num(acclaim['missingMarch'], d.acclaim.missingMarch, 0, 100),
+      powerCurve: num(acclaim['powerCurve'], d.acclaim.powerCurve, 0, 4),
+      marchCurve: num(acclaim['marchCurve'], d.acclaim.marchCurve, 0, 4),
       qualityBand: num(acclaim['qualityBand'], d.acclaim.qualityBand, 0, 100),
       minimum: num(acclaim['minimum'], d.acclaim.minimum, 0),
       t4: num(acclaim['t4'], d.acclaim.t4, 0, 100),
       round: num(acclaim['round'], d.acclaim.round, 1),
     },
     power: {
-      floor: num(power['floor'], d.power.floor, 0),
       expected: typeof power['expected'] === 'boolean' ? power['expected'] : d.power.expected,
-      spread: num(power['spread'], d.power.spread, 0, 100),
-      table: [],
-      auto: typeof power['auto'] === 'boolean' ? power['auto'] : d.power.auto,
-      low: num(power['low'], d.power.low, 0, 100),
-      high: num(power['high'], d.power.high, 0, 100),
-      samples: Math.round(num(power['samples'], d.power.samples, 2, 1000)),
+      table: sized,
+      surplus: num(power['surplus'], d.power.surplus, 0, 10_000_000),
     },
     marches: {
       kinds: MARCH_KINDS.filter((k) => kinds.includes(k)),
@@ -417,7 +388,6 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
       wrong: num(formations['wrong'], d.formations.wrong, 0, 1),
     },
   };
-  result.power.table = sized;
   return result;
 }
 

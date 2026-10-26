@@ -65,6 +65,9 @@
         <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
       }
     </div>
+    <!-- what the curves do with the numbers now (Gether 26. 10. 2026) -->
+    <p class="ev-card__hint">{{ curves().power }}</p>
+    <p class="ev-card__hint">{{ curves().marches }}</p>
     </div>
   </details>
 
@@ -94,47 +97,30 @@
         <thead>
           <tr>
             <th scope="col">{{ s.power.count }}</th>
-            <th scope="col">{{ s.power.min }}</th>
-            <th scope="col">{{ s.power.max }}</th>
-            <th scope="col">{{ s.power.scoreMin }}</th>
-            <th scope="col">{{ s.power.scoreMax }}</th>
-            <th scope="col">{{ s.power.now }}</th>
+            <th scope="col">{{ s.power.recommended }}</th>
+            <th scope="col">{{ s.power.example }}</th>
           </tr>
         </thead>
         <tbody>
           @for (row of v.power.table; track $index; let i = $index) {
             <tr>
               <th scope="row" [attr.data-label]="s.power.count">{{ i + 1 }}</th>
-              @for (key of ['min', 'max', 'scoreMin', 'scoreMax']; track key) {
-                <td [attr.data-label]="$any(s.power)[key]">
-                  <input
-                    class="input ev-input ev-input--cell"
-                    type="number"
-                    step="any"
-                    inputmode="decimal"
-                    [attr.aria-label]="(i + 1) + ' · ' + $any(s.power)[key]"
-                    [value]="value(['power', 'table', i, key])"
-                    (change)="setNumber(['power', 'table', i, key], $event)"
-                  />
-                </td>
-              }
-              <td class="ev-table__note" [attr.data-label]="s.power.now">{{ rangeNow(i) }}</td>
+              <td [attr.data-label]="s.power.recommended">
+                <input
+                  class="input ev-input ev-input--cell"
+                  type="number"
+                  step="any"
+                  inputmode="decimal"
+                  [attr.aria-label]="(i + 1) + ' · ' + s.power.recommended"
+                  [value]="value(['power', 'table', i])"
+                  (change)="setNumber(['power', 'table', i], $event)"
+                />
+              </td>
+              <td class="ev-table__note" [attr.data-label]="s.power.example">{{ rowAcclaim(i) }}</td>
             </tr>
           }
         </tbody>
       </table>
-    </div>
-    <div class="ev-switch-row">
-      <label class="ev-switch">
-        <input class="switch" type="checkbox" role="switch" [checked]="v.power.auto" (change)="setFlag(['power', 'auto'], $event)" />
-        <span>{{ s.power.auto }}</span>
-      </label>
-      <app-eval-tip [text]="tip('power.auto')" [label]="tipLabel(s.power.auto)" />
-    </div>
-    <div class="ev-grid">
-      @for (f of fs.powerAuto; track f.label) {
-        <ng-container *ngTemplateOutlet="num; context: { $implicit: f }" />
-      }
     </div>
     </div>
   </details>
