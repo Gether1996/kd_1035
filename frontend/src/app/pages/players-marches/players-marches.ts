@@ -33,9 +33,11 @@ import { Marches } from '../account/marches';
 type Sort = 'updated' | 'count' | 'name';
 
 /**
- * /marche – two tabs (Gether 11. 10. 2026): "Marche hráčov" = the marches of the players who made them public ("aby to
- * mali ako motiváciu"; R4 and the superuser see every player's), "Prehľad marchov" (?tab=prehlad, the old ?tab=moje
- * too) = the player's own marches (the Marches component; Gether 12. 10. 2026: "Moje marche" merged into it). Both
+ * /marche – two tabs (Gether 11. 10. 2026): "Prehľad marchov" = the player's own marches (the Marches component; Gether
+ * 12. 10. 2026: "Moje marche" merged into it) – the plain address since 27. 10. 2026 (Gether: "prázdne /marche mi dá
+ * moje marche"; the old ?tab=prehlad and ?tab=moje lead there too), "Marche hráčov" (?tab=hraci, and a link to one
+ * player with ?hrac=) = the marches of the players who made them public ("aby to mali ako motiváciu"; R4 and the
+ * superuser see every player's). Both
  * show each march as a card with its equipment and armaments (MarchBuild). Signed-in players only; a prerendered shell,
  * not indexed, not in the sitemap. ?hrac=<id> and the "Vyhodnocovanie" link of a card jump between a player here and
  * their row of /vyhodnocovanie (14. 10. 2026) – only a filter of what /api/marches/ already gives this visitor.
@@ -48,7 +50,7 @@ type Sort = 'updated' | 'count' | 'name';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayersMarches {
-  /** ?tab=prehlad – the player's own marches (the old ?tab=moje leads there too) */
+  /** ?tab=hraci – the players' marches; none (or the old ?tab=prehlad / ?tab=moje) – the player's own */
   readonly tab = input<string>();
   /** ?cmd=Attila – only the players with a march of this commander (a shareable link, kept across the tabs) */
   readonly cmd = input<string>();
@@ -58,7 +60,7 @@ export class PlayersMarches {
   protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
   /** the player's marches with their equipment and armaments – "Moje marche" merged into it (Gether 12. 10. 2026) */
-  protected readonly mine = computed(() => this.tab() === 'prehlad' || this.tab() === 'moje');
+  protected readonly mine = computed(() => this.tab() !== 'hraci' && !this.hrac());
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
 
@@ -126,9 +128,9 @@ export class PlayersMarches {
       // also after a failed load (a phone back before its network) – the next return tries again
       if (!this.data.isLoading() && (this.data.hasValue() || this.data.error())) this.data.reload();
     });
-    // the old address of the own marches (?tab=moje) shows the overview's
+    // the old addresses of the own marches (?tab=prehlad, ?tab=moje – Discord messages, bookmarks) become the plain one
     effect(() => {
-      if (this.tab() === 'moje') this.showTab('prehlad');
+      if (this.tab() === 'prehlad' || this.tab() === 'moje') this.showTab(null);
     });
     // a newly chosen commander opens the players who have them – once, a card closed by hand afterwards stays closed
     // (a reload of the list on return keeps what the visitor opened and closed)
@@ -152,9 +154,9 @@ export class PlayersMarches {
     inject(DestroyRef).onDestroy(() => seo.set(null));
   }
 
-  protected showTab(tab: 'prehlad' | null): void {
+  protected showTab(tab: 'hraci' | null): void {
     // back on the players' marches after editing the own ones: the list asks again
-    if (!tab && this.mine() && !this.data.isLoading()) this.data.reload();
+    if (tab === 'hraci' && this.mine() && !this.data.isLoading()) this.data.reload();
     // merged: the tabs keep ?cmd= and the commander keeps ?tab=
     void this.router.navigate([], { queryParams: { tab }, queryParamsHandling: 'merge', replaceUrl: true });
   }
@@ -167,7 +169,8 @@ export class PlayersMarches {
 
   /** the chip of ?hrac= removed: everyone again, without a new history entry */
   protected clearPlayer(): void {
-    void this.router.navigate([], { queryParams: { hrac: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    // everyone of the players' tab – without ?hrac= the plain address would be the own marches
+    void this.router.navigate([], { queryParams: { hrac: null, tab: 'hraci' }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   protected isOpen(id: number): boolean {

@@ -841,8 +841,8 @@ class WelcomeTests(KvkTestCase):
         embed = message['embeds'][0]
         self.assertEqual(embed['title'], 'Si schválený na webe KD 1035')
         self.assertIn('Môžeš pridať marche a prihlášku na KvK.', embed['description'])
-        self.assertIn('[Pridať marche](https://kd1035.eu/marche?tab=prehlad)', embed['description'])
-        self.assertEqual((embed['url'], embed['footer']['text']), ('https://kd1035.eu/marche?tab=prehlad', 'KD 1035'))
+        self.assertIn('[Pridať marche](https://kd1035.eu/marche)', embed['description'])
+        self.assertEqual((embed['url'], embed['footer']['text']), ('https://kd1035.eu/marche', 'KD 1035'))
         self.assertFalse(self.due())
         self.assertEqual(send_welcomes(), 0)
         self.assertEqual(self.send.call_count, 1)
@@ -853,7 +853,7 @@ class WelcomeTests(KvkTestCase):
         send_welcomes()
         embed = self.send.call_args.args[1]['embeds'][0]
         self.assertEqual(embed['title'], 'Jsi schválen na webu KD 1035')
-        self.assertIn('[Přidat marche](https://kd1035.eu/cz/marche?tab=prehlad)', embed['description'])
+        self.assertIn('[Přidat marche](https://kd1035.eu/cz/marche)', embed['description'])
 
     def test_other_switches_and_saving_again_never_queue_it(self):
         self.patch(reviewer=True, evaluation_settings=True)

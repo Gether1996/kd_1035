@@ -26,8 +26,8 @@
     <app-pending-approval />
   } @else {
     <div class="segmented tabs" role="group" [attr.aria-label]="p.title">
-      <button type="button" [attr.aria-pressed]="!mine()" (click)="showTab(null)">{{ p.tabs.all }}</button>
-      <button type="button" [attr.aria-pressed]="mine()" (click)="showTab('prehlad')">{{ p.tabs.overview }}</button>
+      <button type="button" [attr.aria-pressed]="mine()" (click)="showTab(null)">{{ p.tabs.overview }}</button>
+      <button type="button" [attr.aria-pressed]="!mine()" (click)="showTab('hraci')">{{ p.tabs.all }}</button>
     </div>
     @if (mine()) {
       <app-marches class="mine" />

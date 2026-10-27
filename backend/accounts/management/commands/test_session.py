@@ -21,7 +21,7 @@ SAMPLE_MARCHES = [
     ('garrison', "K'inich Janaab' Pakal", 'Nebuchadnezzar II'),
     ('engineering', 'Gonzalo de Cordoba', ''),
 ]
-# the equipment and armaments clicked together on the first two marches (/marche?tab=prehlad)
+# the equipment and armaments clicked together on the first two marches (/marche)
 SAMPLE_BUILDS = [
     {
         'gear': {

@@ -5,7 +5,7 @@ import { measure } from './layout';
 
 test.skip(!SESSION, 'needs SESSION (run.sh --player)');
 
-const PLAYER_PAGES = ['/ucet', '/pripomienky', '/marche', '/marche?tab=prehlad', '/kvk', '/cz/ucet', '/cz/marche'];
+const PLAYER_PAGES = ['/ucet', '/pripomienky', '/marche', '/marche?tab=hraci', '/kvk', '/cz/ucet', '/cz/marche'];
 
 for (const path of PLAYER_PAGES) {
   test(`${path} for a signed-in player @player`, async ({ page }) => {
@@ -31,7 +31,7 @@ test('the account shows the player and the in-game name field @player', async ({
 });
 
 test('the march overview lists the sample marches @player', async ({ page }) => {
-  await open(page, '/marche?tab=prehlad');
+  await open(page, '/marche');
   await expect(page.locator('.segmented.tabs button[aria-pressed="true"]')).toBeVisible();
   await expect(page.getByText('Arthur Pendragon').first()).toBeVisible();
 });

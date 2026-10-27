@@ -44,7 +44,7 @@ type SortKey = 'name' | 'marches' | 'power' | 'required';
       <div class="ov-bar">
         <p class="ov-note">{{ x.published.replace('{date}', date(o.published_at)) }} {{ x.hint }}</p>
         @if (auth.user()?.approved) {
-          <a class="pill-btn pill-btn--quiet ov-link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'prehlad' }">{{ x.marchesLink }}</a>
+          <a class="pill-btn pill-btn--quiet ov-link" [routerLink]="i18n.path('playersMarches')">{{ x.marchesLink }}</a>
         }
       </div>
       <div class="field ov-search">

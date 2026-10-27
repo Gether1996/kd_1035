@@ -202,7 +202,7 @@
 
       <!-- marches only once approved (Gether 14. 10. 2026) -->
       @if (user.approved) {
-        <a class="shortcut" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'prehlad' }">
+        <a class="shortcut" [routerLink]="i18n.path('playersMarches')">
           <span class="shortcut__icon"><svg appIcon="shield"></svg></span>
           <span class="shortcut__body">
             <strong

@@ -56,6 +56,7 @@ describe('PlayersMarches', () => {
   it('lists the public marches as cards with their equipment, sorts and filters them', async () => {
     const http = setup({ name: 'Nelly', approved: true });
     const fixture = TestBed.createComponent(PlayersMarches);
+    fixture.componentRef.setInput('tab', 'hraci');
     fixture.detectChanges();
     http.expectOne('/api/marches/').flush({
       reviewer: false,
@@ -129,8 +130,8 @@ describe('PlayersMarches', () => {
     await tick(fixture);
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['bob']);
 
-    // two tabs: the players' marches and the player's own ("Moje marche" merged into the overview)
-    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Marche hráčov', 'Prehľad marchov']);
+    // two tabs: the player's own marches first (the plain /marche), then the players'
+    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Prehľad marchov', 'Marche hráčov']);
     http.match(() => true).forEach((r) => r.flush({}));
   });
 
@@ -141,6 +142,7 @@ describe('PlayersMarches', () => {
     const fixture = TestBed.createComponent(PlayersMarches);
     // the router gives the page ?cmd= as an input
     fixture.componentRef.setInput('cmd', 'Attila');
+    fixture.componentRef.setInput('tab', 'hraci');
     fixture.detectChanges();
     const march = (id: number, kind: string, primary: string, secondary: string) => ({ ...MARCH, id, position: id, kind, primary, secondary });
     const player = (id: number, name: string, updated_at: string, marches: object[]) =>
@@ -215,7 +217,7 @@ describe('PlayersMarches', () => {
     // the tabs and the commander keep each other in the address
     el.querySelectorAll<HTMLButtonElement>('.tabs button')[1].click();
     await tick(fixture);
-    expect(router.url).toBe('/?cmd=Gorgo&tab=prehlad');
+    expect(router.url).toBe('/?cmd=Gorgo&tab=hraci');
     el.querySelectorAll<HTMLButtonElement>('.tabs button')[0].click();
     await tick(fixture);
     expect(router.url).toBe('/?cmd=Gorgo');
@@ -231,6 +233,7 @@ describe('PlayersMarches', () => {
   it('shows the superadmin a wrong pair or formation on a closed player and on the march (Gether 14. 10. 2026)', async () => {
     const http = setup({ name: 'Gether', approved: true, is_superuser: true });
     const fixture = TestBed.createComponent(PlayersMarches);
+    fixture.componentRef.setInput('tab', 'hraci');
     fixture.detectChanges();
     const wrong = [
       { ...MARCH, secondary: '', pair_problem: 'solo', formation_problem: null },
@@ -332,8 +335,8 @@ describe('PlayersMarches', () => {
       expect(chip.textContent).toContain('Hráč: bob');
       chip.click();
       await tick(fixture);
-      // ?cmd= stays
-      expect(router.url).toBe('/?cmd=Attila');
+      // ?cmd= stays, the players' tab too
+      expect(router.url).toBe('/?cmd=Attila&tab=hraci');
       // the router gives the page the address without ?hrac=
       fixture.componentRef.setInput('hrac', undefined);
       await tick(fixture);
@@ -354,7 +357,7 @@ describe('PlayersMarches', () => {
       const all = Array.from(el.querySelectorAll<HTMLButtonElement>('.focus__missing button')).find((b) => b.textContent?.trim() === 'Zobraziť všetkých')!;
       all.click();
       await tick(fixture);
-      expect(router.url).toBe('/?cmd=Attila');
+      expect(router.url).toBe('/?cmd=Attila&tab=hraci');
     });
 
     it('links a player to /vyhodnocovanie only for the ones with it in the account menu', async () => {

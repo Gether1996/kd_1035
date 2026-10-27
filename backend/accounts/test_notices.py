@@ -77,7 +77,7 @@ class MarchNoticeTests(RedMarches):
         self.assertIn('Chýba sekundárny commander', text)
         self.assertIn('prehoď commanderov: Attila + Takeda Shingen', text)
         self.assertIn('Formácia Wedge: Attila má viesť Arch alebo Delta', text)
-        self.assertIn('(https://kd1035.eu/marche?tab=prehlad)', text)
+        self.assertIn('(https://kd1035.eu/marche)', text)
         # never the points
         self.assertNotIn('100', text)
         # Czech for a Czech player; a pair with no other order to suggest
@@ -86,7 +86,7 @@ class MarchNoticeTests(RedMarches):
         problems = notices.problems_of(self.nelly, notices.march_checker())
         text = notices.message(self.nelly, problems)['embeds'][0]['description']
         self.assertIn('Tento pár se ve vyhodnocování KvK nehodnotí', text)
-        self.assertIn('/cz/marche?tab=prehlad', text)
+        self.assertIn('/cz/marche', text)
 
     def test_the_fingerprint_follows_the_problem_itself(self):
         check = notices.march_checker()

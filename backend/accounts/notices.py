@@ -38,7 +38,7 @@ KEEP = timedelta(days=30)
 # a claimed message the worker never finished (it stopped mid-send) – marked failed, never sent twice
 STUCK = timedelta(minutes=10)
 # the overview of the own marches, where the player fixes them
-MARCHES_PAGE = '/marche?tab=prehlad'
+MARCHES_PAGE = '/marche'
 # one preview or one queue: more than the kingdom has players
 MAX_PLAYERS = 500
 # the armament bonuses as the game and the web name them (the same in both languages)
