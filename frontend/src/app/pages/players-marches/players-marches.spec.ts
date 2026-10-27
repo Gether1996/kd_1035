@@ -309,8 +309,10 @@ describe('PlayersMarches', () => {
     async function load(user: Parameters<typeof setup>[0], hrac: string | undefined, players: object[]) {
       const http = setup(user);
       const router = TestBed.inject(Router);
-      await router.navigateByUrl(hrac ? `/?cmd=Attila&hrac=${hrac}` : '/');
+      await router.navigateByUrl(hrac ? `/?cmd=Attila&hrac=${hrac}` : '/?tab=hraci');
       const fixture = TestBed.createComponent(PlayersMarches);
+      // the players' tab (?tab=hraci) – a link with ?hrac= opens it by itself
+      if (!hrac) fixture.componentRef.setInput('tab', 'hraci');
       if (hrac) {
         fixture.componentRef.setInput('cmd', 'Attila');
         fixture.componentRef.setInput('hrac', hrac);
@@ -337,8 +339,9 @@ describe('PlayersMarches', () => {
       await tick(fixture);
       // ?cmd= stays, the players' tab too
       expect(router.url).toBe('/?cmd=Attila&tab=hraci');
-      // the router gives the page the address without ?hrac=
+      // the router gives the page the address without ?hrac=, on the players' tab
       fixture.componentRef.setInput('hrac', undefined);
+      fixture.componentRef.setInput('tab', 'hraci');
       await tick(fixture);
       expect(names(el)).toEqual(['bob', 'cara', 'nelly']);
       expect(el.querySelector('.focus__chip')).toBeNull();
