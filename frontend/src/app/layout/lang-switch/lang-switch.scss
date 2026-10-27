@@ -5,7 +5,7 @@
 }
 
 .lang {
-  --w: 42px;
+  --w: 62px;
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, var(--w));
@@ -15,8 +15,10 @@
   background: rgba(7, 15, 31, 0.55);
 
   a {
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     position: relative;
     z-index: 1;
     height: 32px;
@@ -54,3 +56,28 @@
     transform: translateX(var(--w));
   }
 }
+
+// the national colours are the flags' own – an exception to the palette, like the Discord/Facebook brand colours
+.lang__flag {
+  flex: none;
+  width: 18px;
+  height: 12px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+// a narrow phone: the flags alone (the label stays for screen readers), so the header keeps its room
+@media (max-width: 399px) {
+  .lang {
+    --w: 44px;
+  }
+
+  .lang__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+

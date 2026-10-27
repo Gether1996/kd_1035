@@ -108,7 +108,13 @@
               @if (p.id === unreadFrom()) {
                 <li class="chat__new"><span>{{ f.unread }}</span></li>
               }
-              <li class="msg" [id]="'forum-post-' + p.id" [class.is-mine]="p.mine" [class.is-flash]="flash() === p.id">
+              <li
+                class="msg"
+                [id]="'forum-post-' + p.id"
+                [class.is-mine]="p.mine"
+                [class.is-flash]="flash() === p.id"
+                [class.is-editing]="editing() === p.id"
+              >
                 <p class="msg__head">
                   <span class="msg__who">{{ who(p) }}</span>
                   <time class="msg__time" [attr.datetime]="p.at">{{ when(p.at) }}</time>

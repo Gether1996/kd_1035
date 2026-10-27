@@ -231,6 +231,66 @@ def pennant(px, py, length=36):
     )
 
 
+# national flags on the two mid towers (Gether 27. 10. 2026: "vlajky SK CZ na hrad"), a touch muted for the dusk
+FLAG_WHITE, FLAG_BLUE, FLAG_RED = '#e4ded3', '#2d5394', '#b8352c'
+
+
+def national_flag(px, py, kind, w=46, h=30):
+    """A waving 3:2 flag on a pole from (px, py) up: 'sk' white/blue/red with the shield, 'cz' white/red with the
+    blue wedge at the pole."""
+    top = py - 34 - h
+    clip = f'flag-{kind}'
+    outline = (
+        f'M{f(px)},{f(top)} Q{f(px + w / 2)},{f(top - 5)} {f(px + w)},{f(top + 2)} '
+        f'L{f(px + w)},{f(top + 2 + h)} Q{f(px + w / 2)},{f(top + h - 5)} {f(px)},{f(top + h)} Z'
+    )
+    x0, y0 = px, top - 6
+    if kind == 'sk':
+        third = (h + 8) / 3
+        stripes = (
+            f'<rect x="{f(x0)}" y="{f(y0)}" width="{w}" height="{f(third + 1)}" fill="{FLAG_WHITE}"/>'
+            f'<rect x="{f(x0)}" y="{f(y0 + third)}" width="{w}" height="{f(third + 1)}" fill="{FLAG_BLUE}"/>'
+            f'<rect x="{f(x0)}" y="{f(y0 + 2 * third)}" width="{w}" height="{f(third + 1)}" fill="{FLAG_RED}"/>'
+        )
+        # the shield: red, white rim, white double cross on blue hills – at a third of the flag from the pole
+        sx, sy, sw = px + w * 0.36, top + h * 0.2, w * 0.24
+        shield = (
+            f'M{f(sx - sw / 2)},{f(sy)} H{f(sx + sw / 2)} V{f(sy + sw * 0.62)} '
+            f'C{f(sx + sw / 2)},{f(sy + sw * 1.02)} {f(sx)},{f(sy + sw * 1.2)} {f(sx)},{f(sy + sw * 1.2)} '
+            f'C{f(sx)},{f(sy + sw * 1.2)} {f(sx - sw / 2)},{f(sy + sw * 1.02)} {f(sx - sw / 2)},{f(sy + sw * 0.62)} Z'
+        )
+        cross = (
+            f'M{f(sx)},{f(sy + sw * 0.16)} V{f(sy + sw * 0.86)} '
+            f'M{f(sx - sw * 0.2)},{f(sy + sw * 0.34)} H{f(sx + sw * 0.2)} '
+            f'M{f(sx - sw * 0.3)},{f(sy + sw * 0.56)} H{f(sx + sw * 0.3)}'
+        )
+        hills = (
+            f'M{f(sx - sw * 0.44)},{f(sy + sw * 0.86)} Q{f(sx - sw * 0.25)},{f(sy + sw * 0.66)} {f(sx - sw * 0.1)},{f(sy + sw * 0.84)} '
+            f'Q{f(sx)},{f(sy + sw * 0.62)} {f(sx + sw * 0.1)},{f(sy + sw * 0.84)} '
+            f'Q{f(sx + sw * 0.25)},{f(sy + sw * 0.66)} {f(sx + sw * 0.44)},{f(sy + sw * 0.86)} '
+            f'C{f(sx + sw * 0.3)},{f(sy + sw * 1.08)} {f(sx)},{f(sy + sw * 1.2)} {f(sx)},{f(sy + sw * 1.2)} '
+            f'C{f(sx)},{f(sy + sw * 1.2)} {f(sx - sw * 0.3)},{f(sy + sw * 1.08)} {f(sx - sw * 0.44)},{f(sy + sw * 0.86)} Z'
+        )
+        body = (
+            stripes
+            + f'<path d="{shield}" fill="{FLAG_RED}" stroke="{FLAG_WHITE}" stroke-width="1.6"/>'
+            + f'<path d="{hills}" fill="{FLAG_BLUE}"/>'
+            + f'<path d="{cross}" stroke="{FLAG_WHITE}" stroke-width="1.6" stroke-linecap="round"/>'
+        )
+    else:
+        half = (h + 8) / 2
+        body = (
+            f'<rect x="{f(x0)}" y="{f(y0)}" width="{w}" height="{f(half + 1)}" fill="{FLAG_WHITE}"/>'
+            f'<rect x="{f(x0)}" y="{f(y0 + half)}" width="{w}" height="{f(half + 1)}" fill="{FLAG_RED}"/>'
+            f'<path d="M{f(px)},{f(top - 6)} L{f(px + w / 2)},{f(top + h / 2)} L{f(px)},{f(top + h + 6)} Z" fill="{FLAG_BLUE}"/>'
+        )
+    return (
+        f'<clipPath id="{clip}"><path d="{outline}"/></clipPath>'
+        f'<path d="M{f(px)},{f(py)} V{f(top - 2)}" stroke="{CASTLE}" stroke-width="3"/>'
+        f'<g clip-path="url(#{clip})">{body}</g>'
+    )
+
+
 def layer_castle(rng):
     g = 890  # ground level at the hilltop
     shapes, lit = [], []
@@ -261,7 +321,9 @@ def layer_castle(rng):
         x = CX + s * 235 - 32
         shapes.append(rect(x, g - 160, 64, 170) + rect(x - 6, g - 172, 76, 14) + merlons(x - 6, g - 172, 76, mw=12, gap=8, mh=14))
 
-    flags = pennant(CX + 235, g - 186) + pennant(CX - 235, g - 186) + pennant(CX + 130, g - 255, 30) + pennant(CX - 130, g - 255, 30)
+    # red pennants on the corner towers, Slovakia and Czechia on the mid towers – the kingdom of both
+    flags = pennant(CX + 235, g - 186) + pennant(CX - 235, g - 186)
+    flags += national_flag(CX - 130, g - 255, 'sk') + national_flag(CX + 130, g - 255, 'cz')
     # main banner (swallowtail) on the keep tower
     px, py = CX, g - 426
     flags += (
