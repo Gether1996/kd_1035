@@ -50,16 +50,16 @@
                 </span>
                 <figcaption class="pillar__plaque">
                   <span class="pillar__name">{{ e.name }}</span>
-                  @if (note(e)) {
-                    <span class="pillar__note">{{ note(e) }}</span>
-                  }
                 </figcaption>
               </figure>
               <span class="pillar__capital" aria-hidden="true"></span>
               <div class="pillar__shaft">
                 <span class="pillar__icon" aria-hidden="true"><svg [appIcon]="icons[e.category]"></svg></span>
                 <h2 class="pillar__title" [id]="'hall-' + e.category">{{ title(e.category) }}</h2>
-                <p class="pillar__text">{{ h.categories[e.category].text }}</p>
+                <!-- what the superadmin wrote ("250 za týždeň"), not a stock description (Gether 28. 10. 2026) -->
+                @if (note(e)) {
+                  <p class="pillar__text">{{ note(e) }}</p>
+                }
               </div>
               <span class="pillar__base" aria-hidden="true"></span>
             </section>
@@ -82,16 +82,16 @@
                 </span>
                 <figcaption class="pillar__plaque">
                   <span class="pillar__name">{{ e.name }}</span>
-                  @if (note(e)) {
-                    <span class="pillar__note">{{ note(e) }}</span>
-                  }
                 </figcaption>
               </figure>
               <span class="pillar__capital" aria-hidden="true"></span>
               <div class="pillar__shaft">
                 <span class="pillar__icon" aria-hidden="true"><svg [appIcon]="icons[e.category]"></svg></span>
                 <h2 class="pillar__title" [id]="'hall-' + e.category">{{ title(e.category) }}</h2>
-                <p class="pillar__text">{{ h.categories[e.category].text }}</p>
+                <!-- what the superadmin wrote ("250 za týždeň"), not a stock description (Gether 28. 10. 2026) -->
+                @if (note(e)) {
+                  <p class="pillar__text">{{ note(e) }}</p>
+                }
               </div>
               <span class="pillar__base" aria-hidden="true"></span>
             </section>
