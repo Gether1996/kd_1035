@@ -73,10 +73,6 @@ export class Header {
       { label: t.kvk, link: this.i18n.path('kvk'), icon: 'swords' },
       // the anonymous forum – every signed-in player (Gether 25. 10. 2026); the address works without signing in too
       { label: t.forum, link: this.i18n.path('forum'), icon: 'messages-square', badge: this.forumUnread.count() },
-      // the Hall of Fame – approved players (Gether 28. 10. 2026)
-      ...(this.auth.user()?.approved || this.auth.user()?.is_superuser
-        ? [{ label: t.hall, link: this.i18n.path('hall'), icon: 'trophy' as const }]
-        : []),
       // the KvK evaluation – the superadmin and the players let in (Gether 13. 10. 2026)
       ...(this.auth.canEvaluate()
         ? [{ label: t.evaluation, link: this.i18n.path('evaluation'), icon: 'scale' as const }]
@@ -95,6 +91,10 @@ export class Header {
       { label: t.alliance, link: home, fragment: 'alliance' },
       { label: t.guides, link: this.i18n.path('guideHub'), exact: false },
       { label: t.community, link: home, fragment: 'community' },
+      // the Hall of Fame in the main menu – for approved players only (Gether 28. 10. 2026)
+      ...(this.auth.user()?.approved || this.auth.user()?.is_superuser
+        ? [{ label: t.hall, link: this.i18n.path('hall') }]
+        : []),
     ];
   });
 

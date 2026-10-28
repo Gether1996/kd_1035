@@ -1,0 +1,94 @@
+:host {
+  display: block;
+}
+
+// a window into the hall: its arches behind, the text on one side, the champions on the other
+.teaser {
+  display: grid;
+  gap: clamp(28px, 5vw, 48px);
+  align-items: center;
+  padding: clamp(28px, 5vw, 56px) clamp(18px, 4vw, 48px);
+  border: 1px solid color-mix(in srgb, var(--gold-400) 30%, transparent);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(90deg, rgba(7, 15, 31, 0.92), rgba(7, 15, 31, 0.6)),
+    url('/img/hall/hall.svg') center 30% / cover no-repeat,
+    var(--bg);
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+}
+
+.teaser__text {
+  text-align: center;
+
+  .lead {
+    max-width: 40ch;
+    margin-inline: auto;
+  }
+
+  .btn {
+    margin-top: 24px;
+  }
+
+  @media (min-width: 900px) {
+    text-align: left;
+
+    .lead {
+      margin-inline: 0;
+    }
+  }
+}
+
+.teaser__heroes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 3vw, 24px) clamp(8px, 2vw, 16px);
+  align-items: start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-mini {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  text-align: center;
+}
+
+.hero-mini__portrait {
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 12vw, 88px);
+  aspect-ratio: 1;
+  border: 3px solid var(--gold-400);
+  border-radius: 50%;
+  background: var(--bg-raised);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  font: 700 clamp(1.5rem, 1.2rem + 1.2vw, 2rem) / 1 var(--font-display);
+  color: var(--gold-300);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.hero-mini__name {
+  max-width: 100%;
+  font-weight: 700;
+  font-size: clamp(0.8125rem, 0.75rem + 0.3vw, 0.9375rem);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.hero-mini__what {
+  font-size: clamp(0.6875rem, 0.65rem + 0.2vw, 0.8125rem);
+  line-height: 1.25;
+  color: var(--gold-300);
+}

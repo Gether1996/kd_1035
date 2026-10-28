@@ -524,6 +524,11 @@ export const sk = {
   // the Hall of Fame on /sien-slavy (Gether 28. 10. 2026)
   hall: {
     title: 'Sieň slávy',
+    teaser: {
+      eyebrow: 'Len pre hráčov kráľovstva',
+      text: 'Hráči, na ktorých je kráľovstvo hrdé – a pár takých, na ktorých o niečo menej.',
+      cta: 'Vstúpiť do siene',
+    },
     loginText: 'Sieň slávy vidia prihlásení hráči kráľovstva.',
     error: 'Sieň slávy sa nepodarilo načítať. Skús to znova o chvíľu.',
     empty: 'Sieň slávy sa ešte len zapĺňa.',
@@ -534,6 +539,7 @@ export const sk = {
       rally: { title: 'Rally líder' },
       garrison: { title: 'Strážca garrisonu' },
       helper: { title: 'Pomocná ruka' },
+      diplomat: { title: 'Najlepší diplomat posledného KvK' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebolo ono.' },
       zero: { title: 'Top 3 zero', text: 'Minulé KvK dostali zero.' },
     },

@@ -134,7 +134,6 @@ describe('Header account slot', () => {
       ['/pripomienky', 'Pripomienky eventov'],
       ['/kvk', 'Prihláška na KvK'],
       ['/forum', 'Fórum'],
-      ['/sien-slavy', 'Sieň slávy'],
     ]);
     expect(link?.querySelector('.alert-badge')).not.toBeNull();
     expect(link?.textContent).toContain('Chýba ti meno v hre');
@@ -147,7 +146,6 @@ describe('Header account slot', () => {
       '/pripomienky',
       '/kvk',
       '/forum',
-      '/sien-slavy',
     ]);
   });
 

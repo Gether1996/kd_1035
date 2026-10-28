@@ -28,6 +28,7 @@ export type IconName =
   | 'flame'
   | 'gift'
   | 'hand-helping'
+  | 'handshake'
   | 'heart'
   | 'info'
   | 'key-round'

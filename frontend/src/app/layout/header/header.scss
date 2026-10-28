@@ -77,8 +77,20 @@
   font: 600 0.8125rem/1 var(--font-body);
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--text-dim);
   transition: color 0.25s;
+
+  // a narrower desktop with "Sieň slávy" too (Gether 28. 10. 2026): tighter, so the bar keeps one line
+  @media (min-width: 900px) and (max-width: 1279px) {
+    padding-inline: 8px;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+
+    &::after {
+      inset-inline: 8px;
+    }
+  }
 
   &::after {
     content: '';

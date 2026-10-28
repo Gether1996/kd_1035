@@ -1,6 +1,6 @@
 import { IconName } from '../../shared/icon';
 
-export type HallCategory = 'forts' | 'kp' | 'rally' | 'garrison' | 'helper' | 'mascot' | 'zero';
+export type HallCategory = 'forts' | 'kp' | 'rally' | 'garrison' | 'helper' | 'diplomat' | 'mascot' | 'zero';
 
 /** a filled place, as /api/hall/ sends it */
 export interface HallEntry {
@@ -27,7 +27,7 @@ export interface HallData {
 }
 
 /** the pedestals in the order of the hall (the mascots have their own corner) */
-export const HONOURS: HallCategory[] = ['forts', 'kp', 'rally', 'garrison', 'helper'];
+export const HONOURS: HallCategory[] = ['forts', 'kp', 'rally', 'garrison', 'helper', 'diplomat'];
 
 export const HALL_ICONS: Record<HallCategory, IconName> = {
   forts: 'castle',
@@ -35,6 +35,7 @@ export const HALL_ICONS: Record<HallCategory, IconName> = {
   rally: 'flag',
   garrison: 'shield',
   helper: 'hand-helping',
+  diplomat: 'handshake',
   mascot: 'laugh',
   zero: 'skull',
 };

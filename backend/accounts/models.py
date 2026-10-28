@@ -662,6 +662,8 @@ class HallEntry(models.Model):
         RALLY = 'rally', 'rally líder'
         GARRISON = 'garrison', 'strážca garrisonu'
         HELPER = 'helper', 'pomocná ruka'
+        # Gether 28. 10. 2026: "najlepší diplomat posledného KvK"
+        DIPLOMAT = 'diplomat', 'najlepší diplomat posledného KvK'
         MASCOT = 'mascot', 'maskot KD'
         # the other corner: who was zeroed most in the last KvK (Gether 28. 10. 2026)
         ZERO = 'zero', 'top zero minulého KvK'
