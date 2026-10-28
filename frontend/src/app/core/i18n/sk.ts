@@ -545,7 +545,6 @@ export const sk = {
     },
     place: '{n}. miesto',
     forts: ['{n} pevnosť', '{n} pevnosti', '{n} pevností'],
-    kp: '{n} KP',
     edit: {
       lead: 'Vyber hráča z webu alebo napíš meno. Prázdne miesto sa v sieni neukáže.',
       clowns: ['Klaun vľavo', 'Klaun vpravo'],

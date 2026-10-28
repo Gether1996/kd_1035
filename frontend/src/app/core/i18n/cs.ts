@@ -527,7 +527,6 @@ export const cs: Dict = {
     },
     place: '{n}. místo',
     forts: ['{n} pevnost', '{n} pevnosti', '{n} pevností'],
-    kp: '{n} KP',
     edit: {
       lead: 'Vyber hráče z webu nebo napiš jméno. Prázdné místo se v síni neukáže.',
       clowns: ['Klaun vlevo', 'Klaun vpravo'],

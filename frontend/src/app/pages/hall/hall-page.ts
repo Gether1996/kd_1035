@@ -142,12 +142,12 @@ export class HallPage {
     const text = (entry.count ?? '').trim();
     if (!text) return '';
     const h = this.t().hall;
-    // digits alone: "250 pevností", "2.3B KP"; anything else as written ("1.37B" → "1.37B KP")
+    // digits alone: "250 pevností", "2.3B"; anything else as written – no "KP" after it (Gether 28. 10. 2026)
     if (/^\d+$/.test(text)) {
       const n = Number(text);
-      return entry.category === 'forts' ? plural(n, h.forts) : h.kp.replace('{n}', shortKp(n));
+      return entry.category === 'forts' ? plural(n, h.forts) : shortKp(n);
     }
-    return entry.category === 'kp' && !/kp$/i.test(text) ? h.kp.replace('{n}', text) : text;
+    return text;
   }
 
   /** "za posledný týždeň" under the title of a top 3 */
