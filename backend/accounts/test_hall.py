@@ -49,8 +49,6 @@ class Hall(TestCase):
     def test_the_superadmin_fills_it_in_approved_players_see_it(self):
         saved = self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'note_sk': '48 pevností', 'count': '48'})
         self.assertEqual((saved.status_code, saved.json()['count']), (200, '48'))
-        kp = self.put(self.as_admin, '/api/hall/kp/1/', {'name': 'Maroš', 'count': ' 1.37B '})
-        self.assertEqual(kp.json()['count'], '1.37B')
         self.put(self.as_admin, '/api/hall/mascot/2/', {'name': 'Bobo'})
         entries = self.as_nelly.get('/api/hall/').json()['entries']
         self.assertEqual(
@@ -62,6 +60,10 @@ class Hall(TestCase):
         self.assertEqual(self.as_eve.get('/api/hall/').status_code, 403)
         self.assertEqual(Client().get('/api/hall/').status_code, 403)
         self.assertEqual(self.put(self.as_nelly, '/api/hall/kp/1/', {'name': 'Ja'}).status_code, 403)
+
+    def test_the_count_is_text_as_written(self):
+        kp = self.put(self.as_admin, '/api/hall/kp/1/', {'name': 'Maroš', 'count': ' 1.37B '})
+        self.assertEqual(kp.json()['count'], '1.37B')
 
     def test_places_and_names_are_checked(self):
         self.assertEqual(self.put(self.as_admin, '/api/hall/mascot/3/', {'name': 'X'}).status_code, 404)
