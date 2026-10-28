@@ -24,6 +24,15 @@ import { HallAdmin } from './hall-admin';
 import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, TRIOS, portrait } from './hall-data';
 
 /**
+ * Kill points the way players say them (Gether 28. 10. 2026: "v biliónoch, teda 2.3B, 1.4B"): 2273581583 → "2.3B",
+ * 842998273 → "843M", with a dot like the game
+ */
+export function shortKp(n: number): string {
+  const [value, unit] = n >= 1e9 ? [n / 1e9, 'B'] : n >= 1e6 ? [n / 1e6, 'M'] : [n, ''];
+  return (unit ? value.toFixed(value >= 100 ? 0 : 1).replace(/\.0$/, '') : String(value)) + unit;
+}
+
+/**
  * /sien-slavy – the Hall of Fame (Gether 28. 10. 2026: "kde budú určití naši hráči vyznamenaní za určité kritériá …
  * nech sa ľudia v sieni cítia dobre a dôležito"): a stone hall (img/hall/hall.svg from tools/background/generate.py)
  * as a colonnade – each category's one champion (Gether: "vždy bude len 1 top hráč") a bust on a stone column, three
@@ -119,8 +128,7 @@ export class HallPage {
     if (entry.count === null || entry.count === undefined) return '';
     const h = this.t().hall;
     if (entry.category === 'forts') return plural(entry.count, h.forts);
-    const short = new Intl.NumberFormat(this.i18n.locale(), { notation: 'compact', maximumFractionDigits: 1 });
-    return h.kp.replace('{n}', short.format(entry.count));
+    return h.kp.replace('{n}', shortKp(entry.count));
   }
 
   /** "za posledný týždeň" under the title of a top 3 */
