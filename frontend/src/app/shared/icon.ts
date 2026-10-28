@@ -49,6 +49,7 @@ export type IconName =
   | 'search'
   | 'send'
   | 'shield'
+  | 'skull'
   | 'swords'
   | 'trash-2'
   | 'trophy'

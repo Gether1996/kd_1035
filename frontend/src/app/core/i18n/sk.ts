@@ -537,9 +537,11 @@ export const sk = {
       garrison: { title: 'Strážca garrisonu', text: 'Udrží budovu, aj keď na ňu ide celý nepriateľ.' },
       helper: { title: 'Pomocná ruka', text: 'Vždy poradí a pomôže nováčikom.' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebolo ono.' },
+      zero: { title: 'Top 3 zero', text: 'Minulé KvK ich nepriateľ vynuloval najčastejšie.' },
     },
     place: '{n}. miesto',
     shame: 'Kútik hanby',
+    zeroSign: 'Minulé KvK',
     edit: {
       lead: 'Vyber hráča z webu alebo napíš meno. Prázdne miesto sa v sieni neukáže.',
       clowns: ['Klaun vľavo', 'Klaun vpravo'],
@@ -1115,7 +1117,7 @@ export const sk = {
           'Kedy si súhlasil s podmienkami používania a s ktorou ich verziou.',
           'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení – a či ťa vo svojom zozname hráčov skryl ako neaktívneho (vidí to iba on).',
           'Cookie sessionid – udrží ťa prihláseného 2 týždne, nastaví sa už na začiatku prihlásenia.',
-          'Sieň slávy – ak ťa vedenie vyznamená, schválení hráči vidia tvoje meno, avatar z Discordu, dôvod a fotku, ak ju superadmin nahrá. Fotka je uložená na našom serveri bez metadát, nie je verejná a je v týždenných zálohách; zmizne, keď ju superadmin odstráni alebo keď zmažeš účet.',
+          'Sieň slávy – ak ťa vedenie vyznamená alebo zaradí do kútika hanby (maskoti, top zero), schválení hráči vidia tvoje meno, avatar z Discordu, dôvod a fotku, ak ju superadmin nahrá. Fotka je uložená na našom serveri bez metadát, nie je verejná a je v týždenných zálohách; zmizne, keď ju superadmin odstráni alebo keď zmažeš účet.',
         ],
       },
       {

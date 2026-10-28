@@ -28,7 +28,8 @@ import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, portrait } from
  * nech sa ľudia v sieni cítia dobre a dôležito"): a stone hall (img/hall/hall.svg from tools/background/generate.py)
  * as a colonnade – each category's one champion (Gether: "vždy bude len 1 top hráč") a bust on a stone column, three
  * on a raised step, the others below – and, in the corner, the
- * mascots' "Kútik hanby": a painting of two clowns (img/hall/clowns.svg) with the two names under it. Approved players only; the superadmin fills it in on the second tab
+ * mascots' "Kútik hanby": two clowns cut out of Gether's picture (img/hall/clowns.webp, tools/hall/cutout.py) with
+ * the two names on plates under them. Approved players only; the superadmin fills it in on the second tab
  * (?tab=upravit). Not indexed, the API in the browser only.
  */
 @Component({
@@ -65,6 +66,10 @@ export class HallPage {
   /** the first three on the raised step (the middle one highest), the rest below them */
   protected readonly upper = computed(() => this.champions().slice(0, 3));
   protected readonly lower = computed(() => this.champions().slice(3));
+  /** the other corner: the three zeroed most in the last KvK, in order */
+  protected readonly zeros = computed(() =>
+    (this.data()?.entries ?? []).filter((e) => e.category === 'zero').sort((a, b) => a.place - b.place),
+  );
   protected readonly mascots = computed(() =>
     (this.data()?.entries ?? []).filter((e) => e.category === 'mascot').sort((a, b) => a.place - b.place),
   );

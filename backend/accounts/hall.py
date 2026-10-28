@@ -29,7 +29,11 @@ from .reminder_views import WriteThrottle
 FOLDER = 'hall'
 # one champion on the pedestal of a category (Gether 28. 10. 2026: "vždy bude len 1 top hráč za kategóriu"), two
 # mascots in their corner
-PLACES = {category: 1 for category in HallEntry.Category.values} | {HallEntry.Category.MASCOT: 2}
+PLACES = {category: 1 for category in HallEntry.Category.values} | {
+    HallEntry.Category.MASCOT: 2,
+    # the other corner: the three zeroed most in the last KvK (Gether 28. 10. 2026: "top 3 ZERO minulého KvK")
+    HallEntry.Category.ZERO: 3,
+}
 PHOTO_SIZE = 900
 PHOTO_MAX_BYTES = 10 * 1024 * 1024
 

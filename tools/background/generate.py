@@ -760,88 +760,6 @@ def layer_hall(rng):
     return svg(body, defs, view=f'0 0 {hw} {hh}', aspect='xMidYMin slice')
 
 
-def ruff(cx, cy, w, n, light, dark, dots=None):
-    """a puffed clown collar: two rows of overlapping circles along a gentle curve under the chin"""
-    r = w / (n - 1) * 0.72
-    out = ''
-    for row, colour, dy in ((0, dark, -10), (1, light, 0)):
-        for k in range(n - row):
-            t = (k + row / 2) / (n - 1)
-            x = cx - w / 2 + w * t
-            y = cy + dy + 14 * math.sin(math.pi * t)
-            out += f'<circle cx="{f(x)}" cy="{f(y)}" r="{f(r)}" fill="{colour}"/>'
-            if dots and row:
-                out += f'<circle cx="{f(x)}" cy="{f(y + r * 0.35)}" r="{f(r * 0.28)}" fill="{dots}"/>'
-    return out
-
-
-def layer_clowns(rng):
-    """The mascots of the Hall of Fame (Gether 28. 10. 2026: "fotku maskotov ako 2 klaunov vedľa seba, nech to ale
-    nevyzerá ako AI slop"): a framed painting of two clown busts under a circus curtain – the cheerful one with a
-    striped cone hat, the gloomy one with a bowler a size too small and a tear. Flat shapes in the site's palette, like
-    the castle."""
-    vw, vh = 640, 400
-    cream, skin, navy, ink, hair_a, hair_b = '#ece6da', '#ead7bd', '#24407a', '#0b1730', '#e0893a', '#c94a3a'
-    defs = vgrad('cbg', 0, vh, [(0, '#12224a'), (1, '#0a1530')])
-    defs += '<radialGradient id="cspot"><stop offset="0" stop-color="#ffd994" stop-opacity="0.22"/><stop offset="1" stop-color="#ffd994" stop-opacity="0"/></radialGradient>'
-    body = f'<rect width="{vw}" height="{vh}" fill="url(#cbg)"/>'
-    body += '<ellipse cx="200" cy="250" rx="190" ry="210" fill="url(#cspot)"/><ellipse cx="440" cy="255" rx="190" ry="210" fill="url(#cspot)"/>'
-
-    # --- the cheerful one: striped cone hat, orange tufts, a wide grin
-    x, y = 200, 222
-    a = f'<path d="M{x - 150},{vh} C{x - 140},{y + 110} {x - 90},{y + 92} {x},{y + 92} C{x + 90},{y + 92} {x + 140},{y + 110} {x + 150},{vh} Z" fill="{GOLD}" fill-opacity="0.85"/>'
-    a += ''.join(f'<circle cx="{x}" cy="{y + dy}" r="9" fill="{BANNER}"/>' for dy in (128, 160))
-    a += ruff(x, y + 86, 170, 8, cream, '#d6cbb6')
-    for dx, dy, r in ((-74, -6, 22), (-84, 22, 20), (-70, 44, 16), (74, -6, 22), (84, 22, 20), (70, 44, 16)):
-        a += f'<circle cx="{x + dx}" cy="{y + dy}" r="{r}" fill="{hair_a}"/>'
-    a += f'<circle cx="{x}" cy="{y}" r="74" fill="{skin}"/>'
-    a += f'<ellipse cx="{x}" cy="{y + 34}" rx="44" ry="28" fill="#fbf6ee"/>'
-    a += f'<path d="M{x - 34},{y + 26} Q{x},{y + 64} {x + 34},{y + 26} Q{x},{y + 46} {x - 34},{y + 26} Z" fill="{BANNER}"/>'
-    a += f'<circle cx="{x - 48}" cy="{y + 16}" r="12" fill="{BANNER}" fill-opacity="0.25"/><circle cx="{x + 48}" cy="{y + 16}" r="12" fill="{BANNER}" fill-opacity="0.25"/>'
-    for ex in (-26, 26):
-        a += f'<path d="M{x + ex},{y - 34} L{x + ex + 6},{y - 16} L{x + ex},{y + 2} L{x + ex - 6},{y - 16} Z" fill="{navy}" fill-opacity="0.55"/>'
-        a += f'<circle cx="{x + ex}" cy="{y - 16}" r="6" fill="{ink}"/>'
-        a += f'<path d="M{x + ex - 13},{y - 42} Q{x + ex},{y - 54} {x + ex + 13},{y - 42}" stroke="{ink}" stroke-width="4" fill="none" stroke-linecap="round"/>'
-    a += f'<circle cx="{x}" cy="{y + 6}" r="15" fill="{BANNER}"/><circle cx="{x - 5}" cy="{y + 1}" r="4" fill="#fff" fill-opacity="0.7"/>'
-    hat = f'M{x - 52},{y - 58} L{x + 20},{y - 196} L{x + 58},{y - 50} Z'
-    defs += f'<clipPath id="chat"><path d="{hat}"/></clipPath>'
-    stripes = ''.join(
-        f'<path d="M{x - 80},{y - 60 - i * 34} L{x + 80},{y - 100 - i * 34} L{x + 80},{y - 83 - i * 34} L{x - 80},{y - 43 - i * 34} Z" fill="{cream}"/>'
-        for i in range(5)
-    )
-    a += f'<path d="{hat}" fill="{BANNER}"/><g clip-path="url(#chat)">{stripes}</g>'
-    a += f'<path d="M{x - 58},{y - 52} Q{x + 2},{y - 76} {x + 64},{y - 46}" stroke="{GOLD}" stroke-width="9" fill="none" stroke-linecap="round"/>'
-    a += f'<circle cx="{x + 20}" cy="{y - 198}" r="14" fill="{GOLD}"/>'
-
-    # --- the gloomy one: a bowler a size too small, red curls, a tear and a frown
-    x, y = 440, 226
-    b = f'<path d="M{x - 150},{vh} C{x - 140},{y + 108} {x - 90},{y + 90} {x},{y + 90} C{x + 90},{y + 90} {x + 140},{y + 108} {x + 150},{vh} Z" fill="{navy}"/>'
-    b += ''.join(f'<path d="M{x + dx},{y + 120} l14,22 l-14,22 l-14,-22 Z" fill="{GOLD}" fill-opacity="0.8"/>' for dx in (-60, 0, 60))
-    b += ruff(x, y + 84, 166, 8, cream, '#d6cbb6', dots=BANNER)
-    for dx, dy, r in ((-70, -30, 24), (-86, 0, 22), (-78, 30, 20), (70, -30, 24), (86, 0, 22), (78, 30, 20), (-48, -56, 20), (48, -56, 20)):
-        b += f'<circle cx="{x + dx}" cy="{y + dy}" r="{r}" fill="{hair_b}"/>'
-    b += f'<circle cx="{x}" cy="{y}" r="70" fill="{skin}"/>'
-    b += f'<ellipse cx="{x}" cy="{y + 40}" rx="34" ry="20" fill="#fbf6ee"/>'
-    b += f'<path d="M{x - 24},{y + 48} Q{x},{y + 26} {x + 24},{y + 48}" stroke="{BANNER}" stroke-width="7" fill="none" stroke-linecap="round"/>'
-    for ex in (-24, 24):
-        b += f'<circle cx="{x + ex}" cy="{y - 12}" r="6" fill="{ink}"/>'
-        # brows up in the middle – the gloomy look
-        lift = 6 if ex < 0 else -6
-        b += f'<path d="M{x + ex - 13},{y - 30 + lift} L{x + ex + 13},{y - 30 - lift}" stroke="{ink}" stroke-width="4" stroke-linecap="round"/>'
-    b += f'<path d="M{x + 26},{y + 2} C{x + 32},{y + 14} {x + 34},{y + 20} {x + 26},{y + 24} C{x + 18},{y + 20} {x + 20},{y + 14} {x + 26},{y + 2} Z" fill="#7fb2e6"/>'
-    b += f'<circle cx="{x}" cy="{y + 12}" r="14" fill="{BANNER}"/><circle cx="{x - 5}" cy="{y + 7}" r="4" fill="#fff" fill-opacity="0.7"/>'
-    b += f'<g transform="rotate(-9 {x} {y - 70})"><ellipse cx="{x}" cy="{y - 66}" rx="62" ry="10" fill="{ink}"/>'
-    b += f'<path d="M{x - 38},{y - 66} C{x - 40},{y - 120} {x + 40},{y - 120} {x + 38},{y - 66} Z" fill="{ink}"/>'
-    b += f'<path d="M{x - 38},{y - 76} H{x + 38} V{y - 66} H{x - 38} Z" fill="{BANNER}"/></g>'
-
-    # the circus curtain over them
-    scallops = ''.join(f'Q{x0 + 40},{70 + (6 if i % 2 else 0)} {x0 + 80},38 ' for i, x0 in enumerate(range(0, vw, 80)))
-    curtain = f'<path d="M0,0 H{vw} V38 H0 Z" fill="{BANNER}"/><path d="M0,38 {scallops}Z" fill="{BANNER}"/>'
-    curtain += f'<path d="M0,38 {scallops}" stroke="{GOLD}" stroke-width="4" fill="none"/>'
-    curtain += ''.join(f'<path d="M{x0},0 V46" stroke="#8f231c" stroke-width="10" stroke-opacity="0.6"/>' for x0 in range(40, vw, 80))
-    return svg(body + a + b + curtain, defs, view=f'0 0 {vw} {vh}', aspect='xMidYMid meet')
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=1035)
@@ -874,9 +792,6 @@ def main():
     doc = layer_hall(random.Random(args.seed * 31 + 200))
     (hall_out / 'hall.svg').write_text(doc, encoding='utf-8')
     print(f'hall/hall.svg  {len(doc) / 1024:.1f} kB')
-    doc = layer_clowns(random.Random(args.seed * 31 + 201))
-    (hall_out / 'clowns.svg').write_text(doc, encoding='utf-8')
-    print(f'hall/clowns.svg  {len(doc) / 1024:.1f} kB')
 
     (PUBLIC / 'favicon.svg').write_text(logo_mark(), encoding='utf-8')
     if args.preview:

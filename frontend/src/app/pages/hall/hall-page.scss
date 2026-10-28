@@ -78,12 +78,24 @@
 }
 
 .tier--lower {
-  // the columns in the middle, the mascots' corner at the right end of the step
-  @media (min-width: 1100px) {
-    &.has-shame {
-      justify-content: space-between;
-      padding-left: clamp(24px, 4vw, 72px);
-    }
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+
+// the two corners of shame under the colonnade: the zeroed on the left, the mascots on the right; stacked on a phone
+.corners {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+
+  // only one of them: in its own corner all the same
+  > .zero:only-child {
+    margin-right: auto;
+  }
+
+  > .shame:not(.zero):only-child {
+    margin-left: auto;
   }
 }
 
@@ -255,19 +267,17 @@
 
 // "Kútik hanby": in the corner of the hall, two pinned photos – for fun, a touch tilted
 .shame {
-  flex: 0 1 380px;
+  flex: 0 1 420px;
   min-width: 0;
-  margin-bottom: 18px;
   padding: 18px clamp(14px, 3vw, 22px) 20px;
   border: 1px dashed color-mix(in srgb, var(--red-500) 60%, transparent);
   border-radius: var(--radius-sm);
   background: rgba(4, 9, 20, 0.85);
   text-align: center;
 
-  // a phone: the whole width, under the columns
+  // a phone: the whole width, one corner under the other
   @media (max-width: 599px) {
     flex-basis: 100%;
-    width: auto;
   }
 }
 
@@ -297,38 +307,41 @@
   color: var(--gold-100);
 }
 
-// a painting in a gold frame, a brass plate under each clown
-.painting {
+// the two clowns without a background, the gold plates over the bottom of their jackets (like Gether's picture)
+.mascots {
   margin: 0;
 }
 
-.painting__art {
+.mascots__art {
   display: block;
   width: 100%;
   height: auto;
-  border: 6px solid var(--gold-600);
-  border-radius: 4px;
-  box-shadow:
-    0 0 0 2px #2b1d0d,
-    0 10px 24px rgba(0, 0, 0, 0.55);
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.55));
 }
 
-.painting__plates {
+.mascots__plates {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  gap: 6%;
+  margin: -14% 3% 0;
 }
 
+// an ornate brass plate: a gold face, a dark rim, a fine inner line
 .plate {
   display: grid;
+  align-content: center;
   gap: 2px;
   min-width: 0;
-  padding: 6px 8px;
-  border: 1px solid var(--gold-600);
-  border-radius: 3px;
-  background: linear-gradient(180deg, #e9c47a, #b98a3b);
-  color: #1d1405;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 2px solid #5a3d12;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f6dc8a, #d9a944 55%, #a8772a);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 240, 196, 0.55),
+    0 6px 14px rgba(0, 0, 0, 0.55);
+  color: #2a1a05;
 
   &[data-place='2'] {
     grid-column: 2;
@@ -352,3 +365,93 @@
   font-style: italic;
   color: var(--text-dim);
 }
+
+// ---------------------------------------------------------------- the zero corner: a little graveyard
+
+.zero {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+// three stones on a strip of dark earth – the first one in the middle and tallest
+.graves {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: clamp(6px, 2vw, 14px);
+  margin: 6px 0 0;
+  padding: 0 4px 10px;
+  list-style: none;
+  background: linear-gradient(180deg, transparent calc(100% - 14px), #1a1f1a calc(100% - 14px), #0f130f);
+  border-radius: 0 0 8px 8px;
+}
+
+.grave {
+  --height: 150px;
+  order: 2;
+  min-width: 0;
+
+  &[data-place='2'] {
+    --height: 124px;
+    order: 1;
+  }
+
+  &[data-place='3'] {
+    --height: 112px;
+    order: 3;
+  }
+}
+
+.grave__stone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  min-height: var(--height);
+  margin-bottom: -4px;
+  padding: 22px 6px 12px;
+  border: 1px solid #2a3140;
+  border-bottom: 0;
+  border-radius: 50% 50% 4px 4px / 34% 34% 4px 4px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.06), transparent 45%),
+    linear-gradient(180deg, #9aa3b4, #7c8597 60%, #687083);
+  box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3);
+  // the letters are cut in: dark with a light edge under them
+  color: #10131a;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.grave__rip {
+  font: 700 0.75rem / 1 var(--font-display);
+  letter-spacing: 0.12em;
+}
+
+.grave__name {
+  font: 700 clamp(0.75rem, 0.7rem + 0.25vw, 0.9375rem) / 1.2 var(--font-display);
+  overflow-wrap: anywhere;
+
+  [data-place='1'] & {
+    font-size: clamp(0.8125rem, 0.75rem + 0.3vw, 1rem);
+  }
+}
+
+.grave__note {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.zero .shame__sign {
+  align-self: center;
+}
+
+// the graves stand at the foot of the card, whatever the mascots' corner next to it measures
+.zero .graves {
+  margin-top: auto;
+}
+

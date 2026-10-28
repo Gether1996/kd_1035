@@ -24,7 +24,7 @@ interface Draft {
 
 type Problem = 'name' | 'photo' | 'failed';
 
-const ORDER: HallCategory[] = [...HONOURS, 'mascot'];
+const ORDER: HallCategory[] = [...HONOURS, 'zero', 'mascot'];
 
 /**
  * The superadmin's editor of the Hall of Fame (the "Upraviť" tab of /sien-slavy, Gether 28. 10. 2026: "kde si to

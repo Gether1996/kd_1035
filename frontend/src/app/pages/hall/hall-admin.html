@@ -20,12 +20,12 @@
           @let e = entry(category, place);
           <form class="slot" [class.is-filled]="!!e" (submit)="save($event, category, place)" novalidate>
             @if (range(category).length > 1) {
-              <!-- the mascots: the name goes under the clown on that side of the painting -->
+              <!-- the mascots: the name goes under the clown on that side of the picture -->
               <p class="slot__place">{{ category === 'mascot' ? x.clowns[place - 1] : h.place.replace('{n}', '' + place) }}</p>
             }
 
-            <!-- the mascots are the clown painting with two names – no photo -->
-            @if (category !== 'mascot') {
+            <!-- the mascots (the two clowns) and the zero corner are names only – no photo -->
+            @if (category !== 'mascot' && category !== 'zero') {
             <div class="slot__photo">
               <span class="slot__portrait">
                 @if (e && portrait(e); as src) {

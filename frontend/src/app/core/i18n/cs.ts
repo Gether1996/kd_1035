@@ -519,9 +519,11 @@ export const cs: Dict = {
       garrison: { title: 'Strážce garrisonu', text: 'Udrží budovu, i když na ni jde celý nepřítel.' },
       helper: { title: 'Pomocná ruka', text: 'Vždy poradí a pomůže nováčkům.' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebylo ono.' },
+      zero: { title: 'Top 3 zero', text: 'Minulé KvK je nepřítel vynuloval nejčastěji.' },
     },
     place: '{n}. místo',
     shame: 'Koutek hanby',
+    zeroSign: 'Minulé KvK',
     edit: {
       lead: 'Vyber hráče z webu nebo napiš jméno. Prázdné místo se v síni neukáže.',
       clowns: ['Klaun vlevo', 'Klaun vpravo'],
@@ -1086,7 +1088,7 @@ export const cs: Dict = {
           'Kdy jsi souhlasil s podmínkami používání a s kterou jejich verzí.',
           'Zda tě správce schválil – nový hráč přidá marche a přihlášku na KvK až po schválení – a zda tě ve svém seznamu hráčů skryl jako neaktivního (vidí to jen on).',
           'Cookie sessionid – udrží tě přihlášeného 2 týdny, nastaví se už na začátku přihlášení.',
-          'Síň slávy – když tě vedení vyznamená, schválení hráči vidí tvé jméno, avatar z Discordu, důvod a fotku, pokud ji superadmin nahraje. Fotka je uložená na našem serveru bez metadat, není veřejná a je v týdenních zálohách; zmizí, když ji superadmin odstraní nebo když smažeš účet.',
+          'Síň slávy – když tě vedení vyznamená nebo zařadí do koutku hanby (maskoti, top zero), schválení hráči vidí tvé jméno, avatar z Discordu, důvod a fotku, pokud ji superadmin nahraje. Fotka je uložená na našem serveru bez metadat, není veřejná a je v týdenních zálohách; zmizí, když ji superadmin odstraní nebo když smažeš účet.',
         ],
       },
       {

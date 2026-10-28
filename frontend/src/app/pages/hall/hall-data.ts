@@ -1,6 +1,6 @@
 import { IconName } from '../../shared/icon';
 
-export type HallCategory = 'forts' | 'kp' | 'rally' | 'garrison' | 'helper' | 'mascot';
+export type HallCategory = 'forts' | 'kp' | 'rally' | 'garrison' | 'helper' | 'mascot' | 'zero';
 
 /** a filled place, as /api/hall/ sends it */
 export interface HallEntry {
@@ -36,6 +36,7 @@ export const HALL_ICONS: Record<HallCategory, IconName> = {
   garrison: 'shield',
   helper: 'hand-helping',
   mascot: 'laugh',
+  zero: 'skull',
 };
 
 /** the picture of a place: the uploaded photo, else the Discord avatar a size larger, else none (the initial shows) */

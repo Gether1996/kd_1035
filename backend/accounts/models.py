@@ -663,6 +663,8 @@ class HallEntry(models.Model):
         GARRISON = 'garrison', 'strážca garrisonu'
         HELPER = 'helper', 'pomocná ruka'
         MASCOT = 'mascot', 'maskot KD'
+        # the other corner: who was zeroed most in the last KvK (Gether 28. 10. 2026)
+        ZERO = 'zero', 'top zero minulého KvK'
 
     category = models.CharField('kategória', max_length=12, choices=Category.choices)
     place = models.PositiveSmallIntegerField('miesto', validators=[MinValueValidator(1), MaxValueValidator(3)])

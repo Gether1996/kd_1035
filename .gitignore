@@ -38,3 +38,7 @@ tools/qa/node_modules/
 
 # Database backups (worker)
 backups/
+
+# the Hall of Fame clowns: the source picture and the cut-out model (tools/hall)
+tools/hall/clowns-source.png
+tools/hall/.cache/
