@@ -18,7 +18,6 @@ import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
-import { PageHeader } from '../../shared/page-header';
 import { PendingApproval } from '../../shared/pending-approval';
 import { HallAdmin } from './hall-admin';
 import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, portrait } from './hall-data';
@@ -34,7 +33,7 @@ import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, portrait } from
  */
 @Component({
   selector: 'app-hall-page',
-  imports: [PageHeader, RouterLink, Icon, PendingApproval, HallAdmin],
+  imports: [RouterLink, Icon, PendingApproval, HallAdmin],
   templateUrl: './hall-page.html',
   styleUrls: ['../reminders/reminders-page.scss', './hall-page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,11 +72,6 @@ export class HallPage {
   protected readonly mascots = computed(() =>
     (this.data()?.entries ?? []).filter((e) => e.category === 'mascot').sort((a, b) => a.place - b.place),
   );
-
-  protected readonly crumbs = computed(() => [
-    { label: this.t().nav.home, link: this.i18n.path('home') },
-    { label: this.t().hall.title, link: this.i18n.path('hall') },
-  ]);
 
   constructor() {
     const seo = inject(Seo);

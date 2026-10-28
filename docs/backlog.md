@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **28. 10. 2026 – v1.48.3:** Sieň slávy bez veľkej hlavičky stránky – hneď pod menu len riadok s nadpisom (a záložkami superadmina) a sieň vidno bez scrollovania.
 - **28. 10. 2026 – v1.48.2:** Sieň slávy: bez červených štítkov „Kútik hanby“ a „Minulé KvK“ nad kútmi.
 - **28. 10. 2026 – v1.48.1:** Sieň slávy: maskoti sú klauni vystrihnutí z Getherovho obrázka (bez pozadia, mená na zlatých tabuľkách z nastavení), v druhom kúte **Top 3 zero minulého KvK** ako cintorín s náhrobkami.
 - **28. 10. 2026 – v1.48.0:** **Sieň slávy** (`/sien-slavy`, schválení hráči, menu účtu): kamenná sieň s oblúkmi, zástavami a fakľami, v každej z 5 kategórií (Ničiteľ pevností, Top KP, Rally líder, Strážca garrisonu, Pomocná ruka) jeden víťaz s portrétom na piedestáli, dole Kútik hanby s obrazom dvoch klaunov a menami maskotov; superadmin všetko upravuje na záložke Upraviť (hráč alebo meno, dôvod SK/CZ, fotka).

@@ -523,9 +523,7 @@ export const sk = {
   },
   // the Hall of Fame on /sien-slavy (Gether 28. 10. 2026)
   hall: {
-    eyebrow: 'Kráľovstvo 1035',
     title: 'Sieň slávy',
-    intro: 'Hráči, na ktorých je kráľovstvo hrdé.',
     loginText: 'Sieň slávy vidia prihlásení hráči kráľovstva.',
     error: 'Sieň slávy sa nepodarilo načítať. Skús to znova o chvíľu.',
     empty: 'Sieň slávy sa ešte len zapĺňa.',

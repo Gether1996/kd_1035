@@ -1,13 +1,28 @@
 // /sien-slavy – the Hall of Fame (Gether 28. 10. 2026): a stone hall, a colonnade of champions on columns, the mascots' corner
 
 .is-hall {
+  // no page header above: the room for the fixed menu, then the hall
+  padding-top: calc(var(--header-h) + 12px);
+
   @media (min-width: 1024px) {
     max-width: 1180px;
   }
 }
 
-.tabs {
-  margin-bottom: 20px;
+// the title and the superadmin's tabs on one thin line
+.hall-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+
+.hall-top__title {
+  margin: 0;
+  font: 700 clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem) / 1.2 var(--font-display);
+  color: var(--gold-100);
 }
 
 // ---------------------------------------------------------------- the hall
@@ -16,7 +31,7 @@
   position: relative;
   display: grid;
   gap: clamp(20px, 3vw, 32px);
-  padding: clamp(28px, 5vw, 72px) clamp(10px, 3vw, 40px) clamp(32px, 5vw, 64px);
+  padding: clamp(20px, 3vw, 40px) clamp(10px, 3vw, 40px) clamp(32px, 5vw, 64px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   // the arches and banners at the top, the stone fading into the page below them

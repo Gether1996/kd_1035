@@ -1,7 +1,16 @@
 @let h = t().hall;
-<app-page-header [crumbs]="crumbs()" [eyebrow]="h.eyebrow" [title]="h.title" [intro]="h.intro" />
-
+<!-- no page header: the hall itself right under the menu (Gether 28. 10. 2026: "bez balastu hore, ale aby rovno bolo
+     vidno sieň") – one thin line with the title and the superadmin's tabs -->
 <div class="container content is-wide is-hall">
+  <div class="hall-top">
+    <h1 class="hall-top__title">{{ h.title }}</h1>
+    @if (auth.user()?.is_superuser) {
+      <div class="segmented tabs" role="group" [attr.aria-label]="h.title">
+        <button type="button" [attr.aria-pressed]="!editing()" (click)="showTab(null)">{{ h.tabs.hall }}</button>
+        <button type="button" [attr.aria-pressed]="editing()" (click)="showTab('upravit')">{{ h.tabs.edit }}</button>
+      </div>
+    }
+  </div>
   @if (!auth.ready()) {
     <div class="placeholder" aria-hidden="true"></div>
   } @else if (!auth.user()) {
@@ -12,13 +21,6 @@
   } @else if (!allowed()) {
     <app-pending-approval />
   } @else {
-    @if (auth.user()?.is_superuser) {
-      <div class="segmented tabs" role="group" [attr.aria-label]="h.title">
-        <button type="button" [attr.aria-pressed]="!editing()" (click)="showTab(null)">{{ h.tabs.hall }}</button>
-        <button type="button" [attr.aria-pressed]="editing()" (click)="showTab('upravit')">{{ h.tabs.edit }}</button>
-      </div>
-    }
-
     @if (editing()) {
       <app-hall-admin />
     } @else if (failed()) {

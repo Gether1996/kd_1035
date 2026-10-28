@@ -505,9 +505,7 @@ export const cs: Dict = {
     },
   },
   hall: {
-    eyebrow: 'Království 1035',
     title: 'Síň slávy',
-    intro: 'Hráči, na které je království hrdé.',
     loginText: 'Síň slávy vidí přihlášení hráči království.',
     error: 'Síň slávy se nepodařilo načíst. Zkus to znovu za chvíli.',
     empty: 'Síň slávy se teprve zaplňuje.',
