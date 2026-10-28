@@ -540,8 +540,6 @@ export const sk = {
       zero: { title: 'Top 3 zero', text: 'Minulé KvK ich nepriateľ vynuloval najčastejšie.' },
     },
     place: '{n}. miesto',
-    shame: 'Kútik hanby',
-    zeroSign: 'Minulé KvK',
     edit: {
       lead: 'Vyber hráča z webu alebo napíš meno. Prázdne miesto sa v sieni neukáže.',
       clowns: ['Klaun vľavo', 'Klaun vpravo'],

@@ -103,7 +103,6 @@
               <!-- "Top 3 zero" of the last KvK (Gether 28. 10. 2026: "na druhú stranu do kúta … tiež na hanbu, nejakú inú
                    grafiku"): a little graveyard – a tombstone for each, the first one biggest in the middle -->
               <aside class="shame zero" aria-labelledby="hall-zero">
-                <p class="shame__sign"><svg appIcon="skull"></svg>{{ h.zeroSign }}</p>
                 <p class="shame__title" id="hall-zero">{{ h.categories.zero.title }}</p>
                 <ol class="graves">
                   @for (e of zeros(); track e.id) {
@@ -125,8 +124,7 @@
               <!-- "Kútik hanby" – the mascots for fun (Gether 28. 10. 2026: "len png klaunov bez pozadia a bez menoviek, tie
                    budú dynamické"): the two clowns cut out of Gether's picture (tools/hall/cutout.py), a plate under each -->
               <aside class="shame" aria-labelledby="hall-shame">
-                <p class="shame__sign" id="hall-shame"><svg appIcon="laugh"></svg>{{ h.shame }}</p>
-                <p class="shame__title">{{ h.categories.mascot.title }}</p>
+                <p class="shame__title" id="hall-shame">{{ h.categories.mascot.title }}</p>
                 <figure class="mascots">
                   <img class="mascots__art" src="/img/hall/clowns.webp" alt="" width="1000" height="524" loading="lazy" />
                   <figcaption class="mascots__plates">

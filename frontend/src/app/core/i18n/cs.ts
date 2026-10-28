@@ -522,8 +522,6 @@ export const cs: Dict = {
       zero: { title: 'Top 3 zero', text: 'Minulé KvK je nepřítel vynuloval nejčastěji.' },
     },
     place: '{n}. místo',
-    shame: 'Koutek hanby',
-    zeroSign: 'Minulé KvK',
     edit: {
       lead: 'Vyber hráče z webu nebo napiš jméno. Prázdné místo se v síni neukáže.',
       clowns: ['Klaun vlevo', 'Klaun vpravo'],

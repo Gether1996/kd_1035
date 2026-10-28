@@ -281,28 +281,8 @@
   }
 }
 
-.shame__sign {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 6px 14px;
-  border: 1px solid color-mix(in srgb, var(--red-500) 70%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--red-500) 16%, transparent);
-  font: 700 0.875rem / 1 var(--font-display);
-  letter-spacing: 0.06em;
-  color: var(--red-300);
-  transform: rotate(-2deg);
-
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
-}
-
 .shame__title {
-  margin: 10px 0 14px;
+  margin: 0 0 14px;
   font: 700 1.125rem / 1.2 var(--font-display);
   color: var(--gold-100);
 }
@@ -444,10 +424,6 @@
   font-weight: 600;
   line-height: 1.25;
   overflow-wrap: anywhere;
-}
-
-.zero .shame__sign {
-  align-self: center;
 }
 
 // the graves stand at the foot of the card, whatever the mascots' corner next to it measures
