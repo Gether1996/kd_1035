@@ -69,7 +69,8 @@ class Hall(TestCase):
         self.assertEqual(self.put(self.as_admin, '/api/hall/mascot/3/', {'name': 'X'}).status_code, 404)
         # one champion per category – the fort destroyers and the KP have a top 3
         self.assertEqual(self.put(self.as_admin, '/api/hall/rally/2/', {'name': 'X'}).status_code, 404)
-        self.assertEqual(self.put(self.as_admin, '/api/hall/kp/3/', {'name': 'X'}).status_code, 200)
+        self.assertEqual(self.put(self.as_admin, '/api/hall/kp/5/', {'name': 'X'}).status_code, 200)
+        self.assertEqual(self.put(self.as_admin, '/api/hall/kp/6/', {'name': 'X'}).status_code, 404)
         self.assertEqual(self.put(self.as_admin, '/api/hall/forts/3/', {'name': 'X'}).status_code, 200)
         # the zero corner holds three
         self.assertEqual(self.put(self.as_admin, '/api/hall/zero/3/', {'name': 'X'}).status_code, 200)

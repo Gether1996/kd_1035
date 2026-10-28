@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **28. 10. 2026 – v1.51.2:** Sieň slávy: Top KP je top 5 a poradie na stĺpoch je v kompaktných riadkoch (miesto, meno, číslo vpravo).
 - **28. 10. 2026 – v1.51.1:** Aréna Siene slávy nanovo – svetlejšia: súvislá misa kolosea s radmi sedadiel, atikou a cisárskou lóžou, súmrak nad ňou, svetlý piesok; Zero bez nadpisu.
 - **28. 10. 2026 – v1.51.0:** Sieň slávy má pozadie **gladiátorskej arény** – pokojný piesok v strede, tribúny kolosea s oblúkmi len po krajoch (aj v upútavke na úvode); kamenná sieň so zástavami je preč.
 - **28. 10. 2026 – v1.50.3:** Sieň slávy: Počet (pevnosti, KP) je voľný text – napíšeš „1.37B“ a tak sa aj ukáže; samé číslice web naformátuje ako doteraz.

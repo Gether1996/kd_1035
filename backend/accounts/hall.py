@@ -33,7 +33,8 @@ PLACES = {category: 1 for category in HallEntry.Category.values} | {
     # top 3 to chase (Gether 28. 10. 2026: "nech je to motivačné"): the fort destroyers of the last week, the kill
     # points of the last KvK
     HallEntry.Category.FORTS: 3,
-    HallEntry.Category.KP: 3,
+    # the KP a top 5 (Gether 28. 10. 2026: "aby som zmestil top 5")
+    HallEntry.Category.KP: 5,
     HallEntry.Category.MASCOT: 2,
     # the other corner: the three zeroed most in the last KvK (Gether 28. 10. 2026: "top 3 ZERO minulého KvK")
     HallEntry.Category.ZERO: 3,

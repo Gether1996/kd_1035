@@ -116,7 +116,8 @@
   <section class="pillar" [class.is-raised]="raised" [class.is-trio]="trio" [attr.aria-labelledby]="'hall-' + col.category">
     <figure class="pillar__hero">
       <span class="pillar__portraits">
-        @for (e of col.entries; track e.id) {
+        <!-- the first three as portraits; the KP's 4th and 5th only in the ranking -->
+        @for (e of col.entries.slice(0, 3); track e.id) {
           <span class="pillar__portrait" [attr.data-place]="e.place">
             @if (portrait(e); as src) {
               <img [src]="src" alt="" loading="lazy" />
@@ -142,17 +143,16 @@
       @if (trio) {
         <ol class="pillar__ranks">
           @for (e of col.entries; track e.id) {
+            <!-- one line: the place, the name, the number at the right; a reason under it if there is one -->
             <li>
               <span class="pillar__rank" aria-hidden="true">{{ e.place }}.</span>
-              <span class="pillar__who">
-                <span class="pillar__rank-name">{{ e.name }}</span>
-                @if (amount(e); as n) {
-                  <span class="pillar__amount">{{ n }}</span>
-                }
-                @if (note(e)) {
-                  <span class="pillar__rank-note">{{ note(e) }}</span>
-                }
-              </span>
+              <span class="pillar__rank-name">{{ e.name }}</span>
+              @if (amount(e); as n) {
+                <span class="pillar__amount">{{ n }}</span>
+              }
+              @if (note(e)) {
+                <span class="pillar__rank-note">{{ note(e) }}</span>
+              }
             </li>
           }
         </ol>
