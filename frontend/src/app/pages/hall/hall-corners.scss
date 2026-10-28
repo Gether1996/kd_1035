@@ -20,7 +20,9 @@
   margin: 0 0 14px;
   font: 700 clamp(1.125rem, 1rem + 0.5vw, 1.375rem) / 1.2 var(--font-display);
   color: var(--gold-100);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 12px rgba(0, 0, 0, 0.75);
 }
 
 // the two clowns without a background, the gold plates over the bottom of their jackets (like Gether's picture)
@@ -77,12 +79,15 @@
   overflow-wrap: anywhere;
 }
 
+// on the light sand: light text with a firm dark outline
 .shame__text {
   margin: 14px 0 0;
   font-size: 0.875rem;
   font-style: italic;
-  color: var(--text-dim);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  color: var(--text);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.7);
 }
 
 // ---------------------------------------------------------------- the zero corner: a little graveyard

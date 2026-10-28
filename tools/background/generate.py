@@ -686,89 +686,129 @@ def write_discord(layers):
 
 
 def layer_arena(rng):
-    """The Hall of Fame as a gladiators' arena (Gether 28. 10. 2026: "pozadie je chaotické … ako gladiátorskú arénu, len
-    na krajoch koloseum naznačené a v strede len piesok, nech je jednotné"): calm sand in the middle, lit from above,
-    the colosseum's tiers of arches only along the edges and a low far wall at the top. Dim, so the columns and names
-    stand in front of it."""
+    """The Hall of Fame as a gladiators' arena (Gether 28. 10. 2026: "len na krajoch koloseum naznačené a v strede len
+    piesok", then "nech to vyzerá slick, svetlejšie, vrch nech nie je úplne tmavý, lepšie tribúny"): seen from the
+    sand, the stands are one oval bowl – low at the far side, rising and coming closer towards both edges – under the
+    same dusk sky as the hero. Seat rows, two walkways and the stairs follow the oval; on top the attic with its arches
+    and the masts of the awning, at the bottom the podium wall with a gold edge, red pennants and the emperor's box.
+    Calm, light sand in the middle for the columns and names."""
     aw, ah = 1600, 1000
-    stone, stone_dark, glow = '#18213d', '#0f1630', '#3a2c1c'
-    defs = rgrad('asand', aw / 2, 260, 900, [(0, '#7a6040', 1), (0.45, '#5a4530', 1), (1, '#2c2218', 1)], sy=0.8)
-    defs += vgrad('asky', 0, 150, [(0, '#060d1f'), (1, '#0d1833')])
-    defs += rgrad('avig', aw / 2, ah * 0.45, aw * 0.72, [(0, '#000', 0), (0.75, '#02060f', 0.25), (1, '#02060f', 0.8)])
+    cx = aw / 2
 
-    body = f'<rect width="{aw}" height="{ah}" fill="url(#asand)"/>'
-    # grain of the sand – a few hundred faint specks, and the long rake marks of the morning
-    specks = ''.join(
-        f'<circle cx="{f(rng.uniform(0, aw))}" cy="{f(rng.uniform(170, ah))}" r="{f(rng.uniform(0.8, 2.2))}"/>'
-        for _ in range(520)
-    )
-    body += f'<g fill="#000" fill-opacity="0.18">{specks}</g>'
-    # the rake marks of the morning: wide ovals following the arena's shape
-    rakes = ''.join(
-        f'<ellipse cx="{aw / 2}" cy="{f(170 + i * 10)}" rx="{f(260 + i * 120)}" ry="{f(80 + i * 62)}"/>' for i in range(1, 12)
-    )
-    body += f'<g fill="none" stroke="#000" stroke-opacity="0.07" stroke-width="3">{rakes}</g>'
+    def d(x):
+        return (x - cx) / (aw / 2)
 
-    # the far wall across the top: a shallow curve with small dark arches – the other side of the arena
-    def curve(x, top, sag):
-        d = (x - aw / 2) / (aw / 2)
-        return top + sag * d * d
+    # the oval: the top of the stands (rim) and their foot on the sand (podium), both rising towards the edges
+    def rim(x):
+        return 250 - 175 * d(x) ** 4
 
-    pts_top = [(x, curve(x, 70, 70)) for x in range(-20, aw + 41, 40)]
-    pts_bot = [(x, curve(x, 175, 55)) for x in range(aw + 20, -41, -40)]
-    wall = 'M' + ' L'.join(f'{f(x)},{f(y)}' for x, y in pts_top) + ' L' + ' L'.join(f'{f(x)},{f(y)}' for x, y in pts_bot) + ' Z'
-    body += f'<rect width="{aw}" height="200" fill="url(#asky)"/>'
-    body += f'<path d="{wall}" fill="{stone}"/>'
-    arches = ''
-    for x in range(30, aw, 46):
-        y0, y1 = curve(x, 92, 68), curve(x, 160, 56)
-        w, h = 22, y1 - y0
+    def podium(x):
+        return 372 + 470 * abs(d(x)) ** 5.5
+
+    xs = list(range(-40, aw + 41, 20))
+
+    def band(top, bottom):
+        upper = [(x, top(x)) for x in xs]
+        lower = [(x, bottom(x)) for x in reversed(xs)]
+        return 'M' + ' L'.join(f'{f(x)},{f(y)}' for x, y in upper + lower) + ' Z'
+
+    def line(fn):
+        return 'M' + ' L'.join(f'{f(x)},{f(fn(x))}' for x in xs)
+
+    defs = vgrad('ksky', 0, 250, [(0, '#2b4573'), (0.45, '#5a6f9c'), (0.78, '#c4977a'), (1, '#f0c07f')])
+    defs += rgrad('ksand', cx, 420, 980, [(0, '#c9a46b', 1), (0.4, '#ae8a56', 1), (0.8, '#7f6340', 1), (1, '#5a462e', 1)], sy=0.62)
+    defs += vgrad('kstands', 120, 800, [(0, '#5f6d93'), (0.5, '#46557d'), (1, '#2e3b5e')])
+    defs += vgrad('kattic', 0, 260, [(0, '#7883a6'), (1, '#56638a')])
+    defs += rgrad('kvig', cx, 520, 1000, [(0, '#000', 0), (0.7, '#050b1a', 0.12), (1, '#050b1a', 0.55)], sy=0.75)
+
+    body = f'<rect width="{aw}" height="{ah}" fill="url(#ksky)"/>'
+    # sand under everything below the stands
+    body += f'<rect y="360" width="{aw}" height="{ah - 360}" fill="url(#ksand)"/>'
+
+    # --- the stands
+    body += f'<path d="{band(rim, podium)}" fill="url(#kstands)"/>'
+    # seat rows: fine lines following the oval, every third a little darker
+    rows = ''
+    for i in range(1, 22):
+        t = i / 22
+        rows += line(lambda x, t=t: rim(x) + (podium(x) - rim(x)) * t) + ' '
+    body += f'<path d="{rows}" stroke="#1c2745" stroke-opacity="0.35" stroke-width="1.6" fill="none"/>'
+    # two walkways (praecinctiones) – a light ledge and its shadow under it
+    for t in (0.36, 0.7):
+        walk = lambda x, t=t: rim(x) + (podium(x) - rim(x)) * t
+        body += f'<path d="{line(walk)}" stroke="#8a95b5" stroke-opacity="0.55" stroke-width="3" fill="none"/>'
+        body += f'<path d="{line(lambda x: walk(x) + 4)}" stroke="#141d36" stroke-opacity="0.45" stroke-width="3" fill="none"/>'
+    # stairs: from the rim straight down to the podium, closer together at the far side
+    stairs = ''
+    for k in range(-14, 15):
+        u = k / 14
+        x = cx + u * abs(u) ** 0.35 * aw * 0.56
+        stairs += f'M{f(x)},{f(rim(x))} L{f(cx + (x - cx) * 1.12)},{f(podium(cx + (x - cx) * 1.12))} '
+    body += f'<path d="{stairs}" stroke="#1a2440" stroke-opacity="0.45" stroke-width="2.4" fill="none"/>'
+
+    # --- the attic on the rim: a wall with arched openings and the awning's masts on top
+    def attic_h(x):
+        return 34 + 70 * d(x) ** 4
+
+    body += f'<path d="{band(lambda x: rim(x) - attic_h(x), rim)}" fill="url(#kattic)"/>'
+    body += f'<path d="{line(lambda x: rim(x) - attic_h(x))}" stroke="#c9ab7c" stroke-opacity="0.55" stroke-width="2" fill="none"/>'
+    arches, masts = '', ''
+    x = 10.0
+    while x < aw:
+        scale = 1 + 1.6 * d(x) ** 4
+        w = 16 * scale
+        h = attic_h(x) * 0.62
+        bottom = rim(x) - attic_h(x) * 0.14
         r = w / 2
-        arches += f'M{f(x - r)},{f(y1)} V{f(y0 + r)} A{f(r)},{f(r)} 0 0 1 {f(x + r)},{f(y0 + r)} V{f(y1)} Z '
-    body += f'<path d="{arches}" fill="{stone_dark}"/>'
-    # the low podium wall where the far stands meet the sand, a fine gold edge on it
-    podium = [(x, curve(x, 175, 55)) for x in range(-20, aw + 41, 40)]
-    line = 'M' + ' L'.join(f'{f(x)},{f(y)}' for x, y in podium)
-    body += f'<path d="{line} L{aw + 40},{curve(aw + 40, 196, 55)} ' + ' L'.join(
-        f'{f(x)},{f(y + 21)}' for x, y in reversed(podium)
-    ) + f' Z" fill="{stone_dark}"/>'
-    body += f'<path d="{line}" stroke="{GOLD}" stroke-opacity="0.22" stroke-width="2" fill="none"/>'
+        arches += f'M{f(x - r)},{f(bottom)} V{f(bottom - h + r)} A{f(r)},{f(r)} 0 0 1 {f(x + r)},{f(bottom - h + r)} V{f(bottom)} Z '
+        x += 34 * scale
+    x = 30.0
+    while x < aw:
+        scale = 1 + 1.6 * d(x) ** 4
+        top = rim(x) - attic_h(x)
+        masts += f'M{f(x)},{f(top)} V{f(top - 16 * scale)} '
+        x += 102 * scale
+    body += f'<path d="{arches}" fill="#27345a"/>'
+    body += f'<path d="{masts}" stroke="#3a4870" stroke-width="2.4"/>'
+    body += f'<path d="{line(rim)}" stroke="#20294a" stroke-opacity="0.6" stroke-width="3" fill="none"/>'
 
-    # the side stands: one wall curving in from each edge – wider towards the bottom, three tiers of arches split by
-    # cornices, the lowest arches warm from the torches in the corridors
-    defs += '<linearGradient id="aglow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2c1c" stop-opacity="0"/><stop offset="1" stop-color="#d0913f" stop-opacity="0.5"/></linearGradient>'
+    # --- the podium wall on the sand, a gold edge, red pennants and the emperor's box at the middle
+    def wall_h(x):
+        return 20 + 46 * abs(d(x)) ** 5
 
-    def inner(y):
-        t = max(0.0, (y - 150) / (ah - 150))
-        return 120 + 170 * t ** 0.85
+    body += f'<path d="{band(podium, lambda x: podium(x) + wall_h(x))}" fill="#2a3556"/>'
+    body += f'<path d="{line(podium)}" stroke="{GOLD}" stroke-opacity="0.7" stroke-width="2.4" fill="none"/>'
+    pennants = ''
+    for k in range(-6, 7):
+        if k == 0:
+            continue
+        u = k / 6.6
+        x = cx + u * abs(u) ** 0.25 * aw * 0.47
+        y = podium(x)
+        scale = 1 + 1.4 * abs(d(x)) ** 5
+        w, h = 12 * scale, 26 * scale
+        pennants += f'M{f(x - w / 2)},{f(y + 2)} H{f(x + w / 2)} V{f(y + h)} L{f(x)},{f(y + h - 7 * scale)} L{f(x - w / 2)},{f(y + h)} Z '
+    body += f'<path d="{pennants}" fill="{BANNER}" fill-opacity="0.9"/>'
+    # the emperor's box: a red canopy on two posts above the podium, gold trim
+    by = podium(cx)
+    body += f'<rect x="{f(cx - 46)}" y="{f(by - 62)}" width="92" height="62" fill="#1f2a4a"/>'
+    body += f'<path d="M{f(cx - 56)},{f(by - 62)} H{f(cx + 56)} L{f(cx + 46)},{f(by - 48)} H{f(cx - 46)} Z" fill="{BANNER}"/>'
+    body += f'<path d="M{f(cx - 56)},{f(by - 62)} H{f(cx + 56)}" stroke="{GOLD}" stroke-width="2.4"/>'
+    body += f'<path d="M{f(cx - 40)},{f(by - 46)} V{f(by)} M{f(cx + 40)},{f(by - 46)} V{f(by)}" stroke="#c9ab7c" stroke-width="3"/>'
 
-    def side(mirror):
-        sx = (lambda x: aw - x) if mirror else (lambda x: x)
-        ys = list(range(150, ah + 1, 25))
-        edge = ' L'.join(f'{f(sx(inner(y)))},{y}' for y in ys)
-        out = f'<path d="M{f(sx(-10))},150 L{edge} L{f(sx(-10))},{ah} Z" fill="{stone}"/>'
-        out += f'<path d="M{f(sx(inner(150)))},150 L{edge}" stroke="#000" stroke-opacity="0.35" stroke-width="6" fill="none"/>'
-        for top, bottom, arch in ((150, 380, 40), (380, 650, 54), (650, ah, 72)):
-            out += f'<path d="M{f(sx(-10))},{top} L{f(sx(inner(top)))},{top}" stroke="{GOLD}" stroke-opacity="0.16" stroke-width="2"/>'
-            out += f'<rect x="{f(min(sx(-10), sx(inner(top))))}" y="{top}" width="{f(inner(top) + 10)}" height="8" fill="{stone_dark}"/>'
-            h = (bottom - top) * 0.6
-            y1 = bottom - (bottom - top) * 0.12
-            y0 = y1 - h
-            limit = inner(y0) - 26
-            cx = 16 + arch * 0.45
-            while cx + arch * 0.35 < limit:
-                r = arch * 0.32
-                x0, x1 = sorted((sx(cx - r), sx(cx + r)))
-                shape = f'M{f(x0)},{f(y1)} V{f(y0 + r)} A{f(r)},{f(r)} 0 0 1 {f(x1)},{f(y0 + r)} V{f(y1)} Z'
-                out += f'<path d="{shape}" fill="{stone_dark}"/>'
-                if bottom == ah:
-                    out += f'<path d="{shape}" fill="url(#aglow)"/>'
-                cx += arch * 1.05
-        return out
-
-    body += side(False) + side(True)
-    body += f'<rect width="{aw}" height="{ah}" fill="url(#avig)"/>'
-    return svg(body, defs, view=f'0 0 {aw} {ah}', aspect='xMidYMid slice')
+    # --- the sand: faint rake ovals and a light grain
+    rakes = ''.join(
+        f'<ellipse cx="{cx}" cy="{f(380 + i * 6)}" rx="{f(300 + i * 115)}" ry="{f(70 + i * 52)}"/>' for i in range(1, 12)
+    )
+    # only on the sand: inside the podium wall
+    defs += f'<clipPath id="ksandclip"><path d="{band(lambda x: podium(x) + wall_h(x), lambda x: ah + 10)}"/></clipPath>'
+    body += f'<g clip-path="url(#ksandclip)" fill="none" stroke="#5a4428" stroke-opacity="0.16" stroke-width="2.4">{rakes}</g>'
+    grain = ''.join(
+        f'<circle cx="{f(rng.uniform(0, aw))}" cy="{f(rng.uniform(380, ah))}" r="{f(rng.uniform(0.6, 1.5))}"/>' for _ in range(420)
+    )
+    body += f'<g clip-path="url(#ksandclip)" fill="#4a3720" fill-opacity="0.22">{grain}</g>'
+    body += f'<rect width="{aw}" height="{ah}" fill="url(#kvig)"/>'
+    return svg(body, defs, view=f'0 0 {aw} {ah}', aspect='xMidYMin slice')
 
 
 def main():

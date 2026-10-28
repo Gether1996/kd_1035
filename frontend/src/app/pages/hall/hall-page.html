@@ -63,7 +63,8 @@
               <!-- "Top 3 zero" of the last KvK (Gether 28. 10. 2026: "na druhú stranu do kúta … tiež na hanbu, nejakú inú
                    grafiku"): a little graveyard – three equal tombstones -->
               <aside class="shame zero" aria-labelledby="hall-zero">
-                <p class="shame__title" id="hall-zero">{{ h.categories.zero.title }}</p>
+                <!-- no visible title (Gether 28. 10. 2026: "text zero nad tým daj preč úplne") – the tombstones say it -->
+                <p class="sr-only" id="hall-zero">{{ h.categories.zero.title }}</p>
                 <ol class="graves">
                   @for (e of zeros(); track e.id) {
                     <li class="grave" [attr.data-place]="e.place">

@@ -46,7 +46,7 @@
   border-radius: var(--radius);
   // a gladiators' arena (Gether 28. 10. 2026: "jednotné pozadie"): the sand everywhere, the stands at the edges
   background:
-    linear-gradient(180deg, rgba(7, 15, 31, 0.05), rgba(7, 15, 31, 0.25) 70%, rgba(7, 15, 31, 0.45)),
+    linear-gradient(180deg, rgba(7, 15, 31, 0) 40%, rgba(7, 15, 31, 0.3)),
     url('/img/hall/arena.svg') center top / cover no-repeat,
     #2c2218;
   overflow: hidden;
