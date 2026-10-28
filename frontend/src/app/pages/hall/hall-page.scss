@@ -44,19 +44,11 @@
   padding: clamp(20px, 3vw, 40px) clamp(10px, 3vw, 40px) clamp(32px, 5vw, 64px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  // the arches and banners at the top, the stone fading into the page below them
+  // a gladiators' arena (Gether 28. 10. 2026: "jednotné pozadie"): the sand everywhere, the stands at the edges
   background:
-    linear-gradient(180deg, rgba(7, 15, 31, 0.1), rgba(7, 15, 31, 0.45) 70%, rgba(7, 15, 31, 0.8)),
-    url('/img/hall/hall.svg') center top / cover no-repeat,
-    var(--bg);
-
-  // a phone: the arches at their own size at the top (stretched over the whole height one banner filled the screen)
-  @media (max-width: 899px) {
-    background:
-      linear-gradient(180deg, rgba(7, 15, 31, 0.15), rgba(7, 15, 31, 0.6) 520px, var(--bg) 900px),
-      url('/img/hall/hall.svg') center top / 900px auto no-repeat,
-      var(--bg);
-  }
+    linear-gradient(180deg, rgba(7, 15, 31, 0.05), rgba(7, 15, 31, 0.25) 70%, rgba(7, 15, 31, 0.45)),
+    url('/img/hall/arena.svg') center top / cover no-repeat,
+    #2c2218;
   overflow: hidden;
 }
 

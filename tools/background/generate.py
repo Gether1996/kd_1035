@@ -685,79 +685,90 @@ def write_discord(layers):
     cairosvg.svg2png(bytestring=mark.encode(), write_to=str(out / 'avatar.png'), output_width=1024, output_height=1024)
 
 
-def layer_hall(rng):
-    """The Hall of Fame (/sien-slavy, Gether 28. 10. 2026: "nech to vyzerá ako pekná sieň … nech sa ľudia v sieni
-    cítia dobre a dôležito"): a dark stone hall – round arches on columns, the kingdom's banners hanging in them,
-    torches on the columns, a tiled floor. Dim on purpose: the pedestals and names stand in front of it."""
-    hw, hh = 1600, 1000
-    floor = 820
-    arch_w, col_w, n = 220, 70, 5
-    left = (hw - (n * arch_w + (n + 1) * col_w)) / 2
-    defs = vgrad('hwall', 0, floor, [(0, '#0d1a35'), (1, '#081226')])
-    defs += vgrad('hfloor', floor, hh, [(0, '#0f1d38'), (1, '#060d1c')])
-    defs += vgrad('hrecess', 120, floor, [(0, '#040914'), (1, '#071024')])
-    defs += vgrad('hcol', 0, floor, [(0, '#16264a'), (1, '#0f1c38')])
-    defs += f'<radialGradient id="htorch"><stop offset="0" stop-color="{GOLD}" stop-opacity="0.32"/><stop offset="1" stop-color="{GOLD}" stop-opacity="0"/></radialGradient>'
-    defs += rgrad('hvignette', hw / 2, hh * 0.45, hw * 0.75, [(0, '#000', 0), (1, '#02060f', 0.75)])
+def layer_arena(rng):
+    """The Hall of Fame as a gladiators' arena (Gether 28. 10. 2026: "pozadie je chaotické … ako gladiátorskú arénu, len
+    na krajoch koloseum naznačené a v strede len piesok, nech je jednotné"): calm sand in the middle, lit from above,
+    the colosseum's tiers of arches only along the edges and a low far wall at the top. Dim, so the columns and names
+    stand in front of it."""
+    aw, ah = 1600, 1000
+    stone, stone_dark, glow = '#18213d', '#0f1630', '#3a2c1c'
+    defs = rgrad('asand', aw / 2, 260, 900, [(0, '#7a6040', 1), (0.45, '#5a4530', 1), (1, '#2c2218', 1)], sy=0.8)
+    defs += vgrad('asky', 0, 150, [(0, '#060d1f'), (1, '#0d1833')])
+    defs += rgrad('avig', aw / 2, ah * 0.45, aw * 0.72, [(0, '#000', 0), (0.75, '#02060f', 0.25), (1, '#02060f', 0.8)])
 
-    body = f'<rect width="{hw}" height="{floor}" fill="url(#hwall)"/>'
-    # stone courses – barely there
-    courses = ''.join(f'M0,{y} H{hw} ' for y in range(60, floor, 56))
-    joints = ''
-    for row, y in enumerate(range(4, floor, 56)):
-        offset = 0 if row % 2 else 70
-        joints += ''.join(f'M{x},{y} V{y + 56} ' for x in range(offset, hw, 140))
-    body += f'<path d="{courses}{joints}" stroke="#9fb4dd" stroke-opacity="0.045" stroke-width="2" fill="none"/>'
+    body = f'<rect width="{aw}" height="{ah}" fill="url(#asand)"/>'
+    # grain of the sand – a few hundred faint specks, and the long rake marks of the morning
+    specks = ''.join(
+        f'<circle cx="{f(rng.uniform(0, aw))}" cy="{f(rng.uniform(170, ah))}" r="{f(rng.uniform(0.8, 2.2))}"/>'
+        for _ in range(520)
+    )
+    body += f'<g fill="#000" fill-opacity="0.18">{specks}</g>'
+    # the rake marks of the morning: wide ovals following the arena's shape
+    rakes = ''.join(
+        f'<ellipse cx="{aw / 2}" cy="{f(170 + i * 10)}" rx="{f(260 + i * 120)}" ry="{f(80 + i * 62)}"/>' for i in range(1, 12)
+    )
+    body += f'<g fill="none" stroke="#000" stroke-opacity="0.07" stroke-width="3">{rakes}</g>'
 
-    arches, columns, banners, torches = '', '', '', ''
-    for i in range(n):
-        x = left + col_w + i * (arch_w + col_w)
-        top = 150 if i % 2 == 0 else 190
-        r = arch_w / 2
-        recess = f'M{f(x)},{floor} V{f(top + r)} A{f(r)},{f(r)} 0 0 1 {f(x + arch_w)},{f(top + r)} V{floor} Z'
-        arches += f'<path d="{recess}" fill="url(#hrecess)"/>'
-        arches += f'<path d="M{f(x)},{floor} V{f(top + r)} A{f(r)},{f(r)} 0 0 1 {f(x + arch_w)},{f(top + r)} V{floor}" fill="none" stroke="{GOLD}" stroke-opacity="0.13" stroke-width="3"/>'
-        # a banner of the kingdom in every arch: red with a gold crown, navy in between
-        bw, bx = 104, x + (arch_w - 104) / 2
-        btop, blen = top + r * 0.55, 360 + (40 if i == 2 else 0)
-        colour = BANNER if i % 2 == 0 else '#24407a'
-        tail = f'L{f(bx + bw)},{f(btop + blen)} L{f(bx + bw / 2)},{f(btop + blen - 34)} L{f(bx)},{f(btop + blen)} Z'
-        banners += f'<path d="M{f(bx - 12)},{f(btop)} H{f(bx + bw + 12)}" stroke="#3a2a14" stroke-width="7" stroke-linecap="round"/>'
-        banners += f'<path d="M{f(bx)},{f(btop)} H{f(bx + bw)} {tail}" fill="{colour}" fill-opacity="0.78" stroke="{GOLD}" stroke-opacity="0.45" stroke-width="3"/>'
-        cx, cy = bx + bw / 2, btop + 120
-        crown = (
-            f'M{f(cx - 30)},{f(cy + 18)} L{f(cx - 34)},{f(cy - 14)} L{f(cx - 15)},{f(cy + 2)} L{f(cx)},{f(cy - 24)} '
-            f'L{f(cx + 15)},{f(cy + 2)} L{f(cx + 34)},{f(cy - 14)} L{f(cx + 30)},{f(cy + 18)} Z'
-        )
-        banners += f'<path d="{crown}" fill="{GOLD}" fill-opacity="0.75"/>'
-        banners += f'<path d="M{f(bx + 14)},{f(btop + blen - 70)} H{f(bx + bw - 14)}" stroke="{GOLD}" stroke-opacity="0.4" stroke-width="3"/>'
-    for i in range(n + 1):
-        x = left + i * (arch_w + col_w)
-        columns += f'<rect x="{f(x)}" y="70" width="{col_w}" height="{floor - 70}" fill="url(#hcol)"/>'
-        columns += f'<rect x="{f(x - 10)}" y="70" width="{col_w + 20}" height="26" fill="#1b2d55"/>'
-        columns += f'<rect x="{f(x - 10)}" y="{floor - 30}" width="{col_w + 20}" height="30" fill="#1b2d55"/>'
-        columns += f'<path d="M{f(x + col_w * 0.3)},110 V{floor - 40} M{f(x + col_w * 0.7)},110 V{floor - 40}" stroke="#000" stroke-opacity="0.18" stroke-width="3"/>'
-        # a torch on every column but the outer ones
-        if 0 < i < n:
-            tx, ty = x + col_w / 2, 430
-            torches += f'<circle cx="{f(tx)}" cy="{f(ty - 30)}" r="150" fill="url(#htorch)"/>'
-            torches += f'<path d="M{f(tx - 14)},{f(ty)} L{f(tx + 14)},{f(ty)} L{f(tx + 7)},{f(ty + 34)} L{f(tx - 7)},{f(ty + 34)} Z" fill="#2b1d0d"/>'
-            torches += (
-                f'<path d="M{f(tx)},{f(ty - 58)} C{f(tx + 16)},{f(ty - 34)} {f(tx + 14)},{f(ty - 8)} {f(tx)},{f(ty - 2)} '
-                f'C{f(tx - 14)},{f(ty - 8)} {f(tx - 16)},{f(ty - 30)} {f(tx)},{f(ty - 58)} Z" fill="#ffb24d"/>'
-            )
-            torches += f'<path d="M{f(tx)},{f(ty - 40)} C{f(tx + 7)},{f(ty - 26)} {f(tx + 6)},{f(ty - 10)} {f(tx)},{f(ty - 6)} C{f(tx - 6)},{f(ty - 10)} {f(tx - 7)},{f(ty - 26)} {f(tx)},{f(ty - 40)} Z" fill="#ffe2a6"/>'
-    body += arches + banners + columns + torches
-    # cornice over the columns
-    body += f'<rect x="0" y="44" width="{hw}" height="30" fill="#14234a"/><path d="M0,74 H{hw}" stroke="{GOLD}" stroke-opacity="0.18" stroke-width="2"/>'
-    # the floor: tiles running to the middle
-    body += f'<rect y="{floor}" width="{hw}" height="{hh - floor}" fill="url(#hfloor)"/>'
-    tiles = ''.join(f'M{f(hw / 2 + (x - hw / 2) * 0.35)},{floor} L{x},{hh} ' for x in range(-800, hw + 801, 160))
-    tiles += ''.join(f'M0,{y} H{hw} ' for y in (850, 890, 940))
-    body += f'<path d="{tiles}" stroke="#9fb4dd" stroke-opacity="0.06" stroke-width="2" fill="none"/>'
-    body += f'<path d="M0,{floor} H{hw}" stroke="{GOLD}" stroke-opacity="0.2" stroke-width="2"/>'
-    body += f'<rect width="{hw}" height="{hh}" fill="url(#hvignette)"/>'
-    return svg(body, defs, view=f'0 0 {hw} {hh}', aspect='xMidYMin slice')
+    # the far wall across the top: a shallow curve with small dark arches – the other side of the arena
+    def curve(x, top, sag):
+        d = (x - aw / 2) / (aw / 2)
+        return top + sag * d * d
+
+    pts_top = [(x, curve(x, 70, 70)) for x in range(-20, aw + 41, 40)]
+    pts_bot = [(x, curve(x, 175, 55)) for x in range(aw + 20, -41, -40)]
+    wall = 'M' + ' L'.join(f'{f(x)},{f(y)}' for x, y in pts_top) + ' L' + ' L'.join(f'{f(x)},{f(y)}' for x, y in pts_bot) + ' Z'
+    body += f'<rect width="{aw}" height="200" fill="url(#asky)"/>'
+    body += f'<path d="{wall}" fill="{stone}"/>'
+    arches = ''
+    for x in range(30, aw, 46):
+        y0, y1 = curve(x, 92, 68), curve(x, 160, 56)
+        w, h = 22, y1 - y0
+        r = w / 2
+        arches += f'M{f(x - r)},{f(y1)} V{f(y0 + r)} A{f(r)},{f(r)} 0 0 1 {f(x + r)},{f(y0 + r)} V{f(y1)} Z '
+    body += f'<path d="{arches}" fill="{stone_dark}"/>'
+    # the low podium wall where the far stands meet the sand, a fine gold edge on it
+    podium = [(x, curve(x, 175, 55)) for x in range(-20, aw + 41, 40)]
+    line = 'M' + ' L'.join(f'{f(x)},{f(y)}' for x, y in podium)
+    body += f'<path d="{line} L{aw + 40},{curve(aw + 40, 196, 55)} ' + ' L'.join(
+        f'{f(x)},{f(y + 21)}' for x, y in reversed(podium)
+    ) + f' Z" fill="{stone_dark}"/>'
+    body += f'<path d="{line}" stroke="{GOLD}" stroke-opacity="0.22" stroke-width="2" fill="none"/>'
+
+    # the side stands: one wall curving in from each edge – wider towards the bottom, three tiers of arches split by
+    # cornices, the lowest arches warm from the torches in the corridors
+    defs += '<linearGradient id="aglow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2c1c" stop-opacity="0"/><stop offset="1" stop-color="#d0913f" stop-opacity="0.5"/></linearGradient>'
+
+    def inner(y):
+        t = max(0.0, (y - 150) / (ah - 150))
+        return 120 + 170 * t ** 0.85
+
+    def side(mirror):
+        sx = (lambda x: aw - x) if mirror else (lambda x: x)
+        ys = list(range(150, ah + 1, 25))
+        edge = ' L'.join(f'{f(sx(inner(y)))},{y}' for y in ys)
+        out = f'<path d="M{f(sx(-10))},150 L{edge} L{f(sx(-10))},{ah} Z" fill="{stone}"/>'
+        out += f'<path d="M{f(sx(inner(150)))},150 L{edge}" stroke="#000" stroke-opacity="0.35" stroke-width="6" fill="none"/>'
+        for top, bottom, arch in ((150, 380, 40), (380, 650, 54), (650, ah, 72)):
+            out += f'<path d="M{f(sx(-10))},{top} L{f(sx(inner(top)))},{top}" stroke="{GOLD}" stroke-opacity="0.16" stroke-width="2"/>'
+            out += f'<rect x="{f(min(sx(-10), sx(inner(top))))}" y="{top}" width="{f(inner(top) + 10)}" height="8" fill="{stone_dark}"/>'
+            h = (bottom - top) * 0.6
+            y1 = bottom - (bottom - top) * 0.12
+            y0 = y1 - h
+            limit = inner(y0) - 26
+            cx = 16 + arch * 0.45
+            while cx + arch * 0.35 < limit:
+                r = arch * 0.32
+                x0, x1 = sorted((sx(cx - r), sx(cx + r)))
+                shape = f'M{f(x0)},{f(y1)} V{f(y0 + r)} A{f(r)},{f(r)} 0 0 1 {f(x1)},{f(y0 + r)} V{f(y1)} Z'
+                out += f'<path d="{shape}" fill="{stone_dark}"/>'
+                if bottom == ah:
+                    out += f'<path d="{shape}" fill="url(#aglow)"/>'
+                cx += arch * 1.05
+        return out
+
+    body += side(False) + side(True)
+    body += f'<rect width="{aw}" height="{ah}" fill="url(#avig)"/>'
+    return svg(body, defs, view=f'0 0 {aw} {ah}', aspect='xMidYMid slice')
 
 
 def main():
@@ -789,9 +800,9 @@ def main():
 
     hall_out = PUBLIC / 'img' / 'hall'
     hall_out.mkdir(parents=True, exist_ok=True)
-    doc = layer_hall(random.Random(args.seed * 31 + 200))
-    (hall_out / 'hall.svg').write_text(doc, encoding='utf-8')
-    print(f'hall/hall.svg  {len(doc) / 1024:.1f} kB')
+    doc = layer_arena(random.Random(args.seed * 31 + 200))
+    (hall_out / 'arena.svg').write_text(doc, encoding='utf-8')
+    print(f'hall/arena.svg  {len(doc) / 1024:.1f} kB')
 
     (PUBLIC / 'favicon.svg').write_text(logo_mark(), encoding='utf-8')
     if args.preview:
