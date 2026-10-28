@@ -47,8 +47,10 @@ class Hall(TestCase):
         return client.put(url, json.dumps(data), content_type='application/json', HTTP_X_CSRFTOKEN=client.token)
 
     def test_the_superadmin_fills_it_in_approved_players_see_it(self):
-        saved = self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'note_sk': '48 pevností', 'count': 48})
-        self.assertEqual((saved.status_code, saved.json()['count']), (200, 48))
+        saved = self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'note_sk': '48 pevností', 'count': '48'})
+        self.assertEqual((saved.status_code, saved.json()['count']), (200, '48'))
+        kp = self.put(self.as_admin, '/api/hall/kp/1/', {'name': 'Maroš', 'count': ' 1.37B '})
+        self.assertEqual(kp.json()['count'], '1.37B')
         self.put(self.as_admin, '/api/hall/mascot/2/', {'name': 'Bobo'})
         entries = self.as_nelly.get('/api/hall/').json()['entries']
         self.assertEqual(

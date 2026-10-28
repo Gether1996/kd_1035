@@ -13,8 +13,8 @@ export interface HallEntry {
   /** the uploaded photo ('' without one) */
   photo: string;
   note: { sk: string; cs: string };
-  /** forts of the last week, kill points of the last KvK */
-  count: number | null;
+  /** forts of the last week, kill points of the last KvK – as the superadmin wrote it ("250", "1.37B"), '' = none */
+  count: string;
   // the superadmin's only – what the editor fills in again
   player?: number | null;
   custom_name?: string;

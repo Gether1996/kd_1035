@@ -128,7 +128,7 @@ export class HallAdmin {
           name: d.name.trim(),
           note_sk: d.noteSk.trim(),
           note_cs: d.noteCs.trim(),
-          count: /^\d+$/.test(d.count.trim()) ? Number(d.count.trim()) : null,
+          count: d.count.trim(),
         }),
       );
       this.store(entry);
@@ -182,7 +182,7 @@ export class HallAdmin {
       name: e.custom_name ?? '',
       noteSk: e.note_sk ?? '',
       noteCs: e.note_cs ?? '',
-      count: e.count === null || e.count === undefined ? '' : String(e.count),
+      count: e.count ?? '',
     };
   }
 

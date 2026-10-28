@@ -139,10 +139,15 @@ export class HallPage {
 
   /** "250 pevností", "1,2 mld. KP" – the number the superadmin entered, '' without one */
   protected amount(entry: HallEntry): string {
-    if (entry.count === null || entry.count === undefined) return '';
+    const text = (entry.count ?? '').trim();
+    if (!text) return '';
     const h = this.t().hall;
-    if (entry.category === 'forts') return plural(entry.count, h.forts);
-    return h.kp.replace('{n}', shortKp(entry.count));
+    // digits alone: "250 pevností", "2.3B KP"; anything else as written ("1.37B" → "1.37B KP")
+    if (/^\d+$/.test(text)) {
+      const n = Number(text);
+      return entry.category === 'forts' ? plural(n, h.forts) : h.kp.replace('{n}', shortKp(n));
+    }
+    return entry.category === 'kp' && !/kp$/i.test(text) ? h.kp.replace('{n}', text) : text;
   }
 
   /** "za posledný týždeň" under the title of a top 3 */

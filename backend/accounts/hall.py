@@ -85,8 +85,8 @@ class EntrySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=40, allow_blank=True, required=False, trim_whitespace=True)
     note_sk = serializers.CharField(max_length=120, allow_blank=True, required=False, trim_whitespace=True)
     note_cs = serializers.CharField(max_length=120, allow_blank=True, required=False, trim_whitespace=True)
-    # forts or kill points – up to the trillions KP reach
-    count = serializers.IntegerField(min_value=0, max_value=10**15, allow_null=True, required=False)
+    # forts or kill points as the superadmin writes them – "250", "1.37B"
+    count = serializers.CharField(max_length=24, allow_blank=True, required=False, trim_whitespace=True)
 
     def validate(self, data):
         if not data.get('player') and not data.get('name'):
@@ -135,7 +135,7 @@ def place(request, category, place):
             'name': data.get('name', ''),
             'note_sk': data.get('note_sk', ''),
             'note_cs': data.get('note_cs', ''),
-            'count': data.get('count'),
+            'count': data.get('count', ''),
         },
     )
     return Response(entry_data(entry, superuser=True))

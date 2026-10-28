@@ -677,8 +677,9 @@ class HallEntry(models.Model):
     name = models.CharField('meno', max_length=40, blank=True)
     note_sk = models.CharField('dôvod SK', max_length=120, blank=True)
     note_cs = models.CharField('dôvod CZ', max_length=120, blank=True)
-    # the number behind the place – forts of the last week, kill points of the last KvK (Gether 28. 10. 2026)
-    count = models.PositiveBigIntegerField('počet', null=True, blank=True)
+    # the number behind the place – forts of the last week, kill points of the last KvK (Gether 28. 10. 2026); free text
+    # since the same day ("nech tam môžem napísať napr. 1.37B"), digits alone are formatted on the page
+    count = models.CharField('počet', max_length=24, blank=True, default='')
     # relative to PRIVATE_MEDIA_ROOT, e.g. hall/mascot-1-3f2a….webp
     photo = models.CharField('fotka', max_length=120, blank=True)
     updated_at = models.DateTimeField('upravené', auto_now=True)

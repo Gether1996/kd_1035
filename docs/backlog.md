@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **28. 10. 2026 – v1.50.3:** Sieň slávy: Počet (pevnosti, KP) je voľný text – napíšeš „1.37B“ a tak sa aj ukáže; samé číslice web naformátuje ako doteraz.
 - **28. 10. 2026 – v1.50.2:** Sieň slávy: kým sú vyplnené najviac 4 kategórie, stoja všetky v jednom rade (top 3 v strede), až pri viacerých sa delia na horný a dolný rad.
 - **28. 10. 2026 – v1.50.1:** Sieň slávy: KP sa píšu ako v hre – 2.3B KP, 1.4B KP (pod miliardu napr. 843M KP).
 - **28. 10. 2026 – v1.50.0:** Sieň slávy: **Ničiteľ pevností top 3 za posledný týždeň** a **Top KP top 3 za posledné KvK** – široké stĺpy hore s tromi portrétmi a poradím s počtom („250 pevností“, „1,2 mld. KP“, pole Počet v nastaveniach), ostatné kategórie dole; kategória diplomat sa volá **KvK Leader**; **Zero** s troma rovnocennými náhrobkami.

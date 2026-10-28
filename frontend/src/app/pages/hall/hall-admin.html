@@ -93,13 +93,13 @@
                   #countInput
                   class="input"
                   type="text"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
+                  maxlength="24"
                   autocomplete="off"
+                  [placeholder]="category === 'forts' ? '250' : '1.37B'"
                   [id]="k + '-count'"
                   [value]="d.count"
                   [attr.aria-describedby]="k + '-count-hint'"
-                  (input)="set(category, place, { count: countInput.value.replace(/[^0-9]/g, '') })"
+                  (input)="set(category, place, { count: countInput.value })"
                 />
                 <p class="field__hint" [id]="k + '-count-hint'">{{ x.countHint }}</p>
               </div>

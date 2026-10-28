@@ -541,7 +541,7 @@ export const cs: Dict = {
       notePlaceholder: 'např. 48 pevností v KvK 3',
       noteCsHint: 'Prázdné = slovenský.',
       count: { forts: 'Počet pevností', kp: 'Počet KP' },
-      countHint: 'Ukáže se u hráče.',
+      countHint: 'Ukáže se u hráče tak, jak ho napíšeš (např. 1.37B).',
       photo: 'Fotka',
       upload: 'Nahrát fotku',
       change: 'Změnit fotku',

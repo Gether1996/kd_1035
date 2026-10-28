@@ -559,7 +559,7 @@ export const sk = {
       notePlaceholder: 'napr. 48 pevností v KvK 3',
       noteCsHint: 'Prázdne = slovenský.',
       count: { forts: 'Počet pevností', kp: 'Počet KP' },
-      countHint: 'Ukáže sa pri hráčovi.',
+      countHint: 'Ukáže sa pri hráčovi tak, ako ho napíšeš (napr. 1.37B).',
       photo: 'Fotka',
       upload: 'Nahrať fotku',
       change: 'Zmeniť fotku',
