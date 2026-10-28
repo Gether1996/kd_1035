@@ -537,7 +537,7 @@ export const sk = {
       garrison: { title: 'Strážca garrisonu', text: 'Udrží budovu, aj keď na ňu ide celý nepriateľ.' },
       helper: { title: 'Pomocná ruka', text: 'Vždy poradí a pomôže nováčikom.' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebolo ono.' },
-      zero: { title: 'Top 3 zero', text: 'Minulé KvK ich nepriateľ vynuloval najčastejšie.' },
+      zero: { title: 'Top 3 zero', text: 'Minulé KvK dostali zero.' },
     },
     place: '{n}. miesto',
     edit: {

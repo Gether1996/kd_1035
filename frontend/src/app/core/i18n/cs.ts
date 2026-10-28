@@ -519,7 +519,7 @@ export const cs: Dict = {
       garrison: { title: 'Strážce garrisonu', text: 'Udrží budovu, i když na ni jde celý nepřítel.' },
       helper: { title: 'Pomocná ruka', text: 'Vždy poradí a pomůže nováčkům.' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebylo ono.' },
-      zero: { title: 'Top 3 zero', text: 'Minulé KvK je nepřítel vynuloval nejčastěji.' },
+      zero: { title: 'Top 3 zero', text: 'Minulé KvK dostali zero.' },
     },
     place: '{n}. místo',
     edit: {
