@@ -4,6 +4,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models, transaction
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
 
 from kingdom.models import EVENING_BEFORE, MAX_REMINDER_MINUTES, is_minutes_list
@@ -646,3 +648,49 @@ class ForumPost(models.Model):
 
     def __str__(self):
         return f'{self.thread} · {self.created_at:%d. %m. %Y %H:%M}'
+
+
+class HallEntry(models.Model):
+    """A place in the Hall of Fame on /sien-slavy (Gether 28. 10. 2026: "kde budú určití naši hráči vyznamenaní za
+    určité kritériá"): a category, its place (one champion per category, 1–2 in the mascots' corner), a player of the website
+    or just a name, a short reason in SK/CZ and a photo the superadmin uploads (accounts/hall.py, stored in
+    PRIVATE_MEDIA_ROOT/hall – only approved players see it). Goes with the player's account, the photo with the row."""
+
+    class Category(models.TextChoices):
+        FORTS = 'forts', 'ničiteľ pevností'
+        KP = 'kp', 'top KP'
+        RALLY = 'rally', 'rally líder'
+        GARRISON = 'garrison', 'strážca garrisonu'
+        HELPER = 'helper', 'pomocná ruka'
+        MASCOT = 'mascot', 'maskot KD'
+
+    category = models.CharField('kategória', max_length=12, choices=Category.choices)
+    place = models.PositiveSmallIntegerField('miesto', validators=[MinValueValidator(1), MaxValueValidator(3)])
+    player = models.ForeignKey(
+        Player, on_delete=models.CASCADE, null=True, blank=True, related_name='hall_entries', verbose_name='hráč'
+    )
+    # without a player the name alone; with one it replaces the player's name on the page
+    name = models.CharField('meno', max_length=40, blank=True)
+    note_sk = models.CharField('dôvod SK', max_length=120, blank=True)
+    note_cs = models.CharField('dôvod CZ', max_length=120, blank=True)
+    # relative to PRIVATE_MEDIA_ROOT, e.g. hall/mascot-1-3f2a….webp
+    photo = models.CharField('fotka', max_length=120, blank=True)
+    updated_at = models.DateTimeField('upravené', auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'place']
+        verbose_name = 'miesto v sieni slávy'
+        verbose_name_plural = 'sieň slávy'
+        constraints = [models.UniqueConstraint(fields=['category', 'place'], name='one_entry_per_hall_place')]
+
+    def __str__(self):
+        return f'{self.get_category_display()} · {self.place}.'
+
+
+@receiver(post_delete, sender=HallEntry)
+def _delete_hall_photo(sender, instance, **kwargs):
+    """the photo goes with its row – also when the account cascades it away"""
+    if instance.photo:
+        from . import hall
+
+        hall.remove_photo(instance.photo)

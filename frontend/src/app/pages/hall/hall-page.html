@@ -1,0 +1,124 @@
+@let h = t().hall;
+<app-page-header [crumbs]="crumbs()" [eyebrow]="h.eyebrow" [title]="h.title" [intro]="h.intro" />
+
+<div class="container content is-wide is-hall">
+  @if (!auth.ready()) {
+    <div class="placeholder" aria-hidden="true"></div>
+  } @else if (!auth.user()) {
+    <p class="state">
+      {{ h.loginText }}
+      <a [routerLink]="i18n.path('account')">{{ t().account.login }}</a>
+    </p>
+  } @else if (!allowed()) {
+    <app-pending-approval />
+  } @else {
+    @if (auth.user()?.is_superuser) {
+      <div class="segmented tabs" role="group" [attr.aria-label]="h.title">
+        <button type="button" [attr.aria-pressed]="!editing()" (click)="showTab(null)">{{ h.tabs.hall }}</button>
+        <button type="button" [attr.aria-pressed]="editing()" (click)="showTab('upravit')">{{ h.tabs.edit }}</button>
+      </div>
+    }
+
+    @if (editing()) {
+      <app-hall-admin />
+    } @else if (failed()) {
+      <p class="state">{{ h.error }}</p>
+    } @else if (!data()) {
+      <div class="placeholder" aria-hidden="true"></div>
+    } @else {
+      <!-- the hall: a colonnade – three columns on a raised step, the others below them with the mascots' corner
+           (Gether 28. 10. 2026: "na veľkej obrazovke … nejaké piliere") -->
+      <div class="hall">
+        @if (!champions().length && !mascots().length) {
+          <p class="hall__empty">{{ h.empty }}</p>
+        }
+        @if (upper().length) {
+          <div class="tier tier--upper">
+            @for (e of upper(); track e.id) {
+              @let raised = upper().length === 3 && $index === 1;
+            <!-- a champion as a bust on a stone column: the portrait and name on top, the category cut in the shaft -->
+            <section class="pillar" [class.is-raised]="raised" [attr.aria-labelledby]="'hall-' + e.category">
+              <figure class="pillar__hero">
+                <span class="pillar__portrait">
+                  @if (portrait(e); as src) {
+                    <img [src]="src" alt="" loading="lazy" />
+                  } @else {
+                    <span class="pillar__initial" aria-hidden="true">{{ initial(e) }}</span>
+                  }
+                </span>
+                <figcaption class="pillar__plaque">
+                  <span class="pillar__name">{{ e.name }}</span>
+                  @if (note(e)) {
+                    <span class="pillar__note">{{ note(e) }}</span>
+                  }
+                </figcaption>
+              </figure>
+              <span class="pillar__capital" aria-hidden="true"></span>
+              <div class="pillar__shaft">
+                <span class="pillar__icon" aria-hidden="true"><svg [appIcon]="icons[e.category]"></svg></span>
+                <h2 class="pillar__title" [id]="'hall-' + e.category">{{ title(e.category) }}</h2>
+                <p class="pillar__text">{{ h.categories[e.category].text }}</p>
+              </div>
+              <span class="pillar__base" aria-hidden="true"></span>
+            </section>
+            }
+          </div>
+        }
+        @if (lower().length || mascots().length) {
+          <div class="tier tier--lower" [class.has-shame]="mascots().length">
+            @for (e of lower(); track e.id) {
+              @let raised = false;
+            <!-- a champion as a bust on a stone column: the portrait and name on top, the category cut in the shaft -->
+            <section class="pillar" [class.is-raised]="raised" [attr.aria-labelledby]="'hall-' + e.category">
+              <figure class="pillar__hero">
+                <span class="pillar__portrait">
+                  @if (portrait(e); as src) {
+                    <img [src]="src" alt="" loading="lazy" />
+                  } @else {
+                    <span class="pillar__initial" aria-hidden="true">{{ initial(e) }}</span>
+                  }
+                </span>
+                <figcaption class="pillar__plaque">
+                  <span class="pillar__name">{{ e.name }}</span>
+                  @if (note(e)) {
+                    <span class="pillar__note">{{ note(e) }}</span>
+                  }
+                </figcaption>
+              </figure>
+              <span class="pillar__capital" aria-hidden="true"></span>
+              <div class="pillar__shaft">
+                <span class="pillar__icon" aria-hidden="true"><svg [appIcon]="icons[e.category]"></svg></span>
+                <h2 class="pillar__title" [id]="'hall-' + e.category">{{ title(e.category) }}</h2>
+                <p class="pillar__text">{{ h.categories[e.category].text }}</p>
+              </div>
+              <span class="pillar__base" aria-hidden="true"></span>
+            </section>
+            }
+          @if (mascots().length) {
+            <!-- "Kútik hanby" – the mascots for fun (Gether 28. 10. 2026: "2 klaunov vedľa seba … a priradím k tomu len 2
+                 mená"): a painting of two clowns (tools/background/generate.py) and a name plate under each -->
+            <aside class="shame" aria-labelledby="hall-shame">
+              <p class="shame__sign" id="hall-shame"><svg appIcon="laugh"></svg>{{ h.shame }}</p>
+              <p class="shame__title">{{ h.categories.mascot.title }}</p>
+              <figure class="painting">
+                <img class="painting__art" src="/img/hall/clowns.svg" alt="" width="640" height="400" loading="lazy" />
+                <figcaption class="painting__plates">
+                  @for (e of mascots(); track e.id) {
+                    <span class="plate" [attr.data-place]="e.place">
+                      <span class="plate__name">{{ e.name }}</span>
+                      @if (note(e)) {
+                        <span class="plate__note">{{ note(e) }}</span>
+                      }
+                    </span>
+                  }
+                </figcaption>
+              </figure>
+              <p class="shame__text">{{ h.categories.mascot.text }}</p>
+            </aside>
+          }
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

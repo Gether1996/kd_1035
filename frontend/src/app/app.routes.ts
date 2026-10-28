@@ -28,6 +28,8 @@ const pages = (): Routes => [
   // the superadmin's list of players (Gether 20. 10. 2026: its own page, before a section of /ucet)
   // the anonymous forum (Gether 25. 10. 2026): in the account menu, the link works for everyone
   { path: 'forum', loadComponent: () => import('./pages/forum/forum-page').then((m) => m.ForumPage) },
+  // the Hall of Fame – approved players (Gether 28. 10. 2026)
+  { path: 'sien-slavy', loadComponent: () => import('./pages/hall/hall-page').then((m) => m.HallPage) },
   { path: 'hraci', loadComponent: () => import('./pages/players/players-page').then((m) => m.PlayersPage) },
   // the superadmin's KvK evaluation (Gether 13. 10. 2026)
   {

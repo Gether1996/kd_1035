@@ -1,0 +1,145 @@
+@let h = t().hall;
+@let x = h.edit;
+@if (failed()) {
+  <p class="state">{{ h.error }}</p>
+} @else if (!places()) {
+  <div class="placeholder" aria-hidden="true"></div>
+} @else {
+  <p class="lead">{{ x.lead }}</p>
+  <!-- a category per card side by side; the mascots (two places) across the whole width -->
+  <div class="groups">
+  @for (category of order; track category) {
+    <section class="group" [class.is-wide]="range(category).length > 1" [attr.aria-labelledby]="'hall-edit-' + category">
+      <h2 class="group__title" [id]="'hall-edit-' + category">
+        <svg [appIcon]="icons[category]"></svg>{{ h.categories[category].title }}
+      </h2>
+      <div class="group__places">
+        @for (place of range(category); track place) {
+          @let k = key(category, place);
+          @let d = draft(category, place);
+          @let e = entry(category, place);
+          <form class="slot" [class.is-filled]="!!e" (submit)="save($event, category, place)" novalidate>
+            @if (range(category).length > 1) {
+              <!-- the mascots: the name goes under the clown on that side of the painting -->
+              <p class="slot__place">{{ category === 'mascot' ? x.clowns[place - 1] : h.place.replace('{n}', '' + place) }}</p>
+            }
+
+            <!-- the mascots are the clown painting with two names – no photo -->
+            @if (category !== 'mascot') {
+            <div class="slot__photo">
+              <span class="slot__portrait">
+                @if (e && portrait(e); as src) {
+                  <img [src]="src" alt="" />
+                } @else {
+                  <svg appIcon="camera"></svg>
+                }
+              </span>
+              @if (e) {
+                <label class="pill-btn pill-btn--quiet slot__upload">
+                  <svg appIcon="camera"></svg>{{ e.photo ? x.change : x.upload }}
+                  <input
+                    #file
+                    type="file"
+                    accept="image/*"
+                    class="sr-only"
+                    [disabled]="busy() === k"
+                    (change)="upload(category, place, file)"
+                  />
+                </label>
+                @if (e.photo) {
+                  <button type="button" class="pill-btn pill-btn--quiet" [disabled]="busy() === k" (click)="removePhoto(category, place)">
+                    {{ x.removePhoto }}
+                  </button>
+                }
+                <p class="slot__hint">{{ x.photoHint }}</p>
+              } @else {
+                <p class="slot__hint">{{ x.photoFirst }}</p>
+              }
+            </div>
+            }
+
+            <div class="field">
+              <label class="field__label" [for]="k + '-player'">{{ x.player }}</label>
+              <select #playerSelect class="select" [id]="k + '-player'" (change)="pick(category, place, playerSelect.value)">
+                <option value="" [selected]="!d.player">{{ x.none }}</option>
+                @for (p of choices(); track p.id) {
+                  <option [value]="p.id" [selected]="d.player === p.id">{{ label(p) }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label" [for]="k + '-name'">{{ x.name }}</label>
+              <input
+                #nameInput
+                class="input"
+                type="text"
+                maxlength="40"
+                autocomplete="off"
+                [id]="k + '-name'"
+                [value]="d.name"
+                [attr.aria-describedby]="k + '-name-hint'"
+                [attr.aria-invalid]="problems()[k] === 'name' || null"
+                (input)="set(category, place, { name: nameInput.value })"
+              />
+              <p class="field__hint" [id]="k + '-name-hint'">{{ x.nameHint }}</p>
+            </div>
+            <div class="field">
+              <label class="field__label" [for]="k + '-sk'">{{ x.noteSk }}</label>
+              <input
+                #skInput
+                class="input"
+                type="text"
+                maxlength="120"
+                [id]="k + '-sk'"
+                [placeholder]="x.notePlaceholder"
+                [value]="d.noteSk"
+                (input)="set(category, place, { noteSk: skInput.value })"
+              />
+            </div>
+            <div class="field">
+              <label class="field__label" [for]="k + '-cs'">{{ x.noteCs }}</label>
+              <input
+                #csInput
+                class="input"
+                type="text"
+                maxlength="120"
+                [id]="k + '-cs'"
+                [value]="d.noteCs"
+                [attr.aria-describedby]="k + '-cs-hint'"
+                (input)="set(category, place, { noteCs: csInput.value })"
+              />
+              <p class="field__hint" [id]="k + '-cs-hint'">{{ x.noteCsHint }}</p>
+            </div>
+
+            <div class="slot__actions">
+              <button type="submit" class="pill-btn" [attr.aria-disabled]="busy() === k || null">
+                {{ busy() === k ? x.saving : x.save }}
+              </button>
+              @if (e) {
+                @if (confirm() === k) {
+                  <span class="slot__confirm">
+                    {{ x.confirmClear }}
+                    <button type="button" class="danger" (click)="clear(category, place)">{{ x.yes }}</button>
+                    <button type="button" class="pill-btn pill-btn--quiet" (click)="confirm.set(null)">{{ x.no }}</button>
+                  </span>
+                } @else {
+                  <button type="button" class="pill-btn pill-btn--quiet" (click)="confirm.set(k)">
+                    <svg appIcon="trash-2"></svg>{{ x.clear }}
+                  </button>
+                }
+              }
+            </div>
+            <p class="slot__state" role="status" [class.is-error]="!!problems()[k]">
+              @if (problems()[k]; as p) {
+                {{ x.errors[p] }}
+              } @else if (saved() === k) {
+                {{ x.saved }}
+              }
+            </p>
+          </form>
+        }
+      </div>
+    </section>
+  }
+  </div>
+}

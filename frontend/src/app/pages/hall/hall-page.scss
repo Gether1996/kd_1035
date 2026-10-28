@@ -1,0 +1,354 @@
+// /sien-slavy – the Hall of Fame (Gether 28. 10. 2026): a stone hall, a colonnade of champions on columns, the mascots' corner
+
+.is-hall {
+  @media (min-width: 1024px) {
+    max-width: 1180px;
+  }
+}
+
+.tabs {
+  margin-bottom: 20px;
+}
+
+// ---------------------------------------------------------------- the hall
+
+.hall {
+  position: relative;
+  display: grid;
+  gap: clamp(20px, 3vw, 32px);
+  padding: clamp(28px, 5vw, 72px) clamp(10px, 3vw, 40px) clamp(32px, 5vw, 64px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  // the arches and banners at the top, the stone fading into the page below them
+  background:
+    linear-gradient(180deg, rgba(7, 15, 31, 0.1), rgba(7, 15, 31, 0.45) 70%, rgba(7, 15, 31, 0.8)),
+    url('/img/hall/hall.svg') center top / cover no-repeat,
+    var(--bg);
+
+  // a phone: the arches at their own size at the top (stretched over the whole height one banner filled the screen)
+  @media (max-width: 899px) {
+    background:
+      linear-gradient(180deg, rgba(7, 15, 31, 0.15), rgba(7, 15, 31, 0.6) 520px, var(--bg) 900px),
+      url('/img/hall/hall.svg') center top / 900px auto no-repeat,
+      var(--bg);
+  }
+  overflow: hidden;
+}
+
+.hall__empty {
+  margin: 120px 0;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+// ---------------------------------------------------------------- the colonnade
+
+// a row of columns standing on a stone step; the upper one sits higher and holds three
+.tier {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 44px);
+  padding: 0 clamp(4px, 2vw, 24px);
+
+  // a wide screen keeps a row together
+  @media (min-width: 900px) {
+    flex-wrap: nowrap;
+  }
+
+  // the step under the columns
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: -10px;
+    left: 0;
+    height: 10px;
+    border-top: 2px solid color-mix(in srgb, var(--gold-400) 55%, transparent);
+    border-radius: 2px;
+    background: linear-gradient(180deg, #22355f, #0d1830);
+  }
+}
+
+.tier--upper {
+  width: min(100%, 980px);
+  margin: 0 auto clamp(28px, 4vw, 48px);
+}
+
+.tier--lower {
+  // the columns in the middle, the mascots' corner at the right end of the step
+  @media (min-width: 1100px) {
+    &.has-shame {
+      justify-content: space-between;
+      padding-left: clamp(24px, 4vw, 72px);
+    }
+  }
+}
+
+.pillar {
+  --shaft: clamp(150px, 16vw, 210px);
+  --portrait: clamp(84px, 9vw, 120px);
+  display: flex;
+  flex: 0 1 220px;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+
+  &.is-raised {
+    --shaft: clamp(190px, 21vw, 270px);
+    --portrait: clamp(96px, 11vw, 148px);
+  }
+
+  // a phone: two in a row, lower columns
+  @media (max-width: 599px) {
+    flex-basis: calc(50% - 10px);
+    --shaft: 128px;
+    --portrait: 82px;
+
+    .pillar__shaft {
+      width: 88%;
+      padding-inline: 2px;
+    }
+
+    &.is-raised {
+      --shaft: 128px;
+      --portrait: 82px;
+    }
+  }
+}
+
+.pillar__hero {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 10px;
+}
+
+.pillar__portrait {
+  display: grid;
+  place-items: center;
+  width: var(--portrait);
+  aspect-ratio: 1;
+  border: 3px solid var(--gold-400);
+  border-radius: 50%;
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 6px rgba(245, 196, 81, 0.14),
+    0 10px 26px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.pillar__initial {
+  font: 700 calc(var(--portrait) * 0.42) / 1 var(--font-display);
+  color: var(--gold-300);
+}
+
+// the name on a dark plate over the hall, the reason under it
+.pillar__plaque {
+  display: grid;
+  gap: 2px;
+  max-width: 100%;
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, var(--gold-400) 35%, transparent);
+  border-radius: 6px;
+  background: rgba(4, 9, 20, 0.85);
+}
+
+.pillar__name {
+  font-weight: 700;
+  font-size: clamp(0.875rem, 0.8rem + 0.35vw, 1.0625rem);
+  line-height: 1.25;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.pillar__note {
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+  line-height: 1.3;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+// the column: a capital wider than the shaft, a fluted shaft with the category cut in it, a stepped base
+.pillar__capital {
+  width: 86%;
+  height: 16px;
+  border-top: 3px solid var(--gold-400);
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #2a3f6e, #16264a);
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
+}
+
+.pillar__shaft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  width: 70%;
+  min-height: var(--shaft);
+  padding: 14px 6px 12px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 2px, transparent 2px 18px),
+    linear-gradient(90deg, #101d3a, #22365f 45%, #13213f);
+  box-shadow: inset 0 10px 14px -10px rgba(0, 0, 0, 0.7);
+}
+
+.pillar__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: rgba(4, 9, 20, 0.6);
+  color: var(--gold-300);
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.pillar__title {
+  margin: 4px 0 0;
+  font: 700 clamp(0.8125rem, 0.75rem + 0.45vw, 1.1875rem) / 1.2 var(--font-display);
+  color: var(--gold-100);
+  // whole words ("garrisonu" must not break), a long one may still go to the next line
+  overflow-wrap: normal;
+  hyphens: manual;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.pillar__text {
+  margin: 2px 0 0;
+  font-size: clamp(0.6875rem, 0.65rem + 0.2vw, 0.8125rem);
+  line-height: 1.3;
+  color: var(--text-dim);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+
+  @media (max-width: 599px) {
+    display: none;
+  }
+}
+
+.pillar__base {
+  width: 92%;
+  height: 18px;
+  border-top: 2px solid color-mix(in srgb, var(--gold-400) 50%, transparent);
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #24385f, #111e3b);
+  box-shadow: 0 -6px 0 -2px #1a2a4d;
+}
+
+// ---------------------------------------------------------------- the mascots' corner
+
+// "Kútik hanby": in the corner of the hall, two pinned photos – for fun, a touch tilted
+.shame {
+  flex: 0 1 380px;
+  min-width: 0;
+  margin-bottom: 18px;
+  padding: 18px clamp(14px, 3vw, 22px) 20px;
+  border: 1px dashed color-mix(in srgb, var(--red-500) 60%, transparent);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 9, 20, 0.85);
+  text-align: center;
+
+  // a phone: the whole width, under the columns
+  @media (max-width: 599px) {
+    flex-basis: 100%;
+    width: auto;
+  }
+}
+
+.shame__sign {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--red-500) 70%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--red-500) 16%, transparent);
+  font: 700 0.875rem / 1 var(--font-display);
+  letter-spacing: 0.06em;
+  color: var(--red-300);
+  transform: rotate(-2deg);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.shame__title {
+  margin: 10px 0 14px;
+  font: 700 1.125rem / 1.2 var(--font-display);
+  color: var(--gold-100);
+}
+
+// a painting in a gold frame, a brass plate under each clown
+.painting {
+  margin: 0;
+}
+
+.painting__art {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 6px solid var(--gold-600);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #2b1d0d,
+    0 10px 24px rgba(0, 0, 0, 0.55);
+}
+
+.painting__plates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.plate {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--gold-600);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #e9c47a, #b98a3b);
+  color: #1d1405;
+
+  &[data-place='2'] {
+    grid-column: 2;
+  }
+}
+
+.plate__name {
+  font: 700 0.9375rem / 1.2 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.plate__note {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.shame__text {
+  margin: 14px 0 0;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--text-dim);
+}

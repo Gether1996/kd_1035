@@ -8,9 +8,9 @@ const lucideDir = new URL('lucide-static/icons/', modules);
 const simpleDir = new URL('simple-icons/icons/', modules);
 
 const LUCIDE = [
-  'arrow-left', 'arrow-right', 'arrow-up-right', 'bell', 'bell-off', 'calendar-days', 'calendar-off', 'calendar-plus', 'check',
-  'chevron-down', 'chevron-right', 'chevron-up', 'clock', 'copy', 'crown', 'download', 'eye', 'eye-off', 'flag', 'flame', 'gift', 'hand-helping', 'heart', 'info', 'key-round', 'languages', 'lightbulb',
-  'link', 'log-in', 'log-out', 'map', 'menu', 'messages-square', 'pencil', 'pin', 'plus', 'repeat', 'reply', 'scale', 'search', 'send', 'shield', 'swords', 'trash-2', 'users', 'x',
+  'arrow-left', 'arrow-right', 'arrow-up-right', 'bell', 'bell-off', 'calendar-days', 'calendar-off', 'calendar-plus', 'camera', 'castle', 'check',
+  'chevron-down', 'chevron-right', 'chevron-up', 'clock', 'copy', 'crown', 'download', 'eye', 'eye-off', 'flag', 'flame', 'gift', 'hand-helping', 'heart', 'info', 'key-round', 'languages', 'laugh', 'lightbulb',
+  'link', 'log-in', 'log-out', 'map', 'menu', 'messages-square', 'pencil', 'pin', 'plus', 'repeat', 'reply', 'scale', 'search', 'send', 'shield', 'swords', 'trash-2', 'trophy', 'users', 'x',
 ];
 const BRANDS = ['discord', 'facebook'];
 

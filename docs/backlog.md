@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **28. 10. 2026 – v1.48.0:** **Sieň slávy** (`/sien-slavy`, schválení hráči, menu účtu): kamenná sieň s oblúkmi, zástavami a fakľami, v každej z 5 kategórií (Ničiteľ pevností, Top KP, Rally líder, Strážca garrisonu, Pomocná ruka) jeden víťaz s portrétom na piedestáli, dole Kútik hanby s obrazom dvoch klaunov a menami maskotov; superadmin všetko upravuje na záložke Upraviť (hráč alebo meno, dôvod SK/CZ, fotka).
 - **27. 10. 2026 – v1.47.3:** `/marche` otvorí vlastné marche (Prehľad marchov, prvá záložka), marche ostatných sú na `?tab=hraci`; staré odkazy `?tab=prehlad` fungujú ďalej.
 - **27. 10. 2026 – v1.47.2:** Vlajky SK a CZ na hrade (stredné veže) a v prepínači jazyka (na úzkom mobile len vlajky). Fórum: pri úprave správy sa bublina roztiahne na celú šírku a pole rastie s textom.
 - **26. 10. 2026 – v1.47.1:** Fórum na čítanie dlhých príspevkov (hráči: „fórum je malinké, slohovky se blbě čtou“): širšia stránka, chat beží po stránke namiesto malého okna, pole na písanie ostáva prilepené dole, širšie bubliny a väčšie písmo, pole rastie s textom; prvá návšteva vlákna od začiatku, návrat na nové správy.

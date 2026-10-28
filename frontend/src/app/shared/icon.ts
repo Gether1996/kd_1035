@@ -10,6 +10,8 @@ export type IconName =
   | 'calendar-days'
   | 'calendar-off'
   | 'calendar-plus'
+  | 'camera'
+  | 'castle'
   | 'check'
   | 'chevron-down'
   | 'chevron-right'
@@ -30,6 +32,7 @@ export type IconName =
   | 'info'
   | 'key-round'
   | 'languages'
+  | 'laugh'
   | 'lightbulb'
   | 'link'
   | 'log-in'
@@ -48,6 +51,7 @@ export type IconName =
   | 'shield'
   | 'swords'
   | 'trash-2'
+  | 'trophy'
   | 'users'
   | 'x';
 
