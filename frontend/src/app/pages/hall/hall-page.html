@@ -34,6 +34,13 @@
         @if (!columns().length && !mascots().length && !zeros().length) {
           <p class="hall__empty">{{ h.empty }}</p>
         }
+        @if (oneRow(); as row) {
+          <div class="tier tier--lower tier--one">
+            @for (col of row; track col.category) {
+              <ng-container *ngTemplateOutlet="pillar; context: { $implicit: col, raised: isTrio(col.category) }" />
+            }
+          </div>
+        } @else {
         @if (upper().length) {
           <div class="tier tier--upper">
             @for (col of upper(); track col.category) {
@@ -47,6 +54,7 @@
               <ng-container *ngTemplateOutlet="pillar; context: { $implicit: col, raised: false }" />
             }
           </div>
+        }
         }
         @if (zeros().length || mascots().length) {
           <!-- the hall's two corners of shame: the zeroed of the last KvK on the left, the mascots on the right -->

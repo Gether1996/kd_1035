@@ -109,6 +109,21 @@
   margin-bottom: clamp(28px, 4vw, 48px);
 }
 
+// a few categories in one row (Gether 28. 10. 2026): a narrower desktop keeps three of them side by side
+.tier--one {
+  @media (min-width: 900px) and (max-width: 1279px) {
+    column-gap: 16px;
+
+    .pillar.is-trio {
+      flex-basis: 280px;
+    }
+
+    .pillar:not(.is-trio) {
+      flex-basis: 190px;
+    }
+  }
+}
+
 // the two corners of shame under the colonnade: the zeroed on the left, the mascots on the right; stacked on a phone
 .corners {
   display: flex;

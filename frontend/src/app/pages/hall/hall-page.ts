@@ -27,6 +27,9 @@ import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, TRIOS, portrait
  * Kill points the way players say them (Gether 28. 10. 2026: "v biliónoch, teda 2.3B, 1.4B"): 2273581583 → "2.3B",
  * 842998273 → "843M", with a dot like the game
  */
+/** up to this many columns stand in one row */
+const ONE_ROW = 4;
+
 export function shortKp(n: number): string {
   const [value, unit] = n >= 1e9 ? [n / 1e9, 'B'] : n >= 1e6 ? [n / 1e6, 'M'] : [n, ''];
   return (unit ? value.toFixed(value >= 100 ? 0 : 1).replace(/\.0$/, '') : String(value)) + unit;
@@ -78,6 +81,17 @@ export class HallPage {
   /** the top-3 columns on the raised step, the single champions below them */
   protected readonly upper = computed(() => this.columns().filter((c) => TRIOS.includes(c.category)));
   protected readonly lower = computed(() => this.columns().filter((c) => !TRIOS.includes(c.category)));
+  /**
+   * Few columns stand in one row (Gether 28. 10. 2026: "pokiaľ nie je veľa kategórií a zmestia sa vedľa seba"): the
+   * top-3 ones in the middle, the single champions on both sides; more than ONE_ROW split into the two tiers.
+   */
+  protected readonly oneRow = computed(() => {
+    const cols = this.columns();
+    if (cols.length > ONE_ROW) return null;
+    const singles = this.lower();
+    const half = Math.ceil(singles.length / 2);
+    return [...singles.slice(0, half), ...this.upper(), ...singles.slice(half)];
+  });
   /** the other corner: the three zeroed most in the last KvK, in order */
   protected readonly zeros = computed(() =>
     (this.data()?.entries ?? []).filter((e) => e.category === 'zero').sort((a, b) => a.place - b.place),
