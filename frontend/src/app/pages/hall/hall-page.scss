@@ -168,6 +168,110 @@
   margin: 0 0 10px;
 }
 
+// three portraits on the fort destroyers' column: the first big in the middle, the second and third smaller beside it
+.pillar__portraits {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.pillar.is-trio {
+  flex-basis: 320px;
+
+  // a phone: the top 3 across the whole width
+  @media (max-width: 599px) {
+    flex-basis: 100%;
+    --portrait: 96px;
+  }
+
+  .pillar__shaft {
+    width: 80%;
+  }
+
+  .pillar__portrait {
+    --size: calc(var(--portrait) * 0.68);
+    position: relative;
+    order: 3;
+    width: var(--size);
+    margin-left: calc(var(--size) * -0.06);
+
+    &[data-place='1'] {
+      --size: var(--portrait);
+      z-index: 1;
+      order: 2;
+    }
+
+    &[data-place='2'] {
+      order: 1;
+      margin-left: 0;
+      margin-right: calc(var(--size) * -0.06);
+    }
+  }
+}
+
+// "za posledný týždeň" under the title of a top 3
+.pillar__period {
+  margin: 0;
+  font-size: clamp(0.6875rem, 0.65rem + 0.2vw, 0.8125rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+// the ranking in the shaft – 1., 2., 3. with the reasons
+.pillar__ranks {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+
+  li {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: rgba(4, 9, 20, 0.55);
+  }
+}
+
+.pillar__rank {
+  flex: none;
+  font: 700 0.9375rem / 1 var(--font-display);
+  color: var(--gold-300);
+}
+
+.pillar__who {
+  display: grid;
+  min-width: 0;
+}
+
+.pillar__rank-name {
+  font-weight: 700;
+  font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  line-height: 1.25;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+// the number at the player – the motivating part, in gold
+.pillar__amount {
+  font: 700 clamp(0.875rem, 0.8rem + 0.35vw, 1.0625rem) / 1.2 var(--font-display);
+  color: var(--gold-300);
+}
+
+.pillar__rank-note {
+  font-size: clamp(0.6875rem, 0.65rem + 0.2vw, 0.8125rem);
+  line-height: 1.25;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
 .pillar__portrait {
   display: grid;
   place-items: center;
@@ -281,190 +385,3 @@
   background: linear-gradient(180deg, #24385f, #111e3b);
   box-shadow: 0 -6px 0 -2px #1a2a4d;
 }
-
-// ---------------------------------------------------------------- the mascots' corner
-
-// "Kútik hanby": in the corner of the hall, two pinned photos – for fun, a touch tilted
-// no card of its own: the graves and the clowns stand in the hall (Gether 28. 10. 2026: "nech to splýva pekne nad
-// pozadím")
-.shame {
-  flex: 0 1 420px;
-  min-width: 0;
-  text-align: center;
-
-  // a phone: the whole width, one corner under the other
-  @media (max-width: 599px) {
-    flex-basis: 100%;
-  }
-}
-
-.shame__title {
-  margin: 0 0 14px;
-  font: 700 clamp(1.125rem, 1rem + 0.5vw, 1.375rem) / 1.2 var(--font-display);
-  color: var(--gold-100);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
-}
-
-// the two clowns without a background, the gold plates over the bottom of their jackets (like Gether's picture)
-.mascots {
-  margin: 0;
-}
-
-.mascots__art {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.55));
-  // the picture's straight bottom edge fades out beside the plates
-  mask-image: linear-gradient(180deg, #000 78%, transparent 98%);
-}
-
-.mascots__plates {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6%;
-  margin: -14% 3% 0;
-}
-
-// an ornate brass plate: a gold face, a dark rim, a fine inner line
-.plate {
-  display: grid;
-  align-content: center;
-  gap: 2px;
-  min-width: 0;
-  min-height: 52px;
-  padding: 8px 10px;
-  border: 2px solid #5a3d12;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #f6dc8a, #d9a944 55%, #a8772a);
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 240, 196, 0.55),
-    0 6px 14px rgba(0, 0, 0, 0.55);
-  color: #2a1a05;
-
-  &[data-place='2'] {
-    grid-column: 2;
-  }
-}
-
-.plate__name {
-  font: 700 0.9375rem / 1.2 var(--font-display);
-  overflow-wrap: anywhere;
-}
-
-.plate__note {
-  font-size: 0.75rem;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-}
-
-.shame__text {
-  margin: 14px 0 0;
-  font-size: 0.875rem;
-  font-style: italic;
-  color: var(--text-dim);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
-}
-
-// ---------------------------------------------------------------- the zero corner: a little graveyard
-
-.zero {
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-}
-
-// three stones on a strip of dark earth – the first one in the middle and tallest
-// flex, not a grid: one or two stones stand in the middle too
-.graves {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(6px, 2vw, 14px);
-  margin: 6px 0 0;
-  padding: 0 4px 12px;
-  list-style: none;
-}
-
-.grave {
-  --height: 150px;
-  position: relative;
-  // the shadow below stays over the hall's background
-  isolation: isolate;
-  flex: 0 1 32%;
-  order: 2;
-  min-width: 0;
-
-  // a soft shadow on the floor under the stone instead of a strip of earth
-  &::after {
-    content: '';
-    position: absolute;
-    right: -8%;
-    bottom: -10px;
-    left: -8%;
-    height: 18px;
-    border-radius: 50%;
-    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.65), transparent);
-    z-index: -1;
-  }
-
-  &[data-place='2'] {
-    --height: 124px;
-    order: 1;
-  }
-
-  &[data-place='3'] {
-    --height: 112px;
-    order: 3;
-  }
-}
-
-.grave__stone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 3px;
-  min-height: var(--height);
-  margin-bottom: -4px;
-  padding: 22px 6px 12px;
-  border: 1px solid #2a3140;
-  border-bottom: 0;
-  border-radius: 50% 50% 4px 4px / 34% 34% 4px 4px;
-  background:
-    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.06), transparent 45%),
-    linear-gradient(180deg, #9aa3b4, #7c8597 60%, #687083);
-  box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3);
-  // the letters are cut in: dark with a light edge under them
-  color: #10131a;
-  text-align: center;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.grave__rip {
-  font: 700 0.75rem / 1 var(--font-display);
-  letter-spacing: 0.12em;
-}
-
-.grave__name {
-  font: 700 clamp(0.75rem, 0.7rem + 0.25vw, 0.9375rem) / 1.2 var(--font-display);
-  overflow-wrap: anywhere;
-
-  [data-place='1'] & {
-    font-size: clamp(0.8125rem, 0.75rem + 0.3vw, 1rem);
-  }
-}
-
-.grave__note {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-// the graves stand at the foot of the card, whatever the mascots' corner next to it measures
-.zero .graves {
-  margin-top: auto;
-}
-

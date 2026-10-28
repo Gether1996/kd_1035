@@ -30,6 +30,10 @@ FOLDER = 'hall'
 # one champion on the pedestal of a category (Gether 28. 10. 2026: "vždy bude len 1 top hráč za kategóriu"), two
 # mascots in their corner
 PLACES = {category: 1 for category in HallEntry.Category.values} | {
+    # top 3 to chase (Gether 28. 10. 2026: "nech je to motivačné"): the fort destroyers of the last week, the kill
+    # points of the last KvK
+    HallEntry.Category.FORTS: 3,
+    HallEntry.Category.KP: 3,
     HallEntry.Category.MASCOT: 2,
     # the other corner: the three zeroed most in the last KvK (Gether 28. 10. 2026: "top 3 ZERO minulého KvK")
     HallEntry.Category.ZERO: 3,
@@ -68,6 +72,7 @@ def entry_data(entry: HallEntry, superuser: bool = False) -> dict:
         # the file name changes with each upload – the browser may keep it
         'photo': f'/api/hall/photos/{entry.pk}/?v={Path(entry.photo).stem[-8:]}' if entry.photo else '',
         'note': {'sk': entry.note_sk, 'cs': entry.note_cs or entry.note_sk},
+        'count': entry.count,
     }
     if superuser:
         # what the editor fills in again
@@ -80,6 +85,8 @@ class EntrySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=40, allow_blank=True, required=False, trim_whitespace=True)
     note_sk = serializers.CharField(max_length=120, allow_blank=True, required=False, trim_whitespace=True)
     note_cs = serializers.CharField(max_length=120, allow_blank=True, required=False, trim_whitespace=True)
+    # forts or kill points – up to the trillions KP reach
+    count = serializers.IntegerField(min_value=0, max_value=10**15, allow_null=True, required=False)
 
     def validate(self, data):
         if not data.get('player') and not data.get('name'):
@@ -128,6 +135,7 @@ def place(request, category, place):
             'name': data.get('name', ''),
             'note_sk': data.get('note_sk', ''),
             'note_cs': data.get('note_cs', ''),
+            'count': data.get('count'),
         },
     )
     return Response(entry_data(entry, superuser=True))

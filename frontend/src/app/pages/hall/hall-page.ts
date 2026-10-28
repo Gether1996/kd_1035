@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { isPlatformBrowser } from '@angular/common';
+import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,8 +19,9 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PendingApproval } from '../../shared/pending-approval';
+import { plural } from '../reminders/format';
 import { HallAdmin } from './hall-admin';
-import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, portrait } from './hall-data';
+import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, TRIOS, portrait } from './hall-data';
 
 /**
  * /sien-slavy – the Hall of Fame (Gether 28. 10. 2026: "kde budú určití naši hráči vyznamenaní za určité kritériá …
@@ -33,9 +34,9 @@ import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, portrait } from
  */
 @Component({
   selector: 'app-hall-page',
-  imports: [RouterLink, Icon, PendingApproval, HallAdmin],
+  imports: [NgTemplateOutlet, RouterLink, Icon, PendingApproval, HallAdmin],
   templateUrl: './hall-page.html',
-  styleUrls: ['../reminders/reminders-page.scss', './hall-page.scss'],
+  styleUrls: ['../reminders/reminders-page.scss', './hall-page.scss', './hall-corners.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HallPage {
@@ -57,14 +58,17 @@ export class HallPage {
   protected readonly allowed = computed(() => !!this.auth.user()?.approved || !!this.auth.user()?.is_superuser);
   protected readonly editing = computed(() => this.tab() === 'upravit' && !!this.auth.user()?.is_superuser);
 
-  /** the champions, in the order of the hall's categories */
-  protected readonly champions = computed(() => {
+  /** a column per category with someone on it – its places in order (the fort destroyers have three) */
+  protected readonly columns = computed(() => {
     const entries = this.data()?.entries ?? [];
-    return HONOURS.map((category) => entries.find((e) => e.category === category)).filter((e): e is HallEntry => !!e);
+    return HONOURS.map((category) => ({
+      category,
+      entries: entries.filter((e) => e.category === category).sort((a, b) => a.place - b.place),
+    })).filter((column) => column.entries.length);
   });
-  /** the first three on the raised step (the middle one highest), the rest below them */
-  protected readonly upper = computed(() => this.champions().slice(0, 3));
-  protected readonly lower = computed(() => this.champions().slice(3));
+  /** the top-3 columns on the raised step, the single champions below them */
+  protected readonly upper = computed(() => this.columns().filter((c) => TRIOS.includes(c.category)));
+  protected readonly lower = computed(() => this.columns().filter((c) => !TRIOS.includes(c.category)));
   /** the other corner: the three zeroed most in the last KvK, in order */
   protected readonly zeros = computed(() =>
     (this.data()?.entries ?? []).filter((e) => e.category === 'zero').sort((a, b) => a.place - b.place),
@@ -99,6 +103,29 @@ export class HallPage {
 
   protected title(category: HallCategory): string {
     return this.t().hall.categories[category].title;
+  }
+
+  /** a top-3 category – the ranking with the numbers, also before all three places are filled */
+  protected isTrio(category: HallCategory): boolean {
+    return TRIOS.includes(category);
+  }
+
+  protected icon(category: HallCategory) {
+    return HALL_ICONS[category];
+  }
+
+  /** "250 pevností", "1,2 mld. KP" – the number the superadmin entered, '' without one */
+  protected amount(entry: HallEntry): string {
+    if (entry.count === null || entry.count === undefined) return '';
+    const h = this.t().hall;
+    if (entry.category === 'forts') return plural(entry.count, h.forts);
+    const short = new Intl.NumberFormat(this.i18n.locale(), { notation: 'compact', maximumFractionDigits: 1 });
+    return h.kp.replace('{n}', short.format(entry.count));
+  }
+
+  /** "za posledný týždeň" under the title of a top 3 */
+  protected period(category: HallCategory): string {
+    return (this.t().hall.categories as Record<string, { period?: string }>)[category]?.period ?? '';
   }
 
   protected note(entry: HallEntry): string {

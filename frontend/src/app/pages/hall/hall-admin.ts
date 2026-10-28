@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, sign
 import { firstValueFrom } from 'rxjs';
 import { I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
-import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, portrait } from './hall-data';
+import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, TRIOS, portrait } from './hall-data';
 
 /** a player of the website to choose from (the superadmin's list of players, /api/kvk/reviewers/) */
 interface Choice {
@@ -20,6 +20,8 @@ interface Draft {
   name: string;
   noteSk: string;
   noteCs: string;
+  /** '' = none */
+  count: string;
 }
 
 type Problem = 'name' | 'photo' | 'failed';
@@ -44,6 +46,7 @@ export class HallAdmin {
   private readonly http = inject(HttpClient);
 
   protected readonly order = ORDER;
+  protected readonly trios = TRIOS;
   protected readonly icons = HALL_ICONS;
   protected readonly portrait = portrait;
   protected readonly entries = signal<HallEntry[]>([]);
@@ -96,7 +99,7 @@ export class HallAdmin {
   }
 
   protected draft(category: HallCategory, place: number): Draft {
-    return this.drafts()[this.key(category, place)] ?? { player: null, name: '', noteSk: '', noteCs: '' };
+    return this.drafts()[this.key(category, place)] ?? { player: null, name: '', noteSk: '', noteCs: '', count: '' };
   }
 
   protected set(category: HallCategory, place: number, change: Partial<Draft>): void {
@@ -125,6 +128,7 @@ export class HallAdmin {
           name: d.name.trim(),
           note_sk: d.noteSk.trim(),
           note_cs: d.noteCs.trim(),
+          count: /^\d+$/.test(d.count.trim()) ? Number(d.count.trim()) : null,
         }),
       );
       this.store(entry);
@@ -173,7 +177,13 @@ export class HallAdmin {
   }
 
   private draftOf(e: HallEntry): Draft {
-    return { player: e.player ?? null, name: e.custom_name ?? '', noteSk: e.note_sk ?? '', noteCs: e.note_cs ?? '' };
+    return {
+      player: e.player ?? null,
+      name: e.custom_name ?? '',
+      noteSk: e.note_sk ?? '',
+      noteCs: e.note_cs ?? '',
+      count: e.count === null || e.count === undefined ? '' : String(e.count),
+    };
   }
 
   private problem(key: string, problem: Problem): void {

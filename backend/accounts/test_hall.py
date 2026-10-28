@@ -47,8 +47,8 @@ class Hall(TestCase):
         return client.put(url, json.dumps(data), content_type='application/json', HTTP_X_CSRFTOKEN=client.token)
 
     def test_the_superadmin_fills_it_in_approved_players_see_it(self):
-        saved = self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'note_sk': '48 pevností'})
-        self.assertEqual(saved.status_code, 200)
+        saved = self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'note_sk': '48 pevností', 'count': 48})
+        self.assertEqual((saved.status_code, saved.json()['count']), (200, 48))
         self.put(self.as_admin, '/api/hall/mascot/2/', {'name': 'Bobo'})
         entries = self.as_nelly.get('/api/hall/').json()['entries']
         self.assertEqual(
@@ -63,8 +63,10 @@ class Hall(TestCase):
 
     def test_places_and_names_are_checked(self):
         self.assertEqual(self.put(self.as_admin, '/api/hall/mascot/3/', {'name': 'X'}).status_code, 404)
-        # one champion per category
-        self.assertEqual(self.put(self.as_admin, '/api/hall/forts/2/', {'name': 'X'}).status_code, 404)
+        # one champion per category – the fort destroyers and the KP have a top 3
+        self.assertEqual(self.put(self.as_admin, '/api/hall/rally/2/', {'name': 'X'}).status_code, 404)
+        self.assertEqual(self.put(self.as_admin, '/api/hall/kp/3/', {'name': 'X'}).status_code, 200)
+        self.assertEqual(self.put(self.as_admin, '/api/hall/forts/3/', {'name': 'X'}).status_code, 200)
         # the zero corner holds three
         self.assertEqual(self.put(self.as_admin, '/api/hall/zero/3/', {'name': 'X'}).status_code, 200)
         self.assertEqual(self.put(self.as_admin, '/api/hall/zero/4/', {'name': 'X'}).status_code, 404)

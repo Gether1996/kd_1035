@@ -13,6 +13,8 @@ export interface HallEntry {
   /** the uploaded photo ('' without one) */
   photo: string;
   note: { sk: string; cs: string };
+  /** forts of the last week, kill points of the last KvK */
+  count: number | null;
   // the superadmin's only – what the editor fills in again
   player?: number | null;
   custom_name?: string;
@@ -25,6 +27,9 @@ export interface HallData {
   /** the superadmin's only: how many places each category has */
   places?: Record<HallCategory, number>;
 }
+
+/** the categories with a top 3 – the wide columns on the raised step (Gether 28. 10. 2026: "nech je to motivačné") */
+export const TRIOS: HallCategory[] = ['forts', 'kp'];
 
 /** the pedestals in the order of the hall (the mascots have their own corner) */
 export const HONOURS: HallCategory[] = ['forts', 'kp', 'rally', 'garrison', 'helper', 'diplomat'];

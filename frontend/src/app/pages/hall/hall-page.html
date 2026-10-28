@@ -31,70 +31,20 @@
       <!-- the hall: a colonnade – three columns on a raised step, the others below them with the mascots' corner
            (Gether 28. 10. 2026: "na veľkej obrazovke … nejaké piliere") -->
       <div class="hall">
-        @if (!champions().length && !mascots().length) {
+        @if (!columns().length && !mascots().length && !zeros().length) {
           <p class="hall__empty">{{ h.empty }}</p>
         }
         @if (upper().length) {
           <div class="tier tier--upper">
-            @for (e of upper(); track e.id) {
-              @let raised = upper().length === 3 && $index === 1;
-            <!-- a champion as a bust on a stone column: the portrait and name on top, the category cut in the shaft -->
-            <section class="pillar" [class.is-raised]="raised" [attr.aria-labelledby]="'hall-' + e.category">
-              <figure class="pillar__hero">
-                <span class="pillar__portrait">
-                  @if (portrait(e); as src) {
-                    <img [src]="src" alt="" loading="lazy" />
-                  } @else {
-                    <span class="pillar__initial" aria-hidden="true">{{ initial(e) }}</span>
-                  }
-                </span>
-                <figcaption class="pillar__plaque">
-                  <span class="pillar__name">{{ e.name }}</span>
-                </figcaption>
-              </figure>
-              <span class="pillar__capital" aria-hidden="true"></span>
-              <div class="pillar__shaft">
-                <span class="pillar__icon" aria-hidden="true"><svg [appIcon]="icons[e.category]"></svg></span>
-                <h2 class="pillar__title" [id]="'hall-' + e.category">{{ title(e.category) }}</h2>
-                <!-- what the superadmin wrote ("250 za týždeň"), not a stock description (Gether 28. 10. 2026) -->
-                @if (note(e)) {
-                  <p class="pillar__text">{{ note(e) }}</p>
-                }
-              </div>
-              <span class="pillar__base" aria-hidden="true"></span>
-            </section>
+            @for (col of upper(); track col.category) {
+              <ng-container *ngTemplateOutlet="pillar; context: { $implicit: col, raised: true }" />
             }
           </div>
         }
         @if (lower().length) {
           <div class="tier tier--lower">
-            @for (e of lower(); track e.id) {
-              @let raised = false;
-            <!-- a champion as a bust on a stone column: the portrait and name on top, the category cut in the shaft -->
-            <section class="pillar" [class.is-raised]="raised" [attr.aria-labelledby]="'hall-' + e.category">
-              <figure class="pillar__hero">
-                <span class="pillar__portrait">
-                  @if (portrait(e); as src) {
-                    <img [src]="src" alt="" loading="lazy" />
-                  } @else {
-                    <span class="pillar__initial" aria-hidden="true">{{ initial(e) }}</span>
-                  }
-                </span>
-                <figcaption class="pillar__plaque">
-                  <span class="pillar__name">{{ e.name }}</span>
-                </figcaption>
-              </figure>
-              <span class="pillar__capital" aria-hidden="true"></span>
-              <div class="pillar__shaft">
-                <span class="pillar__icon" aria-hidden="true"><svg [appIcon]="icons[e.category]"></svg></span>
-                <h2 class="pillar__title" [id]="'hall-' + e.category">{{ title(e.category) }}</h2>
-                <!-- what the superadmin wrote ("250 za týždeň"), not a stock description (Gether 28. 10. 2026) -->
-                @if (note(e)) {
-                  <p class="pillar__text">{{ note(e) }}</p>
-                }
-              </div>
-              <span class="pillar__base" aria-hidden="true"></span>
-            </section>
+            @for (col of lower(); track col.category) {
+              <ng-container *ngTemplateOutlet="pillar; context: { $implicit: col, raised: false }" />
             }
           </div>
         }
@@ -103,7 +53,7 @@
           <div class="corners">
             @if (zeros().length) {
               <!-- "Top 3 zero" of the last KvK (Gether 28. 10. 2026: "na druhú stranu do kúta … tiež na hanbu, nejakú inú
-                   grafiku"): a little graveyard – a tombstone for each, the first one biggest in the middle -->
+                   grafiku"): a little graveyard – three equal tombstones -->
               <aside class="shame zero" aria-labelledby="hall-zero">
                 <p class="shame__title" id="hall-zero">{{ h.categories.zero.title }}</p>
                 <ol class="graves">
@@ -111,7 +61,6 @@
                     <li class="grave" [attr.data-place]="e.place">
                       <span class="grave__stone">
                         <span class="grave__rip" aria-hidden="true">R.I.P.</span>
-                        <span class="sr-only">{{ e.place }}.</span>
                         <span class="grave__name">{{ e.name }}</span>
                         @if (note(e)) {
                           <span class="grave__note">{{ note(e) }}</span>
@@ -148,3 +97,61 @@
     }
   }
 </div>
+
+<!-- a category as a stone column: its champion as a bust on top, the category cut in the shaft. The fort destroyers
+     and the KP are a top 3 (Gether 28. 10. 2026): three portraits on top – the first in the middle – and the ranking in
+     the shaft -->
+<ng-template #pillar let-col let-raised="raised">
+  @let first = col.entries[0];
+  @let trio = isTrio(col.category);
+  <section class="pillar" [class.is-raised]="raised" [class.is-trio]="trio" [attr.aria-labelledby]="'hall-' + col.category">
+    <figure class="pillar__hero">
+      <span class="pillar__portraits">
+        @for (e of col.entries; track e.id) {
+          <span class="pillar__portrait" [attr.data-place]="e.place">
+            @if (portrait(e); as src) {
+              <img [src]="src" alt="" loading="lazy" />
+            } @else {
+              <span class="pillar__initial" aria-hidden="true">{{ initial(e) }}</span>
+            }
+          </span>
+        }
+      </span>
+      @if (!trio) {
+        <figcaption class="pillar__plaque">
+          <span class="pillar__name">{{ first.name }}</span>
+        </figcaption>
+      }
+    </figure>
+    <span class="pillar__capital" aria-hidden="true"></span>
+    <div class="pillar__shaft">
+      <span class="pillar__icon" aria-hidden="true"><svg [appIcon]="icon(col.category)"></svg></span>
+      <h2 class="pillar__title" [id]="'hall-' + col.category">{{ title(col.category) }}</h2>
+      @if (period(col.category); as when) {
+        <p class="pillar__period">{{ when }}</p>
+      }
+      @if (trio) {
+        <ol class="pillar__ranks">
+          @for (e of col.entries; track e.id) {
+            <li>
+              <span class="pillar__rank" aria-hidden="true">{{ e.place }}.</span>
+              <span class="pillar__who">
+                <span class="pillar__rank-name">{{ e.name }}</span>
+                @if (amount(e); as n) {
+                  <span class="pillar__amount">{{ n }}</span>
+                }
+                @if (note(e)) {
+                  <span class="pillar__rank-note">{{ note(e) }}</span>
+                }
+              </span>
+            </li>
+          }
+        </ol>
+      } @else if (note(first)) {
+        <!-- what the superadmin wrote ("250 za týždeň"), not a stock description (Gether 28. 10. 2026) -->
+        <p class="pillar__text">{{ note(first) }}</p>
+      }
+    </div>
+    <span class="pillar__base" aria-hidden="true"></span>
+  </section>
+</ng-template>

@@ -21,7 +21,9 @@
           <form class="slot" [class.is-filled]="!!e" (submit)="save($event, category, place)" novalidate>
             @if (range(category).length > 1) {
               <!-- the mascots: the name goes under the clown on that side of the picture -->
-              <p class="slot__place">{{ category === 'mascot' ? x.clowns[place - 1] : h.place.replace('{n}', '' + place) }}</p>
+              <p class="slot__place">
+                {{ category === 'mascot' ? x.clowns[place - 1] : category === 'zero' ? x.graves[place - 1] : h.place.replace('{n}', '' + place) }}
+              </p>
             }
 
             <!-- the mascots (the two clowns) and the zero corner are names only – no photo -->
@@ -83,6 +85,25 @@
               />
               <p class="field__hint" [id]="k + '-name-hint'">{{ x.nameHint }}</p>
             </div>
+            @if (trios.includes(category)) {
+              <!-- the number shown at the player: forts of the last week, KP of the last KvK -->
+              <div class="field">
+                <label class="field__label" [for]="k + '-count'">{{ category === 'forts' ? x.count.forts : x.count.kp }}</label>
+                <input
+                  #countInput
+                  class="input"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  autocomplete="off"
+                  [id]="k + '-count'"
+                  [value]="d.count"
+                  [attr.aria-describedby]="k + '-count-hint'"
+                  (input)="set(category, place, { count: countInput.value.replace(/[^0-9]/g, '') })"
+                />
+                <p class="field__hint" [id]="k + '-count-hint'">{{ x.countHint }}</p>
+              </div>
+            }
             <div class="field">
               <label class="field__label" [for]="k + '-sk'">{{ x.noteSk }}</label>
               <input

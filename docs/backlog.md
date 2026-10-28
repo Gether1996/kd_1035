@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **28. 10. 2026 – v1.50.0:** Sieň slávy: **Ničiteľ pevností top 3 za posledný týždeň** a **Top KP top 3 za posledné KvK** – široké stĺpy hore s tromi portrétmi a poradím s počtom („250 pevností“, „1,2 mld. KP“, pole Počet v nastaveniach), ostatné kategórie dole; kategória diplomat sa volá **KvK Leader**; **Zero** s troma rovnocennými náhrobkami.
 - **28. 10. 2026 – v1.49.0:** Sieň slávy: nová kategória **Najlepší diplomat posledného KvK**, položka v hlavnom menu (len schválení hráči) a upútavka s víťazmi na úvodnej stránke pod Alianciou.
 - **28. 10. 2026 – v1.48.6:** Sieň slávy na širokých monitoroch až 1680 px; spodný rad stĺpov sa zalamuje a zmestí, koľko sa dá (3 hore, ostatné dole).
 - **28. 10. 2026 – v1.48.5:** Sieň slávy: na stĺpe pod kategóriou namiesto predvoleného popisu dôvod zadaný superadminom (napr. „250 za týždeň“), aj na mobile; pod portrétom len meno.
