@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **28. 10. 2026 – v1.48.6:** Sieň slávy na širokých monitoroch až 1680 px; spodný rad stĺpov sa zalamuje a zmestí, koľko sa dá (3 hore, ostatné dole).
 - **28. 10. 2026 – v1.48.5:** Sieň slávy: na stĺpe pod kategóriou namiesto predvoleného popisu dôvod zadaný superadminom (napr. „250 za týždeň“), aj na mobile; pod portrétom len meno.
 - **28. 10. 2026 – v1.48.4:** Sieň slávy: kúty top 3 zero a maskoti bez vlastných kariet – náhrobky a klauni stoja priamo v sieni, jeden či dva náhrobky v strede, spodok obrázka klaunov sa stráca do pozadia.
 - **28. 10. 2026 – v1.48.3:** Sieň slávy bez veľkej hlavičky stránky – hneď pod menu len riadok s nadpisom (a záložkami superadmina) a sieň vidno bez scrollovania.

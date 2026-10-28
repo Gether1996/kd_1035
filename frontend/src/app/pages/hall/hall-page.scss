@@ -7,6 +7,16 @@
   @media (min-width: 1024px) {
     max-width: 1180px;
   }
+
+}
+
+// a wide monitor: the hall takes the room it has (Gether 28. 10. 2026: "nech sa zmestí čo najviac") – wider than the
+// site's 1200 px container (.container, .content.is-wide)
+@media (min-width: 1440px) {
+  .container.content.is-hall {
+    width: min(100% - 2 * var(--gutter), 1680px);
+    max-width: none;
+  }
 }
 
 // the title and the superadmin's tabs on one thin line
@@ -92,7 +102,10 @@
   margin: 0 auto clamp(28px, 4vw, 48px);
 }
 
+// the rest of the columns: as many side by side as the hall holds, the others on the next row, centred
 .tier--lower {
+  flex-wrap: wrap;
+  row-gap: clamp(40px, 5vw, 64px);
   margin-bottom: clamp(28px, 4vw, 48px);
 }
 
