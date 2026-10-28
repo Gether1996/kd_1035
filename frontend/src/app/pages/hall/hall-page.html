@@ -1,6 +1,9 @@
 @let h = t().hall;
 <!-- no page header: the hall itself right under the menu (Gether 28. 10. 2026: "bez balastu hore, ale aby rovno bolo
      vidno sieň") – one thin line with the title and the superadmin's tabs -->
+<!-- the arena fills the whole window behind the page (Gether 28. 10. 2026: "pre celé pozadie tohto view custom pozadie,
+     splývalo by to so sieňou slávy") – fixed, the hall scrolls over it -->
+<div class="arena" aria-hidden="true"></div>
 <div class="container content is-wide is-hall">
   <div class="hall-top">
     <h1 class="hall-top__title">{{ h.title }}</h1>

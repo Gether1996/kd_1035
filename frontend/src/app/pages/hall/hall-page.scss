@@ -33,23 +33,30 @@
   margin: 0;
   font: 700 clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem) / 1.2 var(--font-display);
   color: var(--gold-100);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 }
 
 // ---------------------------------------------------------------- the hall
 
+// the whole window: the arena behind the page, darker under the menu so it stays readable; it covers the night
+// landscape of the other pages (that one is behind <main>, this one inside it)
+.arena {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(7, 15, 31, 0.75), rgba(7, 15, 31, 0) 180px),
+    linear-gradient(180deg, rgba(7, 15, 31, 0) 55%, rgba(7, 15, 31, 0.35)),
+    url('/img/hall/arena.svg') center top / cover no-repeat,
+    #2c2218;
+}
+
+// the hall stands right in the arena – no card of its own
 .hall {
   position: relative;
   display: grid;
   gap: clamp(20px, 3vw, 32px);
-  padding: clamp(20px, 3vw, 40px) clamp(10px, 3vw, 40px) clamp(32px, 5vw, 64px);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  // a gladiators' arena (Gether 28. 10. 2026: "jednotné pozadie"): the sand everywhere, the stands at the edges
-  background:
-    linear-gradient(180deg, rgba(7, 15, 31, 0) 40%, rgba(7, 15, 31, 0.3)),
-    url('/img/hall/arena.svg') center top / cover no-repeat,
-    #2c2218;
-  overflow: hidden;
+  padding: clamp(12px, 2vw, 24px) 0 clamp(32px, 5vw, 64px);
 }
 
 .hall__empty {
