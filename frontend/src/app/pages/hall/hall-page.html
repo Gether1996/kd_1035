@@ -116,7 +116,13 @@
 <ng-template #pillar let-col let-raised="raised">
   @let first = col.entries[0];
   @let trio = isTrio(col.category);
-  <section class="pillar" [class.is-raised]="raised" [class.is-trio]="trio" [attr.aria-labelledby]="'hall-' + col.category">
+  <section
+    class="pillar"
+    [class.is-raised]="raised"
+    [class.is-trio]="trio"
+    [attr.data-cat]="col.category"
+    [attr.aria-labelledby]="'hall-' + col.category"
+  >
     <figure class="pillar__hero">
       <span class="pillar__portraits">
         <!-- the first three as portraits; the KP's 4th and 5th only in the ranking -->

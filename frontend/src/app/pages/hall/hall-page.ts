@@ -37,7 +37,7 @@ export function shortKp(n: number): string {
 
 /**
  * /sien-slavy – the Hall of Fame (Gether 28. 10. 2026: "kde budú určití naši hráči vyznamenaní za určité kritériá …
- * nech sa ľudia v sieni cítia dobre a dôležito"): a gladiators' arena (img/hall/arena.svg from tools/background/generate.py)
+ * nech sa ľudia v sieni cítia dobre a dôležito"): a knights' tournament (img/hall/tournament.svg from tools/hall/tournament.py)
  * as a colonnade – each category's one champion (Gether: "vždy bude len 1 top hráč") a bust on a stone column, three
  * on a raised step, the others below – and, in the corner, the
  * mascots' "Kútik hanby": two clowns cut out of Gether's picture (img/hall/clowns.webp, tools/hall/cutout.py) with
@@ -48,7 +48,7 @@ export function shortKp(n: number): string {
   selector: 'app-hall-page',
   imports: [NgTemplateOutlet, RouterLink, Icon, PendingApproval, HallAdmin],
   templateUrl: './hall-page.html',
-  styleUrls: ['../reminders/reminders-page.scss', './hall-page.scss', './hall-corners.scss'],
+  styleUrls: ['../reminders/reminders-page.scss', './hall-page.scss', './hall-corners.scss', './hall-tournament.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HallPage {
