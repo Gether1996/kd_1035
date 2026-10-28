@@ -539,7 +539,7 @@ export const sk = {
       rally: { title: 'Rally líder' },
       garrison: { title: 'Strážca garrisonu' },
       helper: { title: 'Pomocná ruka' },
-      diplomat: { title: 'Najlepší diplomat posledného KvK' },
+      diplomat: { title: 'KvK Leader' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebolo ono.' },
       zero: { title: 'Top 3 zero', text: 'Minulé KvK dostali zero.' },
     },

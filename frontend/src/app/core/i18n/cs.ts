@@ -521,7 +521,7 @@ export const cs: Dict = {
       rally: { title: 'Rally lídr' },
       garrison: { title: 'Strážce garrisonu' },
       helper: { title: 'Pomocná ruka' },
-      diplomat: { title: 'Nejlepší diplomat posledního KvK' },
+      diplomat: { title: 'KvK Leader' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebylo ono.' },
       zero: { title: 'Top 3 zero', text: 'Minulé KvK dostali zero.' },
     },
