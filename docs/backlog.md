@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **28. 10. 2026 – v1.48.4:** Sieň slávy: kúty top 3 zero a maskoti bez vlastných kariet – náhrobky a klauni stoja priamo v sieni, jeden či dva náhrobky v strede, spodok obrázka klaunov sa stráca do pozadia.
 - **28. 10. 2026 – v1.48.3:** Sieň slávy bez veľkej hlavičky stránky – hneď pod menu len riadok s nadpisom (a záložkami superadmina) a sieň vidno bez scrollovania.
 - **28. 10. 2026 – v1.48.2:** Sieň slávy: bez červených štítkov „Kútik hanby“ a „Minulé KvK“ nad kútmi.
 - **28. 10. 2026 – v1.48.1:** Sieň slávy: maskoti sú klauni vystrihnutí z Getherovho obrázka (bez pozadia, mená na zlatých tabuľkách z nastavení), v druhom kúte **Top 3 zero minulého KvK** ako cintorín s náhrobkami.
