@@ -32,6 +32,22 @@ For each picked account, in order:
 Show Gether the table you are about to write (place, name, number, photo kept yes/no) in the same message as the write.
 
 ## 5. Write it
+**The same people on the same places** (Gether 29. 10. 2026: „ak sa poradie nezmení, to je v poriadku, ale aspoň prepísať počet fortov“): only the numbers change – one PUT per place, each keeping its `player`, `custom_name` (as `name`), `note_sk`, `note_cs`; the photo stays on its place by itself. Works on every server version.
+```js
+const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1];
+for (const e of forts) {
+  const count = counts[e.place];   // the new number of that place
+  const res = await fetch(`/api/hall/forts/${e.place}/`, {
+    method: 'PUT',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+    body: JSON.stringify({ player: e.player, name: e.custom_name, note_sk: e.note_sk, note_cs: e.note_cs, count }),
+  });
+  console.log(e.place, res.status);
+}
+```
+
+**Anything else** (another order, someone new, fewer people) – the whole ranking at once:
 ```js
 const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1];
 const res = await fetch('/api/hall/forts/', {
@@ -43,7 +59,7 @@ const res = await fetch('/api/hall/forts/', {
 [res.status, await res.json()];
 ```
 - `PUT /api/hall/<category>/` (29. 10. 2026, `accounts/hall.py` `ranking`) rewrites the whole category at once: photos move with `photo_from`, places after the list empty, photos nobody keeps are deleted.
-- **404 / 405** = the server still runs an older version: tell Gether to deploy (`git pull && docker compose up -d --build`) – do not fall back to the per-place PUTs, they would leave the photos on the wrong places.
+- **404 / 405** = the server still runs an older version: tell Gether to deploy (`git pull && docker compose up -d --build`) – do not fall back to the per-place PUTs when the order changed, they would leave the photos on the wrong places.
 - **400** = read the errors, fix the entries, try once more; **403** = not signed in as the superadmin.
 
 ## 6. Check and report
