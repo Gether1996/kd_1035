@@ -178,6 +178,16 @@ class NowOrNeverMigrationTests(TestCase):
         # a run the superadmin already tagged keeps its type
         self.assertEqual(EventRun.objects.get(event=tagged).variant, other)
 
+    def test_now_or_never_gets_its_max_reward_unless_one_was_entered(self):
+        max_reward = import_module('kingdom.migrations.0021_now_or_never_max_reward').max_reward
+        empty = make_gh().variants.create(name_sk='Now Or Never')
+        entered = make_gh().variants.create(name_sk='Now Or Never', max_reward_sk='50 000 min')
+        max_reward(apps, None)
+        empty.refresh_from_db()
+        entered.refresh_from_db()
+        self.assertEqual((empty.max_reward_sk, empty.max_reward_cs), ('48 000 minút speedov', '48 000 minut speedů'))
+        self.assertEqual(entered.max_reward_sk, '50 000 min')
+
 
 @override_settings(SITE_URL='https://kd1035.test')
 class RunTypeInMessagesTests(TestCase):
