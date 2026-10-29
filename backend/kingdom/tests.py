@@ -274,6 +274,7 @@ class PlanRemindersTests(TestCase):
             'starts_at': utc(2026, 10, 8, 18),  # tomorrow, weekly
             'repeat_days': 7,
             'reminders': [60, 0],
+            'notify_discord': True,
         }
         return KingdomEvent.objects.create(**{**defaults, **kwargs})
 
@@ -436,7 +437,12 @@ class EventValidationTests(TestCase):
 class EventPayloadTests(TestCase):
     def setUp(self):
         self.event = KingdomEvent.objects.create(
-            name_sk='Ruiny', starts_at=utc(2026, 10, 8, 18), repeat_days=7, reminders=[60], mention_role_id='777777'
+            name_sk='Ruiny',
+            starts_at=utc(2026, 10, 8, 18),
+            repeat_days=7,
+            reminders=[60],
+            mention_role_id='777777',
+            notify_discord=True,
         )
 
     def test_event_reminder_has_discord_timestamps_and_event_role(self):
@@ -605,7 +611,8 @@ class KingdomEventAdminTests(TestCase):
 
     def test_preview_lists_next_five_occurrences(self):
         event = KingdomEvent.objects.create(
-            name_sk='Ruiny', starts_at=self.soon(), repeat_days=1, reminders=[60, 0], time_basis='local'
+            name_sk='Ruiny', starts_at=self.soon(), repeat_days=1, reminders=[60, 0], time_basis='local',
+            notify_discord=True,
         )
         response = self.client.get(f'{self.url}{event.pk}/change/')
         self.assertContains(response, 'Najbližšie termíny')
@@ -850,7 +857,7 @@ class EventNotificationAdminTests(TestCase):
 
     def test_save_as_new_and_duplicate_guard(self):
         start = (timezone.now() + timedelta(hours=3)).replace(second=0, microsecond=0)
-        event = KingdomEvent.objects.create(name_sk='Ruiny', starts_at=start, reminders=[60])
+        event = KingdomEvent.objects.create(name_sk='Ruiny', starts_at=start, reminders=[60], notify_discord=True)
         events.plan_reminders()
         generated = event.notifications.get()
         change = f'{self.url}{generated.pk}/change/'

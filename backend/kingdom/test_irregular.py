@@ -33,6 +33,7 @@ class IrregularDateTests(TestCase):
             name_sk='Silk Road',
             starts_at=utc(2026, 10, 1, 18),  # 20:00 in Bratislava, over: waiting for a date
             irregular=True,
+            notify_discord=True,
             time_basis=KingdomEvent.TimeBasis.LOCAL,
             reminders=[60],
         )
@@ -144,6 +145,7 @@ class ManageEventTests(TestCase):
         'repeat_days': 7,
         'time_basis': 'local',
         'reminders': [60],
+        'notify_discord': True,
         'player_reminders': [15, 60],
     }
 
@@ -189,7 +191,9 @@ class ManageEventTests(TestCase):
     def test_edit_replans_only_when_the_schedule_changes(self, _now):
         from .events import replan
 
-        event = KingdomEvent.objects.create(name_sk='Ruiny', starts_at=utc(2026, 10, 9, 18), reminders=[60])
+        event = KingdomEvent.objects.create(
+            name_sk='Ruiny', starts_at=utc(2026, 10, 9, 18), reminders=[60], notify_discord=True
+        )
         url = f'{LIST}{event.pk}/'
         replan(event)
         note = event.notifications.get()

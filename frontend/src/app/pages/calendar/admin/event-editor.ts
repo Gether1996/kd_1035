@@ -114,7 +114,7 @@ export class EventEditor {
   protected readonly durDays = linkedSignal(() => this.length().days);
   protected readonly durHours = linkedSignal(() => this.length().hours);
   protected readonly durMinutes = linkedSignal(() => this.length().minutes);
-  protected readonly notify = linkedSignal(() => this.event()?.notify_discord ?? true);
+  protected readonly notify = linkedSignal(() => this.event()?.notify_discord ?? false);
   protected readonly reminders = linkedSignal(() => this.event()?.reminders ?? [EVENING_BEFORE]);
   protected readonly mention = linkedSignal(() => this.event()?.mention_role ?? true);
   protected readonly roleId = linkedSignal(() => this.event()?.mention_role_id ?? '');

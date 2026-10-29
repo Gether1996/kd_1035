@@ -195,7 +195,7 @@ class RunTypeInMessagesTests(TestCase):
     say which contest the run is and what the top reward takes."""
 
     def setUp(self):
-        self.gh = make_gh(reminders=[EVENING_BEFORE], message='{name} {relative}')
+        self.gh = make_gh(reminders=[EVENING_BEFORE], message='{name} {relative}', notify_discord=True)
         self.training = EventVariant.objects.create(
             event=self.gh,
             name_sk='Training Day',

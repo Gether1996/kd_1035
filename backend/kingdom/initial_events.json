@@ -15,7 +15,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -40,7 +40,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -65,7 +65,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -90,7 +90,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -115,7 +115,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -140,7 +140,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -165,7 +165,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -190,7 +190,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -215,7 +215,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -240,7 +240,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -265,7 +265,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -290,7 +290,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -315,7 +315,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -359,7 +359,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       15,
@@ -385,7 +385,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       15,
@@ -411,7 +411,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       15,
@@ -436,7 +436,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -461,7 +461,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -486,7 +486,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -511,7 +511,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -536,7 +536,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -561,7 +561,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,
@@ -586,7 +586,7 @@
     ],
     "mention_role_id": "",
     "mention_role": true,
-    "notify_discord": true,
+    "notify_discord": false,
     "show_on_web": true,
     "player_reminders": [
       -1080,

@@ -208,7 +208,8 @@ class KingdomEvent(models.Model):
     mention_everyone = models.BooleanField(
         'označiť @everyone', default=False, help_text='Správa v kanáli označí všetkých (namiesto roly).'
     )
-    notify_discord = models.BooleanField('posielať na Discord', default=True)
+    # off until the superadmin picks the events for the channel (Gether 29. 10. 2026: "chcem nastaviť sám")
+    notify_discord = models.BooleanField('posielať na Discord', default=False)
     show_on_web = models.BooleanField(
         'zobraziť na webe',
         default=True,

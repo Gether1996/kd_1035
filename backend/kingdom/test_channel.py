@@ -51,7 +51,11 @@ class ChannelApiTests(TestCase):
         self.login()
         KingdomEvent.objects.create(name_sk='Vypnutý', starts_at=utc(2026, 11, 1), is_active=False)
         hidden = KingdomEvent.objects.create(
-            name_sk='Skrytý', starts_at=utc(2026, 11, 2), show_on_web=False, reminders=[EVENING_BEFORE, 60]
+            name_sk='Skrytý',
+            starts_at=utc(2026, 11, 2),
+            show_on_web=False,
+            reminders=[EVENING_BEFORE, 60],
+            notify_discord=True,
         )
         data = self.client.get('/api/events/channel/').json()
         self.assertTrue(data['webhook'])
@@ -124,3 +128,28 @@ class ChannelMessageTests(TestCase):
             event.reminders = bad
             with self.assertRaises(ValidationError):
                 event.full_clean()
+
+
+class ChannelOffMigrationTests(TestCase):
+    channel_off = staticmethod(__import__('importlib').import_module('kingdom.migrations.0023_channel_off_by_default').channel_off)
+
+    def test_switches_the_channel_off_except_events_set_with_everyone(self):
+        from django.apps import apps
+
+        default = KingdomEvent.objects.create(name_sk='MGE', starts_at=utc(2026, 11, 2), notify_discord=True)
+        chosen = KingdomEvent.objects.create(
+            name_sk='20 GH', starts_at=utc(2026, 10, 30), notify_discord=True, mention_everyone=True, reminders=[10]
+        )
+        planned = EventNotification.objects.create(title='MGE', send_at=NOW, event=default, occurrence_start=NOW)
+        sent = EventNotification.objects.create(
+            title='MGE', send_at=NOW, event=default, status=EventNotification.Status.SENT, occurrence_start=NOW,
+            offset_minutes=60,
+        )
+        kept = EventNotification.objects.create(title='20 GH', send_at=NOW, event=chosen, occurrence_start=NOW)
+        self.channel_off(apps, None)
+        default.refresh_from_db()
+        chosen.refresh_from_db()
+        self.assertEqual((default.notify_discord, chosen.notify_discord), (False, True))
+        self.assertEqual(set(EventNotification.objects.values_list('pk', flat=True)), {sent.pk, kept.pk})
+        self.assertNotEqual(planned.pk, kept.pk)
+        self.assertFalse(KingdomEvent(name_sk='Nový', starts_at=NOW).notify_discord)
