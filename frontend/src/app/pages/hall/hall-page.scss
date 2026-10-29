@@ -156,9 +156,10 @@
     --portrait: clamp(96px, 11vw, 148px);
   }
 
-  // a phone: two in a row, lower columns
+  // a phone: two in a row, lower columns; the longest banner first – the middle of a wide row
   @media (max-width: 599px) {
     flex-basis: calc(50% - 10px);
+    order: calc(-1 * var(--names, 0));
     --shaft: 128px;
     --portrait: 82px;
 

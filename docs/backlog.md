@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **29. 10. 2026 – v1.53.1:** Sieň slávy: zástava s najviac menami (Top KP) stojí v strede, kratšie striedavo po bokoch, na mobile navrchu.
 - **28. 10. 2026 – v1.53.0:** Sieň slávy ako **rytiersky turnaj** (vybraný z 10 návrhov): pavilóny a turnajové pole cez celú stránku, kategórie ako heraldické zástavy na drevenej tribúne, zero ako štíty padlých rytierov, klauni pred pavilónom šašov s drevenými menovkami.
 - **28. 10. 2026 – v1.52.1:** Sieň slávy: pri čísle KP sa už nepridáva „KP“.
 - **28. 10. 2026 – v1.52.0:** Sieň slávy: aréna je pozadím celej stránky (od vrchu za menu po pätičku, ostáva stáť pri scrollovaní) a sieň nemá vlastnú kartu – stĺpy, náhrobky a klauni stoja priamo v aréne.

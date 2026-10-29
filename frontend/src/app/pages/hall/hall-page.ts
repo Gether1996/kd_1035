@@ -23,16 +23,29 @@ import { plural } from '../reminders/format';
 import { HallAdmin } from './hall-admin';
 import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, TRIOS, portrait } from './hall-data';
 
+/** up to this many columns stand in one row */
+const ONE_ROW = 4;
+
 /**
  * Kill points the way players say them (Gether 28. 10. 2026: "v biliónoch, teda 2.3B, 1.4B"): 2273581583 → "2.3B",
  * 842998273 → "843M", with a dot like the game
  */
-/** up to this many columns stand in one row */
-const ONE_ROW = 4;
-
 export function shortKp(n: number): string {
   const [value, unit] = n >= 1e9 ? [n / 1e9, 'B'] : n >= 1e6 ? [n / 1e6, 'M'] : [n, ''];
   return (unit ? value.toFixed(value >= 100 ? 0 : 1).replace(/\.0$/, '') : String(value)) + unit;
+}
+
+/**
+ * The banners with the most names in the middle (Gether 29. 10. 2026: "listy s najviac hodnotami sa držali v strede"):
+ * the longest one in the centre, the next ones alternately on its left and right; a tie keeps the given order.
+ */
+export function centreOut<T extends { entries: readonly unknown[] }>(columns: readonly T[]): T[] {
+  const bySize = columns
+    .map((column, i) => ({ column, i }))
+    .sort((a, b) => b.column.entries.length - a.column.entries.length || a.i - b.i);
+  const row: T[] = [];
+  bySize.forEach(({ column }, i) => (i % 2 ? row.unshift(column) : row.push(column)));
+  return row;
 }
 
 /**
@@ -78,19 +91,16 @@ export class HallPage {
       entries: entries.filter((e) => e.category === category).sort((a, b) => a.place - b.place),
     })).filter((column) => column.entries.length);
   });
-  /** the top-3 columns on the raised step, the single champions below them */
-  protected readonly upper = computed(() => this.columns().filter((c) => TRIOS.includes(c.category)));
+  /** the top-3 columns on the raised step (the longest in the middle), the single champions below them */
+  protected readonly upper = computed(() => centreOut(this.columns().filter((c) => TRIOS.includes(c.category))));
   protected readonly lower = computed(() => this.columns().filter((c) => !TRIOS.includes(c.category)));
   /**
    * Few columns stand in one row (Gether 28. 10. 2026: "pokiaľ nie je veľa kategórií a zmestia sa vedľa seba"): the
-   * top-3 ones in the middle, the single champions on both sides; more than ONE_ROW split into the two tiers.
+   * longest banner in the middle, the shorter ones towards the sides; more than ONE_ROW split into the two tiers.
    */
   protected readonly oneRow = computed(() => {
     const cols = this.columns();
-    if (cols.length > ONE_ROW) return null;
-    const singles = this.lower();
-    const half = Math.ceil(singles.length / 2);
-    return [...singles.slice(0, half), ...this.upper(), ...singles.slice(half)];
+    return cols.length > ONE_ROW ? null : centreOut(cols);
   });
   /** the other corner: the three zeroed most in the last KvK, in order */
   protected readonly zeros = computed(() =>
