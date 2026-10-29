@@ -1,7 +1,7 @@
 import { ArmoryData, GEAR_SLOTS, Gear, armoryIndex, itemSlot } from '../../core/armory';
 import { KvkSignup } from '../../core/kvk-api';
 import { normalizeSettings } from '../evaluation/settings';
-import { topSignups } from './top';
+import { TOP_SIZE, topSignups } from './top';
 
 const CATALOG: ArmoryData = {
   verified: '2026-10',
@@ -35,8 +35,8 @@ const signup = (player: number, change: Partial<KvkSignup> = {}): KvkSignup => (
   ...change,
 });
 
-describe('Top 3 of the sign-ups (Gether 23. 10. 2026)', () => {
-  it('ranks one troop type by the equipment, each player once with the best sign-up, at most three', () => {
+describe('Top 5 of the sign-ups (Gether 23. 10. 2026)', () => {
+  it('ranks one troop type by the equipment, each player once with the best sign-up, at most five', () => {
     const signups = [
       signup(1, { gear: all('epic') }),
       // the same player's second rally is better – it counts, the first does not
@@ -53,8 +53,11 @@ describe('Top 3 of the sign-ups (Gether 23. 10. 2026)', () => {
       [1, 2],
       [4, 1],
       [2, 1],
+      [3, 1],
     ]);
-    expect(top[0].total).toBeGreaterThan(top[2].total);
+    expect(top[0].total).toBeGreaterThan(top[3].total);
+    expect(TOP_SIZE).toBe(5);
+    expect(topSignups(signups, S, INDEX, 'cavalry', 2).map((t) => t.signup.player?.id)).toEqual([1, 4]);
     expect(topSignups(signups, S, INDEX, 'archer')).toEqual([]);
     expect(topSignups(signups, S, INDEX, 'infantry').map((t) => t.signup.player?.id)).toEqual([5]);
   });

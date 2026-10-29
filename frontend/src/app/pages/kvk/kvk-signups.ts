@@ -194,7 +194,7 @@ export class KvkSignups {
   private readonly injector = inject(Injector);
   private readonly scroller = inject(ViewportScroller);
   /**
-   * "Top 3" of each troop type above the list (Gether 23. 10. 2026: like "Top 5 equip"): the sign-ups the role,
+   * "Top 5" of each troop type above the list (Gether 23. 10. 2026: like "Top 5 equip"): the sign-ups the role,
    * commander and online filters leave, scored by their own equipment and armaments; empty until the armory loads
    */
   protected readonly top = computed(() => {
@@ -205,7 +205,7 @@ export class KvkSignups {
   });
   protected readonly hasTop = computed(() => this.top().some((t) => t.best.length));
 
-  /** a player of the "Top 3": their card opens and the page scrolls to it */
+  /** a player of the "Top 5": their card opens and the page scrolls to it */
   protected showPlayer(id: number): void {
     this.opened.update((opened) => new Set(opened).add(id));
     afterNextRender({ read: () => this.scroller.scrollToAnchor(`kvk-player-${id}`) }, { injector: this.injector });

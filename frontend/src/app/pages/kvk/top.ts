@@ -3,8 +3,8 @@ import { KvkSignup, MarchKind, asMarch } from '../../core/kvk-api';
 import { armamentPoints, equipmentPoints } from '../evaluation/scoring';
 import { EvalSettings } from '../evaluation/settings';
 
-/** how many of each troop type the "Top 3" above the sign-ups shows (Gether 23. 10. 2026) */
-export const TOP_SIZE = 3;
+/** how many of each troop type the "Top 5" above the sign-ups shows (Gether 23. 10. 2026: three; 29. 10. 2026: "tiež top 5") */
+export const TOP_SIZE = 5;
 
 export interface TopSignup {
   signup: KvkSignup;
@@ -14,7 +14,7 @@ export interface TopSignup {
 
 /**
  * The best sign-ups of one troop type by their own equipment and armaments, scored like "Top 5 equip" of the KvK
- * evaluation (Gether 23. 10. 2026: "top 3 za každý troop type"): each player once, with their best sign-up of the
+ * evaluation (Gether 23. 10. 2026: "top 3 za každý troop type", five since 29. 10. 2026): each player once, with their best sign-up of the
  * type (two rally sign-ups are one player); nothing scored (no equipment, no armaments) is left out.
  */
 export function topSignups(

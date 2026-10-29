@@ -309,7 +309,7 @@ export const cs: Dict = {
       yes: 'Ano, přepsat',
     },
     top: {
-      title: 'Top 3 podle výbavy',
+      title: 'Top 5 podle výbavy',
       hint: 'Výbava a armamenty přihlášky, bodované jako Top 5 equip ve Vyhodnocování. Počítá se s filtry role, commandera a času online.',
       score: 'Body za výbavu a armamenty',
       none: 'Zatím nikdo s naklikanou výbavou.',

@@ -317,9 +317,9 @@ export const sk = {
       confirm: 'Prepísať vyplnenú prihlášku týmto marchom?',
       yes: 'Áno, prepísať',
     },
-    // "Top 3" of each troop type above the reviewers' list (Gether 23. 10. 2026)
+    // "Top 5" of each troop type above the reviewers' list (Gether 23. 10. 2026, five since 29. 10. 2026)
     top: {
-      title: 'Top 3 podľa výbavy',
+      title: 'Top 5 podľa výbavy',
       hint: 'Výbava a armamenty prihlášky, bodované ako Top 5 equip vo Vyhodnocovaní. Ráta sa s filtrami roly, commandera a času online.',
       score: 'Body za výbavu a armamenty',
       none: 'Zatiaľ nikto s naklikanou výbavou.',
