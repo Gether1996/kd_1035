@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **29. 10. 2026 – v1.54.0:** Pripomienky eventov: superadmin má záložku **Kanál na Discorde** – oznámenia eventov do kanála nastaví ako hráč svoje pripomienky (ľubovoľné časy, napr. 10 min vopred) a s @everyone.
 - **29. 10. 2026 – v1.53.3:** Delta má druhú sadu armamentov (update 1.1.13): 4 zlaté a 4 modré inscriptions na naklikanie; vo Vyhodnocovaní nové tiery S+ (55) a A+ (45), o trochu nad terajšími zlatými a modrými Delty.
 - **29. 10. 2026 – v1.53.2:** Prihlášky na KvK: Top 5 podľa výbavy namiesto Top 3 pri každom type jednotiek.
 - **29. 10. 2026 – v1.53.1:** Sieň slávy: zástava s najviac menami (Top KP) stojí v strede, kratšie striedavo po bokoch, na mobile navrchu.

@@ -172,7 +172,7 @@ class ManageEventTests(TestCase):
             ({}, 'non_field_errors'),  # an active twin (same name and start)
             ({'name_sk': 'A', 'irregular': True}, 'repeat_days'),
             ({'name_sk': 'A', 'reminders': [], 'notify_discord': True}, 'reminders'),
-            ({'name_sk': 'A', 'reminders': [7]}, 'reminders'),
+            ({'name_sk': 'A', 'reminders': [10081]}, 'reminders'),
             ({'name_sk': 'A', 'player_reminders': [1, 2, 3, 4, 5, 6, 7]}, 'player_reminders'),
             ({'name_sk': 'A', 'message': 'koniec {end}', 'duration_minutes': 0}, 'message'),
             ({'name_sk': 'A', 'until': '2026-10-01'}, 'until'),

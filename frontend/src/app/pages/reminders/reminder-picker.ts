@@ -49,6 +49,8 @@ export class ReminderPicker {
   readonly event = input.required<ReminderEvent>();
   /** id of the element naming the event, read with the switch */
   readonly describedBy = input<string>();
+  /** saves the times instead of the player's own reminders (the superadmin's channel tab) */
+  readonly saver = input<(eventId: number, offsets: number[]) => Promise<unknown>>();
   /** the player's times after every change (null = not reminded), so a parent can keep its copy current */
   readonly changed = output<number[] | null>();
 
@@ -134,7 +136,8 @@ export class ReminderPicker {
     try {
       do {
         this.queued = false;
-        await this.api.setOffsets(this.event().id, this.offsets());
+        const saver = this.saver() ?? ((id: number, offsets: number[]) => this.api.setOffsets(id, offsets));
+        await saver(this.event().id, this.offsets());
       } while (this.queued);
       this.state.set('saved');
     } catch {

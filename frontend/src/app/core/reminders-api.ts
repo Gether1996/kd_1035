@@ -25,6 +25,16 @@ export interface ReminderEvent {
   offered: number[];
   /** the player's choice (largest first), null = not reminded */
   offsets: number[] | null;
+  /** the superadmin's channel tab only: the channel message pings @everyone */
+  everyone?: boolean;
+}
+
+/** /api/events/channel/ – the superadmin's reminders in the kingdom's Discord channel (Gether 29. 10. 2026) */
+export interface ChannelSettings {
+  /** false = DISCORD_WEBHOOK_URL is not set, nothing is sent */
+  webhook: boolean;
+  /** every active event, soonest first; `offsets` = the channel's times, null = nothing in the channel */
+  events: ReminderEvent[];
 }
 
 export interface ReminderSettings {
@@ -52,6 +62,7 @@ export interface LastDelivery {
 export type TestResult = 'ok' | 'blocked' | 'unavailable' | 'throttled';
 
 const REMINDERS_URL = '/api/me/reminders/';
+const CHANNEL_URL = '/api/events/channel/';
 export const MAX_REMINDERS = 5;
 export const MAX_MINUTES = 7 * 24 * 60;
 
@@ -69,6 +80,23 @@ export class RemindersApi {
     return httpResource<ReminderSettings>(() =>
       this.isBrowser && when() ? REMINDERS_URL : undefined,
     );
+  }
+
+  /** The superadmin's channel reminders (nothing is asked while `when` is false). */
+  channel(when: () => boolean = () => true) {
+    return httpResource<ChannelSettings>(() => (this.isBrowser && when() ? CHANNEL_URL : undefined));
+  }
+
+  /** The channel's times of the event; an empty list stops its channel messages. `everyone` with the first times. */
+  async setChannel(eventId: number, offsets: number[], everyone?: boolean): Promise<void> {
+    const url = `${CHANNEL_URL}${eventId}/`;
+    if (!offsets.length) await firstValueFrom(this.http.delete(url));
+    else await firstValueFrom(this.http.put(url, everyone === undefined ? { offsets } : { offsets, everyone }));
+  }
+
+  /** @everyone on or off for the event's channel messages */
+  async setEveryone(eventId: number, everyone: boolean): Promise<void> {
+    await firstValueFrom(this.http.patch(`${CHANNEL_URL}${eventId}/`, { everyone }));
   }
 
   /** Remind of the event `offsets` minutes before each start; an empty list stops the reminders. */

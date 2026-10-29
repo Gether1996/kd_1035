@@ -93,15 +93,35 @@
 
     @if (r.kind !== 'none') {
       <section class="remind" aria-labelledby="remind-title">
-        @if (r.kind === 'player' && r.event; as choice) {
+        @if ((r.kind === 'player' || r.kind === 'channel') && r.event; as choice) {
+          @let ch = t().reminders.channel;
           <app-reminder-picker
             [event]="choice"
+            [saver]="r.saver"
             describedBy="event-dialog-title"
             (changed)="changed.emit({ id: choice.id, offsets: $event })"
           >
-            <h3 class="remind__title" id="remind-title">{{ c.remind.title }}</h3>
+            <h3 class="remind__title" id="remind-title">{{ r.kind === 'channel' ? ch.title : c.remind.title }}</h3>
           </app-reminder-picker>
-          @if (!onAccount()) {
+          @if (r.kind === 'channel') {
+            @if (choice.offsets?.length) {
+              <label class="everyone">
+                <span class="everyone__text">
+                  <span class="everyone__name">{{ ch.everyone }}</span>
+                  <span class="everyone__hint">{{ ch.everyoneHint }}</span>
+                </span>
+                <input
+                  #everyoneSwitch
+                  class="switch"
+                  type="checkbox"
+                  role="switch"
+                  [checked]="!!choice.everyone"
+                  (change)="everyone.emit({ id: choice.id, on: everyoneSwitch.checked })"
+                />
+              </label>
+            }
+            <p class="remind__note" [class.is-warning]="r.noChannel">{{ r.noChannel ? ch.webhookOff : ch.hint }}</p>
+          } @else if (!onAccount()) {
             <p class="remind__note" [class.is-warning]="r.noChannel">
               {{ r.noChannel ? c.remind.noChannel : c.remind.channels }}
               <a [routerLink]="i18n.path('reminders')">{{ t().nav.reminders }}</a

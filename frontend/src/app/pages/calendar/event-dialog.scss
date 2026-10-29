@@ -256,6 +256,30 @@
   }
 }
 
+// the channel tab: @everyone for the event's messages
+.everyone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.everyone__text {
+  display: grid;
+  gap: 2px;
+}
+
+.everyone__name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.everyone__hint {
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
 .skeleton {
   display: block;
   height: 44px;

@@ -1406,6 +1406,19 @@ export const sk = {
       every: ['každý {n} deň', 'každé {n} dni', 'každých {n} dní'],
       weeks: ['každý {n} týždeň', 'každé {n} týždne', 'každých {n} týždňov'],
     },
+    // the superadmin's tab: reminders posted in the kingdom's Discord channel (Gether 29. 10. 2026)
+    channel: {
+      tabs: 'Druh pripomienok',
+      mineTab: 'Moje',
+      tab: 'Kanál na Discorde',
+      title: 'Správy do kanála',
+      hint: 'Príde do kanála na Discorde pre všetkých hráčov, nie súkromne.',
+      webhookOff: 'Webhook kanála nie je nastavený (DISCORD_WEBHOOK_URL) – nič sa neodošle.',
+      mine: 'Oznámenia v kanáli',
+      mineEmpty: 'Žiadny event zatiaľ nepíše do kanála. Vyber event vpravo a zvoľ časy.',
+      everyone: 'Označiť @everyone',
+      everyoneHint: 'Správa upozorní všetkých na serveri.',
+    },
   },
   notFound: {
     eyebrow: 'Chyba 404',

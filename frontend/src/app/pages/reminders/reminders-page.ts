@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
@@ -10,6 +10,7 @@ import { Reminders } from './reminders';
 /**
  * /pripomienky – the player's event reminders, sent as a Discord message by the bot (the bell in the header).
  * A prerendered shell: who is signed in is known only in the browser. Not indexed, not in the sitemap.
+ * The superadmin has a second tab (?tab=kanal, Gether 29. 10. 2026): the messages in the kingdom's Discord channel.
  */
 @Component({
   selector: 'app-reminders-page',
@@ -26,8 +27,21 @@ import { Reminders } from './reminders';
         }
       </div>
 
+      @if (auth.user()?.is_superuser) {
+        <div class="segmented tabs" role="group" [attr.aria-label]="r.channel.tabs">
+          <button type="button" [attr.aria-pressed]="!channel()" (click)="showTab(null)">
+            <svg appIcon="bell"></svg>{{ r.channel.mineTab }}
+          </button>
+          <button type="button" [attr.aria-pressed]="channel()" (click)="showTab('kanal')">
+            <svg appIcon="discord"></svg>{{ r.channel.tab }}
+          </button>
+        </div>
+      }
+
       @if (!auth.ready()) {
         <div class="placeholder" aria-hidden="true"></div>
+      } @else if (channel()) {
+        <app-reminders [channel]="true" />
       } @else if (auth.failed()) {
         <p class="state">{{ r.error }}</p>
       } @else if (!auth.enabled()) {
@@ -61,6 +75,8 @@ import { Reminders } from './reminders';
 export class RemindersPage {
   /** ?login=error|cancelled – set by the backend after an unsuccessful Discord sign-in */
   readonly login = input<string>();
+  /** ?tab=kanal – the superadmin's channel messages */
+  readonly tab = input<string>();
 
   protected readonly i18n = inject(I18n);
   protected readonly auth = inject(Auth);
@@ -70,6 +86,13 @@ export class RemindersPage {
     { label: this.t().nav.home, link: this.i18n.path('home') },
     { label: this.t().reminders.title, link: this.i18n.path('reminders') },
   ]);
+
+  private readonly router = inject(Router);
+  protected readonly channel = computed(() => this.tab() === 'kanal' && !!this.auth.user()?.is_superuser);
+
+  protected showTab(tab: 'kanal' | null): void {
+    void this.router.navigate([], { queryParams: { tab }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
 
   protected readonly notice = computed(() => {
     const t = this.t().account;

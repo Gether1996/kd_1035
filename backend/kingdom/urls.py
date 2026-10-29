@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 
-from . import manage_api, preview, views
+from . import channel_api, manage_api, preview, views
 
 urlpatterns = [
     path('health/', views.health),
@@ -9,6 +9,8 @@ urlpatterns = [
     path('events/', views.EventCalendar.as_view()),
     path('events/<int:pk>/ics', views.event_ics),
     path('calendar.ics', views.calendar_feed),
+    path('events/channel/', channel_api.channel),
+    path('events/channel/<int:pk>/', channel_api.channel_event),
     path('events/manage/', manage_api.event_list),
     path('events/manage/<int:pk>/', manage_api.event_detail),
     path('events/manage/<int:pk>/date/', manage_api.irregular_date),

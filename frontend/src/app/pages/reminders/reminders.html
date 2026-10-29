@@ -1,75 +1,94 @@
 @let r = t();
+@let ch = r.channel;
 
-@if (data.error()) {
+@if (failed()) {
   <p class="state">{{ r.error }}</p>
 } @else if (settings(); as s) {
   <div class="board">
     <!-- large screens: the switch and the player's reminders stay in view next to a long list of events -->
     <div class="side">
-      <div class="discord" [class.is-off]="s.discord_available && !discord()">
-        <span class="discord__icon"><svg appIcon="discord"></svg></span>
-        <div class="discord__body">
-          <label class="discord__name" for="remind-discord">{{ r.discord }}</label>
-          <p class="discord__state" id="remind-discord-state" role="status">
-            @if (!s.discord_available) {
-              {{ r.off }}
-            } @else if (discordState() === 'failed') {
-              <span class="is-error">{{ r.failed }}</span>
-            } @else if (discord()) {
-              <span class="is-on">{{ r.discordOn }}</span>
-            } @else {
-              <span class="is-error">{{ r.discordOff }}</span>
-            }
-          </p>
-        </div>
-        <input
-          #discordSwitch
-          id="remind-discord"
-          class="switch"
-          type="checkbox"
-          role="switch"
-          aria-describedby="remind-discord-state remind-discord-hint"
-          [checked]="s.discord_available && discord()"
-          [disabled]="!s.discord_available"
-          (change)="setDiscord(discordSwitch.checked)"
-        />
-        <div class="discord__foot">
-          @if (s.discord_available) {
-            <p class="discord__hint" id="remind-discord-hint">{{ r.discordHint }}</p>
-          }
-          <!-- proves the bot can reach the player right now; nothing is stored -->
-          <button
-            type="button"
-            class="pill-btn pill-btn--quiet discord__test"
-            [disabled]="!s.discord_available"
-            [attr.aria-disabled]="testing() || null"
-            (click)="sendTest()"
-          >
-            <svg appIcon="send"></svg>{{ r.test.send }}
-          </button>
-          <p class="discord__result" role="status" [class.has-result]="!!testResult()">
-            @switch (testResult()) {
-              @case ('ok') {
-                <span class="is-on">{{ r.test.ok }}</span>
+      @if (channel()) {
+        <!-- the superadmin's channel messages: where they go, and a warning without the webhook -->
+        <div class="discord" [class.is-off]="!webhook()">
+          <span class="discord__icon"><svg appIcon="discord"></svg></span>
+          <div class="discord__body">
+            <p class="discord__name">{{ ch.title }}</p>
+            <p class="discord__state" role="status">
+              @if (webhook()) {
+                {{ ch.hint }}
+              } @else {
+                <span class="is-error">{{ ch.webhookOff }}</span>
               }
-              @case ('blocked') {
-                <span class="is-error">{{ r.test.blocked }}</span>
-                @if (invite(); as url) {
-                  <a class="join" [href]="url" target="_blank" rel="noopener">
-                    {{ r.test.join }}<svg appIcon="arrow-up-right"></svg>
-                  </a>
+            </p>
+          </div>
+        </div>
+      } @else {
+        <div class="discord" [class.is-off]="s.discord_available && !discord()">
+          <span class="discord__icon"><svg appIcon="discord"></svg></span>
+          <div class="discord__body">
+            <label class="discord__name" for="remind-discord">{{ r.discord }}</label>
+            <p class="discord__state" id="remind-discord-state" role="status">
+              @if (!s.discord_available) {
+                {{ r.off }}
+              } @else if (discordState() === 'failed') {
+                <span class="is-error">{{ r.failed }}</span>
+              } @else if (discord()) {
+                <span class="is-on">{{ r.discordOn }}</span>
+              } @else {
+                <span class="is-error">{{ r.discordOff }}</span>
+              }
+            </p>
+          </div>
+          <input
+            #discordSwitch
+            id="remind-discord"
+            class="switch"
+            type="checkbox"
+            role="switch"
+            aria-describedby="remind-discord-state remind-discord-hint"
+            [checked]="s.discord_available && discord()"
+            [disabled]="!s.discord_available"
+            (change)="setDiscord(discordSwitch.checked)"
+          />
+          <div class="discord__foot">
+            @if (s.discord_available) {
+              <p class="discord__hint" id="remind-discord-hint">{{ r.discordHint }}</p>
+            }
+            <!-- proves the bot can reach the player right now; nothing is stored -->
+            <button
+              type="button"
+              class="pill-btn pill-btn--quiet discord__test"
+              [disabled]="!s.discord_available"
+              [attr.aria-disabled]="testing() || null"
+              (click)="sendTest()"
+            >
+              <svg appIcon="send"></svg>{{ r.test.send }}
+            </button>
+            <p class="discord__result" role="status" [class.has-result]="!!testResult()">
+              @switch (testResult()) {
+                @case ('ok') {
+                  <span class="is-on">{{ r.test.ok }}</span>
+                }
+                @case ('blocked') {
+                  <span class="is-error">{{ r.test.blocked }}</span>
+                  @if (invite(); as url) {
+                    <a class="join" [href]="url" target="_blank" rel="noopener">
+                      {{ r.test.join }}<svg appIcon="arrow-up-right"></svg>
+                    </a>
+                  }
+                }
+                @case ('unavailable') {
+                  <span class="is-error">{{ r.test.unavailable }}</span>
+                }
+                @case ('throttled') {
+                  {{ r.test.throttled }}
                 }
               }
-              @case ('unavailable') {
-                <span class="is-error">{{ r.test.unavailable }}</span>
-              }
-              @case ('throttled') {
-                {{ r.test.throttled }}
-              }
-            }
-          </p>
+            </p>
+          </div>
         </div>
-      </div>
+
+      }
 
       @if (lastFailed(); as last) {
         <!-- the newest real reminder bounced: say why, until a later one (or a test now) gets through -->
@@ -90,7 +109,7 @@
       <section class="mine" aria-labelledby="mine-title">
         <div class="group__head">
           <h2 class="group__title" id="mine-title">
-            {{ r.mine }} <span class="group__count">{{ mine().length }}</span>
+            {{ channel() ? ch.mine : r.mine }} <span class="group__count">{{ mine().length }}</span>
           </h2>
           <a class="group__link" [routerLink]="i18n.path('calendar')">
             <svg appIcon="calendar-days"></svg>{{ r.calendarLink }}
@@ -109,7 +128,9 @@
                   }
                   {{ when(event) }}
                 </span>
-                <span class="mine__times"><svg appIcon="bell"></svg>{{ times(event) }}</span>
+                <span class="mine__times"
+                  ><svg appIcon="bell"></svg>{{ times(event) }}{{ channel() && event.everyone ? ' · @everyone' : '' }}</span
+                >
                 <span class="mine__actions">
                   <button
                     type="button"
@@ -137,8 +158,8 @@
         } @else {
           <!-- first visit: three steps instead of an empty box -->
           <div class="mine__empty">
-            <p>{{ r.mineEmpty }}</p>
-            <ol class="steps">
+            <p>{{ channel() ? ch.mineEmpty : r.mineEmpty }}</p>
+            <ol class="steps" [hidden]="channel()">
               @for (step of r.steps; track step; let i = $index) {
                 <li class="steps__item">
                   <span class="steps__num" aria-hidden="true">{{ i + 1 }}</span>{{ step }}
@@ -152,7 +173,9 @@
         }
       </section>
 
-      <app-alarms [off]="s.discord_available && !discord()" />
+      @if (!channel()) {
+        <app-alarms [off]="s.discord_available && !discord()" />
+      }
     </div>
 
     <section class="all" aria-labelledby="all-title">
@@ -246,5 +269,6 @@
     [onAccount]="true"
     (closed)="closeEvent()"
     (changed)="changed($event.id, $event.offsets)"
+    (everyone)="setEveryone($event.id, $event.on)"
   />
 }

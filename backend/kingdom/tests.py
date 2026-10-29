@@ -392,10 +392,13 @@ class EventValidationTests(TestCase):
             EventNotification(title='MGE', send_at=timezone.now(), mention_role_id='12 34').full_clean()
         self.assertIn('mention_role_id', ctx.exception.error_dict)
 
-    def test_reminders_only_from_the_offered_choices(self):
-        with self.assertRaises(ValidationError) as ctx:
-            self.event(reminders=[60, 45]).full_clean()
-        self.assertIn('reminders', ctx.exception.error_dict)
+    def test_reminders_any_minutes_up_to_a_week(self):
+        # any time since 29. 10. 2026 (the superadmin's channel tab: "napríklad 10 min pred eventom")
+        self.event(reminders=[60, 45, 10]).full_clean()
+        for bad in ([60, 60], [7 * 24 * 60 + 1], ['60']):
+            with self.assertRaises(ValidationError) as ctx:
+                self.event(reminders=bad).full_clean()
+            self.assertIn('reminders', ctx.exception.error_dict)
 
     def test_message_must_fit_after_expanding_times(self):
         self.event(message='{start} ' * 200).full_clean()
@@ -523,7 +526,7 @@ class KingdomEventAdminTests(TestCase):
             'until': '',
             'time_basis': 'utc',
             'notify_discord': 'on',
-            'reminders': ['60', '0'],
+            'reminders': '60, 0',
             'mention_role': 'on',
             'mention_role_id': '',
             'show_on_web': 'on',
@@ -550,7 +553,7 @@ class KingdomEventAdminTests(TestCase):
         response = self.client.post(f'{self.url}add/', self.form_data(start))
         self.assertEqual(response.status_code, 302)
         event = KingdomEvent.objects.get()
-        self.assertEqual(event.reminders, [60, 0])
+        self.assertEqual(sorted(event.reminders), [0, 60])
         self.assertEqual(
             sorted(event.notifications.values_list('send_at', 'status')),
             [(start - timedelta(hours=1), Status.PENDING), (start, Status.PENDING)],
@@ -576,7 +579,7 @@ class KingdomEventAdminTests(TestCase):
         self.assertFalse(EventNotification.objects.exists())
 
     def test_reminder_required_when_discord_is_on(self):
-        response = self.client.post(f'{self.url}add/', self.form_data(self.soon(), reminders=[]))
+        response = self.client.post(f'{self.url}add/', self.form_data(self.soon(), reminders=''))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(KingdomEvent.objects.exists())
 

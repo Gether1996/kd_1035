@@ -70,6 +70,10 @@ def build_payload(notification: EventNotification) -> dict:
         'allowed_mentions': {'parse': [], 'roles': [role] if role else []},
         'embeds': [embed],
     }
+    # @everyone instead of the role (Gether 29. 10. 2026), read at send time like the run's type
+    if notification.event and notification.event.mention_everyone:
+        payload['content'] = '@everyone'
+        payload['allowed_mentions'] = {'parse': ['everyone']}
     if settings.SITE_URL:
         payload['avatar_url'] = f'{settings.SITE_URL}/icons/icon-192.png'
     return payload

@@ -1374,6 +1374,18 @@ export const cs: Dict = {
       every: ['každý {n} den', 'každé {n} dny', 'každých {n} dní'],
       weeks: ['každý {n} týden', 'každé {n} týdny', 'každých {n} týdnů'],
     },
+    channel: {
+      tabs: 'Druh připomínek',
+      mineTab: 'Moje',
+      tab: 'Kanál na Discordu',
+      title: 'Zprávy do kanálu',
+      hint: 'Přijde do kanálu na Discordu pro všechny hráče, ne soukromě.',
+      webhookOff: 'Webhook kanálu není nastavený (DISCORD_WEBHOOK_URL) – nic se neodešle.',
+      mine: 'Oznámení v kanálu',
+      mineEmpty: 'Žádný event zatím nepíše do kanálu. Vyber event vpravo a zvol časy.',
+      everyone: 'Označit @everyone',
+      everyoneHint: 'Zpráva upozorní všechny na serveru.',
+    },
   },
   notFound: {
     eyebrow: 'Chyba 404',

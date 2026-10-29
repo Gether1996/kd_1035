@@ -130,3 +130,20 @@
     margin-top: 20px;
   }
 }
+
+// the superadmin's tabs: own reminders and the channel's messages
+.tabs {
+  margin-bottom: 20px;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+}

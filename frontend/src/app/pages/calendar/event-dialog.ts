@@ -35,14 +35,18 @@ import { clock, dayKey, longDay, numericDay } from './month';
 
 /** The reminders part of the dialog: nothing (login off), a login button, or the player's own choice. */
 export interface RemindState {
-  kind: 'none' | 'login' | 'local' | 'loading' | 'error' | 'player';
+  /** 'channel' = the superadmin's messages in the kingdom's Discord channel (/pripomienky → Kanál) */
+  kind: 'none' | 'login' | 'local' | 'loading' | 'error' | 'player' | 'channel';
   loginUrl?: string;
   /** a player without Discord: links the account to Discord, null = Discord sign-in is not set up */
   linkUrl?: string | null;
   /** the player's choice for this event; null = the event will not run again */
   event?: ReminderEvent | null;
-  /** no channel reaches the player (Discord DM off or unavailable and no browser with notifications) */
+  /** no channel reaches the player (Discord DM off or unavailable and no browser with notifications); for 'channel'
+   *  the webhook is not set */
   noChannel?: boolean;
+  /** 'channel': saves the channel's times instead of the player's own */
+  saver?: (eventId: number, offsets: number[]) => Promise<unknown>;
 }
 
 /**
@@ -69,6 +73,8 @@ export class EventDialog {
   readonly closed = output<void>();
   /** the player changed the reminders of this event (already being saved) */
   readonly changed = output<{ id: number; offsets: number[] | null }>();
+  /** the channel tab: @everyone switched for this event */
+  readonly everyone = output<{ id: number; on: boolean }>();
   /** superuser: the event as managed (its types of runs), null = not loaded or not a superuser */
   readonly managed = input<ManagedEvent | null>(null);
   /** superuser: open the event editor / the date of an irregular event */

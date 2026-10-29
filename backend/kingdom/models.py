@@ -11,7 +11,8 @@ TWIN_EVENT_ERROR = 'Aktívny event s rovnakým názvom a prvým začiatkom už e
 # of every reminder list and is turned into a send time per occurrence by events.send_time().
 EVENING_BEFORE = -18 * 60
 
-# minutes before the start → label in the admin
+# minutes before the start → label in the admin; the times offered first for the channel (any other may be typed in,
+# Gether 29. 10. 2026: "napríklad 10 min pred eventom")
 REMINDER_CHOICES = [
     (1440, '1 deň'),
     (EVENING_BEFORE, 'deň vopred o 18:00'),
@@ -28,9 +29,12 @@ def default_reminders():
 
 
 def validate_reminders(value):
-    allowed = {minutes for minutes, _ in REMINDER_CHOICES}
-    if not isinstance(value, list) or any(type(v) is not int or v not in allowed for v in value):
-        raise ValidationError('Povolené sú len minúty %(allowed)s.', params={'allowed': sorted(allowed, reverse=True)})
+    # the same rule as the times offered to players: whole minutes up to a week, or the evening before
+    if not is_minutes_list(value) or len(value) > MAX_OFFERED_REMINDERS:
+        raise ValidationError(
+            'Najviac %(count)s rôznych čísel od 0 do %(max)s (minúty) alebo %(evening)s (deň vopred o 18:00).',
+            params={'count': MAX_OFFERED_REMINDERS, 'max': MAX_REMINDER_MINUTES, 'evening': EVENING_BEFORE},
+        )
 
 
 # personal reminders (accounts app): at most a week before the start
@@ -200,6 +204,10 @@ class KingdomEvent(models.Model):
         help_text='Discord Role ID len pre tento event. Prázdne = DISCORD_EVENT_ROLE_ID z .env.',
     )
     mention_role = models.BooleanField('označiť rolu', default=True)
+    # the superadmin's channel reminders on /pripomienky (Gether 29. 10. 2026: "s @everyone značkou"); wins over the role
+    mention_everyone = models.BooleanField(
+        'označiť @everyone', default=False, help_text='Správa v kanáli označí všetkých (namiesto roly).'
+    )
     notify_discord = models.BooleanField('posielať na Discord', default=True)
     show_on_web = models.BooleanField(
         'zobraziť na webe',

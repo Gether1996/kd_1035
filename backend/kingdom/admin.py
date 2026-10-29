@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
+from accounts.reminders import duration
+
 from . import event_icons
 from .discord import MAX_DELAY, deliver
 from .events import HORIZON, LOCAL_TZ, occurrences, replan, send_time, upcoming
@@ -27,6 +29,7 @@ from .models import (
     Officer,
     SocialLink,
     default_player_reminders,
+    default_reminders,
     lead_order,
 )
 from .permissions import SuperuserOnlyAdmin
@@ -146,13 +149,13 @@ class KingdomEventForm(forms.ModelForm):
         help_text='Ikona v kalendári a v pripomienkach na webe. Nový event ju dostane podľa názvu; bez ikony web ukáže '
         'monogram. Ďalšie ikony: manage.py fetch_event_icons.',
     )
-    reminders = forms.TypedMultipleChoiceField(
+    reminders = MinutesField(
         label='Pripomienky',
-        choices=REMINDER_CHOICES,
-        coerce=int,
         required=False,
-        widget=forms.CheckboxSelectMultiple,
-        help_text='Kedy pred začiatkom poslať správu na Discord.',
+        initial=default_reminders,
+        widget=forms.TextInput(attrs={'placeholder': '18:00, 10'}),
+        help_text='Kedy pred začiatkom poslať správu do kanála na Discorde: minúty oddelené čiarkou, napr. 10, 60, '
+        '1440 (= 1 deň), a 18:00 = deň vopred o 18:00. Najviac 6. Pohodlnejšie na webe: Pripomienky eventov → Kanál.',
     )
     player_reminders = MinutesField(
         label='Časy pre hráčov',
@@ -241,7 +244,7 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         (
             'Discord',
             {
-                'fields': ['notify_discord', 'reminders', 'mention_role', 'mention_role_id'],
+                'fields': ['notify_discord', 'reminders', 'mention_everyone', 'mention_role', 'mention_role_id'],
                 'description': REPLAN_NOTE,
             },
         ),
@@ -333,7 +336,7 @@ class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
                 '<div>{}: {}{}</div>',
                 (
                     (
-                        REMINDER_LABELS.get(offset, f'{offset} min'),
+                        REMINDER_LABELS.get(offset) or duration(offset, 'sk'),
                         local_time(send_time(start, offset)),
                         state(start, offset),
                     )

@@ -154,7 +154,12 @@ export class EventEditor {
   protected readonly duration = computed(() =>
     durationMinutes(this.durDays(), this.durHours(), this.durMinutes()),
   );
-  protected readonly reminderChoices = computed(() => this.data().reminder_choices);
+  /** the usual times and any other the event has (typed in on /pripomienky → Kanál or in the admin) */
+  protected readonly reminderChoices = computed(() =>
+    [...new Set([...this.data().reminder_choices, ...(this.event()?.reminders ?? [])])].sort(
+      (a, b) => leadOrder(b) - leadOrder(a),
+    ),
+  );
   protected readonly playerChoices = computed(() =>
     [...new Set([...PLAYER_PRESETS, ...this.offered()])].sort((a, b) => leadOrder(a) - leadOrder(b)),
   );

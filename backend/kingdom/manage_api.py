@@ -77,6 +77,7 @@ class EventSerializer(serializers.ModelSerializer):
             'time_basis',
             'reminders',
             'notify_discord',
+            'mention_everyone',
             'mention_role',
             'mention_role_id',
             'show_on_web',

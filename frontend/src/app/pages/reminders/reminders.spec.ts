@@ -307,6 +307,44 @@ describe('Reminders on /pripomienky', () => {
     expect(el.querySelectorAll('.steps__item').length).toBe(3);
   });
 
+  it('the channel tab of the superadmin: its times, @everyone, no bot switch or alarms', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: '**', children: [] }]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: KingdomApi, useValue: { links: signal({}) } },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(Reminders);
+    fixture.componentRef.setInput('channel', true);
+    fixture.detectChanges();
+    http.expectOne('/api/events/channel/').flush({
+      webhook: false,
+      events: [event(1, { name_sk: '20 GH', offsets: [10], everyone: true }), event(2, { name_sk: 'MGE' })],
+    });
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(text(mine(el)[0].querySelector('.mine__times'))).toBe('10 min vopred · @everyone');
+    expect(el.querySelector('#remind-discord')).toBeNull();
+    expect(el.querySelector('app-alarms')).toBeNull();
+    expect(text(el.querySelector('.discord__state'))).toContain('DISCORD_WEBHOOK_URL');
+
+    // the first times of an event ping @everyone; Zrušiť switches the channel off
+    const page = fixture.componentInstance as unknown as {
+      saveChannel(id: number, offsets: number[]): Promise<unknown>;
+    };
+    void page.saveChannel(2, [10]);
+    const put = http.expectOne('/api/events/channel/2/');
+    expect([put.request.method, put.request.body]).toEqual(['PUT', { offsets: [10], everyone: true }]);
+    put.flush({});
+    (el.querySelector('.icon-btn--stop') as HTMLButtonElement).click();
+    const stop = http.expectOne('/api/events/channel/1/');
+    expect(stop.request.method).toBe('DELETE');
+    stop.flush(null);
+  });
+
   it('monograms for events without game art', () => {
     expect(
       [

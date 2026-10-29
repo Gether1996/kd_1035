@@ -76,7 +76,7 @@ Tieto pravidlá platia pri **každej** úlohe v tomto repozitári. Každé nové
 - **Pred prácou na prihlásení, `/ucet`, mene v hre, superadminovi, KvK prihláškach, marchoch alebo osobných údajoch hráčov prečítaj [`docs/ucty.md`](docs/ucty.md).**
 
 ## Eventy, kalendár a notifikácie
-- Eventy (`KingdomEvent`) a notifikácie zakladá **iba superuser** (admin alebo správa eventov priamo v `/kalendar`), posiela ich kontajner `worker`. Všetko ide **iba cez Discord**: webhook do kanála a osobné pripomienky súkromnou správou bota – **web push je zrušený**, späť ho nepridávaj bez Getherovho pokynu.
+- Eventy (`KingdomEvent`) a notifikácie zakladá **iba superuser** (admin, správa eventov priamo v `/kalendar` alebo kanálové pripomienky s @everyone na `/pripomienky?tab=kanal`), posiela ich kontajner `worker`. Všetko ide **iba cez Discord**: webhook do kanála a osobné pripomienky súkromnou správou bota – **web push je zrušený**, späť ho nepridávaj bez Getherovho pokynu.
 - **Produkčný webhook nikdy nedávaj do dev `.env`** (eventy putujú v snapshote na každé dev PC).
 - Nepravidelné eventy (`irregular`) nemajú cyklus, termín nastavuje Gether. Herné eventy začínajú o 00:00 UTC, čas začiatku sa na webe ukazuje len pri krátkych nepravidelných eventoch.
 - **Pred prácou na eventoch, kalendári, notifikáciách, pripomienkach hráčov alebo ikonách eventov prečítaj [`docs/eventy.md`](docs/eventy.md).**

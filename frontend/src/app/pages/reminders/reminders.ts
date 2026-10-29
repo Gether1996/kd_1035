@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  input,
   linkedSignal,
   signal,
 } from '@angular/core';
@@ -10,7 +11,7 @@ import { RouterLink } from '@angular/router';
 import { Occurrence, PublicEvent } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { KingdomApi } from '../../core/api';
-import { LastDelivery, ReminderEvent, RemindersApi, TestResult } from '../../core/reminders-api';
+import { LastDelivery, ReminderEvent, ReminderSettings, RemindersApi, TestResult } from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
 import { showsClock } from '../../shared/event-time';
 import { Icon } from '../../shared/icon';
@@ -28,6 +29,8 @@ const PAGE = 12;
  * The reminders panel of /pripomienky (signed-in players only, so it only ever renders in the browser): the switch
  * for the bot's Discord messages, "Moje pripomienky" – one short block per event the player is reminded of – and all
  * events as tiles with search and a filter. The times are set in the same dialog as in the calendar.
+ * With `channel` (the superadmin's tab, Gether 29. 10. 2026) the same panel sets the messages in the kingdom's Discord
+ * channel instead – the events' own channel reminders, any times, @everyone – without the bot's switch and alarms.
  */
 @Component({
   selector: 'app-reminders',
@@ -42,8 +45,25 @@ export class Reminders {
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().reminders);
 
-  protected readonly data = this.api.settings();
-  protected readonly settings = computed(() => (this.data.hasValue() ? this.data.value() : null));
+  /** the superadmin's channel messages instead of the player's own reminders */
+  readonly channel = input(false);
+
+  protected readonly data = this.api.settings(() => !this.channel());
+  protected readonly channelData = this.api.channel(() => this.channel());
+  protected readonly failed = computed(() => (this.channel() ? !!this.channelData.error() : !!this.data.error()));
+  /** the channel tab: the webhook is set on the server */
+  protected readonly webhook = computed(() => (this.channelData.hasValue() ? this.channelData.value().webhook : true));
+  protected readonly settings = computed<ReminderSettings | null>(() => {
+    if (!this.channel()) return this.data.hasValue() ? this.data.value() : null;
+    if (!this.channelData.hasValue()) return null;
+    // the channel has no switch of its own: the bot's parts of the page stay quiet
+    const events = this.channelData.value().events;
+    return { discord: true, discord_available: true, lang: this.i18n.lang(), events, last_delivery: null };
+  });
+  /** the channel tab: @everyone per event, kept current after every change */
+  private readonly everyone = linkedSignal(
+    () => new Map((this.settings()?.events ?? []).map((event) => [event.id, !!event.everyone])),
+  );
   protected readonly discord = linkedSignal(() => this.settings()?.discord ?? false);
   protected readonly discordState = signal<'saved' | 'failed' | null>(null);
   /** the player's times per event, kept current after every change (the overview and the tiles follow) */
@@ -54,6 +74,7 @@ export class Reminders {
     (this.settings()?.events ?? []).map((event) => ({
       ...event,
       offsets: this.chosen().get(event.id) ?? null,
+      everyone: this.everyone().get(event.id) ?? false,
     })),
   );
   /** "Moje pripomienky": the events the player is reminded of */
@@ -112,11 +133,18 @@ export class Reminders {
       irregular: event.irregular,
     };
   });
-  protected readonly remind = computed<RemindState>(() => ({
-    kind: 'player',
-    event: this.selected(),
-    noChannel: this.noChannel(),
-  }));
+  protected readonly remind = computed<RemindState>(() =>
+    this.channel()
+      ? { kind: 'channel', event: this.selected(), noChannel: !this.webhook(), saver: this.saveChannel }
+      : { kind: 'player', event: this.selected(), noChannel: this.noChannel() },
+  );
+
+  /** the channel's times; an event switched on for the first time pings @everyone (Gether: "s @everyone značkou") */
+  private readonly saveChannel = (id: number, offsets: number[]) => {
+    const first = offsets.length > 0 && !this.chosen().get(id)?.length;
+    if (first) this.everyone.update((map) => new Map(map).set(id, true));
+    return this.api.setChannel(id, offsets, first || undefined);
+  };
   protected readonly now = signal(new Date());
   /** the tile or line that opened the dialog gets the focus back */
   private trigger: HTMLElement | null = null;
@@ -228,7 +256,7 @@ export class Reminders {
     this.stopping.update((ids) => new Set(ids).add(event.id));
     this.stopFailed.set(false);
     try {
-      await this.api.setOffsets(event.id, []);
+      await (this.channel() ? this.api.setChannel(event.id, []) : this.api.setOffsets(event.id, []));
       this.changed(event.id, null);
     } catch {
       this.stopFailed.set(true);
@@ -238,6 +266,17 @@ export class Reminders {
         next.delete(event.id);
         return next;
       });
+    }
+  }
+
+  /** the channel tab: @everyone on or off for the event's messages */
+  protected async setEveryone(id: number, on: boolean): Promise<void> {
+    this.everyone.update((map) => new Map(map).set(id, on));
+    try {
+      await this.api.setEveryone(id, on);
+    } catch {
+      this.everyone.update((map) => new Map(map).set(id, !on));
+      this.stopFailed.set(true);
     }
   }
 
