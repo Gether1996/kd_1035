@@ -31,6 +31,8 @@ ICONS = {
     'gold-head': ('legendary_head', '20 GH (zlatá hlava)'),
     # a type of 20 GH (EventVariant): the target from the game's event list (Gether's screenshot, 18. 10. 2026)
     'training-day': (None, 'Training Day (typ 20 GH)'),
+    # the hourglass of Now Or Never, another type of 20 GH (Gether's screenshot, 29. 10. 2026)
+    'now-or-never': (None, 'Now Or Never (typ 20 GH)'),
     'golden-kingdom': ('golden_kingdom', 'Golden Kingdom'),
     'ceroli': ('ceroli', 'Ceroli / Karuak'),
     'realm-of-mystique': ('realm_of_mystique', 'Realm of Mystique'),
@@ -51,6 +53,7 @@ GUESSES = [
     ('holy knight', 'egg'),
     ('hunt for history', 'hammer'),
     ('training day', 'training-day'),
+    ('now or never', 'now-or-never'),
     ('20 gh', 'gold-head'),
     ('gold head', 'gold-head'),
     ('golden kingdom', 'golden-kingdom'),

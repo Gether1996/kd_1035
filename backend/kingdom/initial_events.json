@@ -325,6 +325,14 @@
     "is_active": true,
     "variants": [
       {
+        "name_sk": "Now Or Never",
+        "name_cs": "",
+        "icon": "now-or-never",
+        "max_reward_sk": "",
+        "max_reward_cs": "",
+        "order": 0
+      },
+      {
         "name_sk": "Training Day",
         "name_cs": "",
         "icon": "training-day",

@@ -162,6 +162,23 @@ class TrainingDayMigrationTests(TestCase):
         self.assertTrue(EventVariant.objects.filter(event=moved).exists())
 
 
+class NowOrNeverMigrationTests(TestCase):
+    now_or_never = staticmethod(import_module('kingdom.migrations.0020_now_or_never').now_or_never)
+
+    def test_20_gh_gets_now_or_never_and_its_run_of_30_october(self):
+        gh = make_gh(starts_at=utc(2026, 10, 16))
+        tagged = make_gh(name_sk='20 GH', starts_at=utc(2026, 10, 2))
+        other = tagged.variants.create(name_sk='Training Day')
+        EventRun.objects.create(event=tagged, start=utc(2026, 10, 30), variant=other)
+        self.now_or_never(apps, None)
+        self.now_or_never(apps, None)  # once only
+        variant = EventVariant.objects.get(event=gh)
+        self.assertEqual((variant.name_sk, variant.icon, variant.max_reward_sk), ('Now Or Never', 'now-or-never', ''))
+        self.assertEqual(EventRun.objects.get(event=gh).variant, variant)
+        # a run the superadmin already tagged keeps its type
+        self.assertEqual(EventRun.objects.get(event=tagged).variant, other)
+
+
 @override_settings(SITE_URL='https://kd1035.test')
 class RunTypeInMessagesTests(TestCase):
     """The reminder the day before is when a player decides whether to hold speedups, so the bot DM and the channel
