@@ -583,3 +583,26 @@ class EvaluationAdminTests(TestCase):
         # the whole table replaced
         self.client.post(f'{self.pairs}import/', {'lines': 'Attila; Achilles; 90', 'replace': 'on'})
         self.assertEqual(list(CommanderPair.objects.values_list('primary', 'secondary')), [('Attila', 'Achilles')])
+
+
+class DeltaInscriptionsMigrationTests(TestCase):
+    """The second Delta armaments (Gether 29. 10. 2026): their inscriptions go into a saved tier list"""
+
+    delta_ii = staticmethod(import_module('accounts.migrations.0050_delta_ii_inscriptions').delta_ii)
+
+    def test_adds_the_new_names_and_keeps_tiers_set_on_the_page(self):
+        row = EvaluationSettings.load()
+        row.data = {'armaments': {'inscriptions': {'Flurry': 'S', 'Surge': 'B'}, 'gold': 50}}
+        row.save()
+        self.delta_ii(django_apps, None)
+        self.delta_ii(django_apps, None)  # once only
+        tiers = EvaluationSettings.load().data['armaments']['inscriptions']
+        self.assertEqual((tiers['Flurry'], tiers['Surge'], tiers['Raging Tide'], tiers['Driven']), ('S', 'B', 'S+', 'A+'))
+        self.assertEqual(len(tiers), 9)
+
+    def test_leaves_variables_without_a_tier_list_alone(self):
+        row = EvaluationSettings.load()
+        row.data = {'armaments': {'gold': 50}}
+        row.save()
+        self.delta_ii(django_apps, None)
+        self.assertEqual(EvaluationSettings.load().data, {'armaments': {'gold': 50}})

@@ -6,6 +6,7 @@ import {
   equipmentPoints,
   evaluate,
   expectedMarches,
+  inscriptionValue,
   marchEval,
   missingPairs,
   parsePowerList,
@@ -194,6 +195,15 @@ describe('evaluation scoring', () => {
     expect(armamentPoints(none, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((25 / 200) * 70, 9);
     // without the catalog, or only the counts typed in before: by colour like the spreadsheet
     expect(armamentPoints(S, m, null)).toMatchObject({ tiered: false, inscriptions: ((2 * 50 + 2 * 25 + 10) / 200) * 70 });
+  });
+
+  it('counts the second Delta armaments a little over the old Delta gold and blue (Gether 29. 10. 2026)', () => {
+    const value = (name: string, rarity: 'special' | 'rare') => inscriptionValue(DEFAULT_SETTINGS, { name, rarity });
+    expect(['Raging Tide', 'Impervious', 'Bold Ambitions', 'Rapid Advance'].map((n) => value(n, 'special'))).toEqual([55, 55, 55, 55]);
+    expect(['Surge', 'Steady', 'Burst', 'Driven'].map((n) => value(n, 'rare'))).toEqual([45, 45, 45, 45]);
+    expect([value('Flurry', 'special'), value('Causative', 'rare')]).toEqual([50, 40]);
+    // variables saved before: the new tiers get their points
+    expect(normalizeSettings({ armaments: { tiers: { S: 52 } } }).armaments.tiers).toMatchObject({ 'S+': 55, S: 52, 'A+': 45 });
   });
 
   it('expects more marches with more power: the fewest whose recommended power carries it', () => {

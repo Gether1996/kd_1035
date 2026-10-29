@@ -2858,8 +2858,20 @@
      "piece": "emblem"
     },
     {
+     "id": "delta-ii-emblem-raging-tide",
+     "name": "Raging Tide",
+     "rarity": "special",
+     "piece": "emblem"
+    },
+    {
      "id": "delta-emblem-relentless",
      "name": "Relentless",
+     "rarity": "rare",
+     "piece": "emblem"
+    },
+    {
+     "id": "delta-ii-emblem-surge",
+     "name": "Surge",
      "rarity": "rare",
      "piece": "emblem"
     },
@@ -2870,8 +2882,20 @@
      "piece": "flag"
     },
     {
+     "id": "delta-ii-flag-impervious",
+     "name": "Impervious",
+     "rarity": "special",
+     "piece": "flag"
+    },
+    {
      "id": "delta-flag-determined",
      "name": "Determined",
+     "rarity": "rare",
+     "piece": "flag"
+    },
+    {
+     "id": "delta-ii-flag-steady",
+     "name": "Steady",
      "rarity": "rare",
      "piece": "flag"
     },
@@ -2882,8 +2906,20 @@
      "piece": "instrument"
     },
     {
+     "id": "delta-ii-instrument-bold-ambitions",
+     "name": "Bold Ambitions",
+     "rarity": "special",
+     "piece": "instrument"
+    },
+    {
      "id": "delta-instrument-causative",
      "name": "Causative",
+     "rarity": "rare",
+     "piece": "instrument"
+    },
+    {
+     "id": "delta-ii-instrument-burst",
+     "name": "Burst",
      "rarity": "rare",
      "piece": "instrument"
     },
@@ -2894,8 +2930,20 @@
      "piece": "scroll"
     },
     {
+     "id": "delta-ii-scroll-rapid-advance",
+     "name": "Rapid Advance",
+     "rarity": "special",
+     "piece": "scroll"
+    },
+    {
      "id": "delta-scroll-pummeler",
      "name": "Pummeler",
+     "rarity": "rare",
+     "piece": "scroll"
+    },
+    {
+     "id": "delta-ii-scroll-driven",
+     "name": "Driven",
      "rarity": "rare",
      "piece": "scroll"
     }

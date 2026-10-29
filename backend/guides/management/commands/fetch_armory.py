@@ -22,6 +22,17 @@ FORMATION_FILES = {
 }  # fmt: skip
 RARITY = {'legendary': 'special', 'epic': 'rare', 'elite': 'common'}
 PIECES = ('emblem', 'flag', 'instrument', 'scroll')
+# The second kind of Delta armaments (Crest, Colors, Notes and Laws of Purity, update 1.1.13) – read off the official
+# patch video "Update 1.1.13 Highlights" (youtube.com/watch?v=3hrfI-IDLrw, 29. 10. 2026; Gether: "presne tak ako to má
+# wedge a pincer"). Kept while meta-rok.com has none of them, in its id style (delta-ii-…), gold then blue per piece.
+KNOWN = {
+    'Delta': [
+        ('emblem', 'Raging Tide', 'special'), ('emblem', 'Surge', 'rare'),
+        ('flag', 'Impervious', 'special'), ('flag', 'Steady', 'rare'),
+        ('instrument', 'Bold Ambitions', 'special'), ('instrument', 'Burst', 'rare'),
+        ('scroll', 'Rapid Advance', 'special'), ('scroll', 'Driven', 'rare'),
+    ],
+}  # fmt: skip
 
 
 def js_value(page, name):
@@ -111,6 +122,12 @@ def inscriptions(page):
             formations.setdefault(raw['formation'], []).append(entry)
         else:
             common.append(entry)
+    for formation, known in KNOWN.items():
+        names = {i['name'] for i in formations.get(formation, [])}
+        for piece, name, rarity in known:
+            if name not in names:
+                entry = {'id': f'{slug(formation)}-ii-{piece}-{slug(name)}', 'name': name, 'rarity': rarity, 'piece': piece}
+                formations.setdefault(formation, []).append(entry)
     rank = {'special': 0, 'rare': 1}
     return (
         [

@@ -131,7 +131,8 @@ export interface Tier {
 
 export type PairRow = [primary: string, secondary: string, points: number];
 
-export const INSCRIPTION_TIERS = ['S', 'A', 'B', 'C', 'D'] as const;
+// S+ and A+ (Gether 29. 10. 2026): the new Delta inscriptions a little over the old gold (S) and blue (best A) ones
+export const INSCRIPTION_TIERS = ['S+', 'S', 'A+', 'A', 'B', 'C', 'D'] as const;
 export type InscriptionTier = (typeof INSCRIPTION_TIERS)[number];
 
 /** the best pair first – the table is sorted like this whenever it is loaded or saved (Slim 13. 10. 2026) */
@@ -148,6 +149,7 @@ const TIERS: Tier[] = [
  * The inscription tier list for the open field (Slim 13. 10. 2026: "dal by som mu tier list inscriptions, charge je na
  * úrovni zlatej"). Sources: WarDaddyChadski with Davor – Delta, Pincer, Wedge tier lists (5.–15. 1. 2026), Special
  * Inscription Priority List (18. 1. 2026), Wedge 2.0 (31. 3. 2026), Pincer 2.0 (31. 7. 2026), Arch (28. 10. 2024);
+ * the second Delta armaments (update 1.1.13) by Gether 29. 10. 2026: "o trochu väčšiu váhu ako terajšie zlaté a modré";
  * Chisgule Gaming and DOM 117 on Pincer 2 / Charge (30.–31. 7. 2026); Mr Siege – V formation (26. 3. 2025).
  * Formations without a current source (Echelon, Tercio, Triple Line, Circle, Hollow Square) count by colour.
  */
@@ -165,6 +167,8 @@ export const DEFAULT_INSCRIPTIONS: Record<string, InscriptionTier> = Object.from
       ['A', 'Causative'],
       ['B', 'Relentless', 'Pummeler'],
       ['C', 'Determined'],
+      ['S+', 'Raging Tide', 'Impervious', 'Bold Ambitions', 'Rapid Advance'],
+      ['A+', 'Surge', 'Steady', 'Burst', 'Driven'],
       // Wedge
       ['S', 'Horseback Action', 'Advantage Advanced', 'Intrepid'],
       ['A', 'Indomitable', 'Hunter', 'Unstoppable'],
@@ -225,7 +229,7 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     blue: 25,
     white: 10,
     inscMax: 200,
-    tiers: { S: 50, A: 40, B: 30, C: 20, D: 5 },
+    tiers: { 'S+': 55, S: 50, 'A+': 45, A: 40, B: 30, C: 20, D: 5 },
     inscriptions: DEFAULT_INSCRIPTIONS,
   },
   equipment: {
