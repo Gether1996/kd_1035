@@ -97,3 +97,38 @@ class Hall(TestCase):
         self.nelly.delete_account()
         self.assertFalse(HallEntry.objects.exists())
         self.assertEqual(list((Path(self.media.name) / 'hall').iterdir()), [])
+
+    def test_the_whole_ranking_at_once_photos_move_with_their_players(self):
+        """/prepis-top-forty (Gether 29. 10. 2026): a new week's fort destroyers from a screenshot of the game"""
+        for place, name in enumerate(['Fox', 'Malkom', 'Gether'], start=1):
+            self.put(self.as_admin, f'/api/hall/forts/{place}/', {'name': name, 'count': '100'})
+            self.as_admin.post(f'/api/hall/forts/{place}/photo/', {'photo': jpeg()}, HTTP_X_CSRFTOKEN=self.as_admin.token)
+        before = {e.name: (e.pk, e.photo) for e in HallEntry.objects.all()}
+        url = '/api/hall/forts/'
+        saved = self.put(
+            self.as_admin,
+            url,
+            {
+                'entries': [
+                    {'name': 'Gether', 'count': '82', 'photo_from': before['Gether'][0]},
+                    {'player': self.nelly.pk, 'count': '80'},
+                ]
+            },
+        )
+        self.assertEqual(saved.status_code, 200, saved.content)
+        rows = [(e['place'], e['name'], e['count']) for e in saved.json()['entries']]
+        self.assertEqual(rows, [(1, 'Gether', '82'), (2, 'Nelly', '80')])
+        entries = list(HallEntry.objects.order_by('place'))
+        self.assertEqual([e.photo for e in entries], [before['Gether'][1], ''])
+        # Fox and Malkom left the top: their photos are gone, Gether's stays
+        files = {p.name for p in (Path(self.media.name) / 'hall').iterdir()}
+        self.assertEqual(files, {Path(before['Gether'][1]).name})
+
+    def test_the_ranking_is_checked(self):
+        url = '/api/hall/forts/'
+        self.assertEqual(self.put(self.as_nelly, url, {'entries': [{'name': 'X'}]}).status_code, 403)
+        self.assertEqual(self.put(self.as_admin, url, {'entries': []}).status_code, 400)
+        self.assertEqual(self.put(self.as_admin, url, {'entries': [{'name': 'X'}] * 4}).status_code, 400)
+        self.assertEqual(self.put(self.as_admin, url, {'entries': [{'count': '5'}]}).status_code, 400)
+        self.assertEqual(self.put(self.as_admin, '/api/hall/nope/', {'entries': [{'name': 'X'}]}).status_code, 404)
+        self.assertFalse(HallEntry.objects.exists())

@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **29. 10. 2026:** Sieň slávy: celý rebríček kategórie sa dá prepísať naraz a fotky sa presunú s hráčmi (`PUT /api/hall/<kategória>/`) – pre skill `/prepis-top-forty`.
 - **29. 10. 2026 – v1.54.1:** Oznámenia do kanála sú predvolene vypnuté pri všetkých eventoch – do kanála píšu len eventy, ktoré superadmin vyberie v záložke Kanál.
 - **29. 10. 2026 – v1.54.0:** Pripomienky eventov: superadmin má záložku **Kanál na Discorde** – oznámenia eventov do kanála nastaví ako hráč svoje pripomienky (ľubovoľné časy, napr. 10 min vopred) a s @everyone.
 - **29. 10. 2026 – v1.53.3:** Delta má druhú sadu armamentov (update 1.1.13): 4 zlaté a 4 modré inscriptions na naklikanie; vo Vyhodnocovaní nové tiery S+ (55) a A+ (45), o trochu nad terajšími zlatými a modrými Delty.

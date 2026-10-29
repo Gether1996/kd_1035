@@ -95,6 +95,15 @@ class EntrySerializer(serializers.Serializer):
         return data
 
 
+class RankedSerializer(EntrySerializer):
+    # the id of an entry of the same category whose photo moves here with its player
+    photo_from = serializers.IntegerField(required=False, allow_null=True)
+
+
+class RankingSerializer(serializers.Serializer):
+    entries = RankedSerializer(many=True, allow_empty=False)
+
+
 def place_of(category: str, place: int) -> tuple[str, int]:
     if category not in PLACES or not 1 <= place <= PLACES[category]:
         raise Http404
@@ -140,6 +149,52 @@ def place(request, category, place):
         },
     )
     return Response(entry_data(entry, superuser=True))
+
+
+@api_view(['PUT'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def ranking(request, category):
+    """PUT {entries: [{player?, name?, note_sk?, note_cs?, count?, photo_from?}, …]}: the whole ranking of a category
+    at once, place 1 first (the weekly fort destroyers from a screenshot of the game – Gether 29. 10. 2026,
+    /prepis-top-forty). A photo moves with its player (`photo_from` = their entry before); places after the list
+    become empty and photos nobody keeps are deleted."""
+    if category not in PLACES:
+        raise Http404
+    serializer = RankingSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+    ranked = serializer.validated_data['entries']
+    if len(ranked) > PLACES[category]:
+        return Response({'entries': 'too_many'}, status=400)
+    with transaction.atomic():
+        before = {entry.pk: entry.photo for entry in HallEntry.objects.select_for_update().filter(category=category)}
+        kept = []
+        for place, data in enumerate(ranked, start=1):
+            photo = before.get(data.get('photo_from'), '')
+            kept.append(photo)
+            HallEntry.objects.update_or_create(
+                category=category,
+                place=place,
+                defaults={
+                    'player': data.get('player'),
+                    'name': data.get('name', ''),
+                    'note_sk': data.get('note_sk', ''),
+                    'note_cs': data.get('note_cs', ''),
+                    'count': data.get('count', ''),
+                    'photo': photo,
+                },
+            )
+        # the places after the list: emptied without their photos (moved ones are cleared first, so the delete
+        # signal does not remove a file another place now shows)
+        rest = HallEntry.objects.filter(category=category, place__gt=len(ranked))
+        rest.update(photo='')
+        rest.delete()
+    for photo in set(before.values()) - set(kept):
+        if photo:
+            remove_photo(photo)
+    entries = HallEntry.objects.filter(category=category).select_related('player').order_by('place')
+    return Response({'entries': [entry_data(e, superuser=True) for e in entries]})
 
 
 @api_view(['POST', 'DELETE'])

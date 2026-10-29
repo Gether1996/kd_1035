@@ -52,6 +52,7 @@ urlpatterns = [
     path('evaluation/players/<int:player_id>/', evaluation_views.evaluation_player),
     path('hall/', hall.hall),
     path('hall/photos/<int:entry_id>/', hall.photo),
+    path('hall/<str:category>/', hall.ranking),
     path('hall/<str:category>/<int:place>/', hall.place),
     path('hall/<str:category>/<int:place>/photo/', hall.place_photo),
     path('forum/', forum_views.threads),
