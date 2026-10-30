@@ -21,10 +21,11 @@ The rules are in CLAUDE.md → **Verzia webu** (read it if unsure). In short:
    - `"version"` in `frontend/package.json`
    - the two `"version"` fields at the top of `frontend/package-lock.json` (otherwise `npm install` in the dev container rewrites them and leaves the file dirty)
 3. `docs/backlog.md` → **Hotové**: add on top `- **D. M. RRRR – vX.Y.Z:** <one sentence in Slovak, what players get>` (or put the version into the task's existing line).
+   **Novinky** (`/novinky`, `frontend/src/app/pages/changelog/changes.ts`, Slim 30. 10. 2026): today's block on top gets the new `version` and a short line in SK **and** CZ, the way a player says it – a block already for today gets the line added (one block per day, not per release). Admin-only changes: a line only when players notice them, otherwise just the version. The test fails until `CHANGES[0].version` equals `SITE_VERSION`.
 4. Check that all four numbers agree – `grep -n "SITE_VERSION =\|\"version\"" frontend/src/app/core/version.ts frontend/package.json; sed -n 3,9p frontend/package-lock.json | grep version` – and verify the task (skill `kd-verify`; the footer test checks the format).
 5. Commit and push the commit **and its tag in the same push**:
    ```bash
-   git add frontend/src/app/core/version.ts frontend/package.json frontend/package-lock.json docs/backlog.md <the task's files>
+   git add frontend/src/app/core/version.ts frontend/package.json frontend/package-lock.json docs/backlog.md frontend/src/app/pages/changelog/changes.ts <the task's files>
    git commit -m "Release vX.Y.Z: <what changed>"   # English, ends with the Co-Authored-By line
    git tag vX.Y.Z
    git push origin main vX.Y.Z

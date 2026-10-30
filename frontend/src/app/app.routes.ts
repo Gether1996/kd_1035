@@ -39,6 +39,8 @@ const pages = (): Routes => [
     canDeactivate: [leaveEvaluation],
   },
   { path: 'slovnik', loadComponent: () => import('./pages/glossary/glossary').then((m) => m.Glossary) },
+  // what is new on the website, linked from the version in the footer (Slim 30. 10. 2026)
+  { path: 'novinky', loadComponent: () => import('./pages/changelog/changelog').then((m) => m.Changelog) },
   // guides too
   { path: 'navody', loadComponent: () => import('./pages/guides/guide-hub').then((m) => m.GuideHub) },
   { path: 'navody/:category', loadComponent: () => import('./pages/guides/guide-list').then((m) => m.GuideList) },

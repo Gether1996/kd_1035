@@ -30,6 +30,8 @@ import { Logo } from '../../shared/logo';
         <ul class="footer__links">
           <li><a [routerLink]="i18n.path('terms')">{{ i18n.t().nav.terms }}</a></li>
           <li><a [routerLink]="i18n.path('privacy')">{{ i18n.t().nav.privacy }}</a></li>
+          <!-- what is new on the website (Slim 30. 10. 2026), next to its version -->
+          <li><a [routerLink]="i18n.path('changelog')">{{ i18n.t().footer.changelog }}</a></li>
           <li class="footer__version"><span class="sr-only">{{ i18n.t().footer.version }} </span>v{{ version }}</li>
         </ul>
       </div>

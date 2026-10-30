@@ -22,7 +22,7 @@ from .roster import march_commanders
 from .serializers import GuideDetailSerializer, GuideListSerializer
 
 # Pages of the Angular app (Slovak paths; the Czech version lives under /cz)
-STATIC_PAGES = ['', '/o-nas', '/kalendar', '/podmienky', '/ochrana-udajov', '/navody', '/slovnik'] + [f'/navody/{c}' for c in Guide.Category.values]
+STATIC_PAGES = ['', '/o-nas', '/kalendar', '/podmienky', '/ochrana-udajov', '/navody', '/slovnik', '/novinky'] + [f'/navody/{c}' for c in Guide.Category.values]
 
 # Guide address as nginx passes it to link_preview(): [cz/]navody/<category>/<slug>
 GUIDE_PATH = re.compile(r'^(cz/)?navody/([a-z]+)/([-\w]+)/?$')

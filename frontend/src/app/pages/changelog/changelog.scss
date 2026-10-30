@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.content {
+  max-width: 760px;
+  padding-block: clamp(32px, 5vw, 56px) clamp(64px, 9vw, 112px);
+}
+
+// a timeline: one block per day, the newest on top
+.days {
+  display: grid;
+  gap: clamp(20px, 3vw, 28px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.day {
+  position: relative;
+  padding-left: 22px;
+  border-left: 2px solid var(--line-strong);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: -6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gold-400);
+  }
+}
+
+.day__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+}
+
+.day__version {
+  font: 600 0.8125rem / 1 var(--font-body);
+  letter-spacing: 0.08em;
+  color: var(--gold-300);
+}
+
+.day__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}

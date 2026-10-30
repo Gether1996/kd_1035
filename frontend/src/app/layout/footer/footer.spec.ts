@@ -42,6 +42,8 @@ describe('Footer', () => {
     expect(links).toEqual([
       ['/podmienky', 'Podmienky používania'],
       ['/ochrana-udajov', 'Ochrana údajov'],
+      // what is new on the website (Slim 30. 10. 2026)
+      ['/novinky', 'Novinky'],
     ]);
   });
 

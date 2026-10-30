@@ -59,6 +59,10 @@ export const sk = {
       title: 'Prihláška na KvK | KD 1035',
       description: 'Prihláška hráčov kráľovstva KD 1035 na KvK – rally a garrison.',
     },
+    changelog: {
+      title: 'Novinky na webe · KD 1035',
+      description: 'Čo pribudlo a čo sme zlepšili na webe slovensko-českého kráľovstva KD 1035 v Rise of Kingdoms.',
+    },
     glossary: {
       title: 'Slovník pojmov Rise of Kingdoms – KvK, MGE, KP, rally · KD 1035',
       description:
@@ -790,6 +794,11 @@ export const sk = {
       failed: 'Budík sa nepodarilo uložiť. Skús to znova.',
     },
   },
+  changelog: {
+    eyebrow: 'Web',
+    title: 'Novinky',
+    intro: 'Čo pribudlo a čo sme zlepšili na webe.',
+  },
   glossary: {
     eyebrow: 'Návody',
     title: 'Slovník pojmov',
@@ -1436,6 +1445,7 @@ export const sk = {
     together: 'v spolupráci s',
     updated: 'Informácie aktualizované',
     version: 'Verzia webu',
+    changelog: 'Novinky',
   },
 };
 

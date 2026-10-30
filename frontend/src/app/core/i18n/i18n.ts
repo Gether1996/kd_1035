@@ -17,6 +17,7 @@ export type Page =
   | 'reminders'
   | 'guideHub'
   | 'glossary'
+  | 'changelog'
   | 'kvk'
   | 'playersMarches'
   | 'evaluation'
@@ -45,6 +46,7 @@ const FIXED_PATHS = {
   reminders: '/pripomienky',
   guideHub: '/navody',
   glossary: '/slovnik',
+  changelog: '/novinky',
   kvk: '/kvk',
   playersMarches: '/marche',
   evaluation: '/vyhodnocovanie',

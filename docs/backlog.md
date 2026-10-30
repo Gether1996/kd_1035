@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **30. 10. 2026 – v1.55.0:** Stránka **Novinky** (`/novinky`, odkaz v pätičke) – čo pribudlo na webe, po dňoch s verziou, SK aj CZ (Slim: „changelog do footra“).
 - **30. 10. 2026 – v1.54.3:** Marche hráčov: superadmin si môže zoradiť hráčov podľa počtu chybných marchov („Najviac chýb“).
 - **30. 10. 2026 – v1.54.2:** Marche bez naklikanej výbavy alebo armamentov sú červené ako zlý pár (hráč a superadmin), idú do Na opravu a do Discord upozornení.
 - **29. 10. 2026:** Sieň slávy: celý rebríček kategórie sa dá prepísať naraz a fotky sa presunú s hráčmi (`PUT /api/hall/<kategória>/`) – pre skill `/prepis-top-forty`.
