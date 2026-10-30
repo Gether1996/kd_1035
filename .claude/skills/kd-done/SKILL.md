@@ -38,6 +38,7 @@ Every finished change goes straight to `main` (CLAUDE.md → Git), so this is th
 ## Ship
 
 - [ ] Version decided with skill `kd-release` – players notice it → PATCH or MINOR; text tweaks, content, docs, tests, tools → none
+- [ ] A new version = today's block in **Novinky** (`frontend/src/app/pages/changelog/changes.ts`) updated: its `version` and a short SK + CZ line of what players notice (Gether 30. 10. 2026 – always, CLAUDE.md → Verzia webu)
 - [ ] Docker running, so the pre-commit hook can export the snapshot; small English commits ending with the Co-Authored-By line
 - [ ] Pushed – the tag in the same push when there is a release. Deploying is Gether's step; never run anything on the server
 - [ ] Gether told in Slovak: what changed, the version, whether the deploy runs a migration, and anything that needs Gether's action before or after deploying
