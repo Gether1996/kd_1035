@@ -52,7 +52,7 @@
       <div class="field bar__select">
         <label class="sr-only" for="marches-sort">{{ p.sort }}</label>
         <select #sortBy id="marches-sort" class="select" (change)="setSort(sortBy.value)">
-          @for (s of sorts; track s) {
+          @for (s of sorts(); track s) {
             <option [value]="s" [selected]="sort() === s">{{ p.sorts[s] }}</option>
           }
         </select>

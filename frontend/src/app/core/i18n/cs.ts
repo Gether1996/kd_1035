@@ -580,7 +580,7 @@ export const cs: Dict = {
     expandAll: 'Rozbalit všechny',
     collapseAll: 'Sbalit všechny',
     sort: 'Seřadit',
-    sorts: { updated: 'Nejnovější', count: 'Počet marchů', name: 'Jméno' },
+    sorts: { updated: 'Nejnovější', problems: 'Nejvíc chyb', count: 'Počet marchů', name: 'Jméno' },
     kindFilter: 'Typ marche',
     allKinds: 'Všechny typy',
     updated: 'upraveno {date}',

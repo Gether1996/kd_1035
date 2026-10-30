@@ -85,6 +85,8 @@ describe('PlayersMarches', () => {
     expect(el.querySelectorAll('.player__discord')[1].textContent?.trim()).toBe('nelly · upravené 10. 10. 14:00');
     expect(el.querySelector('.tag')?.textContent).toContain('Ty');
     const sort = el.querySelector<HTMLSelectElement>('#marches-sort')!;
+    // "Najviac chýb" is the superadmin's only
+    expect(Array.from(sort.options, (o) => o.value)).toEqual(['updated', 'count', 'name']);
     sort.value = 'count';
     sort.dispatchEvent(new Event('change'));
     await tick(fixture);
@@ -249,7 +251,7 @@ describe('PlayersMarches', () => {
       players: [
         { ...player, id: 1, marches: wrong },
         // the server leaves the fields out for the others' marches it does not tell about
-        { ...player, id: 2, name: 'eve', ingame_name: 'Eve', marches: [MARCH] },
+        { ...player, id: 2, name: 'eve', ingame_name: 'Eve', marches: [MARCH], updated_at: '2026-10-13T12:00:00Z' },
       ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
@@ -264,6 +266,15 @@ describe('PlayersMarches', () => {
     expect(bob.querySelectorAll('.player__mini.is-bad').length).toBe(3);
     expect(eve.classList).not.toContain('has-problem');
     expect(eve.querySelector('.tag--problem')).toBeNull();
+    // the most red marches first (Gether 30. 10. 2026), Eve changed hers later
+    const names = () => Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent);
+    expect(names()).toEqual(['Eve', 'Bob']);
+    const sort = el.querySelector<HTMLSelectElement>('#marches-sort')!;
+    sort.value = 'problems';
+    sort.dispatchEvent(new Event('change'));
+    await tick(fixture);
+    expect(names()).toEqual(['Bob', 'Eve']);
+    expect(sort.selectedOptions[0].textContent?.trim()).toBe('Najviac chýb');
     // opened: the red cards with what is wrong
     bob.querySelector<HTMLButtonElement>('.player__head')!.click();
     await tick(fixture);

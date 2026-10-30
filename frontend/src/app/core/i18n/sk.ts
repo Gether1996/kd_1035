@@ -599,7 +599,7 @@ export const sk = {
     expandAll: 'Rozbaliť všetky',
     collapseAll: 'Zbaliť všetky',
     sort: 'Zoradiť',
-    sorts: { updated: 'Najnovšie', count: 'Počet marchov', name: 'Meno' },
+    sorts: { updated: 'Najnovšie', problems: 'Najviac chýb', count: 'Počet marchov', name: 'Meno' },
     kindFilter: 'Typ marchu',
     allKinds: 'Všetky typy',
     updated: 'upravené {date}',

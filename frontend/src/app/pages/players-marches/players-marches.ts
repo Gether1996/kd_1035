@@ -30,7 +30,7 @@ import { reloadOnReturn } from '../../shared/reload-on-return';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
 
-type Sort = 'updated' | 'count' | 'name';
+type Sort = 'updated' | 'count' | 'name' | 'problems';
 
 /**
  * /marche – two tabs (Gether 11. 10. 2026): "Prehľad marchov" = the player's own marches (the Marches component; Gether
@@ -72,8 +72,11 @@ export class PlayersMarches {
   );
 
   protected readonly search = signal('');
-  /** the most recently changed first (Gether 12. 10. 2026), the most marches, or the name */
-  protected readonly sorts: Sort[] = ['updated', 'count', 'name'];
+  /** the most recently changed first (Gether 12. 10. 2026), the most marches, or the name; the superadmin also the
+   *  most red marches first (Gether 30. 10. 2026: "na vrch chybných vyplnení") – only they get the problems */
+  protected readonly sorts = computed<Sort[]>(() =>
+    this.auth.user()?.is_superuser ? ['updated', 'problems', 'count', 'name'] : ['updated', 'count', 'name'],
+  );
   protected readonly sort = signal<Sort>('updated');
   /** only the players with a march of this type ('' = all) */
   protected readonly kinds = MARCH_KINDS;
@@ -102,6 +105,7 @@ export class PlayersMarches {
       updated: (a, b) => b.updated_at.localeCompare(a.updated_at) || byName(a, b),
       count: (a, b) => b.marches.length - a.marches.length || byName(a, b),
       name: byName,
+      problems: (a, b) => this.problems(b) - this.problems(a) || b.updated_at.localeCompare(a.updated_at) || byName(a, b),
     };
     return this.players()
       .filter((p) => !focus || p.id === focus)
