@@ -16,6 +16,8 @@ from .models import March, MarchNotice
 from .reminders import DiscordPaused
 from .test_reminders import make_player
 
+STATS = {'attack': Decimal(10), 'defense': Decimal(10), 'health': Decimal(10)}
+
 BOT = {'DISCORD_BOT_TOKEN': 'token', 'SITE_URL': 'https://kd1035.eu'}
 
 
@@ -47,9 +49,11 @@ class RedMarches(TestCase):
         player.save()
         return player
 
-    def march(self, player, position, primary, secondary, kind='cavalry', formation=''):
+    def march(self, player, position, primary, secondary, kind='cavalry', formation='', filled=True):
+        # clicked together and with its bonuses unless `filled` is off – an empty one is a problem of its own
+        built = {'gear': {'weapon': {'item': 'sacred-dominion'}}, 'inscriptions': ['common-brave'], **STATS} if filled else {}
         return March.objects.create(
-            player=player, position=position, kind=kind, primary=primary, secondary=secondary, formation=formation
+            player=player, position=position, kind=kind, primary=primary, secondary=secondary, formation=formation, **built
         )
 
     def login(self, user):
@@ -115,6 +119,29 @@ class MarchNoticeTests(RedMarches):
         self.assertIn('• Bonusy armamentů nad maximum: ATK 20 % (max 14 %), HP 14,1 % (max 14 %). Zkontroluj je ve hře a oprav.', lines)
         # marches without such a bonus keep the fingerprint they had before the caps (no message told twice)
         self.assertEqual(notices.fingerprint(nelly[:3]), before)
+
+    def test_equipment_or_armaments_not_filled_in_are_told(self):
+        """Gether 30. 10. 2026: like a wrong pair, for the player and the superadmin, whatever the type"""
+        before = notices.fingerprint(notices.problems_of(self.bob, notices.march_checker()))
+        March.objects.filter(player=self.bob).update(gear={})
+        bob = notices.problems_of(self.bob, notices.march_checker())
+        self.assertEqual([p['gear_problem'] for p in bob], [['gear']])
+        March.objects.filter(player=self.bob).update(formation='', inscriptions=[])
+        March.objects.filter(player=self.bob).update(gear={'weapon': {'item': 'sacred-dominion'}})
+        self.assertEqual(notices.problems_of(self.bob, notices.march_checker())[0]['gear_problem'], ['armaments'])
+        # no ATK/DEF/HP is armaments not filled in too
+        March.objects.filter(player=self.bob).update(inscriptions=['common-brave'], health=None)
+        bob = notices.problems_of(self.bob, notices.march_checker())
+        self.assertEqual(bob[0]['gear_problem'], ['armaments'])
+        text = notices.message(self.bob, bob)['embeds'][0]['description']
+        self.assertIn('• Chýbajú armamenty – formácia, inscriptions a bonusy ATK, DEF, HP.', text)
+        self.assertNotEqual(notices.fingerprint(bob), before)
+        # the player and the superadmin see it on the march
+        own = self.login(self.bob.user).get('/api/me/marches/').json()['marches'][0]
+        self.assertEqual(own['gear_problem'], ['armaments'])
+        players = self.admin.get('/api/marches/').json()['players']
+        bob_row = next(p for p in players if p['id'] == self.bob.pk)
+        self.assertEqual(bob_row['marches'][0]['gear_problem'], ['armaments'])
 
     def test_superuser_only(self):
         other = self.login(self.bob.user)

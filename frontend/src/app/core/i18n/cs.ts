@@ -639,6 +639,7 @@ export const cs: Dict = {
     pairHint: { swap: 'Hodnotí se opačné pořadí: {secondary} + {primary}.' },
     formationProblem: '{commander} má vést formaci {want}, ne {have} – ve vyhodnocování KvK se armamenty počítají méně.',
     statsProblem: 'Bonusy armamentů nad maximum: {stats} – zkontroluj je ve hře.',
+    gearProblem: { gear: 'Chybí naklikaná výbava.', armaments: 'Chybí armamenty.' },
     statsOver: '{stat} {value} % (max {max} %)',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, co je u nich červené.',

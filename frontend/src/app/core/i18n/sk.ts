@@ -667,6 +667,8 @@ export const sk = {
     formationProblem: '{commander} má viesť formáciu {want}, nie {have} – vo vyhodnocovaní KvK sa armamenty počítajú menej.',
     // an armament bonus over its cap (Gether 19. 10. 2026: ATK, DEF, HP 14 %, All DMG 8 %) – on the march and in its editor
     statsProblem: 'Bonusy armamentov nad maximum: {stats} – skontroluj ich v hre.',
+    // not filled in – also shown to the superadmin on someone else's march (Gether 30. 10. 2026)
+    gearProblem: { gear: 'Chýba naklikaná výbava.', armaments: 'Chýbajú armamenty.' },
     statsOver: '{stat} {value} % (max {max} %)',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, čo je pri nich červené.',

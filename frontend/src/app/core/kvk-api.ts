@@ -105,6 +105,9 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   formation_problem?: string[] | null;
   /** the armament bonuses over their cap (ARMAMENT_CAPS, any type) – the same people only; a sign-up: its player, R4 */
   stats_problem?: ArmamentStat[] | null;
+  /** not filled in: 'gear' = no item, 'armaments' = no formation and inscription or no ATK/DEF/HP (any type, Gether
+   *  30. 10. 2026) – the same people only */
+  gear_problem?: ('gear' | 'armaments')[] | null;
 }
 
 /**
@@ -112,7 +115,10 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
  * superuser and to the player about their own (Gether 14. and 19. 10. 2026); for anyone else the fields are missing
  */
 export const marchHasProblem = (march: March): boolean =>
-  !!march.pair_problem || !!march.formation_problem?.length || !!march.stats_problem?.length;
+  !!march.pair_problem ||
+  !!march.formation_problem?.length ||
+  !!march.stats_problem?.length ||
+  !!march.gear_problem?.length;
 
 /** a sign-up shown and edited like a march (MarchBuild, BuildEditor) */
 export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 });

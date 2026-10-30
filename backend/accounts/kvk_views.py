@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
 # up to two sign-ups per role (Gether 22. 10. 2026)
 SLOTS = (1, 2)
-PROBLEMS = ('pair_problem', 'formation_problem', 'stats_problem')
+PROBLEMS = ('pair_problem', 'formation_problem', 'stats_problem', 'gear_problem')
 
 
 class IsReviewer(BasePermission):
@@ -270,7 +270,8 @@ def reviewers(request):
             Prefetch(
                 'marches',
                 queryset=March.objects.only(
-                    'player_id', 'kind', 'primary', 'secondary', 'formation', 'attack', 'defense', 'health', 'damage'
+                    'player_id', 'kind', 'primary', 'secondary', 'formation', 'attack', 'defense', 'health', 'damage',
+                    'gear', 'inscriptions'
                 ),
             ),
         )

@@ -6,7 +6,8 @@ commander, or with a pair (in this order) that is not in guides.CommanderPair or
 lower (formationOf) – a commander without formations, or a march without one, takes any. Types the evaluation does
 not count (garrison and rally by default) get no warning about the pair or the formation. An armament bonus over
 its cap (ARMAMENT_CAPS, Gether 19. 10. 2026) is a typo whatever the type – red as well; the evaluation counts the
-cap."""
+cap. So is a march of any type without the equipment or the armaments clicked together (Gether 30. 10. 2026:
+"upozornenie aj keď nemá vyplnený equip alebo armamenty, tým istým spôsobom ako zlý commander pár")."""
 
 import math
 from collections.abc import Callable
@@ -29,6 +30,18 @@ def over_caps(army) -> list[str] | None:
     """The armament bonuses of a march or a sign-up over their cap, in the order of ARMAMENT_CAPS; None = none"""
     over = [stat for stat, cap in ARMAMENT_CAPS.items() if (getattr(army, stat) or 0) > cap]
     return over or None
+
+
+def missing_parts(march: March) -> list[str] | None:
+    """'gear' = not a single item clicked, 'armaments' = neither a formation nor an inscription, or no ATK/DEF/HP
+    (emptyParts in frontend/src/app/core/armory.ts + REQUIRED_STATS); None = both filled in"""
+    missing = []
+    if not any(isinstance(piece, dict) and piece.get('item') for piece in (march.gear or {}).values()):
+        missing.append('gear')
+    no_build = not march.formation and not march.inscriptions
+    if no_build or any(getattr(march, stat) is None for stat in ('attack', 'defense', 'health')):
+        missing.append('armaments')
+    return missing or None
 
 
 def evaluation_marches() -> dict:
@@ -67,7 +80,8 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
     formations; the returned function says what is wrong with a march: pair_problem 'solo' (no secondary), 'unknown'
     (not in the table or 0 points) or None, pair_hint how to fix an 'unknown' pair ({swap: the other order scores},
     never the points; else None), formation_problem the formations its primary should lead with when it uses
-    another one (else None) and stats_problem the armament bonuses over their cap (over_caps – any type)."""
+    another one (else None), stats_problem the armament bonuses over their cap (over_caps – any type) and
+    gear_problem what is not filled in (missing_parts – any type)."""
     kinds = counted_kinds(marches)
     table: dict[tuple[str, str], float] = {}
     for primary, secondary, points in CommanderPair.objects.values_list('primary', 'secondary', 'points'):
@@ -88,8 +102,15 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
 
     def check(march: March) -> dict:
         stats = over_caps(march)
+        gear = missing_parts(march)
         if march.kind not in kinds or not march.primary:
-            return {'pair_problem': None, 'pair_hint': None, 'formation_problem': None, 'stats_problem': stats}
+            return {
+                'pair_problem': None,
+                'pair_hint': None,
+                'formation_problem': None,
+                'stats_problem': stats,
+                'gear_problem': gear,
+            }
         problem = pair(march)
         # the player cannot see the pair table – say when only the order is wrong (names as on the march)
         hint = {'swap': scores(march.secondary, march.primary)} if problem == 'unknown' else None
@@ -98,6 +119,7 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
             'pair_hint': hint,
             'formation_problem': formation(march),
             'stats_problem': stats,
+            'gear_problem': gear,
         }
 
     return check

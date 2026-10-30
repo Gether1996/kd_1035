@@ -155,6 +155,16 @@ export class MarchBuild {
     return this.t().statsProblem.replace('{stats}', overCapText(this.t(), march, march.stats_problem));
   });
 
+  /**
+   * Equipment or armaments not filled in (Gether 30. 10. 2026) – the server tells the player and the superuser; the own
+   * march has its red "Doplň …" links instead
+   */
+  protected readonly gearProblem = computed(() => {
+    const parts = this.march().gear_problem;
+    if (!parts?.length || this.own()) return null;
+    return parts.map((part) => this.t().gearProblem[part]).join(' ');
+  });
+
   /** how to fix a pair the evaluation does not score: the other order is scored – the names as on the march */
   protected readonly pairHint = computed(() => {
     const march = this.march();

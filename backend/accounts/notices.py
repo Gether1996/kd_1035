@@ -4,7 +4,7 @@ odoslanie discord správy pre užívateľa, ktorý má nejakú chybu … kde je 
 Only what /marche shows the player in red (pair_check.march_checker): a pair without a secondary commander, a pair the
 evaluation does not score (and, when it does, the other order – never the points or other partners, Gether: "nie,
 len čo je zlé"), a formation the primary commander should not lead with and an armament bonus over its cap (Gether
-19. 10. 2026, pair_check.ARMAMENT_CAPS). The superadmin sees a preview of every
+19. 10. 2026, pair_check.ARMAMENT_CAPS), and equipment or armaments not filled in (30. 10. 2026). The superadmin sees a preview of every
 player with such a march and the exact message, unticks whom they like and queues the rest; the worker sends PER_TICK a
 tick, checking the marches again right before (fixed meanwhile = not sent, changed = the message as it is now).
 
@@ -55,6 +55,8 @@ TEXTS = {
         'formation': 'Formácia {have}: {primary} má viesť {want}. Inscriptions sa viažu na formáciu – po zmene ich '
         'naklikaj znova.',
         'stats': 'Bonusy armamentov nad maximum: {stats}. Skontroluj ich v hre a oprav.',
+        'gear': 'Chýba naklikaná výbava.',
+        'armaments': 'Chýbajú armamenty – formácia, inscriptions a bonusy ATK, DEF, HP.',
         'or': ' alebo ',
         'link': 'Opraviť v Prehľade marchov',
         'footer': 'KD 1035 · upozornenie od správcu webu',
@@ -80,6 +82,8 @@ TEXTS = {
         'formation': 'Formace {have}: {primary} má vést {want}. Inscriptions se vážou na formaci – po změně je '
         'naklikej znovu.',
         'stats': 'Bonusy armamentů nad maximum: {stats}. Zkontroluj je ve hře a oprav.',
+        'gear': 'Chybí naklikaná výbava.',
+        'armaments': 'Chybí armamenty – formace, inscriptions a bonusy ATK, DEF, HP.',
         'or': ' nebo ',
         'link': 'Opravit v Přehledu marchů',
         'footer': 'KD 1035 · upozornění od správce webu',
@@ -130,7 +134,7 @@ def problems_of(player: Player, check) -> list[dict]:
     found = []
     for march in sorted(player.marches.all(), key=lambda m: (m.position, m.pk)):
         result = check(march)
-        if result['pair_problem'] or result['formation_problem'] or result['stats_problem']:
+        if result['pair_problem'] or result['formation_problem'] or result['stats_problem'] or result['gear_problem']:
             found.append(
                 {
                     'id': march.pk,
@@ -154,6 +158,7 @@ def fingerprint(problems: list[dict]) -> str:
     data = [
         [p[k] if k != 'formation_problem' else sorted(p[k] or []) for k in keys]
         + ([p['stats_problem']] if p.get('stats_problem') else [])
+        + ([{'gear': p['gear_problem']}] if p.get('gear_problem') else [])
         for p in problems
     ]
     return hashlib.sha1(json.dumps(data, ensure_ascii=False).encode()).hexdigest()
@@ -189,6 +194,8 @@ def lines(player: Player, problems: list[dict], markdown: bool = True) -> list[s
             )
         if p.get('stats_problem'):
             out.append(f'• {t["stats"].replace("{stats}", over_cap_text(p))}')
+        for part in p.get('gear_problem') or []:
+            out.append(f'• {t[part]}')
     return out
 
 
