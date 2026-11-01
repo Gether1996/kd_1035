@@ -534,9 +534,14 @@ class EvaluationSettings(models.Model):
         return cls.objects.get_or_create(pk=1)[0]
 
 
+# the manual correction of a player's required acclaim: far more than any requirement
+ACCLAIM_BONUS_MAX = 100_000_000
+
+
 class PlayerEvaluation(models.Model):
     """What is written down about a player for the KvK evaluation and the game has no API for: the power in millions
-    (the player on /ucet too, since 14. 10. 2026), T4 troops only and a correction of the recommended power. Seen by
+    (the player on /ucet too, since 14. 10. 2026), T4 troops only, a correction of the recommended power and one of
+    the required acclaim. Seen by
     the superadmin and the players with the switch of the evaluation (approved players
     only), the power by the player too; gone with the account (the privacy page says so)."""
 
@@ -553,6 +558,12 @@ class PlayerEvaluation(models.Model):
     power_bonus = models.DecimalField(
         'úprava odporúčanej power (mil.)', max_digits=5, decimal_places=1, default=0,
         validators=[MinValueValidator(Decimal('-999.9')), MaxValueValidator(Decimal('999.9'))],
+    )  # fmt: skip
+    # a flat amount added to the required acclaim, or taken off (Gether 1. 11. 2026: "pridať flat 2 M acclaim navyše
+    # alebo menej")
+    acclaim_bonus = models.IntegerField(
+        'úprava požadovaného acclaimu', default=0,
+        validators=[MinValueValidator(-ACCLAIM_BONUS_MAX), MaxValueValidator(ACCLAIM_BONUS_MAX)],
     )  # fmt: skip
     updated_at = models.DateTimeField('upravené', auto_now=True)
 

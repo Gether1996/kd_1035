@@ -364,6 +364,30 @@ describe('evaluation scoring', () => {
     expect(estimate.excess).toBe(0);
   });
 
+  it('adds the leadership\'s flat correction after T4, still at least the minimum (Gether 1. 11. 2026)', () => {
+    const same = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', false, 0) });
+    const five = (from: number) => [0, 1, 2, 3, 4].map((i) => same(from + i));
+    const [plain, plus, minus, t4, tiny] = evaluate(
+      S,
+      [
+        player(1, five(1), { power: 100 }),
+        player(2, five(10), { power: 100, acclaim_bonus: 2_000_000 }),
+        player(3, five(20), { power: 100, acclaim_bonus: -1_500_000 }),
+        player(4, five(30), { power: 100, t4: true, acclaim_bonus: 2_000_000 }),
+        player(5, [same(40)], { power: 30, acclaim_bonus: -5_000_000 }),
+      ],
+      INDEX,
+    ).rows;
+    expect(plain.acclaim.bonus).toBe(0);
+    expect(plus.acclaim.required - plain.acclaim.required).toBe(2_000_000);
+    expect(plain.acclaim.required - minus.acclaim.required).toBe(1_500_000);
+    // T4 takes 11 % of the computed acclaim, not of the correction
+    const sum = 5_600_000 * t4.acclaim.power * t4.acclaim.marches * t4.acclaim.quality;
+    expect(t4.acclaim.required).toBe(Math.round((sum * 0.89 + 2_000_000) / 1000) * 1000);
+    // nobody goes below the minimum
+    expect(tiny.acclaim.required).toBe(200_000);
+  });
+
   it('takes the benchmark from a player', () => {
     const players = [1, 2, 3, 4, 5].map((id) => player(id, [march({ id, gear: gear('gold', false, id) })]));
     const picked = evaluate(withPairs({ power: { expected: false }, acclaim: { player: 3 } }), players, INDEX);

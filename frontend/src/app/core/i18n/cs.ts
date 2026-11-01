@@ -1137,7 +1137,7 @@ export const cs: Dict = {
           'Přihlášky na KvK – roli (rally, garrison), typ jednotek, commandery a jejich skilly, naklikanou výbavu, formaci a inscriptions, bonusy armamentů, poznámku a tvůj orientační odhad, kolik dáváš do KvK a kdy jsi online.',
           'Marche na stránce Marche – typ, commandery a jejich skilly, bonusy armamentů a naklikanou výbavu, formaci a inscriptions.',
           'Screenshoty přihlášek a marchů už neukládáme – starší jsme smazali, ze záloh zmizí do 8 týdnů.',
-          'Aktuální power, pokud ji zapíšeš na stránce Můj účet. Při vyhodnocování KvK ji může zapsat i správce (nebo vedení, kterému to povolí), spolu s tím, jestli máš jen T4 jednotky.',
+          'Aktuální power, pokud ji zapíšeš na stránce Můj účet. Při vyhodnocování KvK ji může zapsat i správce (nebo vedení, kterému to povolí), spolu s tím, jestli máš jen T4 jednotky, a ruční úpravu tvého požadovaného acclaimu.',
         ],
       },
       {

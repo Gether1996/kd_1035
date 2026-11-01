@@ -31,7 +31,7 @@ const sk = {
     yes: 'áno',
     no: 'nie',
     kinds: { settings: 'Premenné', pairs: 'Páry commanderov', formations: 'Formácie commanderov', player: 'Hráč', publish: 'Zverejnenie' },
-    fields: { power: 'Power (M)', t4: 'Len T4', power_bonus: 'Úprava odporúčanej power (M)' },
+    fields: { power: 'Power (M)', t4: 'Len T4', power_bonus: 'Úprava odporúčanej power (M)', acclaim_bonus: 'Ručná úprava acclaimu' },
   },
   equipment: {
     kind: 'Typ jednotiek',
@@ -141,6 +141,9 @@ const sk = {
     powerOver: 'Má o {m} M viac – buď zníži power, alebo nahrá viac acclaimu.',
     missing: 'Power {power} M by čakala {expected} marchov – {n} chýba.',
     bonus: 'Úprava odporúčanej power (M)',
+    // a flat amount on top of the required acclaim or off it, in millions (Gether 1. 11. 2026)
+    acclaimBonus: 'Ručná úprava acclaimu (M, napr. 2 alebo −1,5)',
+    acclaimBonusShort: 'ručná úprava',
     noMarches: 'Žiadny march sa nezapočítava.',
     // /marche?hrac= – what the visitor may see there, the page of the marches decides
     marchesLink: 'Marche hráča',
@@ -403,7 +406,7 @@ const cs: EvalTexts = {
     yes: 'ano',
     no: 'ne',
     kinds: { settings: 'Proměnné', pairs: 'Páry commanderů', formations: 'Formace commanderů', player: 'Hráč', publish: 'Zveřejnění' },
-    fields: { power: 'Power (M)', t4: 'Jen T4', power_bonus: 'Úprava doporučené power (M)' },
+    fields: { power: 'Power (M)', t4: 'Jen T4', power_bonus: 'Úprava doporučené power (M)', acclaim_bonus: 'Ruční úprava acclaimu' },
   },
   equipment: {
     kind: 'Typ jednotek',
@@ -508,6 +511,8 @@ const cs: EvalTexts = {
     powerOver: 'Má o {m} M víc – buď sníží power, nebo nahraje víc acclaimu.',
     missing: 'Power {power} M by čekala {expected} marchů – {n} chybí.',
     bonus: 'Úprava doporučené power (M)',
+    acclaimBonus: 'Ruční úprava acclaimu (M, např. 2 nebo −1,5)',
+    acclaimBonusShort: 'ruční úprava',
     noMarches: 'Žádný march se nezapočítává.',
     marchesLink: 'Marche hráče',
     pair: 'Pár',

@@ -11,7 +11,7 @@ from guides.meta.sync import sync_guides
 from guides.models import CommanderPair, fold
 from guides.roster import commander_names
 
-from .models import EvaluationSettings, KvkSignup, March, Player, PlayerEvaluation
+from .models import EvaluationChange, EvaluationSettings, KvkSignup, March, Player, PlayerEvaluation
 from .test_reminders import PLAIN_STATIC, make_player
 
 
@@ -128,7 +128,7 @@ class EvaluationApiTests(TestCase):
         row = rows[self.player.pk]
         self.assertEqual([m['primary'] for m in row['marches']], ['Attila'])
         self.assertEqual(row['marches'][0]['primary_skills'], '5555')
-        self.assertEqual((row['power'], row['t4'], row['power_bonus']), (None, False, 0.0))
+        self.assertEqual((row['power'], row['t4'], row['power_bonus'], row['acclaim_bonus']), (None, False, 0.0, 0))
         # the acclaim reached is not written down any more (Gether 14. 10. 2026)
         self.assertNotIn('acclaim', row)
         # the one waiting for the approval too, marked
@@ -152,12 +152,21 @@ class EvaluationApiTests(TestCase):
     def test_notes_about_a_player(self):
         url = f'/api/evaluation/players/{self.player.pk}/'
         res = self.call('patch', url, {'power': 101.5, 'acclaim': 5600000})
-        self.assertEqual(res.json(), {'id': self.player.pk, 'power': 101.5, 't4': False, 'power_bonus': 0.0})
+        self.assertEqual(res.json(), {'id': self.player.pk, 'power': 101.5, 't4': False, 'power_bonus': 0.0, 'acclaim_bonus': 0})
         self.assertIsNone(PlayerEvaluation.objects.get(player=self.player).acclaim)
         res = self.call('patch', url, {'t4': True, 'power_bonus': -6})
         self.assertEqual((res.json()['power'], res.json()['t4'], res.json()['power_bonus']), (101.5, True, -6.0))
         self.assertEqual(self.call('patch', url, {'power': None}).json()['power'], None)
-        for bad in ({}, {'power': -1}, {'power': 'x'}, {'power': 1.25}, {'acclaim': 5}, {'t4': 'yes'}, {'power_bonus': 5000}):
+        # a flat amount of acclaim on top or off (Gether 1. 11. 2026: "pridať flat 2 M acclaim navyše alebo menej")
+        self.assertEqual(self.call('patch', url, {'acclaim_bonus': 2_000_000}).json()['acclaim_bonus'], 2_000_000)
+        self.assertEqual(self.call('patch', url, {'acclaim_bonus': -1_500_000}).json()['acclaim_bonus'], -1_500_000)
+        self.assertEqual(PlayerEvaluation.objects.get(player=self.player).acclaim_bonus, -1_500_000)
+        change = EvaluationChange.objects.filter(player=self.player).order_by('-pk').first()
+        self.assertEqual(change.changes, [['acclaim_bonus', 2_000_000, -1_500_000]])
+        for bad in (
+            {}, {'power': -1}, {'power': 'x'}, {'power': 1.25}, {'acclaim': 5}, {'t4': 'yes'}, {'power_bonus': 5000},
+            {'acclaim_bonus': 1.5}, {'acclaim_bonus': '2M'}, {'acclaim_bonus': 100_000_001},
+        ):  # fmt: skip
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
         self.assertEqual(self.call('patch', '/api/evaluation/players/999999/', {'t4': True}).status_code, 404)
         # the notes go with the account

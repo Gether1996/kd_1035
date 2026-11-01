@@ -1167,7 +1167,7 @@ export const sk = {
           'Prihlášky na KvK – rolu (rally, garrison), typ jednotiek, commanderov a ich skilly, naklikanú výbavu, formáciu a inscriptions, bonusy armamentov, poznámku a tvoj orientačný odhad, koľko dávaš do KvK a kedy si online.',
           'Marche na stránke Marche – typ, commanderov a ich skilly, bonusy armamentov a naklikanú výbavu, formáciu a inscriptions.',
           'Screenshoty prihlášok a marchov už neukladáme – staršie sme zmazali, zo záloh zmiznú do 8 týždňov.',
-          'Aktuálnu power, ak ju zapíšeš na stránke Môj účet. Pri vyhodnocovaní KvK ju môže zapísať aj správca (alebo vedenie, ktorému to povolí), spolu s tým, či máš iba T4 jednotky.',
+          'Aktuálnu power, ak ju zapíšeš na stránke Môj účet. Pri vyhodnocovaní KvK ju môže zapísať aj správca (alebo vedenie, ktorému to povolí), spolu s tým, či máš iba T4 jednotky, a ručnú úpravu tvojho požadovaného acclaimu.',
         ],
       },
       {

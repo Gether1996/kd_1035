@@ -16,7 +16,12 @@ export interface EvalPlayer {
   t4: boolean;
   /** a correction of the recommended power, millions */
   power_bonus: number;
+  /** a flat amount of acclaim on top of the required one, or off it (Gether 1. 11. 2026); missing in an older response */
+  acclaim_bonus?: number;
 }
+
+/** the most a correction of the required acclaim may be, up or down (backend accounts ACCLAIM_BONUS_MAX) */
+export const ACCLAIM_BONUS_MAX = 100_000_000;
 
 /** from the table; not there, without a secondary or without a commander = not evaluated */
 export type PairSource = 'table' | 'unknown' | 'solo' | 'none';
@@ -81,9 +86,19 @@ export interface PlayerEval {
   /**
    * The benchmark's acclaim × the three factors, multiplied (Gether 24. 10. 2026: strong marches never make up for
    * missing ones or less power): (power / the benchmark's)^curve, (marches / the full number)^curve and the quality
-   * within ± its band; + the surcharge for the power above what those marches carry (surplus, M); then T4 less
+   * within ± its band; + the surcharge for the power above what those marches carry (surplus, M); then T4 less; +
+   * the leadership's own correction (bonus, Gether 1. 11. 2026: "flat 2 M acclaim navyše alebo menej")
    */
-  acclaim: { power: number; marches: number; quality: number; surplus: number; surcharge: number; t4: number; required: number };
+  acclaim: {
+    power: number;
+    marches: number;
+    quality: number;
+    surplus: number;
+    surcharge: number;
+    t4: number;
+    bonus: number;
+    required: number;
+  };
 }
 
 export interface Evaluation {
@@ -381,7 +396,9 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     const sum = a.benchmark * factors.power * factors.marches * factors.quality + surcharge;
     const t4 = x.player.t4 ? sum * (a.t4 / 100) : 0;
     const step = a.round;
-    const required = Math.max(a.minimum, Math.round((sum - t4) / step) * step);
+    // the leadership's flat correction, after T4 (it is meant as it is written), still at least the minimum
+    const bonus = x.player.acclaim_bonus ?? 0;
+    const required = Math.max(a.minimum, Math.round((sum - t4 + bonus) / step) * step);
     return {
       player: x.player,
       marches: x.marches,
@@ -396,7 +413,7 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
       power,
       excess,
       marchCount,
-      acclaim: { ...factors, surplus, surcharge, t4, required },
+      acclaim: { ...factors, surplus, surcharge, t4, bonus, required },
     };
   });
   return { rows, benchmark };

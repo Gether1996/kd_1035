@@ -21,6 +21,7 @@ import { fold } from '../../shared/search';
 import { overCapText } from '../../shared/stat-label';
 import { RecordChange } from './evaluation-api';
 import {
+  ACCLAIM_BONUS_MAX,
   Evaluation,
   MarchEval,
   POWER_FILTERS,
@@ -356,6 +357,34 @@ export class EvalResultsTab {
     else if (value !== r.player.power_bonus) this.record.emit({ id: r.player.id, change: { power_bonus: value } });
   }
 
+  /**
+   * The leadership's flat correction of the required acclaim in millions (Gether 1. 11. 2026: "pridať flat 2 M acclaim
+   * navyše alebo menej"): "2", "-1,5", "−0,5 M"; empty = none. Saved as acclaim, rounded to thousands.
+   */
+  protected setAcclaimBonus(r: PlayerEval, event: Event): void {
+    const box = event.target as HTMLInputElement;
+    const text = box.value.replace(/\s/g, '').replace('−', '-').replace(',', '.').replace(/m$/i, '');
+    const value = text ? Math.round(Number(text) * 1000) * 1000 : 0;
+    const current = r.player.acclaim_bonus ?? 0;
+    if (!Number.isFinite(value) || Math.abs(value) > ACCLAIM_BONUS_MAX) box.value = this.millions(current);
+    else if (value !== current) this.record.emit({ id: r.player.id, change: { acclaim_bonus: value } });
+  }
+
+  /** 2 000 000 → "2", −1 500 000 → "-1,5" (the field of the correction) */
+  protected millions(n: number): string {
+    return String(n / 1_000_000).replace('.', ',');
+  }
+
+  protected abs(n: number): number {
+    return Math.abs(n);
+  }
+
+  /** "Ručná úprava: +2 000 000" over the required acclaim; '' = none */
+  protected bonusText(r: PlayerEval): string {
+    const bonus = r.acclaim.bonus;
+    return bonus ? `${this.texts().detail.acclaimBonusShort}: ${bonus > 0 ? '+' : '−'}${this.int(Math.abs(bonus))}` : '';
+  }
+
   protected setT4(r: PlayerEval, event: Event): void {
     this.record.emit({ id: r.player.id, change: { t4: (event.target as HTMLInputElement).checked } });
   }
@@ -366,7 +395,7 @@ export class EvalResultsTab {
   protected download(): void {
     const c = this.texts().columns;
     // the columns of the table: no score (Slim 13. 10. 2026: "skóre by som dal z tabuľky preč")
-    const head = [c.player, 'Discord', c.marches, c.required, c.power, c.recommended, c.t4];
+    const head = [c.player, 'Discord', c.marches, c.required, c.power, c.recommended, c.t4, this.texts().detail.acclaimBonus];
     const cell = (v: string | number | null) => {
       const text = v === null ? '' : typeof v === 'number' ? String(Math.round(v * 100) / 100).replace('.', ',') : v;
       return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -380,6 +409,7 @@ export class EvalResultsTab {
         r.player.power,
         r.ownLimit,
         r.player.t4 ? 'T4' : '',
+        r.acclaim.bonus || null,
       ]
         .map(cell)
         .join(';'),

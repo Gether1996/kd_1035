@@ -16,7 +16,7 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-01',
-    version: '1.56.0',
+    version: '1.56.1',
     sk: [
       'Armamenty sa naklikávajú ako v hre: formácia v strede, Scroll a Instrument hore, Emblem a Flag dole – ťukni na armament a vyber jeho inscriptions.',
       'Pri každej inscription na marchi je ikona jej armamentu, zoradené ako v hre.',

@@ -154,7 +154,8 @@
               }
             </span>
           </td>
-          <td class="ev-num ev-required">
+          <!-- with the leadership's own correction in the title (Gether 1. 11. 2026) -->
+          <td class="ev-num ev-required" [title]="bonusText(r) || null">
             <span class="ev-label">{{ c.required }}</span>
             {{ int(r.acclaim.required) }}
           </td>
@@ -206,6 +207,9 @@
                   @if (r.acclaim.t4) {
                     − {{ int(r.acclaim.t4) }} ({{ t4Text() }})
                   }
+                  @if (r.acclaim.bonus) {
+                    {{ r.acclaim.bonus > 0 ? '+' : '−' }} {{ int(abs(r.acclaim.bonus)) }} ({{ d.acclaimBonusShort }})
+                  }
                   = <strong class="ev-required">{{ int(r.acclaim.required) }}</strong>
                   @if (r.acclaim.required === settings().acclaim.minimum) {
                     ({{ d.minimum }})
@@ -227,6 +231,19 @@
                     [id]="'ev-bonus-' + r.player.id"
                     [value]="r.player.power_bonus"
                     (change)="setBonus(r, $event)"
+                  />
+                </div>
+                <!-- a flat amount of acclaim on top or off, in millions (Gether 1. 11. 2026) -->
+                <div class="field ev-detail__bonus">
+                  <label class="ev-field__label" [for]="'ev-acclaim-bonus-' + r.player.id">{{ d.acclaimBonus }}</label>
+                  <input
+                    class="input ev-input ev-input--cell"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    [id]="'ev-acclaim-bonus-' + r.player.id"
+                    [value]="millions(r.player.acclaim_bonus ?? 0)"
+                    (change)="setAcclaimBonus(r, $event)"
                   />
                 </div>
                 <!-- what the visitor may see there, /marche decides (others get a sentence without a name) -->
