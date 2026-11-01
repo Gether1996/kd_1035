@@ -1,6 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import type { IconName } from '../shared/icon';
 import { March, MarchKind } from './kvk-api';
 
 /** the march's equipment slots in the order of the card and the editor (backend guides/armory.py MARCH_SLOTS) */
@@ -15,9 +16,26 @@ export const MAX_PER_PIECE = 2;
 
 export const ARMAMENT_PIECES = ['emblem', 'flag', 'instrument', 'scroll'] as const;
 export type ArmamentPiece = (typeof ARMAMENT_PIECES)[number];
+/**
+ * The armaments where the game's Armament screen has them around the formation (Gether 1. 11. 2026: "tak isto ako je
+ * v hre"): scroll top left, instrument top right, emblem bottom left, flag bottom right – also the order they are listed in
+ */
+export const ARMAMENT_WHEEL: readonly ArmamentPiece[] = ['scroll', 'instrument', 'emblem', 'flag'];
+/** each armament's icon of the sprite (our own drawings – the instrument is the war horn of the game) */
+export const ARMAMENT_ICONS: Record<ArmamentPiece, IconName> = {
+  scroll: 'scroll-text',
+  instrument: 'horn',
+  emblem: 'shield',
+  flag: 'flag',
+};
 /** gold, blue and white in the game */
 export const INSCRIPTION_RARITIES = ['special', 'rare', 'common'] as const;
 export type InscriptionRarity = (typeof INSCRIPTION_RARITIES)[number];
+
+/** inscriptions listed armament by armament in the game's places, gold first within one */
+export const byArmament = (a: Pick<Inscription, 'piece' | 'rarity'>, b: Pick<Inscription, 'piece' | 'rarity'>): number =>
+  ARMAMENT_WHEEL.indexOf(a.piece) - ARMAMENT_WHEEL.indexOf(b.piece) ||
+  INSCRIPTION_RARITIES.indexOf(a.rarity) - INSCRIPTION_RARITIES.indexOf(b.rarity);
 
 export interface ArmoryItem {
   id: string;

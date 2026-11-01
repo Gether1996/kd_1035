@@ -152,31 +152,58 @@
             }
           </fieldset>
 
-          <fieldset class="be__formations">
-            <legend class="field__label">
-              {{ b.formation }}
-              @if (formationName(); as name) {
-                <span class="be__formation-name">{{ name }}</span>
-              }
-            </legend>
-            <div class="be__chips">
-              @for (f of formations(); track f.id) {
-                <button type="button" class="be__formation" [attr.aria-pressed]="draft().formation === f.id" (click)="setFormation(f.id)">
-                  <app-formation-icon [formation]="f" />
-                </button>
-              }
-            </div>
-            @if (!draft().formation) {
-              <p class="field__hint">{{ b.pickFormation }}</p>
+          <!-- like the game's Armament screen (Gether 1. 11. 2026): the formation in the middle, the four armaments
+               where the game has them around it; a tap opens one below, with what is chosen in it -->
+          <div class="be__wheel" role="group" [attr.aria-label]="b.armaments">
+            @for (a of armaments(); track a.piece) {
+              <button
+                type="button"
+                class="be__slot be__slot--{{ a.piece }}"
+                [class.is-some]="a.count > 0"
+                [class.is-full]="a.full"
+                [attr.aria-pressed]="armSlot() === a.piece"
+                [attr.aria-controls]="id + '-arm'"
+                (click)="pickArm(a.piece)"
+              >
+                <span class="be__ring" aria-hidden="true"><svg [appIcon]="pieceIcons[a.piece]"></svg></span>
+                <span class="be__slot-name">
+                  {{ b.pieces[a.piece] }}
+                  <span class="be__piece-count" [class.is-full]="a.full">{{ a.count }}/{{ maxPerPiece }}</span>
+                </span>
+                @for (i of a.chosen; track i.id) {
+                  <span class="be__slot-insc be__slot-insc--{{ i.rarity }}">{{ i.name }}</span>
+                }
+              </button>
             }
-          </fieldset>
+            <button
+              type="button"
+              class="be__slot be__slot--formation"
+              [class.is-full]="!!formation()"
+              [attr.aria-pressed]="armSlot() === 'formation'"
+              [attr.aria-controls]="id + '-arm'"
+              (click)="pickArm('formation')"
+            >
+              <span class="be__ring be__ring--formation">
+                @if (formation(); as f) {
+                  <app-formation-icon class="be__ring-formation" [formation]="f" />
+                } @else {
+                  <svg appIcon="plus" aria-hidden="true"></svg>
+                }
+              </span>
+              <span class="be__slot-name">{{ formation()?.name || b.formation }}</span>
+            </button>
+          </div>
 
-          @for (a of armaments(); track a.piece) {
-            <fieldset class="be__piece">
-              <legend class="field__label">
+          <div class="be__arm-panel" role="group" [id]="id + '-arm'" [attr.aria-labelledby]="id + '-arm-title'">
+            @if (armOpen(); as a) {
+              <p class="field__label be__arm-title" [id]="id + '-arm-title'">
+                <svg [appIcon]="pieceIcons[a.piece]" aria-hidden="true"></svg>
                 {{ b.pieces[a.piece] }}
                 <span class="be__piece-count" [class.is-full]="a.full">{{ a.count }}/{{ maxPerPiece }}</span>
-              </legend>
+              </p>
+              @if (!draft().formation) {
+                <p class="field__hint">{{ b.pickFormation }}</p>
+              }
               <div class="be__chips">
                 @for (i of a.inscriptions; track i.id) {
                   <button
@@ -191,8 +218,25 @@
                   </button>
                 }
               </div>
-            </fieldset>
-          }
+            } @else {
+              <p class="field__label be__arm-title" [id]="id + '-arm-title'">
+                {{ b.formation }}
+                @if (formationName(); as name) {
+                  <span class="be__formation-name">{{ name }}</span>
+                }
+              </p>
+              <div class="be__chips">
+                @for (f of formations(); track f.id) {
+                  <button type="button" class="be__formation" [attr.aria-pressed]="draft().formation === f.id" (click)="setFormation(f.id)">
+                    <app-formation-icon [formation]="f" />
+                  </button>
+                }
+              </div>
+              @if (!draft().formation) {
+                <p class="field__hint">{{ b.pickFormation }}</p>
+              }
+            }
+          </div>
         }
 
         <div class="form__actions be__actions">

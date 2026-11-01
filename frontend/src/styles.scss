@@ -1310,6 +1310,15 @@ p {
   --tone: var(--insc-white);
 }
 
+// the armament an inscription belongs to (core/armory.ts ARMAMENT_ICONS), before its name
+.insc__piece {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  opacity: 0.85;
+}
+
 button.insc {
   min-height: 32px;
   border-color: var(--field-line);

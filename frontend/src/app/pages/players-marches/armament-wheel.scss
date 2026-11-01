@@ -1,0 +1,168 @@
+// the armaments of the build editor like the game's Armament screen (Gether 1. 11. 2026) – its own stylesheet, the
+// editor's would go over the 8 kB budget
+
+.be__wheel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas:
+    'scroll formation instrument'
+    'emblem formation flag';
+  gap: 14px 8px;
+  align-items: start;
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+}
+
+.be__slot--scroll {
+  grid-area: scroll;
+}
+
+.be__slot--instrument {
+  grid-area: instrument;
+}
+
+.be__slot--emblem {
+  grid-area: emblem;
+}
+
+.be__slot--flag {
+  grid-area: flag;
+}
+
+.be__slot--formation {
+  grid-area: formation;
+  align-self: center;
+}
+
+.be__slot {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.be__ring {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--field-line);
+  border-radius: 50%;
+  background: var(--field-bg);
+  color: var(--text-dim);
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
+  .icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.be__ring--formation {
+  width: 96px;
+  height: 96px;
+
+  .be__ring-formation {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+// something chosen: gold; full (2/2, or a formation): a solid gold ring
+.be__slot.is-some .be__ring {
+  border-color: color-mix(in srgb, var(--gold-400) 55%, transparent);
+  color: var(--gold-300);
+}
+
+.be__slot.is-full .be__ring {
+  border-color: var(--gold-400);
+  color: var(--gold-300);
+}
+
+.be__slot:hover .be__ring {
+  border-color: var(--field-line-hover);
+}
+
+.be__slot.is-some:hover .be__ring,
+.be__slot.is-full:hover .be__ring {
+  border-color: var(--gold-300);
+}
+
+// the part open below
+.be__slot[aria-pressed='true'] {
+  color: var(--text);
+
+  .be__ring {
+    border-color: var(--gold-300);
+    background: color-mix(in srgb, var(--gold-400) 18%, var(--field-bg));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold-400) 28%, transparent);
+  }
+}
+
+.be__slot-name {
+  font: 600 0.8125rem/1.2 var(--font-body);
+  overflow-wrap: anywhere;
+
+  .be__piece-count {
+    margin-left: 4px;
+  }
+}
+
+// the inscriptions chosen in it, in their colours
+.be__slot-insc {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--insc-white);
+
+  &--special {
+    color: var(--insc-gold);
+  }
+
+  &--rare {
+    color: var(--insc-blue);
+  }
+}
+
+.be__arm-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+.be__arm-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+
+  .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--gold-300);
+  }
+
+  .be__piece-count,
+  .be__formation-name {
+    margin-left: 2px;
+  }
+}
+

@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import {
+  ARMAMENT_ICONS,
   ARMAMENT_PIECES,
+  ARMAMENT_WHEEL,
+  ArmamentPiece,
   ArmoryApi,
   ArmoryItem,
   Build,
@@ -8,6 +11,7 @@ import {
   GearSlot,
   ICONIC_MAX,
   ITEM_RARITIES,
+  INSCRIPTION_RARITIES,
   Inscription,
   MAX_PER_PIECE,
   TROOP_STATS,
@@ -46,7 +50,7 @@ let nextId = 0;
   selector: 'app-build-editor',
   imports: [FormationIcon, GearGrid, Icon, SetBonuses],
   templateUrl: './build-editor.html',
-  styleUrl: './build-editor.scss',
+  styleUrls: ['./build-editor.scss', './armament-wheel.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuildEditor {
@@ -63,6 +67,8 @@ export class BuildEditor {
   protected readonly index = this.armory.index;
   protected readonly failed = this.armory.failed;
   protected readonly pieces = ARMAMENT_PIECES;
+  protected readonly wheel = ARMAMENT_WHEEL;
+  protected readonly pieceIcons = ARMAMENT_ICONS;
   protected readonly maxPerPiece = MAX_PER_PIECE;
   protected readonly iconicLevels = Array.from({ length: ICONIC_MAX + 1 }, (_, i) => i);
   protected readonly roman = roman;
@@ -100,6 +106,7 @@ export class BuildEditor {
     this.draft.set({ ...structuredClone(buildOf(march)), stats });
     this.tab.set(tab);
     this.slot.set(slot ?? GEAR_SLOTS.find((s) => !march.gear?.[s]) ?? 'weapon');
+    this.armPicked.set(null);
     this.search.set('');
     this.weaker.set(false);
     this.error.set(null);
@@ -261,22 +268,53 @@ export class BuildEditor {
   /** the chosen formation's name next to the heading – the picker shows only icons */
   protected readonly formationName = computed(() => this.index()?.formations.get(this.draft().formation)?.name ?? '');
 
-  /** each armament: the formation's own inscriptions (gold, blue) and the common ones, how many are chosen (max. 2) */
+  /** the chosen formation, in the middle of the armaments */
+  protected readonly formation = computed(() => this.index()?.formations.get(this.draft().formation) ?? null);
+
+  /**
+   * each armament in the game's places (ARMAMENT_WHEEL): the formation's own inscriptions (gold, blue) and the common
+   * ones, the chosen ones (gold first) and how many (max. 2)
+   */
   protected readonly armaments = computed(() => {
     const index = this.index();
     if (!index) return [];
     const own = index.formations.get(this.draft().formation)?.inscriptions ?? [];
-    const chosen = this.draft().inscriptions.map((id) => index.inscriptions.get(id)?.piece);
-    return ARMAMENT_PIECES.map((piece) => {
-      const count = chosen.filter((p) => p === piece).length;
+    const chosen = this.draft()
+      .inscriptions.map((id) => index.inscriptions.get(id))
+      .filter((i): i is Inscription => !!i)
+      .sort((a, b) => INSCRIPTION_RARITIES.indexOf(a.rarity) - INSCRIPTION_RARITIES.indexOf(b.rarity));
+    return ARMAMENT_WHEEL.map((piece) => {
+      const mine = chosen.filter((i) => i.piece === piece);
       return {
         piece,
-        count,
-        full: count >= MAX_PER_PIECE,
+        count: mine.length,
+        chosen: mine,
+        full: mine.length >= MAX_PER_PIECE,
         inscriptions: [...own.filter((i) => i.piece === piece), ...index.data.common.filter((i) => i.piece === piece)],
       };
     });
   });
+
+  /**
+   * The part of the armaments open below them, like a tap on the game's Armament screen (Gether 1. 11. 2026): the one
+   * clicked, else the formation while there is none, then the first armament not full yet. Picking an inscription
+   * keeps the part open – it does not jump to the next one under the cursor.
+   */
+  private readonly armPicked = signal<ArmamentPiece | 'formation' | null>(null);
+  protected readonly armSlot = computed<ArmamentPiece | 'formation'>(() => {
+    const picked = this.armPicked();
+    if (picked) return picked;
+    if (!this.draft().formation) return 'formation';
+    return this.armaments().find((a) => !a.full)?.piece ?? ARMAMENT_WHEEL[0];
+  });
+  protected readonly armOpen = computed(() => {
+    const slot = this.armSlot();
+    return slot === 'formation' ? null : (this.armaments().find((a) => a.piece === slot) ?? null);
+  });
+
+  protected pickArm(slot: ArmamentPiece | 'formation'): void {
+    this.armPicked.set(slot);
+  }
 
   protected setFormation(id: string): void {
     const index = this.index();
@@ -285,6 +323,8 @@ export class BuildEditor {
     // the old formation's own inscriptions go, the common ones stay
     const common = new Set(index.data.common.map((i) => i.id));
     this.draft.update((d) => ({ ...d, formation, inscriptions: d.inscriptions.filter((i) => common.has(i)) }));
+    // a formation picked: on to its armaments, the first one not full (like the game: the formation first)
+    this.armPicked.set(formation ? (this.armaments().find((a) => !a.full)?.piece ?? ARMAMENT_WHEEL[0]) : 'formation');
     this.error.set(null);
   }
 
@@ -295,6 +335,7 @@ export class BuildEditor {
   protected toggle(inscription: Inscription): void {
     const piece = this.armaments().find((a) => a.piece === inscription.piece);
     if (!this.chosen(inscription) && piece?.full) return;
+    this.armPicked.set(inscription.piece);
     this.draft.update((d) => ({
       ...d,
       inscriptions: this.chosen(inscription)

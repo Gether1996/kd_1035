@@ -285,21 +285,8 @@
   color: var(--text-mute);
 }
 
-.be__formations,
-.be__piece {
-  display: grid;
-  gap: 10px;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-// the four armaments, each with its name (Gether 12. 10. 2026: "nech vieme, ku čomu patria tie inscriptions")
-.be__piece + .be__piece {
-  padding-top: 10px;
-  border-top: 1px dashed var(--line);
-}
+// the armaments like the game's Armament screen (the formation in the middle, scroll and instrument above, emblem and
+// flag below): armament-wheel.scss
 
 .be__chips {
   display: flex;
@@ -394,6 +381,7 @@
 @media (prefers-reduced-motion: reduce) {
   .be__item,
   .be__formation,
+  .be__ring,
   .be__tab,
   .be__tab::after {
     transition: none;

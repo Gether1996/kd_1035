@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import {
   ArmoryIndex,
   GEAR_SLOTS,
-  INSCRIPTION_RARITIES,
+  ARMAMENT_ICONS,
   Inscription,
   TROOP_STATS,
   gearTotals,
+  byArmament,
   roman,
   troopStat,
 } from '../../core/armory';
@@ -140,7 +141,7 @@ const TOP = 5;
                     @if (v.inscriptions.length) {
                       <ul class="eq-inscs">
                         @for (s of v.inscriptions; track s.id) {
-                          <li class="insc insc--{{ s.rarity }}">{{ s.name }}</li>
+                          <li class="insc insc--{{ s.rarity }}"><svg class="insc__piece" [appIcon]="pieceIcons[s.piece]"></svg><span class="sr-only">{{ pieceNames()[s.piece] }}:</span> {{ s.name }}</li>
                         }
                       </ul>
                     }
@@ -232,6 +233,8 @@ export class EvalEquipmentTab {
 
   protected readonly i18n = inject(I18n);
   protected readonly kinds = EQUIPMENT_KINDS;
+  protected readonly pieceIcons = ARMAMENT_ICONS;
+  protected readonly pieceNames = computed(() => this.i18n.t().marches.build.pieces);
   protected readonly top = TOP;
   protected readonly kind = signal<EquipmentKind>('infantry');
   protected readonly all = signal(false);
@@ -286,7 +289,7 @@ export class EvalEquipmentTab {
     const inscriptions = (from?.inscriptions ?? [])
       .map((id) => index.inscriptions.get(id))
       .filter((i): i is Inscription => !!i)
-      .sort((a, b) => INSCRIPTION_RARITIES.indexOf(a.rarity) - INSCRIPTION_RARITIES.indexOf(b.rarity));
+      .sort(byArmament);
     // a bonus over its cap is red and counts as the cap (Gether 19. 10. 2026)
     const over = from ? overCaps(from) : [];
     const armamentStats = from

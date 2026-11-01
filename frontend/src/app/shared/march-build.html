@@ -93,8 +93,12 @@
           <app-formation-icon class="mb__formation" [formation]="f" />
         }
         <ul class="mb__inscs" [attr.aria-label]="k.inscriptions.title">
+          <!-- each with the icon of its armament, like the editor's (Gether 1. 11. 2026: "aby bolo jasné, ktoré je čo") -->
           @for (i of inscriptions(); track i.id) {
-            <li class="insc insc--{{ i.rarity }}" [title]="b.pieces[i.piece] + ' · ' + b.rarity[i.rarity]">{{ i.name }}</li>
+            <li class="insc insc--{{ i.rarity }}" [title]="b.pieces[i.piece] + ' · ' + b.rarity[i.rarity]">
+              <svg class="insc__piece" [appIcon]="pieceIcons[i.piece]" aria-hidden="true"></svg><span class="sr-only">{{ b.pieces[i.piece] }}:</span>
+              {{ i.name }}
+            </li>
           }
         </ul>
       </div>

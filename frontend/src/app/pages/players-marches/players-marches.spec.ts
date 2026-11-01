@@ -124,7 +124,8 @@ describe('PlayersMarches', () => {
     expect(el.querySelector('.mb__primary')?.textContent?.trim()).toBe('Attila');
     expect(el.querySelector('.gear__icon')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
     expect(el.querySelector('.mb__formation img')?.getAttribute('alt')).toBe('Delta');
-    expect(el.querySelector('.mb__inscs .insc')?.textContent?.trim()).toBe('Thrasher');
+    // with the icon of its armament (Gether 1. 11. 2026)
+    expect(el.querySelector('.mb__inscs .insc')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Scroll: Thrasher');
 
     const search = el.querySelector<HTMLInputElement>('#marches-search')!;
     search.value = 'BOB';

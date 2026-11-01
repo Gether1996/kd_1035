@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import {
   ArmoryApi,
   GearSlot,
-  INSCRIPTION_RARITIES,
+  ARMAMENT_ICONS,
   marchTroop,
   Inscription,
   TROOP_STATS,
   buildOf,
   emptyParts,
   gearTotals,
+  byArmament,
   troopOf,
   troopStat,
 } from '../core/armory';
@@ -63,6 +64,7 @@ export class MarchBuild {
   protected readonly index = this.armory.index;
   protected readonly failed = this.armory.failed;
   protected readonly icon = marchIcon;
+  protected readonly pieceIcons = ARMAMENT_ICONS;
   protected readonly bonus = formatBonus;
   /** the red border: a pair, a formation or an armament bonus the KvK evaluation does not like */
   protected readonly hasProblem = computed(() => marchHasProblem(this.march()));
@@ -108,14 +110,14 @@ export class MarchBuild {
 
   protected readonly formation = computed(() => this.index()?.formations.get(this.build().formation) ?? null);
 
-  /** the inscriptions, gold first, then blue and white */
+  /** the inscriptions armament by armament in the game's places (Gether 1. 11. 2026), gold first within one */
   protected readonly inscriptions = computed(() => {
     const index = this.index();
     if (!index) return [];
     return this.build()
       .inscriptions.map((id) => index.inscriptions.get(id))
       .filter((i): i is Inscription => !!i)
-      .sort((a, b) => INSCRIPTION_RARITIES.indexOf(a.rarity) - INSCRIPTION_RARITIES.indexOf(b.rarity));
+      .sort(byArmament);
   });
 
   /** the armament bonuses typed in (the march's ATK, DEF, HP, All DMG) */

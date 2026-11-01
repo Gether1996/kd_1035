@@ -10,9 +10,13 @@ const simpleDir = new URL('simple-icons/icons/', modules);
 const LUCIDE = [
   'arrow-left', 'arrow-right', 'arrow-up-right', 'bell', 'bell-off', 'calendar-days', 'calendar-off', 'calendar-plus', 'camera', 'castle', 'check',
   'chevron-down', 'chevron-right', 'chevron-up', 'clock', 'copy', 'crown', 'download', 'eye', 'eye-off', 'flag', 'flame', 'gift', 'hand-helping', 'handshake', 'heart', 'info', 'key-round', 'languages', 'laugh', 'lightbulb',
-  'link', 'log-in', 'log-out', 'map', 'menu', 'messages-square', 'pencil', 'pin', 'plus', 'repeat', 'reply', 'scale', 'search', 'send', 'shield', 'skull', 'swords', 'trash-2', 'trophy', 'users', 'x',
+  'link', 'log-in', 'log-out', 'map', 'menu', 'messages-square', 'pencil', 'pin', 'plus', 'repeat', 'reply', 'scale', 'scroll-text', 'search', 'send', 'shield', 'skull', 'swords', 'trash-2', 'trophy', 'users', 'x',
 ];
 const BRANDS = ['discord', 'facebook'];
+// our own, drawn like Lucide (24 × 24, stroke 2): Lucide has no war horn – the Instrument armament (Gether 1. 11. 2026)
+const CUSTOM = {
+  horn: '<ellipse cx="19" cy="9" rx="2" ry="5"/><path d="M19 4C13 4.5 8 11 4 14.5"/><path d="M19 14c-5 0-10 2-15 3"/><path d="M4 14.5V17"/><path d="M2.5 15.2v1.2"/><path d="M11 9.6v5.6"/>',
+};
 
 const inner = (svg) =>
   svg.slice(svg.indexOf('>', svg.indexOf('<svg')) + 1, svg.lastIndexOf('</svg>')).replace(/\s*\n\s*/g, '');
@@ -26,6 +30,10 @@ const symbols = [
     const svg = readFileSync(new URL(`${name}.svg`, simpleDir), 'utf8');
     return `<symbol id="${name}" viewBox="0 0 24 24" fill="currentColor">${inner(svg).replace(/<title>.*?<\/title>/, '')}</symbol>`;
   }),
+  ...Object.entries(CUSTOM).map(
+    ([name, paths]) =>
+      `<symbol id="${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${paths}</symbol>`,
+  ),
 ];
 
 const sprite = `<svg xmlns="http://www.w3.org/2000/svg"><!-- Lucide (ISC) + Simple Icons (CC0) -->${symbols.join('')}</svg>\n`;

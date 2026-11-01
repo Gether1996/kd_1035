@@ -226,34 +226,72 @@ describe('Marches', () => {
 
     dialog.querySelectorAll<HTMLButtonElement>('.be__tabs button')[1].click();
     await tick(fixture);
+    // like the game's Armament screen (Gether 1. 11. 2026): scroll and instrument above, emblem and flag below, the
+    // formation in the middle – a tap opens one below
+    const slots = () => [...dialog.querySelectorAll<HTMLButtonElement>('.be__wheel .be__slot')];
+    const slot = (piece: string) => dialog.querySelector<HTMLButtonElement>(`.be__slot--${piece}`)!;
+    const text = (node: Element | null | undefined) => node?.textContent?.replace(/\s+/g, ' ').trim();
     const formations = () => [...dialog.querySelectorAll<HTMLButtonElement>('.be__formation')];
     const inscriptions = () => [...dialog.querySelectorAll<HTMLButtonElement>('button.insc')];
-    // without a formation only the common ones
-    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Enduring', 'Watchmen', 'Patronage']);
+    const names = () => inscriptions().map(text);
+    expect(slots().map((s) => text(s.querySelector('.be__slot-name')))).toEqual([
+      'Scroll 0/2',
+      'Instrument 0/2',
+      'Emblem 0/2',
+      'Flag 0/2',
+      'Formácia',
+    ]);
+    // no formation yet: it is open first
+    expect(slot('formation').getAttribute('aria-pressed')).toBe('true');
+    expect(inscriptions()).toEqual([]);
+    // an armament without a formation: only the common ones
+    slot('emblem').click();
+    await tick(fixture);
+    expect(names()).toEqual(['Enduring', 'Watchmen']);
+    // a formation picked: on to its first armament not full, the scroll
+    slot('formation').click();
+    await tick(fixture);
     formations()[0].click();
     await tick(fixture);
-    expect(inscriptions().map((b) => b.textContent?.trim())).toEqual(['Relentless', 'Enduring', 'Watchmen', 'Patronage', 'Thrasher']);
+    expect(slot('scroll').getAttribute('aria-pressed')).toBe('true');
+    expect(text(slot('formation').querySelector('.be__slot-name'))).toBe('Delta');
+    expect(names()).toEqual(['Thrasher']);
     // two of each armament at most: the third emblem one is blocked
+    slot('emblem').click();
+    await tick(fixture);
+    expect(names()).toEqual(['Relentless', 'Enduring', 'Watchmen']);
     inscriptions()[0].click();
     inscriptions()[1].click();
     await tick(fixture);
-    expect(dialog.querySelector('.be__piece-count')?.textContent).toBe('2/2');
+    expect(text(slot('emblem').querySelector('.be__piece-count'))).toBe('2/2');
+    // the chosen ones under their armament, gold first
+    expect([...slot('emblem').querySelectorAll('.be__slot-insc')].map(text)).toEqual(['Relentless', 'Enduring']);
     expect(inscriptions()[2].getAttribute('aria-disabled')).toBe('true');
     inscriptions()[2].click();
     await tick(fixture);
     expect(inscriptions()[2].getAttribute('aria-pressed')).toBe('false');
+    // picking keeps the armament open
+    expect(slot('emblem').getAttribute('aria-pressed')).toBe('true');
     inscriptions()[0].click();
     inscriptions()[1].click();
-    inscriptions()[4].click();
-    inscriptions()[3].click();
+    slot('instrument').click();
     await tick(fixture);
+    inscriptions()[0].click();
+    slot('scroll').click();
+    await tick(fixture);
+    inscriptions()[0].click();
+    await tick(fixture);
+    // gold where something is chosen (the formation picked)
+    expect(slots().map((s) => s.classList.contains('is-some') || s.classList.contains('is-full'))).toEqual([true, true, false, false, true]);
     // another formation: its own inscriptions instead, the common one stays
+    slot('formation').click();
+    await tick(fixture);
     formations()[1].click();
     await tick(fixture);
-    expect(inscriptions().filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.textContent?.trim())).toEqual([
-      'Patronage',
-    ]);
-    inscriptions().find((b) => b.textContent?.trim() === 'Toppler')!.click();
+    expect(slot('scroll').getAttribute('aria-pressed')).toBe('true');
+    expect(text(slot('instrument').querySelector('.be__slot-insc'))).toBe('Patronage');
+    expect(slot('scroll').querySelector('.be__slot-insc')).toBeNull();
+    inscriptions().find((b) => text(b) === 'Toppler')!.click();
     await tick(fixture);
 
     dialog.querySelector<HTMLButtonElement>('.be__actions .pill-btn')!.click();
@@ -273,9 +311,16 @@ describe('Marches', () => {
     await tick(fixture);
     expect(dialog.hasAttribute('open')).toBe(false);
     // the card shows the build
-    // the formation as its icon only, the inscriptions gold first
+    // the formation as its icon only, the inscriptions armament by armament, each with its armament's icon
     expect(el.querySelector('.mb__formation img')?.getAttribute('alt')).toBe('Pincer');
-    expect([...el.querySelectorAll('.mb__inscs .insc')].map((i) => i.textContent?.trim())).toEqual(['Toppler', 'Patronage']);
+    expect([...el.querySelectorAll('.mb__inscs .insc')].map((i) => i.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'Scroll: Toppler',
+      'Instrument: Patronage',
+    ]);
+    expect([...el.querySelectorAll('.mb__inscs .insc__piece use')].map((u) => u.getAttribute('href')?.split('#')[1])).toEqual([
+      'scroll-text',
+      'horn',
+    ]);
     expect(el.querySelector('app-march-build .gear__iconic')?.textContent).toBe('III');
     expect(el.querySelector('app-march-build .gear__crit')).not.toBeNull();
     // nothing empty any more: no red link, no hint
