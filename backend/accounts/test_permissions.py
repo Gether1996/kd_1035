@@ -20,13 +20,13 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.db import transaction
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import URLResolver, get_resolver, resolve
 
 from kingdom.models import KingdomEvent
 
 from . import guard
-from .models import TERMS_VERSION, HallEntry, KvkSignup, Player
+from .models import TERMS_VERSION, ForumPost, ForumThread, HallEntry, KvkSignup, March, Player
 from .test_kvk import STATS
 from .test_reminders import make_player, utc
 
@@ -100,6 +100,9 @@ MATRIX = [
     ('PUT',    '/api/me/marches/order/',                    {},      '403 403 400 400 403 400 400 400 403 400 400'),
     ('PATCH',  '/api/me/marches/0/',                        {},      '403 403 404 404 403 404 404 404 403 404 404'),
     ('DELETE', '/api/me/marches/0/',                        None,    '403 403 404 404 403 404 404 404 403 404 404'),
+    # d_ok's march: nobody else changes or deletes it, not even the superadmin
+    ('PATCH',  '/api/me/marches/{march}/',                  {},      '403 403 200 404 403 404 404 404 403 404 404'),
+    ('DELETE', '/api/me/marches/{march}/',                  None,    '403 403 204 404 403 404 404 404 403 404 404'),
     ('GET',    '/api/marches/',                             None,    '403 403 200 200 403 200 200 200 403 200 200'),
     ('GET',    '/api/marches/notices/',                     None,    '403 403 403 403 403 403 403 403 403 403 200'),
     ('POST',   '/api/marches/notices/',                     {},      '403 403 403 403 403 403 403 403 403 403 400'),
@@ -137,10 +140,17 @@ MATRIX = [
     ('DELETE', '/api/events/manage/{irregular}/date/',      None,    '403 403 403 403 403 403 403 403 403 403 200'),
     ('PUT',    '/api/events/manage/{event}/run/',           {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('DELETE', '/api/events/manage/{event}/run/',           {},      '403 403 403 403 403 403 403 403 403 403 400'),
+    # -------- forum moderation: the superadmin only (no role has the forum cookie of the author)
+    ('PATCH',  '/api/forum/{thread}/',                      {'pinned': True},
+                                                                     '403 403 403 403 403 403 403 403 403 403 200'),
+    ('DELETE', '/api/forum/{thread}/',                      None,    '403 403 403 403 403 403 403 403 403 403 204'),
+    ('DELETE', '/api/forum/posts/{post}/',                  None,    '403 403 403 403 403 403 403 403 403 403 200'),
 ]
 # fmt: on
 
-# Endpoints anyone may call, with the reason. Every method of them is public.
+# Endpoints anyone may call, with the reason. The completeness test skips them, MATRIX may still have rows for them:
+# the forum is public, but its moderation (pinning, deleting other people's threads and messages) is the superadmin's –
+# a new moderation method of a public endpoint gets a MATRIX row too.
 PUBLIC = {
     'api/health/': 'monitoring',
     'api/alliances/': 'content',
@@ -236,7 +246,13 @@ class PermissionMatrixTests(TestCase):
         irregular = KingdomEvent.objects.create(name_sk='Silk Road', starts_at=utc(2026, 10, 1, 18), irregular=True)
         signup = KvkSignup.objects.create(player=players['d_ok'], role='rally', kind='cavalry', primary='Attila')
         entry = HallEntry.objects.create(category=HallEntry.Category.FORTS, place=1, name='Nelly')
+        march = March.objects.create(player=players['d_ok'], position=1, kind='cavalry', primary='Attila')
+        thread = ForumThread.objects.create(title='Pravidlá', last_post_at=utc(2026, 10, 25, 18), aliases=1)
+        post = ForumPost.objects.create(thread=thread, alias=1, body='Ahoj')
         cls.ids = {
+            'march': march.pk,
+            'thread': thread.pk,
+            'post': post.pk,
             'event': event.pk,
             'irregular': irregular.pk,
             'signup': signup.pk,
@@ -311,3 +327,14 @@ class PermissionMatrixTests(TestCase):
 
     def test_anyone_may_write_in_the_forum(self):
         self.assertEqual(self.status('anon', 'POST', '/api/forum/', FORUM), 201)
+
+    def test_a_write_without_the_csrf_token_is_refused(self):
+        """MATRIX runs without the CSRF check (the test client skips it); a signed-in player's write needs the token."""
+        client = Client(enforce_csrf_checks=True)
+        client.cookies[settings.SESSION_COOKIE_NAME] = self.sessions['d_ok']
+        response = client.post('/api/me/marches/', MARCH, content_type='application/json')
+        self.assertEqual(response.status_code, 403)
+        client.get('/api/auth/me/')
+        token = client.cookies['csrftoken'].value
+        response = client.post('/api/me/marches/', MARCH, content_type='application/json', HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code, 201)
