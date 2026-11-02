@@ -1051,6 +1051,28 @@ class UnapprovedTests(KvkTestCase):
         self.assertEqual(len(r4.get('/api/kvk/signups/').json()['signups']), 1)
         self.assertEqual(len(other.get('/api/marches/').json()['players']), 1)
 
+    def test_an_unapproved_player_neither_sees_nor_withdraws_their_sign_ups(self):
+        """Like marches (Gether 14. 10. 2026: nesmie ani marche vidieť, ani editovať): the sign-ups wait for the approval"""
+        self.assertEqual(self.sign_up(note='prvý rally').status_code, 200)
+        self.assertEqual(self.sign_up(role='garrison', primary='Takeda Shingen').status_code, 200)
+        Player.objects.filter(pk=self.player.pk).update(approved=False)
+
+        state = self.client.get('/api/kvk/').json()
+        self.assertEqual((state['signups'], state['approved']), ([], False))
+        res = self.call('delete', '/api/kvk/signup/?role=rally')
+        self.assertEqual((res.status_code, res.json()), (403, {'detail': 'not_approved'}))
+        self.assertEqual(KvkSignup.objects.filter(player=self.player).count(), 2)
+        # approved again: the same sign-ups, unchanged
+        Player.objects.filter(pk=self.player.pk).update(approved=True)
+        signups = [(s['role'], s['primary'], s['note']) for s in self.client.get('/api/kvk/').json()['signups']]
+        self.assertEqual(signups, [('rally', 'Attila', 'prvý rally'), ('garrison', 'Takeda Shingen', '')])
+
+    def test_withdrawing_needs_the_approval_not_the_terms(self):
+        self.sign_up()
+        Player.objects.filter(pk=self.player.pk).update(terms_version='2026-01-01')
+        self.assertEqual(self.call('delete', '/api/kvk/signup/?role=rally').status_code, 204)
+        self.assertFalse(KvkSignup.objects.exists())
+
     def test_taking_the_approval_back_cuts_r4_off(self):
         """Approval is the one "cut off" switch: an R4 who loses it sees no sign-up and no march, the switch stays"""
         self.sign_up()

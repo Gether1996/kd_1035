@@ -998,4 +998,40 @@ describe('KvkPage', () => {
     const r4 = await open(true);
     expect(r4.el.querySelector('.list__copy button')?.textContent?.trim()).toBe('Kopírovať pre Discord');
   });
+
+  it('an un-approved player waits for the approval: no form, no "Zrušiť prihlášku", no "Vyplniť z marchu"', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: Scroll, useValue: { scrolled: signal(false), reducedMotion: true } },
+      ],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(KvkPage);
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', approved: false, terms_accepted: true, is_staff: false, is_superuser: false };
+    const answers: Record<string, unknown> = {
+      '/api/auth/me/': { login_enabled: true, user },
+      // the API keeps the sign-ups of an un-approved player to itself (signups: [])
+      '/api/kvk/': { ...STATE, approved: false },
+      '/api/commanders/marches/': COMMANDERS,
+    };
+    const requested: string[] = [];
+    for (let round = 0; round < 5; round++) {
+      fixture.detectChanges();
+      TestBed.tick();
+      for (const req of http.match(() => true)) {
+        requested.push(req.request.url);
+        req.flush(answers[req.request.url] ?? []);
+      }
+      await new Promise((resolve) => setTimeout(resolve));
+    }
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('app-pending-approval')).not.toBeNull();
+    expect(el.querySelector('app-kvk-form')).toBeNull();
+    expect(el.querySelector('.withdraw')).toBeNull();
+    expect(el.querySelector('.from-march')).toBeNull();
+    expect(requested).not.toContain('/api/me/marches/');
+  });
 });

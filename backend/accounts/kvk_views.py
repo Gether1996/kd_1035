@@ -23,7 +23,7 @@ from .army import BUILD_FIELDS, BuildSerializer, current_of
 from .models import APPROVED, KVK_ONLINE, MARCH_STATS, EvaluationSettings, KvkSignup, March, Player, PlayerSettings
 from .pair_check import march_checker, over_caps
 from .reminder_views import WriteThrottle, iso
-from .views import cannot_post, player_of
+from .views import cannot_post, not_approved, player_of
 
 log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
@@ -154,9 +154,10 @@ class SignupSerializer(BuildSerializer):
 @api_view(['GET'])
 def state(request):
     """The player's rally and garrison sign-ups and what the visitor may do. Anyone may ask (anonymous visitors get
-    nothing of their own)."""
+    nothing of their own). A player the superadmin has not approved (or un-approved) gets none either – they stay in the
+    database and come back with the approval, like marches (Gether 14. and 20. 10. 2026)."""
     player = player_of(request.user)
-    mine = signups_of(player) if player else []
+    mine = signups_of(player) if player and player.may_post else []
     return Response(
         {
             # rally before garrison, the first before the second
@@ -182,7 +183,10 @@ def signup(request):
     slot 1 when left out; a second one only next to a first, and withdrawing the first makes the second the first."""
     player = request.user.player
     if request.method == 'DELETE':
-        role = request.query_params.get('role')
+        # an un-approved player does not touch their sign-ups (like marches); the terms are not needed to withdraw one
+        if not player.may_post:
+            return not_approved()
+        role =request.query_params.get('role')
         slot = slot_of(request.query_params.get('slot', 1))
         if role not in ROLES or not slot:
             return Response({'role': 'invalid'}, status=400)
