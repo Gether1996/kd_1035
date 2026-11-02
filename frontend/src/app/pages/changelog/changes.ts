@@ -175,6 +175,16 @@ export const CHANGES: Change[] = [
     cs: ['Přihlášení i bez Discordu – jménem ve hře a heslem.'],
   },
   {
+    date: '2026-10-16',
+    version: '1.32.3',
+    sk: [
+      'Vyhodnocovanie KvK počíta tvoje najsilnejšie marche, nie prvé v poradí – silný march na konci zoznamu sa už nestratí.',
+    ],
+    cs: [
+      'Vyhodnocování KvK počítá tvé nejsilnější marche, ne první v pořadí – silný march na konci seznamu se už neztratí.',
+    ],
+  },
+  {
     date: '2026-10-14',
     version: '1.32.2',
     sk: [

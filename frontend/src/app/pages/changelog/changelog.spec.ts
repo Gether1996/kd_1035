@@ -18,4 +18,14 @@ describe('Changelog (/novinky)', () => {
       expect([...change.sk, ...change.cs].every((line) => line.trim() && !line.includes('*')), change.date).toBe(true);
     }
   });
+
+  it('never has a higher version on an older day (compared as numbers, 1.32.10 > 1.32.9)', () => {
+    const parts = (version: string) => version.split('.').map(Number);
+    for (const change of CHANGES) expect(change.version, change.date).toMatch(/^\d+\.\d+\.\d+$/);
+    for (let i = 1; i < CHANGES.length; i++) {
+      const [newer, older] = [parts(CHANGES[i - 1].version), parts(CHANGES[i].version)];
+      const diff = newer.map((n, j) => n - older[j]).find((d) => d !== 0) ?? 0;
+      expect(diff, `${CHANGES[i].date} ${CHANGES[i].version} > ${CHANGES[i - 1].version}`).toBeGreaterThanOrEqual(0);
+    }
+  });
 });
