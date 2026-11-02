@@ -16,9 +16,15 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-02',
-    version: '1.56.2',
-    sk: ['Opravené: hráč prihlásený menom v hre a heslom (bez Discordu) už pošle prihlášku na KvK.'],
-    cs: ['Opraveno: hráč přihlášený jménem ve hře a heslem (bez Discordu) už odešle přihlášku na KvK.'],
+    version: '1.56.3',
+    sk: [
+      'Opravené: hráč prihlásený menom v hre a heslom (bez Discordu) už pošle prihlášku na KvK.',
+      'Opravené: neschválený hráč už nemení prihlášky na KvK.',
+    ],
+    cs: [
+      'Opraveno: hráč přihlášený jménem ve hře a heslem (bez Discordu) už odešle přihlášku na KvK.',
+      'Opraveno: neschválený hráč už nemění přihlášky na KvK.',
+    ],
   },
   {
     date: '2026-11-01',
