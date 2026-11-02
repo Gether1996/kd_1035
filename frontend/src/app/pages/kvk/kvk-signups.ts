@@ -73,6 +73,8 @@ const onlineOf = (query: string | undefined): KvkOnline | 'all' => KVK_ONLINE.fi
 export class KvkSignups {
   /** every sign-up – loaded by the page, which asks again after a change */
   readonly data = input.required<HttpResourceRef<KvkSignupList | undefined>>();
+  /** approved players who have not signed up yet – the leadership follows up (round of 2. 11. 2026) */
+  protected readonly unsigned = computed(() => (this.data().hasValue() ? (this.data().value()?.unsigned ?? []) : []));
   /** the superuser may withdraw a sign-up */
   readonly superuser = input(false);
   /** ?online= of the page – the filter by the survey's times (a shared link shows the same players) */

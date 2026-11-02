@@ -128,6 +128,17 @@ export interface KvkSignupList {
   signups: KvkSignup[];
   /** the equipment and armament variables of the KvK evaluation; missing in an older response */
   settings?: Record<string, unknown>;
+  /** approved, active players without a sign-up (round of 2. 11. 2026); missing in an older response */
+  unsigned?: UnsignedPlayer[];
+}
+
+export interface UnsignedPlayer {
+  id: number;
+  name: string;
+  ingame_name: string;
+  /** null = a player without Discord, written to in the game */
+  discord_id: string | null;
+  avatar_url: string;
 }
 
 /** No rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026). */

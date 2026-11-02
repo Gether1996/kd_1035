@@ -497,6 +497,11 @@ describe('KvkSignups', () => {
         { ...SIGNUP, player, marches: [{ id: 5, position: 1, kind: 'cavalry', primary: 'Attila', secondary: '', attack: 12, defense: 9, health: 8, damage: 0, gold: 1, blue: 2, white: 3 }] },
         { ...SIGNUP, id: 10, role: 'garrison', kind: 'archer', attack: 8, defense: 7, health: 6, player: { ...player, id: 2, ingame_name: 'Bob' } },
       ],
+      // who has not signed up yet (round of 2. 11. 2026): one with Discord, one without
+      unsigned: [
+        { id: 7, name: 'eve', ingame_name: 'Eve', discord_id: '77', avatar_url: '' },
+        { id: 8, name: 'Ľubo', ingame_name: 'Ľubo', discord_id: null, avatar_url: '/img/avatar-local.svg' },
+      ],
     });
     http.expectOne('/api/commanders/marches/').flush([{ name: 'Attila', icon: '/static/guides/commanders/attila.webp', pick: true }]);
     await flushAll(fixture);
@@ -505,6 +510,13 @@ describe('KvkSignups', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.signup').length).toBe(2);
     expect(el.querySelector('.signup__contact')?.getAttribute('href')).toBe('https://discord.com/users/42');
+    const unsigned = el.querySelector('details.unsigned')!;
+    expect(unsigned.hasAttribute('open')).toBe(false);
+    expect(unsigned.querySelector('summary')?.textContent?.trim()).toBe('Bez prihlášky (2)');
+    const rows = Array.from(unsigned.querySelectorAll('.unsigned__row'));
+    expect(rows.map((r) => r.querySelector('.unsigned__name')?.textContent)).toEqual(['Eve', 'Ľubo']);
+    expect(rows[0].querySelectorAll('a')[1].getAttribute('href')).toBe('https://discord.com/users/77');
+    expect(rows[1].querySelectorAll('a').length).toBe(1);
     // closed at first like the players on /marche: the role and the portraits of the commanders only
     expect(el.querySelector('.signup__body')).toBeNull();
     expect(el.querySelector('.signup__preview .signup__mini')?.getAttribute('alt')).toBe('Attila');

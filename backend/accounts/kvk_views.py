@@ -251,8 +251,28 @@ def all_signups(request):
         # by player, the rally sign-ups before the garrison ones, the first before the second (one card per player)
         key=lambda s: ((s['player']['ingame_name'] or s['player']['name']).casefold(), s['role'] != 'rally', s['slot']),
     )
+    # who has not signed up yet – before KvK the leadership's first question (round of 2. 11. 2026): approved, active
+    # players without a sign-up, the superadmin left out; nothing is sent to them, R4 follow up themselves
+    waiting = (
+        Player.objects.filter(approved=True, inactive=False, user__is_active=True, user__is_superuser=False)
+        .filter(kvk_signups__isnull=True)
+        .select_related('user')
+    )
+    unsigned = sorted(
+        (
+            {
+                'id': p.pk,
+                'name': p.name,
+                'ingame_name': p.ingame_name,
+                'discord_id': p.discord_id,
+                'avatar_url': p.avatar_url,
+            }
+            for p in waiting
+        ),
+        key=lambda p: (p['ingame_name'] or p['name']).casefold(),
+    )
     # the scoring of the equipment for the "Top 3" per troop type above the list (Gether 23. 10. 2026)
-    return Response({'signups': rows, 'settings': equipment_settings()})
+    return Response({'signups': rows, 'settings': equipment_settings(), 'unsigned': unsigned})
 
 
 @never_cache

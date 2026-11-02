@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **2. 11. 2026 – v1.56.4:** Prihlášky na KvK: vedenie (R4, superadmin) vidí zbalený zoznam **Bez prihlášky (N)** – schválení aktívni hráči bez prihlášky s odkazom na ich marche a Discord (návrh kola agentov 2. 11.). Sieň slávy odmietne jednu fotku pre dve miesta.
 - **2. 11. 2026:** Test matice oprávnení (`backend/accounts/test_permissions.py`) – každý endpoint `/api/` × každá rola (anonym, hráč, lokálny, neschválený, R4, zrušené R4, falošný a skutočný superadmin), aj moderovanie fóra, cudzie marche a CSRF; nový endpoint mimo matice test zhodí.
 - **2. 11. 2026:** Novinky: doplnený chýbajúci blok 16. 10. (v1.32.3) a test poradia verzií v `changes.ts`.
 - **2. 11. 2026 – v1.56.3:** Oprava: hráč so zrušeným schválením videl a mazal svoje prihlášky na KvK (`GET /api/kvk/` a `DELETE /api/kvk/signup/`). Teraz ako marche – nevidí ich ani ich nezruší (`not_approved`), ostanú v DB a po novom schválení sa vrátia; zrušiť prihlášku sa dá aj bez súhlasu s novými podmienkami.

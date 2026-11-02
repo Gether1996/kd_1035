@@ -72,6 +72,31 @@
     </label>
   }
 
+  <!-- who has not signed up yet (round of 2. 11. 2026): people, so the filters do not apply; collapsed -->
+  @if (unsigned().length) {
+    <details class="unsigned">
+      <summary class="unsigned__summary">
+        <svg appIcon="chevron-down" class="unsigned__chevron"></svg>{{ k.unsigned.title.replace('{n}', '' + unsigned().length) }}
+      </summary>
+      <ul class="unsigned__list">
+        @for (p of unsigned(); track p.id) {
+          <li class="unsigned__row">
+            <img class="unsigned__avatar" [src]="p.avatar_url" alt="" width="32" height="32" loading="lazy" />
+            <span class="unsigned__name">{{ p.ingame_name || p.name }}</span>
+            <a class="unsigned__link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ hrac: p.id }">
+              {{ k.playerMarches }}<span class="sr-only">: {{ p.ingame_name || p.name }}</span>
+            </a>
+            @if (p.discord_id; as discordId) {
+              <a class="unsigned__link" [href]="'https://discord.com/users/' + discordId" target="_blank" rel="noopener noreferrer">
+                {{ k.contact }}<span class="sr-only">: {{ p.ingame_name || p.name }}</span>
+              </a>
+            }
+          </li>
+        }
+      </ul>
+    </details>
+  }
+
   @if (data().error()) {
     <p class="panel__lead is-error">{{ k.loadError }}</p>
   } @else if (!data().hasValue()) {

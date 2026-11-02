@@ -253,3 +253,84 @@
     transition: none;
   }
 }
+
+// approved players without a sign-up (round of 2. 11. 2026) – collapsed, for the leadership to follow up
+.unsigned {
+  margin: 0 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg-raised) 70%, transparent);
+
+  &[open] .unsigned__chevron {
+    transform: rotate(180deg);
+  }
+}
+
+.unsigned__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.unsigned__chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--gold-300);
+  transition: transform 0.2s var(--ease, ease);
+}
+
+.unsigned__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0 14px 12px;
+  list-style: none;
+}
+
+.unsigned__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.unsigned__avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.unsigned__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unsigned__link {
+  flex: none;
+  font-size: 0.8125rem;
+  color: var(--gold-300);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unsigned__chevron {
+    transition: none;
+  }
+}

@@ -234,6 +234,26 @@ class ReviewTests(KvkTestCase):
         self.assertEqual(self.call('delete', f'/api/kvk/signups/{data["signups"][0]["id"]}/', client=client).status_code, 403)
         self.assertEqual(client.get('/api/kvk/reviewers/').status_code, 403)
 
+    def test_reviewers_see_who_has_not_signed_up(self):
+        """Round of 2. 11. 2026: approved, active players without a sign-up – not the signed up, the waiting for
+        approval, the inactive or the superadmin"""
+        self.sign_up()
+        reviewer = make_player('43')
+        reviewer.kvk_reviewer = True
+        reviewer.ingame_name = 'Revo'
+        reviewer.save()
+        waiting = make_player('44', approved=False)
+        inactive = make_player('45')
+        inactive.inactive = True
+        inactive.save()
+        admin = make_player('46')
+        admin.user.is_superuser = True
+        admin.user.save()
+        unsigned = self.login(reviewer.user).get('/api/kvk/signups/').json()['unsigned']
+        self.assertEqual([(p['id'], p['ingame_name']) for p in unsigned], [(reviewer.pk, 'Revo')])
+        self.assertEqual(set(unsigned[0]), {'id', 'name', 'ingame_name', 'discord_id', 'avatar_url'})
+        self.assertNotIn(waiting.pk, [p['id'] for p in unsigned])
+
     def test_superuser_withdraws_signups_and_picks_reviewers(self):
         admin_player = make_player('245662824171438090')
         admin_player.user.is_superuser = True
