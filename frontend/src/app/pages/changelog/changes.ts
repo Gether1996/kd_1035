@@ -180,11 +180,15 @@ export const CHANGES: Change[] = [
     sk: [
       'Poradie vlastných marchov a veta, koľko z nich sa počíta do vyhodnocovania KvK.',
       'Zlý pár commanderov alebo formácia svieti načerveno a bot ti napíše, čo opraviť.',
+      'Vedenie zverejňuje požadovaný acclaim – každý vidí, koľko sa od neho na KvK čaká.',
+      'Po schválení ti bot pošle správu, že môžeš pridať marche a prihlášku na KvK.',
       'Aktuálnu power si zapíšeš na Môj účet.',
     ],
     cs: [
       'Pořadí vlastních marchů a věta, kolik z nich se počítá do vyhodnocování KvK.',
       'Špatný pár commanderů nebo formace svítí červeně a bot ti napíše, co opravit.',
+      'Vedení zveřejňuje požadovaný acclaim – každý vidí, kolik se od něj na KvK čeká.',
+      'Po schválení ti bot pošle zprávu, že můžeš přidat marche a přihlášku na KvK.',
       'Aktuální power si zapíšeš na Můj účet.',
     ],
   },
@@ -200,11 +204,13 @@ export const CHANGES: Change[] = [
     sk: [
       'Výbavu a armamenty marchu si naklikáš – predmety s critom a iconic, formácie aj inscriptions.',
       'Prihláška na KvK sa vypĺňa rovnako ako march, bez screenshotov.',
+      'Nových hráčov schvaľuje vedenie, potom pridajú marche a prihlášku na KvK; raz potvrdíš podmienky používania.',
       'Skilly commanderov pri marchi (expertise alebo napr. 5111).',
     ],
     cs: [
       'Výbavu a armamenty marche si naklikáš – předměty s critem a iconic, formace i inscriptions.',
       'Přihláška na KvK se vyplňuje stejně jako march, bez screenshotů.',
+      'Nové hráče schvaluje vedení, pak přidají marche a přihlášku na KvK; jednou potvrdíš podmínky používání.',
       'Skilly commanderů u marche (expertise nebo např. 5111).',
     ],
   },
@@ -213,12 +219,18 @@ export const CHANGES: Change[] = [
     version: '1.18.10',
     sk: [
       'Prihláška na KvK a Marche hráčov na porovnanie.',
+      'Na KvK sa prihlásiš na rally aj garrison zvlášť; prihláška platí, kým ju nezrušíš.',
+      'Vyberieš si, či tvoje marche vidia všetci hráči, alebo len vedenie.',
+      'Meno v hre je povinné – web ťa po prvom prihlásení pošle nastaviť si ho.',
       'Budíky – bot ti pripomenie štít či čokoľvek iné.',
       'Kalkulačka pasov na migráciu a Slovník pojmov.',
       'Hľadanie v návodoch a „Čo môžem postaviť“ z commanderov, ktorých máš.',
     ],
     cs: [
       'Přihláška na KvK a Marche hráčů k porovnání.',
+      'Na KvK se přihlásíš na rally i garrison zvlášť; přihláška platí, dokud ji nezrušíš.',
+      'Vybereš si, jestli tvoje marche vidí všichni hráči, nebo jen vedení.',
+      'Jméno ve hře je povinné – web tě po prvním přihlášení pošle nastavit si ho.',
       'Budíky – bot ti připomene štít nebo cokoli jiného.',
       'Kalkulačka pasů na migraci a Slovník pojmů.',
       'Hledání v návodech a „Co můžu postavit“ z commanderů, které máš.',
