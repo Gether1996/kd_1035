@@ -130,5 +130,8 @@ class Hall(TestCase):
         self.assertEqual(self.put(self.as_admin, url, {'entries': []}).status_code, 400)
         self.assertEqual(self.put(self.as_admin, url, {'entries': [{'name': 'X'}] * 4}).status_code, 400)
         self.assertEqual(self.put(self.as_admin, url, {'entries': [{'count': '5'}]}).status_code, 400)
+        # one photo for two places would be deleted with either of them
+        twice = {'entries': [{'name': 'A', 'photo_from': 7}, {'name': 'B', 'photo_from': 7}]}
+        self.assertEqual(self.put(self.as_admin, url, twice).json(), {'entries': 'photo_twice'})
         self.assertEqual(self.put(self.as_admin, '/api/hall/nope/', {'entries': [{'name': 'X'}]}).status_code, 404)
         self.assertFalse(HallEntry.objects.exists())

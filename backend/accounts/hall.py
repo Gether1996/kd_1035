@@ -167,6 +167,10 @@ def ranking(request, category):
     ranked = serializer.validated_data['entries']
     if len(ranked) > PLACES[category]:
         return Response({'entries': 'too_many'}, status=400)
+    # one photo file on two places: emptying one of them would delete the other's photo
+    moved = [data['photo_from'] for data in ranked if data.get('photo_from') is not None]
+    if len(moved) != len(set(moved)):
+        return Response({'entries': 'photo_twice'}, status=400)
     with transaction.atomic():
         before = {entry.pk: entry.photo for entry in HallEntry.objects.select_for_update().filter(category=category)}
         kept = []

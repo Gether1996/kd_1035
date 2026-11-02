@@ -186,7 +186,7 @@ def signup(request):
         # an un-approved player does not touch their sign-ups (like marches); the terms are not needed to withdraw one
         if not player.may_post:
             return not_approved()
-        role =request.query_params.get('role')
+        role = request.query_params.get('role')
         slot = slot_of(request.query_params.get('slot', 1))
         if role not in ROLES or not slot:
             return Response({'role': 'invalid'}, status=400)
