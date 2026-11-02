@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **2. 11. 2026 – v1.56.2:** Oprava: prihláška na KvK pustila len hráčov s Discordom (`IsPlayer` z pripomienok) – hráč s menom a heslom dostal „Nepodarilo sa uložiť“. Teraz `IsSignedPlayer`; meno v hre hráča bez Discordu prihláška neprepíše (prihlasuje sa ním, mení sa na /ucet).
 - **1. 11. 2026 – v1.56.1:** Vyhodnocovanie: vedenie môže hráčovi ručne pridať alebo ubrať acclaim (napr. +2 M alebo −1,5 M) v detaile riadku Odhadu acclaimu – pripočíta sa po zľave za T4, minimum platí ďalej, zmena je v Histórii zmien a v CSV.
 - **1. 11. 2026 – v1.56.0:** Armamenty v editore marchu (aj prihlášky na KvK) ako v hre: formácia v strede, Scroll a Instrument hore, Emblem a Flag dole – každý armament je kruh s ikonou, názvom, počtom 2/2 a vybranými inscriptions; ťuknutie otvorí pod kolesom jeho inscriptions (bez formácie najprv formácia). Na karte marchu a v Top 5 equip má každá inscription ikonu svojho armamentu a sú zoradené ako v hre.
 - **30. 10. 2026 – v1.55.0:** Stránka **Novinky** (`/novinky`, odkaz v pätičke) – čo pribudlo na webe, po dňoch s verziou, SK aj CZ (Slim: „changelog do footra“).

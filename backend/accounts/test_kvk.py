@@ -191,6 +191,32 @@ class SignupTests(KvkTestCase):
         self.assertEqual(self.sign_up(client=admin).status_code, 403)
 
 
+class LocalPlayerSignupTests(KvkTestCase):
+    """Gether 2. 11. 2026: a player signed in with an in-game name and a password (no Discord) got "Nepodařilo se
+    uložit" – the sign-up let in Discord players only"""
+
+    def test_a_player_without_discord_signs_up_and_withdraws(self):
+        user = User.objects.create_user('local_ab12')
+        local = Player.objects.create(
+            user=user, ingame_name='Ľubo', login='ľubo', approved=True, terms_version=TERMS_VERSION
+        )
+        self.assertTrue(local.local)
+        client = self.login(user)
+        res = self.sign_up(client, ingame_name='Iný')
+        self.assertEqual(res.status_code, 200, res.content)
+        # the name they sign in with stays – it changes on /ucet only
+        local.refresh_from_db()
+        self.assertEqual((local.ingame_name, local.login), ('Ľubo', 'ľubo'))
+        build = {'role': 'rally', 'gear': {'weapon': {'item': 'sacred-dominion', 'crit': False}}, **STATS}
+        self.assertEqual(self.call('patch', '/api/kvk/signup/', build, client).status_code, 200)
+        self.assertEqual(KvkSignup.objects.get().player, local)
+        self.assertEqual(self.call('delete', '/api/kvk/signup/?role=rally', client=client).status_code, 204)
+        # still only an approved player who agreed to the terms
+        local.approved = False
+        local.save()
+        self.assertEqual(self.sign_up(client, ingame_name='Ľubo').status_code, 403)
+
+
 class ReviewTests(KvkTestCase):
     def test_reviewers_see_every_signup_others_do_not(self):
         self.sign_up()

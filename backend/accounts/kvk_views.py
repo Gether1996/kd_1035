@@ -22,7 +22,7 @@ from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
 from .models import APPROVED, KVK_ONLINE, MARCH_STATS, EvaluationSettings, KvkSignup, March, Player, PlayerSettings
 from .pair_check import march_checker, over_caps
-from .reminder_views import IsPlayer, WriteThrottle, iso
+from .reminder_views import WriteThrottle, iso
 from .views import cannot_post, player_of
 
 log = logging.getLogger(__name__)
@@ -40,6 +40,15 @@ class IsReviewer(BasePermission):
 class IsSuperuser(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_superuser
+
+
+class IsSignedPlayer(BasePermission):
+    """Any player – with Discord or with an in-game name and a password (Gether 2. 11. 2026: a player signed in on the
+    website could not send the sign-up; IsPlayer of the reminders lets in Discord players only, for the bot).
+    Approval and the terms are checked by cannot_post."""
+
+    def has_permission(self, request, view):
+        return player_of(request.user) is not None
 
 
 # ---------------------------------------------------------------- data
@@ -163,7 +172,7 @@ def state(request):
 
 @never_cache
 @api_view(['PUT', 'PATCH', 'DELETE'])
-@permission_classes([IsPlayer])
+@permission_classes([IsSignedPlayer])
 @throttle_classes([WriteThrottle])
 def signup(request):
     """PUT {ingame_name, role, slot?, kind, primary, secondary?, primary_skills?, secondary_skills?, note?, budget, online}:
@@ -207,8 +216,11 @@ def signup(request):
     if not saved and slot > 1 and not KvkSignup.objects.filter(player=player, role=role, slot=slot - 1).exists():
         return Response({'slot': 'first'}, status=400)
     with transaction.atomic():
-        player.ingame_name = data.pop('ingame_name')
-        player.save(update_fields=['ingame_name'])
+        name = data.pop('ingame_name')
+        # a player without Discord signs in with the in-game name (unique, local_auth.py) – it changes on /ucet only
+        if not player.local:
+            player.ingame_name = name
+            player.save(update_fields=['ingame_name'])
         mine, _ = KvkSignup.objects.update_or_create(player=player, role=data.pop('role'), slot=slot, defaults=data)
         # one survey for all the player's sign-ups (Gether 20. 10. 2026): the others get the same answers (their
         # "upravené" stays)
