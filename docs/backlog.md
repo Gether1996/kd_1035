@@ -4,6 +4,8 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **2. 11. 2026:** Test matice oprávnení (`backend/accounts/test_permissions.py`) – každý endpoint `/api/` × každá rola (anonym, hráč, lokálny, neschválený, R4, zrušené R4, falošný a skutočný superadmin), aj moderovanie fóra, cudzie marche a CSRF; nový endpoint mimo matice test zhodí.
+- **2. 11. 2026:** Novinky: doplnený chýbajúci blok 16. 10. (v1.32.3) a test poradia verzií v `changes.ts`.
 - **2. 11. 2026 – v1.56.3:** Oprava: hráč so zrušeným schválením videl a mazal svoje prihlášky na KvK (`GET /api/kvk/` a `DELETE /api/kvk/signup/`). Teraz ako marche – nevidí ich ani ich nezruší (`not_approved`), ostanú v DB a po novom schválení sa vrátia; zrušiť prihlášku sa dá aj bez súhlasu s novými podmienkami.
 - **2. 11. 2026 – v1.56.2:** Oprava: prihláška na KvK pustila len hráčov s Discordom (`IsPlayer` z pripomienok) – hráč s menom a heslom dostal „Nepodarilo sa uložiť“. Teraz `IsSignedPlayer`; meno v hre hráča bez Discordu prihláška neprepíše (prihlasuje sa ním, mení sa na /ucet).
 - **1. 11. 2026 – v1.56.1:** Vyhodnocovanie: vedenie môže hráčovi ručne pridať alebo ubrať acclaim (napr. +2 M alebo −1,5 M) v detaile riadku Odhadu acclaimu – pripočíta sa po zľave za T4, minimum platí ďalej, zmena je v Histórii zmien a v CSV.
@@ -222,6 +224,9 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - Drobnosti z kola 18. 10.: JSDoc `RemindState` (`event-dialog.ts`) nespomína stav 'local'; Prepojiť s Discordom v dialógu eventu vráti na `/ucet`, nie k eventu (`linkUrl(returnPath(item))`); dlhý riadok komentára v `app.ts:125`; screenshoty CZ `/ucet` ukazujú SK (jazyk profilu testovacieho hráča); webhook testy bez `SITE_URL`; `discord_message()` robí 1 dotaz na DM.
 - Kolo 24. 10. 2026 – upraviť: `kvk-filters-in-url` všetky filtre prihlášok na KvK v adrese (`?druh=` len KVK_KINDS, jeden helper pre navigate, `?cmd=` neznámy = prázdny, zachovať `?hrac=`/`?tab=`, PATCH); `power-freshness` až neskôr (nullable `power_at` bez dopĺňania, len pri skutočnej zmene, `staleDays` 21 v Premenných, Ochrana údajov v tom istom commite, bez nudge, nie v zverejnenom prehľade); `account-kvk-readiness` karta pripravenosti na `/ucet` z tých istých príznakov ako „!“ v hlavičke (test zhody), nízka priorita; `event-test-dm` a `my-data-export` až keď o ne niekto požiada; `polish-leftovers-oct` jeden PATCH: `linkUrl()` v kalendári s `?event=&on=`, JSDoc `RemindState` a web-push text v `noChannel` (neviditeľný znak v `roster-text.ts` nenájdený – vypustiť).
 - Drobnosti z kola 24. 10.: test vymazania power (`null`) v histórii; log pri plnom strope registrácií nespomína 14 dní; „Vyplniť z marchu“ – šípky na zatvorenom selecte v Chrome/Edge hneď kopírujú (tlačidlo „Vyplniť“?), naplánovaná kópia výbavy ostane aj po ručnej zmene typu/commanderov.
+- Kolo 2. 11. 2026 – schválené, nepostavené: `a11y-states-new-editors` koleso armamentov, záložka Kanál a editor Siene slávy do `STATE_LIST` auditu (fixture z e2e seedu, nič v dev DB).
+- Kolo 2. 11. 2026 – upraviť: `hall-ranking-integrity` 400 `photo_twice`/`player_twice` v `PUT /api/hall/<kat>/` + ochrana zdieľanej fotky (place_photo, DELETE, signál) – **skutočná strata fotky**; prečíslovanie po zmazaní účtu len vo fronte (poradie z indexu); `hall-updated-date` dátum rebríčka len z `ranking()` (nie `updated_at`), iba forts/kp; `kvk-unsigned-players` „Bez prihlášky (N)“ pre vedenie na `/kvk?tab=prihlasky` (bez neschválených, neaktívnych, superadminov; polia ako na /marche; skontrolovať Ochranu údajov) – pred KvK 20. 11.; `channel-reminder-test-dm` ukážka kanálovej pripomienky do DM superadmina (len embeds, `allowed_mentions` prázdne, nič neukladá); `account-kvk-readiness` opäť odložené (len existujúce príznaky `needsName/needsPower/needsSurvey`).
+- Drobnosti z kola 2. 11.: tag v1.32.2 je z 15. 10., v Novinkách pod 14. 10. (rozdeliť blok); medzera v `role =request…` (`kvk_views.py`); PUBLIC v teste oprávnení preskakuje nové metódy na fórových routách; `methods_of` nefunguje pre ViewSet.
 
 ## Zamietnuté
 
@@ -236,6 +241,8 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - `account-overview-shortcut` Skratka Požadovaný acclaim na Môj účet – len duplikuje položku menu, nič nové neukazuje.
 - Ručné pripomenutie chýbajúcej power, marchov či prihlášky na KvK správou od vedenia – **nie** (Gether 14. 10. 2026). Nenavrhovať znova.
 - `drop-dead-kvk-columns` Zmazať `KvkSettings`, `Player.evaluation_overview`, `Player.evaluator`, `PlayerEvaluation.acclaim` (24. 10.) – nevratné mazanie produkčných dát bez Getherovho áno; lacnejšie: opraviť docs (CLAUDE.md, `docs/ucty.md`) a neposielať `evaluation_overview` v `me_data`.
+- `kvk-signup-count-for-players` Počet prihlásených na KvK pre hráčov – meniace sa číslo, nízky počet demotivuje; vedeniu pomôže `kvk-unsigned-players` (2. 11.).
+- `novinky-unseen-dot` Bodka pri Novinkách – nový localStorage kľúč (Ochrana údajov), bodka aj pri zmenách len pre vedenie; Gether oznamuje verzie na Discorde (2. 11.).
 
 ## Čaká na Gethera
 
@@ -268,3 +275,4 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - **Typy 20 GH (v1.34.4):** v admine doplniť ostatné typy (názov, max. odmena SK/CZ) a skontrolovať texty max. odmeny – idú hráčom aj do kanála.
 - **Meno v hre:** má byť jedinečné pre všetky účty (aj Discord)?
 - **Kolo 24. 10. 2026:** potvrdiť 14-dňové okno stropu registrácií bez Discordu (`PENDING_WINDOW`, v1.42.1); hranica zastaranej power 21 dní; áno/nie na zmazanie nepoužívaných polí KvK a vyhodnocovania (nevratné).
+- **Kolo 2. 11. 2026:** R4 uvidia zoznam schválených hráčov bez prihlášky na KvK (`kvk-unsigned-players`) – pri stavbe rozhodnuté áno, ak nie, povedz. Ukážka kanálovej pripomienky do DM potrebuje povolené DM od bota.
