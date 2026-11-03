@@ -1,0 +1,56 @@
+@let s = t();
+<dialog #dialog class="modal search" aria-labelledby="site-search-title" (close)="closed.emit()" (keydown)="key($event)">
+  <div class="modal__body">
+    <header class="modal__head">
+      <h2 class="modal__title" id="site-search-title">{{ s.title }}</h2>
+      <button type="button" class="modal__close" [attr.aria-label]="s.close" (click)="close()">
+        <svg appIcon="x"></svg>
+      </button>
+    </header>
+
+    <label class="search__field">
+      <svg appIcon="search"></svg>
+      <input
+        #field
+        autofocus
+        class="input"
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        [placeholder]="s.placeholder"
+        [attr.aria-label]="s.placeholder"
+        aria-describedby="site-search-status"
+        [value]="query()"
+        (input)="query.set(field.value)"
+      />
+    </label>
+
+    <p class="search__status" id="site-search-status" role="status">
+      @if (query().trim().length < 2) {
+        {{ s.hint }}
+      } @else if (!groups().length) {
+        {{ loading() ? s.loading : s.none }}
+      }
+    </p>
+
+    <div #results class="search__results">
+      @for (g of groups(); track g.group) {
+        <section class="search__group" [attr.aria-labelledby]="'site-search-' + g.group">
+          <h3 class="search__group-title" [id]="'site-search-' + g.group">{{ s.groups[g.group] }}</h3>
+          <ul class="search__list">
+            @for (hit of g.hits; track hit.link) {
+              <li>
+                <a class="search__hit" [href]="hit.link" (click)="go($event, hit.link)">
+                  <span class="search__hit-title">{{ hit.title }}</span>
+                  @if (hit.detail) {
+                    <span class="search__hit-detail">{{ hit.detail }}</span>
+                  }
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  </div>
+</dialog>

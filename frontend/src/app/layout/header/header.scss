@@ -426,7 +426,57 @@
   }
 }
 
+// the site search: an icon before the language switch on a desktop, a line on top of the phone menu
+.search-btn {
+  display: none;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.25s, border-color 0.25s;
+
+  &:hover {
+    border-color: var(--line-strong);
+    color: var(--gold-300);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.drawer__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: 600 1rem / 1.2 var(--font-body);
+  color: var(--text-dim);
+  cursor: pointer;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    color: var(--gold-300);
+  }
+}
+
 @media (min-width: 900px) {
+  .search-btn {
+    display: grid;
+  }
+
   .nav,
   .account {
     display: flex;

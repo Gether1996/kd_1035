@@ -1513,6 +1513,8 @@ export const sk = {
     home: 'Domov',
     guides: 'Návody',
   },
+  // the site search in the header (Gether 3. 11. 2026); its own texts are in shared/site-search/texts.ts
+  search: { open: 'Hľadať na webe' },
   footer: {
     fanSite:
       'Neoficiálna fanúšikovská stránka hráčov kráľovstva 1035, bez prepojenia so spoločnosťou Lilith Games. Rise of Kingdoms a herné grafiky sú majetkom Lilith Games.',

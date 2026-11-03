@@ -11,6 +11,7 @@ import {
   inject,
   signal,
   viewChild,
+  ViewContainerRef,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth } from '../../core/auth';
@@ -37,6 +38,7 @@ interface NavItem {
   host: {
     '[class.is-solid]': 'scroll.scrolled() || menuOpen()',
     '(document:keydown.escape)': 'escape()',
+    '(document:keydown)': 'shortcut($event)',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -46,6 +48,11 @@ export class Header {
   protected readonly auth = inject(Auth);
   private readonly forumUnread = inject(ForumUnreadCount);
   protected readonly menuOpen = signal(false);
+  /** the site search (Gether 3. 11. 2026) – its code loads on the first opening only (a plain dynamic import: a
+   *  @defer block would bring Angular's defer runtime into the initial bundle) */
+  protected readonly searchOpen = signal(false);
+  private searchOpener: HTMLElement | null = null;
+  private readonly searchHost = inject(ViewContainerRef);
   private readonly burger = viewChild<ElementRef<HTMLButtonElement>>('burger');
   /** Escape in the account menu hides it until the pointer or the focus leaves */
   protected readonly menuClosed = signal(false);
@@ -135,6 +142,36 @@ export class Header {
 
   protected close(): void {
     this.menuOpen.set(false);
+  }
+
+  protected async openSearch(event?: Event): Promise<void> {
+    if (this.searchOpen()) return;
+    this.searchOpener = (event?.currentTarget as HTMLElement | null) ?? (document.activeElement as HTMLElement | null);
+    this.close();
+    this.searchOpen.set(true);
+    try {
+      const { SiteSearch } = await import('../../shared/site-search/site-search');
+      const ref = this.searchHost.createComponent(SiteSearch);
+      ref.instance.closed.subscribe(() => {
+        ref.destroy();
+        this.searchOpen.set(false);
+        // the burger when it came from the phone menu (now closed), else the button or field it came from
+        (this.searchOpener?.isConnected && this.searchOpener.offsetParent ? this.searchOpener : this.burger()?.nativeElement)?.focus();
+        this.searchOpener = null;
+      });
+    } catch {
+      // offline or a new build without the chunk: nothing opens, the button works again
+      this.searchOpen.set(false);
+    }
+  }
+
+  /** "/" opens the search, unless the visitor is typing somewhere */
+  protected shortcut(event: KeyboardEvent): void {
+    if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || this.searchOpen()) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest('input, textarea, select, [contenteditable]')) return;
+    event.preventDefault();
+    this.openSearch();
   }
 
   /** Escape closes the mobile menu and puts the focus back on its button (it was inside the menu) */

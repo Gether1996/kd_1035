@@ -1,0 +1,83 @@
+:host {
+  display: contents;
+}
+
+// a modal like the others (.modal in styles.scss), a bottom sheet on phones
+.search {
+  width: min(100% - 2 * var(--gutter), 640px);
+}
+
+.search__field {
+  position: relative;
+  display: block;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    width: 17px;
+    height: 17px;
+    color: var(--text-mute);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .input {
+    padding-left: 42px;
+  }
+}
+
+.search__status {
+  min-height: 1.5em;
+  margin: 10px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.search__results {
+  display: grid;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.search__group-title {
+  margin: 0 0 6px;
+  font: 600 0.75rem / 1.2 var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.search__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search__hit {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--gold-400) 10%, transparent);
+  }
+}
+
+.search__hit-title {
+  font-weight: 600;
+}
+
+.search__hit-detail {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

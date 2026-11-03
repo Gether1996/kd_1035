@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **3. 11. 2026 – v1.60.0:** **Hľadanie po celom webe** (`shared/site-search/`, Getherov nápad 9 – kritik kola ho zamietol, Gether ho chcel): lupa v hlavičke, riadok v mobilnom menu, kláves `/`; stránky, návody, Slovník, commanderi, eventy; lenivo cez `import()`. Rozpočet úvodného balíka 620 kB (varovanie).
 - **3. 11. 2026 – prevádzkové upozornenia (bez novej verzie):** worker pošle superadminovi DM pri starej/zlyhanej zálohe a zlyhanej správe do kanála (max. 1× za 24 h na druh, `kingdom/alerts.py`); v hlavičke červený „!“ a „Prevádzka: skontroluj admin“ (`ops` v `/api/auth/me/` len pre overeného superadmina). Testy pokrývajú kritériá, okrajové prípady neskôr.
 - **3. 11. 2026 – v1.59.5:** Kanál na Discorde (`/pripomienky?tab=kanal`): **Poslať ukážku mne** – najbližšia správa do kanála príde superadminovi najprv súkromne od bota, bez @everyone a bez roly, nič sa neuloží (`POST /api/events/channel/<id>/preview/`, `events.notification_for()`). Testy zatiaľ základné (Gether: „nepotrebujem teraz úplne komplexné testy, dokonči testy potom“) – chýba spec komponentu (tlačidlo, stav, vypnuté bez termínu).
 - **3. 11. 2026 – v1.59.4:** rozpísaná prihláška na KvK sa pred odchodom pýta (`leaveKvk`, `KvkForm.dirty` vrátane dotazníka, `beforeunload`); `canceledNavigationResolution` nezmenené (Späť + Zrušiť môže preskočiť záznam histórie, ako pri Premenných).
