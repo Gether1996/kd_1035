@@ -12,6 +12,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
@@ -35,6 +36,8 @@ PLACES = {category: 1 for category in HallEntry.Category.values} | {
     HallEntry.Category.FORTS: 3,
     # the KP a top 5 (Gether 28. 10. 2026: "aby som zmestil top 5")
     HallEntry.Category.KP: 5,
+    # the best equipment of Top 5 equip (3. 11. 2026): a place per troop type – 1 infantry, 2 cavalry, 3 archers
+    HallEntry.Category.EQUIPMENT: 3,
     HallEntry.Category.MASCOT: 2,
     # the other corner: the three zeroed most in the last KvK (Gether 28. 10. 2026: "top 3 ZERO minulého KvK")
     HallEntry.Category.ZERO: 3,
@@ -101,7 +104,13 @@ class RankedSerializer(EntrySerializer):
 
 
 class RankingSerializer(serializers.Serializer):
-    entries = RankedSerializer(many=True, allow_empty=False)
+    # null = an empty place (the best equipment: a troop type nobody has scored in yet stays empty)
+    entries = serializers.ListField(child=RankedSerializer(allow_null=True), allow_empty=False)
+
+    def validate_entries(self, entries):
+        if not any(entries):
+            raise serializers.ValidationError('empty')
+        return entries
 
 
 def place_of(category: str, place: int) -> tuple[str, int]:
@@ -155,10 +164,11 @@ def place(request, category, place):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def ranking(request, category):
-    """PUT {entries: [{player?, name?, note_sk?, note_cs?, count?, photo_from?}, …]}: the whole ranking of a category
-    at once, place 1 first (the weekly fort destroyers from a screenshot of the game – Gether 29. 10. 2026,
-    /prepis-top-forty). A photo moves with its player (`photo_from` = their entry before); places after the list
-    become empty and photos nobody keeps are deleted."""
+    """PUT {entries: [{player?, name?, note_sk?, note_cs?, count?, photo_from?} | null, …]}: the whole ranking of a
+    category at once, place 1 first (the weekly fort destroyers from a screenshot of the game – Gether 29. 10. 2026,
+    /prepis-top-forty; the best equipment from Top 5 equip, where null leaves the place of a troop type empty). A photo
+    moves with its player (`photo_from` = their entry before); null places and places after the list become empty and
+    photos nobody keeps are deleted."""
     if category not in PLACES:
         raise Http404
     serializer = RankingSerializer(data=request.data)
@@ -168,13 +178,16 @@ def ranking(request, category):
     if len(ranked) > PLACES[category]:
         return Response({'entries': 'too_many'}, status=400)
     # one photo file on two places: emptying one of them would delete the other's photo
-    moved = [data['photo_from'] for data in ranked if data.get('photo_from') is not None]
+    moved = [data['photo_from'] for data in ranked if data and data.get('photo_from') is not None]
     if len(moved) != len(set(moved)):
         return Response({'entries': 'photo_twice'}, status=400)
+    empty = [place for place, data in enumerate(ranked, start=1) if not data]
     with transaction.atomic():
         before = {entry.pk: entry.photo for entry in HallEntry.objects.select_for_update().filter(category=category)}
         kept = []
         for place, data in enumerate(ranked, start=1):
+            if not data:
+                continue
             photo = before.get(data.get('photo_from'), '')
             kept.append(photo)
             HallEntry.objects.update_or_create(
@@ -189,9 +202,9 @@ def ranking(request, category):
                     'photo': photo,
                 },
             )
-        # the places after the list: emptied without their photos (moved ones are cleared first, so the delete
-        # signal does not remove a file another place now shows)
-        rest = HallEntry.objects.filter(category=category, place__gt=len(ranked))
+        # the null places and the places after the list: emptied without their photos (moved ones are cleared first,
+        # so the delete signal does not remove a file another place now shows)
+        rest = HallEntry.objects.filter(Q(place__gt=len(ranked)) | Q(place__in=empty), category=category)
         rest.update(photo='')
         rest.delete()
     for photo in set(before.values()) - set(kept):

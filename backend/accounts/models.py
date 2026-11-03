@@ -675,6 +675,8 @@ class HallEntry(models.Model):
         HELPER = 'helper', 'pomocná ruka'
         # Gether 28. 10. 2026: "najlepší diplomat posledného KvK", the same day renamed "KvK Leader"
         DIPLOMAT = 'diplomat', 'KvK Leader'
+        # the best equipment of Top 5 equip (3. 11. 2026): the place is the troop type – 1 infantry, 2 cavalry, 3 archers
+        EQUIPMENT = 'equipment', 'najlepšia výbava'
         MASCOT = 'mascot', 'maskot KD'
         # the other corner: who was zeroed most in the last KvK (Gether 28. 10. 2026)
         ZERO = 'zero', 'top zero minulého KvK'

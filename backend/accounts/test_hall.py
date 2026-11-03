@@ -124,6 +124,31 @@ class Hall(TestCase):
         files = {p.name for p in (Path(self.media.name) / 'hall').iterdir()}
         self.assertEqual(files, {Path(before['Gether'][1]).name})
 
+    def test_the_best_equipment_has_a_place_per_troop_type_and_may_leave_one_empty(self):
+        """"Načítať z Top 5 equip" (3. 11. 2026): 1 infantry, 2 cavalry, 3 archers – a type nobody scored stays empty"""
+        self.assertEqual(self.put(self.as_admin, '/api/hall/equipment/3/', {'name': 'X'}).status_code, 200)
+        self.assertEqual(self.put(self.as_admin, '/api/hall/equipment/4/', {'name': 'X'}).status_code, 404)
+        self.as_admin.post('/api/hall/equipment/3/photo/', {'photo': jpeg()}, HTTP_X_CSRFTOKEN=self.as_admin.token)
+        self.assertEqual(self.as_admin.get('/api/hall/').json()['places']['equipment'], 3)
+        url = '/api/hall/equipment/'
+        too_many = {'entries': [{'name': 'A'}, None, {'name': 'B'}, {'name': 'C'}]}
+        self.assertEqual(self.put(self.as_admin, url, too_many).status_code, 400)
+        # nothing at all would wipe the category by mistake
+        self.assertEqual(self.put(self.as_admin, url, {'entries': [None, None, None]}).status_code, 400)
+        infantry = {'player': self.nelly.pk, 'note_sk': 'pechota', 'note_cs': 'pěchota'}
+        saved = self.put(self.as_admin, url, {'entries': [infantry, None, {'name': 'Bobo', 'note_sk': 'lukostrelci'}]})
+        self.assertEqual(saved.status_code, 200, saved.content)
+        self.assertEqual([(e['place'], e['name'], e['count']) for e in saved.json()['entries']], [(1, 'Nelly', ''), (3, 'Bobo', '')])
+        # the archers' photo was not moved – it went with the old row
+        self.assertEqual(list((Path(self.media.name) / 'hall').iterdir()), [])
+        # what approved players get: the names and the troop type, never anything of the equipment
+        entries = self.as_nelly.get('/api/hall/').json()['entries']
+        self.assertEqual([(e['place'], e['name'], e['note']['cs']) for e in entries], [(1, 'Nelly', 'pěchota'), (3, 'Bobo', 'lukostrelci')])
+        self.assertEqual(set(entries[0]), {'id', 'category', 'place', 'name', 'avatar_url', 'photo', 'note', 'count'})
+        # cavalry filled later, the infantry emptied
+        self.put(self.as_admin, url, {'entries': [None, {'name': 'Fox'}, {'name': 'Bobo'}]})
+        self.assertEqual(list(HallEntry.objects.values_list('place', 'name')), [(2, 'Fox'), (3, 'Bobo')])
+
     def test_the_ranking_is_checked(self):
         url = '/api/hall/forts/'
         self.assertEqual(self.put(self.as_nelly, url, {'entries': [{'name': 'X'}]}).status_code, 403)
