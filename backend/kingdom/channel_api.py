@@ -4,25 +4,41 @@
 They are the event's own channel reminders (`KingdomEvent.reminders` + `notify_discord`, sent through the webhook by
 the worker), so the admin and the calendar's editor show the same times. GET /api/events/channel/ lists the active
 events, PUT /api/events/channel/<id>/ {offsets, everyone?} sets the times (and switches the channel on), PATCH
-{everyone} only the @everyone ping, DELETE switches the channel off (the times stay for the admin). Superusers only.
+{everyone} only the @everyone ping, DELETE switches the channel off (the times stay for the admin). POST
+/api/events/channel/<id>/preview/ sends the superadmin the next run's channel message as a private DM first, without
+any ping (critic 2. 11. 2026: a typo in an @everyone message cannot be unsent). Superusers only.
 """
+
+import logging
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from rest_framework import serializers
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 
+from accounts import discord_bot
 from accounts.reminder_views import event_data, next_start
 from accounts.serializers import OffsetsSerializer
 
-from . import events
+from . import discord, events
 from .manage_api import IsSuperuser
 from .models import REMINDER_CHOICES, KingdomEvent, lead_order
 
+log = logging.getLogger(__name__)
+
 OFFERED = [minutes for minutes, _ in REMINDER_CHOICES]
+PREVIEW_PREFIX = 'Ukážka · '
+
+
+class PreviewThrottle(UserRateThrottle):
+    """The preview DM button: 6 a minute, with its own history (scope)."""
+
+    scope = 'event_test'
+    rate = '6/minute'
 
 
 class EveryoneSerializer(serializers.Serializer):
@@ -90,3 +106,41 @@ def channel_event(request, pk):
     if request.method == 'DELETE':
         return Response(status=204)
     return Response(channel_data(event, timezone.now()))
+
+
+def preview_message(event: KingdomEvent, start) -> dict:
+    """The channel message of the run as a DM: the same embed (built by the unchanged build_payload), titled
+    "Ukážka · …", without content, username, avatar or any mention."""
+    offsets = channel_offsets(event)
+    # the reminder sent closest to the start; the offset only moves the embed's timestamp
+    row = events.notification_for(event, start, offsets[-1] if offsets else 0)
+    embed = discord.build_payload(row)['embeds'][0]
+    embed['title'] = f'{PREVIEW_PREFIX}{embed["title"]}'[:256]
+    return {'embeds': [embed], 'allowed_mentions': {'parse': []}}
+
+
+@never_cache
+@api_view(['POST'])
+@permission_classes([IsSuperuser])
+@throttle_classes([PreviewThrottle])
+def preview(request, pk):
+    """Sends the superadmin the event's next channel message privately. Nothing is stored. {ok: true}, else
+    {reason}: no_date 400 (irregular without a date), no_discord 400 (signed in by password), bot_off 503,
+    blocked / unavailable 502 (Discord refused or does not answer)."""
+    event = get_object_or_404(KingdomEvent.objects.filter(is_active=True), pk=pk)
+    # the same run the Kanál list shows
+    start = next_start(event, timezone.now())
+    if not start:
+        return Response({'reason': 'no_date'}, status=400)
+    player = getattr(request.user, 'player', None)
+    discord_id = player.discord_id if player else None
+    if not discord_id:
+        return Response({'reason': 'no_discord'}, status=400)
+    if not discord_bot.enabled():
+        return Response({'reason': 'bot_off'}, status=503)
+    try:
+        discord_bot.send_dm(discord_id, preview_message(event, start))
+    except discord_bot.BotError as exc:
+        log.warning('Channel preview of event %s failed: %s', event.pk, exc)
+        return Response({'reason': 'blocked' if exc.blocked else 'unavailable'}, status=502)
+    return Response({'ok': True})

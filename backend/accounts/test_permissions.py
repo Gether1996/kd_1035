@@ -134,6 +134,9 @@ MATRIX = [
     ('PUT',    '/api/events/channel/{event}/',              {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('PATCH',  '/api/events/channel/{event}/',              {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('DELETE', '/api/events/channel/{event}/',              None,    '403 403 403 403 403 403 403 403 403 403 204'),
+    # no bot token in the tests: the superadmin gets as far as "bot off"; an irregular event without a date first
+    ('POST',   '/api/events/channel/{event}/preview/',      None,    '403 403 403 403 403 403 403 403 403 403 503'),
+    ('POST',   '/api/events/channel/{irregular}/preview/',  None,    '403 403 403 403 403 403 403 403 403 403 400'),
     ('GET',    '/api/events/manage/',                       None,    '403 403 403 403 403 403 403 403 403 403 200'),
     ('POST',   '/api/events/manage/',                       {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('GET',    '/api/events/manage/{event}/',               None,    '403 403 403 403 403 403 403 403 403 403 200'),

@@ -3,11 +3,15 @@ from datetime import UTC, datetime
 from unittest import mock
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 
-from . import discord
-from .models import EVENING_BEFORE, EventNotification, KingdomEvent
+from accounts import discord_bot
+from accounts.test_reminders import make_player
+
+from . import discord, events
+from .models import EVENING_BEFORE, EventNotification, EventRun, EventVariant, KingdomEvent
 
 DAY = 24 * 60
 
@@ -107,6 +111,66 @@ class ChannelApiTests(TestCase):
         self.gh.is_active = False
         self.gh.save()
         self.assertEqual(self.call('put', self.url, {'offsets': [10]}).status_code, 404)
+
+
+@override_settings(
+    DISCORD_WEBHOOK_URL='https://discord.test/hook', DISCORD_BOT_TOKEN='bot', DISCORD_EVENT_ROLE_ID='42'
+)
+@mock.patch('django.utils.timezone.now', return_value=NOW)
+@mock.patch('accounts.discord_bot.send_dm')
+class ChannelPreviewTests(TestCase):
+    """"Poslať ukážku mne": the next run's channel message privately to the superadmin, without any ping, nothing
+    stored (critic 2. 11. 2026)."""
+
+    def setUp(self):
+        self.gh = KingdomEvent.objects.create(
+            name_sk='20 GH', starts_at=utc(2026, 10, 30), repeat_days=14, duration_minutes=2 * DAY,
+            reminders=[10], notify_discord=True, mention_everyone=True, mention_role=True,
+        )
+        variant = EventVariant.objects.create(event=self.gh, name_sk='Training Day', max_reward_sk='8 100 min')
+        EventRun.objects.create(event=self.gh, start=utc(2026, 10, 30), variant=variant)
+        self.url = f'/api/events/channel/{self.gh.pk}/preview/'
+        cache.clear()
+        self.addCleanup(cache.clear)
+        player = make_player('80351110224678999')
+        player.user.is_superuser = True
+        player.user.save()
+        self.client.force_login(player.user)
+
+    def test_sends_the_channel_embed_without_pings_and_stores_nothing(self, send_dm, _now):
+        rows = EventNotification.objects.count()
+        response = self.client.post(self.url)
+        self.assertEqual((response.status_code, response.json()), (200, {'ok': True}))
+        self.assertEqual(EventNotification.objects.count(), rows)
+        discord_id, body = send_dm.call_args.args
+        self.assertEqual(discord_id, '80351110224678999')
+        self.assertEqual(set(body), {'embeds', 'allowed_mentions'})
+        self.assertNotIn('@everyone', str(body))
+        self.assertNotIn('<@&', str(body))
+        # the same embed as the row the worker plans and sends, only titled "Ukážka · …"
+        events.plan_reminders(now=NOW)
+        planned = discord.build_payload(EventNotification.objects.get(event=self.gh))['embeds'][0]
+        embed = body['embeds'][0]
+        self.assertEqual(embed['title'], 'Ukážka · 20 GH')
+        self.assertEqual({**embed, 'title': planned['title']}, planned)
+        self.assertEqual([field['name'] for field in embed['fields']], ['Začiatok', 'Typ', 'Max. odmena'])
+
+    def test_errors(self, send_dm, _now):
+        irregular = KingdomEvent.objects.create(name_sk='Silk Road', starts_at=utc(2026, 10, 1), irregular=True)
+        response = self.client.post(f'/api/events/channel/{irregular.pk}/preview/')
+        self.assertEqual((response.status_code, response.json()), (400, {'reason': 'no_date'}))
+        with override_settings(DISCORD_BOT_TOKEN=''):
+            self.assertEqual(self.client.post(self.url).status_code, 503)
+        send_dm.side_effect = discord_bot.BotError('no', blocked=True)
+        self.assertEqual(self.client.post(self.url).json(), {'reason': 'blocked'})
+        # signed in by password: no Discord ID to write to
+        self.client.force_login(User.objects.create_superuser('gether', password='x'))
+        response = self.client.post(self.url)
+        self.assertEqual((response.status_code, response.json()), (400, {'reason': 'no_discord'}))
+
+    def test_six_a_minute(self, send_dm, _now):
+        codes = [self.client.post(self.url).status_code for _ in range(7)]
+        self.assertEqual(codes, [200] * 6 + [429])
 
 
 class ChannelMessageTests(TestCase):

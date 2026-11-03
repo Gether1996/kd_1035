@@ -157,24 +157,37 @@ def plan_reminders(now=None, horizon=HORIZON, events=None) -> int:
             window_end = now + horizon + max(map(longest_lead, offsets)) + timedelta(microseconds=1)
             for start in occurrences(event, now, window_end):
                 for offset in offsets:
-                    send_at = send_time(start, offset)
-                    if not now < send_at <= now + horizon:
+                    if not now < send_time(start, offset) <= now + horizon:
                         continue
+                    row = notification_for(event, start, offset)
                     _, new = EventNotification.objects.get_or_create(
                         event=event,
                         occurrence_start=start,
                         offset_minutes=offset,
-                        defaults={
-                            'title': event.name_sk,
-                            'message': render(event, start),
-                            'send_at': send_at,
-                            'event_start': start,
-                            'mention_role': event.mention_role,
-                            'mention_role_id': event.mention_role_id,
-                        },
+                        defaults={field: getattr(row, field) for field in PLANNED_FIELDS},
                     )
                     created += new
     return created
+
+
+# what a planned row takes from its event; the rest (status, sent_at, error) has the model's defaults
+PLANNED_FIELDS = ('title', 'message', 'send_at', 'event_start', 'mention_role', 'mention_role_id')
+
+
+def notification_for(event: KingdomEvent, start, offset: int) -> EventNotification:
+    """The channel reminder of one run `offset` minutes before it, unsaved – exactly what plan_reminders() stores
+    and the superadmin's preview DM (channel_api.preview) shows."""
+    return EventNotification(
+        event=event,
+        occurrence_start=start,
+        offset_minutes=offset,
+        title=event.name_sk,
+        message=render(event, start),
+        send_at=send_time(start, offset),
+        event_start=start,
+        mention_role=event.mention_role,
+        mention_role_id=event.mention_role_id,
+    )
 
 
 def replan(event: KingdomEvent, now=None) -> int:

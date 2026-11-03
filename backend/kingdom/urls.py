@@ -11,6 +11,7 @@ urlpatterns = [
     path('calendar.ics', views.calendar_feed),
     path('events/channel/', channel_api.channel),
     path('events/channel/<int:pk>/', channel_api.channel_event),
+    path('events/channel/<int:pk>/preview/', channel_api.preview),
     path('events/manage/', manage_api.event_list),
     path('events/manage/<int:pk>/', manage_api.event_detail),
     path('events/manage/<int:pk>/date/', manage_api.irregular_date),
