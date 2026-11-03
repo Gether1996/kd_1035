@@ -16,8 +16,9 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.57.0',
+    version: '1.58.0',
     sk: [
+      'Sieň slávy: pod kútmi pribudla Sieň legiend – víťazi minulých KvK a týždňov, ktorých vedenie uložilo do archívu.',
       'Sieň slávy: nová zástava Najlepšia výbava – najlepší hráč na pechotu, jazdu a lukostrelcov podľa výbavy a armamentov naklikaných na webe.',
       'Marche a prihlášky na KvK: pod commandermi odkaz Návod k páru, alebo Páry pre commandera, ak tento pár v našich návodoch nie je.',
       'Výbava a armamenty: neuložené zmeny sa už nestratia omylom – Esc, krížik, Zrušiť aj zatvorenie karty sa najprv opýtajú.',
@@ -26,6 +27,7 @@ export const CHANGES: Change[] = [
       'March a prihláška na KvK uložené skôr s dvoma zlatými či modrými na jednom armamente sú červené a odkaz Oprav armamenty otvorí ten armament.',
     ],
     cs: [
+      'Síň slávy: pod koutky přibyla Síň legend – vítězové minulých KvK a týdnů, které vedení uložilo do archivu.',
       'Síň slávy: nový prapor Nejlepší výbava – nejlepší hráč na pěchotu, jízdu a lukostřelce podle výbavy a armamentů naklikaných na webu.',
       'Marche a přihlášky na KvK: pod commandery odkaz Návod k páru, nebo Páry pro commandera, pokud tento pár v našich návodech není.',
       'Výbava a armamenty: neuložené změny se už neztratí omylem – Esc, křížek, Zrušit i zavření karty se nejdřív zeptají.',
