@@ -32,6 +32,10 @@ CH_CAV = chadski('New Cavalry Guide (10/2026)', 'xWsT2Rvah3c')
 CH_MARSHAL = chadski('Marshal’s Rage Is Crushing It In The Field (10/2026)', 'y856Fl0wdM0')
 CH_IVAN = chadski('Ivan Guide (09/2026)', '17Lliq80gyY')
 CH_LINEUPS = chadski('Meta Field March Line Ups (09/2026)', 'ygzfMwMHMbc')
+# Huo Qubing (CrazyFox 3. 11. 2026: "Huo Qubing tam chýba" in "Čo môžem postaviť")
+CH_HUO = chadski('New Cavalry March Guide (07/2026)', 'YuA9rKiOa44')
+CH_CIV = chadski('Best Civilization and Special Units (09/2026)', 'WNavNKTcjNs')
+CH_CANYON = chadski('Ultimate Canyon Guide (09/2026)', 'xH9eotRk-oU')
 CH_RALLY = chadski('New Cavalry Rally Cooks: Marshal Is A Beast (09/2026)', 'XbjoUTC7gl0')
 CH_MARSHAL_RALLY = chadski('William Marshal Will Slay: Cavalry Rally Is Back (08/2026)', 'V162nzgycf0')
 CH_INF = chadski('Infantry Smashes: March Guide (07/2026)', 'DhzkpvsGZys')
@@ -146,6 +150,9 @@ GUIDES = [
                 {'primary': 'Attila / Gang Gamchan', 'secondary': 'William Marshal',
                  'why': t('Tretia jazdecká armáda: Marshal dodá Attilovi rage, ktorý potrebuje. Funguje aj Gang Gamchan + Marshal, Achilles potom ide k Attilovi.',
                           'Třetí jízdní armáda: Marshal dodá Attilovi rage, který potřebuje. Funguje i Gang Gamchan + Marshal, Achilles pak jde k Attilovi.')},
+                {'primary': 'Huo Qubing', 'secondary': 'Arthur Pendragon',
+                 'why': t('Skill damage armáda s Wedge 2.0 (júl 2026). Od septembra 2026 sa už medzi hlavné jazdecké armády neráta, v Sunset Canyon je Huo stále dobrý.',
+                          'Skill damage armáda s Wedge 2.0 (červenec 2026). Od září 2026 se už mezi hlavní jízdní armády nepočítá, v Sunset Canyon je Huo pořád dobrý.')},
             ]),
             ('h2', t('Zostavy', 'Sestavy')),
             ('lineups', [
@@ -164,7 +171,7 @@ GUIDES = [
                 t('Máš Arthura a Achilla v jednej armáde? Oplatí sa získať Ivana IV a rozdeliť ich do dvoch armád.',
                   'Máš Arthura a Achilla v jedné armádě? Vyplatí se získat Ivana IV a rozdělit je do dvou armád.'),
             ]),
-            ('sources', [CH_CAV, CH_MARSHAL, CH_IVAN, CH_LINEUPS, ('AllClash: Ivan IV Builds (08/2026)', 'https://www.allclash.com/best-ivan-iv-builds-talent-tree-skill-order-best-pairing-in-rise-of-kingdoms/')]),
+            ('sources', [CH_CAV, CH_MARSHAL, CH_IVAN, CH_LINEUPS, CH_HUO, CH_CIV, CH_CANYON, ('AllClash: Ivan IV Builds (08/2026)', 'https://www.allclash.com/best-ivan-iv-builds-talent-tree-skill-order-best-pairing-in-rise-of-kingdoms/')]),
         ],
     },
     {
