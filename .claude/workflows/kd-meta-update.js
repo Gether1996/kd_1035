@@ -133,6 +133,7 @@ Rules:
 - Apply only changes with solid evidence; list anything you skip in "skipped" with the reason.
 - Set VERIFIED = '${MONTH}' in ${verifiedModules.map(k => `backend/guides/meta/${k}.py`).join(', ')} (checked this month, even without changes). Do not bump modules whose research failed.
 - Set LAST_UPDATE = '${DATE}' in backend/guides/meta/__init__.py (the site footer shows it as "Informácie aktualizované").
+- A commander newly named in any guide (with a portrait) needs a pair in backend/guides/meta/commanders.py from a dated source, or an entry in MENTION_ONLY there with the reason and the guide slug (test MentionCoverageTests).
 - New guides: unique slug, right CATEGORY module, first paragraph ≤ 160 chars (it is the excerpt), a ('note',) block, sources.
 - Verify: \`tools/test.sh backend\` (tests without a bind mount, prints only the summary or the failures), then \`sh .githooks/dbsync.sh sync\` (or \`docker compose -f docker-compose.dev.yml exec backend python manage.py sync_meta_guides\`) and open a changed guide on http://localhost:4200 to check it renders.
 - Commit locally ("Update RoK meta guides ${MONTH}", message ending with "${TRAILER}"); do not push.
