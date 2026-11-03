@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { About } from './pages/about/about';
 import { leaveEvaluation } from './pages/evaluation/leave-guard';
 import { Home } from './pages/home/home';
+import { leaveKvk } from './pages/kvk/leave-guard';
 import { NotFound } from './pages/not-found/not-found';
 import { Privacy } from './pages/privacy/privacy';
 import { Terms } from './pages/terms/terms';
@@ -24,7 +25,12 @@ const pages = (): Routes => [
     path: 'marche',
     loadComponent: () => import('./pages/players-marches/players-marches').then((m) => m.PlayersMarches),
   },
-  { path: 'kvk', loadComponent: () => import('./pages/kvk/kvk-page').then((m) => m.KvkPage) },
+  {
+    path: 'kvk',
+    loadComponent: () => import('./pages/kvk/kvk-page').then((m) => m.KvkPage),
+    // a half-filled sign-up is not dropped by a click elsewhere (3. 11. 2026)
+    canDeactivate: [leaveKvk],
+  },
   // the superadmin's list of players (Gether 20. 10. 2026: its own page, before a section of /ucet)
   // the anonymous forum (Gether 25. 10. 2026): in the account menu, the link works for everyone
   { path: 'forum', loadComponent: () => import('./pages/forum/forum-page').then((m) => m.ForumPage) },

@@ -8,6 +8,7 @@ import {
   PLATFORM_ID,
   afterNextRender,
   computed,
+  effect,
   inject,
   input,
   linkedSignal,
@@ -51,6 +52,19 @@ const keyOf = (role: KvkRole, slot: Slot): Key => `${role}-${slot}`;
 
 const perKey = <T,>(make: (key: Key) => T): PerKey<T> =>
   Object.fromEntries(KEYS.map((key) => [key, make(key)])) as PerKey<T>;
+
+/** what a form would send, comparable: the note trimmed and the online times in the form's order, as saving does */
+const sent = (army: ArmyDraft, note: string, budget: KvkBudget | '', online: KvkOnline[]) =>
+  JSON.stringify([
+    army.kind,
+    army.primary,
+    army.secondary,
+    army.skills.primary,
+    army.skills.secondary,
+    note.trim(),
+    budget,
+    KVK_ONLINE.filter((key) => online.includes(key)),
+  ]);
 
 /**
  * The player's KvK sign-ups on /kvk – filled in exactly like "Moje marche" (Gether 12. 10. 2026: "žiadne screenshoty
@@ -162,8 +176,48 @@ export class KvkForm {
   /** the sign-up whose withdraw waits for the confirmation */
   protected readonly confirmWithdraw = signal<Key | null>(null);
 
+  /**
+   * Unsaved changes (3. 11. 2026): a form on screen differs from its saved sign-up (a new one from the empty form and
+   * the survey it started with) – the route's leave guard and closing the tab ask first. A saved sign-up's form counts
+   * only while its pencil is on: switching the tabs closes it and its changes are not seen any more.
+   */
+  readonly dirty = computed(() =>
+    KEYS.some((key) => {
+      const signup = this.signups()[key];
+      if (signup && this.editing() !== key) return false;
+      const start = this.surveyStart(key);
+      const now = sent(this.armies()[key], this.notes()[key], this.budgets()[key], this.onlines()[key]);
+      return now !== sent(armyDraft(signup), signup?.note ?? '', start.budget, start.online);
+    }),
+  );
+
   protected readonly asMarch = asMarch;
   protected readonly built = hasBuild;
+
+  constructor() {
+    // closing or reloading the tab with an unsaved sign-up: the browser asks in its own words; only while dirty, a clean
+    // page leaves at once (and stays in the back/forward cache)
+    afterNextRender(() => {
+      effect(
+        (onCleanup) => {
+          if (!this.dirty()) return;
+          const ask = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            // older Safari asks only with this set
+            e.returnValue = true;
+          };
+          addEventListener('beforeunload', ask);
+          onCleanup(() => removeEventListener('beforeunload', ask));
+        },
+        { injector: this.injector },
+      );
+    });
+  }
+
+  /** for the route's leave guard (through the page): nothing unsaved, or the player agrees to drop it */
+  canLeave(): boolean {
+    return !this.dirty() || confirm(this.i18n.t().kvk.leaveUnsaved);
+  }
 
   /** the build editor saves into the sign-up it was opened for */
   protected readonly saveBuild = (march: March, change: MarchChange): Promise<March> => {

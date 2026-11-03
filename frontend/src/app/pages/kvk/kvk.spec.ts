@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, provideRouter } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
 import { CommanderIndex } from '../../core/commander-index';
 import { KvkApi, KvkSignup, KvkState, March } from '../../core/kvk-api';
@@ -11,6 +11,7 @@ import { Scroll } from '../../core/scroll';
 import { KvkForm } from './kvk-form';
 import { KvkPage } from './kvk-page';
 import { KvkSignups } from './kvk-signups';
+import { leaveKvk } from './leave-guard';
 
 const STATE: KvkState = {
   signups: [],
@@ -337,6 +338,48 @@ describe('KvkForm', () => {
     // the garrison sign-up shows the answers of the rally one, no reminder
     expect(el.querySelector('.survey-missing')).toBeNull();
     expect(el.querySelector('.survey-answers dd')?.textContent?.trim()).toBe('do 100 € (≈ 2 500 Kč)');
+    flushMarches(http);
+    http.verify();
+  });
+
+  it('an unsaved change of the survey makes the form dirty; leaving asks, only for another page (3. 11. 2026)', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(KvkForm);
+    fixture.componentRef.setInput('state', { ...STATE, signups: [SIGNUP] });
+    fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
+    await flushAll(fixture);
+    http.match('/api/armory/').forEach((r) => r.flush(ARMORY));
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const form = fixture.componentInstance;
+    // the saved rally sign-up's card, then the new garrison form with the rally survey: nothing unsaved yet
+    expect(form.dirty()).toBe(false);
+    el.querySelectorAll<HTMLButtonElement>('.role-tabs button')[1].click();
+    await flushAll(fixture);
+    expect(form.dirty()).toBe(false);
+    const online = () => el.querySelectorAll<HTMLInputElement>('.survey .chip input')[2];
+    online().click();
+    await flushAll(fixture);
+    expect(form.dirty()).toBe(true);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const page = { canLeave: () => form.canLeave() } as KvkPage;
+    const leave = (from: string, to: string) =>
+      TestBed.runInInjectionContext(() =>
+        leaveKvk(page, {} as ActivatedRouteSnapshot, { url: from } as RouterStateSnapshot, { url: to } as RouterStateSnapshot),
+      );
+    // another tab of /kvk does not ask, another page does
+    expect(leave('/kvk', '/kvk?tab=prihlasky')).toBe(true);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(leave('/kvk', '/kalendar')).toBe(false);
+    expect(confirm).toHaveBeenCalledWith('Prihláška nie je uložená. Odísť bez uloženia?');
+    // the same answers as saved: clean again
+    online().click();
+    await flushAll(fixture);
+    expect(form.dirty()).toBe(false);
+    expect(leave('/kvk', '/kalendar')).toBe(true);
+    confirm.mockRestore();
     flushMarches(http);
     http.verify();
   });

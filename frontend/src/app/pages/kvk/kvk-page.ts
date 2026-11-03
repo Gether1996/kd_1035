@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, linkedSignal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  viewChild,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
@@ -128,6 +138,8 @@ export class KvkPage {
   protected readonly signups = this.api.signups(() => this.canReview());
   /** the tab of the address; a click sets it at once and writes the address after it */
   protected readonly tab = linkedSignal<Tab>(() => (this.tabQuery() === QUERY.list ? 'list' : 'mine'));
+  /** the own sign-up's form – only on its tab */
+  private readonly form = viewChild(KvkForm);
   protected readonly focus = computed(() => {
     const id = Number(this.hrac());
     return Number.isInteger(id) && id > 0 ? id : null;
@@ -160,6 +172,11 @@ export class KvkPage {
   protected showTab(tab: Tab): void {
     this.tab.set(tab);
     void this.router.navigate([], { queryParams: { tab: QUERY[tab] }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  /** for the route's leave guard: the form on screen has nothing unsaved, or the player agrees to drop it */
+  canLeave(): boolean {
+    return this.form()?.canLeave() ?? true;
   }
 
   /** a sign-up changed: the reviewers' list asks again (the form keeps its own state) */

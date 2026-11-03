@@ -276,6 +276,7 @@ export const sk = {
     loginTitle: 'Prihlás sa',
     loginText: 'Na rally alebo garrison sa prihlásiš so svojím účtom na webe – cez Discord alebo menom v hre.',
     loadError: 'Prihlášky sa nepodarilo načítať. Skús to znova o chvíľu.',
+    leaveUnsaved: 'Prihláška nie je uložená. Odísť bez uloženia?',
     tabs: { mine: 'Moja prihláška', list: 'Prihlášky' },
     lead: 'Rally aj garrison zvlášť, každá ako march. Prihláška platí na ďalšie KvK, kým ju nezrušíš.',
     ingameName: 'Meno v hre',

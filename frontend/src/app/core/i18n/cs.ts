@@ -269,6 +269,7 @@ export const cs: Dict = {
     loginTitle: 'Přihlas se',
     loginText: 'Na rally nebo garrison se přihlásíš se svým účtem na webu – přes Discord nebo jménem ve hře.',
     loadError: 'Přihlášky se nepodařilo načíst. Zkus to znovu za chvíli.',
+    leaveUnsaved: 'Přihláška není uložená. Odejít bez uložení?',
     tabs: { mine: 'Moje přihláška', list: 'Přihlášky' },
     lead: 'Rally i garrison zvlášť, každá jako march. Přihláška platí i na další KvK, dokud ji nezrušíš.',
     ingameName: 'Jméno ve hře',
