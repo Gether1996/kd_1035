@@ -231,15 +231,43 @@ export function armamentPoints(settings: EvalSettings, march: March, index: Armo
       dropped++;
       return false;
     });
-  const raw = tiered
-    ? counted.reduce((sum, i) => sum + inscriptionValue(settings, i), 0)
-    : v(march.gold) * a.gold + v(march.blue) * a.blue + v(march.white) * a.white;
-  // 100 % = four gold inscriptions of the highest tier (Gether 3. 11. 2026: "… a 4 zlaté inscripty"); white ones may
-  // fill a gap but never score more than the weight
+  // per armament like the game (Gether 3. 11. 2026: "najviac je 4 zlaté … 3 zlaté a 2 biele … stále je maximum 100"):
+  // each of the four armaments scores its gold or blue one plus its white one, at most the top tier – so four gold
+  // ones of the top tier are 100 %, white ones fill a lower gold one up to it but never stand in for a missing gold
   const top = Math.max(a.gold, ...Object.values(a.tiers));
+  let raw = 0;
+  if (tiered) {
+    const pieces = new Map<string, number>();
+    for (const i of counted) pieces.set(i.piece, (pieces.get(i.piece) ?? 0) + inscriptionValue(settings, i));
+    for (const sum of pieces.values()) raw += Math.min(top, sum);
+  } else {
+    raw = byColour(a, top, v(march.gold), v(march.blue), v(march.white));
+  }
   const inscriptions = Math.min(1, raw / (4 * top)) * a.inscWeight;
   const filled = tiered || [march.attack, march.defense, march.health, march.gold, march.blue, march.white].some((n) => (n ?? 0) > 0);
   return { stats, inscriptions, points: stats + inscriptions, filled, tiered, dropped };
+}
+
+/**
+ * The counts typed in before the inscriptions were clicked together (no armament known): each gold and blue one on an
+ * armament of its own (four at most), each white one where it adds most – an armament holds two inscriptions and
+ * scores at most `top`.
+ */
+function byColour(a: EvalSettings['armaments'], top: number, gold: number, blue: number, white: number): number {
+  const specials = [...Array<number>(gold).fill(a.gold), ...Array<number>(blue).fill(a.blue)].slice(0, 4);
+  const armaments = Array.from({ length: 4 }, (_, k) => ({ sum: specials[k] ?? 0, held: k < specials.length ? 1 : 0 }));
+  for (let w = 0; w < white; w++) {
+    let best: (typeof armaments)[number] | null = null;
+    let gain = 0;
+    for (const armament of armaments) {
+      const more = Math.min(top, armament.sum + a.white) - Math.min(top, armament.sum);
+      if (armament.held < 2 && more > gain) [best, gain] = [armament, more];
+    }
+    if (!best) break;
+    best.sum += a.white;
+    best.held++;
+  }
+  return armaments.reduce((sum, armament) => sum + Math.min(top, armament.sum), 0);
 }
 
 /** the tier of the spreadsheet a score reaches */

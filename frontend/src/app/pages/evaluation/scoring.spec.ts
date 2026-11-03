@@ -89,6 +89,13 @@ describe('evaluation scoring', () => {
   it('counts the armaments: 100 % = every bonus at its cap and four gold inscriptions (Gether 3. 11. 2026)', () => {
     const m = march({ attack: 10.1, defense: 9.5, health: 7, damage: 3.3, gold: 1, blue: 1, white: 2 });
     expect(armamentPoints(S, m).points).toBeCloseTo(M1, 9);
+    // per armament: a white one fills a lower gold one up to the top tier, but never stands in for a missing gold one
+    const ins = (gold: number, white: number) => armamentPoints(S, march({ gold, white })).inscriptions;
+    expect(ins(4, 0)).toBeCloseTo((200 / 220) * 70, 9);
+    expect(ins(4, 3)).toBeCloseTo((215 / 220) * 70, 9);
+    // both white ones on the armament without a gold one: 2 × 10, far below a gold one
+    expect(ins(3, 2)).toBeCloseTo(((3 * 50 + 2 * 10) / 220) * 70, 9);
+    expect(ins(3, 4)).toBeLessThan(ins(4, 0) + 1e-9);
     // the best possible: 100, and never more – white ones on top of four gold ones add nothing
     const best = march({ attack: 14, defense: 14, health: 14, damage: 8, gold: 5, blue: 4, white: 8 });
     expect(armamentPoints(S, best).points).toBeCloseTo(100, 9);
@@ -528,14 +535,17 @@ describe('evaluation scoring', () => {
   });
 
   it('counts the best X marches, whatever their place in the player\'s order (Gether 16. 10. 2026)', () => {
-    // seven marches, the later ones better (more inscriptions)
-    const marches = [1, 2, 3, 4, 5, 6, 7].map((n) => march({ id: n, position: n, gold: n, gear: gear('gold', false, 0) }));
+    // seven marches, the later ones better: one to four gold inscriptions, then white ones on top (one armament holds
+    // one gold – a fifth gold one adds nothing since 3. 11. 2026)
+    const marches = [1, 2, 3, 4, 5, 6, 7].map((n) =>
+      march({ id: n, position: n, gold: Math.min(n, 4), white: Math.max(0, n - 4), gear: gear('gold', false, 0) }),
+    );
     const counted = (settings: EvalSettings, list = marches) =>
       evaluate(settings, [player(1, list)], INDEX).rows[0].marches.filter((m) => m.counted).map((m) => m.march.position);
     expect(counted(withPairs({ marches: { max: 3 } }))).toEqual([5, 6, 7]);
     expect(counted(withPairs({ marches: { max: 7 } }))).toEqual([1, 2, 3, 4, 5, 6, 7]);
     // the strongest one last still counts
-    const strongLast = marches.map((m) => ({ ...m, gold: m.position === 7 ? 9 : 1 }));
+    const strongLast = marches.map((m) => ({ ...m, gold: m.position === 7 ? 9 : 1, white: 0 }));
     expect(counted(withPairs({ marches: { max: 5 } }), strongLast)).toEqual([1, 2, 3, 4, 7]);
     // shown in the player's order, the ones over the limit marked
     const row = evaluate(withPairs({ marches: { max: 3 } }), [player(1, marches)], INDEX).rows[0];

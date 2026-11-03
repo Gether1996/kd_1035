@@ -16,8 +16,9 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.59.0',
+    version: '1.59.1',
     sk: [
+      'Inscriptions sa počítajú po armamentoch: plné body sú 4 zlaté najvyššieho tieru, biela zlatú len doplní, nenahradí.',
       'Prihláška na KvK sa volá KvK rally / garrison – je len pre tých, čo chcú viesť rally alebo držať garrison.',
       'Pri výbave a armamentoch rally či garrisonu pribudlo Načítať z marchu – stačí upraviť, čo sa líši.',
       'Skóre výbavy a armamentov: 100 bodov je až všetko na maxime, armamenty už nevychádzajú vyššie, než majú.',
@@ -30,6 +31,7 @@ export const CHANGES: Change[] = [
       'March a prihláška na KvK uložené skôr s dvoma zlatými či modrými na jednom armamente sú červené a odkaz Oprav armamenty otvorí ten armament.',
     ],
     cs: [
+      'Inscriptions se počítají po armamentech: plné body jsou 4 zlaté nejvyššího tieru, bílá zlatou jen doplní, nenahradí.',
       'Přihláška na KvK se jmenuje KvK rally / garrison – je jen pro ty, kdo chtějí vést rally nebo držet garrison.',
       'U výbavy a armamentů rally či garrisonu přibylo Načíst z marche – stačí upravit, co se liší.',
       'Skóre výbavy a armamentů: 100 bodů je až všechno na maximu, armamenty už nevycházejí výš, než mají.',
