@@ -25,11 +25,13 @@ import { HallAdmin } from './hall-admin';
 import {
   EquipmentTroop,
   HALL_ICONS,
+  HALL_ORDER,
   HONOURS,
   HallCategory,
   HallData,
   HallEntry,
   TRIOS,
+  archiveDate,
   portrait,
   troopOfPlace,
 } from './hall-data';
@@ -72,7 +74,13 @@ export function centreOut<T extends { entries: readonly unknown[] }>(columns: re
   selector: 'app-hall-page',
   imports: [NgTemplateOutlet, RouterLink, Icon, PendingApproval, HallAdmin],
   templateUrl: './hall-page.html',
-  styleUrls: ['../reminders/reminders-page.scss', './hall-page.scss', './hall-corners.scss', './hall-tournament.scss'],
+  styleUrls: [
+    '../reminders/reminders-page.scss',
+    './hall-page.scss',
+    './hall-corners.scss',
+    './hall-tournament.scss',
+    './hall-legends.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HallPage {
@@ -120,6 +128,22 @@ export class HallPage {
   protected readonly mascots = computed(() =>
     (this.data()?.entries ?? []).filter((e) => e.category === 'mascot').sort((a, b) => a.place - b.place),
   );
+  /**
+   * Sieň legiend (3. 11. 2026): the archived halls, newest first – per category the names in place order, the
+   * categories in the order of the hall
+   */
+  protected readonly legends = computed(() =>
+    (this.data()?.archive ?? []).map((archive) => ({
+      id: archive.id,
+      label: archive.label,
+      created_at: archive.created_at,
+      date: archiveDate(archive.created_at, this.i18n.locale()),
+      categories: HALL_ORDER.map((category) => ({
+        category,
+        entries: archive.entries.filter((e) => e.category === category).sort((a, b) => a.place - b.place),
+      })).filter((c) => c.entries.length),
+    })),
+  );
 
   constructor() {
     const seo = inject(Seo);
@@ -159,7 +183,7 @@ export class HallPage {
   }
 
   /** "250 pevností", "1,2 mld. KP" – the number the superadmin entered, '' without one */
-  protected amount(entry: HallEntry): string {
+  protected amount(entry: Pick<HallEntry, 'category' | 'count'>): string {
     const text = (entry.count ?? '').trim();
     if (!text) return '';
     const h = this.t().hall;
@@ -171,6 +195,11 @@ export class HallPage {
     return text;
   }
 
+  /** the places that are a ranking (the fort destroyers, the KP) – the others are equal or a troop type each */
+  protected ranked(category: HallCategory): boolean {
+    return category === 'forts' || category === 'kp';
+  }
+
   /** "za posledný týždeň" under the title of a top 3 */
   protected period(category: HallCategory): string {
     return (this.t().hall.categories as Record<string, { period?: string }>)[category]?.period ?? '';
@@ -180,14 +209,14 @@ export class HallPage {
    * The reason under a name; at the best equipment not when it only repeats the troop type (the button of the editor
    * writes the type there, the banner shows it already)
    */
-  protected note(entry: HallEntry): string {
+  protected note(entry: Pick<HallEntry, 'category' | 'place' | 'note'>): string {
     const note = entry.note[this.i18n.lang()];
     const troop = this.troop(entry);
     return troop && note.trim().toLocaleLowerCase() === this.troopName(troop).toLocaleLowerCase() ? '' : note;
   }
 
   /** the troop type of a place of the best equipment, null elsewhere */
-  protected troop(entry: HallEntry): EquipmentTroop | null {
+  protected troop(entry: Pick<HallEntry, 'category' | 'place'>): EquipmentTroop | null {
     return entry.category === 'equipment' ? troopOfPlace(entry.place) : null;
   }
 

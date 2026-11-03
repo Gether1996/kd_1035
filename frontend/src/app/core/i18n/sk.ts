@@ -553,6 +553,8 @@ export const sk = {
     },
     place: '{n}. miesto',
     forts: ['{n} pevnosť', '{n} pevnosti', '{n} pevností'],
+    // the archived halls under the corners (3. 11. 2026)
+    legends: { title: 'Sieň legiend', lead: 'Víťazi minulých KvK a týždňov.' },
     edit: {
       lead: 'Vyber hráča z webu alebo napíš meno. Prázdne miesto sa v sieni neukáže.',
       clowns: ['Klaun vľavo', 'Klaun vpravo'],
@@ -568,6 +570,28 @@ export const sk = {
         cancel: 'Zrušiť',
         empty: 'V Top 5 equip zatiaľ nikto nemá výbavu.',
         failed: 'Top 5 equip sa nepodarilo načítať. Skús to znova.',
+      },
+      // Sieň legiend: the hall as it is now into an archive (3. 11. 2026)
+      archive: {
+        title: 'Archív – Sieň legiend',
+        hint: 'Uloží terajšie mená, počty a dôvody vybraných kategórií. Neskoršie zmeny siene archív nezmenia.',
+        label: 'Názov',
+        labelPlaceholder: 'napr. KvK 3 alebo Týždeň 44',
+        categories: 'Kategórie',
+        nothing: 'Sieň je prázdna, nie je čo uložiť.',
+        save: 'Uložiť do archívu',
+        saved: 'Uložené do archívu.',
+        list: 'Uložené archívy',
+        empty: 'Zatiaľ žiadny archív.',
+        names: ['{n} meno', '{n} mená', '{n} mien'],
+        delete: 'Zmazať',
+        confirmDelete: 'Zmazať archív natrvalo?',
+        yes: 'Zmazať',
+        errors: {
+          label: 'Napíš názov archívu.',
+          categories: 'Vyber aspoň jednu kategóriu s menami.',
+          failed: 'Nepodarilo sa to. Skús to znova.',
+        },
       },
       player: 'Hráč',
       none: '– len meno –',
@@ -1162,7 +1186,7 @@ export const sk = {
           'Kedy si súhlasil s podmienkami používania a s ktorou ich verziou.',
           'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení – a či ťa vo svojom zozname hráčov skryl ako neaktívneho (vidí to iba on).',
           'Cookie sessionid – udrží ťa prihláseného 2 týždne, nastaví sa už na začiatku prihlásenia.',
-          'Sieň slávy – ak ťa vedenie vyznamená alebo zaradí do kútika hanby (maskoti, top zero), schválení hráči vidia tvoje meno, avatar z Discordu, dôvod a fotku, ak ju superadmin nahrá. Fotka je uložená na našom serveri bez metadát, nie je verejná a je v týždenných zálohách; zmizne, keď ju superadmin odstráni alebo keď zmažeš účet.',
+          'Sieň slávy – ak ťa vedenie vyznamená alebo zaradí do kútika hanby (maskoti, top zero), schválení hráči vidia tvoje meno, avatar z Discordu, dôvod a fotku, ak ju superadmin nahrá. Fotka je uložená na našom serveri bez metadát, nie je verejná a je v týždenných zálohách; zmizne, keď ju superadmin odstráni alebo keď zmažeš účet. Keď vedenie uloží sieň do archívu (Sieň legiend), uloží sa tam tvoje meno, počet a dôvod – bez fotky, avatara a prepojenia s účtom.',
         ],
       },
       {
@@ -1226,6 +1250,7 @@ export const sk = {
         list: [
           'Záznam odoslaných pripomienok mažeme po 30 dňoch a výber eventu, ktorý sa už nebude opakovať, najneskôr na druhý deň. Odoslaný budík zmažeme do dvoch dní.',
           'Prihlášky na KvK uchovávame, kým ich nezrušíš ty alebo superadmin (platia na ďalšie KvK), alebo kým nezmažeš účet.',
+          'Mená, počty a dôvody v archíve siene slávy (Sieň legiend) ostanú, kým archív nezmaže superadmin – aj po zmazaní účtu. O odstránenie svojho mena požiadaj vedenie na Discorde.',
           'Zálohy databázy na serveri vznikajú raz týždenne a necháva sa posledných 8, takže zmazané údaje zmiznú aj zo záloh do 8 týždňov.',
           'Na limit pokusov o prihlásenie a registráciu používame IP adresu iba v pamäti servera – do databázy ani do záznamov ju pritom neukladáme.',
           'Záznamy servera o návštevách sú bez IP adries. Technické chybové záznamy ju výnimočne obsahovať môžu; všetky záznamy majú pevne obmedzenú veľkosť (3 × 10 MB na službu) a staršie sa prepisujú.',
@@ -1235,7 +1260,7 @@ export const sk = {
         title: 'Tvoje možnosti',
         text: 'Meno v hre zmeníš na stránke Môj účet, marche na stránke Marche, pripomienky a budíky na stránke Pripomienky eventov, prihlášku na KvK zrušíš na stránke Prihláška na KvK.',
         list: [
-          'Tlačidlo Zmazať účet hneď zmaže všetky údaje o tebe uvedené vyššie, zo záloh zmiznú do 8 týždňov. Účty vedenia maže správca.',
+          'Tlačidlo Zmazať účet hneď zmaže všetky údaje o tebe uvedené vyššie okrem mena v archíve siene slávy, zo záloh zmiznú do 8 týždňov. Účty vedenia maže správca.',
           'O kópiu alebo opravu svojich údajov požiadaj vedenie na Discorde.',
           'Sťažnosť môžeš podať Úradu na ochranu osobných údajov SR, v Česku Úřadu pro ochranu osobních údajů.',
         ],

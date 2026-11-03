@@ -24,7 +24,7 @@ from rest_framework.response import Response
 
 from .kvk_views import IsSuperuser
 from .march_views import IsApprovedPlayer
-from .models import HallEntry, Player
+from .models import HallArchive, HallArchiveEntry, HallEntry, Player
 from .reminder_views import WriteThrottle
 
 FOLDER = 'hall'
@@ -123,10 +123,11 @@ def place_of(category: str, place: int) -> tuple[str, int]:
 @api_view(['GET'])
 @permission_classes([IsApprovedPlayer])
 def hall(request):
-    """Every filled place, in order. The superadmin also gets what the editor needs and the number of places."""
+    """Every filled place, in order, and the archive (Sieň legiend), newest first. The superadmin also gets what the
+    editor needs and the number of places."""
     superuser = request.user.is_superuser
     entries = HallEntry.objects.select_related('player')
-    data = {'entries': [entry_data(e, superuser) for e in entries]}
+    data = {'entries': [entry_data(e, superuser) for e in entries], 'archive': archives()}
     if superuser:
         data['places'] = PLACES
     return Response(data)
@@ -265,3 +266,78 @@ def photo(request, entry_id):
     response = FileResponse(path.open('rb'), content_type='image/webp')
     response['Cache-Control'] = 'private, max-age=2592000'
     return response
+
+
+# ---------------------------------------------------------------- Sieň legiend
+
+
+def archives() -> list[dict]:
+    """The archived halls, newest first – names, numbers and reasons as they were, never a photo or an account"""
+    return [
+        {
+            'id': archive.pk,
+            'label': archive.label,
+            'created_at': archive.created_at,
+            'entries': [
+                {
+                    'category': e.category,
+                    'place': e.place,
+                    'name': e.name,
+                    'count': e.count,
+                    'note': {'sk': e.note_sk, 'cs': e.note_cs or e.note_sk},
+                }
+                for e in archive.entries.all()
+            ],
+        }
+        for archive in HallArchive.objects.prefetch_related('entries')
+    ]
+
+
+class ArchiveSerializer(serializers.Serializer):
+    # "KvK 3", "Týždeň 44"
+    label = serializers.CharField(max_length=40, trim_whitespace=True)
+    categories = serializers.ListField(
+        child=serializers.ChoiceField(choices=HallEntry.Category.values), allow_empty=False, max_length=len(PLACES)
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def archive(request):
+    """POST {label, categories}: copies the filled places of the categories into a new archive (Gether 3. 11. 2026 –
+    the champions of a past KvK or week are not lost when the hall is rewritten). Later edits of the hall and deleted
+    accounts do not change it."""
+    serializer = ArchiveSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+    data = serializer.validated_data
+    entries = [
+        e for e in HallEntry.objects.select_related('player').filter(category__in=data['categories']) if shown_name(e)
+    ]
+    if not entries:
+        return Response({'categories': 'empty'}, status=400)
+    with transaction.atomic():
+        saved = HallArchive.objects.create(label=data['label'])
+        HallArchiveEntry.objects.bulk_create(
+            HallArchiveEntry(
+                archive=saved,
+                category=e.category,
+                place=e.place,
+                name=shown_name(e)[:64],
+                count=e.count,
+                note_sk=e.note_sk,
+                note_cs=e.note_cs,
+            )
+            for e in entries
+        )
+    return Response({'archive': archives()}, status=201)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def archive_delete(request, archive_id):
+    """DELETE: the archive with all its names"""
+    get_object_or_404(HallArchive, pk=archive_id).delete()
+    return Response(status=204)

@@ -105,6 +105,54 @@
               </aside>
           </div>
         }
+        @if (legends().length) {
+          <!-- Sieň legiend (3. 11. 2026): the champions of past KvKs and weeks the superadmin archived before rewriting
+               the hall – collapsed, a wooden board per archive -->
+          @let l = h.legends;
+          <details class="legends">
+            <summary class="legends__summary">
+              <svg appIcon="scroll-text"></svg>
+              <span class="legends__title">{{ l.title }}</span>
+              <span class="legends__count">{{ legends().length }}</span>
+            </summary>
+            <p class="legends__lead">{{ l.lead }}</p>
+            <div class="legends__boards">
+              @for (a of legends(); track a.id) {
+                <section class="board" [attr.aria-labelledby]="'legend-' + a.id">
+                  <h2 class="board__title" [id]="'legend-' + a.id">{{ a.label }}</h2>
+                  <p class="board__date"><time [attr.datetime]="a.created_at">{{ a.date }}</time></p>
+                  <dl class="board__cats">
+                    @for (c of a.categories; track c.category) {
+                      <div class="board__cat">
+                        <dt><svg [appIcon]="icon(c.category)"></svg>{{ title(c.category) }}</dt>
+                        <dd>
+                          <ol class="board__names">
+                            @for (e of c.entries; track e.place) {
+                              <li>
+                                @if (ranked(c.category)) {
+                                  <span class="board__rank" aria-hidden="true">{{ e.place }}.</span>
+                                }
+                                <span class="board__name">{{ e.name }}</span>
+                                @if (troop(e); as tr) {
+                                  <span class="board__amount">{{ troopName(tr) }}</span>
+                                } @else if (amount(e); as n) {
+                                  <span class="board__amount">{{ n }}</span>
+                                }
+                                @if (note(e)) {
+                                  <span class="board__note">{{ note(e) }}</span>
+                                }
+                              </li>
+                            }
+                          </ol>
+                        </dd>
+                      </div>
+                    }
+                  </dl>
+                </section>
+              }
+            </div>
+          </details>
+        }
       </div>
     }
   }

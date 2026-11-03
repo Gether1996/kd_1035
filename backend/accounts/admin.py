@@ -7,7 +7,18 @@ from kingdom.models import REMINDER_CHOICES
 from kingdom.permissions import SuperuserOnlyAdmin
 
 from .local_auth import login_key
-from .models import Alarm, EvaluationChange, EventReminder, KvkSignup, MarchNotice, Player, PlayerSettings, SentReminder
+from .models import (
+    Alarm,
+    EvaluationChange,
+    EventReminder,
+    HallArchive,
+    HallArchiveEntry,
+    KvkSignup,
+    MarchNotice,
+    Player,
+    PlayerSettings,
+    SentReminder,
+)
 from .reminders import duration
 
 # 'pri začiatku', 'deň vopred o 18:00'… – other times as '1 deň 6 h'
@@ -270,4 +281,21 @@ class EvaluationChangeAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
+        return False
+
+
+class HallArchiveEntryInline(admin.TabularInline):
+    model = HallArchiveEntry
+    extra = 0
+    fields = ['category', 'place', 'name', 'count', 'note_sk', 'note_cs']
+
+
+@admin.register(HallArchive)
+class HallArchiveAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """Sieň legiend – the archived halls (made on /sien-slavy?tab=upravit); names can be fixed here."""
+
+    list_display = ['label', 'created_at']
+    inlines = [HallArchiveEntryInline]
+
+    def has_add_permission(self, request):
         return False

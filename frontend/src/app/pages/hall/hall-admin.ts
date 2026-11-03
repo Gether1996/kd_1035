@@ -8,16 +8,19 @@ import { I18n } from '../../core/i18n/i18n';
 import { sk } from '../../core/i18n/sk';
 import { marchIcon } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
+import { plural } from '../reminders/format';
 import { EquipmentData, EquipmentPlayer } from '../evaluation/equipment';
 import { equipmentWinners } from './equipment-winners';
 import {
   EQUIPMENT_TROOPS,
   EquipmentTroop,
   HALL_ICONS,
-  HONOURS,
+  HALL_ORDER,
+  HallArchive,
   HallCategory,
   HallData,
   HallEntry,
+  archiveDate,
   portrait,
   troopOfPlace,
 } from './hall-data';
@@ -45,7 +48,8 @@ type Problem = 'name' | 'photo' | 'failed';
 /** "Načítať z Top 5 equip": nothing yet, loading, the winners to confirm, nobody has any equipment, failed */
 type EquipmentLoad = 'idle' | 'loading' | 'preview' | 'empty' | 'failed';
 
-const ORDER: HallCategory[] = [...HONOURS, 'zero', 'mascot'];
+/** "Uložiť do archívu": no label, no category with names, the request failed */
+type ArchiveProblem = 'label' | 'categories' | 'failed';
 
 /**
  * The superadmin's editor of the Hall of Fame (the "Upraviť" tab of /sien-slavy, Gether 28. 10. 2026: "kde si to
@@ -64,7 +68,7 @@ export class HallAdmin {
   protected readonly t = this.i18n.t;
   private readonly http = inject(HttpClient);
 
-  protected readonly order = ORDER;
+  protected readonly order = HALL_ORDER;
   protected readonly troops = EQUIPMENT_TROOPS;
   protected readonly troopOfPlace = troopOfPlace;
   protected readonly troopIcon = marchIcon;
@@ -84,6 +88,20 @@ export class HallAdmin {
   protected readonly equipmentLoad = signal<EquipmentLoad>('idle');
   protected readonly winners = signal<(EquipmentPlayer | null)[]>([]);
 
+  /** Sieň legiend: the saved archives, newest first, and the form that saves the hall into a new one */
+  protected readonly archives = signal<HallArchive[]>([]);
+  protected readonly archiveLabel = signal('');
+  /** the ticked categories; null = the default (every filled one but the mascots) */
+  protected readonly archivePick = signal<HallCategory[] | null>(null);
+  protected readonly archiveProblem = signal<ArchiveProblem | null>(null);
+  /** the categories with someone in them – the only ones there is something to archive of */
+  protected readonly filled = computed(() =>
+    this.order.filter((category) => this.entries().some((e) => e.category === category)),
+  );
+  protected readonly picked = computed(
+    () => this.archivePick() ?? this.filled().filter((category) => category !== 'mascot'),
+  );
+
   /** approved players first, then the others, each by name */
   protected readonly choices = computed(() =>
     [...this.players()].sort((a, b) => Number(b.approved) - Number(a.approved) || this.label(a).localeCompare(this.label(b))),
@@ -100,6 +118,7 @@ export class HallAdmin {
         firstValueFrom(this.http.get<{ players: Choice[] }>('/api/kvk/reviewers/')),
       ]);
       this.entries.set(hall.entries);
+      this.archives.set(hall.archive ?? []);
       this.places.set(hall.places ?? null);
       this.players.set(players.players);
       const drafts: Record<string, Draft> = {};
@@ -250,6 +269,67 @@ export class HallAdmin {
 
   protected troopName(troop: EquipmentTroop): string {
     return this.t().marches.build.troops[troop];
+  }
+
+  protected togglePick(category: HallCategory): void {
+    const picked = this.picked();
+    this.archivePick.set(
+      picked.includes(category) ? picked.filter((c) => c !== category) : [...picked, category],
+    );
+    this.archiveProblem.set(null);
+    this.saved.set(null);
+  }
+
+  /**
+   * POST /api/hall/archive/: the names, numbers and reasons of the ticked categories as they are now ("KvK 3") – the
+   * hall can be rewritten after it
+   */
+  protected async saveArchive(event: Event): Promise<void> {
+    event.preventDefault();
+    const label = this.archiveLabel().trim();
+    const categories = this.picked().filter((category) => this.filled().includes(category));
+    if (!label) return this.archiveProblem.set('label');
+    if (!categories.length) return this.archiveProblem.set('categories');
+    await this.runArchive('archive', async () => {
+      const saved = await firstValueFrom(
+        this.http.post<{ archive: HallArchive[] }>('/api/hall/archive/', { label, categories }),
+      );
+      this.archives.set(saved.archive);
+      this.archiveLabel.set('');
+      this.archivePick.set(null);
+      this.saved.set('archive');
+    });
+  }
+
+  protected async deleteArchive(id: number): Promise<void> {
+    this.confirm.set(null);
+    await this.runArchive(`archive-${id}`, async () => {
+      await firstValueFrom(this.http.delete(`/api/hall/archive/${id}/`));
+      this.archives.update((list) => list.filter((a) => a.id !== id));
+    });
+  }
+
+  /** "5 mien" */
+  protected names(n: number): string {
+    return plural(n, this.t().hall.edit.archive.names);
+  }
+
+  protected archiveDate(iso: string): string {
+    return archiveDate(iso, this.i18n.locale());
+  }
+
+  private async runArchive(key: string, request: () => Promise<void>): Promise<void> {
+    this.busy.set(key);
+    this.saved.set(null);
+    this.archiveProblem.set(null);
+    try {
+      await request();
+    } catch (err) {
+      const empty = err instanceof HttpErrorResponse && err.status === 400 && err.error?.categories;
+      this.archiveProblem.set(empty ? 'categories' : 'failed');
+    } finally {
+      this.busy.set(null);
+    }
   }
 
   private store(entry: HallEntry): void {

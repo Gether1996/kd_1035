@@ -126,6 +126,9 @@ MATRIX = [
     ('DELETE', '/api/hall/forts/1/',                        None,    '403 403 403 403 403 403 403 403 403 403 204'),
     ('POST',   '/api/hall/forts/1/photo/',                  {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('DELETE', '/api/hall/forts/1/photo/',                  None,    '403 403 403 403 403 403 403 403 403 403 200'),
+    # Sieň legiend: read with GET /api/hall/, written by the superadmin
+    ('POST',   '/api/hall/archive/',                        {},      '403 403 403 403 403 403 403 403 403 403 400'),
+    ('DELETE', '/api/hall/archive/0/',                      None,    '403 403 403 403 403 403 403 403 403 403 404'),
     # -------- events: the superadmin only (the channel reminders and the calendar's editor)
     ('GET',    '/api/events/channel/',                      None,    '403 403 403 403 403 403 403 403 403 403 200'),
     ('PUT',    '/api/events/channel/{event}/',              {},      '403 403 403 403 403 403 403 403 403 403 400'),

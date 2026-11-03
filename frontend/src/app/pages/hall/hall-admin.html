@@ -6,6 +6,85 @@
   <div class="placeholder" aria-hidden="true"></div>
 } @else {
   <p class="lead">{{ x.lead }}</p>
+  <!-- Sieň legiend (3. 11. 2026): the hall as it is now into an archive before it is rewritten, the saved ones below -->
+  @let ar = x.archive;
+  <section class="group archive" aria-labelledby="hall-edit-archive">
+    <h2 class="group__title" id="hall-edit-archive"><svg appIcon="scroll-text"></svg>{{ ar.title }}</h2>
+    <div class="archive__grid">
+      <form class="slot is-filled" (submit)="saveArchive($event)" novalidate>
+        <p class="slot__hint">{{ ar.hint }}</p>
+        <div class="field">
+          <label class="field__label" for="hall-archive-label">{{ ar.label }}</label>
+          <input
+            #labelInput
+            class="input"
+            id="hall-archive-label"
+            type="text"
+            maxlength="40"
+            autocomplete="off"
+            [placeholder]="ar.labelPlaceholder"
+            [value]="archiveLabel()"
+            [attr.aria-invalid]="archiveProblem() === 'label' || null"
+            (input)="archiveLabel.set(labelInput.value); archiveProblem.set(null)"
+          />
+        </div>
+        <div class="field">
+          <p class="field__label" id="hall-archive-cats">{{ ar.categories }}</p>
+          @if (filled().length) {
+            <div class="chips" role="group" aria-labelledby="hall-archive-cats">
+              @for (category of filled(); track category) {
+                <label class="chip">
+                  <input type="checkbox" [checked]="picked().includes(category)" (change)="togglePick(category)" />
+                  <span><svg [appIcon]="icons[category]"></svg>{{ h.categories[category].title }}</span>
+                </label>
+              }
+            </div>
+          } @else {
+            <p class="slot__hint">{{ ar.nothing }}</p>
+          }
+        </div>
+        <div class="slot__actions">
+          <button type="submit" class="pill-btn" [attr.aria-disabled]="busy() === 'archive' || null">
+            {{ busy() === 'archive' ? x.saving : ar.save }}
+          </button>
+        </div>
+        <p class="slot__state" role="status" [class.is-error]="!!archiveProblem()">
+          @if (archiveProblem(); as p) {
+            {{ ar.errors[p] }}
+          } @else if (saved() === 'archive') {
+            {{ ar.saved }}
+          }
+        </p>
+      </form>
+      <div class="archive__saved">
+        <h3 class="archive__subtitle">{{ ar.list }}</h3>
+        @if (archives().length) {
+          <ul class="archive__list">
+            @for (a of archives(); track a.id) {
+              @let k = 'archive-' + a.id;
+              <li class="archive__row">
+                <span class="archive__label">{{ a.label }}</span>
+                <span class="archive__meta">{{ archiveDate(a.created_at) }} · {{ names(a.entries.length) }}</span>
+                @if (confirm() === k) {
+                  <span class="slot__confirm">
+                    {{ ar.confirmDelete }}
+                    <button type="button" class="danger" [disabled]="busy() === k" (click)="deleteArchive(a.id)">{{ ar.yes }}</button>
+                    <button type="button" class="pill-btn pill-btn--quiet" (click)="confirm.set(null)">{{ x.no }}</button>
+                  </span>
+                } @else {
+                  <button type="button" class="pill-btn pill-btn--quiet archive__delete" (click)="confirm.set(k)">
+                    <svg appIcon="trash-2"></svg>{{ ar.delete }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="slot__hint">{{ ar.empty }}</p>
+        }
+      </div>
+    </div>
+  </section>
   <!-- a category per card side by side; the mascots (two places) across the whole width -->
   <div class="groups">
   @for (category of order; track category) {

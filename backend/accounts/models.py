@@ -714,3 +714,41 @@ def _delete_hall_photo(sender, instance, **kwargs):
         from . import hall
 
         hall.remove_photo(instance.photo)
+
+
+class HallArchive(models.Model):
+    """"Sieň legiend" (3. 11. 2026): the champions of a past KvK or week, copied from the Hall of Fame before the
+    superadmin rewrites it (accounts/hall.py archive). Names and numbers only, no photos and no link to an account – a
+    deleted account leaves its name here until the superadmin deletes the archive (the privacy page says so)."""
+
+    label = models.CharField('názov', max_length=40)
+    created_at = models.DateTimeField('uložené', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+        verbose_name = 'archív siene slávy'
+        verbose_name_plural = 'archív siene slávy'
+
+    def __str__(self):
+        return self.label
+
+
+class HallArchiveEntry(models.Model):
+    """A place of the Hall of Fame as it was when archived – the name shown then, the number and the reason."""
+
+    archive = models.ForeignKey(HallArchive, on_delete=models.CASCADE, related_name='entries', verbose_name='archív')
+    category = models.CharField('kategória', max_length=12, choices=HallEntry.Category.choices)
+    place = models.PositiveSmallIntegerField('miesto')
+    # the name shown then: typed in (40), in-game (32) or a Discord display name (64)
+    name = models.CharField('meno', max_length=64)
+    count = models.CharField('počet', max_length=24, blank=True, default='')
+    note_sk = models.CharField('dôvod SK', max_length=120, blank=True)
+    note_cs = models.CharField('dôvod CZ', max_length=120, blank=True)
+
+    class Meta:
+        ordering = ['archive', 'category', 'place']
+        verbose_name = 'miesto v archíve'
+        verbose_name_plural = 'miesta v archíve'
+
+    def __str__(self):
+        return f'{self.get_category_display()} · {self.place}. {self.name}'

@@ -234,3 +234,55 @@
 .fill .slot__state {
   min-height: 0;
 }
+
+// ---------------------------------------------------------------- Sieň legiend: saving the hall into an archive
+
+.archive__grid {
+  display: grid;
+  gap: 14px;
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.archive__subtitle {
+  margin: 0 0 10px;
+  font: 700 1rem / 1.2 var(--font-display);
+  color: var(--gold-100);
+}
+
+.archive__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.archive__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 10, 23, 0.35);
+}
+
+.archive__label {
+  color: var(--gold-100);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.archive__meta {
+  flex: 1 1 auto;
+  color: var(--text-dim);
+  font-size: 0.875rem;
+}
+
+.archive__delete {
+  margin-left: auto;
+}

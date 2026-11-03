@@ -18,7 +18,7 @@ def jpeg(size=(1600, 1200)) -> SimpleUploadedFile:
     return SimpleUploadedFile('me.jpg', buffer.getvalue(), content_type='image/jpeg')
 
 
-class Hall(TestCase):
+class HallBase(TestCase):
     """Nelly (approved), Eve (waits for approval), the superadmin"""
 
     def setUp(self):
@@ -46,6 +46,8 @@ class Hall(TestCase):
     def put(self, client, url, data):
         return client.put(url, json.dumps(data), content_type='application/json', HTTP_X_CSRFTOKEN=client.token)
 
+
+class Hall(HallBase):
     def test_the_superadmin_fills_it_in_approved_players_see_it(self):
         saved = self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'note_sk': '48 pevností', 'count': '48'})
         self.assertEqual((saved.status_code, saved.json()['count']), (200, '48'))
@@ -160,3 +162,56 @@ class Hall(TestCase):
         self.assertEqual(self.put(self.as_admin, url, twice).json(), {'entries': 'photo_twice'})
         self.assertEqual(self.put(self.as_admin, '/api/hall/nope/', {'entries': [{'name': 'X'}]}).status_code, 404)
         self.assertFalse(HallEntry.objects.exists())
+
+
+class HallArchiveTests(HallBase):
+    """Sieň legiend: the superadmin copies categories of the hall into an archive, approved players read it"""
+
+    def archive(self, client, data):
+        return client.post('/api/hall/archive/', json.dumps(data), content_type='application/json', HTTP_X_CSRFTOKEN=client.token)
+
+    def test_the_archive_is_a_copy_that_later_edits_and_deleted_accounts_do_not_change(self):
+        self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'count': '48', 'note_sk': 'Najviac', 'note_cs': ''})
+        self.put(self.as_admin, '/api/hall/forts/2/', {'name': 'Bobo', 'count': '30'})
+        self.put(self.as_admin, '/api/hall/mascot/1/', {'name': 'Klaun'})
+        self.as_admin.post('/api/hall/forts/1/photo/', {'photo': jpeg()}, HTTP_X_CSRFTOKEN=self.as_admin.token)
+        saved = self.archive(self.as_admin, {'label': ' Týždeň 44 ', 'categories': ['forts']})
+        self.assertEqual(saved.status_code, 201)
+        # the hall is rewritten, Nelly renames herself and then deletes her account
+        self.put(self.as_admin, '/api/hall/forts/1/', {'name': 'Iný', 'count': '60'})
+        self.nelly.ingame_name = 'Premenovaná'
+        self.nelly.save()
+        self.assertEqual(self.as_nelly.delete('/api/auth/me/', HTTP_X_CSRFTOKEN=self.as_nelly.token).status_code, 204)
+        archive = self.as_admin.get('/api/hall/').json()['archive']
+        self.assertEqual([a['label'] for a in archive], ['Týždeň 44'])
+        self.assertEqual(
+            [(e['category'], e['place'], e['name'], e['count'], e['note']) for e in archive[0]['entries']],
+            [('forts', 1, 'Nelly', '48', {'sk': 'Najviac', 'cs': 'Najviac'}), ('forts', 2, 'Bobo', '30', {'sk': '', 'cs': ''})],
+        )
+        # names and numbers only – no photo, no account
+        self.assertEqual(set(archive[0]['entries'][0]), {'category', 'place', 'name', 'count', 'note'})
+
+    def test_approved_players_read_it_newest_first_only_the_superadmin_writes(self):
+        self.put(self.as_admin, '/api/hall/kp/1/', {'name': 'Maroš', 'count': '2273581583'})
+        self.archive(self.as_admin, {'label': 'KvK 2', 'categories': ['kp']})
+        self.archive(self.as_admin, {'label': 'KvK 3', 'categories': ['kp', 'mascot']})
+        self.assertEqual([a['label'] for a in self.as_nelly.get('/api/hall/').json()['archive']], ['KvK 3', 'KvK 2'])
+        self.assertEqual(self.as_eve.get('/api/hall/').status_code, 403)
+        self.assertEqual(self.archive(self.as_nelly, {'label': 'X', 'categories': ['kp']}).status_code, 403)
+        self.assertEqual(self.archive(self.as_eve, {'label': 'X', 'categories': ['kp']}).status_code, 403)
+        first = self.as_admin.get('/api/hall/').json()['archive'][0]['id']
+        self.assertEqual(self.as_nelly.delete(f'/api/hall/archive/{first}/', HTTP_X_CSRFTOKEN=self.as_nelly.token).status_code, 403)
+        self.assertEqual(self.as_admin.delete(f'/api/hall/archive/{first}/', HTTP_X_CSRFTOKEN=self.as_admin.token).status_code, 204)
+        self.assertEqual(self.as_admin.delete(f'/api/hall/archive/{first}/', HTTP_X_CSRFTOKEN=self.as_admin.token).status_code, 404)
+        self.assertEqual([a['label'] for a in self.as_nelly.get('/api/hall/').json()['archive']], ['KvK 2'])
+
+    def test_the_label_and_categories_are_checked(self):
+        self.put(self.as_admin, '/api/hall/rally/1/', {'name': 'Maroš'})
+        self.assertEqual(self.archive(self.as_admin, {'label': ' ', 'categories': ['rally']}).status_code, 400)
+        self.assertEqual(self.archive(self.as_admin, {'label': 'X' * 41, 'categories': ['rally']}).status_code, 400)
+        self.assertEqual(self.archive(self.as_admin, {'label': 'KvK 3', 'categories': []}).status_code, 400)
+        self.assertEqual(self.archive(self.as_admin, {'label': 'KvK 3', 'categories': ['nope']}).status_code, 400)
+        # nothing to copy: no archive without a name in it
+        empty = self.archive(self.as_admin, {'label': 'KvK 3', 'categories': ['kp', 'zero']})
+        self.assertEqual((empty.status_code, empty.json()), (400, {'categories': 'empty'}))
+        self.assertEqual(self.as_admin.get('/api/hall/').json()['archive'], [])
