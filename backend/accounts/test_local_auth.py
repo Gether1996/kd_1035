@@ -357,8 +357,8 @@ class LinkDiscordTests(LocalAuthTestCase):
             self.addCleanup(patcher.stop)
             patcher.start()
 
-    def link(self, **params):
-        response = self.client.get('/api/auth/discord/login/', {'next': '/ucet', **params})
+    def link(self, next='/ucet', **params):
+        response = self.client.get('/api/auth/discord/login/', {'next': next, **params})
         state = parse_qs(urlsplit(response['Location']).query)['state'][0]
         return self.client.get('/api/auth/discord/callback/', {'state': state, 'code': 'abc'})
 
@@ -389,6 +389,22 @@ class LinkDiscordTests(LocalAuthTestCase):
         self.assertRedirects(response, '/ucet?login=taken', fetch_redirect_response=False)
         self.assertIsNone(Player.objects.get(pk=self.player.pk).discord_id)
         self.assertTrue(self.me()['local'])  # still signed in without Discord
+
+    def test_linked_from_an_event_returns_to_the_event(self):
+        # the calendar's event dialog (Prepojiť s Discordom) – back at the event, not on /ucet
+        response = self.link('/cz/kalendar?event=7&on=2026-11-03', link='1')
+        self.assertRedirects(response, '/cz/kalendar?event=7&on=2026-11-03', fetch_redirect_response=False)
+        self.assertEqual(Player.objects.get(pk=self.player.pk).discord_id, PROFILE['id'])
+
+    def test_a_failed_link_from_an_event_goes_to_the_account_page(self):
+        # the calendar would say nothing – the account page explains `taken`, in the language of the event page
+        make_player(PROFILE['id'])
+        response = self.link('/cz/kalendar?event=7&on=2026-11-03', link='1')
+        self.assertRedirects(response, '/cz/ucet?login=taken', fetch_redirect_response=False)
+        self.assertIsNone(Player.objects.get(pk=self.player.pk).discord_id)
+        self.client.get('/api/auth/discord/login/', {'next': '/kalendar?event=7', 'link': '1'})
+        response = self.client.get('/api/auth/discord/callback/', {'error': 'access_denied'})
+        self.assertRedirects(response, '/ucet?login=cancelled', fetch_redirect_response=False)
 
     def test_without_link_a_discord_sign_in_is_another_account(self):
         self.link()

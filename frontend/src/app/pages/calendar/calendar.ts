@@ -168,9 +168,10 @@ export class Calendar {
     if (!item || !this.auth.enabled()) return { kind: 'none' };
     const user = this.auth.user();
     if (!user) return { kind: 'login', loginUrl: this.auth.loginUrl(this.returnPath(item)) };
-    // without Discord: no reminders – the way out is linking the account (when Discord sign-in is set up)
+    // without Discord: no reminders – the way out is linking the account (when Discord sign-in is set up), back at
+    // this event afterwards (a failed link lands on /ucet, which explains it)
     if (user.local)
-      return { kind: 'local', linkUrl: this.auth.discordLogin() ? this.auth.linkUrl() : null };
+      return { kind: 'local', linkUrl: this.auth.discordLogin() ? this.auth.linkUrl(this.returnPath(item)) : null };
     if (this.reminders.error()) return { kind: 'error' };
     if (!this.reminders.hasValue()) return { kind: 'loading' };
     const s = this.reminders.value();

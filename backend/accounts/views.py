@@ -83,11 +83,16 @@ def lang_of(next_url: str) -> str:
     return 'cs' if path == '/cz' or path.startswith('/cz/') else 'sk'
 
 
+def account_page(next_url: str) -> str:
+    """/ucet or /cz/ucet – the account page in the language of next"""
+    return '/cz/ucet' if lang_of(next_url) == 'cs' else DEFAULT_NEXT
+
+
 def ask_for_name(next_url: str) -> str:
     """A player without an in-game name (the first sign-in) lands on the account page with the name field first
     (Gether 11. 10. 2026: required at the first sign-in); ?next= brings them back where they were going."""
     path = urlsplit(next_url).path
-    account = '/cz/ucet' if lang_of(next_url) == 'cs' else DEFAULT_NEXT
+    account = account_page(next_url)
     query = {'meno': '1'}
     if path.rstrip('/') != account:
         query['next'] = next_url
@@ -158,42 +163,47 @@ def discord_callback(request):
     link = request.session.pop(LINK_KEY, None)
     if not discord_oauth.login_enabled():
         raise Http404
+    # linking from another page (the calendar's event dialog) returns there only once linked; a failure (`taken`,
+    # `cancelled`, `error`) goes to the account page, which explains it
+    fail_url = account_page(next_url) if link is not None else next_url
 
     error = request.GET.get('error')
     if error:
         if error != 'access_denied':
             log.warning('Discord login refused: %r', error[:100])  # %r: no forged log lines from the URL
-        return back_to(next_url, 'cancelled' if error == 'access_denied' else 'error')
+        return back_to(fail_url, 'cancelled' if error == 'access_denied' else 'error')
 
     # the state proves this browser started the sign-in (no login CSRF); checked before anything goes to Discord
     state = request.GET.get('state', '')
     code = request.GET.get('code')
     if not expected or not secrets.compare_digest(expected.encode(), state.encode()) or not code:
-        return back_to(next_url, 'error')
+        return back_to(fail_url, 'error')
     if not CallbackThrottle().allow_request(request, None):
         log.warning('Discord login throttled')
-        return back_to(next_url, 'error')
+        return back_to(fail_url, 'error')
 
     try:
         profile = discord_oauth.fetch_user(discord_oauth.exchange_code(code, redirect_uri(request)))
     except discord_oauth.OAuthError as exc:
         log.warning('Discord login failed: %s', exc)
-        return back_to(next_url, 'error')
+        return back_to(fail_url, 'error')
 
     if link is not None:
         status = link_player(request, link, profile)
         if status:
-            return back_to(next_url, status)
+            return back_to(fail_url, status)
     user = save_player(profile, lang=lang_of(next_url))
     if not user.is_active:  # blocked in the admin
         log.warning('Discord login of inactive user %s', user.pk)
-        return back_to(next_url, 'error')
+        return back_to(fail_url, 'error')
     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     # Discord confirmed the ID: an admin from .env gets the admin rights in this session (guard.py)
     guard.prove_discord(request, profile['id'])
     if not user.player.ingame_name.strip():
         return back_to(ask_for_name(next_url))
-    return back_to(next_url, 'linked' if link is not None else '')
+    # the account page says it is linked; the event dialog shows the reminders straight away (no ?login= left there)
+    linked = link is not None and urlsplit(next_url).path.rstrip('/') == account_page(next_url)
+    return back_to(next_url, 'linked' if linked else '')
 
 
 @transaction.atomic

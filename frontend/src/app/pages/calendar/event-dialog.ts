@@ -33,7 +33,8 @@ import { ReminderPicker } from '../reminders/reminder-picker';
 import { KINGDOM_ZONE, eventLink } from './deep-link';
 import { clock, dayKey, longDay, numericDay } from './month';
 
-/** The reminders part of the dialog: nothing (login off), a login button, or the player's own choice. */
+/** The reminders part of the dialog: nothing (login off), a login button, a link-to-Discord button (a player
+ *  without Discord, 'local'), or the player's own choice. */
 export interface RemindState {
   /** 'channel' = the superadmin's messages in the kingdom's Discord channel (/pripomienky → Kanál) */
   kind: 'none' | 'login' | 'local' | 'loading' | 'error' | 'player' | 'channel';
@@ -42,8 +43,7 @@ export interface RemindState {
   linkUrl?: string | null;
   /** the player's choice for this event; null = the event will not run again */
   event?: ReminderEvent | null;
-  /** no channel reaches the player (Discord DM off or unavailable and no browser with notifications); for 'channel'
-   *  the webhook is not set */
+  /** no channel reaches the player (Discord DM off or unavailable); for 'channel' the webhook is not set */
   noChannel?: boolean;
   /** 'channel': saves the channel's times instead of the player's own */
   saver?: (eventId: number, offsets: number[]) => Promise<unknown>;
