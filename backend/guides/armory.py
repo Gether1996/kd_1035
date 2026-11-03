@@ -25,6 +25,8 @@ MAX_PER_PIECE = 2
 # of them at most one gold or blue: 2 white, gold + white or blue + white, never 2 gold or 2 blue (Gether 3. 11. 2026)
 MAX_RARE_PER_PIECE = 1
 MAX_INSCRIPTIONS = 4 * MAX_PER_PIECE
+# the four armaments where the game's Armament screen has them (ARMAMENT_WHEEL in frontend/src/app/core/armory.ts)
+PIECES = ('scroll', 'instrument', 'emblem', 'flag')
 
 
 @cache
@@ -69,6 +71,20 @@ def inscriptions():
 def inscription_pieces():
     """inscription id → its armament (emblem, flag, instrument, scroll)"""
     return {key: i['piece'] for key, i in inscriptions().items()}
+
+
+def rare_excess(chosen, catalog=None) -> list[str]:
+    """The armaments with more than MAX_RARE_PER_PIECE gold or blue inscriptions among `chosen`, in PIECES order –
+    one rule for saving (army.BuildSerializer refuses them) and for builds saved before it (pair_check.rare_excess).
+    Ids the catalog no longer knows are skipped; `catalog` = inscriptions() read once by the caller."""
+    catalog = inscriptions() if catalog is None else catalog
+    rare = Counter(catalog[i]['piece'] for i in chosen if i in catalog and catalog[i]['rarity'] != 'common')
+    return [piece for piece in PIECES if rare[piece] > MAX_RARE_PER_PIECE]
+
+
+def piece_name(piece: str) -> str:
+    """'emblem' → 'Emblem': the game's name of an armament, the same in both languages"""
+    return piece.capitalize()
 
 
 # the march's counts of inscriptions by colour (ArmyFields.gold, blue, white)

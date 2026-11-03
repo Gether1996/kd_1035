@@ -7,12 +7,15 @@ lower (formationOf) – a commander without formations, or a march without one, 
 not count (garrison and rally by default) get no warning about the pair or the formation. An armament bonus over
 its cap (ARMAMENT_CAPS, Gether 19. 10. 2026) is a typo whatever the type – red as well; the evaluation counts the
 cap. So is a march of any type without the equipment or the armaments clicked together (Gether 30. 10. 2026:
-"upozornenie aj keď nemá vyplnený equip alebo armamenty, tým istým spôsobom ako zlý commander pár")."""
+"upozornenie aj keď nemá vyplnený equip alebo armamenty, tým istým spôsobom ako zlý commander pár"). And so is
+an armament with two gold or blue inscriptions saved before v1.56.6 allowed one (guides.armory.MAX_RARE_PER_PIECE,
+Gether 3. 11. 2026) – the editor refuses to save it, the evaluation counts the better one."""
 
 import math
 from collections.abc import Callable
 from decimal import Decimal
 
+from guides import armory
 from guides.models import CommanderFormation, CommanderPair, fold
 
 from .models import MAX_MARCHES, EvaluationSettings, March
@@ -24,12 +27,21 @@ DEFAULT_COUNT = 5
 # the most an armament bonus can be (Gether 19. 10. 2026: "14 % atk, def, HP a 8 % all dmg") – ARMAMENT_CAPS in
 # frontend/src/app/core/kvk-api.ts
 ARMAMENT_CAPS = {'attack': Decimal(14), 'defense': Decimal(14), 'health': Decimal(14), 'damage': Decimal(8)}
+# what march_checker() may find – any of them makes a march red (marchHasProblem in frontend/src/app/core/kvk-api.ts)
+PROBLEMS = ('pair_problem', 'formation_problem', 'stats_problem', 'gear_problem', 'inscription_problem')
 
 
 def over_caps(army) -> list[str] | None:
     """The armament bonuses of a march or a sign-up over their cap, in the order of ARMAMENT_CAPS; None = none"""
     over = [stat for stat, cap in ARMAMENT_CAPS.items() if (getattr(army, stat) or 0) > cap]
     return over or None
+
+
+def rare_excess(army, catalog=None) -> list[str] | None:
+    """The armaments of a march or a sign-up with more than one gold or blue inscription (armory.rare_excess – the
+    same rule as saving), in the game's order; None = none. `catalog` = armory.inscriptions() read once."""
+    chosen = army.inscriptions if isinstance(army.inscriptions, list) else []
+    return armory.rare_excess([i for i in chosen if isinstance(i, str)], catalog) or None
 
 
 def missing_parts(march: March) -> list[str] | None:
@@ -80,13 +92,15 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
     formations; the returned function says what is wrong with a march: pair_problem 'solo' (no secondary), 'unknown'
     (not in the table or 0 points) or None, pair_hint how to fix an 'unknown' pair ({swap: the other order scores},
     never the points; else None), formation_problem the formations its primary should lead with when it uses
-    another one (else None), stats_problem the armament bonuses over their cap (over_caps – any type) and
-    gear_problem what is not filled in (missing_parts – any type)."""
+    another one (else None), stats_problem the armament bonuses over their cap (over_caps – any type),
+    gear_problem what is not filled in (missing_parts – any type) and inscription_problem the armaments with two gold
+    or blue inscriptions (rare_excess – any type)."""
     kinds = counted_kinds(marches)
     table: dict[tuple[str, str], float] = {}
     for primary, secondary, points in CommanderPair.objects.values_list('primary', 'secondary', 'points'):
         table.setdefault((fold(primary), fold(secondary)), points)
     formations = {fold(row.commander): row.formations for row in CommanderFormation.objects.all() if row.formations}
+    catalog = armory.inscriptions()
 
     def scores(primary: str, secondary: str) -> bool:
         return (table.get((fold(primary), fold(secondary))) or 0) > 0
@@ -103,6 +117,7 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
     def check(march: March) -> dict:
         stats = over_caps(march)
         gear = missing_parts(march)
+        rare = rare_excess(march, catalog)
         if march.kind not in kinds or not march.primary:
             return {
                 'pair_problem': None,
@@ -110,6 +125,7 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
                 'formation_problem': None,
                 'stats_problem': stats,
                 'gear_problem': gear,
+                'inscription_problem': rare,
             }
         problem = pair(march)
         # the player cannot see the pair table – say when only the order is wrong (names as on the march)
@@ -120,6 +136,7 @@ def march_checker(marches: dict | None = None) -> Callable[[March], dict]:
             'formation_problem': formation(march),
             'stats_problem': stats,
             'gear_problem': gear,
+            'inscription_problem': rare,
         }
 
     return check

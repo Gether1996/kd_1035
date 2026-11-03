@@ -143,6 +143,58 @@ class MarchNoticeTests(RedMarches):
         bob_row = next(p for p in players if p['id'] == self.bob.pk)
         self.assertEqual(bob_row['marches'][0]['gear_problem'], ['armaments'])
 
+    def test_two_gold_or_blue_inscriptions_on_one_armament_are_told(self):
+        """v1.56.6 (Gether 3. 11. 2026): one gold or blue per armament – builds saved before are red, whatever the type"""
+        before = notices.fingerprint(notices.problems_of(self.nelly, notices.march_checker()))
+        # gold + white is fine
+        March.objects.filter(player=self.bob).update(inscriptions=['arch-flag-invincible', 'u-flag-assertive'])
+        self.assertEqual(notices.problems_of(self.bob, notices.march_checker()), [])
+        March.objects.filter(player=self.bob).update(
+            inscriptions=['arch-flag-invincible', 'arch-flag-unswerving', 'delta-emblem-flurry', 'delta-ii-emblem-raging-tide']
+        )
+        bob = notices.problems_of(self.bob, notices.march_checker())
+        self.assertEqual([(p['position'], p['inscription_problem']) for p in bob], [(1, ['emblem', 'flag'])])
+        text = notices.message(self.bob, bob)['embeds'][0]['description']
+        self.assertIn('• Na armamente Emblem, Flag je viac zlatých či modrých inscriptions – nechaj na ňom len jednu.', text)
+        self.bob.lang = 'cs'
+        self.assertIn(
+            '• Na armamentu Emblem, Flag je víc zlatých či modrých inscriptions – nech na něm jen jednu.',
+            notices.lines(self.bob, bob, markdown=False),
+        )
+        # the rally march the evaluation skips too; Nelly's other marches keep their fingerprint
+        March.objects.filter(player=self.nelly, position=4).update(inscriptions=['delta-emblem-flurry', 'delta-ii-emblem-raging-tide'])
+        nelly = notices.problems_of(self.nelly, notices.march_checker())
+        self.assertEqual([p['inscription_problem'] for p in nelly], [None, None, None, ['emblem']])
+        self.assertEqual(notices.fingerprint(nelly[:3]), before)
+        self.assertNotEqual(notices.fingerprint(nelly), before)
+        # the player and the superadmin see it on the march, other players do not
+        self.assertEqual(self.login(self.bob.user).get('/api/me/marches/').json()['marches'][0]['inscription_problem'], ['emblem', 'flag'])
+        bob_row = next(p for p in self.admin.get('/api/marches/').json()['players'] if p['id'] == self.bob.pk)
+        self.assertEqual(bob_row['marches'][0]['inscription_problem'], ['emblem', 'flag'])
+        self.bob.marches_public = True
+        self.bob.save()
+        bob_row = next(p for p in self.login(self.nelly.user).get('/api/marches/').json()['players'] if p['id'] == self.bob.pk)
+        self.assertNotIn('inscription_problem', bob_row['marches'][0])
+
+    def test_the_fingerprint_without_the_new_problem_is_the_one_from_before(self):
+        """A player told before v1.56.7 about the same problems is not told again – the literal is what the code before
+        inscription_problem made of these problems."""
+        problems = [
+            {
+                'id': 7, 'kind': 'cavalry', 'primary': 'Attila', 'secondary': '', 'formation': 'wedge',
+                'pair_problem': 'solo', 'pair_hint': None, 'formation_problem': ['delta', 'arch'],
+                'stats_problem': ['damage'], 'gear_problem': ['gear'], 'inscription_problem': None,
+            },
+            {
+                'id': 8, 'kind': 'infantry', 'primary': 'Richard I', 'secondary': 'Charles Martel', 'formation': '',
+                'pair_problem': None, 'pair_hint': None, 'formation_problem': None, 'stats_problem': None,
+                'gear_problem': None, 'inscription_problem': None,
+            },
+        ]
+        self.assertEqual(notices.fingerprint(problems), '8277c503d7c2846b69e97dcce597a2ac38ac3bbf')
+        problems[1]['inscription_problem'] = ['flag']
+        self.assertNotEqual(notices.fingerprint(problems), '8277c503d7c2846b69e97dcce597a2ac38ac3bbf')
+
     def test_superuser_only(self):
         other = self.login(self.bob.user)
         self.assertEqual(other.get('/api/marches/notices/').status_code, 403)
@@ -246,6 +298,10 @@ class ReviewerIssuesTests(RedMarches):
         March.objects.filter(player=self.bob).update(defense=Decimal('15'))
         rows = self.rows()
         self.assertEqual((rows[self.nelly.pk]['issues'], rows[self.bob.pk]['issues']), (3, 1))
+
+    def test_two_gold_or_blue_on_one_armament_count(self):
+        March.objects.filter(player=self.bob).update(inscriptions=['delta-emblem-flurry', 'delta-ii-emblem-raging-tide'])
+        self.assertEqual(self.rows()[self.bob.pk]['issues'], 1)
 
     def test_the_queries_do_not_grow_with_the_players(self):
         self.bob.delete_account()

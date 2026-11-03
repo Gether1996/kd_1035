@@ -116,9 +116,7 @@ class BuildSerializer(ArmySerializer):
             pieces = Counter(armory.inscription_pieces()[i] for i in chosen)
             if any(count > armory.MAX_PER_PIECE for count in pieces.values()):
                 raise serializers.ValidationError({'inscriptions': 'per_piece'})
-            catalog = armory.inscriptions()
-            rare = Counter(catalog[i]['piece'] for i in chosen if catalog[i]['rarity'] != 'common')
-            if any(count > armory.MAX_RARE_PER_PIECE for count in rare.values()):
+            if armory.rare_excess(chosen):
                 raise serializers.ValidationError({'inscriptions': 'rare_per_piece'})
         # the counts by colour: a new army starts at 0, a change of the inscriptions counts them again; one saved
         # before keeps its typed counts until its inscriptions change

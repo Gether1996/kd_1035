@@ -21,7 +21,7 @@ from rest_framework.response import Response
 from . import private_images
 from .army import BUILD_FIELDS, BuildSerializer, current_of
 from .models import APPROVED, KVK_ONLINE, MARCH_STATS, EvaluationSettings, KvkSignup, March, Player, PlayerSettings
-from .pair_check import march_checker, over_caps
+from .pair_check import PROBLEMS, march_checker, over_caps, rare_excess
 from .reminder_views import WriteThrottle, iso
 from .views import cannot_post, not_approved, player_of
 
@@ -29,7 +29,6 @@ log = logging.getLogger(__name__)
 ROLES = [role for role, _ in KvkSignup.Role.choices]
 # up to two sign-ups per role (Gether 22. 10. 2026)
 SLOTS = (1, 2)
-PROBLEMS = ('pair_problem', 'formation_problem', 'stats_problem', 'gear_problem')
 
 
 class IsReviewer(BasePermission):
@@ -84,6 +83,8 @@ def signup_data(signup: KvkSignup, with_player=False) -> dict:
         **army_data(signup),
         # a bonus over its cap – red like on /marche (Gether 19. 10. 2026); the sign-up's own player, R4, the superuser
         'stats_problem': over_caps(signup),
+        # two gold or blue inscriptions on one armament, saved before v1.56.6 – the same people
+        'inscription_problem': rare_excess(signup),
         'note': signup.note,
         # the survey (Gether 20. 10. 2026): '' and [] for a sign-up from before it
         'budget': signup.budget,

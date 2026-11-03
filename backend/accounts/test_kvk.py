@@ -1053,6 +1053,18 @@ class SignupBuildTests(KvkTestCase):
         self.assertEqual(self.client.get('/api/kvk/').json()['signups'][0]['stats_problem'], ['damage'])
 
 
+    def test_two_gold_or_blue_on_one_armament_is_red_on_the_signup(self):
+        """Saved before v1.56.6 (Gether 3. 11. 2026) – the player, R4 and the superuser see which armament"""
+        self.sign_up()
+        self.assertIsNone(self.client.get('/api/kvk/').json()['signups'][0]['inscription_problem'])
+        KvkSignup.objects.update(formation='arch', inscriptions=['arch-flag-invincible', 'arch-flag-unswerving'])
+        self.assertEqual(self.client.get('/api/kvk/').json()['signups'][0]['inscription_problem'], ['flag'])
+        reviewer = make_player('43')
+        reviewer.kvk_reviewer = True
+        reviewer.save()
+        rows = self.login(reviewer.user).get('/api/kvk/signups/').json()['signups']
+        self.assertEqual([row['inscription_problem'] for row in rows], [['flag']])
+
 class UnapprovedTests(KvkTestCase):
     """An un-approved player keeps their marches and sign-ups in the database; nobody sees them, the superuser neither,
     until approved again (Gether 20. 10. 2026)."""

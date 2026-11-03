@@ -4,7 +4,8 @@ odoslanie discord správy pre užívateľa, ktorý má nejakú chybu … kde je 
 Only what /marche shows the player in red (pair_check.march_checker): a pair without a secondary commander, a pair the
 evaluation does not score (and, when it does, the other order – never the points or other partners, Gether: "nie,
 len čo je zlé"), a formation the primary commander should not lead with and an armament bonus over its cap (Gether
-19. 10. 2026, pair_check.ARMAMENT_CAPS), and equipment or armaments not filled in (30. 10. 2026). The superadmin sees a preview of every
+19. 10. 2026, pair_check.ARMAMENT_CAPS), equipment or armaments not filled in (30. 10. 2026) and an armament with two
+gold or blue inscriptions saved before v1.56.6 (3. 11. 2026). The superadmin sees a preview of every
 player with such a march and the exact message, unticks whom they like and queues the rest; the worker sends PER_TICK a
 tick, checking the marches again right before (fixed meanwhile = not sent, changed = the message as it is now).
 
@@ -24,11 +25,11 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from guides.armory import armory
+from guides.armory import armory, piece_name
 
 from . import discord_bot
 from .models import MarchNotice, Player
-from .pair_check import ARMAMENT_CAPS, march_checker
+from .pair_check import ARMAMENT_CAPS, PROBLEMS, march_checker
 from .reminders import GOLD, DiscordPaused
 
 log = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ TEXTS = {
         'stats': 'Bonusy armamentov nad maximum: {stats}. Skontroluj ich v hre a oprav.',
         'gear': 'Chýba naklikaná výbava.',
         'armaments': 'Chýbajú armamenty – formácia, inscriptions a bonusy ATK, DEF, HP.',
+        'rare': 'Na armamente {pieces} je viac zlatých či modrých inscriptions – nechaj na ňom len jednu.',
         'or': ' alebo ',
         'link': 'Opraviť v Prehľade marchov',
         'footer': 'KD 1035 · upozornenie od správcu webu',
@@ -84,6 +86,7 @@ TEXTS = {
         'stats': 'Bonusy armamentů nad maximum: {stats}. Zkontroluj je ve hře a oprav.',
         'gear': 'Chybí naklikaná výbava.',
         'armaments': 'Chybí armamenty – formace, inscriptions a bonusy ATK, DEF, HP.',
+        'rare': 'Na armamentu {pieces} je víc zlatých či modrých inscriptions – nech na něm jen jednu.',
         'or': ' nebo ',
         'link': 'Opravit v Přehledu marchů',
         'footer': 'KD 1035 · upozornění od správce webu',
@@ -134,7 +137,7 @@ def problems_of(player: Player, check) -> list[dict]:
     found = []
     for march in sorted(player.marches.all(), key=lambda m: (m.position, m.pk)):
         result = check(march)
-        if result['pair_problem'] or result['formation_problem'] or result['stats_problem'] or result['gear_problem']:
+        if any(result[key] for key in PROBLEMS):
             found.append(
                 {
                     'id': march.pk,
@@ -153,12 +156,14 @@ def problems_of(player: Player, check) -> list[dict]:
 
 def fingerprint(problems: list[dict]) -> str:
     """What exactly is wrong – another pair with the same kind of problem is a new one to tell. The bonuses over their
-    cap are added only when there are some, so a fingerprint from before them stays the same."""
+    cap, what is not filled in and the armaments with two gold or blue inscriptions are added only when there are
+    some, so a fingerprint from before them stays the same."""
     keys = ('id', 'kind', 'primary', 'secondary', 'formation', 'pair_problem', 'formation_problem')
     data = [
         [p[k] if k != 'formation_problem' else sorted(p[k] or []) for k in keys]
         + ([p['stats_problem']] if p.get('stats_problem') else [])
         + ([{'gear': p['gear_problem']}] if p.get('gear_problem') else [])
+        + ([{'rare': p['inscription_problem']}] if p.get('inscription_problem') else [])
         for p in problems
     ]
     return hashlib.sha1(json.dumps(data, ensure_ascii=False).encode()).hexdigest()
@@ -196,6 +201,9 @@ def lines(player: Player, problems: list[dict], markdown: bool = True) -> list[s
             out.append(f'• {t["stats"].replace("{stats}", over_cap_text(p))}')
         for part in p.get('gear_problem') or []:
             out.append(f'• {t[part]}')
+        if p.get('inscription_problem'):
+            pieces = ', '.join(piece_name(piece) for piece in p['inscription_problem'])
+            out.append(f'• {t["rare"].replace("{pieces}", pieces)}')
     return out
 
 
