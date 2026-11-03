@@ -265,7 +265,8 @@ describe('Calendar', () => {
       expect(remind.querySelector('.is-error')).toBeNull();
       expect(remind.querySelector('.switch')).toBeNull();
       const link = remind.querySelector('a.remind__login');
-      expect(link?.getAttribute('href')).toBe('/api/auth/discord/login/?link=1&next=%2Fucet');
+      // linking returns to this event (v1.59.2)
+      expect(link?.getAttribute('href')).toMatch(/^\/api\/auth\/discord\/login\/\?link=1&next=%2Fkalendar%3Fevent%3D\d+%26on%3D/);
       expect(link?.textContent).toContain('Prepojiť s Discordom');
     });
 
