@@ -496,8 +496,22 @@ class MarchTests(KvkTestCase):
             {'inscriptions': ['u-scroll-warcry'] * 9},
             # two of each armament at most
             {'inscriptions': ['u-scroll-warcry', 'u-scroll-ward', 'u-scroll-calm']},
+            # one gold or blue of each armament at most: never 2 gold, 2 blue or gold + blue (Gether 3. 11. 2026)
+            {'formation': 'pincer', 'inscriptions': ['pincer-scroll-toppler', 'pincer-scroll-dominate']},
+            {'formation': 'pincer', 'inscriptions': ['pincer-scroll-imploder', 'pincer-scroll-bludgeon']},
+            {'formation': 'delta', 'inscriptions': ['delta-scroll-thrasher', 'delta-scroll-pummeler']},
         ):
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
+        res = self.call('patch', url, {'formation': 'delta', 'inscriptions': ['delta-scroll-thrasher', 'delta-scroll-pummeler']})
+        self.assertEqual(res.json(), {'inscriptions': ['rare_per_piece']})
+        # gold + white, blue + white on another armament, two white
+        allowed = [
+            'pincer-scroll-toppler', 'u-scroll-warcry', 'pincer-emblem-vigor', 'u-emblem-artisan', 'u-flag-assertive',
+            'u-flag-ballistics',
+        ]
+        res = self.call('patch', url, {'formation': 'pincer', 'inscriptions': allowed})
+        self.assertEqual(res.status_code, 200, res.content)
+        self.assertEqual((res.json()['gold'], res.json()['blue'], res.json()['white']), (1, 1, 4))
         res = self.call('patch', url, {'formation': 'pincer', 'inscriptions': ['pincer-scroll-toppler', 'u-scroll-warcry']})
         self.assertEqual(res.status_code, 200, res.content)
         res = self.call('patch', url, {'gear': {}, 'formation': '', 'inscriptions': []})

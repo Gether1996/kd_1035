@@ -752,6 +752,9 @@ export const sk = {
       pieces: { emblem: 'Emblem', flag: 'Flag', instrument: 'Instrument', scroll: 'Scroll' },
       rarity: { special: 'zlatá', rare: 'modrá', common: 'biela' },
       pickFormation: 'Vyber formáciu – pod ňou sa ukážu jej zlaté a modré inscriptions.',
+      // one gold or blue inscription per armament (Gether 3. 11. 2026)
+      rareHint: 'Najviac jedna zlatá alebo modrá, ďalšia len biela.',
+      oneRare: 'Na jednom armamente môže byť len jedna zlatá alebo modrá inscription – jednu odober.',
       search: 'Hľadať predmet',
       weaker: 'Aj slabšie (Elite, Advanced, Common)',
       clearSlot: 'Vyprázdniť',

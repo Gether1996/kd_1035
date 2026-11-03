@@ -16,9 +16,15 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.56.5',
-    sk: ['Požadovaný acclaim: Ivar so skillmi 5511 sa už počíta takmer ako plný pár.'],
-    cs: ['Požadovaný acclaim: Ivar se skilly 5511 se už počítá skoro jako plný pár.'],
+    version: '1.56.6',
+    sk: [
+      'Požadovaný acclaim: Ivar so skillmi 5511 sa už počíta takmer ako plný pár.',
+      'Armamenty: na jednom armamente je najviac jedna zlatá alebo modrá inscription, ďalšia len biela – ako v hre.',
+    ],
+    cs: [
+      'Požadovaný acclaim: Ivar se skilly 5511 se už počítá skoro jako plný pár.',
+      'Armamenty: na jednom armamentu je nejvýš jedna zlatá nebo modrá inscription, další jen bílá – jako ve hře.',
+    ],
   },
   {
     date: '2026-11-02',

@@ -1,4 +1,14 @@
-import { ArmoryIndex, GEAR_SLOTS, Inscription, buildOf, gearTotals, troopOf, troopStat } from '../../core/armory';
+import {
+  ArmoryIndex,
+  GEAR_SLOTS,
+  Inscription,
+  MAX_RARE_PER_PIECE,
+  buildOf,
+  gearTotals,
+  isRareInscription,
+  troopOf,
+  troopStat,
+} from '../../core/armory';
 import { ARMAMENT_CAPS, ArmamentStat, March, overCaps } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
 import { EvalSettings } from './settings';
@@ -35,7 +45,7 @@ export interface MarchEval {
   skills: number;
   /** tiered: the inscriptions clicked together scored by the tier list (else the counts by colour); points after the
    * formation factor */
-  armaments: { stats: number; inscriptions: number; points: number; filled: boolean; tiered: boolean };
+  armaments: { stats: number; inscriptions: number; points: number; filled: boolean; tiered: boolean; dropped: number };
   /** the formations the primary commander should use; ok = null when he has none set or the march has no formation */
   formation: { preferred: string[]; ok: boolean | null };
   equipment: EquipmentEval;
@@ -194,7 +204,8 @@ export function inscriptionValue(settings: EvalSettings, inscription: Pick<Inscr
 /**
  * The spreadsheet's armament points: the bonuses over their best, the inscriptions over their best – the ones clicked
  * together by the tier list (Slim 13. 10. 2026), the counts typed in before by colour. A bonus over its cap is a typo
- * and counts as the cap (ARMAMENT_CAPS, Gether 19. 10. 2026).
+ * and counts as the cap (ARMAMENT_CAPS, Gether 19. 10. 2026). An armament can hold one gold or blue inscription only
+ * (Gether 3. 11. 2026): of more saved before the rule the best one counts, the others are `dropped`.
  */
 export function armamentPoints(settings: EvalSettings, march: March, index: ArmoryIndex | null = null): MarchEval['armaments'] {
   const a = settings.armaments;
@@ -204,12 +215,24 @@ export function armamentPoints(settings: EvalSettings, march: March, index: Armo
   const stats = (bonuses / a.combatMax) * a.statsWeight;
   const clicked = index ? (march.inscriptions ?? []).map((id) => index.inscriptions.get(id)).filter((i) => !!i) : [];
   const tiered = clicked.length > 0;
+  const rare = new Map<string, number>();
+  let dropped = 0;
+  const counted = [...clicked]
+    .sort((x, y) => inscriptionValue(settings, y) - inscriptionValue(settings, x))
+    .filter((i) => {
+      if (!isRareInscription(i)) return true;
+      const n = rare.get(i.piece) ?? 0;
+      rare.set(i.piece, n + 1);
+      if (n < MAX_RARE_PER_PIECE) return true;
+      dropped++;
+      return false;
+    });
   const raw = tiered
-    ? clicked.reduce((sum, i) => sum + inscriptionValue(settings, i), 0)
+    ? counted.reduce((sum, i) => sum + inscriptionValue(settings, i), 0)
     : v(march.gold) * a.gold + v(march.blue) * a.blue + v(march.white) * a.white;
   const inscriptions = (raw / a.inscMax) * a.inscWeight;
   const filled = tiered || [march.attack, march.defense, march.health, march.gold, march.blue, march.white].some((n) => (n ?? 0) > 0);
-  return { stats, inscriptions, points: stats + inscriptions, filled, tiered };
+  return { stats, inscriptions, points: stats + inscriptions, filled, tiered, dropped };
 }
 
 /** the tier of the spreadsheet a score reaches */
@@ -517,14 +540,20 @@ export const POWER_FILTERS: ReadonlySet<string> = new Set<QuickFilter>(['nopower
 
 /**
  * A march the player should change: a pair not evaluated (solo or not in the table – both skipped as 'pair'), a
- * formation its primary commander should not lead with or an armament bonus over its cap (any type, like /marche).
+ * formation its primary commander should not lead with, an armament bonus over its cap (any type, like /marche) or
+ * two gold or blue inscriptions on one armament, saved before the rule (Gether 3. 11. 2026).
  * Counted from the evaluation, not from marchHasProblem() of the server: the table counts with the Premenné being
  * edited, unsaved ones too, and the filter has to agree with it. Not a type that does not count ('kind'), nor a march
  * over the max ('limit') by itself – the player cannot fix either by changing commanders; a march over the max in a
  * wrong formation is one (/marche says so as well).
  */
 export function marchToFix(m: MarchEval): boolean {
-  return m.skipped === 'pair' || (m.skipped !== 'kind' && m.formation.ok === false) || overCaps(m.march).length > 0;
+  return (
+    m.skipped === 'pair' ||
+    (m.skipped !== 'kind' && m.formation.ok === false) ||
+    overCaps(m.march).length > 0 ||
+    m.armaments.dropped > 0
+  );
 }
 
 /** more power than the player's own counted marches carry ("Odp. power" in red) */

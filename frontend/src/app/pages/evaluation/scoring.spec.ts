@@ -8,6 +8,7 @@ import {
   expectedMarches,
   inscriptionValue,
   marchEval,
+  marchToFix,
   missingPairs,
   parsePowerList,
   pairTable,
@@ -206,7 +207,12 @@ describe('evaluation scoring', () => {
     const m = march({ attack: 10.1, defense: 9.5, health: 7, damage: 3.3, gold: 2, blue: 2, white: 1, inscriptions: ids });
     const a = armamentPoints(S, m, INDEX);
     expect(a.tiered).toBe(true);
-    expect(a.inscriptions).toBeCloseTo((135 / 200) * 70, 9);
+    // Destructive and Vigor are both on the scroll: one gold or blue of an armament counts, the better one (Gether
+    // 3. 11. 2026) – the march is to fix
+    expect(a.inscriptions).toBeCloseTo((130 / 200) * 70, 9);
+    expect(a.dropped).toBe(1);
+    expect(marchToFix(marchEval(S, pairTable(S), m, INDEX))).toBe(true);
+    expect(armamentPoints(S, march({ inscriptions: ids.filter((id) => id !== 'arch-scroll-destructive') }), INDEX).dropped).toBe(0);
     // a tier of its own, or none: by colour
     const charge = withPairs({ armaments: { inscriptions: { Charge: 'S' }, tiers: { S: 60 } } });
     expect(armamentPoints(charge, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((60 / 200) * 70, 9);

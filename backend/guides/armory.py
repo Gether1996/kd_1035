@@ -22,6 +22,8 @@ MARCH_SLOTS = ('weapon', 'helmet', 'chest', 'gloves', 'legs', 'boots', 'accessor
 ICONIC_MAX = 5
 # at most two inscriptions of each of the four armaments (Gether 12. 10. 2026)
 MAX_PER_PIECE = 2
+# of them at most one gold or blue: 2 white, gold + white or blue + white, never 2 gold or 2 blue (Gether 3. 11. 2026)
+MAX_RARE_PER_PIECE = 1
 MAX_INSCRIPTIONS = 4 * MAX_PER_PIECE
 
 

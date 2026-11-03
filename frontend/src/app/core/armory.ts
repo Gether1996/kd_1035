@@ -13,6 +13,12 @@ export type ItemRarity = (typeof ITEM_RARITIES)[number];
 export const ICONIC_MAX = 5;
 /** at most two inscriptions of each armament (Gether 12. 10. 2026) */
 export const MAX_PER_PIECE = 2;
+/**
+ * of them at most one gold or blue – 2 white, gold + white or blue + white, never 2 gold or 2 blue (Gether 3. 11.
+ * 2026; backend guides/armory.py MAX_RARE_PER_PIECE)
+ */
+export const MAX_RARE_PER_PIECE = 1;
+export const isRareInscription = (i: { rarity: string }) => i.rarity !== 'common';
 
 export const ARMAMENT_PIECES = ['emblem', 'flag', 'instrument', 'scroll'] as const;
 export type ArmamentPiece = (typeof ARMAMENT_PIECES)[number];

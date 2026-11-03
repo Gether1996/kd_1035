@@ -67,7 +67,10 @@ export const ARMORY: ArmoryData = {
       id: 'pincer',
       name: 'Pincer',
       icon: '/static/guides/formations/pincer.webp',
-      inscriptions: [{ id: 'pincer-scroll-toppler', name: 'Toppler', rarity: 'special', piece: 'scroll' }],
+      inscriptions: [
+        { id: 'pincer-scroll-toppler', name: 'Toppler', rarity: 'special', piece: 'scroll' },
+        { id: 'pincer-scroll-dominate', name: 'Dominate', rarity: 'special', piece: 'scroll' },
+      ],
     },
   ],
   common: [

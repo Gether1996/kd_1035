@@ -722,6 +722,8 @@ export const cs: Dict = {
       pieces: { emblem: 'Emblem', flag: 'Flag', instrument: 'Instrument', scroll: 'Scroll' },
       rarity: { special: 'zlatá', rare: 'modrá', common: 'bílá' },
       pickFormation: 'Vyber formaci – pod ní se ukážou její zlaté a modré inscriptions.',
+      rareHint: 'Nejvýš jedna zlatá nebo modrá, další jen bílá.',
+      oneRare: 'Na jednom armamentu může být jen jedna zlatá nebo modrá inscription – jednu odeber.',
       search: 'Hledat předmět',
       weaker: 'I slabší (Elite, Advanced, Common)',
       clearSlot: 'Vyprázdnit',

@@ -204,13 +204,18 @@
               @if (!draft().formation) {
                 <p class="field__hint">{{ b.pickFormation }}</p>
               }
+              @if (a.tooRare) {
+                <p class="field__error">{{ b.oneRare }}</p>
+              } @else {
+                <p class="field__hint">{{ b.rareHint }}</p>
+              }
               <div class="be__chips">
                 @for (i of a.inscriptions; track i.id) {
                   <button
                     type="button"
                     class="insc insc--{{ i.rarity }}"
                     [attr.aria-pressed]="chosen(i)"
-                    [attr.aria-disabled]="(a.full && !chosen(i)) || null"
+                    [attr.aria-disabled]="blocked(i) || null"
                     [title]="b.rarity[i.rarity]"
                     (click)="toggle(i)"
                   >

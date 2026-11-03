@@ -291,8 +291,14 @@ describe('Marches', () => {
     expect(slot('scroll').getAttribute('aria-pressed')).toBe('true');
     expect(text(slot('instrument').querySelector('.be__slot-insc'))).toBe('Patronage');
     expect(slot('scroll').querySelector('.be__slot-insc')).toBeNull();
+    // one gold or blue of each armament (Gether 3. 11. 2026): another gold takes the place of the first one
+    expect(text(dialog.querySelector('.be__arm-panel .field__hint'))).toBe('Najviac jedna zlatá alebo modrá, ďalšia len biela.');
+    inscriptions().find((b) => text(b) === 'Dominate')!.click();
+    await tick(fixture);
     inscriptions().find((b) => text(b) === 'Toppler')!.click();
     await tick(fixture);
+    expect([...slot('scroll').querySelectorAll('.be__slot-insc')].map(text)).toEqual(['Toppler']);
+    expect(inscriptions().find((b) => text(b) === 'Dominate')!.getAttribute('aria-pressed')).toBe('false');
 
     dialog.querySelector<HTMLButtonElement>('.be__actions .pill-btn')!.click();
     const saved = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/me/marches/3/');

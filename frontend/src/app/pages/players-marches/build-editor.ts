@@ -14,10 +14,12 @@ import {
   INSCRIPTION_RARITIES,
   Inscription,
   MAX_PER_PIECE,
+  MAX_RARE_PER_PIECE,
   TROOP_STATS,
   buildOf,
   emptyParts,
   gearTotals,
+  isRareInscription,
   itemScore,
   itemSlot,
   marchTroop,
@@ -285,11 +287,16 @@ export class BuildEditor {
       .sort((a, b) => INSCRIPTION_RARITIES.indexOf(a.rarity) - INSCRIPTION_RARITIES.indexOf(b.rarity));
     return ARMAMENT_WHEEL.map((piece) => {
       const mine = chosen.filter((i) => i.piece === piece);
+      const rare = mine.filter(isRareInscription);
       return {
         piece,
         count: mine.length,
         chosen: mine,
         full: mine.length >= MAX_PER_PIECE,
+        /** the gold or blue one chosen – a second one takes its place */
+        rare: rare[0] ?? null,
+        /** saved before the rule: two gold or blue, one has to go before saving */
+        tooRare: rare.length > MAX_RARE_PER_PIECE,
         inscriptions: [...own.filter((i) => i.piece === piece), ...index.data.common.filter((i) => i.piece === piece)],
       };
     });
@@ -332,15 +339,27 @@ export class BuildEditor {
     return this.draft().inscriptions.includes(inscription.id);
   }
 
-  protected toggle(inscription: Inscription): void {
+  /** the gold or blue one a pick would replace (one of them per armament), null = added beside the others */
+  private replaces(inscription: Inscription): Inscription | null {
+    if (this.chosen(inscription) || !isRareInscription(inscription)) return null;
+    return this.armaments().find((a) => a.piece === inscription.piece)?.rare ?? null;
+  }
+
+  /** cannot be picked: the armament is full and the pick would not just swap its gold or blue one */
+  protected blocked(inscription: Inscription): boolean {
     const piece = this.armaments().find((a) => a.piece === inscription.piece);
-    if (!this.chosen(inscription) && piece?.full) return;
+    return !this.chosen(inscription) && !!piece?.full && !this.replaces(inscription);
+  }
+
+  protected toggle(inscription: Inscription): void {
+    if (this.blocked(inscription)) return;
+    const replaced = this.replaces(inscription);
     this.armPicked.set(inscription.piece);
     this.draft.update((d) => ({
       ...d,
       inscriptions: this.chosen(inscription)
         ? d.inscriptions.filter((i) => i !== inscription.id)
-        : [...d.inscriptions, inscription.id],
+        : [...d.inscriptions.filter((i) => i !== replaced?.id), inscription.id],
     }));
     this.error.set(null);
   }
@@ -374,6 +393,13 @@ export class BuildEditor {
       this.tab.set('armaments');
       this.statsMissing.set(true);
       this.error.set(this.t().required.statsMarch);
+      return;
+    }
+    const tooRare = this.armaments().find((a) => a.tooRare);
+    if (tooRare) {
+      this.tab.set('armaments');
+      this.armPicked.set(tooRare.piece);
+      this.error.set(this.t().build.oneRare);
       return;
     }
     this.busy.set(true);
