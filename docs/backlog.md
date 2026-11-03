@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **3. 11. 2026 – v1.59.5:** Kanál na Discorde (`/pripomienky?tab=kanal`): **Poslať ukážku mne** – najbližšia správa do kanála príde superadminovi najprv súkromne od bota, bez @everyone a bez roly, nič sa neuloží (`POST /api/events/channel/<id>/preview/`, `events.notification_for()`). Testy zatiaľ základné (Gether: „nepotrebujem teraz úplne komplexné testy, dokonči testy potom“) – chýba spec komponentu (tlačidlo, stav, vypnuté bez termínu).
 - **3. 11. 2026 – v1.59.4:** rozpísaná prihláška na KvK sa pred odchodom pýta (`leaveKvk`, `KvkForm.dirty` vrátane dotazníka, `beforeunload`); `canceledNavigationResolution` nezmenené (Späť + Zrušiť môže preskočiť záznam histórie, ako pri Premenných).
 - **3. 11. 2026 – v1.59.3:** Delta 2 inscriptions ako Wedge 2 a Pincer 2 (zlaté S 50, Surge a Burst B 30, Steady a Driven C 20); tiery S+ a A+ zrušené, plné body = 4 zlaté S (migrácia `accounts/0054` presunie uložený tier list).
 - **3. 11. 2026 – v1.59.2:** Nájdi pár pre commandera a Čo môžem postaviť – hláška bez páru už netvrdí, že návody commandera nespomínajú; prepojenie s Discordom z dialógu eventu vráti hráča k eventu (`taken`/`cancelled`/`error` na `/ucet`); `rare_excess(known=…)`.

@@ -16,7 +16,7 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.59.4',
+    version: '1.59.5',
     sk: [
       'Prihláška na KvK: rozpísaná a neuložená sa už nestratí omylom – odkaz na inú stránku aj zatvorenie karty sa najprv opýtajú.',
       'Nové inscriptions Delty 2 majú rovnaké body ako Wedge 2 a Pincer 2 – zlaté 50, modré 30 a 20.',
