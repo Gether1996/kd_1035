@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **3. 11. 2026 – v1.56.5:** Vyhodnocovanie: zrušené pole **Úprava odporúčanej power** v detaile hráča (Gether: „zavadza“, ostala ručná úprava acclaimu; uložené hodnoty sa už nepočítajú). Premenné → Páry: **Plné body už od 5511** – commander zo zoznamu (predvolene Ivar the Boneless 91 %) dostane pri 5511 to % páru, do 5555 rovnomerne 100 % (Slim: Sun Tzu + Ivar 110 b. → pri 5511 100 b.).
 - **2. 11. 2026 – v1.56.4:** Prihlášky na KvK: vedenie (R4, superadmin) vidí zbalený zoznam **Bez prihlášky (N)** – schválení aktívni hráči bez prihlášky s odkazom na ich marche a Discord (návrh kola agentov 2. 11.). Sieň slávy odmietne jednu fotku pre dve miesta.
 - **2. 11. 2026:** Test matice oprávnení (`backend/accounts/test_permissions.py`) – každý endpoint `/api/` × každá rola (anonym, hráč, lokálny, neschválený, R4, zrušené R4, falošný a skutočný superadmin), aj moderovanie fóra, cudzie marche a CSRF; nový endpoint mimo matice test zhodí.
 - **2. 11. 2026:** Novinky: doplnený chýbajúci blok 16. 10. (v1.32.3) a test poradia verzií v `changes.ts`.

@@ -166,3 +166,18 @@
     }
   }
 }
+
+// full points from 5511: a short list, not stretched over a wide card
+.ev-table--early {
+  max-width: 480px;
+
+  .ev-input--points {
+    width: 80px;
+    min-width: 0;
+  }
+}
+
+.ev-early-add {
+  justify-self: start;
+  margin-top: 8px;
+}

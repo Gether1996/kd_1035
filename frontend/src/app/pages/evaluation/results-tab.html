@@ -221,19 +221,8 @@
                 @if (limitText(r); as limit) {
                   <p class="ev-detail__line" [class.is-over]="over(r)">{{ limit }}</p>
                 }
-                <div class="field ev-detail__bonus">
-                  <label class="ev-field__label" [for]="'ev-bonus-' + r.player.id">{{ d.bonus }}</label>
-                  <input
-                    class="input ev-input ev-input--cell"
-                    type="text"
-                    inputmode="decimal"
-                    autocomplete="off"
-                    [id]="'ev-bonus-' + r.player.id"
-                    [value]="r.player.power_bonus"
-                    (change)="setBonus(r, $event)"
-                  />
-                </div>
-                <!-- a flat amount of acclaim on top or off, in millions (Gether 1. 11. 2026) -->
+                <!-- a flat amount of acclaim on top or off, in millions (Gether 1. 11. 2026); the correction of the
+                     recommended power next to it is gone (Gether 3. 11. 2026: "zavadza") -->
                 <div class="field ev-detail__bonus">
                   <label class="ev-field__label" [for]="'ev-acclaim-bonus-' + r.player.id">{{ d.acclaimBonus }}</label>
                   <input

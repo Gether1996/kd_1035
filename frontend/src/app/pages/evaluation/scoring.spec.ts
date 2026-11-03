@@ -65,7 +65,6 @@ const player = (id: number, marches: March[], change: Partial<EvalPlayer> = {}):
   marches,
   power: null,
   t4: false,
-  power_bonus: 0,
   ...change,
 });
 
@@ -179,6 +178,26 @@ describe('evaluation scoring', () => {
     expect(skillFactor(S, march({ secondary_skills: '5511' }))).toBe(sunTzu5511);
   });
 
+  it('gives Ivar most of the pair already at 5511 (Gether 3. 11. 2026, Slim: "5511 100 … 5555 ivar 110")', () => {
+    expect(S.pairs.from5511).toEqual({ 'Ivar the Boneless': 91 });
+    const ivar = (skills: string, sunTzu = '5555') =>
+      skillFactor(S, march({ primary: 'Sun Tzu', secondary: 'Ivar the Boneless', primary_skills: sunTzu, secondary_skills: skills }));
+    expect(110 * ivar('5511')).toBeCloseTo(100.1, 9);
+    // evenly up to the full pair with his last two skills
+    expect(ivar('5531')).toBeCloseTo(0.91 + 0.09 * (2 / 8), 9);
+    expect(ivar('5555')).toBe(1);
+    // under 5511 and with an unfinished Sun Tzu the curve as for everyone – the list never lowers a march
+    const curve = (ready: number) => 0.3 + 0.7 * Math.pow(ready, 1.5);
+    expect(ivar('5411')).toBeCloseTo(curve((1 + 7 / 16) / 2), 9);
+    expect(ivar('5511', '5511')).toBeCloseTo(curve(0.5), 9);
+    expect(ivar('5511', '5551')).toBeCloseTo(0.91 * curve(12 / 16), 9);
+    // the name without case, the primary too; emptied on purpose stays empty
+    const lower = normalizeSettings({ pairs: { from5511: { ' ivar the boneless ': 80, '': 50, Bad: 'x' } } }, PAIRS);
+    expect(lower.pairs.from5511).toEqual({ 'ivar the boneless': 80 });
+    expect(skillFactor(lower, march({ primary: 'Ivar the Boneless', primary_skills: '5511' }))).toBeCloseTo(0.8, 9);
+    expect(normalizeSettings({ pairs: { from5511: {} } }, PAIRS).pairs.from5511).toEqual({});
+  });
+
   it('scores the inscriptions clicked together by the tier list, the rest by colour', () => {
     // Charge A 40, Tidebreaker S 50, Destructive D 5, Vigor B 30, Brave (white, no tier) 10
     expect(DEFAULT_INSCRIPTIONS).toMatchObject({ Charge: 'A', Tidebreaker: 'S', Destructive: 'D', Vigor: 'B' });
@@ -249,11 +268,11 @@ describe('evaluation scoring', () => {
         player(1, [1, 2, 3, 4, 5].map(weak), { power: 95 }),
         player(2, [6, 7, 8, 9, 10].map(strong), { power: 170 }),
         player(3, [11, 12, 13].map(strong), { power: 107 }),
-        player(4, [14].map(weak), { power: 39, power_bonus: 2 }),
+        player(4, [14].map(weak), { power: 39 }),
       ],
       INDEX,
     ).rows;
-    expect(rows.map((r) => r.recommended)).toEqual([105, 105, 82, 68]);
+    expect(rows.map((r) => r.recommended)).toEqual([105, 105, 82, 66]);
     // more power than the marches carry: red, and the marches the power asks for count (3 +2)
     expect(rows.map((r) => r.missing)).toEqual([0, 0, 2, 0]);
   });
@@ -440,7 +459,7 @@ describe('evaluation scoring', () => {
     expect(s.power.table.length).toBe(9);
     expect(withPairs({ marches: { max: 12 } }).marches.max).toBe(10);
     // a pair written twice: the first row; the best first
-    expect(s.pairs).toEqual({ rows: [['Ivan IV', 'Achilles', 116], ['Attila', 'Achilles', 92]], minimum: 0.3, curve: 1.5 });
+    expect(s.pairs).toEqual({ rows: [['Ivan IV', 'Achilles', 116], ['Attila', 'Achilles', 92]], minimum: 0.3, curve: 1.5, from5511: { 'Ivar the Boneless': 91 } });
     expect(s.armaments.inscriptions).toEqual({ Charge: 'S' });
     expect(s.armaments.tiers).toEqual({ ...DEFAULT_SETTINGS.armaments.tiers, A: 0 });
     // saved before the tier list: the default one
@@ -457,7 +476,7 @@ describe('evaluation scoring', () => {
   it('saves the variables without the pair table, the table on its own', () => {
     const { settings, pairs } = toSave({ ...S, pairs: { ...S.pairs, rows: [['', '', 0], ...PAIRS.slice(0, 2)] } });
     expect(pairs).toEqual(PAIRS.slice(0, 2));
-    expect((settings as EvalSettings).pairs).toEqual({ minimum: 0.3, curve: 1.5 });
+    expect((settings as EvalSettings).pairs).toEqual({ minimum: 0.3, curve: 1.5, from5511: { 'Ivar the Boneless': 91 } });
     expect(normalizeSettings(settings, pairs).pairs.rows).toEqual(PAIRS.slice(0, 2));
   });
 

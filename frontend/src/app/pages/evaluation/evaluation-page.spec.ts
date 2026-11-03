@@ -174,7 +174,7 @@ describe('EvaluationPage', () => {
   });
 
   it('publishes what the table counts – not while the variables are unsaved', async () => {
-    const player = { id: 7, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', approved: true, marches: [], power: 100, t4: false, power_bonus: 0 };
+    const player = { id: 7, name: 'nelly', ingame_name: 'Nelly', avatar_url: '', approved: true, marches: [], power: 100, t4: false };
     const waiting = { ...player, id: 8, approved: false };
     const fixture = await open(SUPERUSER, undefined, [player, waiting]);
     const http = TestBed.inject(HttpTestingController);
@@ -241,7 +241,7 @@ describe('EvaluationPage', () => {
   it('narrows the table by a quick filter kept in ?f=, with counts that follow the search and Hráči', async () => {
     const march = { id: 1, position: 1, kind: 'archer', primary: 'Qin Shi Huang', secondary: 'Yi Seong-Gye' };
     const solo = { ...march, id: 2, position: 2, secondary: '' };
-    const p = { ingame_name: '', avatar_url: '', approved: true, t4: false, power_bonus: 0 };
+    const p = { ingame_name: '', avatar_url: '', approved: true, t4: false };
     const players = [
       // more power than one march carries
       { ...p, id: 1, name: 'Anna', marches: [march], power: 100 },
@@ -331,7 +331,7 @@ describe('EvaluationPage', () => {
   });
 
   describe('?hrac= – the player of a link from /marche', () => {
-    const player = { name: 'x', ingame_name: '', avatar_url: '', approved: true, marches: [], power: null, t4: false, power_bonus: 0 };
+    const player = { name: 'x', ingame_name: '', avatar_url: '', approved: true, marches: [], power: null, t4: false };
     const players = [
       { ...player, id: 1, name: 'nelly' },
       { ...player, id: 2, name: 'bob' },

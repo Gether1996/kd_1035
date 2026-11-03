@@ -25,7 +25,7 @@ export interface EvaluationData {
 
 export type SavedSettings = Pick<EvaluationData, 'settings' | 'updated_at' | 'pairs' | 'pairs_version' | 'formations' | 'formations_version'>;
 
-export type RecordChange = Partial<Pick<EvalPlayer, 'power' | 't4' | 'power_bonus' | 'acclaim_bonus'>>;
+export type RecordChange = Partial<Pick<EvalPlayer, 'power' | 't4' | 'acclaim_bonus'>>;
 
 @Injectable({ providedIn: 'root' })
 export class EvaluationApi {

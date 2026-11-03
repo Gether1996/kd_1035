@@ -140,7 +140,6 @@ const sk = {
     powerLimit: 'Na tieto marche stačí power do {m} M.',
     powerOver: 'Má o {m} M viac – buď zníži power, alebo nahrá viac acclaimu.',
     missing: 'Power {power} M by čakala {expected} marchov – {n} chýba.',
-    bonus: 'Úprava odporúčanej power (M)',
     // a flat amount on top of the required acclaim or off it, in millions (Gether 1. 11. 2026)
     acclaimBonus: 'Ručná úprava acclaimu (M, napr. 2 alebo −1,5)',
     acclaimBonusShort: 'ručná úprava',
@@ -274,6 +273,13 @@ const sk = {
       filter: 'Hľadať v tabuľke',
       unknownName: 'Neznámy commander – meno ako pri marchi',
       zero: '0 bodov – pár sa nehodnotí',
+      // commanders who do their job already at 5511 (Gether 3. 11. 2026, Ivar)
+      early: 'Plné body už od 5511',
+      earlyCommander: 'Commander',
+      earlyPercent: '% páru pri 5511',
+      earlyAdd: 'Pridať commandera',
+      earlyRemove: 'Odstrániť commandera',
+      earlyExample: 'Napr. {name} 5511 v páre za 110 b.: {points} b. (bez výnimky {regular} b.)',
     },
     // the formation each commander should lead with (Gether 14. 10. 2026, Slim)
     formations: {
@@ -335,6 +341,7 @@ const sk = {
     'pairs.points': 'Body páru v tomto poradí: 100 = plný meta pár, skóre marchu × body / 100. 0 = nehodnotí sa.',
     'pairs.minimum': 'Koeficient páru, keď majú oba commanderi skilly 1111. Expertise (5555) = ×1, 1 = skilly sa neriešia.',
     'pairs.curve': 'Ako rýchlo rastie koeficient so skillmi. 1 = rovnomerne, vyššie = nedorobení commanderi dostanú menej.',
+    'pairs.from5511': 'Commander, ktorému stačí 5511 (napr. Ivar). Pri 5511 dostane march toto % bodov páru, do 5555 rovnomerne až 100 %. Druhý commander sa počíta podľa svojich skillov.',
     'formations.wrong': 'Armamenty marchu v inej formácii, než má jeho primárny commander, sa násobia týmto číslom. 1 = formácia sa nerieši.',
     'formations.table': 'Formácie, v ktorých má commander viesť march ako primárny. Prázdne = hocijaká.',
     'results.marches': 'Započítané marche. +N = marche, ktoré podľa power chýbajú.',
@@ -510,7 +517,6 @@ const cs: EvalTexts = {
     powerLimit: 'Na tyto marche stačí power do {m} M.',
     powerOver: 'Má o {m} M víc – buď sníží power, nebo nahraje víc acclaimu.',
     missing: 'Power {power} M by čekala {expected} marchů – {n} chybí.',
-    bonus: 'Úprava doporučené power (M)',
     acclaimBonus: 'Ruční úprava acclaimu (M, např. 2 nebo −1,5)',
     acclaimBonusShort: 'ruční úprava',
     noMarches: 'Žádný march se nezapočítává.',
@@ -640,6 +646,12 @@ const cs: EvalTexts = {
       filter: 'Hledat v tabulce',
       unknownName: 'Neznámý commander – jméno jako u marche',
       zero: '0 bodů – pár se nehodnotí',
+      early: 'Plné body už od 5511',
+      earlyCommander: 'Commander',
+      earlyPercent: '% páru při 5511',
+      earlyAdd: 'Přidat commandera',
+      earlyRemove: 'Odstranit commandera',
+      earlyExample: 'Např. {name} 5511 v páru za 110 b.: {points} b. (bez výjimky {regular} b.)',
     },
     formations: {
       title: 'Formace commanderů',
@@ -699,6 +711,7 @@ const cs: EvalTexts = {
     'pairs.points': 'Body páru v tomto pořadí: 100 = plný meta pár, skóre marche × body / 100. 0 = nehodnotí se.',
     'pairs.minimum': 'Koeficient páru, když mají oba commandeři skilly 1111. Expertise (5555) = ×1, 1 = skilly se neřeší.',
     'pairs.curve': 'Jak rychle roste koeficient se skilly. 1 = rovnoměrně, vyšší = nedodělaní commandeři dostanou méně.',
+    'pairs.from5511': 'Commander, kterému stačí 5511 (např. Ivar). Při 5511 dostane march toto % bodů páru, do 5555 rovnoměrně až 100 %. Druhý commander se počítá podle svých skillů.',
     'formations.wrong': 'Armamenty marche v jiné formaci, než má jeho primární commander, se násobí tímto číslem. 1 = formace se neřeší.',
     'formations.table': 'Formace, ve kterých má commander vést march jako primární. Prázdné = jakákoli.',
     'results.marches': 'Započítané marche. +N = marche, které podle power chybí.',

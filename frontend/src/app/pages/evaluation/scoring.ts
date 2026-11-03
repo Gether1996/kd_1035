@@ -14,8 +14,6 @@ export interface EvalPlayer {
   /** millions, null = not written down */
   power: number | null;
   t4: boolean;
-  /** a correction of the recommended power, millions */
-  power_bonus: number;
   /** a flat amount of acclaim on top of the required one, or off it (Gether 1. 11. 2026); missing in an older response */
   acclaim_bonus?: number;
 }
@@ -72,8 +70,7 @@ export interface PlayerEval {
   quality: number;
   /**
    * The power the player's own counted marches carry – the power table's row of their count, the same for everyone
-   * with that many (Gether 26. 10. 2026) plus the player's own correction; both the same number, `recommended` kept for
-   * the published overview
+   * with that many (Gether 26. 10. 2026); both the same number, `recommended` kept for the published overview
    */
   recommended: number | null;
   ownLimit: number | null;
@@ -149,21 +146,41 @@ export function pairPoints(table: Map<string, number>, march: March): MarchEval[
   return points === undefined ? { points: 0, source: 'unknown' } : { points, source: 'table' };
 }
 
-/** 0 at 1111, 1 at 5555 (expertise) */
-const readiness = (skills: string | undefined) => {
+/** the four skill levels, 5555 (expertise) when missing or broken */
+const levelsOf = (skills: string | undefined): number[] => {
   const levels = (skills ?? '5555').split('').map(Number);
-  return levels.length === 4 && levels.every((l) => l >= 1 && l <= 5) ? (levels.reduce((a, b) => a + b, 0) - 4) / 16 : 1;
+  return levels.length === 4 && levels.every((l) => l >= 1 && l <= 5) ? levels : [5, 5, 5, 5];
 };
+
+/** 0 at 1111, 1 at 5555 (expertise) */
+const readiness = (skills: string | undefined) => (levelsOf(skills).reduce((a, b) => a + b, 0) - 4) / 16;
 
 /**
  * The skill levels of the pair as a factor (the spreadsheet scored unfinished commanders about a third of the full
  * pair): both commanders weigh the same (Slim 13. 10. 2026: "váha skillov primary alebo secondary je zlá");
  * minimum + (1 − minimum) × readiness^curve.
+ *
+ * A commander of "Od 5511" (Ivar, Gether 3. 11. 2026) at 5511 or more counts on his own as his % at 5511, rising
+ * evenly to 100 % at 5555 with his last two skills; × the other commander's factor on his own. The higher of the two
+ * ways counts – the list only ever helps.
  */
 export function skillFactor(settings: EvalSettings, march: March): number {
   const p = settings.pairs;
-  const ready = march.secondary ? (readiness(march.primary_skills) + readiness(march.secondary_skills)) / 2 : readiness(march.primary_skills);
-  return p.minimum + (1 - p.minimum) * Math.pow(ready, p.curve);
+  const curve = (ready: number) => p.minimum + (1 - p.minimum) * Math.pow(ready, p.curve);
+  const sides: [string, string | undefined][] = [[march.primary, march.primary_skills]];
+  if (march.secondary) sides.push([march.secondary, march.secondary_skills]);
+  const regular = curve(sides.reduce((sum, [, skills]) => sum + readiness(skills), 0) / sides.length);
+  const listed = Object.entries(p.from5511 ?? {});
+  if (!listed.length) return regular;
+  let early = false;
+  const own = sides.map(([name, skills]) => {
+    const percent = listed.find(([n]) => fold(n) === fold(name))?.[1];
+    const [a, b, c, d] = levelsOf(skills);
+    if (percent === undefined || a < 5 || b < 5) return curve(readiness(skills));
+    early = true;
+    return percent / 100 + (1 - percent / 100) * ((c + d - 2) / 8);
+  });
+  return early ? Math.max(regular, own.reduce((x, y) => x * y, 1)) : regular;
 }
 
 /** the points of one inscription: its tier in the tier list, else its colour */
@@ -283,12 +300,12 @@ export function expectedMarches(settings: EvalSettings, power: number): number {
 
 /**
  * The recommended power of a march count: its row of the power table, the same for everyone with that many marches
- * (Gether 26. 10. 2026: "niekto má 5 marchov a iný má 5 marchov, ale odporúčaná power je iná") – plus the player's
- * own correction set by the leadership
+ * (Gether 26. 10. 2026: "niekto má 5 marchov a iný má 5 marchov, ale odporúčaná power je iná"). The leadership's own
+ * correction of it is gone (Gether 3. 11. 2026: "zavadza") – the correction of the acclaim stays.
  */
-export function recommendedPower(settings: EvalSettings, count: number, bonus = 0): number | null {
+export function recommendedPower(settings: EvalSettings, count: number): number | null {
   const n = Math.min(settings.marches.max, count);
-  return n > 0 ? Math.round(settings.power.table[n - 1] + bonus) : null;
+  return n > 0 ? Math.round(settings.power.table[n - 1]) : null;
 }
 
 /** (power / the benchmark's power)^curve – what the acclaim a power can reach is against the benchmark's */
@@ -375,7 +392,7 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
   const band = a.qualityBand / 100;
 
   const rows = partial.map((x): PlayerEval => {
-    const recommended = recommendedPower(settings, x.counted, x.player.power_bonus);
+    const recommended = recommendedPower(settings, x.counted);
     const written = powerOf(x.player);
     const power = written ?? recommended;
     const quality = x.counted ? x.marchScore / x.counted : 0;
@@ -389,8 +406,8 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     };
     const excess = written !== null && recommended !== null ? Math.max(0, written - recommended) : 0;
     // the power above what the marches counted with the missing ones carry: with the missing ones counted only the
-    // power over the full number's row (unless the leadership corrected the player's recommended power)
-    const carried = recommendedPower(settings, marchCount, x.player.power_bonus);
+    // power over the full number's row
+    const carried = recommendedPower(settings, marchCount);
     const surplus = power !== null && carried !== null ? Math.max(0, power - carried) : 0;
     const surcharge = surplus * p.surplus;
     const sum = a.benchmark * factors.power * factors.marches * factors.quality + surcharge;

@@ -366,6 +366,60 @@
     </div>
     <p class="ev-card__hint">{{ skillExample() }}</p>
 
+    <!-- commanders whose 5511 already does most of the job (Gether 3. 11. 2026, Ivar) -->
+    <ng-container *ngTemplateOutlet="sub; context: { $implicit: s.pairs.early, key: 'pairs.from5511' }" />
+    <table class="ev-table ev-table--form ev-table--early">
+      <thead>
+        <tr>
+          <th scope="col">{{ s.pairs.earlyCommander }}</th>
+          <th scope="col">{{ s.pairs.earlyPercent }}</th>
+          <th scope="col"><span class="sr-only">{{ s.pairs.earlyRemove }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of earlyRows(); track $index) {
+          <tr>
+            <td>
+              <input
+                class="input ev-input ev-input--cell"
+                list="ev-commanders"
+                [class.is-invalid]="unknown(e.name)"
+                [attr.aria-invalid]="unknown(e.name) || null"
+                [attr.title]="unknown(e.name) ? s.pairs.unknownName : null"
+                [attr.aria-label]="s.pairs.earlyCommander"
+                [value]="e.name"
+                (change)="setEarly($index, 'name', $event)"
+              />
+            </td>
+            <td>
+              <input
+                class="input ev-input ev-input--cell ev-input--points"
+                type="number"
+                step="any"
+                min="0"
+                max="100"
+                inputmode="decimal"
+                [attr.aria-label]="s.pairs.earlyPercent + ': ' + e.name"
+                [value]="e.percent"
+                (change)="setEarly($index, 'percent', $event)"
+              />
+            </td>
+            <td>
+              <button type="button" class="ev-icon-btn" [attr.aria-label]="s.pairs.earlyRemove + ': ' + e.name" (click)="removeEarly($index)">
+                <svg appIcon="trash-2"></svg>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <button type="button" class="pill-btn pill-btn--quiet ev-small ev-early-add" (click)="addEarly()">
+      <svg appIcon="plus"></svg> {{ s.pairs.earlyAdd }}
+    </button>
+    @for (line of earlyExamples(); track line) {
+      <p class="ev-card__hint">{{ line }}</p>
+    }
+
     <h3 class="ev-card__sub">{{ s.pairs.missing }}</h3>
     @if (missing().length) {
       <ul class="ev-missing">

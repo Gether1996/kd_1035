@@ -349,14 +349,6 @@ export class EvalResultsTab {
     else if (value !== r.player.power) this.record.emit({ id: r.player.id, change: { power: value } });
   }
 
-  protected setBonus(r: PlayerEval, event: Event): void {
-    const box = event.target as HTMLInputElement;
-    const text = box.value.replace(',', '.').trim();
-    const value = text ? Math.round(Number(text) * 10) / 10 : 0;
-    if (!Number.isFinite(value) || Math.abs(value) > 999.9) box.value = String(r.player.power_bonus);
-    else if (value !== r.player.power_bonus) this.record.emit({ id: r.player.id, change: { power_bonus: value } });
-  }
-
   /**
    * The leadership's flat correction of the required acclaim in millions (Gether 1. 11. 2026: "pridať flat 2 M acclaim
    * navyše alebo menej"): "2", "-1,5", "−0,5 M"; empty = none. Saved as acclaim, rounded to thousands.

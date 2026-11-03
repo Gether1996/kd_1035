@@ -108,6 +108,11 @@ export interface EvalSettings {
     /** the skill levels of both commanders (equal weight): the factor of 1111 and the curve */
     minimum: number;
     curve: number;
+    /**
+     * commander → % of the pair his march scores already at 5511, up to 100 % at 5555 (Gether 3. 11. 2026, Slim:
+     * "ivar 5511 a dať mu 100 bodov" – Sun Tzu + Ivar 110 at 5555, 100 at 5511); not listed = the curve above
+     */
+    from5511: Record<string, number>;
   };
   formations: {
     /**
@@ -246,6 +251,8 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     rows: [],
     minimum: 0.3,
     curve: 1.5,
+    // Ivar's 5511 already does most of his job: 100 of the 110 points of Sun Tzu + Ivar
+    from5511: { 'Ivar the Boneless': 91 },
   },
   formations: { byCommander: {}, wrong: 0.8 },
 };
@@ -381,6 +388,8 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
       ),
       minimum: num(pairs['minimum'], d.pairs.minimum, 0, 1),
       curve: num(pairs['curve'], d.pairs.curve, 0.1, 5),
+      // saved before it existed: the default (Ivar); emptied on purpose stays empty
+      from5511: commanderPercents(pairs['from5511'] ?? d.pairs.from5511),
     },
     formations: {
       byCommander: Object.fromEntries(
@@ -393,6 +402,16 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
     },
   };
   return result;
+}
+
+/** commander → a percentage 0–100, names trimmed and in order (a change made and undone is not "unsaved") */
+export function commanderPercents(value: unknown): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(obj(value))
+      .map(([name, n]) => [name.trim(), num(n, NaN, 0, 100)] as const)
+      .filter(([name, n]) => !!name && Number.isFinite(n))
+      .sort(([a], [b]) => a.localeCompare(b)),
+  );
 }
 
 /** a pair written twice: the first row counts (a row added on top is the newest) */

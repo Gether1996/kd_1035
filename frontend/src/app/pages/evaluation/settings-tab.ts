@@ -33,6 +33,7 @@ import {
   MARCHES_LIMIT,
   PairRow,
   RARITIES,
+  commanderPercents,
   SLOTS,
   rowsFor,
 } from './settings';
@@ -340,6 +341,67 @@ export class EvalSettingsTab {
       .sections.pairs.example.replace('{a}', format(skillFactor(s, m('5511', '5555'))))
       .replace('{b}', format(skillFactor(s, m('5511', '5511'))));
   });
+
+  // ---------------------------------------------------------------- full points from 5511 (Gether 3. 11. 2026, Ivar)
+
+  /** a row being typed in keeps its place: without a name it lives here, not in the variables */
+  private readonly earlyDraft = signal<{ name: string; percent: number } | null>(null);
+
+  protected readonly earlyRows = computed(() => {
+    const rows = Object.entries(this.settings().pairs.from5511).map(([name, percent]) => ({ name, percent }));
+    const draft = this.earlyDraft();
+    return draft ? [...rows, draft] : rows;
+  });
+
+  /** what the rule does to a pair worth 110 now: "Ivar the Boneless 5511 …: 100 b. (bez výnimky 83 b.)" */
+  protected readonly earlyExamples = computed(() => {
+    const s = this.settings();
+    const without: EvalSettings = { ...s, pairs: { ...s.pairs, from5511: {} } };
+    const format = (n: number) => String(Math.round(n * 10) / 10).replace('.', ',');
+    return Object.keys(s.pairs.from5511).map((name) => {
+      const march = { id: 0, position: 0, kind: '', primary: 'A', secondary: name, primary_skills: '5555', secondary_skills: '5511' } as March;
+      return this.texts()
+        .sections.pairs.earlyExample.replace('{name}', name)
+        .replace('{points}', format(110 * skillFactor(s, march)))
+        .replace('{regular}', format(110 * skillFactor(without, march)));
+    });
+  });
+
+  private putEarly(rows: { name: string; percent: number }[]): void {
+    this.earlyDraft.set(rows.find((r) => !r.name.trim()) ?? null);
+    const named = rows.filter((r) => !!r.name.trim()).map((r) => [r.name, r.percent]);
+    this.change((draft) => (draft.pairs.from5511 = commanderPercents(Object.fromEntries(named))));
+  }
+
+  protected addEarly(): void {
+    if (!this.earlyDraft()) this.earlyDraft.set({ name: '', percent: 90 });
+    afterNextRender(
+      () => this.host.nativeElement.querySelector<HTMLInputElement>('.ev-table--early tbody tr:last-child input')?.focus(),
+      { injector: this.injector },
+    );
+  }
+
+  protected removeEarly(index: number): void {
+    this.putEarly(this.earlyRows().filter((_, i) => i !== index));
+  }
+
+  protected setEarly(index: number, field: 'name' | 'percent', event: Event): void {
+    const box = event.target as HTMLInputElement;
+    const rows = this.earlyRows().map((r) => ({ ...r }));
+    const row = rows[index];
+    if (field === 'name') {
+      row.name = box.value.trim();
+    } else {
+      const value = Number(box.value.replace(',', '.'));
+      if (box.value.trim() === '' || !Number.isFinite(value)) {
+        box.value = String(row.percent);
+        return;
+      }
+      row.percent = Math.min(100, Math.max(0, value));
+      box.value = String(row.percent);
+    }
+    this.putEarly(rows);
+  }
 
   /** a new row on top with 0 points (= not evaluated yet), the cursor in it – the points or the first name */
   protected addPair(primary = '', secondary = ''): void {
