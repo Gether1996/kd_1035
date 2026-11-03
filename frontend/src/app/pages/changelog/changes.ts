@@ -16,8 +16,9 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.59.3',
+    version: '1.59.4',
     sk: [
+      'Prihláška na KvK: rozpísaná a neuložená sa už nestratí omylom – odkaz na inú stránku aj zatvorenie karty sa najprv opýtajú.',
       'Nové inscriptions Delty 2 majú rovnaké body ako Wedge 2 a Pincer 2 – zlaté 50, modré 30 a 20.',
       'Kalendár: hráč bez Discordu sa po prepojení s Discordom vráti rovno k eventu a nastaví si pripomienku.',
       'Nájdi pár pre commandera: presnejšia hláška, keď pár pre takého commandera v návodoch nemáme.',
@@ -34,6 +35,7 @@ export const CHANGES: Change[] = [
       'March a prihláška na KvK uložené skôr s dvoma zlatými či modrými na jednom armamente sú červené a odkaz Oprav armamenty otvorí ten armament.',
     ],
     cs: [
+      'Přihláška na KvK: rozepsaná a neuložená se už neztratí omylem – odkaz na jinou stránku i zavření karty se nejdřív zeptají.',
       'Nové inscriptions Delty 2 mají stejné body jako Wedge 2 a Pincer 2 – zlaté 50, modré 30 a 20.',
       'Kalendář: hráč bez Discordu se po propojení s Discordem vrátí rovnou k eventu a nastaví si připomínku.',
       'Najdi pár pro commandera: přesnější hláška, když pár pro takového commandera v návodech nemáme.',
