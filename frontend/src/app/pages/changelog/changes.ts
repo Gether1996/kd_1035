@@ -16,13 +16,15 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.56.7',
+    version: '1.56.8',
     sk: [
+      'Výbava a armamenty: neuložené zmeny sa už nestratia omylom – Esc, krížik, Zrušiť aj zatvorenie karty sa najprv opýtajú.',
       'Požadovaný acclaim: Ivar so skillmi 5511 sa už počíta takmer ako plný pár.',
       'Armamenty: na jednom armamente je najviac jedna zlatá alebo modrá inscription, ďalšia len biela – ako v hre.',
       'March a prihláška na KvK uložené skôr s dvoma zlatými či modrými na jednom armamente sú červené a odkaz Oprav armamenty otvorí ten armament.',
     ],
     cs: [
+      'Výbava a armamenty: neuložené změny se už neztratí omylem – Esc, křížek, Zrušit i zavření karty se nejdřív zeptají.',
       'Požadovaný acclaim: Ivar se skilly 5511 se už počítá skoro jako plný pár.',
       'Armamenty: na jednom armamentu je nejvýš jedna zlatá nebo modrá inscription, další jen bílá – jako ve hře.',
       'March a přihláška na KvK uložené dřív se dvěma zlatými či modrými na jednom armamentu jsou červené a odkaz Oprav armamenty otevře ten armament.',
