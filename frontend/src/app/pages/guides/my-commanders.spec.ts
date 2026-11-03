@@ -2,8 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { CommanderEntry, IndexedCommander, commanderKey } from './commander-finder';
-import { MyCommanders, OWNED_KEY, pairsOf, plan } from './my-commanders';
+import { CommanderEntry, IndexedCommander, commanderKey, pairsOf } from '../../core/commander-index';
+import { MyCommanders, OWNED_KEY, plan } from './my-commanders';
 
 const pic = (name: string) => ({ name, icon: `/static/guides/commanders/${commanderKey(name)}.webp` });
 const entry = (slug: string, role: CommanderEntry['role'], partners: string[], context = ''): CommanderEntry => ({

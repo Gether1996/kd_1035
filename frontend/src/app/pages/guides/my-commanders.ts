@@ -10,56 +10,20 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { GuideCategory, I18n } from '../../core/i18n/i18n';
+import { I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
-import { CommanderRef, IndexedCommander, commanderKey } from './commander-finder';
-import { shownCommander } from './hidden-commanders';
+import { CommanderRef, IndexedCommander, Pair, commanderKey, pairsOf } from '../../core/commander-index';
+import { shownCommander } from '../../core/hidden-commanders';
 
 /** The owned commanders (their keys) – only in this browser, never sent anywhere (privacy page). */
 export const OWNED_KEY = 'kd1035.commanders';
 /** how many "one commander missing" suggestions are shown */
 const SUGGESTIONS = 6;
 
-/** A pair of a guide: the primary commander and the secondary (null = anyone). */
-export interface Pair {
-  key: string;
-  primary: CommanderRef;
-  secondary: CommanderRef | null;
-  guides: { slug: string; category: GuideCategory; title_sk: string; title_cs: string; context_sk: string; context_cs: string }[];
-}
-
 export interface Suggestion {
   commander: CommanderRef;
   pairs: Pair[];
-}
-
-/** Every pair of the guides, once: from the primary commander's side (the secondary side mirrors it), one pair per
- * alternative partner ("Attila / Gang Gamchan" = two pairs). A commander alone (role solo) is no pair. */
-export function pairsOf(all: IndexedCommander[]): Pair[] {
-  const pairs = new Map<string, Pair>();
-  for (const commander of all) {
-    const primary: CommanderRef = { name: commander.name, icon: commander.icon };
-    for (const entry of commander.entries.filter((e) => e.role === 'primary')) {
-      const partners: (CommanderRef | null)[] = entry.partners.length ? entry.partners : [null];
-      for (const secondary of partners) {
-        const key = `${commanderKey(primary.name)}+${secondary ? commanderKey(secondary.name) : ''}`;
-        const pair = pairs.get(key) ?? { key, primary, secondary, guides: [] };
-        if (!pair.guides.some((g) => g.slug === entry.slug && g.context_sk === entry.context_sk)) {
-          pair.guides.push({
-            slug: entry.slug,
-            category: entry.category,
-            title_sk: entry.title_sk,
-            title_cs: entry.title_cs,
-            context_sk: entry.context_sk,
-            context_cs: entry.context_cs,
-          });
-        }
-        pairs.set(key, pair);
-      }
-    }
-  }
-  return [...pairs.values()];
 }
 
 /** The pairs the player can field now, and the commanders that would add the most pairs (one missing each). */
@@ -102,7 +66,7 @@ export class MyCommanders {
   protected readonly t = computed(() => this.i18n.t().builder);
 
   protected readonly data = httpResource<IndexedCommander[]>(() => (this.isBrowser ? '/api/commanders/' : undefined));
-  /** without the gatherers and the KvK1 / KvK2 commanders (hidden-commanders.ts) */
+  /** without the gatherers and the KvK1 / KvK2 commanders (core/hidden-commanders.ts) */
   protected readonly commanders = computed(() =>
     this.data.hasValue() ? this.data.value().filter((c) => shownCommander(c.name)) : [],
   );

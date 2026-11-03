@@ -38,6 +38,33 @@
   font-weight: 500;
 }
 
+// our guide of the pair under the head: one quiet line, the gold only on hover and focus
+.mb__guide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  margin-top: -8px;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+
+  svg {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--gold-300);
+    text-decoration-color: currentColor;
+  }
+}
+
 .mb__head {
   display: flex;
   flex-wrap: wrap;

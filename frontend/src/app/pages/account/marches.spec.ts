@@ -1,8 +1,10 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
+import { CommanderIndex } from '../../core/commander-index';
 import { cs } from '../../core/i18n/cs';
 import { sk } from '../../core/i18n/sk';
 import { March } from '../../core/kvk-api';
@@ -18,7 +20,15 @@ const COMMANDERS = [
 ];
 
 function setup() {
-  TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      // the cards' links to the guides of their pairs have their own spec (shared/march-build.spec.ts)
+      { provide: CommanderIndex, useValue: { commanders: signal(null), load: () => {} } },
+    ],
+  });
   return TestBed.inject(HttpTestingController);
 }
 

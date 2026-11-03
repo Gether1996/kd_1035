@@ -669,6 +669,8 @@ export const sk = {
     },
     // how to fix it, under the sentence above (the player cannot see the pair table)
     pairHint: { swap: 'Hodnotí sa opačné poradie: {secondary} + {primary}.' },
+    // a quiet link under the head of every march to our guides (3. 11. 2026): the guide of its pair, else the pairs of its primary
+    guideLink: { pair: 'Návod k páru', commander: 'Páry pre {commander}' },
     // a formation the primary commander should not lead with (Gether 14. 10. 2026) – the player and the superadmin only
     formationProblem: '{commander} má viesť formáciu {want}, nie {have} – vo vyhodnocovaní KvK sa armamenty počítajú menej.',
     // an armament bonus over its cap (Gether 19. 10. 2026: ATK, DEF, HP 14 %, All DMG 8 %) – on the march and in its editor

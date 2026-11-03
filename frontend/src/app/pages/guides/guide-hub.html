@@ -87,11 +87,12 @@
       <a [routerLink]="i18n.path('glossary')">{{ t.glossary.link }}</a>
     </p>
 
-    <!-- its own chunk (bundle budget); a shared link with ?commander= loads it right away -->
+    <!-- its own chunk (bundle budget); a shared link with ?commander= loads it right away; #najdi-par (a march card's
+         "Páry pre …") is on the placeholder and then on the finder itself -->
     @defer (on viewport; when !!commander()) {
       <app-commander-finder [commander]="commander()" />
     } @placeholder {
-      <div class="finder-placeholder" aria-hidden="true"></div>
+      <div class="finder-placeholder" id="najdi-par" aria-hidden="true"></div>
     }
 
     @defer (on viewport) {

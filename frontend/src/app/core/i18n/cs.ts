@@ -642,6 +642,7 @@ export const cs: Dict = {
       unknown: 'Tento pár se ve vyhodnocování KvK nepočítá – vyber jiný pár nebo jiné pořadí.',
     },
     pairHint: { swap: 'Hodnotí se opačné pořadí: {secondary} + {primary}.' },
+    guideLink: { pair: 'Návod k páru', commander: 'Páry pro {commander}' },
     formationProblem: '{commander} má vést formaci {want}, ne {have} – ve vyhodnocování KvK se armamenty počítají méně.',
     statsProblem: 'Bonusy armamentů nad maximum: {stats} – zkontroluj je ve hře.',
     gearProblem: { gear: 'Chybí naklikaná výbava.', armaments: 'Chybí armamenty.' },

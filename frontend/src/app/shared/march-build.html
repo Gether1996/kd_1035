@@ -35,6 +35,12 @@
   </span>
   <span class="mb__actions"><ng-content /></span>
 </header>
+<!-- our guides of the pair, or the pairs of the primary in the finder on /navody -->
+@if (guideLink(); as link) {
+  <a class="mb__guide" [routerLink]="link.path" [queryParams]="link.query" [fragment]="link.fragment" [attr.title]="link.title">
+    <svg appIcon="handshake"></svg>{{ link.text }}
+  </a>
+}
 <!-- a pair the KvK evaluation does not score – only the player and the superadmin are told (Gether 14. 10. 2026) -->
 @if (m.pair_problem; as problem) {
   <p class="mb__pair-problem">

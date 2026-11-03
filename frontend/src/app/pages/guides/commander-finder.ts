@@ -16,32 +16,8 @@ import { Router, RouterLink } from '@angular/router';
 import { GuideCategory, I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
 import { fold } from '../../shared/search';
-import { shownCommander } from './hidden-commanders';
-
-export interface CommanderRef {
-  name: string;
-  /** the portrait, /static/guides/commanders/<slug>.webp */
-  icon: string;
-}
-
-/** One pair of one guide from the commander's side (backend/guides/commander_index.py). */
-export interface CommanderEntry {
-  slug: string;
-  category: GuideCategory;
-  title_sk: string;
-  title_cs: string;
-  /** solo = a single commander to focus on, no partner */
-  role: 'primary' | 'secondary' | 'solo';
-  /** alternatives ("Attila / Gang Gamchan"); empty with a role primary = anyone */
-  partners: CommanderRef[];
-  /** the troops column or the line-up label of the guide; '' = the guide title says it */
-  context_sk: string;
-  context_cs: string;
-}
-
-export interface IndexedCommander extends CommanderRef {
-  entries: CommanderEntry[];
-}
+import { CommanderEntry, CommanderRef, IndexedCommander, commanderKey } from '../../core/commander-index';
+import { shownCommander } from '../../core/hidden-commanders';
 
 type Role = CommanderEntry['role'];
 
@@ -53,14 +29,6 @@ interface Card {
 }
 
 const ROLES: Role[] = ['primary', 'secondary', 'solo'];
-
-/** "Sun Tzu Prime" → sun-tzu-prime, the ?commander= value (the backend's slug of the name) */
-export function commanderKey(name: string): string {
-  return fold(name)
-    .replace(/['’]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
 
 /**
  * /navody: "Nájdi pár pre commandera" – a combobox of every commander of the commander guides and, for the chosen
@@ -85,7 +53,7 @@ export class CommanderFinder {
   protected readonly roles = ROLES;
 
   protected readonly data = httpResource<IndexedCommander[]>(() => (this.isBrowser ? '/api/commanders/' : undefined));
-  /** only the meta commanders to choose from (hidden-commanders.ts) – a guide may still name the others as partners */
+  /** only the meta commanders to choose from (core/hidden-commanders.ts) – a guide may still name the others as partners */
   private readonly all = computed(() =>
     this.data.hasValue() ? this.data.value().filter((c) => shownCommander(c.name)) : [],
   );

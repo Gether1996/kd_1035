@@ -5,6 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { ARMORY } from '../../core/armory-testing';
+import { CommanderIndex } from '../../core/commander-index';
 import { KvkApi, KvkSignup, KvkState, March } from '../../core/kvk-api';
 import { Scroll } from '../../core/scroll';
 import { KvkForm } from './kvk-form';
@@ -41,7 +42,15 @@ const COMMANDERS = [
   { name: 'Takeda Shingen', icon: '/static/guides/commanders/takeda-shingen.webp', pick: true },
 ];
 function setup() {
-  TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      // the cards' links to the guides of their pairs have their own spec (shared/march-build.spec.ts)
+      { provide: CommanderIndex, useValue: { commanders: signal(null), load: () => {} } },
+    ],
+  });
   return TestBed.inject(HttpTestingController);
 }
 

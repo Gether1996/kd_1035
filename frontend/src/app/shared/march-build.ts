@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
   ArmoryApi,
   GearSlot,
@@ -14,6 +15,7 @@ import {
   troopOf,
   troopStat,
 } from '../core/armory';
+import { CommanderIndex, pairGuideLink } from '../core/commander-index';
 import { I18n } from '../core/i18n/i18n';
 import { ARMAMENT_STATS, INSCRIPTIONS, March, REQUIRED_STATS, marchHasProblem, marchIcon } from '../core/kvk-api';
 import { FormationIcon } from './formation-icon';
@@ -23,17 +25,20 @@ import { SetBonuses } from './set-bonuses';
 import { formatBonus, overCapText, statLabel } from './stat-label';
 
 let nextId = 0;
+/** "Nájdi pár pre commandera" on /navody (pages/guides/guide-hub.html) */
+const FINDER = 'najdi-par';
 
 /**
  * One march with its build on /marche (Gether 12. 10. 2026: our own layout, not a copy of meta-rok, as little text as
  * possible): the commanders on top with the march type as a badge; a small heading over each column – the equipment
  * as tiles with the bonuses it gives to the march's troops (set bonuses included), the armaments as the formation icon,
  * the inscriptions (gold first) and the bonuses typed in. A tile of the own march opens the editor on its slot. The
- * catalog (core/armory.ts) loads with the first card. Buttons of the own marches are projected into the head.
+ * catalog (core/armory.ts) loads with the first card. Buttons of the own marches are projected into the head. Under the
+ * head a quiet link to our guides of the pair (the commander index loads once with the first card as well).
  */
 @Component({
   selector: 'app-march-build',
-  imports: [FormationIcon, GearGrid, Icon, SetBonuses],
+  imports: [RouterLink, FormationIcon, GearGrid, Icon, SetBonuses],
   templateUrl: './march-build.html',
   styleUrl: './march-build.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +65,7 @@ export class MarchBuild {
   protected readonly detail = signal(false);
 
   private readonly armory = inject(ArmoryApi);
+  private readonly commanderIndex = inject(CommanderIndex);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().marches);
   protected readonly index = this.armory.index;
@@ -189,6 +195,24 @@ export class MarchBuild {
     return this.t().pairHint.swap.replace('{secondary}', march.secondary).replace('{primary}', march.primary);
   });
 
+  /**
+   * "Návod k páru" to the guide of the march's pair, else "Páry pre Attila" to the finder on /navody with the primary
+   * chosen (3. 11. 2026) – only our public guides, never the evaluation's pair table; nothing while the index loads or
+   * when it failed
+   */
+  protected readonly guideLink = computed(() => {
+    const all = this.commanderIndex.commanders();
+    const march = this.march();
+    const link = all && pairGuideLink(all, march.primary, march.secondary);
+    if (!link) return null;
+    const t = this.t().guideLink;
+    if (link.kind === 'commander') {
+      return { text: t.commander.replace('{commander}', link.name), path: this.i18n.path('guideHub'), query: { commander: link.key }, fragment: FINDER, title: null };
+    }
+    const title = (this.i18n.lang() === 'cs' && link.title_cs) || link.title_sk;
+    return { text: t.pair, path: this.i18n.guidePath(link.category, link.slug), query: null, fragment: undefined, title };
+  });
+
   /** the own march with no item or no armament at all: a red link opens the editor on that tab */
   protected readonly missing = computed(() => {
     const parts = emptyParts(this.march());
@@ -213,6 +237,7 @@ export class MarchBuild {
 
   constructor() {
     this.armory.load();
+    this.commanderIndex.load();
   }
 
   protected initials(name: string): string {

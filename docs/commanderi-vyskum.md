@@ -1,6 +1,6 @@
 # Commanderi – vzácnosť, zlaté kľúče a chýbajúca meta (výskum 11. 10. 2026)
 
-_Výskum agenta pre Gethera (11. 10. 2026). Použité: zoznam skrytých commanderov v `frontend/src/app/pages/guides/hidden-commanders.ts` („Čo môžem postaviť“ a výber pri marchoch – bez epických, elitných, zo zlatých kľúčov, zberačov a KvK1/KvK2). Chýbajúcich meta commanderov do návodov pridáva mesačná aktualizácia (`kd-meta-update`) iba so zdrojmi._
+_Výskum agenta pre Gethera (11. 10. 2026). Použité: zoznam skrytých commanderov v `frontend/src/app/core/hidden-commanders.ts` („Čo môžem postaviť“ a výber pri marchoch – bez epických, elitných, zo zlatých kľúčov, zberačov a KvK1/KvK2). Chýbajúcich meta commanderov do návodov pridáva mesačná aktualizácia (`kd-meta-update`) iba so zdrojmi._
 
 ## Zhrnutie
 - **Epickí (fialoví) z našich 50:** Baibars, Belisarius, Bjorn Ironside, Boudica, Imhotep, Joan of Arc, Lohar, Matilda of Flanders, Pelagius, Sun Tzu. **Elitná:** Constance. Ostatní sú legendárni (Hermann Prime, Scipio Africanus Prime, Sun Tzu Prime tiež).

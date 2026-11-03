@@ -2,7 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { CommanderEntry, CommanderFinder, IndexedCommander, commanderKey } from './commander-finder';
+import { CommanderFinder } from './commander-finder';
+import { CommanderEntry, IndexedCommander, commanderKey } from '../../core/commander-index';
 
 const pic = (name: string) => ({ name, icon: `/static/guides/commanders/${commanderKey(name)}.webp` });
 const entry = (slug: string, role: CommanderEntry['role'], partners: string[], context = ''): CommanderEntry => ({
@@ -28,7 +29,7 @@ const INDEX: IndexedCommander[] = [
     ],
   },
   { ...pic('Sun Quan'), entries: [entry('pary-pre-f2p-a-zaciatok', 'solo', [], 'KvK1')] },
-  // epic and KvK1 – never offered (hidden-commanders.ts)
+  // epic and KvK1 – never offered (core/hidden-commanders.ts)
   { ...pic('Sun Tzu'), entries: [entry('pary-pre-f2p-a-zaciatok', 'solo', [], 'KvK1')] },
   { ...pic('Sun Tzu Prime'), entries: [entry('pary-pre-pechotu', 'primary', [])] },
 ];
@@ -70,7 +71,7 @@ describe('CommanderFinder', () => {
     input!.dispatchEvent(new Event('input'));
     await fixture.whenStable();
     expect(input!.getAttribute('aria-expanded')).toBe('true');
-    // Sun Tzu (epic, KvK1) is not offered – only the meta commanders (hidden-commanders.ts)
+    // Sun Tzu (epic, KvK1) is not offered – only the meta commanders (core/hidden-commanders.ts)
     expect(options(el)).toEqual(['Sun Quan', 'Sun Tzu Prime']);
     expect(input!.getAttribute('aria-activedescendant')).toBe('finder-option-0');
 
