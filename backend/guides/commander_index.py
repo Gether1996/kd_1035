@@ -6,6 +6,7 @@ out, and guides written by hand are never indexed (the block says "podľa našic
 """
 
 import re
+from pathlib import Path
 
 from . import meta
 from .meta import commanders
@@ -90,6 +91,39 @@ def build_index(guides=commanders.GUIDES, published=None) -> list[dict]:
                     }
                 )
     return sorted(by_icon.values(), key=lambda item: item['name'].casefold())
+
+
+def _texts(value):
+    """Every string of a block – both languages of t(), cells of rows and line-ups."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _texts(item)
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            yield from _texts(item)
+
+
+def mentioned_commanders(guides=None) -> dict[str, set[str]]:
+    """{commander: slugs of the guides naming him} over every meta guide (commanders, equipment, events, tips).
+    Named = a portrait matches (find_icons, the longest name wins: Sun Tzu Prime is not also Sun Tzu), so prose words
+    are no false hits. Sources and figures are citations and files, not advice: skipped."""
+    from .roster import ROSTER, portrait_name  # roster imports this module
+
+    if guides is None:
+        guides = [guide for module in meta.MODULES for guide in module.GUIDES]
+    names = {portrait_name(name): name for name, _ in ROSTER}
+    names |= {Path(item['icon']).stem: item['name'] for item in build_index()}
+    found: dict[str, set[str]] = {}
+    for guide in guides:
+        for block in guide['blocks']:
+            if block[0] in ('sources', 'figure'):
+                continue
+            for value in _texts(block[1:]):
+                for icon in find_icons(value, 'commanders'):
+                    found.setdefault(names.get(icon, icon.replace('-', ' ').title()), set()).add(guide['slug'])
+    return found
 
 
 def commander_index() -> list[dict]:

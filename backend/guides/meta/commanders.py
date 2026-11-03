@@ -65,6 +65,18 @@ MS_TIERS = mr_siege('The New 2026 Siege Tier List (07/2026)', 'RI72lN9KqcA')
 MS_ELIZABETH = mr_siege('Elizabeth Exceeded Expectations: Best Pairings (06/2026)', 'I6WCc0Tpz8A')
 
 
+# Commanders the guides name (with a portrait) without a pair in GUIDES below, on purpose – the pair finder on /navody
+# and "Čo môžem postaviť" do not list them. A commander a guide names must be in a pair table here (from a dated
+# source) or in this set with the reason and the guide (test MentionCoverageTests; a stale entry fails it too).
+MENTION_ONLY = frozenset(
+    {
+        'Archimedes',  # pary-pre-siege: a tip (worth it only with 4–5 siege marches), the sources give him no pair
+        'Cheok Jun-gyeong',  # priprava-na-kvk: KvK report pair with Pyrrhus, who has no portrait and no pair source
+        'Trajan',  # sunset-canyon, golden-kingdom: leadership tank of these events only, not a field pair
+        'William Wallace',  # ceroli-crisis: single-target boss nuker of that event, named without a partner
+    }
+)
+
 OPEN_FIELD = ['primary', 'secondary', 'why', 'talents']
 WITH_TROOPS = ['primary', 'secondary', 'troops', 'why']
 

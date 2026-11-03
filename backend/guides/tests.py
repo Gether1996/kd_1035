@@ -9,12 +9,12 @@ from xml.sax.saxutils import escape
 
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from kingdom.models import KingdomEvent
 
 from . import commander_index, roster
 from .meta import render as render_module
-from .meta import LAST_UPDATE, MODULES
+from .meta import LAST_UPDATE, MODULES, commanders
 from .meta.render import (
     COMMANDER_DIR, GEAR_DIR, SPECIALTY_DIR, commander_icons, gear_icons, render, slug, specialty_icon, verified_note,
 )  # fmt: skip
@@ -133,8 +133,6 @@ class MetaGuidesTests(TestCase):
 
     def test_pair_tables_have_no_f2p_column(self):
         # Gether, 10. 10. 2026: the F2P column goes everywhere
-        from .meta import commanders
-
         for guide in commanders.GUIDES:
             for block in guide['blocks']:
                 if block[0] == 'pairs':
@@ -190,8 +188,6 @@ class MetaGuidesTests(TestCase):
 
     def test_every_commander_in_pair_tables_has_a_portrait(self):
         # a new commander from the monthly meta update needs a portrait: manage.py fetch_commander_icons "Name"
-        from .meta import commanders
-
         for guide in commanders.GUIDES:
             for block in guide['blocks']:
                 if block[0] == 'lineups':  # portraits only, no names next to them
@@ -500,6 +496,63 @@ class CommanderIndexTests(TestCase):
         guide = {'slug': 'x', 'title': {'sk': 'X', 'cs': 'X'}, 'blocks': [('pairs', ['primary', 'why'], [row])]}
         with self.assertRaisesMessage(ValueError, 'x: pair row without secondary'):
             commander_index.build_index([guide])
+
+
+class MentionCoverageTests(SimpleTestCase):
+    """A commander a meta guide names must be in the pair finder (Huo Qubing was only in Sunset Canyon, 3. 11. 2026)
+    or in commanders.MENTION_ONLY with a reason."""
+
+    def uncovered(self, pair_guides=commanders.GUIDES):
+        others = [guide for module in MODULES if module is not commanders for guide in module.GUIDES]
+        indexed = {item['name'] for item in commander_index.build_index(pair_guides)}
+        mentioned = commander_index.mentioned_commanders(list(pair_guides) + others)
+        return {
+            name: sorted(slugs)
+            for name, slugs in mentioned.items()
+            if name not in indexed and name not in commanders.MENTION_ONLY
+        }
+
+    def test_every_mentioned_commander_has_a_pair_or_a_reason(self):
+        missing = self.uncovered()
+        self.assertEqual(
+            missing,
+            {},
+            'named in guides but missing in the pair finder – add a pair from a dated source to guides/meta/'
+            'commanders.py, or the name to MENTION_ONLY with a reason: '
+            + '; '.join(f'{name} ({", ".join(slugs)})' for name, slugs in sorted(missing.items())),
+        )
+
+    def test_mention_only_is_not_stale(self):
+        mentioned = commander_index.mentioned_commanders()
+        indexed = {item['name'] for item in commander_index.build_index()}
+        self.assertEqual(sorted(commanders.MENTION_ONLY - set(mentioned)), [], 'no guide names them any more')
+        self.assertEqual(sorted(commanders.MENTION_ONLY & indexed), [], 'they have a pair now')
+
+    def test_a_commander_left_only_in_an_event_guide_is_reported(self):
+        def without_huo(guide):
+            blocks = [
+                (block[0], block[1], [row for row in block[2] if row['primary'] != 'Huo Qubing'])
+                if block[0] == 'pairs'
+                else block
+                for block in guide['blocks']
+            ]
+            return {**guide, 'blocks': blocks}
+
+        pair_guides = [without_huo(guide) for guide in commanders.GUIDES]
+        self.assertEqual(self.uncovered(pair_guides), {'Huo Qubing': ['sunset-canyon']})
+
+    def test_longest_name_wins_and_sources_do_not_count(self):
+        guide = {
+            'slug': 'x',
+            'blocks': [
+                ('ul', [{'sk': 'Sun Tzu Prime + Richard.', 'cs': 'Joan of Arc'}, 'Sun Tzuov štýl']),
+                ('sources', [('Huo Qubing Guide', 'https://example.com/huo-qubing')]),
+            ],
+        }
+        self.assertEqual(
+            commander_index.mentioned_commanders([guide]),
+            {'Sun Tzu Prime': {'x'}, 'Richard': {'x'}, 'Joan of Arc': {'x'}},
+        )
 
 
 class MarchCommanderTests(TestCase):
