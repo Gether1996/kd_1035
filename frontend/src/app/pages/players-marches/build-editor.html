@@ -13,6 +13,20 @@
         </button>
       </header>
 
+      @if (sources().length) {
+        <!-- a KvK rally / garrison: start from an own march instead of clicking it all again (Gether 3. 11. 2026) -->
+        <div class="field be__load">
+          <label class="field__label" [for]="id + '-load'">{{ b.loadFrom }}</label>
+          <select #loadSelect class="select" [id]="id + '-load'" [attr.aria-describedby]="id + '-load-hint'" (change)="loadFrom(loadSelect.value); loadSelect.value = ''">
+            <option value="">{{ b.loadNone }}</option>
+            @for (m of sources(); track m.id) {
+              <option [value]="m.id">{{ sourceLabel(m) }}</option>
+            }
+          </select>
+          <p class="field__hint" [id]="id + '-load-hint'">{{ b.loadHint }}</p>
+        </div>
+      }
+
       @if (index(); as ix) {
         <!-- two big tabs, so it is clear the editor switches between the equipment and the armaments (Gether 12. 10. 2026) -->
         <div class="be__tabs" role="group" [attr.aria-label]="b.title">

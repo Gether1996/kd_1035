@@ -8,6 +8,10 @@
 }
 
 // two big tabs side by side: the chosen one gold with a bar underneath – clearly a switch, not a label
+.be__load {
+  margin-bottom: 14px;
+}
+
 .be__tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

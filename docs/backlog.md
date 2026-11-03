@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **3. 11. 2026 – v1.59.0:** Prihláška na KvK premenovaná na **KvK rally / garrison**; v editore výbavy prihlášky **Načítať z marchu**; skóre armamentov so stropom (100 = max. bonusy a 4 zlaté inscriptions). Hľadanie po celom webe (site-search) z kola agentov ešte čaká.
 - **3. 11. 2026 – v1.58.0:** Sieň slávy: **Sieň legiend** – superadmin na `?tab=upravit` uloží vybrané kategórie do archívu (`POST /api/hall/archive/`, len mená, počty a dôvody, bez fotiek a väzby na účet), hráči ich vidia zbalené pod kútmi; stránka Ochrana údajov doplnená.
 - **3. 11. 2026 – v1.57.0:** Sieň slávy: kategória **Najlepšia výbava** (`equipment`, miesto = typ jednotiek: 1 pechota, 2 jazda, 3 lukostrelci). Superadmin v editore „Načítať z Top 5 equip“ – prví z Top 5 equip (ten istý výpočet, `pages/hall/equipment-winners.ts`) najprv uvidí, potom ich zapíše naraz; typ bez bodov ostane prázdny (`PUT /api/hall/<kategória>/` berie `null` = prázdne miesto). Hráči vidia len mená a typ jednotiek.
 - **3. 11. 2026 – bez verzie:** Huo Qubing + Arthur Pendragon v návode na jazdu (d8c135e). Test `MentionCoverageTests`: každý commander spomenutý v návodoch je v hľadaní párov alebo v `MENTION_ONLY` (Archimedes, Cheok Jun-gyeong, Trajan, William Wallace) s dôvodom; pravidlo v `docs/navody.md` a `kd-meta-update`. Drobnosti: krátke mená (Arthur, Nevsky) a commanderi bez portrétu sa nedetegujú.

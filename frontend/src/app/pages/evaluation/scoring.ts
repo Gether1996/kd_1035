@@ -212,7 +212,11 @@ export function armamentPoints(settings: EvalSettings, march: March, index: Armo
   const v = (n: number | null | undefined) => n ?? 0;
   const c = (stat: ArmamentStat) => Math.min(v(march[stat]), ARMAMENT_CAPS[stat]);
   const bonuses = c('attack') / a.attack + c('defense') / a.defense + c('health') / a.health + c('damage') / a.damage;
-  const stats = (bonuses / a.combatMax) * a.statsWeight;
+  // 100 % = every bonus at its cap (Gether 3. 11. 2026: "100 bodov = … maximálne staty na armamentoch"); the
+  // spreadsheet's 17.76 was below the caps, so the bonuses could score more than their weight
+  const best =
+    ARMAMENT_CAPS.attack / a.attack + ARMAMENT_CAPS.defense / a.defense + ARMAMENT_CAPS.health / a.health + ARMAMENT_CAPS.damage / a.damage;
+  const stats = Math.min(1, bonuses / best) * a.statsWeight;
   const clicked = index ? (march.inscriptions ?? []).map((id) => index.inscriptions.get(id)).filter((i) => !!i) : [];
   const tiered = clicked.length > 0;
   const rare = new Map<string, number>();
@@ -230,7 +234,10 @@ export function armamentPoints(settings: EvalSettings, march: March, index: Armo
   const raw = tiered
     ? counted.reduce((sum, i) => sum + inscriptionValue(settings, i), 0)
     : v(march.gold) * a.gold + v(march.blue) * a.blue + v(march.white) * a.white;
-  const inscriptions = (raw / a.inscMax) * a.inscWeight;
+  // 100 % = four gold inscriptions of the highest tier (Gether 3. 11. 2026: "… a 4 zlaté inscripty"); white ones may
+  // fill a gap but never score more than the weight
+  const top = Math.max(a.gold, ...Object.values(a.tiers));
+  const inscriptions = Math.min(1, raw / (4 * top)) * a.inscWeight;
   const filled = tiered || [march.attack, march.defense, march.health, march.gold, march.blue, march.white].some((n) => (n ?? 0) > 0);
   return { stats, inscriptions, points: stats + inscriptions, filled, tiered, dropped };
 }

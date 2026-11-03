@@ -56,8 +56,8 @@ export const sk = {
       description: 'Odhad acclaimu hráčov kráľovstva KD 1035 na KvK.',
     },
     kvk: {
-      title: 'Prihláška na KvK | KD 1035',
-      description: 'Prihláška hráčov kráľovstva KD 1035 na KvK – rally a garrison.',
+      title: 'KvK rally / garrison | KD 1035',
+      description: 'Hráči kráľovstva KD 1035, ktorí chcú na KvK viesť rally alebo držať garrison.',
     },
     changelog: {
       title: 'Novinky na webe · KD 1035',
@@ -105,7 +105,7 @@ export const sk = {
     account: 'Môj účet',
     reminders: 'Pripomienky eventov',
     marches: 'Marche',
-    kvk: 'Prihláška na KvK',
+    kvk: 'KvK rally / garrison',
     // the superadmin only (/vyhodnocovanie)
     evaluation: 'Vyhodnocovanie',
     // the superadmin's list of players (/hraci, Gether 20. 10. 2026)
@@ -121,7 +121,7 @@ export const sk = {
     powerMissing: 'Chýba ti aktuálna power',
     setPower: 'Doplň aktuálnu power',
     // a KvK sign-up without the survey of the form (Gether 20. 10. 2026)
-    surveyMissing: 'Chýba ti dotazník k prihláške na KvK',
+    surveyMissing: 'Chýba ti dotazník ku KvK rally / garrison',
     setSurvey: 'Doplň dotazník ku KvK',
   },
   hero: {
@@ -271,10 +271,10 @@ export const sk = {
   },
   kvk: {
     eyebrow: 'KvK',
-    title: 'Prihláška na KvK',
-    intro: 'Prihlás sa na rally alebo garrison a naklikaj výbavu – vedenie z nej zostaví tímy.',
+    title: 'KvK rally / garrison',
+    intro: 'Len pre hráčov, ktorí chcú na KvK viesť rally alebo držať garrison – vedenie z prihlášok zostaví tímy. Ostatní tu nič vypĺňať nemusia.',
     loginTitle: 'Prihlás sa',
-    loginText: 'Prihlášku na KvK podáš so svojím účtom na webe – cez Discord alebo menom v hre.',
+    loginText: 'Na rally alebo garrison sa prihlásiš so svojím účtom na webe – cez Discord alebo menom v hre.',
     loadError: 'Prihlášky sa nepodarilo načítať. Skús to znova o chvíľu.',
     tabs: { mine: 'Moja prihláška', list: 'Prihlášky' },
     lead: 'Rally aj garrison zvlášť, každá ako march. Prihláška platí na ďalšie KvK, kým ju nezrušíš.',
@@ -448,13 +448,13 @@ export const sk = {
       evaluation_settings: 'Vyh. nastavenia',
       none: 'Bez prístupu',
     },
-    kvkFilter: 'Prihláška na KvK',
+    kvkFilter: 'KvK rally / garrison',
     kvkFilters: {
       all: 'KvK: všetci',
       any: 'Prihlásení na KvK',
       rally: 'Rally',
       garrison: 'Garrison',
-      none: 'Bez prihlášky na KvK',
+      none: 'Bez rally / garrison',
     },
     lastLogin: 'naposledy {date}',
     marchCount: ['{n} march', '{n} marche', '{n} marchov'],
@@ -765,6 +765,10 @@ export const sk = {
       detail: 'Detail',
       detailHide: 'Skryť detail',
       title: 'Výbava a armamenty',
+      // a KvK rally / garrison: copy the build of an own march into the editor (Gether 3. 11. 2026)
+      loadFrom: 'Načítať z marchu',
+      loadNone: 'Vybrať march',
+      loadHint: 'Výbava aj armamenty marchu sa načítajú sem – uprav, čo treba, a ulož.',
       open: 'Výbava a armamenty',
       edit: 'Naklikať výbavu',
       change: 'Upraviť výbavu',
@@ -1304,8 +1308,8 @@ export const sk = {
       link: 'Nastaviť',
     },
     kvk: {
-      title: 'Prihláška na KvK',
-      text: 'Rally alebo garrison s naklikanou výbavou pre vedenie.',
+      title: 'KvK rally / garrison',
+      text: 'Chceš viesť rally alebo držať garrison? Prihlás sa s naklikanou výbavou.',
       link: 'Otvoriť',
     },
     marches: {

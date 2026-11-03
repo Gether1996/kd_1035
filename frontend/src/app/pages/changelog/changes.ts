@@ -16,8 +16,11 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.58.0',
+    version: '1.59.0',
     sk: [
+      'Prihláška na KvK sa volá KvK rally / garrison – je len pre tých, čo chcú viesť rally alebo držať garrison.',
+      'Pri výbave a armamentoch rally či garrisonu pribudlo Načítať z marchu – stačí upraviť, čo sa líši.',
+      'Skóre výbavy a armamentov: 100 bodov je až všetko na maxime, armamenty už nevychádzajú vyššie, než majú.',
       'Sieň slávy: pod kútmi pribudla Sieň legiend – víťazi minulých KvK a týždňov, ktorých vedenie uložilo do archívu.',
       'Sieň slávy: nová zástava Najlepšia výbava – najlepší hráč na pechotu, jazdu a lukostrelcov podľa výbavy a armamentov naklikaných na webe.',
       'Marche a prihlášky na KvK: pod commandermi odkaz Návod k páru, alebo Páry pre commandera, ak tento pár v našich návodoch nie je.',
@@ -27,6 +30,9 @@ export const CHANGES: Change[] = [
       'March a prihláška na KvK uložené skôr s dvoma zlatými či modrými na jednom armamente sú červené a odkaz Oprav armamenty otvorí ten armament.',
     ],
     cs: [
+      'Přihláška na KvK se jmenuje KvK rally / garrison – je jen pro ty, kdo chtějí vést rally nebo držet garrison.',
+      'U výbavy a armamentů rally či garrisonu přibylo Načíst z marche – stačí upravit, co se liší.',
+      'Skóre výbavy a armamentů: 100 bodů je až všechno na maximu, armamenty už nevycházejí výš, než mají.',
       'Síň slávy: pod koutky přibyla Síň legend – vítězové minulých KvK a týdnů, které vedení uložilo do archivu.',
       'Síň slávy: nový prapor Nejlepší výbava – nejlepší hráč na pěchotu, jízdu a lukostřelce podle výbavy a armamentů naklikaných na webu.',
       'Marche a přihlášky na KvK: pod commandery odkaz Návod k páru, nebo Páry pro commandera, pokud tento pár v našich návodech není.',

@@ -81,10 +81,18 @@ const PAIRS: PairRow[] = [
 const S: EvalSettings = normalizeSettings(null, PAIRS);
 const withPairs = (value: unknown) => normalizeSettings(value, PAIRS);
 
+// Maros666, M1 of the spreadsheet: 100 % = the caps and four gold inscriptions of the top tier S+ (3. 11. 2026)
+const BEST_BONUSES = 14 / 3 + 14 / 2.75 + 14 / 1.8 + 8;
+const M1 = ((10.1 / 3 + 9.5 / 2.75 + 7 / 1.8 + 3.3) / BEST_BONUSES) * 30 + ((50 + 25 + 2 * 10) / (4 * 55)) * 70;
+
 describe('evaluation scoring', () => {
-  it('counts the armaments like the spreadsheet (Maros666, M1: 56.92 points)', () => {
+  it('counts the armaments: 100 % = every bonus at its cap and four gold inscriptions (Gether 3. 11. 2026)', () => {
     const m = march({ attack: 10.1, defense: 9.5, health: 7, damage: 3.3, gold: 1, blue: 1, white: 2 });
-    expect(armamentPoints(S, m).points).toBeCloseTo(56.9157, 3);
+    expect(armamentPoints(S, m).points).toBeCloseTo(M1, 9);
+    // the best possible: 100, and never more – white ones on top of four gold ones add nothing
+    const best = march({ attack: 14, defense: 14, health: 14, damage: 8, gold: 5, blue: 4, white: 8 });
+    expect(armamentPoints(S, best).points).toBeCloseTo(100, 9);
+    expect(armamentPoints(S, march({ attack: 14, defense: 14, health: 14, damage: 0, gold: 4 })).points).toBeLessThan(100);
     expect(armamentPoints(S, march()).filled).toBe(false);
   });
 
@@ -102,7 +110,7 @@ describe('evaluation scoring', () => {
     const equipment = e.equipment.points; // no gear: 0
     expect(equipment).toBe(0);
     expect(e.pair).toEqual({ points: 117, source: 'table' });
-    expect(e.total).toBeCloseTo((0 * 0.75 + 56.9157 * 0.25) * 1.17, 3);
+    expect(e.total).toBeCloseTo((0 * 0.75 + M1 * 0.25) * 1.17, 3);
   });
 
   it('judges the equipment by rarity, refine and iconic like the tiers of the spreadsheet', () => {
@@ -209,17 +217,17 @@ describe('evaluation scoring', () => {
     expect(a.tiered).toBe(true);
     // Destructive and Vigor are both on the scroll: one gold or blue of an armament counts, the better one (Gether
     // 3. 11. 2026) – the march is to fix
-    expect(a.inscriptions).toBeCloseTo((130 / 200) * 70, 9);
+    expect(a.inscriptions).toBeCloseTo((130 / 220) * 70, 9);
     expect(a.dropped).toBe(1);
     expect(marchToFix(marchEval(S, pairTable(S), m, INDEX))).toBe(true);
     expect(armamentPoints(S, march({ inscriptions: ids.filter((id) => id !== 'arch-scroll-destructive') }), INDEX).dropped).toBe(0);
     // a tier of its own, or none: by colour
     const charge = withPairs({ armaments: { inscriptions: { Charge: 'S' }, tiers: { S: 60 } } });
-    expect(armamentPoints(charge, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((60 / 200) * 70, 9);
+    expect(armamentPoints(charge, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((60 / 240) * 70, 9);
     const none = withPairs({ armaments: { inscriptions: {} } });
-    expect(armamentPoints(none, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((25 / 200) * 70, 9);
+    expect(armamentPoints(none, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((25 / 220) * 70, 9);
     // without the catalog, or only the counts typed in before: by colour like the spreadsheet
-    expect(armamentPoints(S, m, null)).toMatchObject({ tiered: false, inscriptions: ((2 * 50 + 2 * 25 + 10) / 200) * 70 });
+    expect(armamentPoints(S, m, null)).toMatchObject({ tiered: false, inscriptions: ((2 * 50 + 2 * 25 + 10) / 220) * 70 });
   });
 
   it('counts the second Delta armaments a little over the old Delta gold and blue (Gether 29. 10. 2026)', () => {
@@ -249,7 +257,7 @@ describe('evaluation scoring', () => {
     // the garrison does not count
     expect(row.counted).toBe(2);
     expect(row.marches.map((m) => [m.march.id, m.counted, m.skipped])).toEqual([[1, true, null], [2, true, null], [3, false, 'kind']]);
-    const one = (50 * 0.75 + 56.9157 * 0.25) * 0.5;
+    const one = (50 * 0.75 + M1 * 0.25) * 0.5;
     expect(row.marchScore).toBeCloseTo(2 * one, 2);
     expect(row.quality).toBeCloseTo(one, 2);
     // 2 marches carry 72 M – whatever their quality (Gether 26. 10. 2026); 100 M asks for 5: 3 missing

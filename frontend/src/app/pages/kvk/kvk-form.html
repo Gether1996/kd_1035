@@ -199,7 +199,7 @@
   </p>
 </section>
 
-<app-build-editor #builds [saveWith]="saveBuild" (saved)="store($event)" />
+<app-build-editor #builds [saveWith]="saveBuild" [sources]="marches()" (saved)="store($event)" />
 
 @if (signup()) {
   <div class="withdraw">

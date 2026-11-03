@@ -175,7 +175,8 @@ export class EvalSettingsTab {
         f(['marches', 'armaments'], s.marches.armaments),
       ],
       armaments: (
-        ['attack', 'defense', 'health', 'damage', 'combatMax', 'statsWeight', 'inscWeight', 'gold', 'blue', 'white', 'inscMax'] as const
+        // the best bonuses and inscriptions follow the caps and the tiers (3. 11. 2026) – no longer typed in
+        ['attack', 'defense', 'health', 'damage', 'statsWeight', 'inscWeight', 'gold', 'blue', 'white'] as const
       ).map((key) => f(['armaments', key], s.armaments[key])),
       inscriptionTiers: INSCRIPTION_TIERS.map((tier): NumField => ({ path: ['armaments', 'tiers', tier], label: `Tier ${tier}` })),
       equipment: [f(['equipment', 'statsWeight'], s.equipment.statsWeight), f(['equipment', 'statsMax'], s.equipment.statsMax)],

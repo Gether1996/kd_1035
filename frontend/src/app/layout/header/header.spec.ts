@@ -132,7 +132,7 @@ describe('Header account slot', () => {
       ['/ucet', 'Môj účet'],
       ['/marche', 'Marche'],
       ['/pripomienky', 'Pripomienky eventov'],
-      ['/kvk', 'Prihláška na KvK'],
+      ['/kvk', 'KvK rally / garrison'],
       ['/forum', 'Fórum'],
     ]);
     expect(link?.querySelector('.alert-badge')).not.toBeNull();
@@ -189,7 +189,7 @@ describe('Header account slot', () => {
     });
     const link = el().querySelector<HTMLAnchorElement>('.account__link');
     expect(link?.querySelector('.alert-badge')).not.toBeNull();
-    expect(link?.textContent).toContain('Chýba ti dotazník k prihláške na KvK');
+    expect(link?.textContent).toContain('Chýba ti dotazník ku KvK rally / garrison');
     const alerts = (selector: string) => Array.from(el().querySelectorAll(selector), (a) => [a.getAttribute('href'), a.textContent?.trim()]);
     expect(alerts('.account__dropdown .is-alert')).toEqual([['/kvk', '!Doplň dotazník ku KvK']]);
     expect(alerts('.drawer__page.is-alert').map(([href]) => href)).toEqual(['/kvk']);

@@ -76,6 +76,8 @@ export class BuildEditor {
   readonly saved = output<March>();
   /** how the build is saved: a march by default; a KvK sign-up passes its own (PATCH /api/kvk/signup/) */
   readonly saveWith = input<((march: March, change: MarchChange) => Promise<March>) | null>(null);
+  /** a KvK rally / garrison: the player's own marches, whose build can be loaded here (Gether 3. 11. 2026) */
+  readonly sources = input<March[]>([]);
 
   private readonly api = inject(MarchesApi);
   private readonly armory = inject(ArmoryApi);
@@ -176,6 +178,20 @@ export class BuildEditor {
     this.discarding = false;
     this.initial.set(this.draft());
     this.dialog().nativeElement.showModal();
+  }
+
+  /** "Načítať z marchu": the march's equipment, formation, inscriptions and bonuses into the draft – saved only with
+   *  "Uložiť", so the player tweaks what differs first */
+  protected loadFrom(value: string): void {
+    const source = this.sources().find((m) => String(m.id) === value);
+    if (!source) return;
+    const stats = Object.fromEntries(ARMAMENT_STATS.map((stat) => [stat, source[stat] ?? null])) as Draft['stats'];
+    this.draft.set({ ...structuredClone(buildOf(source)), stats });
+    this.error.set(null);
+  }
+
+  protected sourceLabel(m: March): string {
+    return `${m.position}. ${m.primary}${m.secondary ? ' + ' + m.secondary : ''}`;
   }
 
   /** Esc: a clean editor closes at once, a dirty one asks first */

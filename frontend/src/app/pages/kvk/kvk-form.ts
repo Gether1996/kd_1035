@@ -140,9 +140,10 @@ export class KvkForm {
     () => (this.role() === 'rally' ? 'Rally' : 'Garrison') + (this.slot() > 1 ? ` ${this.slot()}` : ''),
   );
 
-  /** the player's marches for "Vyplniť z marchu" – asked once the form shows for the first time */
+  /** the player's marches for "Vyplniť z marchu" and the build editor's "Načítať z marchu" – asked once the form or a
+   *  sign-up shows for the first time */
   private readonly wantMarches = linkedSignal<boolean, boolean>({
-    source: () => this.formOpen() && this.state().approved,
+    source: () => (this.formOpen() || !!this.signup()) && this.state().approved,
     computation: (now, previous) => now || !!previous?.value,
   });
   private readonly marchData = this.marchesApi.list(() => this.wantMarches());

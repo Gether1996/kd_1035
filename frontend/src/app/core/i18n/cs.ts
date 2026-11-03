@@ -58,8 +58,8 @@ export const cs: Dict = {
       description: 'Odhad acclaimu hráčů království KD 1035 na KvK.',
     },
     kvk: {
-      title: 'Přihláška na KvK | KD 1035',
-      description: 'Přihláška hráčů království KD 1035 na KvK – rally a garrison.',
+      title: 'KvK rally / garrison | KD 1035',
+      description: 'Hráči království KD 1035, kteří chtějí na KvK vést rally nebo držet garrison.',
     },
     changelog: {
       title: 'Novinky na webu · KD 1035',
@@ -105,7 +105,7 @@ export const cs: Dict = {
     account: 'Můj účet',
     reminders: 'Připomínky eventů',
     marches: 'Marche',
-    kvk: 'Přihláška na KvK',
+    kvk: 'KvK rally / garrison',
     // the superadmin only (/vyhodnocovanie)
     evaluation: 'Vyhodnocování',
     // the superadmin's list of players (/hraci, Gether 20. 10. 2026)
@@ -119,7 +119,7 @@ export const cs: Dict = {
     powerMissing: 'Chybí ti aktuální power',
     setPower: 'Doplň aktuální power',
     // a KvK sign-up without the survey of the form (Gether 20. 10. 2026)
-    surveyMissing: 'Chybí ti dotazník k přihlášce na KvK',
+    surveyMissing: 'Chybí ti dotazník ke KvK rally / garrison',
     setSurvey: 'Doplň dotazník ke KvK',
   },
   hero: {
@@ -264,10 +264,10 @@ export const cs: Dict = {
   },
   kvk: {
     eyebrow: 'KvK',
-    title: 'Přihláška na KvK',
-    intro: 'Přihlas se na rally nebo garrison a naklikej výbavu – vedení z ní sestaví týmy.',
+    title: 'KvK rally / garrison',
+    intro: 'Jen pro hráče, kteří chtějí na KvK vést rally nebo držet garrison – vedení z přihlášek sestaví týmy. Ostatní tu nic vyplňovat nemusí.',
     loginTitle: 'Přihlas se',
-    loginText: 'Přihlášku na KvK podáš se svým účtem na webu – přes Discord nebo jménem ve hře.',
+    loginText: 'Na rally nebo garrison se přihlásíš se svým účtem na webu – přes Discord nebo jménem ve hře.',
     loadError: 'Přihlášky se nepodařilo načíst. Zkus to znovu za chvíli.',
     tabs: { mine: 'Moje přihláška', list: 'Přihlášky' },
     lead: 'Rally i garrison zvlášť, každá jako march. Přihláška platí i na další KvK, dokud ji nezrušíš.',
@@ -431,13 +431,13 @@ export const cs: Dict = {
       evaluation_settings: 'Vyh. nastavení',
       none: 'Bez přístupu',
     },
-    kvkFilter: 'Přihláška na KvK',
+    kvkFilter: 'KvK rally / garrison',
     kvkFilters: {
       all: 'KvK: všichni',
       any: 'Přihlášení na KvK',
       rally: 'Rally',
       garrison: 'Garrison',
-      none: 'Bez přihlášky na KvK',
+      none: 'Bez rally / garrison',
     },
     lastLogin: 'naposledy {date}',
     marchCount: ['{n} march', '{n} marche', '{n} marchů'],
@@ -729,6 +729,9 @@ export const cs: Dict = {
       detail: 'Detail',
       detailHide: 'Skrýt detail',
       title: 'Výbava a armamenty',
+      loadFrom: 'Načíst z marche',
+      loadNone: 'Vybrat march',
+      loadHint: 'Výbava i armamenty marche se načtou sem – uprav, co je potřeba, a ulož.',
       open: 'Výbava a armamenty',
       edit: 'Naklikat výbavu',
       change: 'Upravit výbavu',
@@ -1264,8 +1267,8 @@ export const cs: Dict = {
       link: 'Nastavit',
     },
     kvk: {
-      title: 'Přihláška na KvK',
-      text: 'Rally nebo garrison s naklikanou výbavou pro vedení.',
+      title: 'KvK rally / garrison',
+      text: 'Chceš vést rally nebo držet garrison? Přihlas se s naklikanou výbavou.',
       link: 'Otevřít',
     },
     marches: {
