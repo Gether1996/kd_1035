@@ -37,11 +37,11 @@ def over_caps(army) -> list[str] | None:
     return over or None
 
 
-def rare_excess(army, catalog=None) -> list[str] | None:
+def rare_excess(army, known=None) -> list[str] | None:
     """The armaments of a march or a sign-up with more than one gold or blue inscription (armory.rare_excess – the
-    same rule as saving), in the game's order; None = none. `catalog` = armory.inscriptions() read once."""
+    same rule as saving), in the game's order; None = none. `known` = armory.inscriptions() read once."""
     chosen = army.inscriptions if isinstance(army.inscriptions, list) else []
-    return armory.rare_excess([i for i in chosen if isinstance(i, str)], catalog) or None
+    return armory.rare_excess([i for i in chosen if isinstance(i, str)], known) or None
 
 
 def missing_parts(march: March) -> list[str] | None:

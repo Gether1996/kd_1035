@@ -73,12 +73,12 @@ def inscription_pieces():
     return {key: i['piece'] for key, i in inscriptions().items()}
 
 
-def rare_excess(chosen, catalog=None) -> list[str]:
+def rare_excess(chosen, known=None) -> list[str]:
     """The armaments with more than MAX_RARE_PER_PIECE gold or blue inscriptions among `chosen`, in PIECES order –
     one rule for saving (army.BuildSerializer refuses them) and for builds saved before it (pair_check.rare_excess).
-    Ids the catalog no longer knows are skipped; `catalog` = inscriptions() read once by the caller."""
-    catalog = inscriptions() if catalog is None else catalog
-    rare = Counter(catalog[i]['piece'] for i in chosen if i in catalog and catalog[i]['rarity'] != 'common')
+    Ids the catalog no longer knows are skipped; `known` = inscriptions() read once by the caller."""
+    known = inscriptions() if known is None else known
+    rare = Counter(known[i]['piece'] for i in chosen if i in known and known[i]['rarity'] != 'common')
     return [piece for piece in PIECES if rare[piece] > MAX_RARE_PER_PIECE]
 
 
