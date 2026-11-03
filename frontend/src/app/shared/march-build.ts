@@ -3,6 +3,7 @@ import {
   ArmoryApi,
   GearSlot,
   ARMAMENT_ICONS,
+  ArmamentPiece,
   marchTroop,
   Inscription,
   TROOP_STATS,
@@ -49,8 +50,8 @@ export class MarchBuild {
   readonly statsRequired = input(false);
   /** a tile of the own march clicked: the editor opens on that slot */
   readonly slotPick = output<GearSlot>();
-  /** "Doplň bonusy armamentov" of the own march: the editor opens on its Armamenty tab */
-  readonly armamentsPick = output<void>();
+  /** "Doplň bonusy armamentov" of the own march: the editor opens on its Armamenty tab – on this armament, if any */
+  readonly armamentsPick = output<ArmamentPiece | null>();
   protected readonly id = `march-build-${++nextId}`;
   /**
    * Compact by default (Gether 13. 10. 2026: "šetriť miesto, pokiaľ niekoho nezaujímajú detaily %"): a smaller
@@ -165,6 +166,20 @@ export class MarchBuild {
     const parts = this.march().gear_problem;
     if (!parts?.length || this.own()) return null;
     return parts.map((part) => this.t().gearProblem[part]).join(' ');
+  });
+
+  /**
+   * Two gold or blue inscriptions on one armament, saved before v1.56.6 allowed one (Gether 3. 11. 2026) – the server
+   * tells the player and the superuser (a sign-up: also R4); "Oprav armamenty" opens the own march on the first one
+   */
+  protected readonly rareProblem = computed(() => {
+    const pieces = this.march().inscription_problem;
+    if (!pieces?.length) return null;
+    const names = this.t().build.pieces;
+    return {
+      text: this.t().rareProblem.replace('{pieces}', pieces.map((piece) => names[piece] ?? piece).join(', ')),
+      piece: pieces[0],
+    };
   });
 
   /** how to fix a pair the evaluation does not score: the other order is scored – the names as on the march */

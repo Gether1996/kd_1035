@@ -645,6 +645,8 @@ export const cs: Dict = {
     formationProblem: '{commander} má vést formaci {want}, ne {have} – ve vyhodnocování KvK se armamenty počítají méně.',
     statsProblem: 'Bonusy armamentů nad maximum: {stats} – zkontroluj je ve hře.',
     gearProblem: { gear: 'Chybí naklikaná výbava.', armaments: 'Chybí armamenty.' },
+    rareProblem: 'Na armamentu {pieces} je víc zlatých či modrých inscriptions – nech na něm jen jednu.',
+    rareFixOwn: 'Oprav armamenty',
     statsOver: '{stat} {value} % (max {max} %)',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, co je u nich červené.',

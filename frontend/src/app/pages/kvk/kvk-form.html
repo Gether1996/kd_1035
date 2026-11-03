@@ -160,7 +160,7 @@
       [numbered]="false"
       [statsRequired]="true"
       (slotPick)="builds.open(asMarch(s), null, $event)"
-      (armamentsPick)="builds.open(asMarch(s), null, undefined, 'armaments')"
+      (armamentsPick)="builds.open(asMarch(s), null, undefined, 'armaments', $event)"
     >
       <button type="button" class="pill-btn march__build" (click)="builds.open(asMarch(s), $event)">
         <svg appIcon="swords"></svg>{{ built(s) ? m.build.change : m.build.edit }}

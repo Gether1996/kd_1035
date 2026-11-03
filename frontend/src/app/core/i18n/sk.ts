@@ -675,6 +675,9 @@ export const sk = {
     statsProblem: 'Bonusy armamentov nad maximum: {stats} – skontroluj ich v hre.',
     // not filled in – also shown to the superadmin on someone else's march (Gether 30. 10. 2026)
     gearProblem: { gear: 'Chýba naklikaná výbava.', armaments: 'Chýbajú armamenty.' },
+    // two gold or blue inscriptions on one armament, saved before v1.56.6 (Gether 3. 11. 2026); the link opens the editor
+    rareProblem: 'Na armamente {pieces} je viac zlatých či modrých inscriptions – nechaj na ňom len jednu.',
+    rareFixOwn: 'Oprav armamenty',
     statsOver: '{stat} {value} % (max {max} %)',
     armamentsMissingOwn: 'Doplň armamenty',
     incompleteCount: 'Neúplné marche: {n} – doplň, čo je pri nich červené.',

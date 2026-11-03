@@ -96,9 +96,16 @@ export class BuildEditor {
 
   /**
    * `opener` gets the focus back on close (the clicked button, or the new card's after a new march); `slot` opens
-   * the equipment on that slot (a tile clicked on the card), else on the first empty one
+   * the equipment on that slot (a tile clicked on the card), else on the first empty one; `piece` opens that armament
+   * (its two gold or blue inscriptions, "Oprav armamenty")
    */
-  open(march: March, opener?: Event | HTMLElement | null, slot?: GearSlot, tab: 'gear' | 'armaments' = 'gear'): void {
+  open(
+    march: March,
+    opener?: Event | HTMLElement | null,
+    slot?: GearSlot,
+    tab: 'gear' | 'armaments' = 'gear',
+    piece: ArmamentPiece | null = null,
+  ): void {
     this.armory.load();
     // without one the focused element (a tile of the card) gets the focus back
     const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -108,7 +115,7 @@ export class BuildEditor {
     this.draft.set({ ...structuredClone(buildOf(march)), stats });
     this.tab.set(tab);
     this.slot.set(slot ?? GEAR_SLOTS.find((s) => !march.gear?.[s]) ?? 'weapon');
-    this.armPicked.set(null);
+    this.armPicked.set(piece);
     this.search.set('');
     this.weaker.set(false);
     this.error.set(null);

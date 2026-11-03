@@ -533,6 +533,53 @@ describe('Marches', () => {
     expect((fine.nativeElement as HTMLElement).querySelector('.march-fix')).toBeNull();
     again.verify();
   });
+
+  it('two gold or blue inscriptions on one armament: red, counted, and "Oprav armamenty" opens that armament', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(Marches);
+    fixture.detectChanges();
+    const marches: March[] = [
+      { ...MARCH, id: 1, position: 1, kind: 'cavalry', primary: 'Attila', secondary: 'Takeda Shingen', attack: 1, defense: 1, health: 1 },
+      // saved before v1.56.6 (Gether 3. 11. 2026): Toppler and Dominate are both gold scroll inscriptions
+      {
+        ...MARCH,
+        id: 2,
+        position: 2,
+        kind: 'cavalry',
+        primary: 'Attila',
+        secondary: 'Takeda Shingen',
+        attack: 1,
+        defense: 1,
+        health: 1,
+        formation: 'pincer',
+        inscriptions: ['pincer-scroll-toppler', 'pincer-scroll-dominate', 'u-emblem-enduring'],
+        inscription_problem: ['scroll'],
+      },
+    ];
+    http.expectOne('/api/me/marches/').flush({ marches, max: 10, public: false });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('button.march-fix')!.textContent).toContain('Na opravu pre vyhodnocovanie KvK: 1');
+    const card = el.querySelector('app-march-build[data-march="2"]')!;
+    expect(card.classList).toContain('is-bad-pair');
+    expect(el.querySelector('app-march-build[data-march="1"]')!.classList).not.toContain('is-bad-pair');
+    expect(card.querySelector('.mb__pair-problem')!.textContent).toContain(
+      'Na armamente Scroll je viac zlatých či modrých inscriptions – nechaj na ňom len jednu.',
+    );
+
+    card.querySelector<HTMLButtonElement>('.mb__fix')!.click();
+    await tick(fixture);
+    const dialog = el.querySelector('dialog.be')!;
+    expect(dialog.hasAttribute('open')).toBe(true);
+    expect(dialog.querySelector('.be__tabs [aria-selected="true"], .be__tabs [aria-pressed="true"]')?.textContent).toContain('Armamenty');
+    // the scroll open, with what to do about it
+    expect(dialog.querySelector('.be__arm-title')?.textContent).toContain('Scroll');
+    expect(dialog.querySelector('.be__arm-panel .field__error')?.textContent).toContain('len jedna zlatá alebo modrá');
+    http.verify();
+  });
 });
 
 describe('PlayersAdmin', () => {

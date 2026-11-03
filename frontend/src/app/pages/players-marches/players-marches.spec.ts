@@ -245,6 +245,8 @@ describe('PlayersMarches', () => {
       // only the other order is in the pair table
       { ...MARCH, id: 4, position: 4, primary: 'Takeda Shingen', secondary: 'Attila', pair_problem: 'unknown', pair_hint: { swap: true }, formation_problem: null },
       { ...MARCH, id: 5, position: 5, pair_problem: 'unknown', pair_hint: { swap: false }, formation_problem: null },
+      // two gold or blue on one armament, saved before v1.56.6
+      { ...MARCH, id: 6, position: 6, pair_problem: null, formation_problem: null, inscription_problem: ['scroll', 'flag'] },
     ];
     const player = { name: 'bob', ingame_name: 'Bob', avatar_url: '', public: true, me: false, updated_at: '2026-10-12T12:00:00Z' };
     http.expectOne('/api/marches/').flush({
@@ -262,9 +264,9 @@ describe('PlayersMarches', () => {
     const bob = rows.find((r) => r.textContent?.includes('Bob'))!;
     const eve = rows.find((r) => r.textContent?.includes('Eve'))!;
     expect(bob.classList).toContain('has-problem');
-    expect(bob.querySelector('.tag--problem')?.textContent).toContain('Na opravu: 4');
+    expect(bob.querySelector('.tag--problem')?.textContent).toContain('Na opravu: 5');
     // Takeda Shingen has no portrait here, so no mini
-    expect(bob.querySelectorAll('.player__mini.is-bad').length).toBe(3);
+    expect(bob.querySelectorAll('.player__mini.is-bad').length).toBe(4);
     expect(eve.classList).not.toContain('has-problem');
     expect(eve.querySelector('.tag--problem')).toBeNull();
     // the most red marches first (Gether 30. 10. 2026), Eve changed hers later
@@ -282,7 +284,7 @@ describe('PlayersMarches', () => {
     http.expectOne('/api/armory/').flush(ARMORY);
     await tick(fixture);
     const cards = Array.from(bob.querySelectorAll('app-march-build'));
-    expect(cards.map((c) => c.classList.contains('is-bad-pair'))).toEqual([true, true, false, true, true]);
+    expect(cards.map((c) => c.classList.contains('is-bad-pair'))).toEqual([true, true, false, true, true, true]);
     const notes = Array.from(bob.querySelectorAll('.mb__pair-problem'), (n) => n.textContent?.trim());
     expect(notes[0]).toContain('Chýba sekundárny commander');
     expect(notes[1]).toContain('Attila má viesť formáciu');
@@ -291,6 +293,9 @@ describe('PlayersMarches', () => {
     expect(notes[2]).toContain('Tento pár sa vo vyhodnocovaní KvK nepočíta');
     expect(notes[2]).toContain('Hodnotí sa opačné poradie: Attila + Takeda Shingen.');
     expect(Array.from(bob.querySelectorAll('.mb__pair-hint'), (n) => n.textContent?.trim())).toEqual(['Hodnotí sa opačné poradie: Attila + Takeda Shingen.']);
+    // the armaments by their game names; someone else's march has no link to the editor
+    expect(notes[4]).toBe('Na armamente Scroll, Flag je viac zlatých či modrých inscriptions – nechaj na ňom len jednu.');
+    expect(bob.querySelector('.mb__fix')).toBeNull();
   });
 
   it('a new player waits for the superadmin instead of the list', async () => {

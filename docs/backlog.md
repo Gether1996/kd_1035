@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **3. 11. 2026 – v1.56.7:** Staré marche a prihlášky s dvoma zlatými/modrými inscriptions na jednom armamente: `march_checker` vracia `inscription_problem` (červený rám, Na opravu, počet v Hráčoch, Discord upozornenie), na karte odkaz **Oprav armamenty** otvorí editor na tom armamente. Rozsah: `manage.py count_rare_excess` (len počty).
 - **3. 11. 2026 – v1.56.6:** Armamenty: na jednom armamente najviac 1 zlatá alebo modrá inscription (2 biele, zlatá + biela, modrá + biela; Gether). Server odmietne iné (`rare_per_piece`), editor pri výbere ďalšej zlatej/modrej vymení tú prvú; staré uložené dve: editor ich nedovolí uložiť, Vyhodnocovanie ráta lepšiu a march je „Na opravu“.
 - **3. 11. 2026 – v1.56.5:** Vyhodnocovanie: zrušené pole **Úprava odporúčanej power** v detaile hráča (Gether: „zavadza“, ostala ručná úprava acclaimu; uložené hodnoty sa už nepočítajú). Premenné → Páry: **Plné body už od 5511** – commander zo zoznamu (predvolene Ivar the Boneless 91 %) dostane pri 5511 to % páru, do 5555 rovnomerne 100 % (Slim: Sun Tzu + Ivar 110 b. → pri 5511 100 b.).
 - **2. 11. 2026 – v1.56.4:** Prihlášky na KvK: vedenie (R4, superadmin) vidí zbalený zoznam **Bez prihlášky (N)** – schválení aktívni hráči bez prihlášky s odkazom na ich marche a Discord (návrh kola agentov 2. 11.). Sieň slávy odmietne jednu fotku pre dve miesta.

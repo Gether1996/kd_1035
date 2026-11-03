@@ -383,6 +383,29 @@ describe('KvkForm', () => {
     http.verify();
   });
 
+  it('a sign-up with two gold or blue inscriptions on one armament is red and opens that armament (v1.56.6)', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(KvkForm);
+    fixture.componentRef.setInput('state', { ...STATE, signups: [{ ...SIGNUP, inscription_problem: ['flag'] }] });
+    fixture.detectChanges();
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
+    await flushAll(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await flushAll(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const card = el.querySelector('.kvk-card')!;
+    expect(card.classList).toContain('is-bad-pair');
+    expect(card.querySelector('.mb__pair-problem')?.textContent).toContain('Na armamente Flag je viac zlatých či modrých inscriptions');
+    card.querySelector<HTMLButtonElement>('.mb__fix')!.click();
+    await flushAll(fixture);
+    const dialog = el.querySelector('dialog.be')!;
+    expect(dialog.hasAttribute('open')).toBe(true);
+    expect(dialog.querySelector('.be__arm-title')?.textContent).toContain('Flag');
+    flushMarches(http);
+    http.verify();
+  });
+
   it('withdraws the sign-up of one role, the other one stays', async () => {
     const http = setup();
     const fixture = TestBed.createComponent(KvkForm);

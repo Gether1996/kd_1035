@@ -10,4 +10,10 @@ describe('marchHasProblem', () => {
     expect(marchHasProblem({ ...march, gear_problem: ['armaments'] })).toBe(true);
     expect(marchHasProblem({ ...march, gear_problem: null })).toBe(false);
   });
+
+  it('two gold or blue inscriptions on one armament are red as well (v1.56.6, Gether 3. 11. 2026)', () => {
+    expect(marchHasProblem({ ...march, inscription_problem: ['emblem'] })).toBe(true);
+    expect(marchHasProblem({ ...march, inscription_problem: [] })).toBe(false);
+    expect(marchHasProblem({ ...march, inscription_problem: null })).toBe(false);
+  });
 });

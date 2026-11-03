@@ -75,6 +75,8 @@ describe('Account', () => {
         { ...march, id: 1, pair_problem: 'solo' },
         { ...march, id: 2, secondary: 'Takeda Shingen', pair_problem: null, formation_problem: [] },
         { ...march, id: 3, secondary: 'Takeda Shingen', formation_problem: ['Wedge'] },
+        // two gold or blue on one armament (v1.56.6)
+        { ...march, id: 4, secondary: 'Takeda Shingen', inscription_problem: ['emblem'] },
       ],
       max: 10,
       public: false,
@@ -83,7 +85,7 @@ describe('Account', () => {
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
     // the count, and for a screen reader what it means
-    expect(el.querySelector('.shortcut__issues')?.textContent?.trim()).toBe('2 na opravu');
+    expect(el.querySelector('.shortcut__issues')?.textContent?.trim()).toBe('3 na opravu');
     expect(el.querySelector('.shortcut__issues .sr-only')?.textContent?.trim()).toBe('na opravu');
   });
 

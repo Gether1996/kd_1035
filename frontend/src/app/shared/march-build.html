@@ -51,6 +51,15 @@
 @if (statsProblem(); as text) {
   <p class="mb__pair-problem">{{ text }}</p>
 }
+<!-- two gold or blue inscriptions on one armament, saved before v1.56.6 (Gether 3. 11. 2026) -->
+@if (rareProblem(); as rare) {
+  <p class="mb__pair-problem">
+    {{ rare.text }}
+    @if (own()) {
+      <button type="button" class="mb__fix" (click)="armamentsPick.emit(rare.piece)">{{ k.rareFixOwn }}</button>
+    }
+  </p>
+}
 <!-- equipment or armaments not filled in (Gether 30. 10. 2026) -->
 @if (gearProblem(); as text) {
   <p class="mb__pair-problem">{{ text }}</p>
@@ -105,13 +114,13 @@
     }
     @if (missing().armaments) {
       <!-- the own march without a formation and an inscription: red, straight to the Armamenty tab -->
-      <button type="button" class="mb__missing is-own" (click)="armamentsPick.emit()">{{ k.armamentsMissingOwn }}</button>
+      <button type="button" class="mb__missing is-own" (click)="armamentsPick.emit(null)">{{ k.armamentsMissingOwn }}</button>
     }
     <!-- the armament bonuses typed in (and the inscription counts of a march saved before they were clicked together) -->
     @if (statsMissing() && !missing().armaments) {
       @if (own()) {
         <!-- the own march: straight to the bonuses in the editor -->
-        <button type="button" class="mb__missing is-own" (click)="armamentsPick.emit()">{{ k.statsMissingOwn }}</button>
+        <button type="button" class="mb__missing is-own" (click)="armamentsPick.emit(null)">{{ k.statsMissingOwn }}</button>
       } @else {
         <p class="mb__missing">{{ k.statsMissing }}</p>
       }

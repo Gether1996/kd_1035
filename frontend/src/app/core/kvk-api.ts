@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { Gear } from './armory';
+import type { ArmamentPiece, Gear } from './armory';
 import type { MarchChange } from './marches-api';
 
 /** a player signs up for rally and garrison separately, each with its own army (Gether 11. 10. 2026) */
@@ -108,6 +108,9 @@ export interface March extends Partial<Record<MarchStat, number | null>> {
   /** not filled in: 'gear' = no item, 'armaments' = no formation and inscription or no ATK/DEF/HP (any type, Gether
    *  30. 10. 2026) – the same people only */
   gear_problem?: ('gear' | 'armaments')[] | null;
+  /** the armaments with two gold or blue inscriptions, saved before v1.56.6 allowed one (any type, Gether 3. 11. 2026) –
+   *  the same people only */
+  inscription_problem?: ArmamentPiece[] | null;
 }
 
 /**
@@ -118,7 +121,8 @@ export const marchHasProblem = (march: March): boolean =>
   !!march.pair_problem ||
   !!march.formation_problem?.length ||
   !!march.stats_problem?.length ||
-  !!march.gear_problem?.length;
+  !!march.gear_problem?.length ||
+  !!march.inscription_problem?.length;
 
 /** a sign-up shown and edited like a march (MarchBuild, BuildEditor) */
 export const asMarch = (signup: KvkSignup): March => ({ ...signup, position: 0 });
