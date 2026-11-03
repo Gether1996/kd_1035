@@ -1487,6 +1487,20 @@ export const sk = {
       mineEmpty: 'Žiadny event zatiaľ nepíše do kanála. Vyber event vpravo a zvoľ časy.',
       everyone: 'Označiť @everyone',
       everyoneHint: 'Správa upozorní všetkých na serveri.',
+      // "Poslať ukážku mne": the next channel message as a private DM (the reasons = PreviewResult)
+      preview: {
+        send: 'Poslať ukážku mne',
+        hint: 'Pošle najbližšiu správu do kanála len tebe súkromne, bez @everyone. Typ termínu nastavený neskôr skutočnú správu ešte zmení.',
+        result: {
+          ok: 'Ukážka odoslaná – pozri súkromné správy na Discorde.',
+          no_date: 'Event nemá ďalší termín, ukážka nie je z čoho.',
+          no_discord: 'Si prihlásený heslom, bez Discordu – ukážku ti nemá kam prísť. Prihlás sa cez Discord.',
+          bot_off: 'Bot nie je nastavený (DISCORD_BOT_TOKEN) – ukážka sa nedá poslať.',
+          blocked: 'Bot ti nevie napísať – zapni si súkromné správy od členov servera.',
+          unavailable: 'Discord teraz neodpovedá, skús neskôr.',
+          throttled: 'Skús to o chvíľu.',
+        },
+      },
     },
   },
   notFound: {

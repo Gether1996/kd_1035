@@ -75,8 +75,13 @@
 
 .discord__state {
   margin-top: 2px;
-  font-size: 0.875rem;
   color: var(--text-mute);
+}
+
+// the switch's state, the test message's and the channel preview's answer
+.discord__state,
+.discord__result {
+  font-size: 0.875rem;
 
   .is-on {
     color: var(--gold-300);
@@ -114,21 +119,12 @@
 
 // always in the page (role=status announces what appears in it), takes no room while empty
 .discord__result {
-  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--text-dim);
   text-wrap: pretty;
 
   &.has-result {
     margin-top: 10px;
-  }
-
-  .is-on {
-    color: var(--gold-300);
-  }
-
-  .is-error {
-    color: var(--red-300);
   }
 }
 
@@ -323,6 +319,12 @@
   display: flex;
   gap: 2px;
   grid-area: actions;
+}
+
+// the channel tab: "Poslať ukážku mne" under the times, its answer (.discord__result) under it
+.mine__preview {
+  grid-column: 2 / -1;
+  margin-top: 8px;
 }
 
 // no reminders yet: how it works in three steps

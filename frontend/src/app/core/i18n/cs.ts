@@ -1443,6 +1443,20 @@ export const cs: Dict = {
       mineEmpty: 'Žádný event zatím nepíše do kanálu. Vyber event vpravo a zvol časy.',
       everyone: 'Označit @everyone',
       everyoneHint: 'Zpráva upozorní všechny na serveru.',
+      // "Poslať ukážku mne": the next channel message as a private DM (the reasons = PreviewResult)
+      preview: {
+        send: 'Poslat ukázku mně',
+        hint: 'Pošle nejbližší zprávu do kanálu jen tobě soukromě, bez @everyone. Typ termínu nastavený později skutečnou zprávu ještě změní.',
+        result: {
+          ok: 'Ukázka odeslána – podívej se do soukromých zpráv na Discordu.',
+          no_date: 'Event nemá další termín, ukázka není z čeho.',
+          no_discord: 'Jsi přihlášený heslem, bez Discordu – ukázka ti nemá kam přijít. Přihlas se přes Discord.',
+          bot_off: 'Bot není nastavený (DISCORD_BOT_TOKEN) – ukázku nelze poslat.',
+          blocked: 'Bot ti neumí napsat – zapni si soukromé zprávy od členů serveru.',
+          unavailable: 'Discord teď neodpovídá, zkus to později.',
+          throttled: 'Zkus to za chvíli.',
+        },
+      },
     },
   },
   notFound: {

@@ -152,6 +152,29 @@
                     <svg appIcon="x"></svg>
                   </button>
                 </span>
+                @if (channel()) {
+                  <!-- the exact channel message privately first, without @everyone; nothing is stored -->
+                  @let sent = previewResult().get(event.id);
+                  <div class="mine__preview">
+                    <button
+                      type="button"
+                      class="pill-btn pill-btn--quiet"
+                      [title]="ch.preview.hint"
+                      [disabled]="!event.next_start"
+                      [attr.aria-disabled]="previewing().has(event.id) || null"
+                      (click)="sendPreview(event)"
+                    >
+                      <svg appIcon="send"></svg>{{ ch.preview.send }}
+                    </button>
+                    <p class="discord__result" role="status" [class.has-result]="!!sent">
+                      @if (sent) {
+                        <span [class.is-on]="sent === 'ok'" [class.is-error]="sent !== 'ok' && sent !== 'throttled'">{{
+                          ch.preview.result[sent]
+                        }}</span>
+                      }
+                    </p>
+                  </div>
+                }
               </li>
             }
           </ul>

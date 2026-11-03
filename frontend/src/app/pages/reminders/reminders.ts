@@ -11,7 +11,14 @@ import { RouterLink } from '@angular/router';
 import { Occurrence, PublicEvent } from '../../core/events-api';
 import { I18n } from '../../core/i18n/i18n';
 import { KingdomApi } from '../../core/api';
-import { LastDelivery, ReminderEvent, ReminderSettings, RemindersApi, TestResult } from '../../core/reminders-api';
+import {
+  LastDelivery,
+  PreviewResult,
+  ReminderEvent,
+  ReminderSettings,
+  RemindersApi,
+  TestResult,
+} from '../../core/reminders-api';
 import { EventIcon } from '../../shared/event-icon';
 import { showsClock } from '../../shared/event-time';
 import { Icon } from '../../shared/icon';
@@ -278,6 +285,29 @@ export class Reminders {
       this.everyone.update((map) => new Map(map).set(id, !on));
       this.stopFailed.set(true);
     }
+  }
+
+  /** the channel tab: "Poslať ukážku mne" – the events being sent, and the last answer per event */
+  protected readonly previewing = signal<ReadonlySet<number>>(new Set());
+  protected readonly previewResult = signal<ReadonlyMap<number, PreviewResult>>(new Map());
+
+  /** the event's next channel message privately to the superadmin first (an @everyone message cannot be unsent) */
+  protected async sendPreview(event: ReminderEvent): Promise<void> {
+    // aria-disabled while sending: the button keeps the keyboard focus
+    if (this.previewing().has(event.id)) return;
+    this.previewing.update((ids) => new Set(ids).add(event.id));
+    this.previewResult.update((map) => {
+      const next = new Map(map);
+      next.delete(event.id);
+      return next;
+    });
+    const result = await this.api.previewChannel(event.id);
+    this.previewResult.update((map) => new Map(map).set(event.id, result));
+    this.previewing.update((ids) => {
+      const next = new Set(ids);
+      next.delete(event.id);
+      return next;
+    });
   }
 
   protected more(): void {

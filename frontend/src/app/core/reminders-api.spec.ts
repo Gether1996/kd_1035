@@ -101,6 +101,25 @@ describe('RemindersApi', () => {
     }
   });
 
+  it('a channel preview says why it was not sent', async () => {
+    setup();
+    const answers: [object, number, string][] = [
+      [{ ok: true }, 200, 'ok'],
+      [{ reason: 'no_discord' }, 400, 'no_discord'],
+      [{ reason: 'bot_off' }, 503, 'bot_off'],
+      [{ reason: 'blocked' }, 502, 'blocked'],
+      [{ detail: 'Throttled' }, 429, 'throttled'],
+      [{ detail: 'Server Error' }, 500, 'unavailable'],
+    ];
+    for (const [body, status, result] of answers) {
+      const preview = api.previewChannel(7);
+      const post = http.expectOne('/api/events/channel/7/preview/');
+      expect(post.request.method).toBe('POST');
+      post.flush(body, { status, statusText: String(status) });
+      expect(await preview).toBe(result);
+    }
+  });
+
   it('a refused change rejects', async () => {
     setup();
     const save = api.setOffsets(1, [99999]);

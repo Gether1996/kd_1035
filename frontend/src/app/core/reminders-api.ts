@@ -61,6 +61,19 @@ export interface LastDelivery {
 /** "Poslať skúšobnú správu": sent, the bot cannot reach the player, Discord does not answer, too many tries */
 export type TestResult = 'ok' | 'blocked' | 'unavailable' | 'throttled';
 
+/** "Poslať ukážku mne" on the channel tab: sent, or why not (no next date, signed in without Discord, no bot,
+ *  the bot cannot reach the superadmin, Discord does not answer, too many tries) */
+export type PreviewResult =
+  | 'ok'
+  | 'no_date'
+  | 'no_discord'
+  | 'bot_off'
+  | 'blocked'
+  | 'unavailable'
+  | 'throttled';
+
+const PREVIEW_ERRORS: readonly PreviewResult[] = ['no_date', 'no_discord', 'bot_off', 'blocked'];
+
 const REMINDERS_URL = '/api/me/reminders/';
 const CHANNEL_URL = '/api/events/channel/';
 export const MAX_REMINDERS = 5;
@@ -97,6 +110,20 @@ export class RemindersApi {
   /** @everyone on or off for the event's channel messages */
   async setEveryone(eventId: number, everyone: boolean): Promise<void> {
     await firstValueFrom(this.http.patch(`${CHANNEL_URL}${eventId}/`, { everyone }));
+  }
+
+  /** The event's next channel message as a private DM to the superadmin, without any ping; never throws. */
+  async previewChannel(eventId: number): Promise<PreviewResult> {
+    if (!this.isBrowser) return 'unavailable';
+    try {
+      await firstValueFrom(this.http.post(`${CHANNEL_URL}${eventId}/preview/`, {}));
+      return 'ok';
+    } catch (error) {
+      if (!(error instanceof HttpErrorResponse)) return 'unavailable';
+      if (error.status === 429) return 'throttled';
+      const reason = (error.error as { reason?: PreviewResult } | null)?.reason;
+      return reason && PREVIEW_ERRORS.includes(reason) ? reason : 'unavailable';
+    }
   }
 
   /** Remind of the event `offsets` minutes before each start; an empty list stops the reminders. */
