@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from accounts.models import Player, SentReminder
 
-from . import overview
+from . import alerts, overview
 from .models import EventNotification, KingdomEvent
 
 Status = EventNotification.Status
@@ -139,7 +139,7 @@ class HeartbeatTests(TempStatusMixin, SimpleTestCase):
 
         def one_round(create_backup):
             with ExitStack() as stack:
-                for name in ('close_old_connections', 'send_due', 'send_personal_reminders', 'prune_sent'):
+                for name in ('close_old_connections', 'send_due', 'send_personal_reminders', 'prune_sent', 'check_alerts'):
                     stack.enter_context(mock.patch(f'{WORKER}.{name}'))
                 stack.enter_context(mock.patch(f'{WORKER}.call_command'))
                 stack.enter_context(mock.patch(f'{WORKER}.plan_reminders', return_value=0))
@@ -269,3 +269,137 @@ class SnapshotUnchangedTests(TempStatusMixin, TransactionTestCase):
             self.assertIsNotNone(overview.read_status())
             self.assertFalse(snapshot.export_snapshot())
             self.assertEqual((self.folder / 'snapshot' / 'db.sqlite3').read_bytes(), before)
+
+
+ADMIN_ID = '80351110224678912'
+
+
+@override_settings(
+    DISCORD_ADMIN_IDS=[ADMIN_ID, '80351110224678913'], DISCORD_BOT_TOKEN='bot', SITE_URL='https://kd1035.test'
+)
+class AlertTests(TempStatusMixin, TestCase):
+    """The worker's DMs about a failed backup or channel post – at most one per kind and day, nothing from history."""
+
+    def setUp(self):
+        super().setUp()
+        patcher = mock.patch('accounts.discord_bot.send_dm')
+        self.send_dm = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.now = timezone.now()
+        # a recent backup – only the case under test alerts
+        self.write(last_backup_at=self.now.isoformat(), last_backup_file='a.gz')
+
+    def fail(self, title='Ruins'):
+        return EventNotification.objects.create(title=title, send_at=self.now, status=Status.FAILED, error='x')
+
+    def tick(self, now=None, heartbeat=None):
+        heartbeat = heartbeat or overview.Heartbeat()
+        count = alerts.check(heartbeat, now or self.now)
+        heartbeat.tick()
+        return count
+
+    def test_a_new_failure_is_told_once(self):
+        self.tick()  # the first check takes in what exists
+        self.fail('Ruins <@here>')
+        self.assertEqual(self.tick(), 1)
+        self.assertEqual(self.send_dm.call_count, 2)  # every superadmin
+        target, message = self.send_dm.call_args.args
+        self.assertIn('Ruins', message['content'])
+        self.assertIn('https://kd1035.test/admin/', message['content'])
+        self.assertNotIn('<@here>', message['content'])  # escaped
+        self.assertEqual(self.tick(), 0)  # the same failure again: nothing
+        self.fail('Altar')
+        self.assertEqual(self.tick(self.now + timedelta(hours=1)), 0)  # a new one within the day: still nothing
+        self.assertEqual(self.send_dm.call_count, 2)
+
+    def test_history_and_a_restart_alert_nothing(self):
+        self.fail()  # failed before the alerts existed (the old status file has no keys for them)
+        self.assertEqual(self.tick(), 0)
+        self.assertEqual(self.tick(), 0)  # a new Heartbeat = the worker restarted
+        self.send_dm.assert_not_called()
+
+    @override_settings(BACKUP_INTERVAL_DAYS=7)
+    def test_old_backup_once_a_day(self):
+        self.write(last_backup_at=(self.now - timedelta(days=9)).isoformat(), last_backup_file='a.gz')
+        self.assertEqual(self.tick(), 1)
+        self.assertIn('9 d', self.send_dm.call_args.args[1]['content'])
+        self.assertEqual(self.tick(self.now + timedelta(hours=23)), 0)
+        self.assertEqual(self.tick(self.now + timedelta(hours=24)), 1)
+        self.assertEqual(self.send_dm.call_count, 4)
+
+    def test_failed_backup_attempt(self):
+        heartbeat = overview.Heartbeat()
+        heartbeat.backup_failed(OSError('disk full'))
+        self.assertEqual(self.tick(heartbeat=heartbeat), 1)
+        self.assertIn('disk full', self.send_dm.call_args.args[1]['content'])
+        self.assertEqual(overview.read_status()['backup_error'], 'disk full')
+        heartbeat.backup_written(Path('kd1035_new.sqlite3.gz'))
+        self.assertEqual(overview.read_status()['backup_error'], '')
+
+    def test_a_failing_dm_tries_again_in_an_hour(self):
+        self.tick()
+        self.fail()
+        self.send_dm.side_effect = RuntimeError('Discord down')
+        with self.assertLogs('kingdom.alerts', 'WARNING'):
+            self.assertEqual(self.tick(), 0)
+        self.send_dm.side_effect = None
+        self.assertEqual(self.tick(self.now + timedelta(minutes=30)), 0)
+        self.fail('Altar')
+        self.assertEqual(self.tick(self.now + timedelta(hours=1)), 1)
+
+    def test_the_worker_keeps_ticking_when_the_dm_raises(self):
+        self.tick()
+        self.fail()
+        self.send_dm.side_effect = RuntimeError('Discord down')
+        with ExitStack() as stack:
+            for name in ('close_old_connections', 'send_due', 'send_personal_reminders', 'prune_sent', 'call_command'):
+                stack.enter_context(mock.patch(f'{WORKER}.{name}'))
+            stack.enter_context(mock.patch(f'{WORKER}.plan_reminders', return_value=0))
+            stack.enter_context(mock.patch(f'{WORKER}.backup_due', return_value=False))
+            stack.enter_context(mock.patch('time.sleep', side_effect=[None, Stop]))
+            stack.enter_context(self.assertLogs('kingdom.alerts', 'WARNING'))
+            stack.enter_context(self.assertRaises(Stop))
+            call_command('run_worker')  # two ticks
+        self.assertIsNotNone(overview.read_status()['last_tick'])
+
+    def test_without_a_bot_nothing_is_sent_but_failures_are_taken_in(self):
+        self.tick()
+        self.fail()
+        with override_settings(DISCORD_BOT_TOKEN=''):
+            self.assertEqual(self.tick(), 0)
+        self.assertEqual(self.tick(), 0)  # set up later: no pile of old news
+        self.send_dm.assert_not_called()
+
+
+@override_settings(SUPERUSER_GUARD=True, DISCORD_ADMIN_IDS=[ADMIN_ID])
+class OpsInMeTests(TempStatusMixin, TestCase):
+    """The superadmin's red "!" in the header – the key only for a proven superadmin."""
+
+    def me(self):
+        return self.client.get('/api/auth/me/').json()['user']
+
+    def player(self, **flags):
+        user = User.objects.create_user(f'discord_{ADMIN_ID}', **flags)
+        return Player.objects.create(user=user, discord_id=ADMIN_ID, username='gether', announced=True)
+
+    def test_proven_superadmin_gets_ops(self):
+        self.client.force_login(self.player(is_superuser=True, is_staff=True).user)
+        session = self.client.session
+        session['kd_admin'] = f'discord:{ADMIN_ID}'
+        session.save()
+        self.write(last_tick=timezone.now().isoformat(), last_backup_at=timezone.now().isoformat())
+        self.assertEqual(self.me()['ops'], {'worker_stale': False, 'backup_stale': False, 'failed': 0})
+        # the worker stopped, a channel post failed
+        self.write(last_tick=(timezone.now() - timedelta(minutes=5)).isoformat(), backup_error='disk full')
+        EventNotification.objects.create(title='Ruins', send_at=timezone.now(), status=Status.FAILED)
+        self.assertEqual(self.me()['ops'], {'worker_stale': True, 'backup_stale': True, 'failed': 1})
+
+    def test_nobody_else_gets_ops(self):
+        self.assertIsNone(self.me())  # anonymous
+        self.assertNotIn('ops', self.client.get('/api/auth/me/').json())
+        player = self.player(is_superuser=True)  # the flag in the database, but not a proven session
+        self.client.force_login(player.user)
+        self.assertNotIn('ops', self.me())
+        player.user.is_superuser = False
+        player.user.save()
+        self.assertNotIn('ops', self.me())

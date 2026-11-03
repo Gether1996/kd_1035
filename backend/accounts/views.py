@@ -24,6 +24,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.throttling import SimpleRateThrottle, UserRateThrottle
 
+from kingdom import overview
+
 from . import discord_oauth, guard, local_auth
 from .models import TERMS_VERSION, Player, PlayerSettings
 from .serializers import ProfileSerializer
@@ -287,7 +289,7 @@ def signed_in(request) -> dict | None:
         return None
     # the power of the KvK evaluation – the player's own or the one the superadmin wrote down (Gether 14. 10. 2026)
     evaluation = getattr(player, 'evaluation', None)
-    return {
+    data = {
         'discord_id': player.discord_id,
         # without Discord (local_auth.py): no bot DMs, the password on /ucet
         'local': player.local,
@@ -317,6 +319,11 @@ def signed_in(request) -> dict | None:
         and player.kvk_signups.exists()
         and not player.kvk_signups.exclude(budget='').exclude(online=[]).exists(),
     }
+    if request.user.is_superuser:
+        # the superadmin's red "!" (worker stopped, old backup, failed channel posts) – after the guard
+        # (accounts/guard.py) is_superuser is the proven flag; nobody else gets the key
+        data['ops'] = overview.ops()
+    return data
 
 
 def update_profile(request):
