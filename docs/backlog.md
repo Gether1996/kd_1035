@@ -5,6 +5,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 ## Hotové
 
 - **3. 11. 2026 – bez verzie:** Huo Qubing + Arthur Pendragon v návode na jazdu (d8c135e). Test `MentionCoverageTests`: každý commander spomenutý v návodoch je v hľadaní párov alebo v `MENTION_ONLY` (Archimedes, Cheok Jun-gyeong, Trajan, William Wallace) s dôvodom; pravidlo v `docs/navody.md` a `kd-meta-update`. Drobnosti: krátke mená (Arthur, Nevsky) a commanderi bez portrétu sa nedetegujú.
+- **3. 11. 2026 – v1.56.9:** Karta marchu (`/marche`, Marche hráčov, `/kvk`) odkazuje na náš návod k páru, inak na „Nájdi pár“ pre primárneho commandera (`/navody?commander=…#najdi-par`); index `/api/commanders/` raz na stránku (`CommanderIndex`).
 - **3. 11. 2026 – v1.56.8:** Editor výbavy a armamentov sa pred zahodením neuložených zmien opýta (Esc, X, Zrušiť, zatvorenie karty) – na `/marche` aj `/kvk`.
 - **3. 11. 2026 – v1.56.7:** Staré marche a prihlášky s dvoma zlatými/modrými inscriptions na jednom armamente: `march_checker` vracia `inscription_problem` (červený rám, Na opravu, počet v Hráčoch, Discord upozornenie), na karte odkaz **Oprav armamenty** otvorí editor na tom armamente. Rozsah: `manage.py count_rare_excess` (len počty).
 - **3. 11. 2026 – v1.56.6:** Armamenty: na jednom armamente najviac 1 zlatá alebo modrá inscription (2 biele, zlatá + biela, modrá + biela; Gether). Server odmietne iné (`rare_per_piece`), editor pri výbere ďalšej zlatej/modrej vymení tú prvú; staré uložené dve: editor ich nedovolí uložiť, Vyhodnocovanie ráta lepšiu a march je „Na opravu“.
