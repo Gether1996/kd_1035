@@ -163,3 +163,74 @@
     color: var(--red-300);
   }
 }
+
+// "Načítať z Top 5 equip": the winner of each troop type before it is written
+.fill {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(4, 10, 23, 0.35);
+}
+
+.fill__hint,
+.fill__title {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.fill__title {
+  font-weight: 700;
+  color: var(--gold-300);
+}
+
+.fill__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fill__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.fill__troop-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.fill__troop {
+  min-width: 7.5em;
+  color: var(--text-dim);
+}
+
+.fill__name {
+  font-weight: 700;
+  color: var(--text);
+
+  &.is-none {
+    font-weight: 400;
+    color: var(--text-dim);
+  }
+}
+
+// the place of the best equipment: its troop type with the game's tag
+.slot__place:has(.fill__troop-icon) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// an empty state line takes no room in the box (it stays in the page for screen readers)
+.fill .slot__state {
+  min-height: 0;
+}

@@ -13,6 +13,53 @@
       <h2 class="group__title" [id]="'hall-edit-' + category">
         <svg [appIcon]="icons[category]"></svg>{{ h.categories[category].title }}
       </h2>
+      @if (category === 'equipment') {
+        <!-- the best of Top 5 equip (3. 11. 2026): what will be written first, then all three places at once -->
+        @let q = x.equipment;
+        <div class="fill">
+          <p class="fill__hint">{{ q.hint }}</p>
+          @if (equipmentLoad() === 'preview') {
+            <p class="fill__title">{{ q.preview }}</p>
+            <ul class="fill__list">
+              @for (troop of troops; track troop; let i = $index) {
+                @let w = winners()[i];
+                <li class="fill__row">
+                  <img class="fill__troop-icon" [src]="troopIcon(troop)" alt="" width="20" height="20" />
+                  <span class="fill__troop">{{ troopName(troop) }}</span>
+                  @if (w) {
+                    <span class="fill__name">{{ w.name }}</span>
+                  } @else {
+                    <span class="fill__name is-none">{{ q.nobody }}</span>
+                  }
+                </li>
+              }
+            </ul>
+            <div class="slot__actions">
+              <button type="button" class="pill-btn" [attr.aria-disabled]="busy() === 'equipment' || null" (click)="busy() !== 'equipment' && applyEquipment()">
+                {{ busy() === 'equipment' ? x.saving : q.apply }}
+              </button>
+              <button type="button" class="pill-btn pill-btn--quiet" (click)="equipmentLoad.set('idle')">{{ q.cancel }}</button>
+            </div>
+          } @else {
+            <div class="slot__actions">
+              <button type="button" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="equipmentLoad() === 'loading' || null" (click)="equipmentLoad() !== 'loading' && loadEquipment()">
+                <svg appIcon="gem"></svg>{{ equipmentLoad() === 'loading' ? q.loading : q.load }}
+              </button>
+            </div>
+          }
+          <p class="slot__state" role="status" [class.is-error]="equipmentLoad() === 'failed' || !!problems()['equipment']">
+            @if (equipmentLoad() === 'failed') {
+              {{ q.failed }}
+            } @else if (equipmentLoad() === 'empty') {
+              {{ q.empty }}
+            } @else if (problems()['equipment']; as p) {
+              {{ x.errors[p] }}
+            } @else if (saved() === 'equipment') {
+              {{ x.saved }}
+            }
+          </p>
+        </div>
+      }
       <div class="group__places">
         @for (place of range(category); track place) {
           @let k = key(category, place);
@@ -22,7 +69,12 @@
             @if (range(category).length > 1) {
               <!-- the mascots: the name goes under the clown on that side of the picture -->
               <p class="slot__place">
-                {{ category === 'mascot' ? x.clowns[place - 1] : category === 'zero' ? x.graves[place - 1] : h.place.replace('{n}', '' + place) }}
+                @if (category === 'equipment' && troopOfPlace(place); as troop) {
+                  <!-- the best equipment: a place per troop type -->
+                  <img class="fill__troop-icon" [src]="troopIcon(troop)" alt="" width="20" height="20" />{{ troopName(troop) }}
+                } @else {
+                  {{ category === 'mascot' ? x.clowns[place - 1] : category === 'zero' ? x.graves[place - 1] : h.place.replace('{n}', '' + place) }}
+                }
               </p>
             }
 
@@ -85,7 +137,7 @@
               />
               <p class="field__hint" [id]="k + '-name-hint'">{{ x.nameHint }}</p>
             </div>
-            @if (trios.includes(category)) {
+            @if (category === 'forts' || category === 'kp') {
               <!-- the number shown at the player: forts of the last week, KP of the last KvK -->
               <div class="field">
                 <label class="field__label" [for]="k + '-count'">{{ category === 'forts' ? x.count.forts : x.count.kp }}</label>

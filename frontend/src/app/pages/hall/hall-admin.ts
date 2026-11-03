@@ -2,9 +2,25 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { ChangeDetectionStrategy, Component, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { ArmoryData, armoryIndex } from '../../core/armory';
+import { cs } from '../../core/i18n/cs';
 import { I18n } from '../../core/i18n/i18n';
+import { sk } from '../../core/i18n/sk';
+import { marchIcon } from '../../core/kvk-api';
 import { Icon } from '../../shared/icon';
-import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, TRIOS, portrait } from './hall-data';
+import { EquipmentData, EquipmentPlayer } from '../evaluation/equipment';
+import { equipmentWinners } from './equipment-winners';
+import {
+  EQUIPMENT_TROOPS,
+  EquipmentTroop,
+  HALL_ICONS,
+  HONOURS,
+  HallCategory,
+  HallData,
+  HallEntry,
+  portrait,
+  troopOfPlace,
+} from './hall-data';
 
 /** a player of the website to choose from (the superadmin's list of players, /api/kvk/reviewers/) */
 interface Choice {
@@ -26,6 +42,9 @@ interface Draft {
 
 type Problem = 'name' | 'photo' | 'failed';
 
+/** "Načítať z Top 5 equip": nothing yet, loading, the winners to confirm, nobody has any equipment, failed */
+type EquipmentLoad = 'idle' | 'loading' | 'preview' | 'empty' | 'failed';
+
 const ORDER: HallCategory[] = [...HONOURS, 'zero', 'mascot'];
 
 /**
@@ -46,7 +65,9 @@ export class HallAdmin {
   private readonly http = inject(HttpClient);
 
   protected readonly order = ORDER;
-  protected readonly trios = TRIOS;
+  protected readonly troops = EQUIPMENT_TROOPS;
+  protected readonly troopOfPlace = troopOfPlace;
+  protected readonly troopIcon = marchIcon;
   protected readonly icons = HALL_ICONS;
   protected readonly portrait = portrait;
   protected readonly entries = signal<HallEntry[]>([]);
@@ -59,6 +80,9 @@ export class HallAdmin {
   protected readonly saved = signal<string | null>(null);
   protected readonly problems = signal<Record<string, Problem>>({});
   protected readonly confirm = signal<string | null>(null);
+  /** the best equipment from Top 5 equip – the winner of each troop type before it is written */
+  protected readonly equipmentLoad = signal<EquipmentLoad>('idle');
+  protected readonly winners = signal<(EquipmentPlayer | null)[]>([]);
 
   /** approved players first, then the others, each by name */
   protected readonly choices = computed(() =>
@@ -166,6 +190,66 @@ export class HallAdmin {
     await this.run(this.key(category, place), async () => {
       this.store(await firstValueFrom(this.http.delete<HallEntry>(`/api/hall/${category}/${place}/photo/`)));
     });
+  }
+
+  /**
+   * The winners of Top 5 equip (/api/evaluation/equipment/ and the armory, scored in the browser exactly like its tab)
+   * shown before anything is written
+   */
+  protected async loadEquipment(): Promise<void> {
+    this.equipmentLoad.set('loading');
+    this.problems.update(({ equipment: _old, ...rest }) => rest);
+    try {
+      const [data, armory] = await Promise.all([
+        firstValueFrom(this.http.get<EquipmentData>('/api/evaluation/equipment/')),
+        firstValueFrom(this.http.get<ArmoryData>('/api/armory/')),
+      ]);
+      const winners = equipmentWinners(data, armoryIndex(armory));
+      this.winners.set(winners);
+      this.equipmentLoad.set(winners.some(Boolean) ? 'preview' : 'empty');
+    } catch {
+      this.equipmentLoad.set('failed');
+    }
+  }
+
+  /**
+   * Writes the three places at once (PUT /api/hall/equipment/): the player of the website (their avatar shows), no
+   * number, the troop type as the reason in SK and CZ; a troop type nobody scored in is emptied. A photo stays with a
+   * player who keeps a place.
+   */
+  protected async applyEquipment(): Promise<void> {
+    const moved = new Set<number>();
+    const entries = this.winners().map((player, i) => {
+      if (!player) return null;
+      const troop = EQUIPMENT_TROOPS[i];
+      const before = this.entries().find(
+        (e) => e.category === 'equipment' && e.player === player.id && !!e.photo && !moved.has(e.id),
+      );
+      if (before) moved.add(before.id);
+      return {
+        player: player.id,
+        name: '',
+        count: '',
+        note_sk: sk.marches.build.troops[troop],
+        note_cs: cs.marches.build.troops[troop],
+        photo_from: before?.id ?? null,
+      };
+    });
+    await this.run('equipment', async () => {
+      const saved = await firstValueFrom(this.http.put<{ entries: HallEntry[] }>('/api/hall/equipment/', { entries }));
+      this.entries.update((list) => [...list.filter((e) => e.category !== 'equipment'), ...saved.entries]);
+      this.drafts.update((d) => {
+        const rest = Object.fromEntries(Object.entries(d).filter(([key]) => !key.startsWith('equipment-')));
+        for (const e of saved.entries) rest[this.key(e.category, e.place)] = this.draftOf(e);
+        return rest;
+      });
+      this.equipmentLoad.set('idle');
+      this.saved.set('equipment');
+    });
+  }
+
+  protected troopName(troop: EquipmentTroop): string {
+    return this.t().marches.build.troops[troop];
   }
 
   private store(entry: HallEntry): void {

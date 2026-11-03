@@ -1,6 +1,16 @@
 import { IconName } from '../../shared/icon';
 
-export type HallCategory = 'forts' | 'kp' | 'rally' | 'garrison' | 'helper' | 'diplomat' | 'mascot' | 'zero';
+export type HallCategory = 'forts' | 'kp' | 'rally' | 'garrison' | 'helper' | 'diplomat' | 'equipment' | 'mascot' | 'zero';
+
+/**
+ * "Najlepšia výbava" (3. 11. 2026): the place is the troop type, not a rank – place 1 infantry, 2 cavalry, 3 archers,
+ * the order of EQUIPMENT_KINDS of Top 5 equip (kept here, so the home teaser does not load the scoring)
+ */
+export const EQUIPMENT_TROOPS = ['infantry', 'cavalry', 'archer'] as const;
+export type EquipmentTroop = (typeof EQUIPMENT_TROOPS)[number];
+
+/** the troop type of a place of the best equipment */
+export const troopOfPlace = (place: number): EquipmentTroop | null => EQUIPMENT_TROOPS[place - 1] ?? null;
 
 /** a filled place, as /api/hall/ sends it */
 export interface HallEntry {
@@ -28,11 +38,14 @@ export interface HallData {
   places?: Record<HallCategory, number>;
 }
 
-/** the categories with a top 3 – the wide columns on the raised step (Gether 28. 10. 2026: "nech je to motivačné") */
-export const TRIOS: HallCategory[] = ['forts', 'kp'];
+/**
+ * the categories with a top 3 – the wide columns on the raised step (Gether 28. 10. 2026: "nech je to motivačné");
+ * the best equipment has its three troop types there the same way
+ */
+export const TRIOS: HallCategory[] = ['forts', 'kp', 'equipment'];
 
 /** the pedestals in the order of the hall (the mascots have their own corner) */
-export const HONOURS: HallCategory[] = ['forts', 'kp', 'rally', 'garrison', 'helper', 'diplomat'];
+export const HONOURS: HallCategory[] = ['forts', 'kp', 'equipment', 'rally', 'garrison', 'helper', 'diplomat'];
 
 export const HALL_ICONS: Record<HallCategory, IconName> = {
   forts: 'castle',
@@ -41,6 +54,7 @@ export const HALL_ICONS: Record<HallCategory, IconName> = {
   garrison: 'shield',
   helper: 'hand-helping',
   diplomat: 'handshake',
+  equipment: 'gem',
   mascot: 'laugh',
   zero: 'skull',
 };

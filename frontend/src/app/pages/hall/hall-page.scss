@@ -108,12 +108,15 @@
   margin-bottom: clamp(28px, 4vw, 48px);
 }
 
-// a few categories in one row (Gether 28. 10. 2026): a narrower desktop keeps three of them side by side
+// a few categories in one row (Gether 28. 10. 2026): a narrower desktop keeps three of them side by side – up to
+// 1439 px also three top 3 banners (the best equipment, 3. 11. 2026) and a single one
 .tier--one {
-  @media (min-width: 900px) and (max-width: 1279px) {
+  @media (min-width: 900px) and (max-width: 1439px) {
     column-gap: 16px;
 
+    // three portraits (2.36 × the first) stay over their own banner
     .pillar.is-trio {
+      --portrait: clamp(96px, 8.5vw, 112px);
       flex-basis: 280px;
     }
 
@@ -222,6 +225,14 @@
       margin-right: calc(var(--size) * -0.06);
     }
   }
+
+  // the best equipment: three equal portraits, infantry · cavalry · archers from the left – a place is a troop type
+  &[data-cat='equipment'] .pillar__portrait {
+    --size: calc(var(--portrait) * 0.78);
+    z-index: auto;
+    order: 0;
+    margin: 0 calc(var(--size) * -0.03);
+  }
 }
 
 // "za posledný týždeň" under the title of a top 3
@@ -276,6 +287,23 @@
 .pillar__amount {
   font: 700 clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem) / 1.3 var(--font-display);
   color: var(--gold-300);
+  white-space: nowrap;
+}
+
+// the best equipment: the troop type's tag of the game and its name instead of a rank
+.pillar__troop-icon {
+  align-self: center;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.pillar__troop {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
   white-space: nowrap;
 }
 

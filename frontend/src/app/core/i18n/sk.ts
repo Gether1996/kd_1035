@@ -546,6 +546,8 @@ export const sk = {
       garrison: { title: 'Strážca garrisonu' },
       helper: { title: 'Pomocná ruka' },
       diplomat: { title: 'KvK Leader' },
+      // a place per troop type (3. 11. 2026), the best of Top 5 equip
+      equipment: { title: 'Najlepšia výbava', period: 'podľa výbavy na webe' },
       mascot: { title: 'Maskoti KD', text: 'Bez nich by to nebolo ono.' },
       zero: { title: 'Zero', text: 'Minulé KvK dostali zero.' },
     },
@@ -555,6 +557,18 @@ export const sk = {
       lead: 'Vyber hráča z webu alebo napíš meno. Prázdne miesto sa v sieni neukáže.',
       clowns: ['Klaun vľavo', 'Klaun vpravo'],
       graves: ['Náhrobok vľavo', 'Náhrobok v strede', 'Náhrobok vpravo'],
+      // the best equipment: the winners of Top 5 equip (/vyhodnocovanie), shown before they are saved
+      equipment: {
+        load: 'Načítať z Top 5 equip',
+        loading: 'Načítavam…',
+        hint: 'Najlepší hráč na pechotu, jazdu a lukostrelcov z Top 5 equip. Najprv uvidíš, čo sa zapíše.',
+        preview: 'Zapíše sa',
+        nobody: 'nikto – miesto ostane prázdne',
+        apply: 'Zapísať',
+        cancel: 'Zrušiť',
+        empty: 'V Top 5 equip zatiaľ nikto nemá výbavu.',
+        failed: 'Top 5 equip sa nepodarilo načítať. Skús to znova.',
+      },
       player: 'Hráč',
       none: '– len meno –',
       name: 'Meno',

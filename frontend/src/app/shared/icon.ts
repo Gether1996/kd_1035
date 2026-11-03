@@ -26,6 +26,7 @@ export type IconName =
   | 'facebook'
   | 'flag'
   | 'flame'
+  | 'gem'
   | 'gift'
   | 'hand-helping'
   | 'handshake'

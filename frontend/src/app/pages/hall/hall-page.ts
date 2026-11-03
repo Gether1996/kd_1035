@@ -15,13 +15,24 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Auth } from '../../core/auth';
+import { marchIcon } from '../../core/kvk-api';
 import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PendingApproval } from '../../shared/pending-approval';
 import { plural } from '../reminders/format';
 import { HallAdmin } from './hall-admin';
-import { HALL_ICONS, HONOURS, HallCategory, HallData, HallEntry, TRIOS, portrait } from './hall-data';
+import {
+  EquipmentTroop,
+  HALL_ICONS,
+  HONOURS,
+  HallCategory,
+  HallData,
+  HallEntry,
+  TRIOS,
+  portrait,
+  troopOfPlace,
+} from './hall-data';
 
 /** up to this many columns stand in one row */
 const ONE_ROW = 4;
@@ -165,8 +176,27 @@ export class HallPage {
     return (this.t().hall.categories as Record<string, { period?: string }>)[category]?.period ?? '';
   }
 
+  /**
+   * The reason under a name; at the best equipment not when it only repeats the troop type (the button of the editor
+   * writes the type there, the banner shows it already)
+   */
   protected note(entry: HallEntry): string {
-    return entry.note[this.i18n.lang()];
+    const note = entry.note[this.i18n.lang()];
+    const troop = this.troop(entry);
+    return troop && note.trim().toLocaleLowerCase() === this.troopName(troop).toLocaleLowerCase() ? '' : note;
+  }
+
+  /** the troop type of a place of the best equipment, null elsewhere */
+  protected troop(entry: HallEntry): EquipmentTroop | null {
+    return entry.category === 'equipment' ? troopOfPlace(entry.place) : null;
+  }
+
+  protected troopName(troop: EquipmentTroop): string {
+    return this.t().marches.build.troops[troop];
+  }
+
+  protected troopIcon(troop: EquipmentTroop): string {
+    return marchIcon(troop);
   }
 
   /** the first letter of the name – the portrait of a name without a picture */
