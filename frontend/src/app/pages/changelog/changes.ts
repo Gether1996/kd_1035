@@ -16,8 +16,10 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.59.1',
+    version: '1.59.2',
     sk: [
+      'Kalendár: hráč bez Discordu sa po prepojení s Discordom vráti rovno k eventu a nastaví si pripomienku.',
+      'Nájdi pár pre commandera: presnejšia hláška, keď pár pre takého commandera v návodoch nemáme.',
       'Inscriptions sa počítajú po armamentoch: plné body sú 4 zlaté najvyššieho tieru, biela zlatú len doplní, nenahradí.',
       'Prihláška na KvK sa volá KvK rally / garrison – je len pre tých, čo chcú viesť rally alebo držať garrison.',
       'Pri výbave a armamentoch rally či garrisonu pribudlo Načítať z marchu – stačí upraviť, čo sa líši.',
@@ -31,6 +33,8 @@ export const CHANGES: Change[] = [
       'March a prihláška na KvK uložené skôr s dvoma zlatými či modrými na jednom armamente sú červené a odkaz Oprav armamenty otvorí ten armament.',
     ],
     cs: [
+      'Kalendář: hráč bez Discordu se po propojení s Discordem vrátí rovnou k eventu a nastaví si připomínku.',
+      'Najdi pár pro commandera: přesnější hláška, když pár pro takového commandera v návodech nemáme.',
       'Inscriptions se počítají po armamentech: plné body jsou 4 zlaté nejvyššího tieru, bílá zlatou jen doplní, nenahradí.',
       'Přihláška na KvK se jmenuje KvK rally / garrison – je jen pro ty, kdo chtějí vést rally nebo držet garrison.',
       'U výbavy a armamentů rally či garrisonu přibylo Načíst z marche – stačí upravit, co se liší.',

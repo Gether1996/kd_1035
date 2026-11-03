@@ -101,7 +101,7 @@ describe('CommanderFinder', () => {
     input!.value = 'xyz';
     input!.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(el.querySelector('.finder__empty')?.textContent).toContain('nespomínajú');
+    expect(el.querySelector('.finder__empty')?.textContent).toContain('v návodoch nemáme');
 
     press(input!, 'Escape');
     await fixture.whenStable();

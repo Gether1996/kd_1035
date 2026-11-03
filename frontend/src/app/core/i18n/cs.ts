@@ -253,7 +253,7 @@ export const cs: Dict = {
     label: 'Jméno commandera',
     placeholder: 'Např. Attila',
     clear: 'Vymazat',
-    noMatch: 'Takového commandera naše návody nezmiňují.',
+    noMatch: 'Pár pro takového commandera v návodech nemáme.',
     roles: {
       primary: 'Jako primární',
       secondary: 'Jako sekundární',
@@ -836,7 +836,7 @@ export const cs: Dict = {
     intro: 'Označ commandery, které máš, a uvidíš páry z našich návodů, které můžeš hned postavit.',
     filter: 'Hledat commandera',
     listLabel: 'Commandeři z návodů',
-    noMatch: 'Takového commandera naše návody nezmiňují.',
+    noMatch: 'Pár pro takového commandera v návodech nemáme.',
     owned: { one: '{n} označený commander', few: '{n} označení commandeři', other: '{n} označených commanderů' },
     clear: 'Zrušit výběr',
     saved: 'Výběr si pamatuje jen tento prohlížeč.',

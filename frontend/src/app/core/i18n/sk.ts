@@ -260,7 +260,7 @@ export const sk = {
     label: 'Meno commandera',
     placeholder: 'Napr. Attila',
     clear: 'Vymazať',
-    noMatch: 'Takého commandera naše návody nespomínajú.',
+    noMatch: 'Pár pre takého commandera v návodoch nemáme.',
     roles: {
       primary: 'Ako primárny',
       secondary: 'Ako sekundárny',
@@ -875,7 +875,7 @@ export const sk = {
     intro: 'Označ commanderov, ktorých máš, a uvidíš páry z našich návodov, ktoré vieš hneď postaviť.',
     filter: 'Hľadať commandera',
     listLabel: 'Commanderi z návodov',
-    noMatch: 'Takého commandera naše návody nespomínajú.',
+    noMatch: 'Pár pre takého commandera v návodoch nemáme.',
     owned: { one: '{n} označený commander', few: '{n} označení commanderi', other: '{n} označených commanderov' },
     clear: 'Zrušiť výber',
     saved: 'Výber si pamätá iba tento prehliadač.',
