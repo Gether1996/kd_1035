@@ -765,6 +765,10 @@ export const sk = {
       save: 'Uložiť',
       saving: 'Ukladám…',
       cancel: 'Zrušiť',
+      // Esc, X or Zrušiť with unsaved changes (Gether 3. 11. 2026)
+      discardConfirm: 'Máš neuložené zmeny výbavy. Zahodiť ich?',
+      discard: 'Zahodiť zmeny',
+      keepEditing: 'Pokračovať v úprave',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',
       loadError: 'Zoznam výbavy sa nepodarilo načítať. Skús to znova o chvíľu.',
       source: 'Predmety a inscriptions: codexhelper.com a meta-rok.com, stav k {date}.',

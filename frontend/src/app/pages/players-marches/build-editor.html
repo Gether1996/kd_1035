@@ -1,4 +1,4 @@
-<dialog #dialog class="modal be" (close)="closed()" [attr.aria-labelledby]="id">
+<dialog #dialog class="modal be" (cancel)="cancel($event)" (close)="closed()" [attr.aria-labelledby]="id">
   @if (march(); as m) {
     @let k = t();
     @let b = k.build;
@@ -8,7 +8,7 @@
           <h2 class="modal__title" [id]="id">{{ b.title }}</h2>
           <p class="modal__eyebrow">{{ k.march.replace('{n}', '' + m.position) }}@if (m.primary) { · {{ m.primary }}}</p>
         </div>
-        <button type="button" class="modal__close" [attr.aria-label]="b.cancel" (click)="close()">
+        <button type="button" class="modal__close" [attr.aria-label]="b.cancel" (click)="requestClose($event.currentTarget)">
           <svg appIcon="x"></svg>
         </button>
       </header>
@@ -245,10 +245,18 @@
         }
 
         <div class="form__actions be__actions">
+          <!-- unsaved changes are not thrown away without asking (Esc, X, Zrušiť) -->
+          @if (confirmDiscard()) {
+            <div class="be__discard">
+              <p role="alert">{{ b.discardConfirm }}</p>
+              <button type="button" class="danger" (click)="discard()">{{ b.discard }}</button>
+              <button #keep type="button" class="pill-btn pill-btn--quiet" (click)="keepEditing()">{{ b.keepEditing }}</button>
+            </div>
+          }
           <button type="button" class="pill-btn" [attr.aria-disabled]="busy() || null" (click)="save()">
             {{ busy() ? b.saving : b.save }}
           </button>
-          <button type="button" class="pill-btn pill-btn--quiet" (click)="close()">{{ b.cancel }}</button>
+          <button type="button" class="pill-btn pill-btn--quiet" (click)="requestClose($event.currentTarget)">{{ b.cancel }}</button>
           <p class="form__state is-error" role="status">{{ error() }}</p>
         </div>
         <p class="be__source">{{ b.source.replace('{date}', sourceDate(ix.data.verified)) }}</p>

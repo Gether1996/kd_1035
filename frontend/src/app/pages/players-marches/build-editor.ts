@@ -1,4 +1,20 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  PLATFORM_ID,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   ARMAMENT_ICONS,
   ARMAMENT_PIECES,
@@ -75,7 +91,9 @@ export class BuildEditor {
   protected readonly iconicLevels = Array.from({ length: ICONIC_MAX + 1 }, (_, i) => i);
   protected readonly roman = roman;
 
+  private readonly injector = inject(Injector);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  private readonly keepButton = viewChild<ElementRef<HTMLButtonElement>>('keep');
   private opener: HTMLElement | null = null;
 
   protected readonly march = signal<March | null>(null);
@@ -93,6 +111,40 @@ export class BuildEditor {
   protected readonly weaker = signal(false);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+
+  /**
+   * Unsaved changes are not thrown away without asking (Esc, X, "Zrušiť", a reload): minutes of clicking gone with
+   * one stray Esc. `initial` is the build as opened or last saved; both sides are compared in the shape "Uložiť"
+   * sends, so an untouched editor is never dirty (ids the catalog dropped, null vs 0 All DMG, order).
+   */
+  private readonly initial = signal<Draft | null>(null);
+  protected readonly dirty = computed(() => {
+    const initial = this.initial();
+    return !!initial && this.shape(this.draft()) !== this.shape(initial);
+  });
+  /** the question "Zahodiť zmeny?" in the actions */
+  protected readonly confirmDiscard = signal(false);
+  /** "Zahodiť zmeny" clicked: the close that follows is wanted */
+  private discarding = false;
+  /** what asked to close (X, Zrušiť, the element focused before Esc) – "Pokračovať v úprave" returns there */
+  private returnTo: HTMLElement | null = null;
+  /** closing or reloading the tab with the dirty editor open: the browser asks in its own words */
+  private readonly askBeforeUnload = (e: BeforeUnloadEvent) => {
+    e.preventDefault();
+    // older Safari asks only with this set
+    e.returnValue = true;
+  };
+
+  constructor() {
+    if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
+    effect((onCleanup) => {
+      if (!this.march() || !this.dirty()) return;
+      addEventListener('beforeunload', this.askBeforeUnload);
+      onCleanup(() => removeEventListener('beforeunload', this.askBeforeUnload));
+    });
+    // the page can go while the dialog is open (Back in the browser is not blocked by the modal)
+    inject(DestroyRef).onDestroy(() => removeEventListener('beforeunload', this.askBeforeUnload));
+  }
 
   /**
    * `opener` gets the focus back on close (the clicked button, or the new card's after a new march); `slot` opens
@@ -120,7 +172,48 @@ export class BuildEditor {
     this.weaker.set(false);
     this.error.set(null);
     this.statsMissing.set(false);
+    this.confirmDiscard.set(false);
+    this.discarding = false;
+    this.initial.set(this.draft());
     this.dialog().nativeElement.showModal();
+  }
+
+  /** Esc: a clean editor closes at once, a dirty one asks first */
+  protected cancel(event: Event): void {
+    event.preventDefault();
+    this.requestClose(document.activeElement);
+  }
+
+  /** X and "Zrušiť" (`from` = the button) */
+  protected requestClose(from: EventTarget | Element | null): void {
+    if (!this.dirty()) return this.close();
+    this.askDiscard(from instanceof HTMLElement ? from : null);
+  }
+
+  private askDiscard(from: HTMLElement | null): void {
+    // a second Esc while asking (the focus on its answers) keeps the first place to return to
+    if (from?.closest('.be__discard')) from = null;
+    if (!this.confirmDiscard() || from) this.returnTo = from;
+    this.confirmDiscard.set(true);
+    // the question is read out (role="alert"); the focus waits on the harmless answer
+    afterNextRender({ write: () => this.keepButton()?.nativeElement.focus() }, { injector: this.injector });
+  }
+
+  /** "Pokračovať v úprave": every change stays, the focus goes back where the player was */
+  protected keepEditing(): void {
+    this.confirmDiscard.set(false);
+    const back = this.returnTo?.isConnected ? this.returnTo : null;
+    this.returnTo = null;
+    afterNextRender(
+      { write: () => (back ?? this.dialog().nativeElement.querySelector<HTMLElement>('.modal__close'))?.focus() },
+      { injector: this.injector },
+    );
+  }
+
+  /** "Zahodiť zmeny" */
+  protected discard(): void {
+    this.discarding = true;
+    this.close();
   }
 
   protected close(): void {
@@ -128,6 +221,18 @@ export class BuildEditor {
   }
 
   protected closed(): void {
+    // closed without a cancel we could stop (Chrome's second Esc without a click between, the Android back gesture):
+    // open again with the changes and ask
+    if (this.march() && this.dirty() && !this.discarding) {
+      this.dialog().nativeElement.showModal();
+      this.askDiscard(null);
+      return;
+    }
+    removeEventListener('beforeunload', this.askBeforeUnload);
+    this.discarding = false;
+    this.confirmDiscard.set(false);
+    this.returnTo = null;
+    this.initial.set(null);
     this.march.set(null);
     this.opener?.focus();
   }
@@ -374,15 +479,29 @@ export class BuildEditor {
   // ---------------------------------------------------------------- saving
 
   /** the build without ids the catalog no longer knows (a later fetch_armory may drop one) – they would block saving */
-  private known(): Build {
+  private known(draft: Build = this.draft()): Build {
     const index = this.index();
-    const { gear, formation, inscriptions } = this.draft();
+    const { gear, formation, inscriptions } = draft;
     if (!index) return { gear, formation, inscriptions };
     return {
       gear: Object.fromEntries(Object.entries(gear).filter(([, piece]) => piece && index.items.has(piece.item))),
       formation: index.formations.has(formation) ? formation : '',
       inscriptions: inscriptions.filter((id) => index.inscriptions.has(id)),
     };
+  }
+
+  /** a draft as "Uložiť" would send it, in a fixed order – for `dirty` */
+  private shape(draft: Draft): string {
+    const { gear, formation, inscriptions } = this.known(draft);
+    return JSON.stringify([
+      GEAR_SLOTS.map((slot) => {
+        const piece = gear[slot];
+        return piece ? [piece.item, !!piece.crit, piece.iconic ?? 0] : null;
+      }),
+      formation,
+      [...inscriptions].sort(),
+      ARMAMENT_STATS.map((stat) => draft.stats[stat] ?? (stat === 'damage' ? 0 : null)),
+    ]);
   }
 
   /** "stav k októbru 2026" */
@@ -415,6 +534,8 @@ export class BuildEditor {
       const change = { ...this.known(), ...stats, damage: stats.damage ?? 0 };
       const save = this.saveWith();
       const updated = save ? await save(march, change) : await this.api.update(march.id, change);
+      // saved: closing does not ask
+      this.initial.set(this.draft());
       this.saved.emit(updated);
       this.close();
     } catch {

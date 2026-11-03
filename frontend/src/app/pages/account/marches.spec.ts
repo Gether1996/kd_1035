@@ -208,9 +208,50 @@ describe('Marches', () => {
     expect(tiles()[0].getAttribute('aria-pressed')).toBe('true');
     expect(items()[0].getAttribute('aria-pressed')).toBe('true');
     expect(tiles()[0].querySelector('img')?.getAttribute('src')).toBe('/static/guides/gear/sacred-dominion.webp');
-    // Zrušiť leaves the march as it was, the next opening starts from it again
-    dialog.querySelector<HTMLButtonElement>('.be__actions .pill-btn--quiet')!.click();
+    // unsaved changes: Zrušiť, X and Esc ask first (the dialog stays open), "Pokračovať v úprave" keeps every change
+    const cancel = dialog.querySelector<HTMLButtonElement>('.be__actions > .pill-btn--quiet')!;
+    const question = () => dialog.querySelector('.be__discard [role="alert"]');
+    const answer = (n: number) => dialog.querySelectorAll<HTMLButtonElement>('.be__discard button')[n];
+    cancel.focus();
+    cancel.click();
     await tick(fixture);
+    expect(dialog.hasAttribute('open')).toBe(true);
+    expect(question()?.textContent?.trim()).toBe('Máš neuložené zmeny výbavy. Zahodiť ich?');
+    expect([answer(0), answer(1)].map((b) => b.textContent?.trim())).toEqual(['Zahodiť zmeny', 'Pokračovať v úprave']);
+    // the focus on the harmless answer
+    expect(document.activeElement).toBe(answer(1));
+    answer(1).click();
+    await tick(fixture);
+    expect(question()).toBeNull();
+    expect(items()[0].getAttribute('aria-pressed')).toBe('true');
+    // back where the player was
+    expect(document.activeElement).toBe(cancel);
+    const esc = new Event('cancel', { cancelable: true });
+    dialog.dispatchEvent(esc);
+    await tick(fixture);
+    expect(esc.defaultPrevented).toBe(true);
+    expect(dialog.hasAttribute('open')).toBe(true);
+    expect(question()).not.toBeNull();
+    // closed without a cancel (Chrome's second Esc, the Android back gesture): open again, nothing lost, still asking
+    dialog.removeAttribute('open');
+    dialog.dispatchEvent(new Event('close'));
+    await tick(fixture);
+    expect(dialog.hasAttribute('open')).toBe(true);
+    expect(question()).not.toBeNull();
+    expect(items()[0].getAttribute('aria-pressed')).toBe('true');
+    // the tab asks before a reload too
+    const unload = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(true);
+    // "Zahodiť zmeny" leaves the march as it was, the focus back on the button that opened the editor
+    answer(0).click();
+    await tick(fixture);
+    expect(dialog.hasAttribute('open')).toBe(false);
+    expect(document.activeElement).toBe(el.querySelector('.march__build'));
+    expect(unload()).toBe(false);
     expect(el.querySelector('app-march-build .gear__icon')).toBeNull();
     el.querySelector<HTMLButtonElement>('.march__build')!.click();
     await tick(fixture);
@@ -315,7 +356,9 @@ describe('Marches', () => {
     saved.flush({ ...BUILT, ...saved.request.body });
     await tick(fixture);
     await tick(fixture);
+    // saved: closed without asking, the tab no longer asks before a reload
     expect(dialog.hasAttribute('open')).toBe(false);
+    expect(unload()).toBe(false);
     // the card shows the build
     // the formation as its icon only, the inscriptions armament by armament, each with its armament's icon
     expect(el.querySelector('.mb__formation img')?.getAttribute('alt')).toBe('Pincer');
@@ -332,6 +375,49 @@ describe('Marches', () => {
     // nothing empty any more: no red link, no hint
     expect(el.querySelector('app-march-build button.mb__missing')).toBeNull();
     expect(el.querySelector('.march-hint--alert')).toBeNull();
+    http.verify();
+  });
+
+  it('an untouched editor closes on Esc at once, also for a march without bonuses or with a build from the server', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(Marches);
+    fixture.detectChanges();
+    const marches: March[] = [
+      // nothing filled in: no bonuses, no build
+      { ...MARCH, id: 1, position: 1, kind: 'cavalry', primary: 'Attila' },
+      // keys in another order, All DMG empty, an inscription the catalog no longer knows
+      {
+        ...MARCH,
+        id: 2,
+        position: 2,
+        kind: 'cavalry',
+        primary: 'Attila',
+        attack: 1,
+        defense: 2,
+        health: 3,
+        damage: null,
+        gear: { weapon: { iconic: 2, crit: true, item: 'sacred-dominion' } },
+        formation: 'pincer',
+        inscriptions: ['u-instrument-patronage', 'gone-from-the-catalog', 'pincer-scroll-toppler'],
+      },
+    ];
+    http.expectOne('/api/me/marches/').flush({ marches, max: 10, public: false });
+    http.expectOne('/api/commanders/marches/').flush(COMMANDERS);
+    await tick(fixture);
+    http.expectOne('/api/armory/').flush(ARMORY);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const dialog = el.querySelector('dialog.be')!;
+    for (const id of [1, 2]) {
+      el.querySelector<HTMLButtonElement>(`[data-march="${id}"] .march__build`)!.click();
+      await tick(fixture);
+      expect(dialog.hasAttribute('open')).toBe(true);
+      const esc = new Event('cancel', { cancelable: true });
+      dialog.dispatchEvent(esc);
+      await tick(fixture);
+      expect(dialog.hasAttribute('open')).toBe(false);
+      expect(dialog.querySelector('.be__discard')).toBeNull();
+    }
     http.verify();
   });
 

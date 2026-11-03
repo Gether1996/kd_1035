@@ -357,6 +357,24 @@
   background: var(--bg-raised);
 }
 
+// "Zahodiť zmeny?" on its own row above "Uložiť", like the KvK confirms
+.be__discard {
+  display: flex;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+
+  p {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--text);
+    font-weight: 600;
+  }
+}
+
 .form__state {
   min-height: 1.4em;
   margin: 0;
