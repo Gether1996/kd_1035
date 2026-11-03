@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **3. 11. 2026 – v1.57.0:** Sieň slávy: kategória **Najlepšia výbava** (`equipment`, miesto = typ jednotiek: 1 pechota, 2 jazda, 3 lukostrelci). Superadmin v editore „Načítať z Top 5 equip“ – prví z Top 5 equip (ten istý výpočet, `pages/hall/equipment-winners.ts`) najprv uvidí, potom ich zapíše naraz; typ bez bodov ostane prázdny (`PUT /api/hall/<kategória>/` berie `null` = prázdne miesto). Hráči vidia len mená a typ jednotiek.
 - **3. 11. 2026 – bez verzie:** Huo Qubing + Arthur Pendragon v návode na jazdu (d8c135e). Test `MentionCoverageTests`: každý commander spomenutý v návodoch je v hľadaní párov alebo v `MENTION_ONLY` (Archimedes, Cheok Jun-gyeong, Trajan, William Wallace) s dôvodom; pravidlo v `docs/navody.md` a `kd-meta-update`. Drobnosti: krátke mená (Arthur, Nevsky) a commanderi bez portrétu sa nedetegujú.
 - **3. 11. 2026 – v1.56.9:** Karta marchu (`/marche`, Marche hráčov, `/kvk`) odkazuje na náš návod k páru, inak na „Nájdi pár“ pre primárneho commandera (`/navody?commander=…#najdi-par`); index `/api/commanders/` raz na stránku (`CommanderIndex`).
 - **3. 11. 2026 – v1.56.8:** Editor výbavy a armamentov sa pred zahodením neuložených zmien opýta (Esc, X, Zrušiť, zatvorenie karty) – na `/marche` aj `/kvk`.
