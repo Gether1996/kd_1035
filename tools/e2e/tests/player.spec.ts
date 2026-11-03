@@ -35,3 +35,46 @@ test('the march overview lists the sample marches @player', async ({ page }) => 
   await expect(page.locator('.segmented.tabs button[aria-pressed="true"]')).toBeVisible();
   await expect(page.getByText('Arthur Pendragon').first()).toBeVisible();
 });
+
+// Unsaved equipment is not thrown away without asking (Esc, a second Esc, the tab closing). Nothing is saved.
+for (const path of ['/marche', '/kvk']) {
+  test(`${path}: the build editor asks before dropping unsaved changes @player @journey`, async ({ page }) => {
+    await open(page, path);
+    const opener = page.locator('.march__build').first();
+    await opener.click();
+    const dialog = page.locator('dialog.be[open]');
+    const question = dialog.locator('.be__discard [role="alert"]');
+    await expect(dialog.locator('.be__item').first()).toBeVisible();
+    // untouched: Esc closes at once
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+
+    await opener.click();
+    const item = dialog.locator('.be__item[aria-pressed="false"]').first();
+    const name = (await item.textContent())?.trim() ?? '';
+    await item.click();
+    const picked = dialog.locator('.be__item[aria-pressed="true"]', { hasText: name });
+    await expect(picked).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(question).toBeVisible();
+    // a second Esc without a click between (Chrome may close without a cancel): still open, still asking
+    await page.keyboard.press('Escape');
+    await expect(question).toBeVisible();
+    await expect(picked).toBeVisible();
+
+    await dialog.getByRole('button', { name: 'Pokračovať v úprave' }).click();
+    await expect(question).toHaveCount(0);
+    await expect(picked).toBeVisible();
+    // the tab asks before it closes
+    const leave = page.waitForEvent('dialog');
+    await page.close({ runBeforeUnload: true });
+    const prompt = await leave;
+    expect(prompt.type()).toBe('beforeunload');
+    await prompt.dismiss();
+
+    await dialog.locator('.be__actions > .pill-btn--quiet').click();
+    await dialog.getByRole('button', { name: 'Zahodiť zmeny' }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
+}
