@@ -32,6 +32,8 @@ export interface Player {
   reviewer?: boolean;
   /** a KvK sign-up without the survey of its form (from before 20. 10. 2026) – the header reminds the player */
   kvk_survey_missing?: boolean;
+  /** the superadmin only: the worker stopped, an old or failed backup, failed channel posts – the header's red "!" */
+  ops?: { worker_stale: boolean; backup_stale: boolean; failed: number };
 }
 
 export interface Me {
@@ -83,8 +85,13 @@ export class Auth {
   });
   /** a KvK sign-up without its survey (Gether 20. 10. 2026) – the same reminder, it leads to /kvk */
   readonly needsSurvey = computed(() => !!this.user()?.kvk_survey_missing);
-  /** the red "!" in the header: something of the profile is missing */
-  readonly needsAttention = computed(() => this.needsName() || this.needsPower() || this.needsSurvey());
+  /** the superadmin: the admin overview shows a problem (Gether's round of agents, 3. 11. 2026) */
+  readonly needsOps = computed(() => {
+    const ops = this.user()?.ops;
+    return !!ops && (ops.worker_stale || ops.backup_stale || ops.failed > 0);
+  });
+  /** the red "!" in the header: something of the profile is missing, or the superadmin should check the admin */
+  readonly needsAttention = computed(() => this.needsName() || this.needsPower() || this.needsSurvey() || this.needsOps());
   /** opens /vyhodnocovanie – the account menu item and the links to it (/marche) show exactly then */
   readonly canEvaluate = computed(() => {
     const user = this.user();

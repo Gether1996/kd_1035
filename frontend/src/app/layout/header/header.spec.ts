@@ -194,6 +194,20 @@ describe('Header account slot', () => {
     expect(alerts('.account__dropdown .is-alert')).toEqual([['/kvk', '!Doplň dotazník ku KvK']]);
     expect(alerts('.drawer__page.is-alert').map(([href]) => href)).toEqual(['/kvk']);
   });
+
+  it('sends the superadmin to the admin when the operations need a look (3. 11. 2026)', async () => {
+    const ops = { worker_stale: true, backup_stale: false, failed: 0 };
+    await answer({
+      login_enabled: true,
+      user: { discord_id: '1', name: 'Gether', avatar_url: '', ingame_name: 'Gether', power: 90, approved: true, terms_accepted: true, is_staff: true, is_superuser: true, ops },
+    });
+    const link = el().querySelector<HTMLAnchorElement>('.account__link');
+    expect(link?.querySelector('.alert-badge')).not.toBeNull();
+    expect(link?.textContent).toContain('Prevádzka webu má problém');
+    const alerts = (selector: string) => Array.from(el().querySelectorAll(selector), (a) => [a.getAttribute('href'), a.textContent?.trim()]);
+    expect(alerts('.account__dropdown .is-alert')).toEqual([['/admin/', '!Prevádzka: skontroluj admin']]);
+    expect(alerts('.drawer__page.is-alert').map(([href]) => href)).toEqual(['/admin/']);
+  });
 });
 
 describe('Header active item', () => {

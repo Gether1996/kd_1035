@@ -123,6 +123,9 @@ export const sk = {
     // a KvK sign-up without the survey of the form (Gether 20. 10. 2026)
     surveyMissing: 'Chýba ti dotazník ku KvK rally / garrison',
     setSurvey: 'Doplň dotazník ku KvK',
+    // the superadmin: the worker stopped, an old backup or failed channel posts (3. 11. 2026)
+    opsProblem: 'Prevádzka webu má problém',
+    checkOps: 'Prevádzka: skontroluj admin',
   },
   hero: {
     tagline: 'Jediné čisto slovensko-české kráľovstvo v hre.',

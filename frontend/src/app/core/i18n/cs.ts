@@ -121,6 +121,9 @@ export const cs: Dict = {
     // a KvK sign-up without the survey of the form (Gether 20. 10. 2026)
     surveyMissing: 'Chybí ti dotazník ke KvK rally / garrison',
     setSurvey: 'Doplň dotazník ke KvK',
+    // the superadmin: the worker stopped, an old backup or failed channel posts (3. 11. 2026)
+    opsProblem: 'Provoz webu má problém',
+    checkOps: 'Provoz: zkontroluj admin',
   },
   hero: {
     tagline: 'Jediné čistě česko-slovenské království ve hře.',

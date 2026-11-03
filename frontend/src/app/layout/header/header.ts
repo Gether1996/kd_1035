@@ -56,9 +56,21 @@ export class Header {
       this.auth.needsName() ? t.nameMissing : '',
       this.auth.needsPower() ? t.powerMissing : '',
       this.auth.needsSurvey() ? t.surveyMissing : '',
+      this.auth.needsOps() ? t.opsProblem : '',
     ]
       .filter(Boolean)
       .join(', ');
+  });
+  /** the red "!" items of both menus: what the profile misses, and for the superadmin the Django admin (`admin`) */
+  protected readonly alertItems = computed(() => {
+    const t = this.i18n.t().nav;
+    const account = this.i18n.path('account');
+    const items: { label: string; link: string; fragment?: string; admin?: boolean }[] = [];
+    if (this.auth.needsName()) items.push({ label: t.setName, link: account, fragment: 'meno' });
+    if (this.auth.needsPower()) items.push({ label: t.setPower, link: account, fragment: 'power' });
+    if (this.auth.needsSurvey()) items.push({ label: t.setSurvey, link: this.i18n.path('kvk') });
+    if (this.auth.needsOps()) items.push({ label: t.checkOps, link: '/admin/', admin: true });
+    return items;
   });
 
   /** the signed-in player's pages: the account menu (desktop) and the mobile menu */
