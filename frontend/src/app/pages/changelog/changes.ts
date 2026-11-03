@@ -16,8 +16,9 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-03',
-    version: '1.59.2',
+    version: '1.59.3',
     sk: [
+      'Nové inscriptions Delty 2 majú rovnaké body ako Wedge 2 a Pincer 2 – zlaté 50, modré 30 a 20.',
       'Kalendár: hráč bez Discordu sa po prepojení s Discordom vráti rovno k eventu a nastaví si pripomienku.',
       'Nájdi pár pre commandera: presnejšia hláška, keď pár pre takého commandera v návodoch nemáme.',
       'Inscriptions sa počítajú po armamentoch: plné body sú 4 zlaté najvyššieho tieru, biela zlatú len doplní, nenahradí.',
@@ -33,6 +34,7 @@ export const CHANGES: Change[] = [
       'March a prihláška na KvK uložené skôr s dvoma zlatými či modrými na jednom armamente sú červené a odkaz Oprav armamenty otvorí ten armament.',
     ],
     cs: [
+      'Nové inscriptions Delty 2 mají stejné body jako Wedge 2 a Pincer 2 – zlaté 50, modré 30 a 20.',
       'Kalendář: hráč bez Discordu se po propojení s Discordem vrátí rovnou k eventu a nastaví si připomínku.',
       'Najdi pár pro commandera: přesnější hláška, když pár pro takového commandera v návodech nemáme.',
       'Inscriptions se počítají po armamentech: plné body jsou 4 zlaté nejvyššího tieru, bílá zlatou jen doplní, nenahradí.',

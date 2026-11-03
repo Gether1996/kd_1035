@@ -81,9 +81,9 @@ const PAIRS: PairRow[] = [
 const S: EvalSettings = normalizeSettings(null, PAIRS);
 const withPairs = (value: unknown) => normalizeSettings(value, PAIRS);
 
-// Maros666, M1 of the spreadsheet: 100 % = the caps and four gold inscriptions of the top tier S+ (3. 11. 2026)
+// Maros666, M1 of the spreadsheet: 100 % = the caps and four gold inscriptions of the top tier S (3. 11. 2026)
 const BEST_BONUSES = 14 / 3 + 14 / 2.75 + 14 / 1.8 + 8;
-const M1 = ((10.1 / 3 + 9.5 / 2.75 + 7 / 1.8 + 3.3) / BEST_BONUSES) * 30 + ((50 + 25 + 2 * 10) / (4 * 55)) * 70;
+const M1 = ((10.1 / 3 + 9.5 / 2.75 + 7 / 1.8 + 3.3) / BEST_BONUSES) * 30 + ((50 + 25 + 2 * 10) / (4 * 50)) * 70;
 
 describe('evaluation scoring', () => {
   it('counts the armaments: 100 % = every bonus at its cap and four gold inscriptions (Gether 3. 11. 2026)', () => {
@@ -91,10 +91,10 @@ describe('evaluation scoring', () => {
     expect(armamentPoints(S, m).points).toBeCloseTo(M1, 9);
     // per armament: a white one fills a lower gold one up to the top tier, but never stands in for a missing gold one
     const ins = (gold: number, white: number) => armamentPoints(S, march({ gold, white })).inscriptions;
-    expect(ins(4, 0)).toBeCloseTo((200 / 220) * 70, 9);
-    expect(ins(4, 3)).toBeCloseTo((215 / 220) * 70, 9);
+    expect(ins(4, 0)).toBeCloseTo(70, 9);
+    expect(ins(4, 3)).toBeCloseTo(70, 9);
     // both white ones on the armament without a gold one: 2 × 10, far below a gold one
-    expect(ins(3, 2)).toBeCloseTo(((3 * 50 + 2 * 10) / 220) * 70, 9);
+    expect(ins(3, 2)).toBeCloseTo(((3 * 50 + 2 * 10) / 200) * 70, 9);
     expect(ins(3, 4)).toBeLessThan(ins(4, 0) + 1e-9);
     // the best possible: 100, and never more – white ones on top of four gold ones add nothing
     const best = march({ attack: 14, defense: 14, health: 14, damage: 8, gold: 5, blue: 4, white: 8 });
@@ -224,7 +224,7 @@ describe('evaluation scoring', () => {
     expect(a.tiered).toBe(true);
     // Destructive and Vigor are both on the scroll: one gold or blue of an armament counts, the better one (Gether
     // 3. 11. 2026) – the march is to fix
-    expect(a.inscriptions).toBeCloseTo((130 / 220) * 70, 9);
+    expect(a.inscriptions).toBeCloseTo((130 / 200) * 70, 9);
     expect(a.dropped).toBe(1);
     expect(marchToFix(marchEval(S, pairTable(S), m, INDEX))).toBe(true);
     expect(armamentPoints(S, march({ inscriptions: ids.filter((id) => id !== 'arch-scroll-destructive') }), INDEX).dropped).toBe(0);
@@ -232,18 +232,19 @@ describe('evaluation scoring', () => {
     const charge = withPairs({ armaments: { inscriptions: { Charge: 'S' }, tiers: { S: 60 } } });
     expect(armamentPoints(charge, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((60 / 240) * 70, 9);
     const none = withPairs({ armaments: { inscriptions: {} } });
-    expect(armamentPoints(none, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((25 / 220) * 70, 9);
+    expect(armamentPoints(none, march({ inscriptions: ['pincer-instrument-charge'] }), INDEX).inscriptions).toBeCloseTo((25 / 200) * 70, 9);
     // without the catalog, or only the counts typed in before: by colour like the spreadsheet
-    expect(armamentPoints(S, m, null)).toMatchObject({ tiered: false, inscriptions: ((2 * 50 + 2 * 25 + 10) / 220) * 70 });
+    expect(armamentPoints(S, m, null)).toMatchObject({ tiered: false, inscriptions: ((2 * 50 + 2 * 25 + 10) / 200) * 70 });
   });
 
-  it('counts the second Delta armaments a little over the old Delta gold and blue (Gether 29. 10. 2026)', () => {
+  it('counts the second Delta armaments like Wedge 2.0 and Pincer 2.0 (Gether 3. 11. 2026)', () => {
     const value = (name: string, rarity: 'special' | 'rare') => inscriptionValue(DEFAULT_SETTINGS, { name, rarity });
-    expect(['Raging Tide', 'Impervious', 'Bold Ambitions', 'Rapid Advance'].map((n) => value(n, 'special'))).toEqual([55, 55, 55, 55]);
-    expect(['Surge', 'Steady', 'Burst', 'Driven'].map((n) => value(n, 'rare'))).toEqual([45, 45, 45, 45]);
-    expect([value('Flurry', 'special'), value('Causative', 'rare')]).toEqual([50, 40]);
-    // variables saved before: the new tiers get their points
-    expect(normalizeSettings({ armaments: { tiers: { S: 52 } } }).armaments.tiers).toMatchObject({ 'S+': 55, S: 52, 'A+': 45 });
+    expect(['Raging Tide', 'Impervious', 'Bold Ambitions', 'Rapid Advance'].map((n) => value(n, 'special'))).toEqual([50, 50, 50, 50]);
+    expect(['Surge', 'Burst', 'Steady', 'Driven'].map((n) => value(n, 'rare'))).toEqual([30, 30, 20, 20]);
+    expect([value('Horseback Action', 'special'), value('Tidebreaker', 'special')]).toEqual([50, 50]);
+    // the tiers S+ and A+ are gone: a saved one counts by colour
+    expect(Object.keys(DEFAULT_SETTINGS.armaments.tiers)).toEqual(['S', 'A', 'B', 'C', 'D']);
+    expect(normalizeSettings({ armaments: { inscriptions: { Surge: 'A+' } } }).armaments.inscriptions).toEqual({});
   });
 
   it('expects more marches with more power: the fewest whose recommended power carries it', () => {
@@ -535,10 +536,10 @@ describe('evaluation scoring', () => {
   });
 
   it('counts the best X marches, whatever their place in the player\'s order (Gether 16. 10. 2026)', () => {
-    // seven marches, the later ones better: one to four gold inscriptions, then white ones on top (one armament holds
-    // one gold – a fifth gold one adds nothing since 3. 11. 2026)
+    // seven marches, the later ones better: white ones first, then gold ones (an armament holds one gold, four gold
+    // ones are full points since 3. 11. 2026)
     const marches = [1, 2, 3, 4, 5, 6, 7].map((n) =>
-      march({ id: n, position: n, gold: Math.min(n, 4), white: Math.max(0, n - 4), gear: gear('gold', false, 0) }),
+      march({ id: n, position: n, gold: Math.max(0, n - 3), white: Math.min(n, 3), gear: gear('gold', false, 0) }),
     );
     const counted = (settings: EvalSettings, list = marches) =>
       evaluate(settings, [player(1, list)], INDEX).rows[0].marches.filter((m) => m.counted).map((m) => m.march.position);

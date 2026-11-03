@@ -615,3 +615,28 @@ class DeltaInscriptionsMigrationTests(TestCase):
         row.save()
         self.delta_ii(django_apps, None)
         self.assertEqual(EvaluationSettings.load().data, {'armaments': {'gold': 50}})
+
+
+
+class DeltaLikeWedgeMigrationTests(TestCase):
+    """Gether 3. 11. 2026: Delta 2.0 scores like Wedge 2.0 and Pincer 2.0 – S 50, B 30, C 20; S+ and A+ are gone"""
+
+    migrate = staticmethod(import_module('accounts.migrations.0054_delta_ii_like_wedge_ii').delta_like_wedge)
+
+    def test_moves_the_delta_names_and_drops_the_old_tiers(self):
+        row = EvaluationSettings.load()
+        row.data = {
+            'armaments': {
+                'inscriptions': {'Raging Tide': 'S+', 'Surge': 'A+', 'Steady': 'A+', 'Driven': 'B', 'Charge': 'S+'},
+                'tiers': {'S+': 55, 'S': 50, 'A+': 45},
+            }
+        }
+        row.save()
+        self.migrate(django_apps, None)
+        self.migrate(django_apps, None)
+        armaments = EvaluationSettings.load().data['armaments']
+        # a Delta name set by hand to another tier stays; another S+ becomes S
+        self.assertEqual(
+            armaments['inscriptions'], {'Raging Tide': 'S', 'Surge': 'B', 'Steady': 'C', 'Driven': 'B', 'Charge': 'S'}
+        )
+        self.assertEqual(armaments['tiers'], {'S': 50})

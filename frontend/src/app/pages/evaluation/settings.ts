@@ -136,8 +136,7 @@ export interface Tier {
 
 export type PairRow = [primary: string, secondary: string, points: number];
 
-// S+ and A+ (Gether 29. 10. 2026): the new Delta inscriptions a little over the old gold (S) and blue (best A) ones
-export const INSCRIPTION_TIERS = ['S+', 'S', 'A+', 'A', 'B', 'C', 'D'] as const;
+export const INSCRIPTION_TIERS = ['S', 'A', 'B', 'C', 'D'] as const;
 export type InscriptionTier = (typeof INSCRIPTION_TIERS)[number];
 
 /** the best pair first – the table is sorted like this whenever it is loaded or saved (Slim 13. 10. 2026) */
@@ -172,8 +171,10 @@ export const DEFAULT_INSCRIPTIONS: Record<string, InscriptionTier> = Object.from
       ['A', 'Causative'],
       ['B', 'Relentless', 'Pummeler'],
       ['C', 'Determined'],
-      ['S+', 'Raging Tide', 'Impervious', 'Bold Ambitions', 'Rapid Advance'],
-      ['A+', 'Surge', 'Steady', 'Burst', 'Driven'],
+      // the second Delta armaments like Wedge 2.0 and Pincer 2.0 (Gether 3. 11. 2026: "také isté body … 50 a 30 a 20")
+      ['S', 'Raging Tide', 'Impervious', 'Bold Ambitions', 'Rapid Advance'],
+      ['B', 'Surge', 'Burst'],
+      ['C', 'Steady', 'Driven'],
       // Wedge
       ['S', 'Horseback Action', 'Advantage Advanced', 'Intrepid'],
       ['A', 'Indomitable', 'Hunter', 'Unstoppable'],
@@ -234,7 +235,7 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     blue: 25,
     white: 10,
     inscMax: 200,
-    tiers: { 'S+': 55, S: 50, 'A+': 45, A: 40, B: 30, C: 20, D: 5 },
+    tiers: { S: 50, A: 40, B: 30, C: 20, D: 5 },
     inscriptions: DEFAULT_INSCRIPTIONS,
   },
   equipment: {

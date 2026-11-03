@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **3. 11. 2026 – v1.59.3:** Delta 2 inscriptions ako Wedge 2 a Pincer 2 (zlaté S 50, Surge a Burst B 30, Steady a Driven C 20); tiery S+ a A+ zrušené, plné body = 4 zlaté S (migrácia `accounts/0054` presunie uložený tier list).
 - **3. 11. 2026 – v1.59.2:** Nájdi pár pre commandera a Čo môžem postaviť – hláška bez páru už netvrdí, že návody commandera nespomínajú; prepojenie s Discordom z dialógu eventu vráti hráča k eventu (`taken`/`cancelled`/`error` na `/ucet`); `rare_excess(known=…)`.
 - **3. 11. 2026 – v1.59.1:** Inscriptions vo vyhodnocovaní po armamentoch – každý zo 4 armamentov najviac najvyšší tier (zlatá/modrá + biela), 4 zlaté najvyššieho tieru = plné body, biela zlatú nenahradí, march stále najviac 100.
 - **3. 11. 2026 – v1.59.0:** Prihláška na KvK premenovaná na **KvK rally / garrison**; v editore výbavy prihlášky **Načítať z marchu**; skóre armamentov so stropom (100 = max. bonusy a 4 zlaté inscriptions). Hľadanie po celom webe (site-search) z kola agentov ešte čaká.
