@@ -224,8 +224,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - `event-test-dm` Ukážka správy eventu do súkromnej správy superadmina (namiesto `DISCORD_TEST_WEBHOOK_URL`, bez pingu roly) – kritik: upraviť; len tlačidlo v editore eventu na `/kalendar` + jedna admin akcia, nič neukladá, throttle `event_test`.
 - `players-last-seen` Hráči na `/ucet`: „naposledy {dátum}“ pod menom – kritik: zúžiť len na toto; mazanie hráča ostáva v Django admine, filter neaktívnych až 3 mesiace po nasadení.
 - `my-data-export` Stiahnuť moje údaje (JSON na `/ucet`) – kritik: až po nasadení; opraviť polia podľa modelov, test úplnosti cez `_meta.get_fields()`, veta v Ochrane údajov.
-- `tools-speedup-calculator` Stránka `/nastroje` s kalkulačkou speedupov – čaká na súhlas Gethera; vstup dni/hodiny/minúty, nie v pätičke, neoverené denominácie označiť.
-- `tools-training-calculator` Kalkulačka výcviku a bodov MGE – až po kalkulačke speedupov; len overené čísla, pridať do mesačnej kontroly.
+- ~~`tools-speedup-calculator`, `tools-training-calculator` Stránka `/nastroje` s kalkulačkami~~ – **nie** (Gether 4. 11. 2026). Nenavrhovať znova.
 - Týždenný prehľad eventov na Discorde (`weekly-discord-digest`) – až po zapnutí rotácie a súhlase Gethera.
 - Drobnosti z kola 7: nadpis upozornenia na nového hráča cez `plain()`; komentár nad `.list__commander` v `kvk.scss` a odsadenie `.list__filters`; zvýrazniť zodpovedajúce marche pri filtri commandera; `\u200b` namiesto neviditeľného znaku v `roster-text.ts`; „Kopírovať pre Discord“ na `CopyLinkStatus`; náhľad starého termínu opakovaného eventu – „Tento termín skončil.“; bodka v `docs/eventy.md` a docstring `preview.py` na 120 znakov.
 - Eventy ako Discord Scheduled Events – až po rozhodnutí Gethera; nie spolu s týždenným prehľadom.
@@ -255,7 +254,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 - Bezpečnostné hlavičky v nginx – už existujú (`security-headers.conf`); plná CSP by mala malý prínos a riziko.
 - Registrácia Governor ID so schválením R4, prístup R4 do adminu s exportom governorov, upozornenia vedenia na nové registrácie – Gether registráciu governorov zrušil (8. 10. 2026).
-- `discord-slash-events` Príkaz /eventy na Discorde – blokované: chýba rozhodnutie Gethera a nasadenie na verejné HTTPS (Interactions endpoint); nová závislosť, env a zmena Ochrany údajov. Navrhnúť znova po nasadení, ak o to Gether požiada.
+- `discord-slash-events` Príkaz /eventy na Discorde – **nie** (Gether 4. 11. 2026). Nenavrhovať znova.
 - `migration-application` (+ časť 2: stav, odpovede, mazanie) Žiadosť o migráciu cez web – vedenie o ňu nežiadalo, osobné údaje cudzích hráčov, duplikuje kontakt cez Discord.
 - `fix-reminder-dm` Správa „oprav si march“ od superadmina cez bota – nový druh kontaktu, chýba rozhodnutie a reset tokenu; červené upozornenia už stačia.
 - `picker-scored-partners` Výber commandera najprv s hodnotenými pármi – duplikuje v1.24.6 (meta skupiny), zverejnil by celý zoznam párov vedenia.
@@ -263,7 +262,8 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - `event-rsvp` Účasť na evente (idem/možno/nie) – **nie** (Gether 14. 10. 2026: „prepínač na zisťovať účasť nepotrebujem“, rozrobená verzia zahodená). Nenavrhovať znova.
 - `account-overview-shortcut` Skratka Požadovaný acclaim na Môj účet – len duplikuje položku menu, nič nové neukazuje.
 - Ručné pripomenutie chýbajúcej power, marchov či prihlášky na KvK správou od vedenia – **nie** (Gether 14. 10. 2026). Nenavrhovať znova.
-- `drop-dead-kvk-columns` Zmazať `KvkSettings`, `Player.evaluation_overview`, `Player.evaluator`, `PlayerEvaluation.acclaim` (24. 10.) – nevratné mazanie produkčných dát bez Getherovho áno; lacnejšie: opraviť docs (CLAUDE.md, `docs/ucty.md`) a neposielať `evaluation_overview` v `me_data`.
+- ~~`drop-dead-kvk-columns` Zmazať `KvkSettings`, `Player.evaluation_overview`, `Player.evaluator`, `PlayerEvaluation.acclaim`~~ – hotové 4. 11. 2026 s Getherovým áno, migrácia `accounts/0055` (bez novej verzie).
+- Upozornenie „bez prihlášky na KvK“ v menu účtu pre každého hráča – **nie** (Gether 4. 11. 2026). Nenavrhovať znova.
 - `kvk-signup-count-for-players` Počet prihlásených na KvK pre hráčov – meniace sa číslo, nízky počet demotivuje; vedeniu pomôže `kvk-unsigned-players` (2. 11.).
 - `novinky-unseen-dot` Bodka pri Novinkách – nový localStorage kľúč (Ochrana údajov), bodka aj pri zmenách len pre vedenie; Gether oznamuje verzie na Discorde (2. 11.).
 - `account-kvk-readiness` Karta pripravenosti na KvK na /ucet – duplikuje menu účtu s „!“ (meno, power, dotazník) a `marchIssues()`; ak treba „bez prihlášky“, stačí príznak `needsSignup` v menu (3. 11.).
@@ -273,9 +273,10 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 - **Rozrobené 3. 11. 2026 (Gether: „testy dokonči potom“):** komponentový test hľadania po webe (`shared/site-search`) a tlačidla „Poslať ukážku mne“ v záložke Kanál (`reminders.spec.ts`), audit prístupnosti `tools/a11y/audit.sh --superuser` pre otvorené hľadanie a záložku Kanál. Potvrdiť, či chceš Discord upozornenia na zálohy a zlyhané správy do kanála (worker → DM superadminovi).
 
+- **Pred najbližším nasadením:** na serveri `docker compose exec -u app worker python manage.py backup_db` – migrácia `accounts/0055` zmaže nepoužívané stĺpce a `KvkSettings` (nevratné).
 - **Po nasadení v1.56.7:** na produkcii `docker compose exec -u app backend python manage.py count_rare_excess` (koľko marchov a prihlášok treba opraviť, len počty).
 - Voliteľne: majú commanderi z `MENTION_ONLY` (Archimedes, Cheok Jun-gyeong, Trajan, William Wallace) dostať pár v hľadaní? Každý pár potrebuje datovaný zdroj.
-- **Kolo nápadov 20. 10. 2026** (2 ideátori + kritik, na Getherovu žiadosť). Schválené na stavbu: (1) ~~dotazník raz na hráča v zozname Prihlášky~~ hotové v1.37.2; (2)–(5) ~~filter podľa času online, stav v adrese a prekliky, „Len prihlásení na KvK“ v Top 5 equip, upratanie~~ hotové v1.38.0. Až po rozhodnutí: príkaz `/eventy` na Discorde (interakcie už existujú), záložka strát v `/nastroje` (straty → suroviny a čas výcviku T4/T5). Zamietnuté kritikom: obnova dotazníka pred KvK a výber R4 vybraný/náhradník (vracajú kolá, zrušené v1.35.5), počítadlo hláv (skilly predvolene 5555 – nespoľahlivé), moje zásoby, MGE prahy, súpiska Ark, plánovač craftu. **Otázky pre Gethera:** je „prvá zóna, zvyčajne piatok ~15:00 UTC“ tvoj údaj? Smie vedenie filtrovať podľa sumy a smú ísť časy online do správy pre Discord? Prihlášky bez kôl natrvalo – smiem zmazať `KvkSettings`, `Player.evaluator`, `PlayerEvaluation.acclaim`? Chceš označovanie vybraných na KvK? Áno/nie `/nastroje` a `/eventy` (+ kedy `DISCORD_PUBLIC_KEY` na produkcii)? Určuje vedenie poradie v MGE?
+- **Kolo nápadov 20. 10. 2026** (2 ideátori + kritik, na Getherovu žiadosť). Schválené na stavbu: (1) ~~dotazník raz na hráča v zozname Prihlášky~~ hotové v1.37.2; (2)–(5) ~~filter podľa času online, stav v adrese a prekliky, „Len prihlásení na KvK“ v Top 5 equip, upratanie~~ hotové v1.38.0. Príkaz `/eventy` a `/nastroje` – Gether 4. 11. 2026 nie. Zamietnuté kritikom: obnova dotazníka pred KvK a výber R4 vybraný/náhradník (vracajú kolá, zrušené v1.35.5), počítadlo hláv (skilly predvolene 5555 – nespoľahlivé), moje zásoby, MGE prahy, súpiska Ark, plánovač craftu. **Otázky pre Gethera:** je „prvá zóna, zvyčajne piatok ~15:00 UTC“ tvoj údaj? Smie vedenie filtrovať podľa sumy a smú ísť časy online do správy pre Discord? Chceš označovanie vybraných na KvK? Určuje vedenie poradie v MGE?
 - **Discord aplikácia:** lokálne zapnutá (Client ID a Secret v dev `.env`, redirect URI pre localhost aj kd1035.eu sú zaregistrované). Pred serverom **Reset Secret** a **Reset Token** bota (staré sú v histórii chatu), nové do `.env` na serveri aj lokálne; na serveri aj `DISCORD_ADMIN_IDS`.
 - **Webhook** `DISCORD_WEBHOOK_URL` (voliteľne `DISCORD_EVENT_ROLE_ID`) – na dev PC testovací kanál, ostrý iba na serveri (dev databáza sa cez git dostane na každé PC).
 - **Eventy:** šablóny bežnej rotácie (MGE, Ark, Wheel…) sú v admine neaktívne – skontrolovať dátumy, zapnúť a nastaviť „Časy pre hráčov“. Pred každým nepravidelným eventom (Silk Road, Shadow Legion, Karuak Boss) nastaviť nový termín.
@@ -292,17 +293,14 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - **Rozhodnúť:** týždenný prehľad na Discorde (`DISCORD_WEEKLY_DIGEST`, pondelok 9:00?), stav migrácie na webe, Discord Scheduled Events (`DISCORD_GUILD_ID` + právo Manage Events).
 - **Odber kalendára (v1.6.0):** po nasadení sa raz prihlásiť na odber v Google Kalendári (Iné kalendáre → Z URL, skopírovaný https odkaz) a na iPhone („Pridať do kalendára“); Google obnovuje hodiny až deň. Voliteľne `https://kd1035.eu/api/calendar.ics` do validátora (icalendar.org).
 - **Náhľad eventu (v1.6.2):** po nasadení vložiť odkaz na event do Discord kanála a skontrolovať kartu (čerstvý odkaz, Discord cachuje).
-- **Rozhodnúť:** chce Gether príkaz /eventy pre bota na Discorde (áno/nie)? Ak áno, `DISCORD_PUBLIC_KEY` (+ voliteľne `DISCORD_GUILD_ID`) do `.env` na serveri.
 - **Prihlášky na KvK (v1.24.2):** potvrdiť, že vedenie smie kopírovať zoznam prihlášok (meno v hre, rola, jednotky, commanderi) do Discord kanála – Ochrana údajov to už uvádza; ak nie, tlačidlo a dve vety von.
 - **Ukážka eventu do DM:** povoliť súkromné správy od bota (upozornenia na nových hráčov už chodia, asi áno).
-- **Kalkulačky:** áno/nie pre stránku `/nastroje` (speedupy, výcvik); voliteľne overiť v hre typové speedupy 3 h/8 h/15 h, kameň T3 lukostrelci/jazda (112), body T2 pred KvK (2).
 - **Hráči – neaktívni:** potvrdiť hranicu 90 dní (až po nasadení).
 - **Upozornenie na pár (v1.29.1):** smú hráči vidieť mená (nie body) až 3 hodnotených partnerov k primárnemu? Ak áno, `pair_hint.partners` ako PATCH.
-- **Vyhodnocovanie:** smú sa požiadavky na acclaim po hráčoch zverejniť (Discord kópia alebo /ucet – vybrať jedno)? Hranica zastaranej power (návrh 21 dní).
+- **Vyhodnocovanie:** smú sa požiadavky na acclaim po hráčoch zverejniť (Discord kópia alebo /ucet – vybrať jedno)?
 - **Zrušené schválenie (v1.34.2):** potvrdiť, že neschválený hráč so zapnutým R4/vyhodnocovaním stratí prístup (po nasadení sa to prejaví).
 - **Prepínač jazyka (v1.34.3):** potvrdiť, že prepínač v hlavičke smie zmeniť jazyk profilu (aj jazyk bota); inak revert `89e63bb` ako PATCH.
 - **Typy 20 GH (v1.34.4):** v admine doplniť ostatné typy (názov, max. odmena SK/CZ) a skontrolovať texty max. odmeny – idú hráčom aj do kanála.
-- **Meno v hre:** má byť jedinečné pre všetky účty (aj Discord)?
-- **Kolo 24. 10. 2026:** potvrdiť 14-dňové okno stropu registrácií bez Discordu (`PENDING_WINDOW`, v1.42.1); hranica zastaranej power 21 dní; áno/nie na zmazanie nepoužívaných polí KvK a vyhodnocovania (nevratné).
+- Hranica zastaranej power (21 dní), 14-dňové okno registrácií bez Discordu (`PENDING_WINDOW`) a jedinečné meno v hre – Gether 4. 11. 2026: „neriešme“, ostáva, ako je.
 - **Kolo 2. 11. 2026:** R4 uvidia zoznam schválených hráčov bez prihlášky na KvK (`kvk-unsigned-players`) – pri stavbe rozhodnuté áno, ak nie, povedz. Ukážka kanálovej pripomienky do DM potrebuje povolené DM od bota.
-- **Kolo 3. 11. 2026 (2):** pushnúť tag `git push origin v1.59.2`; potvrdiť DM upozornenia z prevádzky (zastaraná záloha, zlyhaná správa do kanála) – používajú `DISCORD_ADMIN_IDS` a `DISCORD_BOT_TOKEN` na serveri; povolené DM od bota (ukážka pripomienky); pred zavedením odpočtu KvK z adminu (najskôr 21. 11.) založiť event KvK so zaškrtnutým „odpočet na úvode“; chceš v menu účtu upozornenie „bez prihlášky na KvK“ pre každého hráča?
+- **Kolo 3. 11. 2026 (2):** potvrdiť DM upozornenia z prevádzky (zastaraná záloha, zlyhaná správa do kanála) – používajú `DISCORD_ADMIN_IDS` a `DISCORD_BOT_TOKEN` na serveri; povolené DM od bota (ukážka pripomienky); pred zavedením odpočtu KvK z adminu (najskôr 21. 11.) založiť event KvK so zaškrtnutým „odpočet na úvode“.

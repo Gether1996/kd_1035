@@ -79,27 +79,13 @@ class Player(models.Model):
         default=False,
         help_text='Hráč (napr. R4) vidí všetky prihlášky na KvK a marche všetkých hráčov. Nastavuje superadmin.',
     )
-    # Gether 14. 10. 2026: one switch for the evaluation itself (the estimate and the variables), one for the published
-    # overview of the required acclaim. `evaluator` was the table's own switch – not read any more (merged into
-    # evaluation_settings by migration 0031), dropped later with Gether's yes.
-    evaluator = models.BooleanField(
-        'tabuľka vyhodnocovania (nepoužíva sa)',
-        default=False,
-        help_text='Nepoužíva sa od 14. 10. 2026 – tabuľku aj premenné povoľuje „nastavenia vyhodnocovania“.',
-    )
+    # the evaluation itself (the estimate and the variables); the published required acclaim is seen by every approved
+    # player (Gether 23. 10. 2026), the old switches `evaluator` and `evaluation_overview` are gone (4. 11. 2026)
     evaluation_settings = models.BooleanField(
         'nastavenia vyhodnocovania',
         default=False,
         help_text='Hráč vidí na /vyhodnocovanie odhad acclaimu schválených hráčov, zapisuje im power a T4, mení '
         'premenné výpočtu, páry a formácie commanderov (platí pre všetkých) a zverejňuje požadovaný acclaim. '
-        'Nastavuje superadmin.',
-    )
-    # no longer read (Gether 23. 10. 2026): every approved player sees the published required acclaim; the column waits
-    # for a migration that drops it (docs/odporucania.md)
-    evaluation_overview = models.BooleanField(
-        'požadovaný acclaim',
-        default=False,
-        help_text='Hráč vidí na /vyhodnocovanie zverejnený požadovaný acclaim schválených hráčov (iba čítanie). '
         'Nastavuje superadmin.',
     )
     approved = models.BooleanField(
@@ -292,26 +278,6 @@ class Alarm(models.Model):
 
     def __str__(self):
         return f'{self.player} · {self.note or "budík"}'
-
-
-class KvkSettings(models.Model):
-    """No longer read (Gether 20. 10. 2026: the Nastavenia tab of /kvk "nesluzi to na nic"): once the heading of the
-    KvK sign-ups the superuser set on /kvk. The table waits for a migration that drops it (docs/odporucania.md). No
-    rounds: a sign-up stays until the player or the superuser withdraws it (Gether 11. 10. 2026)."""
-
-    title_sk = models.CharField('názov (SK)', max_length=80, blank=True)
-    title_cs = models.CharField('názov (CZ)', max_length=80, blank=True, help_text='Prázdne = slovenský názov.')
-
-    class Meta:
-        verbose_name = 'KvK prihlasovanie'
-        verbose_name_plural = 'KvK prihlasovanie'
-
-    def __str__(self):
-        return self.title_sk or 'KvK prihlasovanie'
-
-    @classmethod
-    def load(cls) -> 'KvkSettings':
-        return cls.objects.get_or_create(pk=1)[0]
 
 
 class PlayerSettings(models.Model):
@@ -550,10 +516,6 @@ class PlayerEvaluation(models.Model):
         'power (mil.)', max_digits=6, decimal_places=1, null=True, blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(Decimal('9999.9'))],
     )  # fmt: skip
-    # not written down any more (Gether 14. 10. 2026: "aktuálny acclaim dajme preč") – dropped later with Gether's yes
-    acclaim = models.PositiveBigIntegerField(
-        'aktuálny acclaim (nepoužíva sa)', null=True, blank=True, validators=[MaxValueValidator(10**12)]
-    )
     t4 = models.BooleanField('iba T4 jednotky', default=False)
     power_bonus = models.DecimalField(
         'úprava odporúčanej power (mil.)', max_digits=5, decimal_places=1, default=0,

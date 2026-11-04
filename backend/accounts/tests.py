@@ -559,7 +559,7 @@ class OwnPowerTests(TestCase):
 
     def test_shows_the_power_the_superadmin_wrote_down(self):
         self.assertIsNone(self.client.get('/api/auth/me/').json()['user']['power'])
-        PlayerEvaluation.objects.create(player=self.player, power=Decimal('101.5'), acclaim=300_000)
+        PlayerEvaluation.objects.create(player=self.player, power=Decimal('101.5'))
         self.assertEqual(self.client.get('/api/auth/me/').json()['user']['power'], 101.5)
 
     def test_player_writes_down_and_clears_the_power(self):
@@ -571,10 +571,10 @@ class OwnPowerTests(TestCase):
         self.assertIsNone(PlayerEvaluation.objects.get(player=self.player).power)
 
     def test_changes_only_the_power_of_the_evaluation(self):
-        PlayerEvaluation.objects.create(player=self.player, power=Decimal('80'), acclaim=300_000, t4=True)
+        PlayerEvaluation.objects.create(player=self.player, power=Decimal('80'), t4=True)
         self.patch({'power': 85})
         record = PlayerEvaluation.objects.get(player=self.player)
-        self.assertEqual((record.power, record.acclaim, record.t4), (Decimal('85'), 300_000, True))
+        self.assertEqual((record.power, record.t4), (Decimal('85'), True))
         # the name alone leaves the power as it is
         self.patch({'ingame_name': 'Gether'})
         self.assertEqual(PlayerEvaluation.objects.get(player=self.player).power, Decimal('85'))

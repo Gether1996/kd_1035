@@ -153,7 +153,6 @@ class EvaluationApiTests(TestCase):
         url = f'/api/evaluation/players/{self.player.pk}/'
         res = self.call('patch', url, {'power': 101.5, 'acclaim': 5600000})
         self.assertEqual(res.json(), {'id': self.player.pk, 'power': 101.5, 't4': False, 'power_bonus': 0.0, 'acclaim_bonus': 0})
-        self.assertIsNone(PlayerEvaluation.objects.get(player=self.player).acclaim)
         res = self.call('patch', url, {'t4': True, 'power_bonus': -6})
         self.assertEqual((res.json()['power'], res.json()['t4'], res.json()['power_bonus']), (101.5, True, -6.0))
         self.assertEqual(self.call('patch', url, {'power': None}).json()['power'], None)
