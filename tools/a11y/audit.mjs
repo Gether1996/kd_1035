@@ -2,12 +2,13 @@
 // Run it through tools/a11y/audit.sh (dev server must be up), which passes these variables to the container:
 //   PAGES=/,/kalendar           paths, comma separated (default: every public page, plus /ucet, /pripomienky and /hraci when signed in)
 //   SIZES=360x780,1280x800      viewports (default 360x780 and 1280x800)
-//   STATES=0                    skip the interactive states (event dialog, commander finder, mobile menu)
+//   STATES=0                    skip the interactive states (event dialog, commander finder, mobile menu, search)
 //   SESSION=<sessionid>         signed in as that user (audit.sh --player / --superuser makes a test player)
 // Interactive states, each audited only inside the part it opens:
 //   dialog  calendar pages: the first event (month bar or agenda row) clicked, <dialog> open
 //   finder  pages with the commander finder: 'att' typed, listbox open
 //   menu    / and /cz below 900 px: burger clicked, mobile menu open
+//   search  / and /cz: the header search opened with "/", 'ka' typed, results shown
 // Prints one line per violated rule (page, viewport, rule, impact, nodes, first selector) and exits 1
 // when any critical or serious violation exists. Full axe results: tools/a11y/out/<page>-<size>[-<state>].json (git-ignored).
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -68,6 +69,19 @@ const STATE_LIST = [
       await page.waitForTimeout(600); // drawer transition
     },
     scope: '#mobile-menu',
+  },
+  {
+    // the site search from the header ("/" opens it at every width), with results of every group
+    name: 'search',
+    when: (path) => path === '/' || path === '/cz',
+    async open(page) {
+      await page.keyboard.press('/');
+      await page.locator('dialog.search[open] input').waitFor();
+      await page.locator('dialog.search input').pressSequentially('ka');
+      await page.locator('dialog.search .search__hit').first().waitFor();
+      await page.waitForTimeout(600); // the sheet's transition
+    },
+    scope: 'dialog.search',
   },
   {
     // the sign-ups for R4 and the superuser (--superuser --marches): role, troops and commander filters, the cards

@@ -271,7 +271,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Čaká na Gethera
 
-- **Rozrobené 3. 11. 2026 (Gether: „testy dokonči potom“):** komponentový test hľadania po webe (`shared/site-search`) a tlačidla „Poslať ukážku mne“ v záložke Kanál (`reminders.spec.ts`), audit prístupnosti `tools/a11y/audit.sh --superuser` pre otvorené hľadanie a záložku Kanál. Potvrdiť, či chceš Discord upozornenia na zálohy a zlyhané správy do kanála (worker → DM superadminovi).
+- ~~Testy z 3. 11. 2026~~ hotové 4. 11.: `site-search.spec.ts`, ukážka v Kanáli v `reminders.spec.ts`, audit má stav `search`; `audit.sh --superuser` hľadanie aj Kanál (s kanálovou pripomienkou) 0 porušení. Ostáva potvrdiť, či chceš Discord upozornenia na zálohy a zlyhané správy do kanála (worker → DM superadminovi).
 
 - **Pred najbližším nasadením:** na serveri `docker compose exec -u app worker python manage.py backup_db` – migrácia `accounts/0055` zmaže nepoužívané stĺpce a `KvkSettings` (nevratné).
 - **Po nasadení v1.56.7:** na produkcii `docker compose exec -u app backend python manage.py count_rare_excess` (koľko marchov a prihlášok treba opraviť, len počty).

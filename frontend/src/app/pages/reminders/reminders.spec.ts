@@ -345,6 +345,66 @@ describe('Reminders on /pripomienky', () => {
     stop.flush(null);
   });
 
+  it('"Poslať ukážku mne" sends the channel message privately and says how it went', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: '**', children: [] }]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: KingdomApi, useValue: { links: signal({}) } },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(Reminders);
+    fixture.componentRef.setInput('channel', true);
+    fixture.detectChanges();
+    http.expectOne('/api/events/channel/').flush({
+      webhook: true,
+      events: [
+        event(1, { name_sk: '20 GH', offsets: [10] }),
+        event(3, { name_sk: 'Silk Road', next_start: null, irregular: true, repeat_days: 0, offsets: [0] }),
+      ],
+    });
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const rows = mine(el);
+    const buttons = rows.map((row) => row.querySelector<HTMLButtonElement>('.mine__preview button')!);
+    // an event without a next date has nothing to show
+    const silk = rows.findIndex((row) => text(row).includes('Silk Road'));
+    expect(buttons[silk].disabled).toBe(true);
+    const gh = rows.findIndex((row) => text(row).includes('20 GH'));
+    const button = buttons[gh];
+    const result = rows[gh].querySelector('.discord__result')!;
+    expect(result.getAttribute('role')).toBe('status');
+    expect(text(button)).toBe('Poslať ukážku mne');
+
+    const answers: [object | null, number, string, boolean][] = [
+      [{}, 200, 'Ukážka odoslaná – pozri súkromné správy na Discorde.', false],
+      [{ reason: 'blocked' }, 400, 'Bot ti nevie napísať – zapni si súkromné správy od členov servera.', true],
+      [{ reason: 'no_discord' }, 400, 'Si prihlásený heslom, bez Discordu – ukážku ti nemá kam prísť. Prihlás sa cez Discord.', true],
+      [{ reason: 'bot_off' }, 503, 'Bot nie je nastavený (DISCORD_BOT_TOKEN) – ukážka sa nedá poslať.', true],
+      [{ reason: 'something else' }, 502, 'Discord teraz neodpovedá, skús neskôr.', true],
+      [{ detail: 'Throttled' }, 429, 'Skús to o chvíľu.', false],
+    ];
+    for (const [body, status, said, error] of answers) {
+      expect(button.disabled).toBe(false);
+      button.click();
+      await fixture.whenStable();
+      // while sending: the old answer is gone, the button keeps the focus and a second click sends nothing
+      expect(text(result)).toBe('');
+      expect(button.getAttribute('aria-disabled')).toBe('true');
+      button.click();
+      const req = http.expectOne('/api/events/channel/1/preview/');
+      expect(req.request.method).toBe('POST');
+      req.flush(body, { status, statusText: String(status) });
+      await new Promise((done) => setTimeout(done));
+      await fixture.whenStable();
+      expect(text(result)).toBe(said);
+      expect(button.getAttribute('aria-disabled')).toBeNull();
+      expect(!!result.querySelector('.is-error')).toBe(error);
+    }
+  });
+
   it('monograms for events without game art', () => {
     expect(
       [
