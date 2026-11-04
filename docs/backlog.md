@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **4. 11. 2026 – v1.61.0:** Vyhodnocovanie: prirážka za power nad odporúčanú (`power.excess` 100 000/M, Methiu) a stĺpec + filter „Minulé KvK nesplnil“ (`PlayerEvaluation.missed_last`, migrácia `accounts/0056`, × `power.missed` = 2), Ochrana údajov 4. 11. 2026.
 - **4. 11. 2026 – v1.60.1:** Vyhodnocovanie: ručná úprava acclaimu viditeľná v riadku tabuľky vedľa požadovaného acclaimu („+2 M“, `.ev-bonus` v `results-tab`), Gether.
 - **3. 11. 2026 – v1.60.0:** **Hľadanie po celom webe** (`shared/site-search/`, Getherov nápad 9 – kritik kola ho zamietol, Gether ho chcel): lupa v hlavičke, riadok v mobilnom menu, kláves `/`; stránky, návody, Slovník, commanderi, eventy; lenivo cez `import()`. Rozpočet úvodného balíka 620 kB (varovanie).
 - **3. 11. 2026 – prevádzkové upozornenia (bez novej verzie):** ~~worker pošle superadminovi DM pri starej/zlyhanej zálohe a zlyhanej správe do kanála~~ (Gether 4. 11. 2026 nie, zmazané); v hlavičke červený „!“ a „Prevádzka: skontroluj admin“ (`ops` v `/api/auth/me/` len pre overeného superadmina). Testy pokrývajú kritériá, okrajové prípady neskôr.

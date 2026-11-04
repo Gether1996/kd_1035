@@ -80,6 +80,8 @@ const PAIRS: PairRow[] = [
 ];
 const S: EvalSettings = normalizeSettings(null, PAIRS);
 const withPairs = (value: unknown) => normalizeSettings(value, PAIRS);
+/** the curves on their own: without the penalty for power above "Odp. power" (its own test) */
+const CURVES: EvalSettings = withPairs({ power: { excess: 0 } });
 
 // Maros666, M1 of the spreadsheet: 100 % = the caps and four gold inscriptions of the top tier S (3. 11. 2026)
 const BEST_BONUSES = 14 / 3 + 14 / 2.75 + 14 / 1.8 + 8;
@@ -277,7 +279,9 @@ describe('evaluation scoring', () => {
     expect(row.acclaim.marches).toBeCloseTo(1, 9);
     expect(row.acclaim.quality).toBeCloseTo(1 + 0.2 * (row.quality / (286.53 / 5) - 1), 9);
     const { power, marches: count, quality } = row.acclaim;
-    expect(row.acclaim.required).toBe(Math.round((5_600_000 * power * count * quality) / 1000) * 1000);
+    // + 100 000 for each of the 28 M above the 72 M of the two marches (Methiu 4. 11. 2026)
+    expect(row.acclaim.penalty).toBe(28 * 100_000);
+    expect(row.acclaim.required).toBe(Math.round((5_600_000 * power * count * quality + 28 * 100_000) / 1000) * 1000);
   });
 
   it('gives everyone with the same number of marches the same recommended power', () => {
@@ -303,7 +307,7 @@ describe('evaluation scoring', () => {
     const same = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', false, 0) });
     const marches = (n: number, from: number) => Array.from({ length: n }, (_, i) => same(from + i));
     const [skapals, twoBig, full] = evaluate(
-      S,
+      CURVES,
       [player(1, marches(5, 1), { power: 170 }), player(2, marches(2, 10), { power: 100 }), player(3, marches(5, 20), { power: 105 })],
       INDEX,
     ).rows;
@@ -317,9 +321,43 @@ describe('evaluation scoring', () => {
     const [counted] = evaluate(withPairs({ power: { expected: false } }), [player(4, marches(2, 30), { power: 100 })], INDEX).rows;
     expect(counted.acclaim.surplus).toBe(28);
     // switched off
-    const [off] = evaluate(withPairs({ power: { surplus: 0 } }), [player(5, marches(5, 40), { power: 170 })], INDEX).rows;
+    const [off] = evaluate(withPairs({ power: { surplus: 0, excess: 0 } }), [player(5, marches(5, 40), { power: 170 })], INDEX).rows;
     expect(off.acclaim.surcharge).toBe(0);
     expect(off.acclaim.required).toBe(Math.round(base / 1000) * 1000);
+  });
+
+  it('adds a small penalty for power above "Odp. power", more for a player short last KvK (Methiu 4. 11. 2026)', () => {
+    const same = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', false, 0) });
+    const marches = (n: number, from: number) => Array.from({ length: n }, (_, i) => same(from + i));
+    const players = [
+      // 3 marches carry 82 M: 3 M above
+      player(1, marches(3, 1), { power: 85 }),
+      player(2, marches(3, 10), { power: 85, missed_last: true }),
+      // at the recommended power: nothing, ticked or not
+      player(3, marches(3, 20), { power: 82, missed_last: true }),
+      // 5 marches, 120 M: 15 M above "Odp. power" and 15 M surplus
+      player(4, marches(5, 30), { power: 120, missed_last: true }),
+      // no power written down: the recommended one stands in, no penalty
+      player(5, marches(3, 40), { power: null }),
+    ];
+    const [plain, missed, at, big, none] = evaluate(S, players, INDEX).rows;
+    expect([plain.excess, plain.acclaim.penalty, plain.acclaim.missed]).toEqual([3, 300_000, 1]);
+    // "za 10 mega přes doporučenou budeš mít 1M acclaim": 100 000 per M by default
+    expect(plain.acclaim.required - Math.round((5_600_000 * plain.acclaim.power * plain.acclaim.marches * plain.acclaim.quality) / 1000) * 1000).toBe(300_000);
+    expect([missed.acclaim.penalty, missed.acclaim.missed]).toEqual([600_000, 2]);
+    expect(missed.acclaim.required - plain.acclaim.required).toBe(300_000);
+    expect([at.acclaim.penalty, at.acclaim.surcharge]).toEqual([0, 0]);
+    // both surcharges × 2
+    expect([big.excess, big.acclaim.penalty, big.acclaim.surplus, big.acclaim.surcharge]).toEqual([15, 3_000_000, 15, 960_000]);
+    expect(none.acclaim.penalty).toBe(0);
+
+    // the variables: another rate, another factor, off
+    const tuned = evaluate(withPairs({ power: { excess: 50_000, missed: 1.5 } }), players, INDEX).rows;
+    expect([tuned[0].acclaim.penalty, tuned[1].acclaim.penalty]).toEqual([150_000, 225_000]);
+    const off = evaluate(withPairs({ power: { excess: 0 } }), players, INDEX).rows;
+    expect(off.map((r) => r.acclaim.penalty)).toEqual([0, 0, 0, 0, 0]);
+    // the quick filter
+    expect(evaluate(S, players, INDEX).rows.filter((r) => quickMatch('missed', r)).map((r) => r.player.id)).toEqual([2, 3, 4]);
   });
 
   it('is fair to small accounts (Gether 26. 10. 2026: a T4 player with 1 march and 40 M close to bigger ones)', () => {
@@ -356,7 +394,7 @@ describe('evaluation scoring', () => {
     const strong = (id: number) =>
       march({ id, primary: 'Ivan IV', secondary: 'Achilles', attack: 12, defense: 12, health: 12, damage: 6, gold: 4, gear: gear('gold', true, 3) });
     const [five, two, twoStrong] = evaluate(
-      S,
+      CURVES,
       [
         player(1, [1, 2, 3, 4, 5].map(same), { power: 91 }),
         player(2, [same(6), same(7)], { power: 77 }),
@@ -487,7 +525,7 @@ describe('evaluation scoring', () => {
     // saved before the tier list: the default one
     expect(normalizeSettings({ armaments: { gold: 40 } }).armaments).toMatchObject({ gold: 40, inscriptions: DEFAULT_INSCRIPTIONS });
     // the old row's highest power, the number, the default; past 5 marches by the last step
-    expect(s.power).toEqual({ expected: true, table: [70, 80, 82, 93, 105, 117, 129, 141, 153], surplus: 32_000 });
+    expect(s.power).toEqual({ expected: true, table: [70, 80, 82, 93, 105, 117, 129, 141, 153], surplus: 32_000, excess: 100_000, missed: 2 });
     // the variables of the model before 26. 10. 2026 are dropped, a curve kept within its bounds
     expect(s.acclaim.powerCurve).toBe(4);
     expect(s.acclaim.marchCurve).toBe(0.8);

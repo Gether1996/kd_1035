@@ -25,5 +25,5 @@ export class Privacy {
     { label: this.t().nav.privacy, link: this.i18n.path('privacy') },
   ]);
   // same date format in Slovak and Czech; change both when the page changes
-  protected readonly validFrom = { iso: '2026-11-03', text: '3. 11. 2026' };
+  protected readonly validFrom = { iso: '2026-11-04', text: '4. 11. 2026' };
 }

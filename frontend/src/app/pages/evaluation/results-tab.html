@@ -121,6 +121,11 @@
           <app-eval-tip [text]="tip('results.recommended')" [label]="tipLabel(c.recommended)" />
         </th>
         <th scope="col">{{ c.t4 }} <app-eval-tip [text]="tip('results.t4')" [label]="tipLabel(c.t4)" /></th>
+        <!-- fell short of the acclaim last KvK – the leadership's tick (Gether 4. 11. 2026) -->
+        <th scope="col">
+          <abbr [title]="c.missed">{{ c.missedShort }}</abbr>
+          <app-eval-tip [text]="tip('results.missed')" [label]="tipLabel(c.missed)" />
+        </th>
         <th scope="col"><span class="sr-only">{{ c.detail }}</span></th>
       </tr>
     </thead>
@@ -187,6 +192,16 @@
             <span class="ev-label" aria-hidden="true">{{ c.t4 }}</span>
             <input class="ev-check" type="checkbox" [attr.aria-label]="c.t4 + ': ' + who" [checked]="r.player.t4" (change)="setT4(r, $event)" />
           </td>
+          <td>
+            <span class="ev-label" aria-hidden="true">{{ c.missed }}</span>
+            <input
+              class="ev-check"
+              type="checkbox"
+              [attr.aria-label]="c.missed + ': ' + who"
+              [checked]="!!r.player.missed_last"
+              (change)="setMissed(r, $event)"
+            />
+          </td>
           <td class="ev-toggle">
             <button
               type="button"
@@ -202,7 +217,7 @@
         </tr>
         @if (open) {
           <tr class="ev-detail-row" [id]="'ev-detail-' + r.player.id">
-            <td colspan="8">
+            <td colspan="9">
               <div class="ev-detail">
                 <!-- how the acclaim adds up -->
                 <p class="ev-detail__sum">
@@ -211,6 +226,9 @@
                   {{ partText(r, 'quality') }}
                   @if (r.acclaim.surcharge) {
                     + {{ surplusText(r) }}
+                  }
+                  @if (r.acclaim.penalty) {
+                    + {{ penaltyText(r) }}
                   }
                   @if (r.acclaim.t4) {
                     − {{ int(r.acclaim.t4) }} ({{ t4Text() }})
@@ -307,7 +325,7 @@
         }
       } @empty {
         <tr>
-          <td colspan="8" class="ev-empty">{{ x.empty }}</td>
+          <td colspan="9" class="ev-empty">{{ x.empty }}</td>
         </tr>
       }
     </tbody>

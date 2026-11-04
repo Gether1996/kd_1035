@@ -1227,7 +1227,7 @@ export const sk = {
           'Prihlášky na KvK – rolu (rally, garrison), typ jednotiek, commanderov a ich skilly, naklikanú výbavu, formáciu a inscriptions, bonusy armamentov, poznámku a tvoj orientačný odhad, koľko dávaš do KvK a kedy si online.',
           'Marche na stránke Marche – typ, commanderov a ich skilly, bonusy armamentov a naklikanú výbavu, formáciu a inscriptions.',
           'Screenshoty prihlášok a marchov už neukladáme – staršie sme zmazali, zo záloh zmiznú do 8 týždňov.',
-          'Aktuálnu power, ak ju zapíšeš na stránke Môj účet. Pri vyhodnocovaní KvK ju môže zapísať aj správca (alebo vedenie, ktorému to povolí), spolu s tým, či máš iba T4 jednotky, a ručnú úpravu tvojho požadovaného acclaimu.',
+          'Aktuálnu power, ak ju zapíšeš na stránke Môj účet. Pri vyhodnocovaní KvK ju môže zapísať aj správca (alebo vedenie, ktorému to povolí), spolu s tým, či máš iba T4 jednotky, ručnú úpravu tvojho požadovaného acclaimu a či si minulé KvK nesplnil požadovaný acclaim.',
         ],
       },
       {
@@ -1239,7 +1239,7 @@ export const sk = {
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
-          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power a T4 vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Kto a kedy zmenil premenné vyhodnocovania alebo zapísanú power a T4 hráča, sa zapisuje do histórie, ktorú vidí iba správca; záznamy sa mažú po 180 dňoch. Keď vedenie zverejní požadovaný acclaim, všetci schválení hráči uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
+          'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power, T4 a nesplnený acclaim z minulého KvK vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Kto a kedy zmenil premenné vyhodnocovania alebo zapísanú power, T4 a nesplnený acclaim hráča, sa zapisuje do histórie, ktorú vidí iba správca; záznamy sa mažú po 180 dňoch. Keď vedenie zverejní požadovaný acclaim, všetci schválení hráči uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

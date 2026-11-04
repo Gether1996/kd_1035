@@ -395,7 +395,7 @@ export class EvaluationPage {
       this.players.update((all) =>
         all.map((p) => {
           const s = saved.get(p.id);
-          return s ? { ...p, power: s.power ?? null, t4: !!s.t4, acclaim_bonus: s.acclaim_bonus ?? 0 } : p;
+          return s ? { ...p, power: s.power ?? null, t4: !!s.t4, acclaim_bonus: s.acclaim_bonus ?? 0, missed_last: !!s.missed_last } : p;
         }),
       );
     } catch {
@@ -411,9 +411,9 @@ export class EvaluationPage {
     this.recordFailed.set(false);
     try {
       const saved = await this.api.saveRecord(id, change);
-      put({ power: saved.power, t4: saved.t4, acclaim_bonus: saved.acclaim_bonus ?? 0 });
+      put({ power: saved.power, t4: saved.t4, acclaim_bonus: saved.acclaim_bonus ?? 0, missed_last: !!saved.missed_last });
     } catch {
-      if (before) put({ power: before.power, t4: before.t4, acclaim_bonus: before.acclaim_bonus ?? 0 });
+      if (before) put({ power: before.power, t4: before.t4, acclaim_bonus: before.acclaim_bonus ?? 0, missed_last: !!before.missed_last });
       this.recordFailed.set(true);
     }
   }

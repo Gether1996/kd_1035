@@ -310,7 +310,22 @@ export class EvalResultsTab {
     return this.texts()
       .detail.surplus.replace('{m}', this.dec(r.acclaim.surplus))
       .replace('{a}', this.int(this.settings().power.surplus))
-      .replace('{s}', this.int(r.acclaim.surcharge));
+      .replace('{s}', this.int(r.acclaim.surcharge)) + this.missedText(r);
+  }
+
+  /** "power nad odporúčanú 3 M × 100 000 (300 000)" – above "Odp. power" (Methiu 4. 11. 2026) */
+  protected penaltyText(r: PlayerEval): string {
+    return this.texts()
+      .detail.penalty.replace('{m}', this.dec(r.excess))
+      .replace('{a}', this.int(this.settings().power.excess))
+      .replace('{s}', this.int(r.acclaim.penalty)) + this.missedText(r);
+  }
+
+  /** " × 2 – minulé KvK nesplnil" after a surcharge of a player short of the acclaim last KvK */
+  private missedText(r: PlayerEval): string {
+    if (r.acclaim.missed === 1) return '';
+    const f = new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 2 }).format(r.acclaim.missed);
+    return ' ' + this.texts().detail.missed.replace('{f}', f);
   }
 
   // ---------------------------------------------------------------- explanations
@@ -387,13 +402,18 @@ export class EvalResultsTab {
     this.record.emit({ id: r.player.id, change: { t4: (event.target as HTMLInputElement).checked } });
   }
 
+  /** fell short of the acclaim last KvK (Gether 4. 11. 2026: "checkbox ku hráčom, to si potom nastavím") */
+  protected setMissed(r: PlayerEval, event: Event): void {
+    this.record.emit({ id: r.player.id, change: { missed_last: (event.target as HTMLInputElement).checked } });
+  }
+
   // ---------------------------------------------------------------- CSV
 
   /** the rows shown as CSV (semicolons and a BOM: a Slovak or Czech Excel opens it right away) */
   protected download(): void {
     const c = this.texts().columns;
     // the columns of the table: no score (Slim 13. 10. 2026: "skóre by som dal z tabuľky preč")
-    const head = [c.player, 'Discord', c.marches, c.required, c.power, c.recommended, c.t4, this.texts().detail.acclaimBonus];
+    const head = [c.player, 'Discord', c.marches, c.required, c.power, c.recommended, c.t4, c.missed, this.texts().detail.acclaimBonus];
     const cell = (v: string | number | null) => {
       const text = v === null ? '' : typeof v === 'number' ? String(Math.round(v * 100) / 100).replace('.', ',') : v;
       return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -407,6 +427,7 @@ export class EvalResultsTab {
         r.player.power,
         r.ownLimit,
         r.player.t4 ? 'T4' : '',
+        r.player.missed_last ? '✓' : '',
         r.acclaim.bonus || null,
       ]
         .map(cell)

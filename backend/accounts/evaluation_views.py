@@ -129,6 +129,7 @@ def record_data(record: PlayerEvaluation | None) -> dict:
         't4': record.t4 if record else False,
         'power_bonus': float(record.power_bonus) if record else 0.0,
         'acclaim_bonus': record.acclaim_bonus if record else 0,
+        'missed_last': record.missed_last if record else False,
     }
 
 
@@ -245,12 +246,20 @@ class RecordSerializer(serializers.Serializer):
     )
     # a flat amount of acclaim on top of the computed one, or off it (Gether 1. 11. 2026)
     acclaim_bonus = serializers.IntegerField(min_value=-ACCLAIM_BONUS_MAX, max_value=ACCLAIM_BONUS_MAX, required=False)
+    # fell short of the required acclaim in the last KvK (Methiu 4. 11. 2026)
+    missed_last = serializers.BooleanField(required=False)
 
-    def validate_t4(self, value):
+    def strict_bool(self, name, value):
         # a JSON boolean only, not "yes" or 1
-        if type(self.initial_data.get('t4')) is not bool:
+        if type(self.initial_data.get(name)) is not bool:
             raise serializers.ValidationError('bool')
         return value
+
+    def validate_t4(self, value):
+        return self.strict_bool('t4', value)
+
+    def validate_missed_last(self, value):
+        return self.strict_bool('missed_last', value)
 
 
 def save_record(player: Player, values: dict, user=None) -> PlayerEvaluation:
@@ -269,7 +278,7 @@ def save_record(player: Player, values: dict, user=None) -> PlayerEvaluation:
 @permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_player(request, player_id):
-    """PATCH {power?, t4?, power_bonus?, acclaim_bonus?} – what the superadmin writes down about one player."""
+    """PATCH {power?, t4?, power_bonus?, acclaim_bonus?, missed_last?} – what the superadmin writes down about one player."""
     player = get_object_or_404(visible_players(request), pk=player_id)
     form = RecordSerializer(data=request.data)
     form.is_valid(raise_exception=True)
@@ -287,7 +296,7 @@ BULK_MAX = 500
 @permission_classes([CanEvaluate])
 @throttle_classes([WriteThrottle])
 def evaluation_players(request):
-    """PATCH {players: [{id, power?, t4?, power_bonus?, acclaim_bonus?}, …]} – many players at once (the power of
+    """PATCH {players: [{id, power?, t4?, power_bonus?, acclaim_bonus?, missed_last?}, …]} – many players at once (the power of
     everyone pasted from a list). All or nothing: one wrong row or unknown player and nothing is saved."""
     items = request.data.get('players') if isinstance(request.data, dict) else None
     if not isinstance(items, list) or not 1 <= len(items) <= BULK_MAX:

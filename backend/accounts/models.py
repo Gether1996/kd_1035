@@ -527,6 +527,9 @@ class PlayerEvaluation(models.Model):
         'úprava požadovaného acclaimu', default=0,
         validators=[MinValueValidator(-ACCLAIM_BONUS_MAX), MaxValueValidator(ACCLAIM_BONUS_MAX)],
     )  # fmt: skip
+    # the leadership's tick: the player fell short of the required acclaim in the last KvK – the surcharges for power
+    # above the recommended one count more (Methiu 4. 11. 2026)
+    missed_last = models.BooleanField('minulé KvK nesplnil acclaim', default=False)
     updated_at = models.DateTimeField('upravené', auto_now=True)
 
     class Meta:

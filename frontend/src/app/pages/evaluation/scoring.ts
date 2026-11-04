@@ -26,6 +26,8 @@ export interface EvalPlayer {
   t4: boolean;
   /** a flat amount of acclaim on top of the required one, or off it (Gether 1. 11. 2026); missing in an older response */
   acclaim_bonus?: number;
+  /** fell short of the required acclaim in the last KvK – a tick of the leadership (Methiu 4. 11. 2026) */
+  missed_last?: boolean;
 }
 
 /** the most a correction of the required acclaim may be, up or down (backend accounts ACCLAIM_BONUS_MAX) */
@@ -93,8 +95,10 @@ export interface PlayerEval {
   /**
    * The benchmark's acclaim × the three factors, multiplied (Gether 24. 10. 2026: strong marches never make up for
    * missing ones or less power): (power / the benchmark's)^curve, (marches / the full number)^curve and the quality
-   * within ± its band; + the surcharge for the power above what those marches carry (surplus, M); then T4 less; +
-   * the leadership's own correction (bonus, Gether 1. 11. 2026: "flat 2 M acclaim navyše alebo menej")
+   * within ± its band; + the surcharge for the power above what those marches carry (surplus, M); + the penalty for
+   * the power above the recommended power of the player's own marches (excess, Methiu 4. 11. 2026); both × the
+   * factor for a player who fell short last KvK (missed); then T4 less; + the leadership's own correction (bonus,
+   * Gether 1. 11. 2026: "flat 2 M acclaim navyše alebo menej")
    */
   acclaim: {
     power: number;
@@ -102,6 +106,10 @@ export interface PlayerEval {
     quality: number;
     surplus: number;
     surcharge: number;
+    /** acclaim for the power above "Odp. power" (excess M × power.excess) */
+    penalty: number;
+    /** the factor of the surcharges for a player who fell short last KvK (1 = not ticked or no surcharge) */
+    missed: number;
     t4: number;
     bonus: number;
     required: number;
@@ -397,6 +405,10 @@ interface Draft {
  *   the quality factor (the average march against the benchmark's, within ± qualityBand %),
  * + power.surplus for each million above the recommended power of those marches – the power not even the full number
  * of marches carries (Gether 26. 10. 2026: "SKAPALS a Maros … majú zbytočne 170 M power, ktorú treba znížiť"),
+ * + power.excess for each million above the recommended power of the player's own counted marches ("Odp. power";
+ * Methiu 4. 11. 2026: "malá penalizace za větší než doporučenou power … za 1M power 100k acclaim"), both surcharges
+ * × power.missed for a player the leadership ticked as short of the acclaim last KvK ("větší penalizace pro ty, co
+ * mají větší než doporučenou power a z minula nesplněný limit"),
  * T4 less, at least the minimum. Multiplied, so the quality never makes up for missing marches or less power.
  *
  * Why curves (Gether 26. 10. 2026: "T4 hráč s jedným marchom a 40 M power má taký vysoký acclaim, len o trochu nižší
@@ -467,8 +479,11 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
     // power over the full number's row
     const carried = recommendedPower(settings, marchCount);
     const surplus = power !== null && carried !== null ? Math.max(0, power - carried) : 0;
-    const surcharge = surplus * p.surplus;
-    const sum = a.benchmark * factors.power * factors.marches * factors.quality + surcharge;
+    // short of the acclaim last KvK: the surcharges count more (only where there is one)
+    const missed = x.player.missed_last ? p.missed : 1;
+    const surcharge = surplus * p.surplus * missed;
+    const penalty = excess * p.excess * missed;
+    const sum = a.benchmark * factors.power * factors.marches * factors.quality + surcharge + penalty;
     const t4 = x.player.t4 ? sum * (a.t4 / 100) : 0;
     const step = a.round;
     // the leadership's flat correction, after T4 (it is meant as it is written), still at least the minimum
@@ -488,7 +503,7 @@ export function evaluate(settings: EvalSettings, players: EvalPlayer[], index: A
       power,
       excess,
       marchCount,
-      acclaim: { ...factors, surplus, surcharge, t4, bonus, required },
+      acclaim: { ...factors, surplus, surcharge, penalty, missed, t4, bonus, required },
     };
   });
   return { rows, benchmark };
@@ -568,8 +583,8 @@ export function parsePowerList(text: string, players: EvalPlayer[]): { found: { 
 // ---------------------------------------------------------------- quick filters of the table
 
 /** "Na opravu", "Bez power" and "Nad odp. power" of the table – a to-do list before KvK */
-export type QuickFilter = 'all' | 'fix' | 'nopower' | 'over';
-export const QUICK_FILTERS: readonly QuickFilter[] = ['all', 'fix', 'nopower', 'over'];
+export type QuickFilter = 'all' | 'fix' | 'nopower' | 'over' | 'missed';
+export const QUICK_FILTERS: readonly QuickFilter[] = ['all', 'fix', 'nopower', 'over', 'missed'];
 /** hidden with "Rátať s power" off */
 export const POWER_FILTERS: ReadonlySet<string> = new Set<QuickFilter>(['nopower', 'over']);
 
@@ -605,6 +620,8 @@ export function quickMatch(filter: QuickFilter, r: PlayerEval): boolean {
       return r.player.power === null;
     case 'over':
       return overLimit(r);
+    case 'missed':
+      return !!r.player.missed_last;
     default:
       return true;
   }

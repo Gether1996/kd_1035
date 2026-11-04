@@ -128,7 +128,9 @@ class EvaluationApiTests(TestCase):
         row = rows[self.player.pk]
         self.assertEqual([m['primary'] for m in row['marches']], ['Attila'])
         self.assertEqual(row['marches'][0]['primary_skills'], '5555')
-        self.assertEqual((row['power'], row['t4'], row['power_bonus'], row['acclaim_bonus']), (None, False, 0.0, 0))
+        self.assertEqual(
+            (row['power'], row['t4'], row['power_bonus'], row['acclaim_bonus'], row['missed_last']), (None, False, 0.0, 0, False)
+        )
         # the acclaim reached is not written down any more (Gether 14. 10. 2026)
         self.assertNotIn('acclaim', row)
         # the one waiting for the approval too, marked
@@ -152,7 +154,7 @@ class EvaluationApiTests(TestCase):
     def test_notes_about_a_player(self):
         url = f'/api/evaluation/players/{self.player.pk}/'
         res = self.call('patch', url, {'power': 101.5, 'acclaim': 5600000})
-        self.assertEqual(res.json(), {'id': self.player.pk, 'power': 101.5, 't4': False, 'power_bonus': 0.0, 'acclaim_bonus': 0})
+        self.assertEqual(res.json(), {'id': self.player.pk, 'power': 101.5, 't4': False, 'power_bonus': 0.0, 'acclaim_bonus': 0, 'missed_last': False})
         res = self.call('patch', url, {'t4': True, 'power_bonus': -6})
         self.assertEqual((res.json()['power'], res.json()['t4'], res.json()['power_bonus']), (101.5, True, -6.0))
         self.assertEqual(self.call('patch', url, {'power': None}).json()['power'], None)
@@ -162,9 +164,15 @@ class EvaluationApiTests(TestCase):
         self.assertEqual(PlayerEvaluation.objects.get(player=self.player).acclaim_bonus, -1_500_000)
         change = EvaluationChange.objects.filter(player=self.player).order_by('-pk').first()
         self.assertEqual(change.changes, [['acclaim_bonus', 2_000_000, -1_500_000]])
+        # fell short of the acclaim in the last KvK (Methiu 4. 11. 2026): a tick of the leadership, in the history
+        self.assertIs(self.call('patch', url, {'missed_last': True}).json()['missed_last'], True)
+        self.assertTrue(PlayerEvaluation.objects.get(player=self.player).missed_last)
+        change = EvaluationChange.objects.filter(player=self.player).order_by('-pk').first()
+        self.assertEqual(change.changes, [['missed_last', False, True]])
         for bad in (
             {}, {'power': -1}, {'power': 'x'}, {'power': 1.25}, {'acclaim': 5}, {'t4': 'yes'}, {'power_bonus': 5000},
-            {'acclaim_bonus': 1.5}, {'acclaim_bonus': '2M'}, {'acclaim_bonus': 100_000_001},
+            {'acclaim_bonus': 1.5}, {'acclaim_bonus': '2M'}, {'acclaim_bonus': 100_000_001}, {'missed_last': 1},
+            {'missed_last': 'true'},
         ):  # fmt: skip
             self.assertEqual(self.call('patch', url, bad).status_code, 400, bad)
         self.assertEqual(self.call('patch', '/api/evaluation/players/999999/', {'t4': True}).status_code, 404)

@@ -68,7 +68,7 @@ def formations_changed(user, old: dict, new: dict) -> None:
 
 
 def record_changed(user, player, old: dict, new: dict) -> None:
-    """power, t4, power_bonus, acclaim_bonus of one player"""
+    """power, t4, power_bonus, acclaim_bonus, missed_last of one player"""
     write(user, EvaluationChange.Kind.PLAYER, diff(old, new), player=player)
 
 

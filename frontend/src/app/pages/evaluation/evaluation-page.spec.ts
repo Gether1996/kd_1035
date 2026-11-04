@@ -266,13 +266,13 @@ describe('EvaluationPage', () => {
     };
 
     expect(el.querySelector('.ev-quick')?.getAttribute('aria-label')).toBe('Rýchly filter');
-    expect(labels()).toEqual(['Všetci · 3', 'Na opravu · 1', 'Bez power · 1', 'Nad odp. power · 1']);
+    expect(labels()).toEqual(['Všetci · 3', 'Na opravu · 1', 'Bez power · 1', 'Nad odp. power · 1', 'Nesplnil minulé KvK · 0']);
     // the counts follow the search and "Hráči"
     await change('#ev-search', 'da');
-    expect(labels()).toEqual(['Všetci · 1', 'Na opravu · 0', 'Bez power · 0', 'Nad odp. power · 0']);
+    expect(labels()).toEqual(['Všetci · 1', 'Na opravu · 0', 'Bez power · 0', 'Nad odp. power · 0', 'Nesplnil minulé KvK · 0']);
     await change('#ev-search', '');
     await change('#ev-show', 'approved');
-    expect(labels()).toEqual(['Všetci · 4', 'Na opravu · 1', 'Bez power · 2', 'Nad odp. power · 1']);
+    expect(labels()).toEqual(['Všetci · 4', 'Na opravu · 1', 'Bez power · 2', 'Nad odp. power · 1', 'Nesplnil minulé KvK · 0']);
 
     // by power: the most first, without power last
     await change('#ev-sort', 'power');
@@ -308,7 +308,7 @@ describe('EvaluationPage', () => {
     el.querySelector<HTMLInputElement>('.ev-switch input')!.click();
     await tick(fixture);
     await tick(fixture);
-    expect(labels()).toEqual(['Všetci · 4', 'Na opravu · 1']);
+    expect(labels()).toEqual(['Všetci · 4', 'Na opravu · 1', 'Nesplnil minulé KvK · 0']);
     expect(pressed()).toBe('Všetci · 4');
     expect(router.url).toBe('/');
     // and a link with a power filter is not taken while it is off
@@ -345,6 +345,39 @@ describe('EvaluationPage', () => {
     expect(bonus('Cyril')).toBeNull();
     // one value under the card's label on a phone: the number and the correction together
     expect(cell('Anna').children.length).toBe(2);
+  });
+
+  it('ticks "Minulé KvK nesplnil" in the row, saves it and filters by it (Gether 4. 11. 2026)', async () => {
+    const march = { id: 1, position: 1, kind: 'archer', primary: 'Qin Shi Huang', secondary: 'Yi Seong-Gye' };
+    const p = { ingame_name: '', avatar_url: '', approved: true, t4: false, marches: [march], power: 60 };
+    const players = [
+      { ...p, id: 1, name: 'Anna', missed_last: false },
+      { ...p, id: 2, name: 'Boris', missed_last: true },
+    ];
+    const fixture = await open(SUPERUSER, undefined, players, { pairs: [['Qin Shi Huang', 'Yi Seong-Gye', 117]] });
+    const http = TestBed.inject(HttpTestingController);
+    const el = fixture.nativeElement as HTMLElement;
+    const box = (name: string) => el.querySelector<HTMLInputElement>(`input[aria-label="Minulé KvK nesplnil: ${name}"]`);
+    const quick = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.ev-quick button'));
+    const names = () => Array.from(el.querySelectorAll('.ev-player__name')).map((n) => n.textContent?.trim());
+
+    expect(el.querySelector('thead abbr[title="Minulé KvK nesplnil"]')?.textContent?.trim()).toBe('Nesplnil');
+    expect([box('Anna')!.checked, box('Boris')!.checked]).toEqual([false, true]);
+    expect(quick().at(-1)?.textContent?.trim()).toBe('Nesplnil minulé KvK · 1');
+
+    box('Anna')!.click();
+    const req = http.expectOne('/api/evaluation/players/1/');
+    expect([req.request.method, req.request.body]).toEqual(['PATCH', { missed_last: true }]);
+    req.flush({ id: 1, power: 60, t4: false, power_bonus: 0, acclaim_bonus: 0, missed_last: true });
+    await tick(fixture);
+    await tick(fixture);
+    expect(quick().at(-1)?.textContent?.trim()).toBe('Nesplnil minulé KvK · 2');
+
+    quick().at(-1)!.click();
+    await tick(fixture);
+    expect(names()).toEqual(expect.arrayContaining(['Anna', 'Boris']));
+    expect(TestBed.inject(Router).url).toBe('/?f=missed');
+    expect(http.match('/api/evaluation/players/1/')).toEqual([]);
   });
 
   it('never asks on the server', () => {

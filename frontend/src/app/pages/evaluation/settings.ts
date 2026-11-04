@@ -52,6 +52,14 @@ export interface EvalSettings {
      * zbytočne 170 M power, ktorú treba znížiť"); the spreadsheet's "Dodatočný acclaim kvôli power" 16 000 × 2
      */
     surplus: number;
+    /**
+     * Acclaim for each million above the recommended power of the player's own counted marches ("Odp. power") –
+     * a small penalty for more power than the marches (Methiu 4. 11. 2026: "za 1M power 100k acclaim … není
+     * likvidační"); 0 = off
+     */
+    excess: number;
+    /** × both surcharges for a player who fell short of the acclaim last KvK (Methiu 4. 11. 2026); 1 = no more */
+    missed: number;
   };
   marches: {
     /** which march types count (open field) */
@@ -216,6 +224,8 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     // sheet Constants: the highest power of 1 … 5 marches ("Max Power" 66, 72, 82, 93, 105 M)
     table: [66, 72, 82, 93, 105],
     surplus: 32_000,
+    excess: 100_000,
+    missed: 2,
   },
   marches: {
     kinds: ['infantry', 'cavalry', 'archer', 'leadership', 'engineering'],
@@ -336,6 +346,8 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
       expected: typeof power['expected'] === 'boolean' ? power['expected'] : d.power.expected,
       table: sized,
       surplus: num(power['surplus'], d.power.surplus, 0, 10_000_000),
+      excess: num(power['excess'], d.power.excess, 0, 10_000_000),
+      missed: num(power['missed'], d.power.missed, 1, 10),
     },
     marches: {
       kinds: MARCH_KINDS.filter((k) => kinds.includes(k)),
