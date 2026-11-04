@@ -303,26 +303,33 @@ describe('evaluation scoring', () => {
     expect(rows.map((r) => r.missing)).toEqual([0, 0, 2, 0]);
   });
 
-  it('adds acclaim for the power not even the full number of marches carries (Gether 26. 10. 2026: SKAPALS 170 M)', () => {
+  it('charges one rate for every million the marches do not carry, above 105 M too (Gether 26. 10. and 4. 11. 2026)', () => {
     const same = (id: number) => march({ id, primary: 'Ivan IV', secondary: 'Achilles', gear: gear('gold', false, 0) });
     const marches = (n: number, from: number) => Array.from({ length: n }, (_, i) => same(from + i));
-    const [skapals, twoBig, full] = evaluate(
-      CURVES,
-      [player(1, marches(5, 1), { power: 170 }), player(2, marches(2, 10), { power: 100 }), player(3, marches(5, 20), { power: 105 })],
+    const [skapals, twoBig, full, none] = evaluate(
+      S,
+      [
+        player(1, marches(5, 1), { power: 170 }),
+        player(2, marches(2, 10), { power: 100 }),
+        player(3, marches(5, 20), { power: 105 }),
+        // no counted march: nothing to measure against (to fix first)
+        player(4, [], { power: 120 }),
+      ],
       INDEX,
     ).rows;
-    // 5 marches carry 105 M: 65 M of it is surplus, 32 000 each on top of the curves
-    expect([skapals.acclaim.surplus, skapals.acclaim.surcharge]).toEqual([65, 65 * 32_000]);
+    // 5 marches carry 105 M: 65 M above, 100 000 each on top of the curves – no second surcharge any more
+    expect([skapals.excess, skapals.acclaim.penalty]).toEqual([65, 65 * 100_000]);
     const base = 5_600_000 * skapals.acclaim.power * skapals.acclaim.marches * skapals.acclaim.quality;
-    expect(skapals.acclaim.required).toBe(Math.round((base + 65 * 32_000) / 1000) * 1000);
-    // 100 M with 2 marches owes the 5 marches the power asks for, but no surplus – they carry it; 105 M is no surplus
-    expect([twoBig.acclaim.surplus, full.acclaim.surplus]).toEqual([0, 0]);
-    // not counting the missing marches: the power above the 72 M of the two marches is the surplus
-    const [counted] = evaluate(withPairs({ power: { expected: false } }), [player(4, marches(2, 30), { power: 100 })], INDEX).rows;
-    expect(counted.acclaim.surplus).toBe(28);
-    // switched off
-    const [off] = evaluate(withPairs({ power: { surplus: 0, excess: 0 } }), [player(5, marches(5, 40), { power: 170 })], INDEX).rows;
-    expect(off.acclaim.surcharge).toBe(0);
+    expect(skapals.acclaim.required).toBe(Math.round((base + 65 * 100_000) / 1000) * 1000);
+    // 2 marches carry 72 M: the same rate for each of the 28 M; 105 M with 5 marches is nothing
+    expect([twoBig.excess, twoBig.acclaim.penalty]).toEqual([28, 28 * 100_000]);
+    expect([full.acclaim.penalty, none.acclaim.penalty]).toEqual([0, 0]);
+    // the same with the missing marches not counted
+    const [counted] = evaluate(withPairs({ power: { expected: false } }), [player(5, marches(2, 30), { power: 100 })], INDEX).rows;
+    expect(counted.acclaim.penalty).toBe(28 * 100_000);
+    // switched off; an old "surplus" saved before the merge counts no more
+    const [off] = evaluate(withPairs({ power: { surplus: 32_000, excess: 0 } }), [player(6, marches(5, 40), { power: 170 })], INDEX).rows;
+    expect(off.acclaim.penalty).toBe(0);
     expect(off.acclaim.required).toBe(Math.round(base / 1000) * 1000);
   });
 
@@ -335,7 +342,7 @@ describe('evaluation scoring', () => {
       player(2, marches(3, 10), { power: 85, missed_last: true }),
       // at the recommended power: nothing, ticked or not
       player(3, marches(3, 20), { power: 82, missed_last: true }),
-      // 5 marches, 120 M: 15 M above "Odp. power" and 15 M surplus
+      // 5 marches, 120 M: 15 M above "Odp. power" (105 M)
       player(4, marches(5, 30), { power: 120, missed_last: true }),
       // no power written down: the recommended one stands in, no penalty
       player(5, marches(3, 40), { power: null }),
@@ -346,9 +353,8 @@ describe('evaluation scoring', () => {
     expect(plain.acclaim.required - Math.round((5_600_000 * plain.acclaim.power * plain.acclaim.marches * plain.acclaim.quality) / 1000) * 1000).toBe(300_000);
     expect([missed.acclaim.penalty, missed.acclaim.missed]).toEqual([600_000, 2]);
     expect(missed.acclaim.required - plain.acclaim.required).toBe(300_000);
-    expect([at.acclaim.penalty, at.acclaim.surcharge]).toEqual([0, 0]);
-    // both surcharges × 2
-    expect([big.excess, big.acclaim.penalty, big.acclaim.surplus, big.acclaim.surcharge]).toEqual([15, 3_000_000, 15, 960_000]);
+    expect(at.acclaim.penalty).toBe(0);
+    expect([big.excess, big.acclaim.penalty]).toEqual([15, 3_000_000]);
     expect(none.acclaim.penalty).toBe(0);
 
     // the variables: another rate, another factor, off
@@ -525,7 +531,7 @@ describe('evaluation scoring', () => {
     // saved before the tier list: the default one
     expect(normalizeSettings({ armaments: { gold: 40 } }).armaments).toMatchObject({ gold: 40, inscriptions: DEFAULT_INSCRIPTIONS });
     // the old row's highest power, the number, the default; past 5 marches by the last step
-    expect(s.power).toEqual({ expected: true, table: [70, 80, 82, 93, 105, 117, 129, 141, 153], surplus: 32_000, excess: 100_000, missed: 2 });
+    expect(s.power).toEqual({ expected: true, table: [70, 80, 82, 93, 105, 117, 129, 141, 153], excess: 100_000, missed: 2 });
     // the variables of the model before 26. 10. 2026 are dropped, a curve kept within its bounds
     expect(s.acclaim.powerCurve).toBe(4);
     expect(s.acclaim.marchCurve).toBe(0.8);

@@ -224,9 +224,6 @@
                   <strong>{{ d.acclaim }}:</strong>
                   {{ int(settings().acclaim.benchmark) }} × {{ partText(r, 'power') }} × {{ partText(r, 'marches') }} ×
                   {{ partText(r, 'quality') }}
-                  @if (r.acclaim.surcharge) {
-                    + {{ surplusText(r) }}
-                  }
                   @if (r.acclaim.penalty) {
                     + {{ penaltyText(r) }}
                   }

@@ -169,7 +169,7 @@ export class EvalSettingsTab {
       ],
       score: f(['acclaim', 'score'], s.acclaim.score),
       benchmarkPower: f(['acclaim', 'power'], s.acclaim.power),
-      power: [f(['power', 'surplus'], s.power.surplus), f(['power', 'excess'], s.power.excess), f(['power', 'missed'], s.power.missed)],
+      power: [f(['power', 'excess'], s.power.excess), f(['power', 'missed'], s.power.missed)],
       marches: [
         f(['marches', 'equipment'], s.marches.equipment),
         f(['marches', 'armaments'], s.marches.armaments),

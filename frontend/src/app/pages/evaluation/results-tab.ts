@@ -305,14 +305,6 @@ export class EvalResultsTab {
     return d.partQuality.replace('{q}', this.dec(r.quality)).replace('{b}', this.dec(b.quality)).replace('{f}', f(r.acclaim.quality));
   }
 
-  /** "zbytočná power 65 M × 32 000 (2 080 000)" – the power not even the marches counted with the missing ones carry */
-  protected surplusText(r: PlayerEval): string {
-    return this.texts()
-      .detail.surplus.replace('{m}', this.dec(r.acclaim.surplus))
-      .replace('{a}', this.int(this.settings().power.surplus))
-      .replace('{s}', this.int(r.acclaim.surcharge)) + this.missedText(r);
-  }
-
   /** "power nad odporúčanú 3 M × 100 000 (300 000)" – above "Odp. power" (Methiu 4. 11. 2026) */
   protected penaltyText(r: PlayerEval): string {
     return this.texts()
@@ -321,7 +313,7 @@ export class EvalResultsTab {
       .replace('{s}', this.int(r.acclaim.penalty)) + this.missedText(r);
   }
 
-  /** " × 2 – minulé KvK nesplnil" after a surcharge of a player short of the acclaim last KvK */
+  /** " × 2 – minulé KvK nesplnil" after the penalty of a player short of the acclaim last KvK */
   private missedText(r: PlayerEval): string {
     if (r.acclaim.missed === 1) return '';
     const f = new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 2 }).format(r.acclaim.missed);

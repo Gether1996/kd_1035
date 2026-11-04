@@ -47,18 +47,13 @@ export interface EvalSettings {
      */
     table: number[];
     /**
-     * Acclaim for each million above the recommended power of the marches counted with the missing ones – the power
-     * not even the full number of marches carries (Gether 26. 10. 2026: "SKAPALS a Maros musí byť vysoký, lebo majú
-     * zbytočne 170 M power, ktorú treba znížiť"); the spreadsheet's "Dodatočný acclaim kvôli power" 16 000 × 2
-     */
-    surplus: number;
-    /**
      * Acclaim for each million above the recommended power of the player's own counted marches ("Odp. power") –
-     * a small penalty for more power than the marches (Methiu 4. 11. 2026: "za 1M power 100k acclaim … není
-     * likvidační"); 0 = off
+     * a penalty for more power than the marches carry (Methiu 4. 11. 2026: "za 1M power 100k acclaim … není
+     * likvidační"); also above the 105 M of five marches – the surcharge for that on its own ("surplus") is merged
+     * into it (Gether 4. 11. 2026); 0 = off
      */
     excess: number;
-    /** × both surcharges for a player who fell short of the acclaim last KvK (Methiu 4. 11. 2026); 1 = no more */
+    /** × the penalty for a player who fell short of the acclaim last KvK (Methiu 4. 11. 2026); 1 = no more */
     missed: number;
   };
   marches: {
@@ -223,7 +218,6 @@ export const DEFAULT_SETTINGS: EvalSettings = {
     expected: true,
     // sheet Constants: the highest power of 1 … 5 marches ("Max Power" 66, 72, 82, 93, 105 M)
     table: [66, 72, 82, 93, 105],
-    surplus: 32_000,
     excess: 100_000,
     missed: 2,
   },
@@ -345,7 +339,7 @@ export function normalizeSettings(value: unknown, pairRows: unknown = [], format
     power: {
       expected: typeof power['expected'] === 'boolean' ? power['expected'] : d.power.expected,
       table: sized,
-      surplus: num(power['surplus'], d.power.surplus, 0, 10_000_000),
+      // an old "surplus" (the surcharge above the full number's row, merged 4. 11. 2026) is dropped
       excess: num(power['excess'], d.power.excess, 0, 10_000_000),
       missed: num(power['missed'], d.power.missed, 1, 10),
     },
