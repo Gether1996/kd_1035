@@ -38,6 +38,20 @@ import { Reveal } from '../../../shared/reveal';
           }
         </div>
 
+        <!-- the kingdom's own joke: a screenshot from the map (Gether 4. 11. 2026), pinned slightly askew -->
+        <figure class="wisdom" appReveal>
+          <img
+            class="wisdom__shot"
+            src="/img/fun/brana-8.webp"
+            [alt]="t().intro.wisdom.alt"
+            width="736"
+            height="236"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption class="wisdom__caption">{{ t().intro.wisdom.title }}</figcaption>
+        </figure>
+
         <div class="more" appReveal>
           <a class="more__link" [routerLink]="i18n.path('about')">
             {{ t().intro.more }} <svg appIcon="arrow-right"></svg>

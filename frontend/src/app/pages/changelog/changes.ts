@@ -16,16 +16,18 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-04',
-    version: '1.61.1',
+    version: '1.61.2',
     sk: [
+      'Úvod: pod O kráľovstve pribudla Múdrosť kráľovstva – screenshot z mapy, ktorý pozná každý z nás.',
       'Požadovaný acclaim: kto má viac power, než unesú jeho marche, dostane prirážku – rovnakú za každý milión navyše, aj nad 105 M pri piatich marchoch.',
       'Vyhodnocovanie KvK pre vedenie: ručná úprava acclaimu je vidieť priamo v tabuľke vedľa požadovaného acclaimu.',
-      'Vyhodnocovanie KvK pre vedenie: stĺpec a filter Minulé KvK nesplnil – takému hráčovi sa prirážky za power násobia.',
+      'Vyhodnocovanie KvK pre vedenie: stĺpec a filter Minulé KvK nesplnil – takému hráčovi sa prirážka za power násobí.',
     ],
     cs: [
+      'Úvod: pod O království přibyla Moudrost království – screenshot z mapy, který zná každý z nás.',
       'Požadovaný acclaim: kdo má víc power, než unesou jeho marche, dostane přirážku – stejnou za každý milion navíc, i nad 105 M u pěti marchů.',
       'Vyhodnocování KvK pro vedení: ruční úprava acclaimu je vidět přímo v tabulce vedle požadovaného acclaimu.',
-      'Vyhodnocování KvK pro vedení: sloupec a filtr Minulé KvK nesplnil – takovému hráči se přirážky za power násobí.',
+      'Vyhodnocování KvK pro vedení: sloupec a filtr Minulé KvK nesplnil – takovému hráči se přirážka za power násobí.',
     ],
   },
   {

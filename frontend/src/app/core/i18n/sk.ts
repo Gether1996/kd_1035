@@ -146,6 +146,11 @@ export const sk = {
     lead: 'KD 1035 je jediné kráľovstvo v Rise of Kingdoms, kde hrajú výhradne Slováci a Česi.',
     more: 'Viac o nás',
     guides: 'Otvoriť návody',
+    // a screenshot from the map, the kingdom's own joke (Gether 4. 11. 2026)
+    wisdom: {
+      title: 'Múdrosť kráľovstva',
+      alt: 'Správa nad mestom na mape v hre: „hraj s rozumem, šetři se na bránu 8“',
+    },
     pillars: [
       { title: 'Bez prekladača', text: 'Na mape aj na Discorde si rozumieme.' },
       { title: 'Jedno časové pásmo', text: 'Rally aj eventy v čase, keď sú hore všetci.' },

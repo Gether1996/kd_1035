@@ -118,6 +118,40 @@
   }
 }
 
+// the screenshot from the map, pinned slightly askew; straight on hover
+.wisdom {
+  width: min(100%, 520px);
+  margin: clamp(36px, 6vw, 64px) auto 0;
+  text-align: center;
+}
+
+.wisdom__shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.8);
+  transform: rotate(-1.5deg);
+  transition: transform 0.5s var(--ease-out);
+
+  .wisdom:hover & {
+    transform: rotate(0deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.wisdom__caption {
+  margin-top: 16px;
+  font: 600 0.8125rem/1.3 var(--font-body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
 .more {
   margin-top: clamp(32px, 5vw, 48px);
   text-align: center;

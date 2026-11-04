@@ -73,8 +73,10 @@ describe('SiteSearch (the header search)', () => {
     answer('/api/guides/', GUIDES);
     answer('/api/commanders/', COMMANDERS);
     answer('/api/events/', EVENTS);
-    // the glossary and the helpers are dynamic imports
-    for (let i = 0; i < 10; i++) await new Promise((resolve) => setTimeout(resolve));
+    // the glossary and the helpers are dynamic imports – wait until every source answered (a slow machine needs more)
+    const loading = () => (fixture.componentInstance as unknown as { loading(): boolean }).loading();
+    for (let i = 0; i < 200 && loading(); i++) await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(loading()).toBe(false);
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     const type = async (value: string) => {
