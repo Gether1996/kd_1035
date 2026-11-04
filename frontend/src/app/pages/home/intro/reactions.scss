@@ -1,0 +1,95 @@
+:host {
+  display: block;
+}
+
+// the row keeps its height before the counts arrive – nothing jumps
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 14px;
+}
+
+.reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font: 600 0.9375rem/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    border-color 0.25s,
+    color 0.25s;
+
+  .icon {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.35s var(--ease-out);
+  }
+
+  &:hover {
+    border-color: var(--line-strong);
+    color: var(--text);
+
+    .icon {
+      transform: scale(1.12);
+    }
+  }
+
+  &:active .icon {
+    transform: scale(0.9);
+  }
+}
+
+span.reaction {
+  cursor: default;
+}
+
+// the player's own: a tinted pill (the sprite's icons cannot be filled – the symbol keeps fill="none")
+.reaction--like.is-mine {
+  border-color: var(--gold-400);
+  background: color-mix(in srgb, var(--gold-400) 16%, transparent);
+  color: var(--gold-100);
+}
+
+.reaction--heart.is-mine {
+  border-color: var(--red-500);
+  background: color-mix(in srgb, var(--red-500) 24%, transparent);
+  color: var(--red-300);
+}
+
+.reactions__who {
+  flex-basis: 100%;
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+  text-align: center;
+
+  summary {
+    cursor: pointer;
+    color: var(--gold-300);
+  }
+
+  p {
+    margin: 8px auto 0;
+    max-width: 520px;
+    color: var(--text-dim);
+    overflow-wrap: anywhere;
+  }
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    vertical-align: -2px;
+  }
+}

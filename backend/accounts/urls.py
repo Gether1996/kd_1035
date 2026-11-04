@@ -9,6 +9,7 @@ from . import (
     kvk_views,
     local_auth,
     march_views,
+    reaction_views,
     reminder_views,
     views,
 )
@@ -62,4 +63,5 @@ urlpatterns = [
     path('forum/<int:thread_id>/', forum_views.thread),
     path('forum/posts/<int:post_id>/', forum_views.post),
     path('forum/posts/<int:post_id>/like/', forum_views.like),
+    path('reactions/<str:target>/', reaction_views.reactions),
 ]

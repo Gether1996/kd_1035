@@ -717,3 +717,28 @@ class HallArchiveEntry(models.Model):
 
     def __str__(self):
         return f'{self.get_category_display()} · {self.place}. {self.name}'
+
+
+class Reaction(models.Model):
+    """A like or a heart of a signed-in player on a picture of the site – the home page's "Múdrosť kráľovstva"
+    (Gether 4. 11. 2026: "likes a srdiečka, hráči budú môcť pridávať"). One of each kind per player, a second click
+    takes it back; everyone sees only the counts. Goes with the account (the privacy page says so)."""
+
+    class Kind(models.TextChoices):
+        LIKE = 'like', 'like'
+        HEART = 'heart', 'srdiečko'
+
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='reactions', verbose_name='hráč')
+    # what was reacted to – one of REACTION_TARGETS (reaction_views.py)
+    target = models.CharField('obrázok', max_length=40)
+    kind = models.CharField('reakcia', max_length=10, choices=Kind.choices)
+    created_at = models.DateTimeField('pridané', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'reakcia'
+        verbose_name_plural = 'reakcie'
+        constraints = [models.UniqueConstraint(fields=['player', 'target', 'kind'], name='reaction_once')]
+        indexes = [models.Index(fields=['target', 'kind'], name='reaction_count')]
+
+    def __str__(self):
+        return f'{self.player} · {self.target} · {self.kind}'

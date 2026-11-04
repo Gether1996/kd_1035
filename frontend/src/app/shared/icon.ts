@@ -55,6 +55,7 @@ export type IconName =
   | 'shield'
   | 'skull'
   | 'swords'
+  | 'thumbs-up'
   | 'trash-2'
   | 'trophy'
   | 'users'

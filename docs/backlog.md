@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **4. 11. 2026 – v1.62.0:** Like a srdiečko pod „Múdrosťou kráľovstva“ na úvode – pridávajú prihlásení hráči (jedno z každého), počty vidí každý, kto reagoval len superadmin (`accounts.Reaction`, migrácia `0057`, `/api/reactions/<target>/`), Ochrana údajov doplnená.
 - **4. 11. 2026 – v1.61.2:** Úvod: „Múdrosť kráľovstva“ – Getherov screenshot z mapy („hraj s rozumem, šetři se na bránu 8“, interný humor) pod piliermi v sekcii O kráľovstve (`img/fun/brana-8.webp`, mierne pootočený, rovný pri hoveri).
 - **4. 11. 2026 – v1.61.1:** Vyhodnocovanie: prirážka za zbytočnú power (nad 105 M) zlúčená do prirážky za power nad odporúčanú – jedna sadzba za každý milión, ktorý marche neunesú (Gether: „nie je to zbytočné navyše?“).
 - **4. 11. 2026 – v1.61.0:** Vyhodnocovanie: prirážka za power nad odporúčanú (`power.excess` 100 000/M, Methiu) a stĺpec + filter „Minulé KvK nesplnil“ (`PlayerEvaluation.missed_last`, migrácia `accounts/0056`, × `power.missed` = 2), Ochrana údajov 4. 11. 2026.

@@ -185,6 +185,8 @@ PUBLIC = {
     'api/forum/<int:thread_id>/': 'anonymous',
     'api/forum/posts/<int:post_id>/': 'anonymous',
     'api/forum/posts/<int:post_id>/like/': 'anonymous',
+    # the counts for everyone, POST by any signed-in player, who reacted the superadmin only – test_reactions.py
+    'api/reactions/<str:target>/': 'reactions',
 }
 
 

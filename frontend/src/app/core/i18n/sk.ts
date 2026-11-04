@@ -150,6 +150,15 @@ export const sk = {
     wisdom: {
       title: 'Múdrosť kráľovstva',
       alt: 'Správa nad mestom na mape v hre: „hraj s rozumem, šetři se na bránu 8“',
+      // likes and hearts of the players (Gether 4. 11. 2026)
+      reactions: {
+        label: 'Reakcie hráčov',
+        like: 'Páči sa mi',
+        heart: 'Srdiečko',
+        signIn: 'prihlás sa a pridaj reakciu',
+        who: 'Kto reagoval',
+        nobody: 'zatiaľ nikto',
+      },
     },
     pillars: [
       { title: 'Bez prekladača', text: 'Na mape aj na Discorde si rozumieme.' },
@@ -1245,6 +1254,7 @@ export const sk = {
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',
           'Kým ťa správca neschváli alebo ak schválenie zruší, tvoje marche a prihlášky ostanú uložené, ale vidí ich iba on.',
           'Z tvojich marchov (a power, ak je zapísaná) web vypočíta odhad acclaimu na KvK. Odhad aj zapísanú power, T4 a nesplnený acclaim z minulého KvK vidí iba správca a vedenie, ktorému povolí vyhodnocovanie (to vidí len schválených hráčov); svoju power vidíš aj ty na stránke Môj účet. Kto a kedy zmenil premenné vyhodnocovania alebo zapísanú power, T4 a nesplnený acclaim hráča, sa zapisuje do histórie, ktorú vidí iba správca; záznamy sa mažú po 180 dňoch. Keď vedenie zverejní požadovaný acclaim, všetci schválení hráči uvidia pri schválených hráčoch meno, avatar, počet marchov, power (ako bola pri zverejnení), odporúčanú power a požadovaný acclaim – marche nie.',
+          'Like a srdiečko pod obrázkom na úvode ukladáme s tvojím účtom – ostatní vidia iba počty, kto ich dal, vidí len správca. Ďalším klikom ich zrušíš.',
           'Nič nezverejňujeme, nepredávame ani neposkytujeme ďalej – okrem služieb v nasledujúcom bode.',
         ],
       },

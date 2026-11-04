@@ -4,10 +4,11 @@ import { RouterLink } from '@angular/router';
 import { I18n } from '../../../core/i18n/i18n';
 import { Icon, IconName } from '../../../shared/icon';
 import { Reveal } from '../../../shared/reveal';
+import { Reactions } from './reactions';
 
 @Component({
   selector: 'app-intro',
-  imports: [NgTemplateOutlet, RouterLink, Icon, Reveal],
+  imports: [NgTemplateOutlet, RouterLink, Icon, Reveal, Reactions],
   template: `
     <section class="section" id="kingdom">
       <div class="container">
@@ -50,6 +51,7 @@ import { Reveal } from '../../../shared/reveal';
             decoding="async"
           />
           <figcaption class="wisdom__caption">{{ t().intro.wisdom.title }}</figcaption>
+          <app-reactions target="brana-8" />
         </figure>
 
         <div class="more" appReveal>
