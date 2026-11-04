@@ -2,8 +2,8 @@
 
 The worker writes a small heartbeat file (WORKER_STATUS_PATH, next to the database) every tick instead of a DB row,
 so the git snapshot does not change every 30 s. The backup time comes from that file too – on the server only the
-worker has the backup folder mounted, the backend (which renders the admin) does not. The same file carries what the
-operations alerts (alerts.py) already told the superadmin, and `ops()` gives the superadmin's header the red "!".
+worker has the backup folder mounted, the backend (which renders the admin) does not. `ops()` gives the superadmin's
+header the red "!" (no Discord DMs about operations – Gether 4. 11. 2026).
 """
 
 import json
@@ -57,9 +57,7 @@ class Heartbeat:
     """What the worker last did, written atomically (temp file in the same folder + os.replace) every tick.
 
     The last backup survives restarts: the existing file is read at start-up and a newer backup in the folder
-    (e.g. a manual backup_db) wins. A write that fails is logged once and never stops the worker. The operations
-    alerts (alerts.py) keep their state here too, so a restart neither repeats an alert nor reports old failures; a
-    file from before them (no such keys) reads as nothing alerted and no failures known yet.
+    (e.g. a manual backup_db) wins. A write that fails is logged once and never stops the worker.
     """
 
     def __init__(self, backup_folder: Path | None = None):
@@ -68,12 +66,6 @@ class Heartbeat:
         self.last_backup_file = previous.get('last_backup_file') or ''
         # the last backup attempt raised (cleared by the next backup written)
         self.backup_error = str(previous.get('backup_error') or '')
-        # alert kind → when the superadmin was last told (ISO time)
-        alerted = previous.get('alerted')
-        self.alerted = {k: v for k, v in alerted.items() if isinstance(v, str)} if isinstance(alerted, dict) else {}
-        # the failed channel notifications already known; None = not checked yet (the first check only takes them in)
-        failed = previous.get('failed_ids')
-        self.failed_ids = [i for i in failed if isinstance(i, int)] if isinstance(failed, list) else None
         if backup_folder is not None:
             self._adopt_latest(backup_folder)
         self.failing = False
@@ -103,8 +95,6 @@ class Heartbeat:
             'last_backup_at': self.last_backup_at.isoformat() if self.last_backup_at else None,
             'last_backup_file': self.last_backup_file,
             'backup_error': self.backup_error,
-            'alerted': self.alerted,
-            'failed_ids': self.failed_ids,
         }
         path = status_path()
         try:
@@ -158,13 +148,13 @@ def backup_state(status: dict | None, now: datetime) -> dict:
 
 
 def failed_notifications(now: datetime):
-    """Channel notifications that failed in the last FAILED_WINDOW (the panel, the header and the alerts)."""
+    """Channel notifications that failed in the last FAILED_WINDOW (the admin panel and the header)."""
     return EventNotification.objects.filter(status=EventNotification.Status.FAILED, send_at__gte=now - FAILED_WINDOW)
 
 
 def ops(now: datetime | None = None) -> dict:
     """The superadmin's header (/api/auth/me/): something the admin overview shows is wrong – a file read and one
-    count. It also covers a worker that is not running, which the worker itself cannot report (alerts.py)."""
+    count. It also covers a worker that is not running."""
     now = now or timezone.now()
     status = read_status()
     return {

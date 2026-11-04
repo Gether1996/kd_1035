@@ -14,7 +14,6 @@ from accounts.evaluation_history import prune as prune_evaluation_history
 from accounts.newcomers import announce_new_players, send_welcomes
 from accounts.notices import send_march_notices
 from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
-from kingdom.alerts import check as check_alerts
 from kingdom.backups import backup_due, create_backup
 from kingdom.discord import send_due
 from kingdom.events import plan_reminders
@@ -31,8 +30,7 @@ SESSION_CLEANUP_SECONDS = 24 * 3600
 class Command(BaseCommand):
     help = (
         'Background loop: plans reminders of recurring kingdom events, sends due Discord notifications and the '
-        "players' personal reminders, tells the superadmin about new players and about a failed backup or channel "
-        'post, backs up the database every '
+        "players' personal reminders, tells the superadmin about new players, backs up the database every "
         'BACKUP_INTERVAL_DAYS and deletes expired sessions and old reminder logs once a day.'
     )
 
@@ -100,7 +98,7 @@ class Command(BaseCommand):
                         heartbeat.backup_written(archive)
                         log.info('Backup written: %s', archive)
                 except Exception as exc:
-                    heartbeat.backup_failed(exc)  # the superadmin gets a DM (alerts.py)
+                    heartbeat.backup_failed(exc)  # the superadmin's red "!" in the header
                     log.exception('Backup failed')
 
             if time.monotonic() >= next_session_cleanup:
@@ -125,12 +123,6 @@ class Command(BaseCommand):
                     sweep_files()
                 except Exception:
                     log.exception('Sweeping screenshot files failed')
-
-            try:
-                # a failed backup or channel post → the superadmin's DM; its state goes out in the tick's write below
-                check_alerts(heartbeat)
-            except Exception:
-                log.exception('Checking the operations alerts failed')
 
             heartbeat.tick()  # a file for the admin overview, never a DB write
             time.sleep(TICK_SECONDS)

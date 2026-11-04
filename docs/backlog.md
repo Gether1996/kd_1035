@@ -5,7 +5,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 ## Hotové
 
 - **3. 11. 2026 – v1.60.0:** **Hľadanie po celom webe** (`shared/site-search/`, Getherov nápad 9 – kritik kola ho zamietol, Gether ho chcel): lupa v hlavičke, riadok v mobilnom menu, kláves `/`; stránky, návody, Slovník, commanderi, eventy; lenivo cez `import()`. Rozpočet úvodného balíka 620 kB (varovanie).
-- **3. 11. 2026 – prevádzkové upozornenia (bez novej verzie):** worker pošle superadminovi DM pri starej/zlyhanej zálohe a zlyhanej správe do kanála (max. 1× za 24 h na druh, `kingdom/alerts.py`); v hlavičke červený „!“ a „Prevádzka: skontroluj admin“ (`ops` v `/api/auth/me/` len pre overeného superadmina). Testy pokrývajú kritériá, okrajové prípady neskôr.
+- **3. 11. 2026 – prevádzkové upozornenia (bez novej verzie):** ~~worker pošle superadminovi DM pri starej/zlyhanej zálohe a zlyhanej správe do kanála~~ (Gether 4. 11. 2026 nie, zmazané); v hlavičke červený „!“ a „Prevádzka: skontroluj admin“ (`ops` v `/api/auth/me/` len pre overeného superadmina). Testy pokrývajú kritériá, okrajové prípady neskôr.
 - **3. 11. 2026 – v1.59.5:** Kanál na Discorde (`/pripomienky?tab=kanal`): **Poslať ukážku mne** – najbližšia správa do kanála príde superadminovi najprv súkromne od bota, bez @everyone a bez roly, nič sa neuloží (`POST /api/events/channel/<id>/preview/`, `events.notification_for()`). Testy zatiaľ základné (Gether: „nepotrebujem teraz úplne komplexné testy, dokonči testy potom“) – chýba spec komponentu (tlačidlo, stav, vypnuté bez termínu).
 - **3. 11. 2026 – v1.59.4:** rozpísaná prihláška na KvK sa pred odchodom pýta (`leaveKvk`, `KvkForm.dirty` vrátane dotazníka, `beforeunload`); `canceledNavigationResolution` nezmenené (Späť + Zrušiť môže preskočiť záznam histórie, ako pri Premenných).
 - **3. 11. 2026 – v1.59.3:** Delta 2 inscriptions ako Wedge 2 a Pincer 2 (zlaté S 50, Surge a Burst B 30, Steady a Driven C 20); tiery S+ a A+ zrušené, plné body = 4 zlaté S (migrácia `accounts/0054` presunie uložený tier list).
@@ -271,7 +271,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Čaká na Gethera
 
-- ~~Testy z 3. 11. 2026~~ hotové 4. 11.: `site-search.spec.ts`, ukážka v Kanáli v `reminders.spec.ts`, audit má stav `search`; `audit.sh --superuser` hľadanie aj Kanál (s kanálovou pripomienkou) 0 porušení. Ostáva potvrdiť, či chceš Discord upozornenia na zálohy a zlyhané správy do kanála (worker → DM superadminovi).
+- ~~Testy z 3. 11. 2026~~ hotové 4. 11.: `site-search.spec.ts`, ukážka v Kanáli v `reminders.spec.ts`, audit má stav `search`; `audit.sh --superuser` hľadanie aj Kanál (s kanálovou pripomienkou) 0 porušení. Discord upozornenia z prevádzky Gether nechce (4. 11.) – zmazané, ostáva len „!“ v hlavičke.
 
 - **Pred najbližším nasadením:** na serveri `docker compose exec -u app worker python manage.py backup_db` – migrácia `accounts/0055` zmaže nepoužívané stĺpce a `KvkSettings` (nevratné).
 - **Po nasadení v1.56.7:** na produkcii `docker compose exec -u app backend python manage.py count_rare_excess` (koľko marchov a prihlášok treba opraviť, len počty).
@@ -303,4 +303,4 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 - **Typy 20 GH (v1.34.4):** v admine doplniť ostatné typy (názov, max. odmena SK/CZ) a skontrolovať texty max. odmeny – idú hráčom aj do kanála.
 - Hranica zastaranej power (21 dní), 14-dňové okno registrácií bez Discordu (`PENDING_WINDOW`) a jedinečné meno v hre – Gether 4. 11. 2026: „neriešme“, ostáva, ako je.
 - **Kolo 2. 11. 2026:** R4 uvidia zoznam schválených hráčov bez prihlášky na KvK (`kvk-unsigned-players`) – pri stavbe rozhodnuté áno, ak nie, povedz. Ukážka kanálovej pripomienky do DM potrebuje povolené DM od bota.
-- **Kolo 3. 11. 2026 (2):** potvrdiť DM upozornenia z prevádzky (zastaraná záloha, zlyhaná správa do kanála) – používajú `DISCORD_ADMIN_IDS` a `DISCORD_BOT_TOKEN` na serveri; povolené DM od bota (ukážka pripomienky); pred zavedením odpočtu KvK z adminu (najskôr 21. 11.) založiť event KvK so zaškrtnutým „odpočet na úvode“.
+- **Kolo 3. 11. 2026 (2):** povolené DM od bota (ukážka pripomienky); pred zavedením odpočtu KvK z adminu (najskôr 21. 11.) založiť event KvK so zaškrtnutým „odpočet na úvode“.
