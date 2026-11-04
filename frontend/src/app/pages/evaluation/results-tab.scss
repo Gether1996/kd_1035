@@ -80,6 +80,15 @@
   }
 }
 
+// the missing marches ("+1") and the leadership's flat correction of the required acclaim ("+2 M" – gold from
+// .ev-note--gold right below, which must stay after this rule; the component style budget is 8 kB)
+.ev-missing-count,
+.ev-bonus {
+  margin-left: 4px;
+  color: var(--red-300);
+  font-weight: 600;
+}
+
 .ev-note--gold {
   color: var(--gold-300);
 }
@@ -114,7 +123,8 @@
   gap: 6px;
 }
 
-.ev-note--error {
+.ev-note--error,
+.is-over {
   color: var(--red-300);
 }
 
@@ -218,16 +228,6 @@
 .ev-required {
   font-weight: 700;
   color: var(--gold-100);
-}
-
-.ev-missing-count {
-  margin-left: 4px;
-  color: var(--red-300);
-  font-weight: 600;
-}
-
-.is-over {
-  color: var(--red-300);
 }
 
 .ev-check {

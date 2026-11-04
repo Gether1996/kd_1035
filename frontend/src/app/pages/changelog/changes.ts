@@ -15,6 +15,12 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-04',
+    version: '1.60.1',
+    sk: ['Vyhodnocovanie KvK pre vedenie: ručná úprava acclaimu je vidieť priamo v tabuľke vedľa požadovaného acclaimu.'],
+    cs: ['Vyhodnocování KvK pro vedení: ruční úprava acclaimu je vidět přímo v tabulce vedle požadovaného acclaimu.'],
+  },
+  {
     date: '2026-11-03',
     version: '1.60.0',
     sk: [

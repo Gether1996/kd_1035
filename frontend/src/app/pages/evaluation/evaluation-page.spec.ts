@@ -321,6 +321,32 @@ describe('EvaluationPage', () => {
     expect(router.url).toBe('/');
   });
 
+  it('shows the manual correction of the acclaim next to the required acclaim in the row', async () => {
+    const march = { id: 1, position: 1, kind: 'archer', primary: 'Qin Shi Huang', secondary: 'Yi Seong-Gye' };
+    const p = { ingame_name: '', avatar_url: '', approved: true, t4: false, marches: [march], power: 60 };
+    const players = [
+      { ...p, id: 1, name: 'Anna', acclaim_bonus: 2_000_000 },
+      { ...p, id: 2, name: 'Boris', acclaim_bonus: -1_500_000 },
+      { ...p, id: 3, name: 'Cyril', acclaim_bonus: 0 },
+    ];
+    const fixture = await open(SUPERUSER, undefined, players, { pairs: [['Qin Shi Huang', 'Yi Seong-Gye', 117]] });
+    const el = fixture.nativeElement as HTMLElement;
+    const cell = (name: string) =>
+      Array.from(el.querySelectorAll('.ev-row'))
+        .find((row) => row.querySelector('.ev-player__name')?.textContent?.trim() === name)!
+        .querySelector('.ev-required')!;
+    const bonus = (name: string) => cell(name).querySelector('.ev-bonus');
+    const said = (node: Element | null) => node?.textContent?.replace(/\s+/g, ' ').trim();
+
+    expect(said(bonus('Anna'))).toBe('ručná úprava +2 M');
+    expect(bonus('Anna')!.querySelector('.sr-only')?.textContent?.trim()).toBe('ručná úprava');
+    expect(bonus('Anna')!.getAttribute('title')?.replace(/\s/g, ' ')).toBe('ručná úprava: +2 000 000');
+    expect(said(bonus('Boris'))).toBe('ručná úprava −1,5 M');
+    expect(bonus('Cyril')).toBeNull();
+    // one value under the card's label on a phone: the number and the correction together
+    expect(cell('Anna').children.length).toBe(2);
+  });
+
   it('never asks on the server', () => {
     setup(SUPERUSER, 'server');
     const confirm = vi.spyOn(window, 'confirm');

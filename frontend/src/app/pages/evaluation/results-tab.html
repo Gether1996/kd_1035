@@ -154,10 +154,18 @@
               }
             </span>
           </td>
-          <!-- with the leadership's own correction in the title (Gether 1. 11. 2026) -->
-          <td class="ev-num ev-required" [title]="bonusText(r) || null">
+          <!-- with the leadership's own correction next to it (Gether 1. 11. 2026, visible since 4. 11. 2026) -->
+          <td class="ev-num ev-required">
             <span class="ev-label">{{ c.required }}</span>
-            {{ int(r.acclaim.required) }}
+            <span>
+              {{ int(r.acclaim.required) }}
+              @if (r.acclaim.bonus) {
+                <small class="ev-bonus ev-note--gold" [title]="bonusText(r)">
+                  <span class="sr-only">{{ x.detail.acclaimBonusShort }}</span>
+                  {{ bonusMillions(r.acclaim.bonus) }}
+                </small>
+              }
+            </span>
           </td>
           <td class="ev-col-power">
             <span class="ev-label" aria-hidden="true">{{ c.power }}</span>

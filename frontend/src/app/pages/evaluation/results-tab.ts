@@ -371,6 +371,12 @@ export class EvalResultsTab {
     return Math.abs(n);
   }
 
+  /** the correction next to the required acclaim in the row: 2 000 000 → "+2 M", −1 500 000 → "−1,5 M" */
+  protected bonusMillions(bonus: number): string {
+    const m = new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 3 }).format(Math.abs(bonus) / 1_000_000);
+    return `${bonus > 0 ? '+' : '−'}${m} M`;
+  }
+
   /** "Ručná úprava: +2 000 000" over the required acclaim; '' = none */
   protected bonusText(r: PlayerEval): string {
     const bonus = r.acclaim.bonus;
