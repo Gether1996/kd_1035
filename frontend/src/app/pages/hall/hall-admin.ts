@@ -222,8 +222,9 @@ export class HallAdmin {
     this.set(category, place, { player: value ? Number(value) : null });
   }
 
+  /** the in-game name alone, the Discord name only without one (Gether 7. 11. 2026: "nedávaj do zátvorky jeho discord meno") */
   protected label(p: Choice): string {
-    return p.ingame_name && p.ingame_name !== p.name ? `${p.ingame_name} (${p.name})` : p.ingame_name || p.name;
+    return p.ingame_name || p.name;
   }
 
   protected async save(event: Event, category: HallCategory, place: number): Promise<void> {
