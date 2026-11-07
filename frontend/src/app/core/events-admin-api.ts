@@ -44,6 +44,11 @@ export interface ManagedEvent extends EventFields {
   usual_time: string;
   /** players who picked it for their reminders */
   players: number;
+  /**
+   * an irregular event's dates (newest first, ISO), the usual gap in days and a guess of the next date
+   * (Gether 7. 11. 2026); null for a regular event, missing in an older response
+   */
+  history?: { dates: string[]; every_days: number | null; guess: string | null } | null;
   /** the types its runs can be (added in the admin) */
   variants: (EventVariant & { id: number })[];
 }

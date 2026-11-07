@@ -76,6 +76,31 @@
         <p class="other">{{ other() }}</p>
       }
 
+      <!-- the dates it had and a guess of the next one (Gether 7. 11. 2026) – the superadmin's only -->
+      @if (event?.history; as h) {
+        <section class="history" aria-labelledby="date-history">
+          <h3 class="field__label" id="date-history">{{ a.history.title }}</h3>
+          @if (h.dates.length) {
+            <p class="history__dates">
+              @for (d of h.dates; track d; let last = $last) {
+                <span>{{ dayOf(d) }}</span>@if (!last) {<span aria-hidden="true"> · </span>}
+              }
+            </p>
+            @if (every()) {
+              <p class="history__every">{{ every() }}</p>
+            }
+            @if (h.guess) {
+              <p class="history__guess">
+                <span>{{ a.history.guess.replace('{date}', when(h.guess)) }}</span>
+                <button type="button" class="pill-btn pill-btn--quiet" (click)="useGuess()">{{ a.history.use }}</button>
+              </p>
+            }
+          } @else {
+            <p class="history__every">{{ a.history.none }}</p>
+          }
+        </section>
+      }
+
       @if (replaces()) {
         <div class="current">
           <p>{{ replaces() }}</p>

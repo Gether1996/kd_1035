@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **7. 11. 2026 – v1.64.0:** Nepravidelné eventy si pamätajú každý termín (`EventDate`, migrácie `kingdom/0024`–`0025` s doplnením starších), v dialógu Termín minulé termíny, zvyčajný odstup a odhad ďalšieho s „Použiť odhad“.
 - **7. 11. 2026 – v1.63.2:** Discord oznam Ničiteľov pevností ako jedna karta – prví traja vedľa seba, 4. a 5. pod nimi, avatar víťaza vpravo.
 - **7. 11. 2026 – v1.63.1:** Discord oznam Ničiteľov pevností ako karty s Discord avatarmi hráčov (hlavička s víťazom, karta na každé miesto, farby medailí).
 - **7. 11. 2026 – v1.63.0:** Sieň slávy: editor kompaktný a bez dôvodov; Ničiteľ pevností až 5, týždeň s dátumami, „Zverejniť posledný týždeň na Discord“ (@everyone, kanál sieň-slávy, `DISCORD_HALL_WEBHOOK_URL`, potom zamknuté) a „Uložiť do archívu“ (Sieň legiend s týždňom, kategória sa vyprázdni); migrácia `0058`.

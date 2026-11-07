@@ -22,6 +22,7 @@ from .models import (
     REMINDER_CHOICES,
     TWIN_EVENT_ERROR,
     Alliance,
+    EventDate,
     EventNotification,
     EventRun,
     EventVariant,
@@ -212,10 +213,20 @@ class EventVariantInline(admin.TabularInline):
     fields = ['order', 'name_sk', 'name_cs', 'icon', 'max_reward_sk', 'max_reward_cs']
 
 
+class EventDateInline(admin.TabularInline):
+    """The dates an irregular event had (kingdom/history.py) – written by itself; a wrong one can be deleted here"""
+
+    model = EventDate
+    extra = 0
+    fields = ['start', 'end', 'created_at']
+    readonly_fields = ['created_at']
+    verbose_name_plural = 'minulé termíny (len nepravidelné eventy)'
+
+
 @admin.register(KingdomEvent)
 class KingdomEventAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     form = KingdomEventForm
-    inlines = [EventVariantInline]
+    inlines = [EventVariantInline, EventDateInline]
     list_display = [
         'icon_tag',
         'name_sk',

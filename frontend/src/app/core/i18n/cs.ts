@@ -1057,6 +1057,14 @@ export const cs: Dict = {
     zones: { local: 'náš čas', utc: 'UTC' },
     other: '= {time}',
     replaces: 'Teď má termín {date} – přesune se na nový.',
+    // the dates it had and a guess of the next one (Gether 7. 11. 2026)
+    history: {
+      title: 'Minulé termíny',
+      none: 'Zatím žádný – zapíše se každý termín, který nastavíš.',
+      every: 'Obvykle každých {n} dní.',
+      guess: 'Odhad dalšího: {date}',
+      use: 'Použít odhad',
+    },
     clearDate: 'Zrušit termín',
     saveDate: 'Uložit termín',
     otherEvent: 'Jiný event v tento den',

@@ -16,7 +16,7 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-07',
-    version: '1.63.2',
+    version: '1.64.0',
     sk: [
       'Sieň slávy: Ničitelia pevností až s piatimi menami a dátumom týždňa; nové poradie príde aj do Discord kanála sieň-slávy – prví traja vedľa seba, víťaz s avatarom.',
       'Sieň slávy: odchádzajúci týždeň sa uloží do Siene legiend aj s dátumom, nič sa nestratí.',

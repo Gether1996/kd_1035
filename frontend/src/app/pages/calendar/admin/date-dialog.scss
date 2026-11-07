@@ -107,6 +107,37 @@
   font-size: 0.9375rem;
 }
 
+// the dates it had and a guess of the next one
+.history {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+
+  p {
+    margin: 0;
+  }
+}
+
+.history__dates {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.history__every {
+  color: var(--text-dim);
+}
+
+.history__guess {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  color: var(--gold-300);
+}
+
 .empty {
   color: var(--text-dim);
 }

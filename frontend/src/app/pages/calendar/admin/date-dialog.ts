@@ -104,6 +104,28 @@ export class DateDialog {
   protected readonly busy = signal(false);
   protected readonly error = signal('');
 
+  /** "Zvyčajne každých 28 dní." – from two dates on */
+  protected readonly every = computed(() => {
+    const days = this.chosen()?.history?.every_days;
+    return days ? this.t().history.every.replace('{n}', String(days)) : '';
+  });
+
+  /** "Použiť odhad": the guessed day and hour into the fields, in the event's own time */
+  protected useGuess(): void {
+    const event = this.chosen();
+    const guess = event?.history?.guess;
+    if (!event || !guess) return;
+    const shown = wallClock(guess, zoneOf(event.time_basis));
+    this.date.set(shown.date);
+    this.time.set(shown.time);
+  }
+
+  /** "14. 10. 2026" */
+  protected dayOf(iso: string): string {
+    const date = new Date(iso);
+    return `${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()}`;
+  }
+
   constructor() {
     const doc = inject(DOCUMENT);
     afterNextRender(() => {

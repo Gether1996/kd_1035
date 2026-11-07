@@ -1096,6 +1096,14 @@ export const sk = {
     zones: { local: 'náš čas', utc: 'UTC' },
     other: '= {time}',
     replaces: 'Teraz má termín {date} – presunie sa na nový.',
+    // the dates it had and a guess of the next one (Gether 7. 11. 2026)
+    history: {
+      title: 'Minulé termíny',
+      none: 'Zatiaľ žiadny – zapíše sa každý termín, ktorý nastavíš.',
+      every: 'Zvyčajne každých {n} dní.',
+      guess: 'Odhad ďalšieho: {date}',
+      use: 'Použiť odhad',
+    },
     clearDate: 'Zrušiť termín',
     saveDate: 'Uložiť termín',
     otherEvent: 'Iný event v tento deň',

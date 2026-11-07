@@ -249,7 +249,15 @@ class KingdomEvent(models.Model):
             from .event_icons import guess
 
             self.icon = guess(self.name_sk)
+        before = None
+        if self.pk and self.irregular:
+            before = KingdomEvent.objects.filter(pk=self.pk).values_list('starts_at', flat=True).first()
         super().save(*args, **kwargs)
+        if self.irregular:
+            # every date an irregular event gets is remembered (Gether 7. 11. 2026) – kingdom/history.py
+            from .history import record
+
+            record(self, before)
 
     def active_twins(self):
         """Other active events with the same name and first start – each would send every reminder again."""
@@ -335,6 +343,27 @@ class EventRun(models.Model):
     def clean(self):
         if self.variant_id and self.event_id and self.variant.event_id != self.event_id:
             raise ValidationError({'variant': 'Typ patrí inému eventu.'})
+
+
+class EventDate(models.Model):
+    """A date an irregular event had (Silk Road, Shadow Legion…): written whenever its next date is set, in the admin or
+    the calendar – its `starts_at` is overwritten with every new date (Gether 7. 11. 2026: "pamätať, kedy boli
+    naposledy, možno časom budeme vedieť nastaviť ako pravidelné"). A future date moved or cancelled before it
+    happened is removed again; kingdom/history.py estimates the next one."""
+
+    event = models.ForeignKey(KingdomEvent, on_delete=models.CASCADE, related_name='past_dates', verbose_name='event')
+    start = models.DateTimeField('začiatok')
+    end = models.DateTimeField('koniec', null=True, blank=True)
+    created_at = models.DateTimeField('zapísané', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-start']
+        verbose_name = 'termín nepravidelného eventu'
+        verbose_name_plural = 'termíny nepravidelných eventov'
+        constraints = [models.UniqueConstraint(fields=['event', 'start'], name='one_record_per_event_date')]
+
+    def __str__(self):
+        return f'{self.event} {timezone.localtime(self.start):%d. %m. %Y %H:%M}'
 
 
 class EventNotification(models.Model):

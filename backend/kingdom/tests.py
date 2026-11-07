@@ -541,6 +541,9 @@ class KingdomEventAdminTests(TestCase):
             # the inline of the event's types (EventVariant), empty
             'variants-TOTAL_FORMS': '0',
             'variants-INITIAL_FORMS': '0',
+            # the past dates of an irregular event (EventDate), empty
+            'past_dates-TOTAL_FORMS': '0',
+            'past_dates-INITIAL_FORMS': '0',
             **kwargs,
         }
 

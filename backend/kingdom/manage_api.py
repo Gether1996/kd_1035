@@ -26,7 +26,7 @@ from rest_framework.settings import api_settings
 
 from guides.models import Guide
 
-from . import event_icons, events
+from . import event_icons, events, history
 from .admin import PLAN_FIELDS
 from .event_templates import NOT_PLANNED
 from .models import REMINDER_CHOICES, EventRun, KingdomEvent
@@ -128,13 +128,15 @@ class EventSerializer(serializers.ModelSerializer):
             'players': getattr(event, 'players_count', None),
             # the types its runs can be (EventVariant, edited in the admin)
             'variants': [{'id': v.pk, **variant_data(v)} for v in event.variants.all()],
+            # an irregular event's past dates, its usual gap and a guess of the next date (Gether 7. 11. 2026)
+            'history': history.summary(event, now) if event.irregular else None,
         }
 
 
 def managed_events():
     return (
         KingdomEvent.objects.select_related('guide')
-        .prefetch_related('variants')
+        .prefetch_related('variants', 'past_dates')
         .annotate(players_count=Count('subscriptions', distinct=True))
     )
 
