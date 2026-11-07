@@ -141,7 +141,7 @@
 .week__fieldset {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px 10px;
   margin: 0;
   padding: 0;
@@ -152,16 +152,27 @@
   }
 }
 
-.week__day {
-  display: grid;
-  gap: 4px;
-  font-size: 0.8125rem;
-  color: var(--text-dim);
+.week__picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 4px;
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  background: var(--field-bg);
 
-  .input {
-    min-height: 40px;
-    width: auto;
+  .slot__icon-btn {
+    border-color: transparent;
   }
+}
+
+.week__range {
+  min-width: 11.5em;
+  text-align: center;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-100);
 }
 
 .week__status {

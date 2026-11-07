@@ -624,9 +624,9 @@ export const sk = {
       // the week of the fort destroyers: its dates, posting it to Discord, archiving it (Gether 7. 11. 2026)
       forts: {
         hint: 'Vyplň 1 až 5 miest. Po zverejnení na Discorde sa poradie nedá meniť, kým ho neuložíš do archívu.',
-        week: 'Týždeň',
-        from: 'Od',
-        to: 'Do',
+        week: 'Týždeň (pondelok – nedeľa)',
+        previous: 'Predchádzajúci týždeň',
+        next: 'Ďalší týždeň',
         saveWeek: 'Uložiť týždeň',
         weekSaved: 'Týždeň uložený.',
         publish: 'Zverejniť posledný týždeň na Discord',
@@ -1230,7 +1230,7 @@ export const sk = {
           'Kedy si súhlasil s podmienkami používania a s ktorou ich verziou.',
           'Či ťa správca schválil – nový hráč pridá marche a prihlášku na KvK až po schválení – a či ťa vo svojom zozname hráčov skryl ako neaktívneho (vidí to iba on).',
           'Cookie sessionid – udrží ťa prihláseného 2 týždne, nastaví sa už na začiatku prihlásenia.',
-          'Sieň slávy – ak ťa vedenie vyznamená alebo zaradí do kútika hanby (maskoti, top zero), schválení hráči vidia tvoje meno, avatar z Discordu a fotku, ak ju superadmin nahrá. Fotka je uložená na našom serveri bez metadát, nie je verejná a je v týždenných zálohách; zmizne, keď ju superadmin odstráni alebo keď zmažeš účet. Keď vedenie uloží sieň do archívu (Sieň legiend), uloží sa tam tvoje meno a počet – bez fotky, avatara a prepojenia s účtom. Týždenné poradie Ničiteľov pevností (meno a počet pevností) môže vedenie zverejniť aj v kanáli sieň-slávy na našom Discord serveri.',
+          'Sieň slávy – ak ťa vedenie vyznamená alebo zaradí do kútika hanby (maskoti, top zero), schválení hráči vidia tvoje meno, avatar z Discordu a fotku, ak ju superadmin nahrá. Fotka je uložená na našom serveri bez metadát, nie je verejná a je v týždenných zálohách; zmizne, keď ju superadmin odstráni alebo keď zmažeš účet. Keď vedenie uloží sieň do archívu (Sieň legiend), uloží sa tam tvoje meno a počet – bez fotky, avatara a prepojenia s účtom. Týždenné poradie Ničiteľov pevností (meno, počet pevností a avatar z Discordu – nie fotka zo siene) môže vedenie zverejniť aj v kanáli sieň-slávy na našom Discord serveri.',
         ],
       },
       {

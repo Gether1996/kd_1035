@@ -102,14 +102,16 @@
           <form class="week__days" (submit)="saveWeek($event)" novalidate>
             <fieldset class="week__fieldset" [disabled]="lock">
               <legend class="field__label">{{ f.week }}</legend>
-              <label class="week__day">
-                <span>{{ f.from }}</span>
-                <input #fromInput class="input" type="date" [value]="weekFrom()" (input)="weekFrom.set(fromInput.value)" />
-              </label>
-              <label class="week__day">
-                <span>{{ f.to }}</span>
-                <input #toInput class="input" type="date" [value]="weekTo()" (input)="weekTo.set(toInput.value)" />
-              </label>
+              <!-- a whole week, Monday to Sunday – the arrows move it by a week (Gether 7. 11. 2026) -->
+              <div class="week__picker">
+                <button type="button" class="slot__icon-btn" [attr.aria-label]="f.previous" [title]="f.previous" (click)="shiftWeek(-1)">
+                  <svg appIcon="arrow-left"></svg>
+                </button>
+                <output class="week__range" aria-live="polite">{{ weekRange(weekFrom(), weekTo()) }}</output>
+                <button type="button" class="slot__icon-btn" [attr.aria-label]="f.next" [title]="f.next" (click)="shiftWeek(1)">
+                  <svg appIcon="arrow-right"></svg>
+                </button>
+              </div>
               <button type="submit" class="pill-btn pill-btn--quiet" [attr.aria-disabled]="busy() === 'week' || null">
                 {{ busy() === 'week' ? x.saving : f.saveWeek }}
               </button>

@@ -601,9 +601,9 @@ export const cs: Dict = {
       // the week of the fort destroyers: its dates, posting it to Discord, archiving it (Gether 7. 11. 2026)
       forts: {
         hint: 'Vyplň 1 až 5 míst. Po zveřejnění na Discordu se pořadí nedá měnit, dokud ho neuložíš do archivu.',
-        week: 'Týden',
-        from: 'Od',
-        to: 'Do',
+        week: 'Týden (pondělí – neděle)',
+        previous: 'Předchozí týden',
+        next: 'Další týden',
         saveWeek: 'Uložit týden',
         weekSaved: 'Týden uložen.',
         publish: 'Zveřejnit poslední týden na Discord',
@@ -1190,7 +1190,7 @@ export const cs: Dict = {
           'Kdy jsi souhlasil s podmínkami používání a s kterou jejich verzí.',
           'Zda tě správce schválil – nový hráč přidá marche a přihlášku na KvK až po schválení – a zda tě ve svém seznamu hráčů skryl jako neaktivního (vidí to jen on).',
           'Cookie sessionid – udrží tě přihlášeného 2 týdny, nastaví se už na začátku přihlášení.',
-          'Síň slávy – když tě vedení vyznamená nebo zařadí do koutku hanby (maskoti, top zero), schválení hráči vidí tvé jméno, avatar z Discordu a fotku, pokud ji superadmin nahraje. Fotka je uložená na našem serveru bez metadat, není veřejná a je v týdenních zálohách; zmizí, když ji superadmin odstraní nebo když smažeš účet. Když vedení uloží síň do archivu (Síň legend), uloží se tam tvé jméno a počet – bez fotky, avataru a propojení s účtem. Týdenní pořadí Ničitelů pevností (jméno a počet pevností) může vedení zveřejnit i v kanálu sieň-slávy na našem Discord serveru.',
+          'Síň slávy – když tě vedení vyznamená nebo zařadí do koutku hanby (maskoti, top zero), schválení hráči vidí tvé jméno, avatar z Discordu a fotku, pokud ji superadmin nahraje. Fotka je uložená na našem serveru bez metadat, není veřejná a je v týdenních zálohách; zmizí, když ji superadmin odstraní nebo když smažeš účet. Když vedení uloží síň do archivu (Síň legend), uloží se tam tvé jméno a počet – bez fotky, avataru a propojení s účtem. Týdenní pořadí Ničitelů pevností (jméno, počet pevností a avatar z Discordu – ne fotka ze síně) může vedení zveřejnit i v kanálu sieň-slávy na našem Discord serveru.',
         ],
       },
       {

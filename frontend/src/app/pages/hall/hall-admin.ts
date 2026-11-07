@@ -71,14 +71,21 @@ const FORTS_ERRORS: Record<string, FortsState> = {
   published: 'published',
 };
 
+const iso = (d: Date) => [d.getFullYear(), d.getMonth() + 1, d.getDate()].map((n) => String(n).padStart(2, '0')).join('-');
+
 /** the last full week, Monday to Sunday (YYYY-MM-DD) – offered before a week is saved */
 export function lastWeek(today = new Date()): { from: string; to: string } {
   const monday = new Date(today);
   monday.setDate(today.getDate() - ((today.getDay() + 6) % 7) - 7);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
-  const iso = (d: Date) => [d.getFullYear(), d.getMonth() + 1, d.getDate()].map((n) => String(n).padStart(2, '0')).join('-');
   return { from: iso(monday), to: iso(sunday) };
+}
+
+/** a YYYY-MM-DD day moved by `days` (the local calendar – no time zone shifts the date) */
+export function addDays(day: string, days: number): string {
+  const [y, m, d] = day.split('-').map(Number);
+  return iso(new Date(y, m - 1, d + days));
 }
 
 /**
@@ -414,7 +421,17 @@ export class HallAdmin {
     this.weekTo.set(week.to ?? offered.to);
   }
 
-  /** PUT /api/hall/forts/week/ – the days of the ranking (both, at most 31 days) */
+  /**
+   * The arrows of the week (Gether 7. 11. 2026: "vždy presne daný týždeň od pondelka do nedele … intuitívne"): a whole
+   * week back or forward, never two loose days
+   */
+  protected shiftWeek(weeks: number): void {
+    this.weekFrom.update((day) => addDays(day, 7 * weeks));
+    this.weekTo.update((day) => addDays(day, 7 * weeks));
+    this.fortsState.set(null);
+  }
+
+  /** PUT /api/hall/forts/week/ – the Monday and the Sunday of the ranking */
   protected async saveWeek(event: Event): Promise<void> {
     event.preventDefault();
     const from = this.weekFrom();

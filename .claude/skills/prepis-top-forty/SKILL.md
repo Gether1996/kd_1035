@@ -65,7 +65,7 @@ const res = await fetch('/api/hall/forts/', {
 - `PUT /api/hall/<category>/` (29. 10. 2026, `accounts/hall.py` `ranking`) rewrites the whole category at once: photos move with `photo_from`, places after the list empty, photos nobody keeps are deleted.
 - **404 / 405** = the server still runs an older version: tell Gether to deploy (`git pull && docker compose up -d --build`) – do not fall back to the per-place PUTs when the order changed, they would leave the photos on the wrong places.
 - **400** = read the errors, fix the entries, try once more; **403** = not signed in as the superadmin; **409** = posted and locked (step 3).
-- **The week**: when Gether says which week it is (or the screenshot shows it), save it too – `PUT /api/hall/forts/week/` `{week_from: 'YYYY-MM-DD', week_to: 'YYYY-MM-DD'}` (at most 31 days). After an archive the next 7 days are already offered; check them.
+- **The week**: when Gether says which week it is (or the screenshot shows it), save it too – `PUT /api/hall/forts/week/` `{week_from: 'YYYY-MM-DD', week_to: 'YYYY-MM-DD'}` (always Monday to Sunday). After an archive the next 7 days are already offered; check them.
 - **Posting to Discord** (`POST /api/hall/forts/publish/`, @everyone in the channel sieň-slávy) is Gether's button – never press it for him.
 
 ## 6. Check and report
