@@ -74,9 +74,6 @@
                       <span class="grave__stone">
                         <span class="grave__rip" aria-hidden="true">R.I.P.</span>
                         <span class="grave__name">{{ e.name }}</span>
-                        @if (note(e)) {
-                          <span class="grave__note">{{ note(e) }}</span>
-                        }
                       </span>
                     </li>
                   }
@@ -94,9 +91,6 @@
                     @for (e of mascots(); track e.id) {
                       <span class="plate" [attr.data-place]="e.place">
                         <span class="plate__name">{{ e.name }}</span>
-                        @if (note(e)) {
-                          <span class="plate__note">{{ note(e) }}</span>
-                        }
                       </span>
                     }
                   </figcaption>
@@ -137,9 +131,6 @@
                                   <span class="board__amount">{{ troopName(tr) }}</span>
                                 } @else if (amount(e); as n) {
                                   <span class="board__amount">{{ n }}</span>
-                                }
-                                @if (note(e)) {
-                                  <span class="board__note">{{ note(e) }}</span>
                                 }
                               </li>
                             }
@@ -215,15 +206,9 @@
                   <span class="pillar__amount">{{ n }}</span>
                 }
               }
-              @if (note(e)) {
-                <span class="pillar__rank-note">{{ note(e) }}</span>
-              }
             </li>
           }
         </ol>
-      } @else if (note(first)) {
-        <!-- what the superadmin wrote ("250 za týždeň"), not a stock description (Gether 28. 10. 2026) -->
-        <p class="pillar__text">{{ note(first) }}</p>
       }
     </div>
     <span class="pillar__base" aria-hidden="true"></span>

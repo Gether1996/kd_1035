@@ -125,6 +125,8 @@ SITE_URL = env('SITE_URL', default='').rstrip('/')
 # --- Discord event notifications (sent by the worker container) ---
 DISCORD_WEBHOOK_URL = env('DISCORD_WEBHOOK_URL', default='')
 DISCORD_EVENT_ROLE_ID = env('DISCORD_EVENT_ROLE_ID', default='')
+# the channel "sieň slávy": the weekly fort destroyers posted from /sien-slavy (Gether 7. 11. 2026); empty = no button
+DISCORD_HALL_WEBHOOK_URL = env('DISCORD_HALL_WEBHOOK_URL', default='')
 
 # --- Sign in with Discord (accounts app); both empty = login is switched off ---
 DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID', default='')

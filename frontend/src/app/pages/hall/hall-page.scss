@@ -307,14 +307,6 @@
   white-space: nowrap;
 }
 
-.pillar__rank-note {
-  grid-column: 2 / -1;
-  font-size: 0.6875rem;
-  line-height: 1.25;
-  color: var(--text-dim);
-  overflow-wrap: anywhere;
-}
-
 .pillar__portrait {
   display: grid;
   place-items: center;
@@ -408,16 +400,6 @@
   overflow-wrap: normal;
   hyphens: manual;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-}
-
-.pillar__text {
-  margin: 4px 0 0;
-  font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.9375rem);
-  font-weight: 600;
-  line-height: 1.3;
-  color: var(--gold-300);
-  overflow-wrap: anywhere;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 .pillar__base {

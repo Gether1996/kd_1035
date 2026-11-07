@@ -45,12 +45,25 @@ export interface HallArchiveEntry {
 export interface HallArchive {
   id: number;
   label: string;
+  /** the week of an archived fort ranking (YYYY-MM-DD), null otherwise */
+  week_from?: string | null;
+  week_to?: string | null;
   created_at: string;
   entries: HallArchiveEntry[];
 }
 
+/** the week of the fort destroyers (Gether 7. 11. 2026); the superadmin also whether it was posted to Discord */
+export interface FortsWeek {
+  from: string | null;
+  to: string | null;
+  published_at?: string | null;
+  /** DISCORD_HALL_WEBHOOK_URL is set on the server */
+  webhook?: boolean;
+}
+
 export interface HallData {
   entries: HallEntry[];
+  forts_week?: FortsWeek;
   /** the archived halls, newest first */
   archive?: HallArchive[];
   /** the superadmin's only: how many places each category has */
@@ -84,6 +97,13 @@ export const HALL_ICONS: Record<HallCategory, IconName> = {
 /** the picture of a place: the uploaded photo, else the Discord avatar a size larger, else none (the initial shows) */
 export function portrait(entry: HallEntry): string {
   return entry.photo || entry.avatar_url.replace('size=64', 'size=256');
+}
+
+/** "27. 10. – 2. 11. 2026" – a week of the fort destroyers; '' without both days */
+export function weekRange(from: string | null | undefined, to: string | null | undefined): string {
+  if (!from || !to) return '';
+  const [a, b] = [from, to].map((iso) => iso.split('-').map(Number));
+  return `${a[2]}. ${a[1]}.${a[0] !== b[0] ? ` ${a[0]}` : ''} – ${b[2]}. ${b[1]}. ${b[0]}`;
 }
 
 /** "3. novembra 2026" – the day an archive was saved */

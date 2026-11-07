@@ -14,6 +14,7 @@ import { equipmentWinners } from './equipment-winners';
 import {
   EQUIPMENT_TROOPS,
   EquipmentTroop,
+  FortsWeek,
   HALL_ICONS,
   HALL_ORDER,
   HallArchive,
@@ -23,6 +24,7 @@ import {
   archiveDate,
   portrait,
   troopOfPlace,
+  weekRange,
 } from './hall-data';
 
 /** a player of the website to choose from (the superadmin's list of players, /api/kvk/reviewers/) */
@@ -37,8 +39,6 @@ interface Choice {
 interface Draft {
   player: number | null;
   name: string;
-  noteSk: string;
-  noteCs: string;
   /** '' = none */
   count: string;
 }
@@ -50,6 +50,36 @@ type EquipmentLoad = 'idle' | 'loading' | 'preview' | 'empty' | 'failed';
 
 /** "Uložiť do archívu": no label, no category with names, the request failed */
 type ArchiveProblem = 'label' | 'categories' | 'failed';
+
+/** what the box of the forts week says under its buttons */
+type FortsState =
+  | 'weekSaved'
+  | 'archived'
+  | 'week'
+  | 'empty'
+  | 'noWeek'
+  | 'noWebhook'
+  | 'discord'
+  | 'uncertain'
+  | 'published'
+  | 'failed';
+
+const FORTS_ERRORS: Record<string, FortsState> = {
+  empty: 'empty',
+  week: 'noWeek',
+  no_webhook: 'noWebhook',
+  published: 'published',
+};
+
+/** the last full week, Monday to Sunday (YYYY-MM-DD) – offered before a week is saved */
+export function lastWeek(today = new Date()): { from: string; to: string } {
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7) - 7);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const iso = (d: Date) => [d.getFullYear(), d.getMonth() + 1, d.getDate()].map((n) => String(n).padStart(2, '0')).join('-');
+  return { from: iso(monday), to: iso(sunday) };
+}
 
 /**
  * The superadmin's editor of the Hall of Fame (the "Upraviť" tab of /sien-slavy, Gether 28. 10. 2026: "kde si to
@@ -88,6 +118,35 @@ export class HallAdmin {
   protected readonly equipmentLoad = signal<EquipmentLoad>('idle');
   protected readonly winners = signal<(EquipmentPlayer | null)[]>([]);
 
+  /**
+   * The week of the fort destroyers (Gether 7. 11. 2026): its dates, "Zverejniť … na Discord" once – then the forts are
+   * locked – and "Uložiť do archívu", which empties the category
+   */
+  protected readonly week = signal<FortsWeek | null>(null);
+  protected readonly weekFrom = signal('');
+  protected readonly weekTo = signal('');
+  protected readonly fortsState = signal<FortsState | null>(null);
+  protected readonly locked = computed(() => !!this.week()?.published_at);
+  protected readonly fortsMessage = computed(() => {
+    const state = this.fortsState();
+    const f = this.t().hall.edit.forts;
+    if (!state) return '';
+    return state === 'weekSaved' ? f.weekSaved : state === 'archived' ? f.archived : f.errors[state];
+  });
+  protected readonly publishedAt = computed(() => {
+    const at = this.week()?.published_at;
+    if (!at) return '';
+    const when = new Intl.DateTimeFormat(this.i18n.locale(), {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(at));
+    return this.t().hall.edit.forts.published.replace('{at}', when);
+  });
+  protected readonly weekRange = weekRange;
+
   /** Sieň legiend: the saved archives, newest first, and the form that saves the hall into a new one */
   protected readonly archives = signal<HallArchive[]>([]);
   protected readonly archiveLabel = signal('');
@@ -119,6 +178,7 @@ export class HallAdmin {
       ]);
       this.entries.set(hall.entries);
       this.archives.set(hall.archive ?? []);
+      this.setWeek(hall.forts_week ?? { from: null, to: null });
       this.places.set(hall.places ?? null);
       this.players.set(players.players);
       const drafts: Record<string, Draft> = {};
@@ -142,7 +202,7 @@ export class HallAdmin {
   }
 
   protected draft(category: HallCategory, place: number): Draft {
-    return this.drafts()[this.key(category, place)] ?? { player: null, name: '', noteSk: '', noteCs: '', count: '' };
+    return this.drafts()[this.key(category, place)] ?? { player: null, name: '', count: '' };
   }
 
   protected set(category: HallCategory, place: number, change: Partial<Draft>): void {
@@ -169,8 +229,9 @@ export class HallAdmin {
         this.http.put<HallEntry>(`/api/hall/${category}/${place}/`, {
           player: d.player,
           name: d.name.trim(),
-          note_sk: d.noteSk.trim(),
-          note_cs: d.noteCs.trim(),
+          // the reasons are gone from the editor (Gether 7. 11. 2026: "to nepoužívam vôbec") – a save empties them
+          note_sk: '',
+          note_cs: '',
           count: d.count.trim(),
         }),
       );
@@ -341,13 +402,79 @@ export class HallAdmin {
   }
 
   private draftOf(e: HallEntry): Draft {
-    return {
-      player: e.player ?? null,
-      name: e.custom_name ?? '',
-      noteSk: e.note_sk ?? '',
-      noteCs: e.note_cs ?? '',
-      count: e.count ?? '',
-    };
+    return { player: e.player ?? null, name: e.custom_name ?? '', count: e.count ?? '' };
+  }
+
+  // ---------------------------------------------------------------- the week of the fort destroyers
+
+  private setWeek(week: FortsWeek): void {
+    this.week.set(week);
+    const offered = lastWeek();
+    this.weekFrom.set(week.from ?? offered.from);
+    this.weekTo.set(week.to ?? offered.to);
+  }
+
+  /** PUT /api/hall/forts/week/ – the days of the ranking (both, at most 31 days) */
+  protected async saveWeek(event: Event): Promise<void> {
+    event.preventDefault();
+    const from = this.weekFrom();
+    const to = this.weekTo();
+    if (!from || !to || to < from) return this.fortsState.set('week');
+    await this.runForts('week', async () => {
+      this.setWeek(await firstValueFrom(this.http.put<FortsWeek>('/api/hall/forts/week/', { week_from: from, week_to: to })));
+      this.fortsState.set('weekSaved');
+    });
+  }
+
+  /** POST /api/hall/forts/publish/ – the ranking to the channel sieň-slávy with @everyone, once */
+  protected async publish(): Promise<void> {
+    this.confirm.set(null);
+    await this.runForts('publish', async () => {
+      this.week.set(await firstValueFrom(this.http.post<FortsWeek>('/api/hall/forts/publish/', {})));
+    });
+  }
+
+  /** POST /api/hall/forts/archive/ – into Sieň legiend with the week; the category is emptied, the next week offered */
+  protected async archiveForts(): Promise<void> {
+    this.confirm.set(null);
+    await this.runForts('fortsArchive', async () => {
+      const saved = await firstValueFrom(
+        this.http.post<{ archive: HallArchive[]; forts_week: FortsWeek }>('/api/hall/forts/archive/', {}),
+      );
+      this.archives.set(saved.archive);
+      this.setWeek(saved.forts_week);
+      this.entries.update((list) => list.filter((e) => e.category !== 'forts'));
+      this.drafts.update((d) => Object.fromEntries(Object.entries(d).filter(([key]) => !key.startsWith('forts-'))));
+      this.fortsState.set('archived');
+    });
+  }
+
+  private async runForts(key: string, request: () => Promise<void>): Promise<void> {
+    this.busy.set(key);
+    this.saved.set(null);
+    this.fortsState.set(null);
+    try {
+      await request();
+    } catch (err) {
+      const body = err instanceof HttpErrorResponse ? err.error : null;
+      const detail = typeof body?.detail === 'string' ? body.detail : '';
+      if (body?.week) this.fortsState.set('week');
+      else if (detail === 'discord') this.fortsState.set(body.uncertain ? 'uncertain' : 'discord');
+      else this.fortsState.set(FORTS_ERRORS[detail] ?? 'failed');
+      // posted meanwhile (another tab): show the lock
+      if (detail === 'published') void this.reloadWeek();
+    } finally {
+      this.busy.set(null);
+    }
+  }
+
+  private async reloadWeek(): Promise<void> {
+    try {
+      const hall = await firstValueFrom(this.http.get<HallData>('/api/hall/'));
+      if (hall.forts_week) this.setWeek(hall.forts_week);
+    } catch {
+      // the message says enough
+    }
   }
 
   private problem(key: string, problem: Problem): void {

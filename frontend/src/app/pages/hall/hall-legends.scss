@@ -195,14 +195,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.board__note {
-  flex-basis: 100%;
-  color: rgba(255, 240, 210, 0.82);
-  font-size: 0.8125rem;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .legends__summary,
   .legends__summary::after {

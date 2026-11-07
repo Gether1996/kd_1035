@@ -80,7 +80,8 @@ describe('Sieň legiend', () => {
       ),
     );
     // the order of the hall; the KP short like the banners, the equipment's troop type instead of a number
-    expect(cats).toEqual([['1. Bobo 48 pevností Najviac'], ['1. Nelly 2.3B', '2. Fox 843M'], ['Maroš jazda']]);
+    // no reasons any more (Gether 7. 11. 2026)
+    expect(cats).toEqual([['1. Bobo 48 pevností'], ['1. Nelly 2.3B', '2. Fox 843M'], ['Maroš jazda']]);
   });
 
   it('has no block without an archive', async () => {

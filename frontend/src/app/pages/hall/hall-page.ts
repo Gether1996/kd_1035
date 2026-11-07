@@ -34,6 +34,7 @@ import {
   archiveDate,
   portrait,
   troopOfPlace,
+  weekRange,
 } from './hall-data';
 
 /** up to this many columns stand in one row */
@@ -200,19 +201,14 @@ export class HallPage {
     return category === 'forts' || category === 'kp';
   }
 
-  /** "za posledný týždeň" under the title of a top 3 */
-  protected period(category: HallCategory): string {
-    return (this.t().hall.categories as Record<string, { period?: string }>)[category]?.period ?? '';
-  }
-
   /**
-   * The reason under a name; at the best equipment not when it only repeats the troop type (the button of the editor
-   * writes the type there, the banner shows it already)
+   * "za posledný týždeň" under the title of a top 3 – at the fort destroyers the week itself once the superadmin saved
+   * it ("27. 10. – 2. 11. 2026", Gether 7. 11. 2026). The reasons under the names are gone ("to nepoužívam vôbec").
    */
-  protected note(entry: Pick<HallEntry, 'category' | 'place' | 'note'>): string {
-    const note = entry.note[this.i18n.lang()];
-    const troop = this.troop(entry);
-    return troop && note.trim().toLocaleLowerCase() === this.troopName(troop).toLocaleLowerCase() ? '' : note;
+  protected period(category: HallCategory): string {
+    const week = this.data()?.forts_week;
+    const days = category === 'forts' ? weekRange(week?.from, week?.to) : '';
+    return days || ((this.t().hall.categories as Record<string, { period?: string }>)[category]?.period ?? '');
   }
 
   /** the troop type of a place of the best equipment, null elsewhere */

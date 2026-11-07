@@ -8,6 +8,7 @@ git), come back re-encoded (no EXIF, at most PHOTO_SIZE px) and are served only 
 
 import io
 import secrets
+from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
@@ -15,6 +16,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from PIL import Image, ImageOps, UnidentifiedImageError
 from rest_framework import serializers
@@ -22,18 +24,20 @@ from rest_framework.decorators import api_view, parser_classes, permission_class
 from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.response import Response
 
+from kingdom.discord import GOLD, UNCERTAIN, DiscordError, send
+
 from .kvk_views import IsSuperuser
 from .march_views import IsApprovedPlayer
-from .models import HallArchive, HallArchiveEntry, HallEntry, Player
+from .models import HallArchive, HallArchiveEntry, HallEntry, HallFortsWeek, Player
 from .reminder_views import WriteThrottle
 
 FOLDER = 'hall'
 # one champion on the pedestal of a category (Gether 28. 10. 2026: "vždy bude len 1 top hráč za kategóriu"), two
 # mascots in their corner
 PLACES = {category: 1 for category in HallEntry.Category.values} | {
-    # top 3 to chase (Gether 28. 10. 2026: "nech je to motivačné"): the fort destroyers of the last week, the kill
-    # points of the last KvK
-    HallEntry.Category.FORTS: 3,
+    # to chase (Gether 28. 10. 2026: "nech je to motivačné"): the fort destroyers of the last week – up to 5 since
+    # 7. 11. 2026 ("top 5 na forty, ale nemusí to byť pravidlo … akýkoľvek počet up to 5")
+    HallEntry.Category.FORTS: 5,
     # the KP a top 5 (Gether 28. 10. 2026: "aby som zmestil top 5")
     HallEntry.Category.KP: 5,
     # the best equipment of Top 5 equip (3. 11. 2026): a place per troop type – 1 infantry, 2 cavalry, 3 archers
@@ -119,6 +123,20 @@ def place_of(category: str, place: int) -> tuple[str, int]:
     return category, place
 
 
+def locked(category: str) -> Response | None:
+    """The fort destroyers posted to Discord stay as posted until they are archived (Gether 7. 11. 2026)"""
+    if category == HallEntry.Category.FORTS and HallFortsWeek.load().published_at:
+        return Response({'detail': 'published'}, status=409)
+    return None
+
+
+def week_data(week: HallFortsWeek, superuser: bool) -> dict:
+    data = {'from': week.week_from, 'to': week.week_to}
+    if superuser:
+        data |= {'published_at': week.published_at, 'webhook': bool(settings.DISCORD_HALL_WEBHOOK_URL)}
+    return data
+
+
 @never_cache
 @api_view(['GET'])
 @permission_classes([IsApprovedPlayer])
@@ -127,7 +145,12 @@ def hall(request):
     editor needs and the number of places."""
     superuser = request.user.is_superuser
     entries = HallEntry.objects.select_related('player')
-    data = {'entries': [entry_data(e, superuser) for e in entries], 'archive': archives()}
+    data = {
+        'entries': [entry_data(e, superuser) for e in entries],
+        'archive': archives(),
+        # the week of the fort destroyers ("27. 10. – 2. 11."); the superadmin also whether it was posted
+        'forts_week': week_data(HallFortsWeek.load(), superuser),
+    }
     if superuser:
         data['places'] = PLACES
     return Response(data)
@@ -140,6 +163,8 @@ def place(request, category, place):
     """PUT {player?, name?, note_sk?, note_cs?}: who stands on the place (a player of the website or a name – at least
     one). DELETE: the place empty again, its photo too."""
     category, place = place_of(category, place)
+    if refused := locked(category):
+        return refused
     if request.method == 'DELETE':
         HallEntry.objects.filter(category=category, place=place).delete()
         return Response(status=204)
@@ -172,6 +197,8 @@ def ranking(request, category):
     photos nobody keeps are deleted."""
     if category not in PLACES:
         raise Http404
+    if refused := locked(category):
+        return refused
     serializer = RankingSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
@@ -223,6 +250,8 @@ def place_photo(request, category, place):
     """POST multipart `photo`: the place's photo (a JPEG, PNG, WebP… – stored as WebP, at most PHOTO_SIZE px, without
     its metadata). DELETE: no photo (the player's Discord avatar shows again)."""
     category, place = place_of(category, place)
+    if refused := locked(category):
+        return refused
     entry = get_object_or_404(HallEntry, category=category, place=place)
     old = entry.photo
     if request.method == 'DELETE':
@@ -277,6 +306,8 @@ def archives() -> list[dict]:
         {
             'id': archive.pk,
             'label': archive.label,
+            'week_from': archive.week_from,
+            'week_to': archive.week_to,
             'created_at': archive.created_at,
             'entries': [
                 {
@@ -341,3 +372,161 @@ def archive_delete(request, archive_id):
     """DELETE: the archive with all its names"""
     get_object_or_404(HallArchive, pk=archive_id).delete()
     return Response(status=204)
+
+
+# ---------------------------------------------------------------- the week of the fort destroyers (Gether 7. 11. 2026)
+
+
+def days(start, end) -> str:
+    """'27. 10. – 2. 11. 2026' – the year once at the end, at the start too when the week crosses New Year"""
+    if not start or not end:
+        return ''
+    first = f'{start.day}. {start.month}.' + (f' {start.year}' if start.year != end.year else '')
+    return f'{first} – {end.day}. {end.month}. {end.year}'
+
+
+def forts_amount(count: str) -> str:
+    """'200 pevností' like the page; anything not just digits as written"""
+    text = count.strip()
+    if not text.isdigit():
+        return text
+    n = int(text)
+    word = 'pevnosť' if n == 1 else 'pevnosti' if 2 <= n <= 4 else 'pevností'
+    return f'{n} {word}'
+
+
+# the characters of Discord markdown – a name stays plain text
+MARKDOWN = set('\\*_~`|>[]()#')
+
+
+def escape(text: str) -> str:
+    return ''.join('\\' + ch if ch in MARKDOWN else ch for ch in text)
+
+
+MEDALS = {1: '🥇', 2: '🥈', 3: '🥉'}
+
+
+def forts_payload(entries: list[HallEntry], week: HallFortsWeek) -> dict:
+    """The new ranking for the channel "sieň slávy" with @everyone – Slovak, like the event messages"""
+    lines = []
+    for e in entries:
+        rank = MEDALS.get(e.place, f'**{e.place}.**')
+        amount = forts_amount(e.count)
+        lines.append(f'{rank} **{escape(shown_name(e))}**' + (f' · {amount}' if amount else ''))
+    when = days(week.week_from, week.week_to)
+    head = f'Týždeň **{when}**\n\n' if when else ''
+    embed = {
+        'title': '🏰 Ničitelia pevností',
+        'description': head + '\n'.join(lines),
+        'color': GOLD,
+        'footer': {'text': 'Sieň slávy · KD 1035'},
+    }
+    payload = {
+        'username': 'Kingdom 1035',
+        'content': '@everyone',
+        'allowed_mentions': {'parse': ['everyone']},
+        'embeds': [embed],
+    }
+    if settings.SITE_URL:
+        embed['url'] = f'{settings.SITE_URL}/sien-slavy'
+        payload['avatar_url'] = f'{settings.SITE_URL}/icons/icon-192.png'
+    return payload
+
+
+class WeekSerializer(serializers.Serializer):
+    week_from = serializers.DateField(allow_null=True)
+    week_to = serializers.DateField(allow_null=True)
+
+    def validate(self, data):
+        start, end = data['week_from'], data['week_to']
+        if bool(start) != bool(end):
+            raise serializers.ValidationError({'week': 'both'})
+        if start and not timedelta(0) <= end - start <= timedelta(days=31):
+            raise serializers.ValidationError({'week': 'range'})
+        return data
+
+
+def forts_entries() -> list[HallEntry]:
+    rows = HallEntry.objects.select_related('player').filter(category=HallEntry.Category.FORTS).order_by('place')
+    return [e for e in rows if shown_name(e)]
+
+
+def the_week() -> HallFortsWeek:
+    """the one row, locked for the rest of the transaction"""
+    return HallFortsWeek.objects.select_for_update().get(pk=HallFortsWeek.load().pk)
+
+
+@api_view(['PUT'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def forts_week(request):
+    """PUT {week_from, week_to} (YYYY-MM-DD, or both null): the week the fort ranking is of – not once it is posted"""
+    if refused := locked(HallEntry.Category.FORTS):
+        return refused
+    serializer = WeekSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+    week = HallFortsWeek.load()
+    week.week_from = serializer.validated_data['week_from']
+    week.week_to = serializer.validated_data['week_to']
+    week.save()
+    return Response(week_data(week, superuser=True))
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def forts_publish(request):
+    """POST: the fort ranking to the channel "sieň slávy" with @everyone (Gether 7. 11. 2026) – once; afterwards the
+    category is locked until it is archived. 409 posted already, 400 {detail: empty | week}, 503 no webhook, 502 Discord
+    failed (`uncertain`: it may have arrived – look in the channel before trying again)."""
+    with transaction.atomic():
+        week = the_week()
+        if week.published_at:
+            return Response({'detail': 'published'}, status=409)
+        entries = forts_entries()
+        if not entries:
+            return Response({'detail': 'empty'}, status=400)
+        if not week.week_from:
+            return Response({'detail': 'week'}, status=400)
+        url = settings.DISCORD_HALL_WEBHOOK_URL
+        if not url:
+            return Response({'detail': 'no_webhook'}, status=503)
+        try:
+            send(forts_payload(entries, week), url)
+        except DiscordError as exc:
+            return Response({'detail': 'discord', 'uncertain': str(exc).startswith(UNCERTAIN)}, status=502)
+        week.published_at = timezone.now()
+        week.save(update_fields=['published_at'])
+    return Response(week_data(week, superuser=True))
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def forts_archive(request):
+    """POST: the fort ranking into Sieň legiend with its week (Gether 7. 11. 2026: "uloží sa do pamäte, nech vieme
+    históriu"), then the category is emptied – photos too – and unlocked; the next 7 days are offered as the next week."""
+    with transaction.atomic():
+        week = the_week()
+        entries = forts_entries()
+        if not entries:
+            return Response({'detail': 'empty'}, status=400)
+        if week.week_from:
+            label = f'Týždeň {days(week.week_from, week.week_to)}'
+        else:
+            today = timezone.localdate()
+            label = f'Ničitelia pevností {today.day}. {today.month}. {today.year}'
+        saved = HallArchive.objects.create(label=label[:40], week_from=week.week_from, week_to=week.week_to)
+        HallArchiveEntry.objects.bulk_create(
+            HallArchiveEntry(archive=saved, category=e.category, place=e.place, name=shown_name(e)[:64], count=e.count)
+            for e in entries
+        )
+        # one by one: the delete signal removes each row's photo
+        for entry in HallEntry.objects.filter(category=HallEntry.Category.FORTS):
+            entry.delete()
+        if week.week_to:
+            week.week_from, week.week_to = week.week_to + timedelta(days=1), week.week_to + timedelta(days=7)
+        week.published_at = None
+        week.save()
+    return Response({'archive': archives(), 'forts_week': week_data(week, superuser=True)}, status=201)

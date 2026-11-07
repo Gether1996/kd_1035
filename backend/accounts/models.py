@@ -647,7 +647,8 @@ class HallEntry(models.Model):
         ZERO = 'zero', 'top zero minulého KvK'
 
     category = models.CharField('kategória', max_length=12, choices=Category.choices)
-    place = models.PositiveSmallIntegerField('miesto', validators=[MinValueValidator(1), MaxValueValidator(3)])
+    # up to 5: the KP and, since 7. 11. 2026, the fort destroyers
+    place = models.PositiveSmallIntegerField('miesto', validators=[MinValueValidator(1), MaxValueValidator(5)])
     player = models.ForeignKey(
         Player, on_delete=models.CASCADE, null=True, blank=True, related_name='hall_entries', verbose_name='hráč'
     )
@@ -687,6 +688,9 @@ class HallArchive(models.Model):
     deleted account leaves its name here until the superadmin deletes the archive (the privacy page says so)."""
 
     label = models.CharField('názov', max_length=40)
+    # the week of an archived fort ranking (Gether 7. 11. 2026: "ukladaj aj dátumové rozmedzie daných týždňov")
+    week_from = models.DateField('týždeň od', null=True, blank=True)
+    week_to = models.DateField('týždeň do', null=True, blank=True)
     created_at = models.DateTimeField('uložené', auto_now_add=True)
 
     class Meta:
@@ -696,6 +700,26 @@ class HallArchive(models.Model):
 
     def __str__(self):
         return self.label
+
+
+class HallFortsWeek(models.Model):
+    """The week of the fort destroyers on /sien-slavy (one row, Gether 7. 11. 2026): its dates, and whether the
+    ranking was posted to the Discord channel – then the category stays locked until it is archived."""
+
+    week_from = models.DateField('týždeň od', null=True, blank=True)
+    week_to = models.DateField('týždeň do', null=True, blank=True)
+    published_at = models.DateTimeField('zverejnené na Discorde', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'týždeň ničiteľov pevností'
+        verbose_name_plural = 'týždeň ničiteľov pevností'
+
+    def __str__(self):
+        return f'{self.week_from or "?"} – {self.week_to or "?"}'
+
+    @classmethod
+    def load(cls) -> 'HallFortsWeek':
+        return cls.objects.get_or_create(pk=1)[0]
 
 
 class HallArchiveEntry(models.Model):

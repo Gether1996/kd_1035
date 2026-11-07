@@ -155,7 +155,7 @@ class Hall(HallBase):
         url = '/api/hall/forts/'
         self.assertEqual(self.put(self.as_nelly, url, {'entries': [{'name': 'X'}]}).status_code, 403)
         self.assertEqual(self.put(self.as_admin, url, {'entries': []}).status_code, 400)
-        self.assertEqual(self.put(self.as_admin, url, {'entries': [{'name': 'X'}] * 4}).status_code, 400)
+        self.assertEqual(self.put(self.as_admin, url, {'entries': [{'name': 'X'}] * 6}).status_code, 400)
         self.assertEqual(self.put(self.as_admin, url, {'entries': [{'count': '5'}]}).status_code, 400)
         # one photo for two places would be deleted with either of them
         twice = {'entries': [{'name': 'A', 'photo_from': 7}, {'name': 'B', 'photo_from': 7}]}

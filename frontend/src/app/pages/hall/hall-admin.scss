@@ -49,20 +49,143 @@
 
 .group__places {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 
-  .is-wide & {
-    @media (min-width: 720px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  gap: 8px;
+}
+
+// more places (the forts' five, the KP, the corners): a row per place on a wide screen – the place and the photo,
+// the fields, the buttons
+@media (min-width: 960px) {
+  .is-wide .slot__fieldset {
+    // the buttons a fixed column: an empty place (no "Vyprázdniť") keeps its fields in line with the others
+    grid-template-columns: 14rem minmax(0, 1fr) 16.5rem;
+    align-items: end;
+  }
+
+  .is-wide .slot__head {
+    align-self: center;
+  }
+
+  .is-wide .slot__fields:not(.has-count) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// compact cards (Gether 7. 11. 2026: "zmenšiť omnoho"): the place and the photo in one line, lower fields
+.slot__fieldset {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.slot__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+
+  .slot__place {
+    flex: 1 1 auto;
+  }
+}
+
+.slot__fields {
+  display: grid;
+  gap: 8px;
+
+  &.has-count {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 6.5em;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  .field__label {
+    font-size: 0.6875rem;
+  }
+
+  .input,
+  .select {
+    min-height: 40px;
+  }
+}
+
+.slot__icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// the week of the fort destroyers: its days, posting and archiving
+.week__fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 6px;
+  }
+}
+
+.week__day {
+  display: grid;
+  gap: 4px;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+
+  .input {
+    min-height: 40px;
+    width: auto;
+  }
+}
+
+.week__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-dim);
+
+  &.is-locked {
+    color: var(--gold-300);
+  }
+
+  .icon {
+    width: 15px;
+    height: 15px;
   }
 }
 
 .slot {
   display: grid;
   align-content: start;
-  gap: 12px;
-  padding: 16px;
+  gap: 8px;
+  padding: 10px 12px;
   border: 1px dashed var(--line);
   border-radius: var(--radius-sm);
   background: rgba(4, 10, 23, 0.35);
@@ -83,19 +206,12 @@
   color: var(--gold-300);
 }
 
-.slot__photo {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-}
-
 .slot__portrait {
   display: grid;
   flex: none;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: 40px;
+  height: 40px;
   border: 2px solid var(--line-strong);
   border-radius: 50%;
   background: var(--bg-raised);
@@ -161,6 +277,11 @@
 
   &.is-error {
     color: var(--red-300);
+  }
+
+  // next to the buttons of a place: no empty line under them
+  .slot__actions & {
+    min-height: 0;
   }
 }
 

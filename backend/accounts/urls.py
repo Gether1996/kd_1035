@@ -55,6 +55,10 @@ urlpatterns = [
     path('hall/photos/<int:entry_id>/', hall.photo),
     # before the categories – 'archive' is not one
     path('hall/archive/', hall.archive),
+    # the week of the fort destroyers: its dates, posting it to Discord, archiving it (Gether 7. 11. 2026)
+    path('hall/forts/week/', hall.forts_week),
+    path('hall/forts/publish/', hall.forts_publish),
+    path('hall/forts/archive/', hall.forts_archive),
     path('hall/archive/<int:archive_id>/', hall.archive_delete),
     path('hall/<str:category>/', hall.ranking),
     path('hall/<str:category>/<int:place>/', hall.place),
