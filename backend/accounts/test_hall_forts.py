@@ -61,23 +61,24 @@ class FortsWeekTests(HallBase):
             payload, url = send.call_args.args
         self.assertEqual(url, 'https://discord.test/api/webhooks/9/hall')
         self.assertEqual((payload['content'], payload['allowed_mentions']), ('@everyone', {'parse': ['everyone']}))
-        head, *cards = payload['embeds']
-        self.assertEqual(head['description'], 'Týždeň **26. 10. – 1. 11. 2026**\nNajviac zničených pevností za týždeň.')
-        self.assertEqual(head['url'], 'https://kd1035.test/sien-slavy')
-        # a card per place: the medal or the number with the name (plain text), the number in bold, the stripe colour
+        [card] = payload['embeds']
+        self.assertEqual(card['description'], 'Týždeň **26. 10. – 1. 11. 2026**\nNajviac zničených pevností za týždeň.')
+        self.assertEqual(card['url'], 'https://kd1035.test/sien-slavy')
+        self.assertEqual(card['footer'], {'text': 'Sieň slávy · KD 1035'})
+        # one card (Gether 7. 11. 2026): the top 3 side by side, the 4th and 5th in their own row – with only two on
+        # top, an empty field ends the row first
+        blank = '\u200b'
         self.assertEqual(
-            [(c['author']['name'], c.get('description'), c['color']) for c in cards],
+            [(f['name'], f['value'], f['inline']) for f in card['fields']],
             [
-                ('🥇 Nelly', '**200** pevností', 0xF5C451),
-                ('🥈 Bobo_*x*', '**3** pevnosti', 0xC9D1DC),
-                ('5. Piaty', '**1** pevnosť', 0x2F5CAA),
+                ('🥇 Nelly', '**200** pevností', True),
+                ('🥈 Bobo\\_\\*x\\*', '**3** pevnosti', True),
+                (blank, blank, False),
+                ('5. Piaty', '**1** pevnosť', True),
             ],
         )
-        # the Discord avatar of a player of the website – next to the name and large on the head card; a name alone has none
-        avatar = self.nelly.avatar_url
-        self.assertEqual((cards[0]['author']['icon_url'], head['thumbnail']['url']), (avatar, avatar))
-        self.assertNotIn('icon_url', cards[1]['author'])
-        self.assertEqual(cards[-1]['footer'], {'text': 'Sieň slávy · KD 1035'})
+        # the winner's Discord avatar on the right
+        self.assertEqual(card['thumbnail']['url'], self.nelly.avatar_url)
         # locked: no second post, no edits of the forts – other categories as before
         with mock.patch('accounts.hall.send') as send:
             self.assertEqual(self.post(self.as_admin, '/api/hall/forts/publish/').status_code, 409)
@@ -137,17 +138,41 @@ class FortsWeekTests(HallBase):
         entry = HallEntry.objects.select_related('player').get(category='forts')
         self.assertTrue(entry.photo)
         payload = forts_payload([entry], HallFortsWeek.load())
-        head, card = payload['embeds']
-        self.assertEqual(card['author']['icon_url'], f'https://cdn.discordapp.com/avatars/1/abc123.png?size=128')
-        self.assertEqual(head['thumbnail']['url'], 'https://cdn.discordapp.com/avatars/1/abc123.png?size=256')
-        # no week yet: the head without it; a number that is not digits as written
-        self.assertEqual(head['description'], 'Najviac zničených pevností za týždeň.')
-        self.assertEqual(card['description'], '**1.37B**')
+        [card] = payload['embeds']
+        self.assertEqual(card['thumbnail']['url'], 'https://cdn.discordapp.com/avatars/1/abc123.png?size=256')
+        # no week yet: the card without it; a number that is not digits as written
+        self.assertEqual(card['description'], 'Najviac zničených pevností za týždeň.')
+        self.assertEqual(card['fields'], [{'name': '🥇 Nelly', 'value': '**1.37B**', 'inline': True}])
         # a player without Discord: no avatar (Discord cannot show the site's picture)
         self.nelly.discord_id = None
         self.nelly.save()
         entry.refresh_from_db()
         self.assertNotIn('thumbnail', forts_payload([entry], HallFortsWeek.load())['embeds'][0])
+
+    def test_five_places_three_and_two(self):
+        from .hall import forts_payload
+
+        for place in range(1, 6):
+            self.put(self.as_admin, f'/api/hall/forts/{place}/', {'name': f'P{place}', 'count': str(100 - place)})
+        entries = list(HallEntry.objects.select_related('player').filter(category='forts').order_by('place'))
+        fields = forts_payload(entries, HallFortsWeek.load())['embeds'][0]['fields']
+        # three inline, then two inline – Discord starts the 4th on a new row by itself
+        self.assertEqual([f['name'] for f in fields], ['🥇 P1', '🥈 P2', '🥉 P3', '4. P4', '5. P5'])
+        self.assertTrue(all(f['inline'] for f in fields))
+        # a name alone: no avatar
+        self.assertNotIn('thumbnail', forts_payload(entries, HallFortsWeek.load())['embeds'][0])
+        # any number from 1 to 5 (Gether 7. 11. 2026: "môže byť 1 až 5, akýkoľvek počet"): one field each, no empty one
+        for n in range(1, 6):
+            fields = forts_payload(entries[:n], HallFortsWeek.load())['embeds'][0]['fields']
+            self.assertEqual([f['name'] for f in fields], ['🥇 P1', '🥈 P2', '🥉 P3', '4. P4', '5. P5'][:n], n)
+        # places left empty in between: the 4th or 5th still in its own row under the top
+        for places, names in (
+            ([0, 4], ['🥇 P1', '​', '5. P5']),
+            ([0, 1, 3, 4], ['🥇 P1', '🥈 P2', '​', '4. P4', '5. P5']),
+            ([2, 3], ['🥉 P3', '​', '4. P4']),
+        ):
+            fields = forts_payload([entries[i] for i in places], HallFortsWeek.load())['embeds'][0]['fields']
+            self.assertEqual([f['name'] for f in fields], names, places)
 
     def test_archived_without_a_week_and_the_photos_go(self):
         self.put(self.as_admin, '/api/hall/forts/1/', {'player': self.nelly.pk, 'count': '200'})

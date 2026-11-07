@@ -406,11 +406,6 @@ def escape(text: str) -> str:
 MEDALS = {1: '🥇', 2: '🥈', 3: '🥉'}
 
 
-# the side stripe of a place's card: gold, silver, bronze, then the site's blue
-PLACE_COLOURS = {1: GOLD, 2: 0xC9D1DC, 3: 0xC8834A}
-OTHER_COLOUR = 0x2F5CAA
-
-
 def discord_avatar(entry: HallEntry, size: int) -> str:
     """The player's Discord avatar ('' for a name alone or a player without Discord – Discord cannot show the site's SVG).
     Never the photo of the hall: the privacy page promises it is not public (Gether 7. 11. 2026)."""
@@ -420,45 +415,48 @@ def discord_avatar(entry: HallEntry, size: int) -> str:
     return player.avatar_url.replace('size=64', f'size={size}')
 
 
+# an empty field: the next ones start a new row
+BLANK = '\u200b'
+
+
 def forts_payload(entries: list[HallEntry], week: HallFortsWeek) -> dict:
-    """The new ranking for the channel "sieň slávy" with @everyone – Slovak, like the event messages. A card (embed) per
-    place with the player's Discord avatar next to the name (Gether 7. 11. 2026: "krajšie, plus avatary"), under a
-    head card with the week and the winner's avatar."""
+    """The new ranking for the channel "sieň slávy" with @everyone – Slovak, like the event messages. One card: the week,
+    the winner's Discord avatar on the right, the top 3 side by side and the 4th and 5th in the row under them
+    (Gether 7. 11. 2026: "prví traja vedľa seba a 4, 5 pod nimi" – Discord puts only text fields side by side, so the
+    avatar is the winner's alone)."""
     when = days(week.week_from, week.week_to)
-    head = {
+    fields = []
+    top = sum(1 for e in entries if e.place <= 3)
+    for e in entries:
+        if e.place > 3 and len(fields) == top and top % 3:
+            # the top had fewer than 3: the 4th and 5th still start their own row
+            fields.append({'name': BLANK, 'value': BLANK, 'inline': False})
+        rank = MEDALS.get(e.place, f'{e.place}.')
+        amount = forts_amount(e.count)
+        number, _, word = amount.partition(' ')
+        fields.append({
+            'name': f'{rank} {escape(shown_name(e))}'[:256],
+            'value': f'**{escape(number)}** {escape(word)}'.strip() if amount else BLANK,
+            'inline': True,
+        })
+    embed = {
         'title': '🏰 Ničitelia pevností',
         'description': (f'Týždeň **{when}**\n' if when else '') + 'Najviac zničených pevností za týždeň.',
         'color': GOLD,
+        'fields': fields,
+        'footer': {'text': 'Sieň slávy · KD 1035'},
     }
     winner = discord_avatar(entries[0], 256) if entries else ''
     if winner:
-        head['thumbnail'] = {'url': winner}
-    cards = []
-    for e in entries:
-        rank = MEDALS.get(e.place, f'{e.place}.')
-        amount = forts_amount(e.count)
-        card = {
-            # the author line is plain text (no markdown): the name as it is
-            'author': {'name': f'{rank} {shown_name(e)}'[:256]},
-            'color': PLACE_COLOURS.get(e.place, OTHER_COLOUR),
-        }
-        if amount:
-            number, _, word = amount.partition(' ')
-            card['description'] = f'**{escape(number)}** {escape(word)}'.strip()
-        icon = discord_avatar(e, 128)
-        if icon:
-            card['author']['icon_url'] = icon
-        cards.append(card)
-    cards[-1]['footer'] = {'text': 'Sieň slávy · KD 1035'}
+        embed['thumbnail'] = {'url': winner}
     payload = {
         'username': 'Kingdom 1035',
         'content': '@everyone',
         'allowed_mentions': {'parse': ['everyone']},
-        # Discord takes at most 10 cards: the head and up to 5 places
-        'embeds': [head, *cards],
+        'embeds': [embed],
     }
     if settings.SITE_URL:
-        head['url'] = f'{settings.SITE_URL}/sien-slavy'
+        embed['url'] = f'{settings.SITE_URL}/sien-slavy'
         payload['avatar_url'] = f'{settings.SITE_URL}/icons/icon-192.png'
     return payload
 
