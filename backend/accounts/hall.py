@@ -386,13 +386,9 @@ def days(start, end) -> str:
 
 
 def forts_amount(count: str) -> str:
-    """'200 pevností' like the page; anything not just digits as written"""
-    text = count.strip()
-    if not text.isdigit():
-        return text
-    n = int(text)
-    word = 'pevnosť' if n == 1 else 'pevnosti' if 2 <= n <= 4 else 'pevností'
-    return f'{n} {word}'
+    """the number as written – no "pevností" after it (Gether 8. 11. 2026: "daj slovo pevnosti pri číslach preč", the
+    title says it already)"""
+    return count.strip()
 
 
 # the characters of Discord markdown – a name stays plain text
@@ -433,10 +429,9 @@ def forts_payload(entries: list[HallEntry], week: HallFortsWeek) -> dict:
             fields.append({'name': BLANK, 'value': BLANK, 'inline': False})
         rank = MEDALS.get(e.place, f'{e.place}.')
         amount = forts_amount(e.count)
-        number, _, word = amount.partition(' ')
         fields.append({
             'name': f'{rank} {escape(shown_name(e))}'[:256],
-            'value': f'**{escape(number)}** {escape(word)}'.strip() if amount else BLANK,
+            'value': f'**{escape(amount)}**' if amount else BLANK,
             'inline': True,
         })
     embed = {

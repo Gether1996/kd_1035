@@ -162,8 +162,8 @@ describe('Ničiteľ pevností – the week (Gether 7. 11. 2026)', () => {
     await tick(fixture);
     expect(el.querySelector('[data-cat="forts"] .pillar__period')?.textContent?.trim()).toBe('26. 10. – 1. 11. 2026');
     expect(Array.from(el.querySelectorAll('[data-cat="forts"] .pillar__ranks li')).map((li) => Array.from(li.querySelectorAll('span')).map((span) => span.textContent?.trim()).join(' '))).toEqual([
-      '1. Nelly 200 pevností',
-      '5. Piaty 1 pevnosť',
+      '1. Nelly 200',
+      '5. Piaty 1',
     ]);
     expect(el.textContent).not.toContain('starý dôvod');
   });

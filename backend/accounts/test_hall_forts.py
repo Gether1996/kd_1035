@@ -71,10 +71,10 @@ class FortsWeekTests(HallBase):
         self.assertEqual(
             [(f['name'], f['value'], f['inline']) for f in card['fields']],
             [
-                ('🥇 Nelly', '**200** pevností', True),
-                ('🥈 Bobo\\_\\*x\\*', '**3** pevnosti', True),
+                ('🥇 Nelly', '**200**', True),
+                ('🥈 Bobo\\_\\*x\\*', '**3**', True),
                 (blank, blank, False),
-                ('5. Piaty', '**1** pevnosť', True),
+                ('5. Piaty', '**1**', True),
             ],
         )
         # the winner's Discord avatar on the right

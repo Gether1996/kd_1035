@@ -15,6 +15,12 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-08',
+    version: '1.64.1',
+    sk: ['Sieň slávy: pri Ničiteľoch pevností je už len číslo, bez slova „pevností“ – na webe aj na Discorde.'],
+    cs: ['Síň slávy: u Ničitelů pevností je už jen číslo, bez slova „pevností“ – na webu i na Discordu.'],
+  },
+  {
     date: '2026-11-07',
     version: '1.64.0',
     sk: [

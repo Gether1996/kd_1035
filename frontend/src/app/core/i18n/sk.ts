@@ -570,7 +570,6 @@ export const sk = {
       zero: { title: 'Zero', text: 'Minulé KvK dostali zero.' },
     },
     place: '{n}. miesto',
-    forts: ['{n} pevnosť', '{n} pevnosti', '{n} pevností'],
     // the archived halls under the corners (3. 11. 2026)
     legends: { title: 'Sieň legiend', lead: 'Víťazi minulých KvK a týždňov.' },
     edit: {

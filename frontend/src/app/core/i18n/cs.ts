@@ -550,7 +550,6 @@ export const cs: Dict = {
       zero: { title: 'Zero', text: 'Minulé KvK dostali zero.' },
     },
     place: '{n}. místo',
-    forts: ['{n} pevnost', '{n} pevnosti', '{n} pevností'],
     legends: { title: 'Síň legend', lead: 'Vítězové minulých KvK a týdnů.' },
     edit: {
       lead: 'Vyber hráče z webu nebo napiš jméno. Prázdné místo se v síni neukáže.',

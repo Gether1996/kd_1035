@@ -20,7 +20,6 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PendingApproval } from '../../shared/pending-approval';
-import { plural } from '../reminders/format';
 import { HallAdmin } from './hall-admin';
 import {
   EquipmentTroop,
@@ -183,15 +182,15 @@ export class HallPage {
     return HALL_ICONS[category];
   }
 
-  /** "250 pevností", "1,2 mld. KP" – the number the superadmin entered, '' without one */
+  /** "250", "2.3B" – the number the superadmin entered, '' without one */
   protected amount(entry: Pick<HallEntry, 'category' | 'count'>): string {
     const text = (entry.count ?? '').trim();
     if (!text) return '';
-    const h = this.t().hall;
-    // digits alone: "250 pevností", "2.3B"; anything else as written – no "KP" after it (Gether 28. 10. 2026)
+    // digits alone: "250", "2.3B"; anything else as written – no "KP" (Gether 28. 10. 2026) nor "pevností" after it
     if (/^\d+$/.test(text)) {
       const n = Number(text);
-      return entry.category === 'forts' ? plural(n, h.forts) : shortKp(n);
+      // forts: the number alone, the banner says what it is (Gether 8. 11. 2026)
+      return entry.category === 'forts' ? String(n) : shortKp(n);
     }
     return text;
   }
