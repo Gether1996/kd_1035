@@ -16,14 +16,14 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-08',
-    version: '1.64.2',
+    version: '1.64.3',
     sk: [
       'Sieň slávy: pri Ničiteľoch pevností je už len číslo, bez slova „pevností“ – na webe aj na Discorde.',
-      'Sieň legiend: pri archivovaných Ničiteľoch pevností je týždeň, za ktorý boli, nie deň uloženia.',
+      'Sieň legiend: archivovaní Ničitelia pevností majú ako nadpis týždeň, za ktorý boli.',
     ],
     cs: [
       'Síň slávy: u Ničitelů pevností je už jen číslo, bez slova „pevností“ – na webu i na Discordu.',
-      'Síň legend: u archivovaných Ničitelů pevností je týden, za který byli, ne den uložení.',
+      'Síň legend: archivovaní Ničitelé pevností mají jako nadpis týden, za který byli.',
     ],
   },
   {

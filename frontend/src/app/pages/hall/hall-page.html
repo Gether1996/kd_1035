@@ -113,8 +113,12 @@
             <div class="legends__boards">
               @for (a of legends(); track a.id) {
                 <section class="board" [attr.aria-labelledby]="'legend-' + a.id">
-                  <h2 class="board__title" [id]="'legend-' + a.id">{{ a.label }}</h2>
-                  <p class="board__date"><time [attr.datetime]="a.created_at">{{ a.date }}</time></p>
+                  @if (a.week) {
+                    <h2 class="board__title" [id]="'legend-' + a.id">{{ a.week }}</h2>
+                  } @else {
+                    <h2 class="board__title" [id]="'legend-' + a.id">{{ a.label }}</h2>
+                    <p class="board__date"><time [attr.datetime]="a.created_at">{{ a.date }}</time></p>
+                  }
                   <dl class="board__cats">
                     @for (c of a.categories; track c.category) {
                       <div class="board__cat">

@@ -179,9 +179,10 @@ describe('Ničiteľ pevností – the week (Gether 7. 11. 2026)', () => {
       '5. Piaty 1',
     ]);
     expect(el.textContent).not.toContain('starý dôvod');
-    // Sieň legiend: the archived week under its title, not the day it was saved (8. 11. 2026)
-    expect(el.querySelector('.board__title')?.textContent?.trim()).toBe('Ničitelia pevností');
-    expect(el.querySelector('.board__date')?.textContent?.trim()).toBe('2. 11. – 8. 11. 2026');
+    // Sieň legiend: the archived week, not the day it was saved (8. 11. 2026)
+    // the week is the title, no name above the category (Gether 8. 11. 2026)
+    expect(el.querySelector('.board__title')?.textContent?.trim()).toBe('2. 11. – 8. 11. 2026');
+    expect(el.querySelector('.board__date')).toBeNull();
   });
 
 });
