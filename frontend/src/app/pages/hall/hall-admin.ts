@@ -457,7 +457,11 @@ export class HallAdmin {
     this.confirm.set(null);
     await this.runForts('fortsArchive', async () => {
       const saved = await firstValueFrom(
-        this.http.post<{ archive: HallArchive[]; forts_week: FortsWeek }>('/api/hall/forts/archive/', {}),
+        // the week in the picker, saved or not (8. 11. 2026) – the server keeps a posted one
+        this.http.post<{ archive: HallArchive[]; forts_week: FortsWeek }>('/api/hall/forts/archive/', {
+          week_from: this.weekFrom(),
+          week_to: this.weekTo(),
+        }),
       );
       this.archives.set(saved.archive);
       this.setWeek(saved.forts_week);

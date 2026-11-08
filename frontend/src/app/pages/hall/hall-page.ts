@@ -137,7 +137,8 @@ export class HallPage {
       id: archive.id,
       label: archive.label,
       created_at: archive.created_at,
-      date: archiveDate(archive.created_at, this.i18n.locale()),
+      // a week of the fort destroyers: its days, else the day it was saved
+      date: weekRange(archive.week_from, archive.week_to) || archiveDate(archive.created_at, this.i18n.locale()),
       categories: HALL_ORDER.map((category) => ({
         category,
         entries: archive.entries.filter((e) => e.category === category).sort((a, b) => a.place - b.place),

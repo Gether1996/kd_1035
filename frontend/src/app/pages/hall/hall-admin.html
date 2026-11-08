@@ -64,7 +64,7 @@
               @let k = 'archive-' + a.id;
               <li class="archive__row">
                 <span class="archive__label">{{ a.label }}</span>
-                <span class="archive__meta">{{ archiveDate(a.created_at) }} · {{ names(a.entries.length) }}</span>
+                <span class="archive__meta">{{ weekRange(a.week_from, a.week_to) || archiveDate(a.created_at) }} · {{ names(a.entries.length) }}</span>
                 @if (confirm() === k) {
                   <span class="slot__confirm">
                     {{ ar.confirmDelete }}

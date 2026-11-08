@@ -530,19 +530,21 @@ def forts_publish(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def forts_archive(request):
-    """POST: the fort ranking into Sieň legiend with its week (Gether 7. 11. 2026: "uloží sa do pamäte, nech vieme
-    históriu"), then the category is emptied – photos too – and unlocked; the next 7 days are offered as the next week."""
+    """POST {week_from?, week_to?}: the fort ranking into Sieň legiend with its week (Gether 7. 11. 2026: "uloží sa do
+    pamäte, nech vieme históriu"), then the category is emptied – photos too – and unlocked; the next 7 days are offered
+    as the next week. The week is the one in the editor's picker (8. 11. 2026: an archive got no week when it was not
+    saved first) – once posted to Discord the posted one."""
+    picked = WeekSerializer(data=request.data if isinstance(request.data, dict) else {})
     with transaction.atomic():
         week = the_week()
         entries = forts_entries()
         if not entries:
             return Response({'detail': 'empty'}, status=400)
-        if week.week_from:
-            label = f'Týždeň {days(week.week_from, week.week_to)}'
-        else:
-            today = timezone.localdate()
-            label = f'Ničitelia pevností {today.day}. {today.month}. {today.year}'
-        saved = HallArchive.objects.create(label=label[:40], week_from=week.week_from, week_to=week.week_to)
+        if not week.published_at and picked.is_valid() and picked.validated_data['week_from']:
+            week.week_from = picked.validated_data['week_from']
+            week.week_to = picked.validated_data['week_to']
+        # the week is shown under the title in Sieň legiend
+        saved = HallArchive.objects.create(label='Ničitelia pevností', week_from=week.week_from, week_to=week.week_to)
         HallArchiveEntry.objects.bulk_create(
             HallArchiveEntry(archive=saved, category=e.category, place=e.place, name=shown_name(e)[:64], count=e.count)
             for e in entries

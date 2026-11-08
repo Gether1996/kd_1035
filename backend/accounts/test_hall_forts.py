@@ -94,12 +94,13 @@ class FortsWeekTests(HallBase):
 
         # archived: into Sieň legiend with the week, the category empty and open again, the next week offered
         self.assertEqual(self.post(self.as_nelly, '/api/hall/forts/archive/').status_code, 403)
-        saved = self.post(self.as_admin, '/api/hall/forts/archive/')
+        # a posted week wins over another one sent along
+        saved = self.post(self.as_admin, '/api/hall/forts/archive/', {'week_from': '2026-11-02', 'week_to': '2026-11-08'})
         self.assertEqual(saved.status_code, 201)
         archive = saved.json()['archive'][0]
         self.assertEqual(
             (archive['label'], archive['week_from'], archive['week_to']),
-            ('Týždeň 26. 10. – 1. 11. 2026', '2026-10-26', '2026-11-01'),
+            ('Ničitelia pevností', '2026-10-26', '2026-11-01'),
         )
         self.assertEqual(
             [(e['place'], e['name'], e['count']) for e in archive['entries']],
@@ -179,6 +180,20 @@ class FortsWeekTests(HallBase):
         self.as_admin.post('/api/hall/forts/1/photo/', {'photo': jpeg()}, HTTP_X_CSRFTOKEN=self.as_admin.token)
         self.assertEqual(len(list(Path(self.media.name, 'hall').iterdir())), 1)
         saved = self.post(self.as_admin, '/api/hall/forts/archive/').json()
-        self.assertTrue(saved['archive'][0]['label'].startswith('Ničitelia pevností '))
+        self.assertEqual(saved['archive'][0]['label'], 'Ničitelia pevností')
         self.assertIsNone(saved['archive'][0]['week_from'])
         self.assertEqual(list(Path(self.media.name, 'hall').iterdir()), [])
+
+    def test_the_archive_takes_the_week_of_the_picker(self):
+        """8. 11. 2026: an archive got no week – it was shown in the picker but never saved"""
+        self.put(self.as_admin, '/api/hall/forts/1/', {'name': 'CrazyFox CZE', 'count': '237'})
+        saved = self.post(self.as_admin, '/api/hall/forts/archive/', {'week_from': '2026-11-02', 'week_to': '2026-11-08'})
+        archive = saved.json()['archive'][0]
+        self.assertEqual((archive['week_from'], archive['week_to']), ('2026-11-02', '2026-11-08'))
+        # and the next week is offered after it
+        self.assertEqual((saved.json()['forts_week']['from'], saved.json()['forts_week']['to']), ('2026-11-09', '2026-11-15'))
+        # a week that is not Monday to Sunday is not taken (the saved one, here none, stays)
+        self.put(self.as_admin, '/api/hall/forts/1/', {'name': 'X', 'count': '1'})
+        HallFortsWeek.objects.update(week_from=None, week_to=None)
+        saved = self.post(self.as_admin, '/api/hall/forts/archive/', {'week_from': '2026-11-03', 'week_to': '2026-11-09'})
+        self.assertIsNone(saved.json()['archive'][0]['week_from'])

@@ -124,12 +124,16 @@ describe('Ničiteľ pevností – the week (Gether 7. 11. 2026)', () => {
     fixture.detectChanges();
     expect(el.querySelector('.week .slot__confirm')?.textContent).toContain('Pozor, ľudia z kategórie sa vymažú.');
     button('Uložiť a vymazať').click();
-    http.expectOne('/api/hall/forts/archive/').flush({
-      archive: [{ id: 3, label: 'Týždeň 26. 10. – 1. 11. 2026', week_from: '2026-10-26', week_to: '2026-11-01', created_at: '2026-11-07T18:00:00Z', entries: [] }],
+    const post = http.expectOne('/api/hall/forts/archive/');
+    // the week in the picker goes along (8. 11. 2026)
+    expect(post.request.body).toEqual({ week_from: '2026-10-26', week_to: '2026-11-01' });
+    post.flush({
+      archive: [{ id: 3, label: 'Ničitelia pevností', week_from: '2026-10-26', week_to: '2026-11-01', created_at: '2026-11-07T18:00:00Z', entries: [] }],
       forts_week: { from: '2026-11-02', to: '2026-11-08', published_at: null, webhook: true },
     });
     await tick(fixture);
-    expect(el.querySelector('.archive__label')?.textContent).toBe('Týždeň 26. 10. – 1. 11. 2026');
+    expect(el.querySelector('.archive__label')?.textContent).toBe('Ničitelia pevností');
+    expect(el.querySelector('.archive__meta')?.textContent).toContain('26. 10. – 1. 11. 2026');
     expect(el.querySelectorAll('[aria-labelledby="hall-edit-forts"] form.slot.is-filled').length).toBe(0);
     expect(el.querySelector('.week__range')?.textContent?.trim()).toBe('2. 11. – 8. 11. 2026');
     expect(button('Zverejniť posledný týždeň na Discord').disabled).toBe(false);
@@ -156,7 +160,16 @@ describe('Ničiteľ pevností – the week (Gether 7. 11. 2026)', () => {
     const { fixture, http, el } = setup(HallPage, false);
     http.expectOne('/api/hall/').flush({
       entries: [entry('forts', 1, 'Nelly', '200'), entry('forts', 5, 'Piaty', '1')],
-      archive: [],
+      archive: [
+        {
+          id: 4,
+          label: 'Ničitelia pevností',
+          week_from: '2026-11-02',
+          week_to: '2026-11-08',
+          created_at: '2026-11-08T10:00:00Z',
+          entries: [{ category: 'forts', place: 1, name: 'CrazyFox CZE', count: '237', note: { sk: '', cs: '' } }],
+        },
+      ],
       forts_week: { from: '2026-10-26', to: '2026-11-01' },
     });
     await tick(fixture);
@@ -166,6 +179,9 @@ describe('Ničiteľ pevností – the week (Gether 7. 11. 2026)', () => {
       '5. Piaty 1',
     ]);
     expect(el.textContent).not.toContain('starý dôvod');
+    // Sieň legiend: the archived week under its title, not the day it was saved (8. 11. 2026)
+    expect(el.querySelector('.board__title')?.textContent?.trim()).toBe('Ničitelia pevností');
+    expect(el.querySelector('.board__date')?.textContent?.trim()).toBe('2. 11. – 8. 11. 2026');
   });
 
 });

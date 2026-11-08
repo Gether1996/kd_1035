@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **8. 11. 2026 – v1.64.2:** Archív Ničiteľov pevností berie týždeň z prepínača (prvý archív na produkcii ho nemal – nebol uložený), Sieň legiend ukazuje týždeň.
 - **8. 11. 2026 – v1.64.1:** Ničitelia pevností bez slova „pevností“ pri čísle (sieň, Sieň legiend, Discord).
 - **7. 11. 2026 – v1.64.0:** Nepravidelné eventy si pamätajú každý termín (`EventDate`, migrácie `kingdom/0024`–`0025` s doplnením starších), v dialógu Termín minulé termíny, zvyčajný odstup a odhad ďalšieho s „Použiť odhad“.
 - **7. 11. 2026 – v1.63.2:** Discord oznam Ničiteľov pevností ako jedna karta – prví traja vedľa seba, 4. a 5. pod nimi, avatar víťaza vpravo.
