@@ -30,7 +30,8 @@ Nové alebo zmenené súbory Claude Code zvyčajne načíta sám. Ak skill v `/`
 | `kd-done` | posledný krok pred commitom a pushom | jeden checklist: testy, žiadne tajomstvá v diffe, dopad na živý web, migrácie, screenshoty, SK + CZ, Ochrana údajov, `.env.example`, verzia |
 | `kd-doc-budget` | ideš rozširovať `CLAUDE.md` alebo `docs/*.md` | limity veľkosti a ako súbor zmenšiť bez straty informácií |
 | `kd-qa` | pred mergom do `main` (= nasadenie), po zmene UI, „na mobile to je divné“ | automatické e2e testy (`tools/e2e`), potom paralelní `kd-qa-tester` v skutočnom Chrome cez Chrome DevTools MCP; jeden zoradený report so screenshotmi. Detail `docs/qa.md` |
-| `prepis-top-forty` | Gether pošle screenshot Fort Destroyer Rankings a mená účtov (bez fariem) | prepíše top 3 Ničiteľov pevností v Sieni slávy **priamo na kd1035.eu** cez jeho prihlásený Chrome (`PUT /api/hall/forts/`), fotky sa presunú s hráčmi |
+| `prepis-top-forty` | Gether pošle screenshot Fort Destroyer Rankings a mená účtov (bez fariem) | prepíše top 5 Ničiteľov pevností v Sieni slávy **priamo na kd1035.eu** cez jeho prihlásený Chrome (`PUT /api/hall/forts/`), fotky sa presunú s hráčmi |
+| `mats-count` | Gether pošle screenshoty materiálov a krabíc z hry | koľko zlatých kože, kameňa, dreva a neutrálnych z nich spraví (4 → 1, bez kostí; skript `count.py`) – nič na webe |
 | `kd-docs-drift` | raz za čas, po veľkej zmene | porovná dokumentáciu s kódom (cesty, príkazy, premenné, čísla) a stránky Ochrana údajov / Podmienky s tým, čo kód naozaj ukladá. Opravuje až po tvojom súhlase. |
 
 Pôvodné skilly ostávajú: `kd-verify` (testy + screenshoty), `kd-release` (nová verzia), `kd-event-data` (zmena eventov), `kd-review-branch` (vetva spolupracovníka); k nim workflow `kd-meta-update` (mesačná aktualizácia návodov, `.claude/workflows/`). Nové skilly ich volajú, nenahrádzajú.
