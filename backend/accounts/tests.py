@@ -376,6 +376,10 @@ class MeTests(TestCase):
                     'ingame_name': '',
                     'lang': 'sk',
                     'power': None,
+                    'vip': None,
+                    'kill_points': None,
+                    'deads': None,
+                    'stats_updated_at': None,
                     'approved': False,
                     'terms_accepted': False,
                     'is_staff': False,
@@ -561,6 +565,23 @@ class OwnPowerTests(TestCase):
         self.assertIsNone(self.client.get('/api/auth/me/').json()['user']['power'])
         PlayerEvaluation.objects.create(player=self.player, power=Decimal('101.5'))
         self.assertEqual(self.client.get('/api/auth/me/').json()['user']['power'], 101.5)
+
+    def test_vip_kill_points_and_deads_for_the_overview(self):
+        """Gether 10. 11. 2026: the VIP level and the game's numbers on /ucet, with the day they were written down"""
+        res = self.patch({'vip': 18, 'kill_points': 8_800_000_000, 'deads': 24_000_000})
+        self.assertEqual(res.status_code, 200)
+        user = res.json()['user']
+        self.assertEqual((user['vip'], user['kill_points'], user['deads']), (18, 8_800_000_000, 24_000_000))
+        self.assertIsNotNone(user['stats_updated_at'])
+        # cleared again
+        user = self.patch({'vip': None, 'kill_points': None}).json()['user']
+        self.assertEqual((user['vip'], user['kill_points'], user['deads']), (None, None, 24_000_000))
+        for bad in ({'vip': 26}, {'vip': -1}, {'vip': 'x'}, {'kill_points': -5}, {'deads': 10**14}, {'kill_points': 1.5}):
+            self.assertEqual(self.patch(bad).status_code, 400, bad)
+        # the name alone leaves the day as it was
+        before = Player.objects.get(pk=self.player.pk).stats_updated_at
+        self.patch({'ingame_name': 'Gether'})
+        self.assertEqual(Player.objects.get(pk=self.player.pk).stats_updated_at, before)
 
     def test_player_writes_down_and_clears_the_power(self):
         response = self.patch({'power': 98.4})

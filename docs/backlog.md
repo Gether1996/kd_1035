@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **10. 11. 2026 – v1.65.0:** Prehľad účtu na `/marche?tab=ucet` (účet + všetky marche ako stĺpce, až 7 vedľa seba na ultrawide) a VIP, kill points a deads na `/ucet` (migrácia `accounts/0059`, Ochrana údajov).
 - **8. 11. 2026 – v1.64.2–v1.64.3:** Archív Ničiteľov pevností berie týždeň z prepínača (prvý archív na produkcii ho nemal – nebol uložený), Sieň legiend ukazuje týždeň. Od v1.64.3 je týždeň nadpisom karty (bez názvu „Ničitelia pevností“, kategória je pod ním).
 - **8. 11. 2026 – v1.64.1:** Ničitelia pevností bez slova „pevností“ pri čísle (sieň, Sieň legiend, Discord).
 - **7. 11. 2026 – v1.64.0:** Nepravidelné eventy si pamätajú každý termín (`EventDate`, migrácie `kingdom/0024`–`0025` s doplnením starších), v dialógu Termín minulé termíny, zvyčajný odstup a odhad ďalšieho s „Použiť odhad“.

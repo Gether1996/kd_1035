@@ -17,6 +17,12 @@ export interface Player {
   lang?: Lang;
   /** the current power in millions – the one of the KvK evaluation, typed on /ucet or by the superadmin; null = none */
   power?: number | null;
+  /** the account overview (Gether 10. 11. 2026): written down on /ucet, null = not; missing in an older response */
+  vip?: number | null;
+  kill_points?: number | null;
+  deads?: number | null;
+  /** when the power, VIP, kill points or deads were last written down (ISO) */
+  stats_updated_at?: string | null;
   /** adds marches and KvK sign-ups – a new player waits for the superadmin (Gether 12. 10. 2026) */
   approved: boolean;
   /** agreed to the current terms of use – else the terms gate asks first */
@@ -179,6 +185,11 @@ export class Auth {
   /** The player's current power in millions (null clears it) – the KvK evaluation counts with it. */
   async savePower(power: number | null): Promise<void> {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { power })));
+  }
+
+  /** The VIP level, kill points and deads of the account overview (null clears one). */
+  async saveStats(stats: { vip: number | null; kill_points: number | null; deads: number | null }): Promise<void> {
+    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', stats)));
   }
 
   /** The player agrees to the current terms of use (the server saves the version and the time). */

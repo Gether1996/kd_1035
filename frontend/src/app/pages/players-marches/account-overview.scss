@@ -1,0 +1,333 @@
+// "Prehľad účtu" on /marche – the account on top, the marches as columns like the game's overview
+
+:host {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 22px;
+}
+
+// a war map on the commander's table behind the overview (Gether 10. 11. 2026: "pekné pozadie … nie moc
+// distracting"): the full width of the window from just above the tabs to the footer, fading in under the page's
+// header and out before the footer; the map itself stays put in the window while the marches scroll over it
+.ov-backdrop {
+  position: absolute;
+  top: -80px;
+  bottom: -96px;
+  left: 50%;
+  z-index: -1;
+  width: 100vw;
+  translate: -50% 0;
+  overflow: clip;
+  background: var(--bg);
+  mask-image: linear-gradient(transparent, #000 200px, #000 calc(100% - 240px), transparent);
+}
+
+.ov-backdrop__map {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: url('/img/overview/war-map.svg') center / cover no-repeat;
+}
+
+.ov-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+
+  @media (min-width: 900px) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
+.ov-head__avatar {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--gold-400);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ov-head__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0;
+  font: 700 1.375rem / 1.2 var(--font-display);
+  color: var(--gold-100);
+  overflow-wrap: anywhere;
+}
+
+.ov-head__discord {
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.ov-vip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border: 1px solid var(--gold-400);
+  border-radius: 999px;
+  color: var(--gold-300);
+  font: 700 0.8125rem / 1.4 var(--font-body);
+  letter-spacing: 0.06em;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.ov-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  grid-column: 1 / -1;
+  margin: 0;
+
+  @media (min-width: 900px) {
+    grid-column: auto;
+  }
+
+  div {
+    display: grid;
+    gap: 2px;
+  }
+
+  dt {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  dd {
+    margin: 0;
+    font: 700 1.25rem / 1.2 var(--font-body);
+    color: var(--gold-100);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.ov-head__updated {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+
+  a {
+    margin-left: 8px;
+    color: var(--gold-300);
+  }
+}
+
+.ov-state {
+  padding: 32px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.ov-placeholder {
+  min-height: 420px;
+}
+
+// as many columns as fit, each 210–300 px: 7 on an ultrawide screen, 4–5 on a monitor, 2 on a tablet, 1–2 on a
+// phone; a few marches stay as narrow as their columns instead of stretching across the page
+.ov-marches {
+  --count: 1;
+  display: grid;
+  // a phone: two marches side by side (one under 300 px), from a tablet on 210 px each
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 10px;
+
+  @media (min-width: 600px) {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+  }
+
+  width: min(100%, calc(var(--count) * 300px + (var(--count) - 1) * 14px));
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.ov-march {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 8px 16px;
+  border: 1px solid var(--line);
+
+  @media (min-width: 600px) {
+    padding: 16px 12px 18px;
+  }
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  text-align: center;
+}
+
+.ov-march__heads {
+  position: relative;
+  width: 84px;
+  height: 72px;
+}
+
+.ov-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--gold-400);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  object-fit: cover;
+}
+
+.ov-face--second {
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: 40px;
+  height: 40px;
+  border-width: 1px;
+  border-radius: 9px;
+}
+
+.ov-face--text {
+  display: grid;
+  place-items: center;
+  color: var(--gold-300);
+  font: 700 1rem / 1 var(--font-display);
+}
+
+.ov-march__kind {
+  position: absolute;
+  top: -6px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+}
+
+.ov-march__names {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font: 400 0.9375rem / 1.25 var(--font-body);
+}
+
+.ov-primary {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ov-secondary {
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+// right after the name, not under it
+.ov-expertise {
+  display: inline-flex;
+  margin-left: 3px;
+  vertical-align: -1px;
+
+  .icon {
+    width: 13px;
+    height: 13px;
+    color: var(--gold-300);
+  }
+}
+
+.ov-skills {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-gear {
+  width: min(100%, 170px);
+}
+
+.ov-gear--loading {
+  aspect-ratio: 1 / 2;
+}
+
+.ov-inscs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  .insc {
+    min-height: 22px;
+    padding: 1px 8px;
+    font-size: 0.75rem;
+  }
+}
+
+.ov-formation {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+}
+
+.ov-formation__icon {
+  width: 22px;
+  height: 22px;
+}
+
+.ov-bonuses {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.ov-bonuses__icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.ov-bonuses__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  color: var(--text-dim);
+}
+
+.ov-bonuses__value {
+  color: var(--gold-300);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

@@ -27,9 +27,13 @@
   } @else {
     <div class="segmented tabs" role="group" [attr.aria-label]="p.title">
       <button type="button" [attr.aria-pressed]="mine()" (click)="showTab(null)">{{ p.tabs.overview }}</button>
-      <button type="button" [attr.aria-pressed]="!mine()" (click)="showTab('hraci')">{{ p.tabs.all }}</button>
+      <!-- the account at a glance (Gether 10. 11. 2026) -->
+      <button type="button" [attr.aria-pressed]="account()" (click)="showTab('ucet')">{{ p.tabs.account }}</button>
+      <button type="button" [attr.aria-pressed]="!mine() && !account()" (click)="showTab('hraci')">{{ p.tabs.all }}</button>
     </div>
-    @if (mine()) {
+    @if (account()) {
+      <app-account-overview />
+    } @else if (mine()) {
       <app-marches class="mine" />
     } @else if (data.error()) {
       <p class="state">{{ p.error }}</p>

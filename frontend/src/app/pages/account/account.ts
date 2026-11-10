@@ -21,6 +21,7 @@ import { MarchesApi } from '../../core/marches-api';
 import { Seo } from '../../core/seo';
 import { Icon } from '../../shared/icon';
 import { PageHeader } from '../../shared/page-header';
+import { parseGameNumber, shortGameNumber } from '../../shared/game-number';
 import { powerMillions } from '../../shared/power';
 import { LocalLogin, PasswordForm } from './local-login';
 
@@ -62,6 +63,7 @@ export class Account {
   protected readonly saving = signal(false);
   protected readonly nameState = signal<'saved' | 'failed' | 'required' | 'taken' | null>(null);
   protected readonly powerState = signal<'saved' | 'failed' | 'invalid' | null>(null);
+  protected readonly statsState = signal<'saved' | 'failed' | 'invalid' | null>(null);
   protected readonly langState = signal<'saved' | 'failed' | null>(null);
   /** the names of the languages in their own language, like the switch in the header */
   protected readonly langs: { lang: Lang; label: string }[] = [
@@ -173,6 +175,40 @@ export class Account {
       this.powerState.set('saved');
     } catch {
       this.powerState.set('failed');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  /** "8.8B" – the field shows a number as the game does; '' = not written down */
+  protected short(n: number | null | undefined): string {
+    return n == null ? '' : shortGameNumber(n);
+  }
+
+  /**
+   * The VIP level, kill points and deads of the account overview (Gether 10. 11. 2026): VIP 0–25, the numbers as the
+   * game shows them ("8.8B") or whole; an empty field clears its number
+   */
+  protected async saveStats(event: Event, vip: HTMLInputElement, kp: HTMLInputElement, deads: HTMLInputElement): Promise<void> {
+    event.preventDefault();
+    this.statsState.set(null);
+    const level = vip.value.trim() ? Number(vip.value.trim()) : null;
+    const killPoints = parseGameNumber(kp.value);
+    const dead = parseGameNumber(deads.value);
+    const vipOk = level === null || (Number.isInteger(level) && level >= 0 && level <= 25);
+    if (!vipOk || killPoints === undefined || dead === undefined) {
+      this.statsState.set('invalid');
+      (!vipOk ? vip : killPoints === undefined ? kp : deads).focus();
+      return;
+    }
+    this.saving.set(true);
+    try {
+      await this.auth.saveStats({ vip: level, kill_points: killPoints, deads: dead });
+      kp.value = this.short(killPoints);
+      deads.value = this.short(dead);
+      this.statsState.set('saved');
+    } catch {
+      this.statsState.set('failed');
     } finally {
       this.saving.set(false);
     }

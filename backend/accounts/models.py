@@ -36,6 +36,11 @@ APPROVED = models.Q(approved=True) | models.Q(user__is_superuser=True)
 LOCAL_AVATAR = '/img/avatar-local.svg'
 
 
+# the highest VIP level of the game (with a margin) and a sane top for kill points or deads
+VIP_MAX = 25
+GAME_STAT_MAX = 10**13
+
+
 class Player(models.Model):
     """A member signed in with Discord. Scope identify only: ID, name and avatar – no e-mail, no servers. The player
     adds their in-game name on /ucet themselves, so leadership recognises them.
@@ -57,6 +62,19 @@ class Player(models.Model):
     ingame_name = models.CharField(
         'meno v hre', max_length=32, blank=True, help_text='Vyplní si ho hráč sám na webe (Môj účet).'
     )
+    # what the player writes down on /ucet for the overview of their account (Gether 10. 11. 2026: "do Účet pridať
+    # môj VIP level a ak ešte niečo, tak pridaj") – the game has no API; seen by the player only
+    vip = models.PositiveSmallIntegerField(
+        'VIP level', null=True, blank=True, validators=[MaxValueValidator(VIP_MAX)], help_text='Zapíše si ho hráč sám.'
+    )
+    kill_points = models.PositiveBigIntegerField(
+        'kill points', null=True, blank=True, validators=[MaxValueValidator(GAME_STAT_MAX)], help_text='Zapíše si ich hráč sám.'
+    )
+    deads = models.PositiveBigIntegerField(
+        'mŕtve jednotky', null=True, blank=True, validators=[MaxValueValidator(GAME_STAT_MAX)], help_text='Zapíše si ich hráč sám.'
+    )
+    # when the power, VIP, kill points or deads were last written down – "údaje z 6. 11." on the overview
+    stats_updated_at = models.DateTimeField('údaje zapísané', null=True, blank=True)
     remind_discord = models.BooleanField(
         'pripomienky na Discord', default=True, help_text='Súkromná správa od bota pred eventmi, ktoré si vybral.'
     )

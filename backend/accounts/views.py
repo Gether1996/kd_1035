@@ -299,6 +299,11 @@ def signed_in(request) -> dict | None:
         # SK/CZ: the website opens in it, the bot writes in it (Gether 17. 10. 2026)
         'lang': player.lang,
         'power': float(evaluation.power) if evaluation and evaluation.power is not None else None,
+        # the account overview (Gether 10. 11. 2026): written down on /ucet, the player's own only
+        'vip': player.vip,
+        'kill_points': player.kill_points,
+        'deads': player.deads,
+        'stats_updated_at': player.stats_updated_at,
         # adds marches and KvK sign-ups (a new player waits for the superadmin, Gether 12. 10. 2026)
         'approved': player.may_post,
         # agreed to the current terms of use – else the web asks first (Gether 12. 10. 2026)

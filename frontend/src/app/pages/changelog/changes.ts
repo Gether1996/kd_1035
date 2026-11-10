@@ -15,6 +15,18 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-10',
+    version: '1.65.0',
+    sk: [
+      'Marche: nová záložka Prehľad účtu – tvoj účet a všetky marche vedľa seba ako v hre, na širokom monitore až 7 v rade.',
+      'Môj účet: zapíš si VIP level, kill points a deads (stačí 8.8B alebo 24M), uvidíš ich v Prehľade účtu.',
+    ],
+    cs: [
+      'Marche: nová záložka Přehled účtu – tvůj účet a všechny marche vedle sebe jako ve hře, na širokém monitoru až 7 v řadě.',
+      'Můj účet: zapiš si VIP level, kill points a deads (stačí 8.8B nebo 24M), uvidíš je v Přehledu účtu.',
+    ],
+  },
+  {
     date: '2026-11-08',
     version: '1.64.3',
     sk: [

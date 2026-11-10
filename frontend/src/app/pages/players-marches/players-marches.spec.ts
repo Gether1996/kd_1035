@@ -133,8 +133,8 @@ describe('PlayersMarches', () => {
     await tick(fixture);
     expect(Array.from(el.querySelectorAll('.player__name'), (n) => n.textContent)).toEqual(['bob']);
 
-    // two tabs: the player's own marches first (the plain /marche), then the players'
-    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Prehľad marchov', 'Marche hráčov']);
+    // three tabs: the player's own marches first (the plain /marche), the account at a glance, then the players'
+    expect(Array.from(el.querySelectorAll('.tabs button'), (b) => b.textContent?.trim())).toEqual(['Prehľad marchov', 'Prehľad účtu', 'Marche hráčov']);
     http.match(() => true).forEach((r) => r.flush({}));
   });
 
@@ -218,7 +218,7 @@ describe('PlayersMarches', () => {
     expect(opened()).toEqual(['dan']);
     expect(router.url).toBe('/?cmd=Gorgo');
     // the tabs and the commander keep each other in the address
-    el.querySelectorAll<HTMLButtonElement>('.tabs button')[1].click();
+    el.querySelectorAll<HTMLButtonElement>('.tabs button')[2].click();
     await tick(fixture);
     expect(router.url).toBe('/?cmd=Gorgo&tab=hraci');
     el.querySelectorAll<HTMLButtonElement>('.tabs button')[0].click();

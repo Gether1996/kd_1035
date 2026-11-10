@@ -1,0 +1,118 @@
+@let x = t();
+@let k = m();
+@let u = user();
+<!-- the war map behind the whole window (tools/overview/war_map.py) -->
+<div class="ov-backdrop" aria-hidden="true"><div class="ov-backdrop__map"></div></div>
+@if (u) {
+  <!-- the account: who, VIP and the game's numbers written down on /ucet (Gether 10. 11. 2026) -->
+  <header class="ov-head">
+    <img class="ov-head__avatar" [src]="u.avatar_url" alt="" width="64" height="64" />
+    <div class="ov-head__who">
+      <h2 class="ov-head__name">
+        {{ u.ingame_name || u.name }}
+        @if (u.vip != null) {
+          <span class="ov-vip"><svg appIcon="crown"></svg>VIP {{ u.vip }}</span>
+        }
+      </h2>
+      @if (u.ingame_name && u.ingame_name !== u.name) {
+        <p class="ov-head__discord">{{ u.name }}</p>
+      }
+    </div>
+    <dl class="ov-stats">
+      <div>
+        <dt>{{ x.power }}</dt>
+        <dd>{{ u.power != null ? short(u.power * 1_000_000) : '–' }}</dd>
+      </div>
+      <div>
+        <dt>{{ x.kp }}</dt>
+        <dd>{{ u.kill_points != null ? short(u.kill_points) : '–' }}</dd>
+      </div>
+      <div>
+        <dt>{{ x.deads }}</dt>
+        <dd>{{ u.deads != null ? short(u.deads) : '–' }}</dd>
+      </div>
+    </dl>
+    <p class="ov-head__updated">
+      {{ updated() || x.notUpdated }}
+      <a [routerLink]="i18n.path('account')" fragment="game-stats">{{ x.edit }}</a>
+    </p>
+  </header>
+}
+
+@if (!loaded()) {
+  <div class="ov-placeholder" aria-hidden="true"></div>
+} @else if (failed()) {
+  <p class="ov-state">{{ x.error }}</p>
+} @else if (!columns().length) {
+  <p class="ov-state">{{ x.empty }}</p>
+} @else {
+  <!-- every march as a column, as many side by side as fit (Gether: "kľudne aj 7 marchov vedľa seba") -->
+  <ol class="ov-marches" [style.--count]="columns().length" [attr.aria-label]="x.marches">
+    @for (c of columns(); track c.march.id) {
+      @let mr = c.march;
+      <li class="ov-march">
+        <div class="ov-march__heads">
+          @for (cmd of c.commanders; track $index) {
+            @if (cmd.src) {
+              <img class="ov-face" [class.ov-face--second]="$index" [src]="cmd.src" alt="" width="96" height="96" loading="lazy" />
+            } @else {
+              <span class="ov-face ov-face--text" [class.ov-face--second]="$index" aria-hidden="true">{{ initials(cmd.name) }}</span>
+            }
+          }
+          @if (mr.kind) {
+            <img class="ov-march__kind" [src]="icon(mr.kind)" [alt]="k.kinds[mr.kind]" [title]="k.kinds[mr.kind]" width="96" height="96" />
+          }
+        </div>
+        <h3 class="ov-march__names">
+          @for (cmd of c.commanders; track $index) {
+            <span [class.ov-primary]="!$index" [class.ov-secondary]="$index">
+              {{ cmd.name }}
+              @if (cmd.skills === '5555') {
+                <span class="ov-expertise" role="img" [attr.aria-label]="k.skills.expertise" [title]="k.skills.expertise"><svg appIcon="crown"></svg></span>
+              } @else if (cmd.skills) {
+                <span class="ov-skills" [title]="k.skills.title">{{ cmd.skills }}</span>
+              }
+            </span>
+          } @empty {
+            <span class="ov-secondary">–</span>
+          }
+        </h3>
+
+        @if (index(); as ix) {
+          <app-gear-grid class="ov-gear" [gear]="c.gear" [index]="ix" [critTroop]="c.crit" />
+        } @else {
+          <div class="ov-gear ov-gear--loading" aria-hidden="true"></div>
+        }
+
+        @if (c.inscriptions.length) {
+          <ul class="ov-inscs" [attr.aria-label]="k.inscriptions.title">
+            @for (i of c.inscriptions; track i.id) {
+              <li class="insc insc--{{ i.rarity }}">{{ i.name }}</li>
+            }
+          </ul>
+        }
+
+        @if (c.formation; as f) {
+          <p class="ov-formation">
+            <app-formation-icon class="ov-formation__icon" [formation]="f" />
+            <span>{{ f.name }}</span>
+          </p>
+        }
+
+        @if (c.stats.length) {
+          <ul class="ov-bonuses" [attr.aria-label]="k.stats.title">
+            @for (s of c.stats; track s.key) {
+              <li>
+                @if (mr.kind && s.key !== 'damage') {
+                  <img class="ov-bonuses__icon" [src]="icon(mr.kind)" alt="" width="96" height="96" />
+                }
+                <span class="ov-bonuses__label">{{ s.label }}</span>
+                <span class="ov-bonuses__value">+{{ s.value }}%</span>
+              </li>
+            }
+          </ul>
+        }
+      </li>
+    }
+  </ol>
+}

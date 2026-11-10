@@ -29,6 +29,7 @@ import { PendingApproval } from '../../shared/pending-approval';
 import { reloadOnReturn } from '../../shared/reload-on-return';
 import { fold } from '../../shared/search';
 import { Marches } from '../account/marches';
+import { AccountOverview } from './account-overview';
 
 type Sort = 'updated' | 'count' | 'name' | 'problems';
 
@@ -44,13 +45,14 @@ type Sort = 'updated' | 'count' | 'name' | 'problems';
  */
 @Component({
   selector: 'app-players-marches',
-  imports: [RouterLink, Icon, PageHeader, Marches, MarchBuild, PendingApproval, CommanderFilter, MarchNotices],
+  imports: [RouterLink, Icon, PageHeader, Marches, MarchBuild, PendingApproval, CommanderFilter, MarchNotices, AccountOverview],
   templateUrl: './players-marches.html',
   styleUrls: ['../reminders/reminders-page.scss', './players-marches.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayersMarches {
-  /** ?tab=hraci – the players' marches; none (or the old ?tab=prehlad / ?tab=moje) – the player's own */
+  /** ?tab=hraci – the players' marches; ?tab=ucet – the account at a glance (Gether 10. 11. 2026); none (or the old
+   * ?tab=prehlad / ?tab=moje) – the player's own */
   readonly tab = input<string>();
   /** ?cmd=Attila – only the players with a march of this commander (a shareable link, kept across the tabs) */
   readonly cmd = input<string>();
@@ -60,7 +62,8 @@ export class PlayersMarches {
   protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
   /** the player's marches with their equipment and armaments – "Moje marche" merged into it (Gether 12. 10. 2026) */
-  protected readonly mine = computed(() => this.tab() !== 'hraci' && !this.hrac());
+  protected readonly account = computed(() => this.tab() === 'ucet' && !this.hrac());
+  protected readonly mine = computed(() => this.tab() !== 'hraci' && !this.account() && !this.hrac());
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
 
@@ -158,7 +161,7 @@ export class PlayersMarches {
     inject(DestroyRef).onDestroy(() => seo.set(null));
   }
 
-  protected showTab(tab: 'hraci' | null): void {
+  protected showTab(tab: 'hraci' | 'ucet' | null): void {
     // back on the players' marches after editing the own ones: the list asks again
     if (tab === 'hraci' && this.mine() && !this.data.isLoading()) this.data.reload();
     // merged: the tabs keep ?cmd= and the commander keeps ?tab=

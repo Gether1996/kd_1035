@@ -164,6 +164,27 @@
   }
 }
 
+// the game's numbers for the account overview: three small fields and the button in a row, wrapping on a phone
+.stats__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+  align-items: end;
+  gap: 10px;
+
+  .field {
+    gap: 6px;
+  }
+
+  .btn {
+    min-height: 48px;
+    margin-top: 0;
+  }
+}
+
+.stats__label {
+  letter-spacing: 0.06em;
+}
+
 // without Discord: "Prepojiť s Discordom" under the password
 .link-discord {
   display: grid;
