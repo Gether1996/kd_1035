@@ -108,7 +108,7 @@
 
         <!-- the game's numbers for the account overview on /marche (Gether 10. 11. 2026) -->
         @let st = a.stats;
-        <form id="game-stats" class="ingame ingame--stats" novalidate (submit)="saveStats($event, vipInput, kpInput, deadsInput)">
+        <form id="game-stats" class="ingame ingame--stats" novalidate (submit)="saveStats($event, vipInput, kpInput, acclaimInput)">
           <h3 class="field__label">{{ st.title }}</h3>
           <div class="stats__fields">
             <div class="field">
@@ -144,15 +144,15 @@
               />
             </div>
             <div class="field">
-              <label class="field__label stats__label" for="account-deads">{{ st.deads }}</label>
+              <label class="field__label stats__label" for="account-acclaim">{{ st.acclaim }}</label>
               <input
-                #deadsInput
-                id="account-deads"
+                #acclaimInput
+                id="account-acclaim"
                 class="input"
                 type="text"
                 autocomplete="off"
-                [placeholder]="st.deadsPlaceholder"
-                [value]="short(user.deads)"
+                [placeholder]="st.acclaimPlaceholder"
+                [value]="short(user.highest_acclaim)"
                 [attr.aria-invalid]="statsState() === 'invalid' || null"
                 aria-describedby="stats-hint stats-state"
                 (input)="statsState.set(null)"

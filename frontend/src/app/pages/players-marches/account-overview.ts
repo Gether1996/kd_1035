@@ -38,10 +38,11 @@ interface Column {
 
 /**
  * "Prehľad účtu" on /marche (?tab=ucet, Gether 10. 11. 2026 – Smrťák's idea: "aby ti tie stránky urobili taký report"):
- * the player's account at a glance – the name, VIP, power, kill points and deads written down on /ucet, then every
- * march as a column side by side: the commanders, the equipment like the game's screen, the inscriptions (gold first),
- * the formation and the armament bonuses. As many columns as fit – up to seven on an ultrawide screen, one or two on a
- * phone. The player's own data only, read in the browser.
+ * the player's account at a glance – the name, VIP, power, kill points and the highest acclaim written down on /ucet,
+ * then every march as a column side by side: the commanders, the equipment like the game's screen, the inscriptions
+ * (gold first), the formation and the armament bonuses (All DMG only when not 0). As many columns as fit – up to seven
+ * on an ultrawide screen, one or two on a phone; the parts line up across the columns of a row (CSS subgrid). The
+ * player's own data only, read in the browser.
  */
 @Component({
   selector: 'app-account-overview',
@@ -98,7 +99,8 @@ export class AccountOverview {
           .filter((c) => c.name)
           .map((c) => ({ ...c, src: portraits.get(c.name) })),
         inscriptions: index ? this.inscriptionsOf(march, index) : [],
-        stats: ARMAMENT_STATS.filter((key) => march[key] != null).map((key) => ({
+        // All DMG at 0 % is no bonus at all (Gether 11. 11. 2026: "all dmg pokiaľ je 0 % tak neukazuj")
+        stats: ARMAMENT_STATS.filter((key) => march[key] != null && !(key === 'damage' && !march[key])).map((key) => ({
           key,
           label: statLabel(this.m(), march.kind, key),
           value: formatBonus(march[key]!),

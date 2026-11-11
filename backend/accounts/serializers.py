@@ -29,8 +29,8 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
         # lang: the language of the website and of the bot's messages the player picked (Gether 17. 10. 2026)
-        # vip, kill_points, deads: the account overview (Gether 10. 11. 2026), null = not written down
-        fields = ['ingame_name', 'power', 'lang', 'vip', 'kill_points', 'deads']
+        # vip, kill_points, highest_acclaim: the account overview (Gether 10. and 11. 11. 2026), null = not written down
+        fields = ['ingame_name', 'power', 'lang', 'vip', 'kill_points', 'highest_acclaim']
         extra_kwargs = {'ingame_name': {'allow_blank': False}}
 
     def validate_ingame_name(self, value):
@@ -52,7 +52,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             instance.login = login_key(validated_data['ingame_name'])
         # the date on the overview: the game's numbers were written down (the same values again too – the player
         # checked them)
-        if {'power', 'vip', 'kill_points', 'deads'} & set(validated_data):
+        if {'power', 'vip', 'kill_points', 'highest_acclaim'} & set(validated_data):
             instance.stats_updated_at = timezone.now()
         with transaction.atomic():
             if 'power' in validated_data:

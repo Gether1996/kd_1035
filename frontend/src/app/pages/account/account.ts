@@ -186,26 +186,27 @@ export class Account {
   }
 
   /**
-   * The VIP level, kill points and deads of the account overview (Gether 10. 11. 2026): VIP 0–25, the numbers as the
-   * game shows them ("8.8B") or whole; an empty field clears its number
+   * The VIP level, kill points and the highest acclaim of the account overview (Gether 10. 11. 2026; the highest
+   * acclaim in place of the deads 11. 11.): VIP 0–25, the numbers as the game shows them ("8.8B") or whole; an empty
+   * field clears its number
    */
-  protected async saveStats(event: Event, vip: HTMLInputElement, kp: HTMLInputElement, deads: HTMLInputElement): Promise<void> {
+  protected async saveStats(event: Event, vip: HTMLInputElement, kp: HTMLInputElement, acclaim: HTMLInputElement): Promise<void> {
     event.preventDefault();
     this.statsState.set(null);
     const level = vip.value.trim() ? Number(vip.value.trim()) : null;
     const killPoints = parseGameNumber(kp.value);
-    const dead = parseGameNumber(deads.value);
+    const highest = parseGameNumber(acclaim.value);
     const vipOk = level === null || (Number.isInteger(level) && level >= 0 && level <= 25);
-    if (!vipOk || killPoints === undefined || dead === undefined) {
+    if (!vipOk || killPoints === undefined || highest === undefined) {
       this.statsState.set('invalid');
-      (!vipOk ? vip : killPoints === undefined ? kp : deads).focus();
+      (!vipOk ? vip : killPoints === undefined ? kp : acclaim).focus();
       return;
     }
     this.saving.set(true);
     try {
-      await this.auth.saveStats({ vip: level, kill_points: killPoints, deads: dead });
+      await this.auth.saveStats({ vip: level, kill_points: killPoints, highest_acclaim: highest });
       kp.value = this.short(killPoints);
-      deads.value = this.short(dead);
+      acclaim.value = this.short(highest);
       this.statsState.set('saved');
     } catch {
       this.statsState.set('failed');

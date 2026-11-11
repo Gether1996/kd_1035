@@ -46,7 +46,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'ingame_name',
         'vip',
         'kill_points',
-        'deads',
+        'highest_acclaim',
         'stats_updated_at',
         'approved',
         'kvk_reviewer',

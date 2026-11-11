@@ -60,25 +60,25 @@ const USER = {
   power: 115,
   vip: 18,
   kill_points: 8_800_000_000,
-  deads: 24_000_000,
+  highest_acclaim: 5_600_000,
   stats_updated_at: '2026-11-06T10:00:00Z',
 };
 
 describe('AccountOverview – "Prehľad účtu" on /marche (Gether 10. 11. 2026)', () => {
-  it('the account on top: name, VIP, power, kill points, deads and the day they were written down', async () => {
+  it('the account on top: name, VIP, power, kill points, the highest acclaim and the day they were written down', async () => {
     const setup = render(USER, []);
     await load(setup);
     const { el } = setup;
     expect(text(el.querySelector('.ov-head__name'))).toBe('Smrťák VIP 18');
     expect(text(el.querySelector('.ov-head__discord'))).toBe('smrtak');
     const stat = (d: Element) => `${text(d.querySelector('dt'))} ${text(d.querySelector('dd'))}`;
-    expect(Array.from(el.querySelectorAll('.ov-stats div'), stat)).toEqual(['Power 115M', 'Kill points 8.8B', 'Deads 24M']);
+    expect(Array.from(el.querySelectorAll('.ov-stats div'), stat)).toEqual(['Power 115M', 'Kill points 8.8B', 'Najvyšší acclaim 5.6M']);
     expect(text(el.querySelector('.ov-head__updated'))).toBe('Údaje z 6. 11. 2026 Upraviť údaje');
     expect(text(el.querySelector('.ov-state'))).toContain('Zatiaľ nemáš žiadny march');
   });
 
   it('nothing written down yet: dashes and where to write it', async () => {
-    const setup = render({ ...USER, vip: null, kill_points: null, deads: null, power: null, stats_updated_at: null }, []);
+    const setup = render({ ...USER, vip: null, kill_points: null, highest_acclaim: null, power: null, stats_updated_at: null }, []);
     await load(setup);
     const { el } = setup;
     expect(el.querySelector('.ov-vip')).toBeNull();
@@ -88,7 +88,7 @@ describe('AccountOverview – "Prehľad účtu" on /marche (Gether 10. 11. 2026)
 
   it('every march as a column in its order: commanders, equipment, inscriptions gold first, formation, bonuses', async () => {
     const setup = render(USER, [
-      march(2, 2, { kind: 'infantry', primary: 'Sun Tzu', secondary: '', primary_skills: '5511' }),
+      march(2, 2, { kind: 'infantry', primary: 'Sun Tzu', secondary: '', primary_skills: '5511', attack: 9, damage: 0 }),
       march(1, 1, {
         gear: { weapon: { item: 'sacred-dominion', crit: true, iconic: 2 } },
         formation: 'delta',
@@ -119,11 +119,14 @@ describe('AccountOverview – "Prehľad účtu" on /marche (Gether 10. 11. 2026)
     // short like the rest of the site; the troop icon before a troop's bonus
     const bonus = (li: Element) => `${text(li.querySelector('.ov-bonuses__label'))} ${text(li.querySelector('.ov-bonuses__value'))}`;
     expect(Array.from(first.querySelectorAll('.ov-bonuses li'), bonus)).toEqual(['Cav ATK +12%', 'Cav DEF +12,6%', 'All DMG +1,6%']);
-    expect(first.querySelectorAll('.ov-bonuses__icon').length).toBe(2);
-    // the second: one commander, no build
+    expect(first.querySelectorAll('img.ov-bonuses__icon').length).toBe(2);
+    // the second: one commander, no build – All DMG at 0 % left out (Gether 11. 11. 2026)
     expect(text(second.querySelector('.ov-march__names'))).toBe('Sun Tzu 5511');
-    expect(second.querySelector('.ov-inscs')).toBeNull();
-    expect(second.querySelector('.ov-formation')).toBeNull();
+    expect(Array.from(second.querySelectorAll('.ov-bonuses li'), bonus)).toEqual(['Inf ATK +9%']);
+    // the empty parts keep their row, so the columns line up (subgrid): six parts in every column
+    expect(second.querySelector('.ov-inscs .insc')).toBeNull();
+    expect(text(second.querySelector('.ov-formation'))).toBe('');
+    for (const column of columns) expect(column.children.length).toBe(6);
   });
 
   it('says so when the marches do not load', async () => {

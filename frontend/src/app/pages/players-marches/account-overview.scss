@@ -21,6 +21,9 @@
   overflow: clip;
   background: var(--bg);
   mask-image: linear-gradient(transparent, #000 200px, #000 calc(100% - 240px), transparent);
+  // it reaches over the tabs above the overview: clicks go through to them (Gether 11. 11. 2026: "po kliknutí sa
+  // neviem dostať na ostatné záložky")
+  pointer-events: none;
 }
 
 .ov-backdrop__map {
@@ -162,11 +165,15 @@
   list-style: none;
 }
 
+// six parts – faces, names, equipment, inscriptions, formation, bonuses – each a row shared with the other columns of
+// the grid's row (subgrid): the formation and the bonuses sit on one line whether a march has 4 or 8 inscriptions
+// (Gether 11. 11. 2026: "nech je to zarovnané všetko vždy tak isto")
 .ov-march {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  display: grid;
+  grid-row: span 6;
+  grid-template-rows: subgrid;
+  justify-items: center;
+  row-gap: 12px;
   min-width: 0;
   padding: 14px 8px 16px;
   border: 1px solid var(--line);
@@ -224,6 +231,7 @@
 }
 
 .ov-march__names {
+  align-self: start;
   display: grid;
   gap: 2px;
   margin: 0;
@@ -260,6 +268,7 @@
 }
 
 .ov-gear {
+  align-self: start;
   width: min(100%, 170px);
 }
 
@@ -268,6 +277,9 @@
 }
 
 .ov-inscs {
+  align-self: start;
+  align-content: start;
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -284,6 +296,8 @@
 }
 
 .ov-formation {
+  align-self: center;
+  min-height: 22px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -298,6 +312,8 @@
 }
 
 .ov-bonuses {
+  align-self: start;
+  justify-self: stretch;
   display: grid;
   gap: 3px;
   width: 100%;

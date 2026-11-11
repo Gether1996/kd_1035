@@ -20,8 +20,9 @@ export interface Player {
   /** the account overview (Gether 10. 11. 2026): written down on /ucet, null = not; missing in an older response */
   vip?: number | null;
   kill_points?: number | null;
-  deads?: number | null;
-  /** when the power, VIP, kill points or deads were last written down (ISO) */
+  /** the best KvK acclaim the player ever reached (Gether 11. 11. 2026, in place of the deads) */
+  highest_acclaim?: number | null;
+  /** when the power, VIP, kill points or the highest acclaim were last written down (ISO) */
   stats_updated_at?: string | null;
   /** adds marches and KvK sign-ups – a new player waits for the superadmin (Gether 12. 10. 2026) */
   approved: boolean;
@@ -187,8 +188,8 @@ export class Auth {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { power })));
   }
 
-  /** The VIP level, kill points and deads of the account overview (null clears one). */
-  async saveStats(stats: { vip: number | null; kill_points: number | null; deads: number | null }): Promise<void> {
+  /** The VIP level, kill points and the highest acclaim of the account overview (null clears one). */
+  async saveStats(stats: { vip: number | null; kill_points: number | null; highest_acclaim: number | null }): Promise<void> {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', stats)));
   }
 

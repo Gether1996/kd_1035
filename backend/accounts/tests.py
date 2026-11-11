@@ -378,7 +378,7 @@ class MeTests(TestCase):
                     'power': None,
                     'vip': None,
                     'kill_points': None,
-                    'deads': None,
+                    'highest_acclaim': None,
                     'stats_updated_at': None,
                     'approved': False,
                     'terms_accepted': False,
@@ -566,17 +566,17 @@ class OwnPowerTests(TestCase):
         PlayerEvaluation.objects.create(player=self.player, power=Decimal('101.5'))
         self.assertEqual(self.client.get('/api/auth/me/').json()['user']['power'], 101.5)
 
-    def test_vip_kill_points_and_deads_for_the_overview(self):
+    def test_vip_kill_points_and_highest_acclaim_for_the_overview(self):
         """Gether 10. 11. 2026: the VIP level and the game's numbers on /ucet, with the day they were written down"""
-        res = self.patch({'vip': 18, 'kill_points': 8_800_000_000, 'deads': 24_000_000})
+        res = self.patch({'vip': 18, 'kill_points': 8_800_000_000, 'highest_acclaim': 5_600_000})
         self.assertEqual(res.status_code, 200)
         user = res.json()['user']
-        self.assertEqual((user['vip'], user['kill_points'], user['deads']), (18, 8_800_000_000, 24_000_000))
+        self.assertEqual((user['vip'], user['kill_points'], user['highest_acclaim']), (18, 8_800_000_000, 5_600_000))
         self.assertIsNotNone(user['stats_updated_at'])
         # cleared again
         user = self.patch({'vip': None, 'kill_points': None}).json()['user']
-        self.assertEqual((user['vip'], user['kill_points'], user['deads']), (None, None, 24_000_000))
-        for bad in ({'vip': 26}, {'vip': -1}, {'vip': 'x'}, {'kill_points': -5}, {'deads': 10**14}, {'kill_points': 1.5}):
+        self.assertEqual((user['vip'], user['kill_points'], user['highest_acclaim']), (None, None, 5_600_000))
+        for bad in ({'vip': 26}, {'vip': -1}, {'vip': 'x'}, {'kill_points': -5}, {'highest_acclaim': 10**14}, {'kill_points': 1.5}):
             self.assertEqual(self.patch(bad).status_code, 400, bad)
         # the name alone leaves the day as it was
         before = Player.objects.get(pk=self.player.pk).stats_updated_at

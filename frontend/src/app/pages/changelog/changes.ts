@@ -15,6 +15,20 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-11',
+    version: '1.65.1',
+    sk: [
+      'Prehľad účtu: z neho sa už dá prepnúť späť na ostatné záložky Marche.',
+      'Prehľad účtu: marche sú v stĺpcoch zarovnané – formácia a bonusy sú vždy na rovnakej výške, All DMG s 0 % sa neukazuje.',
+      'Môj účet: namiesto deads si zapíš svoj najvyšší acclaim, uvidíš ho v Prehľade účtu.',
+    ],
+    cs: [
+      'Přehled účtu: z něj se už dá přepnout zpět na ostatní záložky Marche.',
+      'Přehled účtu: marche jsou ve sloupcích zarovnané – formace a bonusy jsou vždy ve stejné výšce, All DMG s 0 % se neukazuje.',
+      'Můj účet: místo deads si zapiš svůj nejvyšší acclaim, uvidíš ho v Přehledu účtu.',
+    ],
+  },
+  {
     date: '2026-11-10',
     version: '1.65.0',
     sk: [

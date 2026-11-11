@@ -302,7 +302,7 @@ def signed_in(request) -> dict | None:
         # the account overview (Gether 10. 11. 2026): written down on /ucet, the player's own only
         'vip': player.vip,
         'kill_points': player.kill_points,
-        'deads': player.deads,
+        'highest_acclaim': player.highest_acclaim,
         'stats_updated_at': player.stats_updated_at,
         # adds marches and KvK sign-ups (a new player waits for the superadmin, Gether 12. 10. 2026)
         'approved': player.may_post,

@@ -36,7 +36,7 @@ APPROVED = models.Q(approved=True) | models.Q(user__is_superuser=True)
 LOCAL_AVATAR = '/img/avatar-local.svg'
 
 
-# the highest VIP level of the game (with a margin) and a sane top for kill points or deads
+# the highest VIP level of the game (with a margin) and a sane top for kill points or the highest acclaim
 VIP_MAX = 25
 GAME_STAT_MAX = 10**13
 
@@ -70,10 +70,11 @@ class Player(models.Model):
     kill_points = models.PositiveBigIntegerField(
         'kill points', null=True, blank=True, validators=[MaxValueValidator(GAME_STAT_MAX)], help_text='Zapíše si ich hráč sám.'
     )
-    deads = models.PositiveBigIntegerField(
-        'mŕtve jednotky', null=True, blank=True, validators=[MaxValueValidator(GAME_STAT_MAX)], help_text='Zapíše si ich hráč sám.'
+    # the best acclaim of a KvK the player ever reached (Gether 11. 11. 2026: "miesto deaths daj najvyšší acclaim")
+    highest_acclaim = models.PositiveBigIntegerField(
+        'najvyšší acclaim', null=True, blank=True, validators=[MaxValueValidator(GAME_STAT_MAX)], help_text='Zapíše si ho hráč sám.'
     )
-    # when the power, VIP, kill points or deads were last written down – "údaje z 6. 11." on the overview
+    # when the power, VIP, kill points or the highest acclaim were last written down – "údaje z 6. 11." on the overview
     stats_updated_at = models.DateTimeField('údaje zapísané', null=True, blank=True)
     remind_discord = models.BooleanField(
         'pripomienky na Discord', default=True, help_text='Súkromná správa od bota pred eventmi, ktoré si vybral.'

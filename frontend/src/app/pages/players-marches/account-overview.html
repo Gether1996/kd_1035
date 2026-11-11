@@ -28,8 +28,8 @@
         <dd>{{ u.kill_points != null ? short(u.kill_points) : '–' }}</dd>
       </div>
       <div>
-        <dt>{{ x.deads }}</dt>
-        <dd>{{ u.deads != null ? short(u.deads) : '–' }}</dd>
+        <dt>{{ x.acclaim }}</dt>
+        <dd>{{ u.highest_acclaim != null ? short(u.highest_acclaim) : '–' }}</dd>
       </div>
     </dl>
     <p class="ov-head__updated">
@@ -84,12 +84,16 @@
           <div class="ov-gear ov-gear--loading" aria-hidden="true"></div>
         }
 
+        <!-- every part is there even when empty: the rows line up across the columns (Gether 11. 11. 2026: "nech je
+             to zarovnané všetko vždy tak isto" – up to 8 inscriptions) -->
         @if (c.inscriptions.length) {
           <ul class="ov-inscs" [attr.aria-label]="k.inscriptions.title">
             @for (i of c.inscriptions; track i.id) {
               <li class="insc insc--{{ i.rarity }}">{{ i.name }}</li>
             }
           </ul>
+        } @else {
+          <div class="ov-inscs" aria-hidden="true"></div>
         }
 
         @if (c.formation; as f) {
@@ -97,6 +101,8 @@
             <app-formation-icon class="ov-formation__icon" [formation]="f" />
             <span>{{ f.name }}</span>
           </p>
+        } @else {
+          <div class="ov-formation" aria-hidden="true"></div>
         }
 
         @if (c.stats.length) {
@@ -105,12 +111,16 @@
               <li>
                 @if (mr.kind && s.key !== 'damage') {
                   <img class="ov-bonuses__icon" [src]="icon(mr.kind)" alt="" width="96" height="96" />
+                } @else {
+                  <span class="ov-bonuses__icon" aria-hidden="true"></span>
                 }
                 <span class="ov-bonuses__label">{{ s.label }}</span>
                 <span class="ov-bonuses__value">+{{ s.value }}%</span>
               </li>
             }
           </ul>
+        } @else {
+          <div class="ov-bonuses" aria-hidden="true"></div>
         }
       </li>
     }
