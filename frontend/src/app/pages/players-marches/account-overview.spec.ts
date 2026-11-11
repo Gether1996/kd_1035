@@ -119,7 +119,9 @@ describe('AccountOverview – "Prehľad účtu" on /marche (Gether 10. 11. 2026)
     // short like the rest of the site; the troop icon before a troop's bonus
     const bonus = (li: Element) => `${text(li.querySelector('.ov-bonuses__label'))} ${text(li.querySelector('.ov-bonuses__value'))}`;
     expect(Array.from(first.querySelectorAll('.ov-bonuses li'), bonus)).toEqual(['Cav ATK +12%', 'Cav DEF +12,6%', 'All DMG +1,6%']);
-    expect(first.querySelectorAll('img.ov-bonuses__icon').length).toBe(2);
+    // the troop tag before a troop's bonus, the orange burst before All DMG (Gether 11. 11. 2026)
+    const icons = Array.from(first.querySelectorAll<HTMLImageElement>('img.ov-bonuses__icon'), (i) => i.getAttribute('src'));
+    expect(icons).toEqual([...Array(2).fill('/static/guides/specialties/cavalry.webp'), '/img/stats/all-damage.svg']);
     // the second: one commander, no build – All DMG at 0 % left out (Gether 11. 11. 2026)
     expect(text(second.querySelector('.ov-march__names'))).toBe('Sun Tzu 5511');
     expect(Array.from(second.querySelectorAll('.ov-bonuses li'), bonus)).toEqual(['Inf ATK +9%']);

@@ -19,6 +19,9 @@ GEAR_DIR = ICON_ROOT / 'gear'
 COMMANDER_DIR = ICON_ROOT / 'commanders'
 # commander specialty tags of the game (Infantry, Garrison, …) – shown next to a guide in the guide list
 SPECIALTY_DIR = ICON_ROOT / 'specialties'
+# the same tags as the game draws them (red) for the crit badge of the equipment – the specialty tags take the colours
+# of their troops (Gether 11. 11. 2026: "pri kritoch na equipe ponechaj všade červené")
+CRIT_DIR = ICON_ROOT / 'crit'
 # game items in the tips (speedups, AP potions, keys – codexhelper.com / the RoK wiki, with Gether's consent)
 ITEM_DIR = ICON_ROOT / 'items'
 # screenshots from the game sent by Gether (reports and the like)

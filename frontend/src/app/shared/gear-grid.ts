@@ -87,7 +87,9 @@ export class GearGrid {
             .filter(Boolean)
             .join(', ')
         : `${b.slots[slot]}: ${b.emptySlot}`;
-      const troopIcon = `/static/guides/specialties/${this.critTroop()}.webp`;
+      // red as in the game – the specialty tags elsewhere take the colours of their troops (Gether 11. 11. 2026:
+      // "pri kritoch na equipe ponechaj všade červené")
+      const troopIcon = `/static/guides/crit/${this.critTroop()}.webp`;
       return { slot, slotName: b.slots[slot], item, crit: !!(item && piece?.crit), troopIcon, iconic, label };
     });
   });

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="96" height="96" role="img" aria-label="All Damage">
+  <!-- All DMG next to the troop tags (Gether 11. 11. 2026: "all dmg oranžovú hviezdu ako na obrázkoch" – the orange burst
+       of the game's Armament Info, drawn here) -->
+  <defs>
+    <radialGradient id="burst" cx="50%" cy="45%" r="55%">
+      <stop offset="0" stop-color="#ffe08a" />
+      <stop offset="0.45" stop-color="#ff9d2e" />
+      <stop offset="1" stop-color="#e2560c" />
+    </radialGradient>
+  </defs>
+  <polygon
+    points="12.00,0.80 13.29,7.17 16.70,3.86 15.54,8.46 21.70,6.40 16.83,10.71 21.40,12.00 16.83,13.29 21.70,17.60 15.54,15.54 16.70,20.14 13.29,16.83 12.00,23.20 10.71,16.83 7.30,20.14 8.46,15.54 2.30,17.60 7.17,13.29 2.60,12.00 7.17,10.71 2.30,6.40 8.46,8.46 7.30,3.86 10.71,7.17"
+    fill="url(#burst)"
+    stroke="#7d2c06"
+    stroke-width="0.9"
+    stroke-linejoin="round"
+  />
+</svg>

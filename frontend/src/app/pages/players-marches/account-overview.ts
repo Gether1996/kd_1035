@@ -16,7 +16,7 @@ import {
 } from '../../core/armory';
 import { Auth } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
-import { ARMAMENT_STATS, March, marchIcon } from '../../core/kvk-api';
+import { ARMAMENT_STATS, DAMAGE_ICON, March, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
 import { FormationIcon } from '../../shared/formation-icon';
 import { shortGameNumber } from '../../shared/game-number';
@@ -59,6 +59,7 @@ export class AccountOverview {
   private readonly armory = inject(ArmoryApi);
   protected readonly index = this.armory.index;
   protected readonly icon = marchIcon;
+  protected readonly damageIcon = DAMAGE_ICON;
   protected readonly short = shortGameNumber;
 
   private readonly data = inject(MarchesApi).list();

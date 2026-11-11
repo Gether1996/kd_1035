@@ -243,6 +243,25 @@ class MetaGuidesTests(TestCase):
         self.assertIsNone(specialty_icon('siege'))
         self.assertEqual(sorted(path.stem for path in SPECIALTY_DIR.glob('*')), sorted(Guide.Specialty.values))
 
+    def test_troop_tags_have_the_colours_of_their_troops(self):
+        """Gether 11. 11. 2026: infantry blue, cavalry green, archers red like the game's Armament Info – a fresh
+        fetch_specialty_icons recolours them again"""
+        from PIL import Image
+
+        from .management.commands.fetch_specialty_icons import CRIT_DIR, CRIT_TROOPS, TINTS, tinted
+
+        for specialty, (hue, _) in TINTS.items():
+            with Image.open(SPECIALTY_DIR / f'{specialty}.webp') as icon:
+                self.assertTrue(tinted(icon, hue), specialty)
+        with Image.open(SPECIALTY_DIR / 'archer.webp') as icon:
+            self.assertTrue(tinted(icon, 0))
+        # the crit badge of the equipment stays red like in the game (Gether: "pri kritoch ponechaj všade červené")
+        self.assertEqual(sorted(path.stem for path in CRIT_DIR.glob('*')), sorted(CRIT_TROOPS))
+        for troop in CRIT_TROOPS:
+            with Image.open(CRIT_DIR / f'{troop}.webp') as icon:
+                self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)), troop)
+                self.assertTrue(tinted(icon, 0), troop)
+
     def test_fetch_specialty_icons_reads_the_rokstats_tags(self):
         import json
         from io import BytesIO, StringIO
@@ -268,9 +287,15 @@ class MetaGuidesTests(TestCase):
                 return page.format(json.dumps({'tags': tags})).encode()
             return png.getvalue()
 
-        with tempfile.TemporaryDirectory() as folder, mock.patch.object(fetch_specialty_icons, 'fetch', fetch), \
-                mock.patch.object(fetch_specialty_icons, 'SPECIALTY_DIR', Path(folder)):  # fmt: skip
+        with tempfile.TemporaryDirectory() as folder, tempfile.TemporaryDirectory() as crit, \
+                mock.patch.object(fetch_specialty_icons, 'fetch', fetch), \
+                mock.patch.object(fetch_specialty_icons, 'SPECIALTY_DIR', Path(folder)), \
+                mock.patch.object(fetch_specialty_icons, 'CRIT_DIR', Path(crit)):  # fmt: skip
             call_command('fetch_specialty_icons', stdout=StringIO())
+            # the troop tags in the game's red for the crit badge too
+            self.assertEqual(sorted(path.stem for path in Path(crit).glob('*.webp')), sorted(fetch_specialty_icons.CRIT_TROOPS))
+            with Image.open(Path(crit) / 'infantry.webp') as icon:
+                self.assertTrue(fetch_specialty_icons.tinted(icon, 0))
             with Image.open(Path(folder) / 'garrison.webp') as icon:
                 self.assertEqual((icon.format, icon.size), ('WEBP', (96, 96)))
             # the fort emblem is cut from Gether's screenshot, not downloaded
@@ -280,6 +305,18 @@ class MetaGuidesTests(TestCase):
                 sorted(set(Guide.Specialty.values) - set(own)),
             )
             self.assertIn('https://app.rokstats.online/icons/type1.png', urls)
+            # the troop tags in the colours of their troops (Gether 11. 11. 2026), the others as the game draws them
+            tinted = fetch_specialty_icons.tinted
+            with Image.open(Path(folder) / 'infantry.webp') as icon:
+                self.assertTrue(tinted(icon, 207))
+            with Image.open(Path(folder) / 'garrison.webp') as icon:
+                self.assertFalse(tinted(icon, 207))
+            # recolouring again leaves the files as they are (webp is lossy)
+            before = (Path(folder) / 'cavalry.webp').read_bytes()
+            out = StringIO()
+            call_command('fetch_specialty_icons', '--tint', stdout=out)
+            self.assertIn('cavalry already tinted', out.getvalue())
+            self.assertEqual((Path(folder) / 'cavalry.webp').read_bytes(), before)
 
             del tags['4']  # a tag the catalog does not have any more
             with self.assertRaises(CommandError):

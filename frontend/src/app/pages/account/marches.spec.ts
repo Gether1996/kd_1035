@@ -381,7 +381,8 @@ describe('Marches', () => {
       'horn',
     ]);
     expect(el.querySelector('app-march-build .gear__iconic')?.textContent).toBe('III');
-    expect(el.querySelector('app-march-build .gear__crit')).not.toBeNull();
+    // the crit badge red as in the game, whatever colour the troop tags have (Gether 11. 11. 2026)
+    expect(el.querySelector('app-march-build .gear__crit')?.getAttribute('src')).toMatch(/^\/static\/guides\/crit\/[a-z]+\.webp$/);
     // nothing empty any more: no red link, no hint
     expect(el.querySelector('app-march-build button.mb__missing')).toBeNull();
     expect(el.querySelector('.march-hint--alert')).toBeNull();

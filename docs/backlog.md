@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **11. 11. 2026 – v1.65.2:** ikony typov jednotiek vo farbách hry na celom webe (pechota modrá, jazda zelená, lukostrelci červení, siege bronzová, leadership fialová – `fetch_specialty_icons` `TINTS`/`--tint`; krit na výbave ostáva červený z `guides/static/guides/crit/`), All DMG s oranžovou hviezdou v Prehľade účtu.
 - **11. 11. 2026 – v1.65.1:** Prehľad účtu – oprava záložiek (mapa v pozadí zachytávala kliky), stĺpce marchov zarovnané cez subgrid (aj pri 8 inscriptions), All DMG s 0 % sa neukazuje; na `/ucet` najvyšší acclaim namiesto deads (migrácia `accounts/0060`).
 - **10. 11. 2026 – v1.65.0:** Prehľad účtu na `/marche?tab=ucet` (účet + všetky marche ako stĺpce, až 7 vedľa seba na ultrawide) a VIP, kill points a deads na `/ucet` (migrácia `accounts/0059`, Ochrana údajov).
 - **8. 11. 2026 – v1.64.2–v1.64.3:** Archív Ničiteľov pevností berie týždeň z prepínača (prvý archív na produkcii ho nemal – nebol uložený), Sieň legiend ukazuje týždeň. Od v1.64.3 je týždeň nadpisom karty (bez názvu „Ničitelia pevností“, kategória je pod ním).

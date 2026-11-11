@@ -109,7 +109,9 @@
           <ul class="ov-bonuses" [attr.aria-label]="k.stats.title">
             @for (s of c.stats; track s.key) {
               <li>
-                @if (mr.kind && s.key !== 'damage') {
+                @if (s.key === 'damage') {
+                  <img class="ov-bonuses__icon" [src]="damageIcon" alt="" width="96" height="96" />
+                } @else if (mr.kind) {
                   <img class="ov-bonuses__icon" [src]="icon(mr.kind)" alt="" width="96" height="96" />
                 } @else {
                   <span class="ov-bonuses__icon" aria-hidden="true"></span>

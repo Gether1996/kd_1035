@@ -53,8 +53,11 @@ export const MARCH_KINDS: MarchKind[] = [
   'garrison',
   'conquering',
 ];
-/** the specialty icons of the guides (backend guides/static/guides/specialties) */
+/** the specialty icons of the guides (backend guides/static/guides/specialties) – the troop tags in the colours of
+ * their troops like the game's Armament Info: infantry blue, cavalry green, archers red (Gether 11. 11. 2026) */
 export const marchIcon = (kind: MarchKind) => `/static/guides/specialties/${kind}.webp`;
+/** All DMG – the orange burst of the game, next to the troop tags of the bonuses */
+export const DAMAGE_ICON = '/img/stats/all-damage.svg';
 
 /** the armament bonuses of a march (whole %, rounded up – Gether 11. 10. 2026), read as the bonuses of its troop type */
 export const ARMAMENT_STATS = ['attack', 'defense', 'health', 'damage'] as const;
