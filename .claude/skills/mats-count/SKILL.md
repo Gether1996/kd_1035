@@ -34,9 +34,11 @@ A tile = an icon on a coloured square with the count in the bottom right corner 
 **Not materials – left out, named in the answer:** the red-gold chests with a piece of equipment on them (helmet,
 armour, gloves… – equipment chests), the paper with a puzzle piece (blueprint pieces).
 
-**Not sure what it is** (on 9. 11. 2026: the orange crystal, the grey iron-bound chest on green, the wooden chest on
-blue) – do not guess: count without it, list it under „Neznáme“ and ask once. When Gether says what it is, add it to
-the tables above.
+**Ignored – not counted, not mentioned, never asked about:** the orange crystal on an orange square (Gether
+12. 11. 2026: „to nerieš“).
+
+**Not sure what it is** (on 9. 11. 2026: the grey iron-bound chest on green, the wooden chest on blue) – do not guess:
+count without it, list it under „Neznáme“ and ask once. When Gether says what it is, add it to the tables above.
 
 If a number is unreadable or a tile is cut off at the edge of a screenshot, ask instead of guessing. Several screenshots
 of the same bag can overlap (scrolled) – a tile with the same icon, colour and count on two of them is one tile.
