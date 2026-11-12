@@ -11,7 +11,7 @@
       <h2 class="ov-head__name">
         {{ u.ingame_name || u.name }}
         @if (u.vip != null) {
-          <span class="ov-vip"><svg appIcon="crown"></svg>VIP {{ u.vip }}</span>
+          <span class="ov-vip"><svg appIcon="crown"></svg>{{ u.vip === svip ? 'SVIP' : 'VIP ' + u.vip }}</span>
         }
       </h2>
       @if (u.ingame_name && u.ingame_name !== u.name) {

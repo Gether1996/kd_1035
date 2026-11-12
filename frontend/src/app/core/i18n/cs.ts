@@ -1369,6 +1369,7 @@ export const cs: Dict = {
       asInGame: 'Jako ve hře, např. 8.8B',
       vip: 'VIP level',
       vipPlaceholder: 'Např. 18',
+      vipHint: '1–19',
       kp: 'Kill points',
       kpPlaceholder: 'Např. 8.8B',
       acclaim: 'Nejvyšší acclaim',
@@ -1376,7 +1377,7 @@ export const cs: Dict = {
       save: 'Uložit',
       saved: 'Uloženo.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',
-      invalid: 'Zkontroluj čísla: VIP 0 až 25, kill points a acclaim jako ve hře (8.8B, 5.6M) nebo celé číslo.',
+      invalid: 'Zkontroluj čísla: VIP 1 až 19 (nebo zapni SVIP), kill points a acclaim jako ve hře (8.8B, 5.6M) nebo celé číslo.',
       overview: 'Přehled účtu',
     },
     // the language of the website and of the bot's messages (Gether 17. 10. 2026)

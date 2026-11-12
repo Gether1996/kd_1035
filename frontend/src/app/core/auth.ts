@@ -64,6 +64,9 @@ export interface LocalAuthError {
  * neither the login button nor the player, so nothing jumps when the answer arrives.
  * The request also sets the csrftoken cookie that HttpClient sends back as X-CSRFToken.
  */
+/** VIP levels go 1–19, the top one is SVIP – kept as 20 (Gether 12. 11. 2026) */
+export const SVIP = 20;
+
 /** The fields of the profile on /ucet: the in-game name, the power (M), VIP, kill points, the highest acclaim */
 export interface ProfileFields {
   ingame_name?: string;

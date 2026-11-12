@@ -14,7 +14,7 @@ import {
   gearTotals,
   marchTroop,
 } from '../../core/armory';
-import { Auth } from '../../core/auth';
+import { Auth, SVIP } from '../../core/auth';
 import { I18n } from '../../core/i18n/i18n';
 import { ARMAMENT_STATS, DAMAGE_ICON, March, marchIcon } from '../../core/kvk-api';
 import { MarchCommander, MarchesApi, marchCommandersUrl } from '../../core/marches-api';
@@ -61,6 +61,7 @@ export class AccountOverview {
   protected readonly icon = marchIcon;
   protected readonly damageIcon = DAMAGE_ICON;
   protected readonly short = shortGameNumber;
+  protected readonly svip = SVIP;
 
   private readonly data = inject(MarchesApi).list();
   protected readonly loaded = computed(() => this.data.hasValue() || !!this.data.error());

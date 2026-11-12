@@ -1410,6 +1410,7 @@ export const sk = {
       asInGame: 'Ako v hre, napr. 8.8B',
       vip: 'VIP level',
       vipPlaceholder: 'Napr. 18',
+      vipHint: '1–19',
       kp: 'Kill points',
       kpPlaceholder: 'Napr. 8.8B',
       acclaim: 'Najvyšší acclaim',
@@ -1417,7 +1418,7 @@ export const sk = {
       save: 'Uložiť',
       saved: 'Uložené.',
       failed: 'Nepodarilo sa uložiť. Skús to znova.',
-      invalid: 'Skontroluj čísla: VIP 0 až 25, kill points a acclaim ako v hre (8.8B, 5.6M) alebo celé číslo.',
+      invalid: 'Skontroluj čísla: VIP 1 až 19 (alebo zapni SVIP), kill points a acclaim ako v hre (8.8B, 5.6M) alebo celé číslo.',
       overview: 'Prehľad účtu',
     },
     // the language of the website and of the bot's messages (Gether 17. 10. 2026)

@@ -576,7 +576,9 @@ class OwnPowerTests(TestCase):
         # cleared again
         user = self.patch({'vip': None, 'kill_points': None}).json()['user']
         self.assertEqual((user['vip'], user['kill_points'], user['highest_acclaim']), (None, None, 5_600_000))
-        for bad in ({'vip': 26}, {'vip': -1}, {'vip': 'x'}, {'kill_points': -5}, {'highest_acclaim': 10**14}, {'kill_points': 1.5}):
+        # SVIP is the top level, kept as 20 (Gether 12. 11. 2026); there is no VIP 0
+        self.assertEqual(self.patch({'vip': 20}).json()['user']['vip'], 20)
+        for bad in ({'vip': 21}, {'vip': 0}, {'vip': -1}, {'vip': 'x'}, {'kill_points': -5}, {'highest_acclaim': 10**14}, {'kill_points': 1.5}):
             self.assertEqual(self.patch(bad).status_code, 400, bad)
         # the name alone leaves the day as it was
         before = Player.objects.get(pk=self.player.pk).stats_updated_at
@@ -836,3 +838,22 @@ class LanguageTests(TestCase):
             state = parse_qs(urlsplit(response['Location']).query)['state'][0]
             self.client.get('/api/auth/discord/callback/', {'state': state, 'code': 'abc'})
         self.assertEqual(Player.objects.get().lang, 'sk')
+
+
+class VipLevelsMigrationTests(TestCase):
+    """VIP 1–19 and SVIP as 20 (Gether 12. 11. 2026): levels written down under the old 0–25 fit in"""
+
+    def test_zero_is_cleared_and_anything_above_19_is_svip(self):
+        from importlib import import_module
+
+        from django.apps import apps
+
+        fit_levels = import_module('accounts.migrations.0062_vip_svip').fit_levels
+        users = [User.objects.create_user(f'discord_{i}') for i in range(5)]
+        levels = [0, 1, 19, 20, 25]
+        for i, (user, level) in enumerate(zip(users, levels)):
+            Player.objects.create(user=user, discord_id=str(i), username=f'p{i}', vip=level)
+        fit_levels(apps, None)
+        self.assertEqual(
+            list(Player.objects.order_by('discord_id').values_list('vip', flat=True)), [None, 1, 19, 20, 20]
+        )

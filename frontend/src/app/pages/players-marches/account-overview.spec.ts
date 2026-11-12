@@ -86,6 +86,12 @@ describe('AccountOverview – "Prehľad účtu" on /marche (Gether 10. 11. 2026)
     expect(text(el.querySelector('.ov-head__updated'))).toContain('si zapíš na Môj účet');
   });
 
+  it('the top VIP level shows as SVIP (Gether 12. 11. 2026)', async () => {
+    const setup = render({ ...USER, vip: 20 }, []);
+    await load(setup);
+    expect(setup.el.querySelector('.ov-vip')?.textContent?.trim()).toBe('SVIP');
+  });
+
   it('every march as a column in its order: commanders, equipment, inscriptions gold first, formation, bonuses', async () => {
     const setup = render(USER, [
       march(2, 2, { kind: 'infantry', primary: 'Sun Tzu', secondary: '', primary_skills: '5511', attack: 9, damage: 0 }),

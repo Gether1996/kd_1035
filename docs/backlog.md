@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **12. 11. 2026 – v1.66.2:** VIP 1–19 a prepínač SVIP (uložené ako 20, `SVIP` v `core/auth.ts`, migrácia `accounts/0062` – 0 zmaže, nad 20 = SVIP), v Prehľade účtu odznak „SVIP“.
 - **12. 11. 2026 – v1.66.1:** `/ucet` – profil v paneloch (meno a jazyk vedľa seba, Údaje z hry s power, VIP, KP a acclaimom) a jedno Uložiť, ktoré sa rozsvieti pri zmene a pošle len zmenené polia (`saveProfile`).
 - **12. 11. 2026 – v1.66.0:** Poznámky superadmina k eventom s históriou (napr. poradie hráčov po 20 GH) v dialógu eventu (`accounts.EventNote`, migrácia `accounts/0061`, Ochrana údajov) a tretí typ 20 GH Lord of War s max. odmenou 420 000 power (`kingdom/0026`).
 - **11. 11. 2026 – v1.65.2:** ikony typov jednotiek vo farbách hry na celom webe (pechota modrá, jazda zelená, lukostrelci červení, siege bronzová, leadership fialová – `fetch_specialty_icons` `TINTS`/`--tint`; krit na výbave ostáva červený z `guides/static/guides/crit/`), All DMG s oranžovou hviezdou v Prehľade účtu.

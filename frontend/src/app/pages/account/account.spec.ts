@@ -249,4 +249,43 @@ describe('Account', () => {
     expect(save.disabled).toBe(true);
     expect(el.querySelector('#profile-state')?.textContent).toContain('Uložené');
   });
+
+  it('VIP 1–19, the top level SVIP is a switch saved as 20 (Gether 12. 11. 2026)', async () => {
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', vip: 19, approved: true, terms_accepted: true, is_staff: false, is_superuser: false };
+    const el = await render({ login_enabled: true, user });
+    const http = TestBed.inject(HttpTestingController);
+    const vip = el.querySelector<HTMLInputElement>('#account-vip')!;
+    const svip = el.querySelector<HTMLInputElement>('.vip__svip input')!;
+    const save = el.querySelector<HTMLButtonElement>('.profile-form__save')!;
+    const form = el.querySelector<HTMLFormElement>('form.profile-form')!;
+    const settle = async () => {
+      await new Promise((resolve) => setTimeout(resolve));
+      TestBed.tick();
+    };
+    expect(svip.checked).toBe(false);
+    expect(vip.value).toBe('19');
+
+    svip.click();
+    await settle();
+    expect(vip.disabled).toBe(true);
+    expect(save.disabled).toBe(false);
+    form.dispatchEvent(new Event('submit'));
+    const req = http.expectOne((r) => r.method === 'PATCH');
+    expect(req.request.body).toEqual({ vip: 20 });
+    req.flush({ login_enabled: true, user: { ...user, vip: 20 } });
+    await settle();
+    expect(svip.checked).toBe(true);
+    expect(save.disabled).toBe(true);
+
+    // no VIP 0 or 20 by hand
+    svip.click();
+    await settle();
+    for (const bad of ['0', '20']) {
+      vip.value = bad;
+      form.dispatchEvent(new Event('submit'));
+      http.expectNone((r) => r.method === 'PATCH');
+      await settle();
+      expect(el.querySelector('#profile-state')?.textContent).toContain('VIP 1 až 19');
+    }
+  });
 });

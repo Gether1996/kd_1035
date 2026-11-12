@@ -36,8 +36,10 @@ APPROVED = models.Q(approved=True) | models.Q(user__is_superuser=True)
 LOCAL_AVATAR = '/img/avatar-local.svg'
 
 
-# the highest VIP level of the game (with a margin) and a sane top for kill points or the highest acclaim
-VIP_MAX = 25
+# VIP levels go 1–19, the top one is SVIP (Gether 12. 11. 2026: "maximálny lvl je SVIP miesto 20") – kept as 20; and a
+# sane top for kill points or the highest acclaim
+VIP_MAX = 19
+SVIP = 20
 GAME_STAT_MAX = 10**13
 
 
@@ -65,7 +67,11 @@ class Player(models.Model):
     # what the player writes down on /ucet for the overview of their account (Gether 10. 11. 2026: "do Účet pridať
     # môj VIP level a ak ešte niečo, tak pridaj") – the game has no API; seen by the player only
     vip = models.PositiveSmallIntegerField(
-        'VIP level', null=True, blank=True, validators=[MaxValueValidator(VIP_MAX)], help_text='Zapíše si ho hráč sám.'
+        'VIP level',
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(SVIP)],
+        help_text='1–19, 20 = SVIP. Zapíše si ho hráč sám.',
     )
     kill_points = models.PositiveBigIntegerField(
         'kill points', null=True, blank=True, validators=[MaxValueValidator(GAME_STAT_MAX)], help_text='Zapíše si ich hráč sám.'

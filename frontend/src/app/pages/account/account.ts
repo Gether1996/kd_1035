@@ -9,12 +9,13 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Auth, ProfileFields } from '../../core/auth';
+import { Auth, ProfileFields, SVIP } from '../../core/auth';
 import { I18n, Lang } from '../../core/i18n/i18n';
 import { marchHasProblem } from '../../core/kvk-api';
 import { MarchesApi } from '../../core/marches-api';
@@ -139,21 +140,30 @@ export class Account {
     return n == null ? '' : shortGameNumber(n);
   }
 
-  /** what each field shows for the account as saved – a field that differs lights up the save */
+  /** VIP 1–19; the top level SVIP is kept as 20 (Gether 12. 11. 2026) and switched on next to the field */
+  protected readonly svipLevel = SVIP;
+  protected readonly svip = linkedSignal(() => this.auth.user()?.vip === SVIP);
+
+  /** what each field shows for the account as saved – a field that differs lights up the save; SVIP counts as 'SVIP' */
   private shown(): string[] {
     const user = this.auth.user();
     return [
       user?.ingame_name ?? '',
       this.powerText(user?.power ?? null),
-      user?.vip == null ? '' : String(user.vip),
+      user?.vip == null ? '' : user.vip === SVIP ? 'SVIP' : String(user.vip),
       this.short(user?.kill_points),
       this.short(user?.highest_acclaim),
     ];
   }
 
+  /** what the fields hold now, in the order of shown() */
+  private typed(...inputs: HTMLInputElement[]): string[] {
+    return inputs.map((input, i) => (i === 2 && this.svip() ? 'SVIP' : input.value.trim()));
+  }
+
   protected checkChanges(...inputs: HTMLInputElement[]): void {
     const shown = this.shown();
-    this.changed.set(inputs.some((input, i) => input.value.trim() !== shown[i]));
+    this.changed.set(this.typed(...inputs).some((value, i) => value !== shown[i]));
     // typing again clears the last message, like every field did before
     this.profileState.set(null);
   }
@@ -168,7 +178,7 @@ export class Account {
   /**
    * The profile in one save (Gether 12. 11. 2026): the in-game name (required – it can be changed, not cleared), the
    * power for the KvK evaluation – millions (101,5) or the whole number from the game – and the VIP level, kill points
-   * and the highest acclaim of the account overview (VIP 0–25, the numbers as the game shows them, "8.8B"). Only the
+   * and the highest acclaim of the account overview (VIP 1–19 or SVIP, the numbers as the game shows them, "8.8B"). Only the
    * fields that changed are sent, so an untouched power writes nothing into the evaluation's history; an emptied
    * number clears it.
    */
@@ -196,22 +206,24 @@ export class Account {
       power.focus();
       return;
     }
-    const level = vip.value.trim() ? Number(vip.value.trim()) : null;
+    const level = this.svip() ? SVIP : vip.value.trim() ? Number(vip.value.trim()) : null;
     const killPoints = parseGameNumber(kp.value);
     const highest = parseGameNumber(acclaim.value);
-    const vipOk = level === null || (Number.isInteger(level) && level >= 0 && level <= 25);
+    // 20 only through the SVIP switch, never typed
+    const vipOk = this.svip() || level === null || (Number.isInteger(level) && level >= 1 && level < SVIP);
     if (!vipOk || killPoints === undefined || highest === undefined) {
       this.profileState.set('invalid');
       (!vipOk ? vip : killPoints === undefined ? kp : acclaim).focus();
       return;
     }
     const shown = this.shown();
+    const typed = this.typed(name, power, vip, kp, acclaim);
     const fields: ProfileFields = {};
-    if (name.value !== shown[0]) fields.ingame_name = name.value;
-    if (power.value.trim() !== shown[1]) fields.power = millions;
-    if (vip.value.trim() !== shown[2]) fields.vip = level;
-    if (kp.value.trim() !== shown[3]) fields.kill_points = killPoints;
-    if (acclaim.value.trim() !== shown[4]) fields.highest_acclaim = highest;
+    if (typed[0] !== shown[0]) fields.ingame_name = name.value;
+    if (typed[1] !== shown[1]) fields.power = millions;
+    if (typed[2] !== shown[2]) fields.vip = level;
+    if (typed[3] !== shown[3]) fields.kill_points = killPoints;
+    if (typed[4] !== shown[4]) fields.highest_acclaim = highest;
     if (!Object.keys(fields).length) {
       this.changed.set(false);
       return;

@@ -239,6 +239,31 @@
   }
 }
 
+// VIP: the level, under it the SVIP switch and the range – the inputs of the row stay in line
+.stats__field .input:disabled {
+  opacity: 0.45;
+}
+
+.vip__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  align-self: start;
+}
+
+.vip__svip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  font: 600 0.8125rem / 1 var(--font-body);
+  letter-spacing: 0.06em;
+  color: var(--gold-300);
+  cursor: pointer;
+}
+
 .stats__label {
   letter-spacing: 0.06em;
 }

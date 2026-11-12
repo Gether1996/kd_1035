@@ -120,6 +120,7 @@
                 </div>
                 <div class="field stats__field">
                   <label class="field__label stats__label" for="account-vip">{{ st.vip }}</label>
+                  <!-- 1–19, the top level is SVIP: a switch under the field, the level off while it is on (Gether 12. 11. 2026) -->
                   <input
                     #vipInput
                     id="account-vip"
@@ -128,12 +129,26 @@
                     inputmode="numeric"
                     autocomplete="off"
                     maxlength="2"
-                    [placeholder]="st.vipPlaceholder"
-                    [value]="user.vip ?? ''"
+                    [placeholder]="svip() ? '' : st.vipPlaceholder"
+                    [value]="user.vip != null && user.vip < svipLevel ? user.vip : ''"
+                    [disabled]="svip()"
                     [attr.aria-invalid]="ps === 'invalid' || null"
                     aria-describedby="vip-hint profile-state"
                   />
-                  <span class="stats__unit" id="vip-hint">0–25</span>
+                  <div class="vip__foot">
+                    <label class="vip__svip">
+                      <input
+                        #svipInput
+                        class="switch"
+                        type="checkbox"
+                        role="switch"
+                        [checked]="svip()"
+                        (change)="svip.set(svipInput.checked); checkChanges(nameInput, powerInput, vipInput, kpInput, acclaimInput)"
+                      />
+                      <span>SVIP</span>
+                    </label>
+                    <span class="stats__unit" id="vip-hint">{{ st.vipHint }}</span>
+                  </div>
                 </div>
                 <div class="field stats__field">
                   <label class="field__label stats__label" for="account-kp">{{ st.kp }}</label>
