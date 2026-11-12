@@ -16,9 +16,15 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-12',
-    version: '1.66.0',
-    sk: ['Kalendár: 20 GH má nový typ Lord of War – na max. odmenu treba 420 000 power.'],
-    cs: ['Kalendář: 20 GH má nový typ Lord of War – na max. odměnu je potřeba 420 000 power.'],
+    version: '1.66.1',
+    sk: [
+      'Kalendár: 20 GH má nový typ Lord of War – na max. odmenu treba 420 000 power.',
+      'Môj účet: prehľadnejší profil – meno, jazyk a údaje z hry v paneloch a jedno tlačidlo Uložiť, ktoré sa rozsvieti, keď niečo zmeníš.',
+    ],
+    cs: [
+      'Kalendář: 20 GH má nový typ Lord of War – na max. odměnu je potřeba 420 000 power.',
+      'Můj účet: přehlednější profil – jméno, jazyk a údaje ze hry v panelech a jedno tlačítko Uložit, které se rozsvítí, když něco změníš.',
+    ],
   },
   {
     date: '2026-11-11',

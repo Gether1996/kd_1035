@@ -35,164 +35,152 @@
           <p class="card__status"><svg appIcon="clock"></svg>{{ a.pendingStatus }}</p>
         }
 
-        <form id="meno" class="ingame" [class.is-required]="auth.needsName()" novalidate (submit)="saveName($event, nameInput)">
-          @if (auth.needsName()) {
-            <p class="ingame__ask" role="status"><span class="ingame__mark" aria-hidden="true">!</span>{{ a.ingame.required }}</p>
-          }
-          <label class="field__label" for="ingame-name">{{ a.ingame.label }}</label>
-          <div class="ingame__row">
-            <input
-              #nameInput
-              id="ingame-name"
-              class="input"
-              type="text"
-              maxlength="32"
-              autocomplete="nickname"
-              [value]="user.ingame_name"
-              [attr.aria-required]="auth.needsName() || null"
-              [attr.aria-invalid]="auth.needsName() || null"
-              aria-describedby="ingame-hint ingame-state"
-              (input)="nameState.set(null)"
-            />
-            <button type="submit" class="btn btn--gold" [disabled]="saving()">
+        <!-- the profile as panels with one save that lights up on a change (Gether 12. 11. 2026: "krajší layout",
+             "len jedno tlačidlo uložiť, ktoré sa rozsvieti pri nejakej zmene"); the language saves on its own click -->
+        @let st = a.stats;
+        @let ps = profileState();
+        <form
+          class="profile-form"
+          novalidate
+          (input)="checkChanges(nameInput, powerInput, vipInput, kpInput, acclaimInput)"
+          (submit)="saveProfile($event, nameInput, powerInput, vipInput, kpInput, acclaimInput)"
+        >
+          <div class="panels">
+            <div id="meno" class="panel ingame" [class.is-required]="auth.needsName()">
+              @if (auth.needsName()) {
+                <p class="ingame__ask" role="status"><span class="ingame__mark" aria-hidden="true">!</span>{{ a.ingame.required }}</p>
+              }
+              <label class="field__label" for="ingame-name">{{ a.ingame.label }}</label>
+              <input
+                #nameInput
+                id="ingame-name"
+                class="input"
+                type="text"
+                maxlength="32"
+                autocomplete="nickname"
+                [value]="user.ingame_name"
+                [attr.aria-required]="auth.needsName() || null"
+                [attr.aria-invalid]="auth.needsName() || ps === 'required' || ps === 'taken' || null"
+                aria-describedby="ingame-hint profile-state"
+              />
+              <p class="field__hint" id="ingame-hint">{{ user.local ? a.local.loginName : a.ingame.hint }}</p>
+            </div>
+
+            <!-- the language of the website and of the bot's messages (Gether 17. 10. 2026) – saved at once -->
+            <div class="panel ingame ingame--lang">
+              <span class="field__label" id="account-lang">{{ a.lang.label }}</span>
+              <div class="segmented" role="group" aria-labelledby="account-lang" aria-describedby="lang-hint">
+                @for (option of langs; track option.lang) {
+                  <button
+                    type="button"
+                    [attr.aria-pressed]="(user.lang ?? 'sk') === option.lang"
+                    [disabled]="saving()"
+                    (click)="saveLang(option.lang)"
+                  >
+                    {{ option.label }}
+                  </button>
+                }
+              </div>
+              <p class="field__hint" id="lang-hint">{{ a.lang.hint }}</p>
+              <p class="ingame__state" role="status" [class.is-error]="langState() === 'failed'">
+                @if (langState(); as state) {
+                  {{ a.lang[state] }}
+                }
+              </p>
+            </div>
+
+            <!-- the game's numbers: the power for the KvK, VIP, kill points and the highest acclaim for the account
+                 overview on /marche (Gether 10. 11. 2026) -->
+            <section id="game-stats" class="panel panel--wide ingame" [class.is-required]="auth.needsPower()" aria-labelledby="stats-title">
+              <div class="panel__head">
+                <h3 class="field__label panel__title" id="stats-title">{{ st.title }}</h3>
+                <a class="panel__link" [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'ucet' }">
+                  {{ st.overview }}<svg appIcon="arrow-right"></svg>
+                </a>
+              </div>
+              @if (auth.needsPower()) {
+                <p class="ingame__ask" role="status"><span class="ingame__mark" aria-hidden="true">!</span>{{ a.power.required }}</p>
+              }
+              <div class="stats__fields">
+                <div id="power" class="field stats__field">
+                  <label class="field__label stats__label" for="account-power">{{ a.power.label }}</label>
+                  <input
+                    #powerInput
+                    id="account-power"
+                    class="input"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    [placeholder]="a.power.placeholder"
+                    [value]="powerText(user.power ?? null)"
+                    [attr.aria-invalid]="ps === 'powerInvalid' || null"
+                    aria-describedby="power-hint profile-state"
+                  />
+                  <span class="stats__unit" id="power-hint">{{ st.powerHint }}</span>
+                </div>
+                <div class="field stats__field">
+                  <label class="field__label stats__label" for="account-vip">{{ st.vip }}</label>
+                  <input
+                    #vipInput
+                    id="account-vip"
+                    class="input"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    maxlength="2"
+                    [placeholder]="st.vipPlaceholder"
+                    [value]="user.vip ?? ''"
+                    [attr.aria-invalid]="ps === 'invalid' || null"
+                    aria-describedby="vip-hint profile-state"
+                  />
+                  <span class="stats__unit" id="vip-hint">0–25</span>
+                </div>
+                <div class="field stats__field">
+                  <label class="field__label stats__label" for="account-kp">{{ st.kp }}</label>
+                  <input
+                    #kpInput
+                    id="account-kp"
+                    class="input"
+                    type="text"
+                    autocomplete="off"
+                    [placeholder]="st.kpPlaceholder"
+                    [value]="short(user.kill_points)"
+                    [attr.aria-invalid]="ps === 'invalid' || null"
+                    aria-describedby="kp-hint profile-state"
+                  />
+                  <span class="stats__unit" id="kp-hint">{{ st.asInGame }}</span>
+                </div>
+                <div class="field stats__field">
+                  <label class="field__label stats__label" for="account-acclaim">{{ st.acclaim }}</label>
+                  <input
+                    #acclaimInput
+                    id="account-acclaim"
+                    class="input"
+                    type="text"
+                    autocomplete="off"
+                    [placeholder]="st.acclaimPlaceholder"
+                    [value]="short(user.highest_acclaim)"
+                    [attr.aria-invalid]="ps === 'invalid' || null"
+                    aria-describedby="acclaim-hint profile-state"
+                  />
+                  <span class="stats__unit" id="acclaim-hint">{{ st.asInGame }}</span>
+                </div>
+              </div>
+              <p class="field__hint">{{ st.hint }}</p>
+            </section>
+          </div>
+
+          <div class="profile-form__foot">
+            <p class="ingame__state" id="profile-state" role="status" [class.is-error]="ps && ps !== 'saved'">
+              @if (ps) {
+                {{ profileText(ps) }}
+              }
+            </p>
+            <button type="submit" class="btn btn--gold profile-form__save" [class.is-ready]="changed()" [disabled]="!changed() || saving()">
               {{ a.ingame.save }}
             </button>
           </div>
-          <p class="field__hint" id="ingame-hint">{{ a.ingame.hint }}</p>
-          <p
-            class="ingame__state"
-            id="ingame-state"
-            role="status"
-            [class.is-error]="nameState() === 'failed' || nameState() === 'required' || nameState() === 'taken'"
-          >
-            @if (nameState(); as state) {
-              {{ a.ingame[state] }}
-            }
-          </p>
         </form>
-        @if (user.local) {
-          <!-- signs in with the in-game name above -->
-          <p class="field__hint ingame__login">{{ a.local.loginName }}</p>
-        }
-
-        <form id="power" class="ingame ingame--power" [class.is-required]="auth.needsPower()" novalidate (submit)="savePower($event, powerInput)">
-          @if (auth.needsPower()) {
-            <p class="ingame__ask" role="status"><span class="ingame__mark" aria-hidden="true">!</span>{{ a.power.required }}</p>
-          }
-          <label class="field__label" for="account-power">{{ a.power.label }}</label>
-          <div class="ingame__row">
-            <input
-              #powerInput
-              id="account-power"
-              class="input"
-              type="text"
-              inputmode="decimal"
-              autocomplete="off"
-              [placeholder]="a.power.placeholder"
-              [value]="powerText(user.power ?? null)"
-              [attr.aria-invalid]="powerState() === 'invalid' || null"
-              aria-describedby="power-hint power-state"
-              (input)="powerState.set(null)"
-            />
-            <button type="submit" class="btn btn--gold" [disabled]="saving()">
-              {{ a.power.save }}
-            </button>
-          </div>
-          <p class="field__hint" id="power-hint">{{ a.power.hint }}</p>
-          <p class="ingame__state" id="power-state" role="status" [class.is-error]="powerState() === 'failed' || powerState() === 'invalid'">
-            @if (powerState(); as state) {
-              {{ a.power[state] }}
-            }
-          </p>
-        </form>
-
-        <!-- the game's numbers for the account overview on /marche (Gether 10. 11. 2026) -->
-        @let st = a.stats;
-        <form id="game-stats" class="ingame ingame--stats" novalidate (submit)="saveStats($event, vipInput, kpInput, acclaimInput)">
-          <h3 class="field__label">{{ st.title }}</h3>
-          <div class="stats__fields">
-            <div class="field">
-              <label class="field__label stats__label" for="account-vip">{{ st.vip }}</label>
-              <input
-                #vipInput
-                id="account-vip"
-                class="input"
-                type="text"
-                inputmode="numeric"
-                autocomplete="off"
-                maxlength="2"
-                [placeholder]="st.vipPlaceholder"
-                [value]="user.vip ?? ''"
-                [attr.aria-invalid]="statsState() === 'invalid' || null"
-                aria-describedby="stats-hint stats-state"
-                (input)="statsState.set(null)"
-              />
-            </div>
-            <div class="field">
-              <label class="field__label stats__label" for="account-kp">{{ st.kp }}</label>
-              <input
-                #kpInput
-                id="account-kp"
-                class="input"
-                type="text"
-                autocomplete="off"
-                [placeholder]="st.kpPlaceholder"
-                [value]="short(user.kill_points)"
-                [attr.aria-invalid]="statsState() === 'invalid' || null"
-                aria-describedby="stats-hint stats-state"
-                (input)="statsState.set(null)"
-              />
-            </div>
-            <div class="field">
-              <label class="field__label stats__label" for="account-acclaim">{{ st.acclaim }}</label>
-              <input
-                #acclaimInput
-                id="account-acclaim"
-                class="input"
-                type="text"
-                autocomplete="off"
-                [placeholder]="st.acclaimPlaceholder"
-                [value]="short(user.highest_acclaim)"
-                [attr.aria-invalid]="statsState() === 'invalid' || null"
-                aria-describedby="stats-hint stats-state"
-                (input)="statsState.set(null)"
-              />
-            </div>
-            <button type="submit" class="btn btn--gold" [disabled]="saving()">{{ st.save }}</button>
-          </div>
-          <p class="field__hint" id="stats-hint">
-            {{ st.hint }}
-            <a [routerLink]="i18n.path('playersMarches')" [queryParams]="{ tab: 'ucet' }">{{ st.overview }}</a>
-          </p>
-          <p class="ingame__state" id="stats-state" role="status" [class.is-error]="statsState() === 'failed' || statsState() === 'invalid'">
-            @if (statsState(); as state) {
-              {{ st[state] }}
-            }
-          </p>
-        </form>
-
-        <!-- the language of the website and of the bot's messages (Gether 17. 10. 2026) -->
-        <div class="ingame ingame--lang">
-          <span class="field__label" id="account-lang">{{ a.lang.label }}</span>
-          <div class="segmented" role="group" aria-labelledby="account-lang" aria-describedby="lang-hint">
-            @for (option of langs; track option.lang) {
-              <button
-                type="button"
-                [attr.aria-pressed]="(user.lang ?? 'sk') === option.lang"
-                [disabled]="saving()"
-                (click)="saveLang(option.lang)"
-              >
-                {{ option.label }}
-              </button>
-            }
-          </div>
-          <p class="field__hint" id="lang-hint">{{ a.lang.hint }}</p>
-          <p class="ingame__state" role="status" [class.is-error]="langState() === 'failed'">
-            @if (langState(); as state) {
-              {{ a.lang[state] }}
-            }
-          </p>
-        </div>
 
         @if (user.local) {
           <app-password-form />

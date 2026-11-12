@@ -64,6 +64,15 @@ export interface LocalAuthError {
  * neither the login button nor the player, so nothing jumps when the answer arrives.
  * The request also sets the csrftoken cookie that HttpClient sends back as X-CSRFToken.
  */
+/** The fields of the profile on /ucet: the in-game name, the power (M), VIP, kill points, the highest acclaim */
+export interface ProfileFields {
+  ingame_name?: string;
+  power?: number | null;
+  vip?: number | null;
+  kill_points?: number | null;
+  highest_acclaim?: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class Auth {
   private readonly http = inject(HttpClient);
@@ -164,10 +173,6 @@ export class Auth {
   }
 
   /** The player's name in Rise of Kingdoms, so leadership recognises them ('' clears it). */
-  async saveIngameName(name: string): Promise<void> {
-    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { ingame_name: name })));
-  }
-
   /** The language of the website and of the bot's messages; the browser remembers it too (the language switch). */
   async saveLang(lang: Lang): Promise<void> {
     this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { lang })));
@@ -184,13 +189,9 @@ export class Auth {
   }
 
   /** The player's current power in millions (null clears it) – the KvK evaluation counts with it. */
-  async savePower(power: number | null): Promise<void> {
-    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', { power })));
-  }
-
-  /** The VIP level, kill points and the highest acclaim of the account overview (null clears one). */
-  async saveStats(stats: { vip: number | null; kill_points: number | null; highest_acclaim: number | null }): Promise<void> {
-    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', stats)));
+  /** The profile from /ucet in one save – only the fields that changed (null clears a number). */
+  async saveProfile(fields: ProfileFields): Promise<void> {
+    this.me.set(await firstValueFrom(this.http.patch<Me>('/api/auth/me/', fields)));
   }
 
   /** The player agrees to the current terms of use (the server saves the version and the time). */

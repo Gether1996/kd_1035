@@ -137,52 +137,160 @@
   }
 }
 
-// in-game name: label, input + save button in one row (stacked on phones), hint and the save state
-.ingame {
+// the profile (Gether 12. 11. 2026: "krajší layout"): panels – the name and the language side by side, the game's
+// numbers across below – and one save under them that lights up when a field differs from the account
+.profile-form {
   display: grid;
-  gap: 8px;
+  gap: 14px;
   width: 100%;
-  margin: 24px 0 8px;
+  margin-top: 24px;
   text-align: left;
 }
 
-.ingame__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.panels {
+  display: grid;
+  gap: 12px;
 
-  .input {
-    flex: 1 1 140px;
-    min-width: 0;
-  }
-
-  // .card .btn adds a top margin for the buttons below the form
-  .btn {
-    flex: 0 0 auto;
-    min-height: 48px;
-    margin-top: 0;
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-// the game's numbers for the account overview: three small fields and the button in a row, wrapping on a phone
-.stats__fields {
+.panel {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
-  align-items: end;
-  gap: 10px;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
 
-  .field {
-    gap: 6px;
+  @media (min-width: 480px) {
+    padding: 16px 18px;
   }
 
-  .btn {
-    min-height: 48px;
-    margin-top: 0;
+  .field__hint {
+    margin: 0;
+  }
+}
+
+.panel--wide {
+  grid-column: 1 / -1;
+  gap: 12px;
+}
+
+.panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.panel__title {
+  margin: 0;
+}
+
+.panel__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-block: 4px;
+  font-size: 0.875rem;
+  color: var(--gold-300);
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    transition: translate 0.25s var(--ease-out);
+  }
+
+  &:hover .icon {
+    translate: 3px 0;
+  }
+}
+
+// power, VIP, kill points, the highest acclaim: two by two on a phone, in a row from a tablet; label, field and hint
+// share rows (subgrid), so the fields line up when a label wraps on a phone
+.stats__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  gap: 6px 12px;
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.stats__field {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  gap: 6px;
+  align-items: end;
+  margin-bottom: 8px;
+  scroll-margin-top: calc(var(--header-h) + 24px);
+
+  .input {
+    width: 100%;
+    font-variant-numeric: tabular-nums;
   }
 }
 
 .stats__label {
   letter-spacing: 0.06em;
+}
+
+.stats__unit {
+  align-self: start;
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
+// the language: SK/CZ, saved at once; its "Uložené" takes no room until there is one
+.ingame--lang {
+  .segmented {
+    justify-self: start;
+  }
+
+  .ingame__state {
+    min-height: 0;
+
+    // a live region stays rendered (else "Uložené" is not announced) – empty, it only gives back the gap
+    &:empty {
+      margin-top: -8px;
+    }
+  }
+}
+
+// the state on the left, the one save on the right; dim until something changed
+.profile-form__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+
+  .ingame__state {
+    flex: 1 1 200px;
+    margin: 0;
+  }
+}
+
+.card .profile-form__save {
+  min-height: 48px;
+  margin: 0 0 0 auto;
+  transition:
+    opacity 0.25s,
+    filter 0.25s;
+
+  &:disabled:not(.is-ready) {
+    opacity: 0.4;
+    filter: saturate(0.3);
+    cursor: default;
+  }
 }
 
 // without Discord: "Prepojiť s Discordom" under the password
@@ -202,27 +310,6 @@
     color: var(--text-mute);
     text-wrap: pretty;
   }
-}
-
-// without Discord: "you sign in with this name" right under the name form
-.ingame__login {
-  width: 100%;
-  margin-top: -4px;
-  text-align: left;
-}
-
-// the language under the power: label, SK/CZ, hint
-.ingame--lang {
-  margin-top: 4px;
-
-  .segmented {
-    justify-self: start;
-  }
-}
-
-// the power right under the name – the state line of the name keeps them apart
-.ingame--power {
-  margin-top: 4px;
 }
 
 .ingame__state {
@@ -438,7 +525,9 @@
   scroll-margin-top: calc(var(--header-h) + 24px);
 }
 
-.ingame.is-required .input {
+// the name, or the power in the game's numbers
+.ingame.is-required > .input,
+.ingame.is-required .stats__field:first-child .input {
   border-color: var(--red-500);
 }
 

@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Auth } from '../../core/auth';
+import { Auth, ProfileFields } from '../../core/auth';
 import { I18n, Lang } from '../../core/i18n/i18n';
 import { marchHasProblem } from '../../core/kvk-api';
 import { MarchesApi } from '../../core/marches-api';
@@ -30,6 +30,9 @@ import { LocalLogin, PasswordForm } from './local-login';
  * the password without Discord, sign out, delete; a link to the event reminders (/pripomienky).
  * Not indexed, not in the sitemap.
  */
+/** what the profile's save says: saved, or why not */
+type ProfileState = 'saved' | 'failed' | 'required' | 'taken' | 'powerInvalid' | 'invalid';
+
 @Component({
   selector: 'app-account',
   imports: [RouterLink, Icon, PageHeader, LocalLogin, PasswordForm],
@@ -61,9 +64,9 @@ export class Account {
   protected readonly busy = signal(false);
   protected readonly result = signal<'deleted' | 'failed' | null>(null);
   protected readonly saving = signal(false);
-  protected readonly nameState = signal<'saved' | 'failed' | 'required' | 'taken' | null>(null);
-  protected readonly powerState = signal<'saved' | 'failed' | 'invalid' | null>(null);
-  protected readonly statsState = signal<'saved' | 'failed' | 'invalid' | null>(null);
+  /** the profile's one save (Gether 12. 11. 2026): what happened to it, and whether a field differs from the account */
+  protected readonly profileState = signal<ProfileState | null>(null);
+  protected readonly changed = signal(false);
   protected readonly langState = signal<'saved' | 'failed' | null>(null);
   /** the names of the languages in their own language, like the switch in the header */
   protected readonly langs: { lang: Lang; label: string }[] = [
@@ -119,34 +122,6 @@ export class Account {
   private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
   private asked = false;
 
-  protected async saveName(event: Event, input: HTMLInputElement): Promise<void> {
-    event.preventDefault();
-    this.saving.set(true);
-    this.nameState.set(null);
-    try {
-      // the field shows what was saved, also when only spaces around the name changed
-      input.value = input.value.trim();
-      // required (Gether 11. 10. 2026): it can be changed, not cleared – the server refuses an empty one too
-      if (!input.value) {
-        input.value = this.auth.user()?.ingame_name ?? '';
-        this.nameState.set('required');
-        input.focus();
-        return;
-      }
-      await this.auth.saveIngameName(input.value);
-      this.nameState.set('saved');
-      // the first sign-in goes on to the page the player came for
-      const next = this.nextPage();
-      if (next && !this.auth.needsName()) void this.router.navigateByUrl(next);
-    } catch (error) {
-      // a player without Discord signs in with the name – another player's name is refused
-      const taken = error instanceof HttpErrorResponse && `${error.error?.ingame_name ?? ''}`.includes('name_taken');
-      this.nameState.set(taken ? 'taken' : 'failed');
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
   /** signed in without Discord: on to the page the player came for */
   protected signedIn(): void {
     const next = this.nextPage();
@@ -159,57 +134,104 @@ export class Account {
   }
 
   /** the power of the KvK evaluation (Gether 14. 10. 2026) – millions or the whole number from the game; empty clears it */
-  protected async savePower(event: Event, input: HTMLInputElement): Promise<void> {
-    event.preventDefault();
-    this.powerState.set(null);
-    const power = powerMillions(input.value);
-    if (power === undefined) {
-      this.powerState.set('invalid');
-      input.focus();
-      return;
-    }
-    this.saving.set(true);
-    try {
-      await this.auth.savePower(power);
-      input.value = this.powerText(power);
-      this.powerState.set('saved');
-    } catch {
-      this.powerState.set('failed');
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
   /** "8.8B" – the field shows a number as the game does; '' = not written down */
   protected short(n: number | null | undefined): string {
     return n == null ? '' : shortGameNumber(n);
   }
 
+  /** what each field shows for the account as saved – a field that differs lights up the save */
+  private shown(): string[] {
+    const user = this.auth.user();
+    return [
+      user?.ingame_name ?? '',
+      this.powerText(user?.power ?? null),
+      user?.vip == null ? '' : String(user.vip),
+      this.short(user?.kill_points),
+      this.short(user?.highest_acclaim),
+    ];
+  }
+
+  protected checkChanges(...inputs: HTMLInputElement[]): void {
+    const shown = this.shown();
+    this.changed.set(inputs.some((input, i) => input.value.trim() !== shown[i]));
+    // typing again clears the last message, like every field did before
+    this.profileState.set(null);
+  }
+
+  protected profileText(state: ProfileState): string {
+    const a = this.t().account;
+    if (state === 'powerInvalid') return a.power.invalid;
+    if (state === 'invalid') return a.stats.invalid;
+    return a.ingame[state];
+  }
+
   /**
-   * The VIP level, kill points and the highest acclaim of the account overview (Gether 10. 11. 2026; the highest
-   * acclaim in place of the deads 11. 11.): VIP 0–25, the numbers as the game shows them ("8.8B") or whole; an empty
-   * field clears its number
+   * The profile in one save (Gether 12. 11. 2026): the in-game name (required – it can be changed, not cleared), the
+   * power for the KvK evaluation – millions (101,5) or the whole number from the game – and the VIP level, kill points
+   * and the highest acclaim of the account overview (VIP 0–25, the numbers as the game shows them, "8.8B"). Only the
+   * fields that changed are sent, so an untouched power writes nothing into the evaluation's history; an emptied
+   * number clears it.
    */
-  protected async saveStats(event: Event, vip: HTMLInputElement, kp: HTMLInputElement, acclaim: HTMLInputElement): Promise<void> {
+  protected async saveProfile(
+    event: Event,
+    name: HTMLInputElement,
+    power: HTMLInputElement,
+    vip: HTMLInputElement,
+    kp: HTMLInputElement,
+    acclaim: HTMLInputElement,
+  ): Promise<void> {
     event.preventDefault();
-    this.statsState.set(null);
+    this.profileState.set(null);
+    // the field shows what was saved, also when only spaces around the name changed
+    name.value = name.value.trim();
+    if (!name.value) {
+      name.value = this.auth.user()?.ingame_name ?? '';
+      this.profileState.set('required');
+      name.focus();
+      return;
+    }
+    const millions = powerMillions(power.value);
+    if (millions === undefined) {
+      this.profileState.set('powerInvalid');
+      power.focus();
+      return;
+    }
     const level = vip.value.trim() ? Number(vip.value.trim()) : null;
     const killPoints = parseGameNumber(kp.value);
     const highest = parseGameNumber(acclaim.value);
     const vipOk = level === null || (Number.isInteger(level) && level >= 0 && level <= 25);
     if (!vipOk || killPoints === undefined || highest === undefined) {
-      this.statsState.set('invalid');
+      this.profileState.set('invalid');
       (!vipOk ? vip : killPoints === undefined ? kp : acclaim).focus();
+      return;
+    }
+    const shown = this.shown();
+    const fields: ProfileFields = {};
+    if (name.value !== shown[0]) fields.ingame_name = name.value;
+    if (power.value.trim() !== shown[1]) fields.power = millions;
+    if (vip.value.trim() !== shown[2]) fields.vip = level;
+    if (kp.value.trim() !== shown[3]) fields.kill_points = killPoints;
+    if (acclaim.value.trim() !== shown[4]) fields.highest_acclaim = highest;
+    if (!Object.keys(fields).length) {
+      this.changed.set(false);
       return;
     }
     this.saving.set(true);
     try {
-      await this.auth.saveStats({ vip: level, kill_points: killPoints, highest_acclaim: highest });
+      await this.auth.saveProfile(fields);
+      // as the game shows them
+      power.value = this.powerText(millions);
       kp.value = this.short(killPoints);
       acclaim.value = this.short(highest);
-      this.statsState.set('saved');
-    } catch {
-      this.statsState.set('failed');
+      this.changed.set(false);
+      this.profileState.set('saved');
+      // the first sign-in goes on to the page the player came for
+      const next = this.nextPage();
+      if ('ingame_name' in fields && next && !this.auth.needsName()) void this.router.navigateByUrl(next);
+    } catch (error) {
+      // a player without Discord signs in with the name – another player's name is refused
+      const taken = error instanceof HttpErrorResponse && `${error.error?.ingame_name ?? ''}`.includes('name_taken');
+      this.profileState.set(taken ? 'taken' : 'failed');
     } finally {
       this.saving.set(false);
     }

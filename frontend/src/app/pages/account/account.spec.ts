@@ -147,12 +147,12 @@ describe('Account', () => {
     expect(document.activeElement).toBe(input);
 
     // an empty name is not sent
-    el.querySelector<HTMLFormElement>('form.ingame')!.dispatchEvent(new Event('submit'));
+    el.querySelector<HTMLFormElement>('form.profile-form')!.dispatchEvent(new Event('submit'));
     const http = TestBed.inject(HttpTestingController);
     http.expectNone('/api/auth/me/');
 
     input.value = ' Nelly ';
-    el.querySelector<HTMLFormElement>('form.ingame')!.dispatchEvent(new Event('submit'));
+    el.querySelector<HTMLFormElement>('form.profile-form')!.dispatchEvent(new Event('submit'));
     const req = http.expectOne((r) => r.method === 'PATCH' && r.url === '/api/auth/me/');
     expect(req.request.body).toEqual({ ingame_name: 'Nelly' });
     req.flush({ login_enabled: true, user: { ...user, ingame_name: 'Nelly' } });
@@ -165,11 +165,11 @@ describe('Account', () => {
     const el = await render({ login_enabled: true, user });
     const input = el.querySelector<HTMLInputElement>('#ingame-name')!;
     input.value = '  ';
-    el.querySelector<HTMLFormElement>('form.ingame')!.dispatchEvent(new Event('submit'));
+    el.querySelector<HTMLFormElement>('form.profile-form')!.dispatchEvent(new Event('submit'));
     TestBed.inject(HttpTestingController).expectNone((r) => r.method === 'PATCH');
     await new Promise((resolve) => setTimeout(resolve));
     expect(input.value).toBe('Nelly');
-    expect(el.querySelector('#ingame-state')?.textContent).toContain('Najprv si nastav meno v hre');
+    expect(el.querySelector('#profile-state')?.textContent).toContain('Najprv si nastav meno v hre');
   });
 
   it('shows the power of the evaluation and saves millions or the whole number from the game', async () => {
@@ -178,33 +178,75 @@ describe('Account', () => {
     const input = el.querySelector<HTMLInputElement>('#account-power')!;
     expect(input.value).toBe('98,4');
     const http = TestBed.inject(HttpTestingController);
-    const form = el.querySelector<HTMLFormElement>('form.ingame--power')!;
+    const form = el.querySelector<HTMLFormElement>('form.profile-form')!;
 
     input.value = '101 500 000';
     form.dispatchEvent(new Event('submit'));
+    // only what changed is sent
     const req = http.expectOne((r) => r.method === 'PATCH');
     expect(req.request.body).toEqual({ power: 101.5 });
     req.flush({ login_enabled: true, user: { ...user, power: 101.5 } });
     await new Promise((resolve) => setTimeout(resolve));
     expect(input.value).toBe('101,5');
-    expect(el.querySelector('#power-state')?.textContent).toContain('Uložené');
+    expect(el.querySelector('#profile-state')?.textContent).toContain('Uložené');
 
     // not a power: nothing is sent; empty clears it
     input.value = 'veľa';
     form.dispatchEvent(new Event('submit'));
     http.expectNone((r) => r.method === 'PATCH');
     await new Promise((resolve) => setTimeout(resolve));
-    expect(el.querySelector('#power-state')?.textContent).toContain('Zadaj power v miliónoch');
+    expect(el.querySelector('#profile-state')?.textContent).toContain('Zadaj power v miliónoch');
     input.value = '';
     form.dispatchEvent(new Event('submit'));
     const clear = http.expectOne((r) => r.method === 'PATCH');
     expect(clear.request.body).toEqual({ power: null });
-    expect(form.querySelector('.ingame__ask')).toBeNull();
-    // no power: the same reminder as a missing name (Gether 14. 10. 2026)
+    expect(el.querySelector('#game-stats .ingame__ask')).toBeNull();
+    // no power: the same reminder as a missing name (Gether 14. 10. 2026); the header's link goes to #power
     clear.flush({ login_enabled: true, user: { ...user, power: null } });
     await new Promise((resolve) => setTimeout(resolve));
-    expect(form.id).toBe('power');
-    expect(form.classList).toContain('is-required');
-    expect(form.querySelector('.ingame__ask')?.textContent).toContain('Doplň svoju aktuálnu power');
+    expect(el.querySelector('#power #account-power')).not.toBeNull();
+    expect(el.querySelector('#game-stats')!.classList).toContain('is-required');
+    expect(el.querySelector('#game-stats .ingame__ask')?.textContent).toContain('Doplň svoju aktuálnu power');
+  });
+
+  it('one save for the whole profile, lit only while a field differs (Gether 12. 11. 2026)', async () => {
+    const user = {
+      discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', power: 98.4, vip: 16,
+      kill_points: 4_700_000_000, highest_acclaim: 9_300_000, approved: true, terms_accepted: true, is_staff: false, is_superuser: false,
+    };
+    const el = await render({ login_enabled: true, user });
+    const fixture = TestBed.inject(HttpTestingController);
+    const save = el.querySelector<HTMLButtonElement>('.profile-form__save')!;
+    const form = el.querySelector<HTMLFormElement>('form.profile-form')!;
+    expect(el.querySelectorAll('.profile-form button[type="submit"]').length).toBe(1);
+    expect(save.disabled).toBe(true);
+    expect(el.querySelector<HTMLInputElement>('#account-kp')!.value).toBe('4.7B');
+    expect(el.querySelector<HTMLInputElement>('#account-acclaim')!.value).toBe('9.3M');
+
+    const type = async (id: string, value: string) => {
+      const input = el.querySelector<HTMLInputElement>(id)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve));
+      TestBed.tick();
+    };
+    await type('#account-vip', '17');
+    expect(save.disabled).toBe(false);
+    expect(save.classList).toContain('is-ready');
+    // back to what is saved: dim again
+    await type('#account-vip', '16');
+    expect(save.disabled).toBe(true);
+
+    await type('#account-vip', '17');
+    await type('#ingame-name', 'Nelly2');
+    await type('#account-kp', '5B');
+    form.dispatchEvent(new Event('submit'));
+    const req = fixture.expectOne((r) => r.method === 'PATCH');
+    expect(req.request.body).toEqual({ ingame_name: 'Nelly2', vip: 17, kill_points: 5_000_000_000 });
+    req.flush({ login_enabled: true, user: { ...user, ingame_name: 'Nelly2', vip: 17, kill_points: 5_000_000_000 } });
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+    expect(save.disabled).toBe(true);
+    expect(el.querySelector('#profile-state')?.textContent).toContain('Uložené');
   });
 });

@@ -1364,7 +1364,9 @@ export const cs: Dict = {
     // the game's numbers for the account overview on /marche (Gether 10. 11. 2026)
     stats: {
       title: 'Údaje ze hry',
-      hint: 'Pro tvůj Přehled účtu na stránce Marche. Vidíš je jen ty.',
+      hint: 'Power vidí i vedení při KvK, ostatní čísla jen ty.',
+      powerHint: 'V milionech nebo ze hry',
+      asInGame: 'Jako ve hře, např. 8.8B',
       vip: 'VIP level',
       vipPlaceholder: 'Např. 18',
       kp: 'Kill points',

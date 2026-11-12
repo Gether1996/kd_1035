@@ -91,9 +91,9 @@ describe('Auth', () => {
     http.expectOne('/api/auth/me/').flush({ login_enabled: true, user: null });
   });
 
-  it('saves the in-game name without another request', async () => {
+  it('saves the profile without another request', async () => {
     await answer(PLAYER);
-    const save = auth.saveIngameName('GetheR');
+    const save = auth.saveProfile({ ingame_name: 'GetheR' });
     const patch = http.expectOne('/api/auth/me/');
     expect(patch.request.method).toBe('PATCH');
     expect(patch.request.body).toEqual({ ingame_name: 'GetheR' });

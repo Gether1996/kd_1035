@@ -1405,7 +1405,9 @@ export const sk = {
     // the game's numbers for the account overview on /marche (Gether 10. 11. 2026)
     stats: {
       title: 'Údaje z hry',
-      hint: 'Pre tvoj Prehľad účtu na stránke Marche. Vidíš ich len ty.',
+      hint: 'Power vidí aj vedenie pri KvK, ostatné čísla len ty.',
+      powerHint: 'V miliónoch alebo z hry',
+      asInGame: 'Ako v hre, napr. 8.8B',
       vip: 'VIP level',
       vipPlaceholder: 'Napr. 18',
       kp: 'Kill points',
