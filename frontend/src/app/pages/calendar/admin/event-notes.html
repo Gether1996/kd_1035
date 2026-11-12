@@ -1,0 +1,84 @@
+@let x = this.x();
+<section class="notes" aria-labelledby="event-notes-title">
+  <h3 class="notes__title" id="event-notes-title"><svg appIcon="scroll-text"></svg>{{ x.title }}</h3>
+  <p class="notes__hint" id="event-notes-hint">{{ x.hint }}</p>
+
+  <form class="notes__new" (submit)="$event.preventDefault(); add()">
+    <label class="field">
+      <span class="field__label">{{ x.label }} · {{ forRun() }}</span>
+      <textarea
+        class="input notes__text"
+        rows="6"
+        aria-describedby="event-notes-hint"
+        maxlength="20000"
+        [placeholder]="x.placeholder"
+        [value]="draft()"
+        (input)="draft.set($any($event.target).value)"
+      ></textarea>
+    </label>
+    <button type="submit" class="pill-btn notes__add" [disabled]="!draft().trim() || saving()">
+      <svg appIcon="plus"></svg>{{ x.add }}
+    </button>
+  </form>
+  @if (failed()) {
+    <p class="notes__error" role="alert">{{ x.failed }}</p>
+  }
+
+  @if (data.error()) {
+    <p class="notes__error">{{ x.error }}</p>
+  } @else if (data.hasValue()) {
+    @if (notes().length) {
+      <ol class="notes__list" [attr.aria-label]="x.history">
+        @for (n of notes(); track n.id) {
+          <li class="note">
+            <p class="note__head">
+              <span class="note__run">{{ n.run_start ? day(n.run_start) : x.general }}</span>
+              @if (edited(n); as e) {
+                <span class="note__edited">{{ e }}</span>
+              }
+            </p>
+            @if (editing() === n.id) {
+              <label class="field">
+                <span class="sr-only">{{ x.edit }}</span>
+                <textarea
+                  class="input notes__text"
+                  rows="8"
+                  maxlength="20000"
+                  [value]="editText()"
+                  (input)="editText.set($any($event.target).value)"
+                ></textarea>
+              </label>
+              <div class="note__actions">
+                <button type="button" class="pill-btn" [disabled]="!editText().trim() || saving()" (click)="saveEdit(n)">
+                  <svg appIcon="check"></svg>{{ x.save }}
+                </button>
+                <button type="button" class="pill-btn pill-btn--quiet" (click)="editing.set(null)">{{ x.cancel }}</button>
+              </div>
+            } @else {
+              <p class="note__text">{{ n.text }}</p>
+              <div class="note__actions">
+                <button type="button" class="pill-btn pill-btn--quiet" (click)="copy(n)">
+                  <svg [appIcon]="copied() === n.id ? 'check' : 'copy'"></svg>{{ copied() === n.id ? x.copied : x.copy }}
+                </button>
+                <button type="button" class="pill-btn pill-btn--quiet" (click)="startEdit(n)">
+                  <svg appIcon="pencil"></svg>{{ x.edit }}
+                </button>
+                <button
+                  type="button"
+                  class="pill-btn pill-btn--quiet"
+                  [class.note__delete--armed]="confirming() === n.id"
+                  [disabled]="saving()"
+                  (click)="remove(n)"
+                >
+                  <svg appIcon="x"></svg>{{ confirming() === n.id ? x.confirm : x.delete }}
+                </button>
+              </div>
+            }
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="notes__empty">{{ x.empty }}</p>
+    }
+  }
+</section>

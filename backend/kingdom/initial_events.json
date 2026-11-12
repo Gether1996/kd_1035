@@ -325,6 +325,14 @@
     "is_active": true,
     "variants": [
       {
+        "name_sk": "Lord of War",
+        "name_cs": "",
+        "icon": "lord-of-war",
+        "max_reward_sk": "420 000 power",
+        "max_reward_cs": "420 000 power",
+        "order": 0
+      },
+      {
         "name_sk": "Now Or Never",
         "name_cs": "",
         "icon": "now-or-never",

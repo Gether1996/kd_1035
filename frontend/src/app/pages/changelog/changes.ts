@@ -15,6 +15,12 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-12',
+    version: '1.66.0',
+    sk: ['Kalendár: 20 GH má nový typ Lord of War – na max. odmenu treba 420 000 power.'],
+    cs: ['Kalendář: 20 GH má nový typ Lord of War – na max. odměnu je potřeba 420 000 power.'],
+  },
+  {
     date: '2026-11-11',
     version: '1.65.2',
     sk: [

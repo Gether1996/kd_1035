@@ -1,0 +1,116 @@
+// the superadmin's notes in the event dialog – the same quiet look as the rest of its "Superadmin" block
+
+:host {
+  display: block;
+  flex: 1 1 100%;
+}
+
+.notes {
+  display: grid;
+  gap: 12px;
+}
+
+.notes__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font: 700 1rem / 1.3 var(--font-display);
+  color: var(--gold-100);
+
+  .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--gold-400);
+  }
+}
+
+.notes__hint,
+.notes__empty {
+  margin: -6px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.notes__empty {
+  margin: 0;
+}
+
+.notes__new {
+  display: grid;
+  gap: 10px;
+}
+
+.notes__text {
+  min-height: 0;
+  padding-block: 10px;
+  resize: vertical;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.notes__add {
+  justify-self: end;
+}
+
+.notes__error {
+  margin: 0;
+  color: var(--red-300);
+}
+
+.notes__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+}
+
+.note__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.note__run {
+  font: 600 0.8125rem / 1.2 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.note__edited {
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
+// the order of players exactly as typed, line by line
+.note__text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.note__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.note__delete--armed {
+  border-color: color-mix(in srgb, var(--red-500) 55%, transparent);
+  color: var(--red-300);
+}

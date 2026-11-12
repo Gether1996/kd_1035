@@ -1291,6 +1291,7 @@ export const sk = {
         text: 'Aby ťa vedenie spoznalo, prišli ti pripomienky, ktoré si zapol, a vedenie mohlo zostaviť tímy na KvK.',
         list: [
           'Údaje vidí správca webu (Gether) v administrácii. Keď sa prihlásiš prvýkrát, bot mu pošle na Discord tvoje meno a ID (bez Discordu iba meno v hre), aby ťa mohol schváliť.',
+          'Správca si môže k eventom písať poznámky, napríklad poradie hráčov po evente (mená v hre a výsledky). Vidí ich iba on a ostávajú, kým ich nezmaže.',
           'Prihlášky na KvK a tvoje marche vidí aj vedenie, ktorému správca povolí prezeranie (R4) – spolu s tvojím menom v hre, Discord menom, avatarom a ID; vidí aj, kto sa na KvK ešte neprihlásil.',
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',
           'Ak pri marchoch zvolíš „Všetci hráči“, uvidia tvoje marche spolu s menom v hre, Discord menom a avatarom aj všetci schválení hráči prihlásení na webe (stránka Marche hráčov). Zmeniť to môžeš kedykoľvek.',

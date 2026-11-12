@@ -196,6 +196,8 @@
             <p class="manage__error" role="alert">{{ t().eventAdmin.variantError }}</p>
           }
         }
+        <!-- the superadmin's notes to this event, with their history (Gether 12. 11. 2026) -->
+        <app-event-notes [eventId]="item().id" [runStart]="occurrence()?.start ?? null" />
       </div>
     }
   </div>

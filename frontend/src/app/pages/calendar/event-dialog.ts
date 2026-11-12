@@ -30,6 +30,7 @@ import { EventIcon } from '../../shared/event-icon';
 import { Icon } from '../../shared/icon';
 import { repeatLabel } from '../reminders/format';
 import { ReminderPicker } from '../reminders/reminder-picker';
+import { EventNotes } from './admin/event-notes';
 import { KINGDOM_ZONE, eventLink } from './deep-link';
 import { clock, dayKey, longDay, numericDay } from './month';
 
@@ -56,7 +57,7 @@ export interface RemindState {
  */
 @Component({
   selector: 'app-event-dialog',
-  imports: [RouterLink, Icon, EventIcon, ReminderPicker],
+  imports: [RouterLink, Icon, EventIcon, ReminderPicker, EventNotes],
   templateUrl: './event-dialog.html',
   styleUrl: './event-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

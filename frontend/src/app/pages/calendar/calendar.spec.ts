@@ -478,8 +478,12 @@ describe('Calendar', () => {
       http.expectOne('/api/me/reminders/').flush(SETTINGS);
       http.expectOne('/api/events/manage/').flush(manage);
       http.expectOne((req) => req.url === '/api/events/').flush(typed(null));
+      // the dialog asks for the superadmin's notes to the event (Gether 12. 11. 2026)
+      await settle();
+      http.expectOne('/api/events/manage/13/notes/').flush({ notes: [] });
       await fixture.whenStable();
       expect(dialog()).not.toBeNull();
+      expect(dialog()!.querySelector('app-event-notes .notes__empty')).not.toBeNull();
       expect(dialog()!.querySelector('.variant')).toBeNull();
 
       const select = dialog()!.querySelector<HTMLSelectElement>('.manage__variant select')!;

@@ -299,6 +299,38 @@ class Alarm(models.Model):
         return f'{self.player} · {self.note or "budík"}'
 
 
+MAX_EVENT_NOTE = 20_000
+
+
+class EventNote(models.Model):
+    """The superadmin's own note to an event (Gether 12. 11. 2026: "ku eventu 20 GH vedieť napísať poznámku … nech si
+    to drží aj históriu, lebo každý raz píšem email s poradím hráčov"): any number per event, usually one per run
+    (run_start), kept as a history. Only the superadmin sees them. In the accounts app on purpose – they name players,
+    and the git snapshot drops every accounts_* row (kingdom/snapshot.py)."""
+
+    event = models.ForeignKey(
+        'kingdom.KingdomEvent', on_delete=models.CASCADE, related_name='notes', verbose_name='event'
+    )
+    # the start of the run the note is about (UTC); empty = the event in general
+    run_start = models.DateTimeField('termín', null=True, blank=True)
+    text = models.TextField('text', max_length=MAX_EVENT_NOTE)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+',
+        verbose_name='autor',
+    )
+    created_at = models.DateTimeField('vytvorené', auto_now_add=True)
+    updated_at = models.DateTimeField('upravené', auto_now=True)
+
+    class Meta:
+        ordering = [models.F('run_start').desc(nulls_last=True), '-created_at']
+        verbose_name = 'poznámka k eventu'
+        verbose_name_plural = 'poznámky k eventom'
+
+    def __str__(self):
+        first = self.text.strip().splitlines()[0] if self.text.strip() else ''
+        return f'{self.event} · {first[:60]}'
+
+
 class PlayerSettings(models.Model):
     """How new players get in (one row) – the superadmin switches it in the Hráči list on /ucet (Gether 12. 10. 2026:
     "dočasne to chcem nechať otvorené a časom zavriem")."""

@@ -70,6 +70,19 @@ export type FieldErrors = Partial<
 
 const URL = '/api/events/manage/';
 
+/** The superadmin's note to an event (Gether 12. 11. 2026: the order of players he emails after every 20 GH) */
+export interface EventNote {
+  id: number;
+  /** the run it is about (ISO, UTC); null = the event in general */
+  run_start: string | null;
+  text: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** /api/events/manage/<id>/notes/ – every note of the event, the newest run first */
+export const eventNotesUrl = (id: number) => `${URL}${id}/notes/`;
+
 /** Event management for superusers in the calendar. Session + CSRF; only called in the browser. */
 @Injectable({ providedIn: 'root' })
 export class EventsAdminApi {
@@ -103,6 +116,19 @@ export class EventsAdminApi {
     const url = `${URL}${id}/run/`;
     if (variant === null) await firstValueFrom(this.http.delete(url, { body: { start } }));
     else await firstValueFrom(this.http.put(url, { start, variant }));
+  }
+
+  /** A new note to the event, about the run starting at `runStart` (null = the event in general). */
+  addNote(id: number, text: string, runStart: string | null): Promise<EventNote> {
+    return firstValueFrom(this.http.post<EventNote>(eventNotesUrl(id), { text, run_start: runStart }));
+  }
+
+  updateNote(noteId: number, text: string): Promise<EventNote> {
+    return firstValueFrom(this.http.patch<EventNote>(`${URL}notes/${noteId}/`, { text }));
+  }
+
+  async removeNote(noteId: number): Promise<void> {
+    await firstValueFrom(this.http.delete(`${URL}notes/${noteId}/`));
   }
 
   /** No date: the event waits for the next one again. */

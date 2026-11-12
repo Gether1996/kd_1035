@@ -1,0 +1,48 @@
+/**
+ * Texts of the superadmin's event notes (event-notes.ts) – SK and CZ side by side like the evaluation's texts, out of
+ * sk.ts/cs.ts: only the superadmin ever sees them, the initial bundle does not carry them.
+ */
+export const NOTES_TEXTS = {
+  sk: {
+    title: 'Poznámky',
+    hint: 'Vidíš ich len ty – napr. poradie hráčov po evente. Staršie ostávajú ako história.',
+    label: 'Nová poznámka',
+    placeholder: '1. …\n2. …\n3. …',
+    forRun: 'K termínu {date}',
+    general: 'Bez termínu',
+    add: 'Uložiť poznámku',
+    save: 'Uložiť',
+    cancel: 'Zrušiť',
+    edit: 'Upraviť',
+    copy: 'Kopírovať',
+    copied: 'Skopírované',
+    delete: 'Zmazať',
+    confirm: 'Naozaj zmazať?',
+    edited: 'upravené {date}',
+    empty: 'Zatiaľ žiadne poznámky.',
+    error: 'Poznámky sa nepodarilo načítať.',
+    failed: 'Nepodarilo sa uložiť. Skús to znova.',
+    history: 'História poznámok',
+  },
+  cs: {
+    title: 'Poznámky',
+    hint: 'Vidíš je jen ty – např. pořadí hráčů po eventu. Starší zůstávají jako historie.',
+    label: 'Nová poznámka',
+    placeholder: '1. …\n2. …\n3. …',
+    forRun: 'K termínu {date}',
+    general: 'Bez termínu',
+    add: 'Uložit poznámku',
+    save: 'Uložit',
+    cancel: 'Zrušit',
+    edit: 'Upravit',
+    copy: 'Kopírovat',
+    copied: 'Zkopírováno',
+    delete: 'Smazat',
+    confirm: 'Opravdu smazat?',
+    edited: 'upraveno {date}',
+    empty: 'Zatím žádné poznámky.',
+    error: 'Poznámky se nepodařilo načíst.',
+    failed: 'Nepodařilo se uložit. Zkus to znovu.',
+    history: 'Historie poznámek',
+  },
+} satisfies Record<'sk' | 'cs', Record<string, string>>;

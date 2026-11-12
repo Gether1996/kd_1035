@@ -4,6 +4,7 @@ from . import (
     alarm_views,
     discord_interactions,
     evaluation_views,
+    event_notes,
     forum_views,
     hall,
     kvk_views,
@@ -68,4 +69,7 @@ urlpatterns = [
     path('forum/posts/<int:post_id>/', forum_views.post),
     path('forum/posts/<int:post_id>/like/', forum_views.like),
     path('reactions/<str:target>/', reaction_views.reactions),
+    # the superadmin's notes to events, in the calendar's event dialog (Gether 12. 11. 2026)
+    path('events/manage/<int:pk>/notes/', event_notes.notes),
+    path('events/manage/notes/<int:note_id>/', event_notes.note),
 ]

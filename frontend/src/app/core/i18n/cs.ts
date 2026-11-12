@@ -1251,6 +1251,7 @@ export const cs: Dict = {
         text: 'Aby tě vedení poznalo, přišly ti připomínky, které sis zapnul, a vedení mohlo sestavit týmy na KvK.',
         list: [
           'Údaje vidí správce webu (Gether) v administraci. Když se přihlásíš poprvé, bot mu pošle na Discord tvé jméno a ID (bez Discordu jen jméno ve hře), aby tě mohl schválit.',
+          'Správce si může k eventům psát poznámky, například pořadí hráčů po eventu (jména ve hře a výsledky). Vidí je jen on a zůstávají, dokud je nesmaže.',
           'Přihlášky na KvK a tvé marche vidí i vedení, kterému správce povolí prohlížení (R4) – spolu s tvým jménem ve hře, Discord jménem, avatarem a ID; vidí i to, kdo se na KvK ještě nepřihlásil.',
           'Vedení si může seznam přihlášek (jméno ve hře, role, jednotky, commandeři a formace) zkopírovat do Discordu, kde plánuje KvK.',
           'Pokud u marchí zvolíš „Všichni hráči“, uvidí tvé marche spolu se jménem ve hře, Discord jménem a avatarem i všichni schválení hráči přihlášení na webu (stránka Marche hráčů). Změnit to můžeš kdykoli.',

@@ -10,6 +10,7 @@ from .local_auth import login_key
 from .models import (
     Alarm,
     EvaluationChange,
+    EventNote,
     EventReminder,
     HallArchive,
     HallArchiveEntry,
@@ -190,6 +191,23 @@ class EventReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     @admin.display(description='pripomenúť pred začiatkom')
     def times(self, obj):
         return ', '.join(REMINDER_LABELS.get(minutes) or duration(minutes, 'sk') for minutes in obj.offsets)
+
+
+@admin.register(EventNote)
+class EventNoteAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """The superadmin's notes to events (also written in the calendar's event dialog)."""
+
+    list_display = ['event', 'run_start', '__str__', 'updated_at']
+    list_filter = ['event']
+    list_select_related = ['event']
+    search_fields = ['text']
+    fields = ['event', 'run_start', 'text', 'author', 'created_at', 'updated_at']
+    readonly_fields = ['author', 'created_at', 'updated_at']
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.author = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Alarm)
