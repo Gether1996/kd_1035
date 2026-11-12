@@ -55,8 +55,10 @@ export interface ForumPost {
   id: number;
   body: string;
   at: string;
-  /** "Anonym 2" – the writer's number in the thread */
+  /** "Anonym 2" – the writer's number in the thread; 0 = written under a name */
   alias: number;
+  /** written under the player's name ("Pod menom", Gether 12. 11. 2026); null = anonymous, or the account is gone */
+  signed: ForumSignature | null;
   mine: boolean;
   /** when its author last changed the text */
   edited: string | null;
@@ -64,10 +66,23 @@ export interface ForumPost {
   /** this browser likes it */
   liked: boolean;
   /** the message it answers, shortened */
-  reply: { id: number; alias: number; mine: boolean; body: string } | null;
+  reply: ForumQuote | null;
 }
 
-type ErrorKey = 'empty' | 'invalid' | 'cooldown' | 'links' | 'busy' | 'failed';
+export interface ForumSignature {
+  name: string;
+  avatar: string;
+}
+
+interface ForumQuote {
+  id: number;
+  alias: number;
+  signed: ForumSignature | null;
+  mine: boolean;
+  body: string;
+}
+
+type ErrorKey = 'empty' | 'invalid' | 'cooldown' | 'links' | 'busy' | 'named' | 'failed';
 
 const API = '/api/forum/';
 /** the open room asks for new messages this often (only while the tab is visible) */
@@ -148,6 +163,16 @@ export class ForumPage {
   private readonly chat = viewChild<ElementRef<HTMLElement>>('chat');
 
   protected readonly superuser = computed(() => !!this.auth.user()?.is_superuser);
+  /** an approved player signed in may write under their name – anonymous unless switched on (Gether 12. 11. 2026) */
+  protected readonly canSign = computed(() => {
+    const user = this.auth.user();
+    return !!user && (user.approved || user.is_superuser);
+  });
+  protected readonly named = signal(false);
+  protected readonly signName = computed(() => {
+    const user = this.auth.user();
+    return user?.ingame_name || user?.name || '';
+  });
   /** the whole thread: its author or the superadmin; a message: its author or the superadmin */
   protected readonly canDeleteThread = computed(() => this.superuser() || !!this.thread()?.mine);
   protected readonly crumbs = computed(() => [
@@ -218,7 +243,7 @@ export class ForumPage {
       this.error.set('empty');
       return;
     }
-    const created = await this.write<ForumThread>(API, { title, body, website: trap.value });
+    const created = await this.write<ForumThread>(API, { title, body, website: trap.value, named: this.signs() });
     if (!created) return;
     this.newTitle.set('');
     this.newBody.set('');
@@ -331,7 +356,12 @@ export class ForumPage {
     const body = this.message().trim();
     if (!id || !body || this.sending() || this.wait()) return;
     const reply = this.replyTo()?.id ?? null;
-    const post = await this.write<ForumPost>(`${API}${id}/`, { body, website: trap.value, reply_to: reply });
+    const post = await this.write<ForumPost>(`${API}${id}/`, {
+      body,
+      website: trap.value,
+      reply_to: reply,
+      named: this.signs(),
+    });
     if (!post || this.threadId() !== id) return;
     this.setMessage('');
     this.replyTo.set(null);
@@ -507,12 +537,21 @@ export class ForumPage {
     return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
   }
 
-  protected replyWho(reply: { alias: number; mine: boolean }): string {
-    return reply.mine ? this.t().forum.you : this.t().forum.alias.replace('{n}', String(reply.alias));
+  /** the switch is on and the player may use it */
+  private signs(): boolean {
+    return this.canSign() && this.named();
   }
 
-  protected who(post: ForumPost): string {
-    return post.mine ? this.t().forum.you : this.t().forum.alias.replace('{n}', String(post.alias));
+  protected replyWho(reply: ForumQuote): string {
+    return this.who(reply);
+  }
+
+  /** "Ty", the name of a signed message, "Anonym 2" – or "Bývalý hráč" for a signed one whose account is gone */
+  protected who(post: Pick<ForumPost, 'mine' | 'signed' | 'alias'>): string {
+    const f = this.t().forum;
+    if (post.mine) return f.you;
+    if (post.signed) return post.signed.name;
+    return post.alias ? f.alias.replace('{n}', String(post.alias)) : f.formerPlayer;
   }
 
   // ---------------------------------------------------------------- shared
@@ -531,7 +570,7 @@ export class ForumPage {
     } catch (err) {
       const detail = err instanceof HttpErrorResponse ? err.error?.detail : undefined;
       if (err instanceof HttpErrorResponse && typeof err.error?.wait === 'number') this.setWait(err.error.wait);
-      const known: ErrorKey[] = ['invalid', 'cooldown', 'links', 'busy'];
+      const known: ErrorKey[] = ['invalid', 'cooldown', 'links', 'busy', 'named'];
       this.error.set(
         known.includes(detail) ? detail : err instanceof HttpErrorResponse && err.status === 400 ? 'empty' : 'failed',
       );

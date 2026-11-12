@@ -16,16 +16,18 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-12',
-    version: '1.66.2',
+    version: '1.67.0',
     sk: [
       'Kalendár: 20 GH má nový typ Lord of War – na max. odmenu treba 420 000 power.',
       'Môj účet: prehľadnejší profil – meno, jazyk a údaje z hry v paneloch a jedno tlačidlo Uložiť, ktoré sa rozsvieti, keď niečo zmeníš.',
       'Môj účet: VIP level 1 až 19, najvyšší SVIP zapneš prepínačom.',
+      'Fórum: správy sú stále predvolene anonymné, ale prihlásený hráč môže prepínačom „Pod menom“ napísať so svojím menom a avatarom.',
     ],
     cs: [
       'Kalendář: 20 GH má nový typ Lord of War – na max. odměnu je potřeba 420 000 power.',
       'Můj účet: přehlednější profil – jméno, jazyk a údaje ze hry v panelech a jedno tlačítko Uložit, které se rozsvítí, když něco změníš.',
       'Můj účet: VIP level 1 až 19, nejvyšší SVIP zapneš přepínačem.',
+      'Fórum: zprávy jsou dál výchozí anonymní, ale přihlášený hráč může přepínačem „Pod jménem“ napsat se svým jménem a avatarem.',
     ],
   },
   {

@@ -311,6 +311,19 @@
 .msg__who {
   font-weight: 600;
   color: var(--gold-300);
+
+  // written under the name: a touch brighter, with the avatar before it
+  &.is-signed {
+    color: var(--gold-100);
+  }
+}
+
+.msg__avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--gold-400);
 }
 
 .msg__time {
@@ -565,6 +578,25 @@
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+// "Anonymne" / "Pod menom GetheR" (Gether 12. 11. 2026): above the message box, in the new thread above the buttons
+.named {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  cursor: pointer;
+
+  &.is-on {
+    color: var(--gold-300);
+  }
+}
+
+.dock .named {
+  padding: 4px 16px 0;
 }
 
 // the answer, the message box and its status stay at the bottom of the screen while the room scrolls

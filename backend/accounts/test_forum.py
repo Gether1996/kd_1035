@@ -61,12 +61,52 @@ class Forum(TestCase):
             self.assertNotIn(f'"{name}"', text)
         fields = {f.name for model in (ForumThread, ForumPost) for f in model._meta.get_fields()}
         self.assertFalse(fields & {'author', 'player', 'user'})
+        # the only link to a player is a message signed on purpose ("Pod menom", Gether 12. 11. 2026)
+        self.assertFalse(ForumPost.objects.filter(signed_by__isnull=False).exists())
+        self.assertEqual({p['signed'] for p in data['posts']}, {None})
         # Bob keeps his number in the thread
         with mock.patch('accounts.forum_views.time.time', return_value=time.time() + 360):
             again = self.send(self.as_bob, 'post', f'/api/forum/{tid}/', {'body': 'Znova ja'})
         self.assertEqual(again.json()['alias'], 2)
         listed = self.as_nelly.get('/api/forum/').json()['threads'][0]
         self.assertEqual((listed['posts'], listed['mine']), (3, True))
+
+    def test_a_signed_message_shows_the_name_and_no_number(self):
+        """Gether 12. 11. 2026: anonymous by default, "Pod menom" for an approved player signed in"""
+        self.nelly.ingame_name = 'Nelly'
+        self.nelly.save()
+        created = self.send(self.as_nelly, 'post', '/api/forum/', {'title': 'Rally', 'body': 'Ahoj', 'named': True})
+        self.assertEqual(created.status_code, 201)
+        tid = created.json()['id']
+        # Bob anonymous: he is Anonym 1 – the signed message used no number
+        reply = self.send(self.as_bob, 'post', f'/api/forum/{tid}/', {'body': 'Ja'})
+        self.assertEqual(reply.json()['alias'], 1)
+        # Nelly anonymous in the same thread later: a number of her own, nothing ties it to her signed message
+        later = time.time() + 360
+        with mock.patch('accounts.forum_views.time.time', return_value=later):
+            anon = self.send(self.as_nelly, 'post', f'/api/forum/{tid}/', {'body': 'Tajne', 'reply_to': ForumPost.objects.first().pk})
+        self.assertEqual(anon.json()['alias'], 2)
+        self.assertEqual(anon.json()['reply']['signed']['name'], 'Nelly')
+        posts = self.as_bob.get(f'/api/forum/{tid}/').json()['posts']
+        self.assertEqual(
+            [(p['body'], p['alias'], p['signed'] and p['signed']['name']) for p in posts],
+            [('Ahoj', 0, 'Nelly'), ('Ja', 1, None), ('Tajne', 2, None)],
+        )
+        self.assertEqual(ForumPost.objects.get(body='Tajne').signed_by, None)
+        # a deleted account leaves the message without a name – and still without a number
+        self.nelly.user.delete()
+        first = self.as_bob.get(f'/api/forum/{tid}/').json()['posts'][0]
+        self.assertEqual((first['alias'], first['signed']), (0, None))
+
+    def test_only_an_approved_player_signs(self):
+        """a visitor or a fresh account waiting for approval cannot sign as someone"""
+        refused = self.send(self.as_eve, 'post', '/api/forum/', {'title': 'X', 'body': 'Y', 'named': True})
+        self.assertEqual((refused.status_code, refused.json()['detail']), (403, 'named'))
+        visitor = Client(enforce_csrf_checks=True)
+        visitor.token = visitor.get('/api/auth/me/').cookies['csrftoken'].value
+        refused = self.send(visitor, 'post', '/api/forum/', {'title': 'X', 'body': 'Y', 'named': True})
+        self.assertEqual(refused.status_code, 403)
+        self.assertFalse(ForumThread.objects.exists())
 
     def test_only_newer_posts_with_after(self):
         tid = self.thread().json()['id']
@@ -211,7 +251,7 @@ class Forum(TestCase):
         tid = self.thread(body='Kto ide?').json()['id']
         first = ForumPost.objects.get().pk
         reply = self.send(self.as_bob, 'post', f'/api/forum/{tid}/', {'body': 'Ja', 'reply_to': first}).json()
-        self.assertEqual(reply['reply'], {'id': first, 'alias': 1, 'mine': False, 'body': 'Kto ide?'})
+        self.assertEqual(reply['reply'], {'id': first, 'alias': 1, 'signed': None, 'mine': False, 'body': 'Kto ide?'})
         # a message of another thread is no answer
         other = self.thread(self.as_eve, title='Iné').json()['id']
         stray = self.send(self.as_admin, 'post', f'/api/forum/{other}/', {'body': 'X', 'reply_to': first}).json()

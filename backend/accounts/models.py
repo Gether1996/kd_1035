@@ -659,10 +659,17 @@ class ForumThread(models.Model):
 
 
 class ForumPost(models.Model):
-    """A message in a thread – the text, when, and the writer's number in the thread ("Anonym 2"), no player."""
+    """A message in a thread – the text, when, and the writer's number in the thread ("Anonym 2"), no player. Unless
+    the writer, an approved player signed in, switched "Pod menom" on (Gether 12. 11. 2026): then the message keeps
+    their account (signed_by) and shows their name – and has no number (alias 0), so it never tells which "Anonym N"
+    of the thread they are."""
 
     thread = models.ForeignKey(ForumThread, on_delete=models.CASCADE, related_name='posts', verbose_name='vlákno')
     alias = models.PositiveIntegerField('anonym')
+    # set only for a message written under the player's name; a deleted account leaves it without a name
+    signed_by = models.ForeignKey(
+        Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='+', verbose_name='pod menom'
+    )
     body = models.TextField('text', max_length=MAX_FORUM_POST)
     created_at = models.DateTimeField('napísané', auto_now_add=True, db_index=True)
     # its author changed the text (Gether 25. 10. 2026) – "upravené" next to the time

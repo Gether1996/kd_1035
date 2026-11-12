@@ -116,7 +116,10 @@
                 [class.is-editing]="editing() === p.id"
               >
                 <p class="msg__head">
-                  <span class="msg__who">{{ who(p) }}</span>
+                  @if (p.signed; as s) {
+                    <img class="msg__avatar" [src]="s.avatar" alt="" width="22" height="22" loading="lazy" />
+                  }
+                  <span class="msg__who" [class.is-signed]="!!p.signed">{{ who(p) }}</span>
                   <time class="msg__time" [attr.datetime]="p.at">{{ when(p.at) }}</time>
                   @if (p.edited) {
                     <span class="msg__edited">· {{ f.edited }}</span>
@@ -230,6 +233,26 @@
               </button>
             </div>
           }
+          <!-- anonymous unless an approved player switches it on (Gether 12. 11. 2026) -->
+          @if (canSign()) {
+            <label class="named" [class.is-on]="named()">
+              <input
+                #namedSwitch
+                class="switch named__switch"
+                type="checkbox"
+                role="switch"
+                [checked]="named()"
+                (change)="named.set(namedSwitch.checked)"
+              />
+              <span class="named__text">
+                @if (named()) {
+                  {{ f.namedOn.replace('{name}', signName()) }}
+                } @else {
+                  {{ f.namedOff }}
+                }
+              </span>
+            </label>
+          }
           <form class="composer" #composer (submit)="send($event, trap)" novalidate>
             <div class="trap" aria-hidden="true">
               <label for="forum-website">Website</label>
@@ -314,6 +337,26 @@
             (input)="newBody.set(bodyInput.value)"
           ></textarea>
         </div>
+        <!-- anonymous unless an approved player switches it on (Gether 12. 11. 2026) -->
+        @if (canSign()) {
+          <label class="named" [class.is-on]="named()">
+            <input
+              #newNamedSwitch
+              class="switch named__switch"
+              type="checkbox"
+              role="switch"
+              [checked]="named()"
+              (change)="named.set(newNamedSwitch.checked)"
+            />
+            <span class="named__text">
+              @if (named()) {
+                {{ f.namedOn.replace('{name}', signName()) }}
+              } @else {
+                {{ f.namedOff }}
+              }
+            </span>
+          </label>
+        }
         <div class="form__actions">
           <button type="submit" class="pill-btn" [attr.aria-disabled]="sending() || !!wait() || null">
             {{ sending() ? f.sending : f.create }}

@@ -74,7 +74,12 @@ class PostSerializer(serializers.Serializer):
     body = serializers.CharField(max_length=MAX_FORUM_POST, trim_whitespace=True)
 
 
-class ReplySerializer(PostSerializer):
+class NamedSerializer(PostSerializer):
+    # "Pod menom" (Gether 12. 11. 2026): off = anonymous, the default
+    named = serializers.BooleanField(required=False, default=False)
+
+
+class ReplySerializer(NamedSerializer):
     reply_to = serializers.IntegerField(required=False, allow_null=True)
 
 
@@ -92,8 +97,26 @@ class TitleSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=MAX_FORUM_TITLE, trim_whitespace=True)
 
 
-class ThreadSerializer(PostSerializer, TitleSerializer):
+class ThreadSerializer(NamedSerializer, TitleSerializer):
     pass
+
+
+def signer(request, named: bool):
+    """The player a message is signed with: only when asked, and only an approved player signed in (or the
+    superadmin) – a fresh account cannot sign as someone. False = refused, None = anonymous."""
+    if not named:
+        return None
+    player = getattr(request.user, 'player', None) if request.user.is_authenticated else None
+    if player is None or not player.may_post:
+        return False
+    return player
+
+
+def signature(player) -> dict | None:
+    """what a signed message shows: the name in the game first, the avatar"""
+    if player is None:
+        return None
+    return {'name': player.ingame_name or player.name, 'avatar': player.avatar_url}
 
 
 class Mine:
@@ -127,8 +150,10 @@ class Mine:
         self.posts = [*self.posts, post.pk][-KEEP_POSTS:]
         if thread:
             self.threads = [*self.threads, thread.pk][-KEEP_THREADS:]
-        self.aliases[str(post.thread_id)] = post.alias
-        self.aliases = dict(list(self.aliases.items())[-KEEP_THREADS:])
+        # a signed message has no number – my number in the thread stays as it was
+        if post.alias:
+            self.aliases[str(post.thread_id)] = post.alias
+            self.aliases = dict(list(self.aliases.items())[-KEEP_THREADS:])
         self.last = time.time()
 
     def save(self, response: Response) -> Response:
@@ -178,6 +203,8 @@ def post_data(post: ForumPost, mine: Mine) -> dict:
         'body': post.body,
         'at': iso(post.created_at),
         'alias': post.alias,
+        # written under the player's name: {name, avatar}; alias 0 and no signature = an account deleted since
+        'signed': signature(post.signed_by),
         'mine': post.pk in mine.posts,
         'edited': iso(post.edited_at) if post.edited_at else None,
         'likes': post.likes,
@@ -188,7 +215,13 @@ def post_data(post: ForumPost, mine: Mine) -> dict:
 
 def quote(post: ForumPost, mine: Mine) -> dict:
     """the answered message as the reply shows it above its text"""
-    return {'id': post.pk, 'alias': post.alias, 'mine': post.pk in mine.posts, 'body': shorten(post.body, QUOTE)}
+    return {
+        'id': post.pk,
+        'alias': post.alias,
+        'signed': signature(post.signed_by),
+        'mine': post.pk in mine.posts,
+        'body': shorten(post.body, QUOTE),
+    }
 
 
 def no_links(request, texts: list[str]) -> Response | None:
@@ -255,12 +288,17 @@ def threads(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
     data = serializer.validated_data
+    player = signer(request, data['named'])
+    if player is False:
+        return Response({'detail': 'named'}, status=403)
     if refusal := refused(request, mine, [data['title'], data['body']], thread=True):
         return refusal
     with transaction.atomic():
         title = serializer.validated_data['title']
-        thread = ForumThread.objects.create(title=title, aliases=1, last_post_at=timezone.now())
-        post = ForumPost.objects.create(thread=thread, alias=1, body=serializer.validated_data['body'])
+        # a signed first message hands out no number
+        alias = 0 if player else 1
+        thread = ForumThread.objects.create(title=title, aliases=alias, last_post_at=timezone.now())
+        post = ForumPost.objects.create(thread=thread, alias=alias, body=data['body'], signed_by=player)
         ForumThread.objects.filter(pk=thread.pk).update(last_post_at=post.created_at)
     mine.wrote(post, thread)
     return mine.save(Response({**thread_data(thread, mine, 1), 'wait': mine.wait()}, status=201))
@@ -281,7 +319,7 @@ def thread(request, thread_id):
 
     if request.method == 'GET':
         now = timezone.now()
-        posts = item.posts.select_related('reply_to')
+        posts = item.posts.select_related('reply_to__signed_by', 'signed_by')
         edited = []
         after = request.query_params.get('after', '')
         if after.isdigit():
@@ -291,7 +329,9 @@ def thread(request, thread_id):
             except ValueError:
                 since = None
             if since:
-                edited = item.posts.select_related('reply_to').filter(pk__lte=int(after), edited_at__gte=since)
+                edited = item.posts.select_related('reply_to__signed_by', 'signed_by').filter(
+                    pk__lte=int(after), edited_at__gte=since
+                )
         latest = list(posts.order_by('-created_at', '-pk')[:MAX_POSTS])[::-1]
         # every message of the window with its hearts: the open room refreshes the counts and drops the deleted ones
         # (those from `window` on that are missing here)
@@ -337,14 +377,18 @@ def thread(request, thread_id):
     serializer = ReplySerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
+    player = signer(request, serializer.validated_data['named'])
+    if player is False:
+        return Response({'detail': 'named'}, status=403)
     if refusal := refused(request, mine, [serializer.validated_data['body']]):
         return refusal
     # an answer to a message of this thread; a gone one is no answer
-    answered = item.posts.filter(pk=serializer.validated_data.get('reply_to') or 0).first()
+    answered = item.posts.select_related('signed_by').filter(pk=serializer.validated_data.get('reply_to') or 0).first()
     with transaction.atomic():
-        alias = alias_in(item, mine)
+        # a signed message has no number, an anonymous one keeps the writer's number in the thread
+        alias = 0 if player else alias_in(item, mine)
         post = ForumPost.objects.create(
-            thread=item, alias=alias, body=serializer.validated_data['body'], reply_to=answered
+            thread=item, alias=alias, body=serializer.validated_data['body'], reply_to=answered, signed_by=player
         )
         ForumThread.objects.filter(pk=item.pk).update(last_post_at=post.created_at)
     mine.wrote(post)
