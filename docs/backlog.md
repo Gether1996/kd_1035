@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **13. 11. 2026 – v1.67.2:** Ukážka kanálovej správy počíta „o …“ v texte eventu od odoslania ukážky, nie od plánovaného času (`notification_for(at=)`).
 - **13. 11. 2026 – v1.67.1:** Čas v Discord správach vypísaný po slovensky/česky namiesto `<t:…>` (`kingdom/discord_time.py`) – osobné pripomienky a budíky v jazyku hráča, kanál po slovensky.
 - **12. 11. 2026 – v1.67.0:** Fórum – prepínač „Pod menom“ pre schválených hráčov (predvolene anonymne; `ForumPost.signed_by`, alias 0, migrácia `accounts/0063`, Ochrana údajov).
 - **12. 11. 2026 – v1.66.2:** VIP 1–19 a prepínač SVIP (uložené ako 20, `SVIP` v `core/auth.ts`, migrácia `accounts/0062` – 0 zmaže, nad 20 = SVIP), v Prehľade účtu odznak „SVIP“.

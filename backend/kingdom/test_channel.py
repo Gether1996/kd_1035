@@ -126,6 +126,7 @@ class ChannelPreviewTests(TestCase):
         self.gh = KingdomEvent.objects.create(
             name_sk='20 GH', starts_at=utc(2026, 10, 30), repeat_days=14, duration_minutes=2 * DAY,
             reminders=[10], notify_discord=True, mention_everyone=True, mention_role=True,
+            message='{name} začína {start} ({relative}).',
         )
         variant = EventVariant.objects.create(event=self.gh, name_sk='Training Day', max_reward_sk='8 100 min')
         EventRun.objects.create(event=self.gh, start=utc(2026, 10, 30), variant=variant)
@@ -152,7 +153,13 @@ class ChannelPreviewTests(TestCase):
         planned = discord.build_payload(EventNotification.objects.get(event=self.gh))['embeds'][0]
         embed = body['embeds'][0]
         self.assertEqual(embed['title'], 'Ukážka · 20 GH')
-        self.assertEqual({**embed, 'title': planned['title']}, planned)
+        self.assertEqual({**embed, 'title': planned['title'], 'description': planned['description']}, planned)
+        # the preview goes out now: "o …" in its text counts from now like the Začiatok field, not from the planned
+        # send time (Gether 13. 11. 2026: "o 15 min" in a preview sent 11 h ahead)
+        relative = embed['fields'][0]['value'].split(' · ')[1]
+        self.assertEqual(relative, 'o 12 h')
+        self.assertIn(f'({relative})', embed['description'])
+        self.assertIn('(o 10 min)', planned['description'])
         self.assertEqual([field['name'] for field in embed['fields']], ['Začiatok', 'Typ', 'Max. odmena'])
 
     def test_errors(self, send_dm, _now):

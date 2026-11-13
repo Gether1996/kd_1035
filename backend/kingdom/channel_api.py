@@ -113,7 +113,8 @@ def preview_message(event: KingdomEvent, start) -> dict:
     "Ukážka · …", without content, username, avatar or any mention."""
     offsets = channel_offsets(event)
     # the reminder sent closest to the start; the offset only moves the embed's timestamp
-    row = events.notification_for(event, start, offsets[-1] if offsets else 0)
+    # sent now: "o …" in the text counts from now, like the Začiatok field
+    row = events.notification_for(event, start, offsets[-1] if offsets else 0, at=timezone.now())
     embed = discord.build_payload(row)['embeds'][0]
     embed['title'] = f'{PREVIEW_PREFIX}{embed["title"]}'[:256]
     return {'embeds': [embed], 'allowed_mentions': {'parse': []}}

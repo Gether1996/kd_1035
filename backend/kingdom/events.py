@@ -176,15 +176,16 @@ def plan_reminders(now=None, horizon=HORIZON, events=None) -> int:
 PLANNED_FIELDS = ('title', 'message', 'send_at', 'event_start', 'mention_role', 'mention_role_id')
 
 
-def notification_for(event: KingdomEvent, start, offset: int) -> EventNotification:
+def notification_for(event: KingdomEvent, start, offset: int, at=None) -> EventNotification:
     """The channel reminder of one run `offset` minutes before it, unsaved – exactly what plan_reminders() stores
-    and the superadmin's preview DM (channel_api.preview) shows."""
+    and the superadmin's preview DM (channel_api.preview) shows. {relative} counts from when it goes out: the planned
+    send time, or `at` – the preview goes out now (Gether 13. 11. 2026: "o 15 min" in a preview sent 11 h ahead)."""
     return EventNotification(
         event=event,
         occurrence_start=start,
         offset_minutes=offset,
         title=event.name_sk,
-        message=render(event, start, send_time(start, offset)),
+        message=render(event, start, at or send_time(start, offset)),
         send_at=send_time(start, offset),
         event_start=start,
         mention_role=event.mention_role,
