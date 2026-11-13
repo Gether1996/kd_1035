@@ -16,6 +16,7 @@ from .models import EventNotification
 
 log = logging.getLogger(__name__)
 
+# the embed colour of the other webhook messages (Hall of Fame)
 GOLD = 0xF5C451
 # a notification the worker could not send for this long is not sent at all (worker was down)
 MAX_DELAY = timedelta(hours=6)
@@ -42,39 +43,43 @@ def mention_role_id(notification: EventNotification) -> str:
     return notification.mention_role_id or (event.mention_role_id if event else '') or settings.DISCORD_EVENT_ROLE_ID
 
 
-def build_payload(notification: EventNotification) -> dict:
-    role = mention_role_id(notification)
-    embed = {
-        'title': notification.title[:256],
-        'description': notification.message[:4096],
-        'color': GOLD,
-        'timestamp': notification.send_at.isoformat(),
-        'footer': {'text': 'KD 1035 · CZ/SK'},
-    }
-    if notification.event_start:
-        # written out in Slovak, not Discord's <t:…> in each reader's app language (Gether 13. 11. 2026)
-        start = notification.event_start
-        embed['fields'] = [{'name': 'Začiatok', 'value': f'{when(start)} · {until(start, timezone.now())}'}]
-    # the run's type, read at send time (also one set after the row was planned); the channel is Slovak
+# Discord's limit for a message's text
+MAX_CONTENT = 2000
+
+
+def channel_line(notification: EventNotification) -> str:
+    """The message in the channel: one short line of plain text, no embed, no title, no footer (Gether 13. 11. 2026:
+    "veľmi krátke, ideálne na jeden riadok, nech keď budú pribúdať upozornenia do kanála, nech to nie je chaotické").
+    The event's own text (rendered when the row was planned – "Karuak Boss začína … (o 15 min)."), else the same
+    sentence built here; a typed run adds its type and top reward, read at send time (also one set after the row was
+    planned). The channel is Slovak."""
+    text = notification.message.strip()
+    start = notification.event_start
+    if not text:
+        text = f'**{notification.title}**'
+        if start:
+            text += f' začína {when(start)} ({until(start, timezone.now())}).'
     typed = notification.event_id and notification.occurrence_start
     variant = run_variant(notification.event, notification.occurrence_start) if typed else None
     if variant:
-        embed.setdefault('fields', []).append({'name': 'Typ', 'value': variant.name_sk})
-        if variant.max_reward_sk:
-            embed['fields'].append({'name': 'Max. odmena', 'value': variant.max_reward_sk})
-    guide = notification.event.guide if notification.event else None
-    if guide and guide.is_published and settings.SITE_URL:
-        embed['url'] = f'{settings.SITE_URL}{guide.get_absolute_url()}'
-    payload = {
-        'username': 'Kingdom 1035',
-        'content': f'<@&{role}>' if role else '',
-        'allowed_mentions': {'parse': [], 'roles': [role] if role else []},
-        'embeds': [embed],
-    }
+        reward = f', max. odmena {variant.max_reward_sk}' if variant.max_reward_sk else ''
+        text += f' Typ: {variant.name_sk}{reward}.'
+    return text
+
+
+def build_payload(notification: EventNotification) -> dict:
+    role = mention_role_id(notification)
+    mention = f'<@&{role}>' if role else ''
+    allowed = {'parse': [], 'roles': [role] if role else []}
     # @everyone instead of the role (Gether 29. 10. 2026), read at send time like the run's type
     if notification.event and notification.event.mention_everyone:
-        payload['content'] = '@everyone'
-        payload['allowed_mentions'] = {'parse': ['everyone']}
+        mention, allowed = '@everyone', {'parse': ['everyone']}
+    content = f'{mention} {channel_line(notification)}'.strip()
+    payload = {
+        'username': 'Kingdom 1035',
+        'content': content[:MAX_CONTENT],
+        'allowed_mentions': allowed,
+    }
     if settings.SITE_URL:
         payload['avatar_url'] = f'{settings.SITE_URL}/icons/icon-192.png'
     return payload

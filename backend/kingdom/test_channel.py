@@ -145,22 +145,18 @@ class ChannelPreviewTests(TestCase):
         self.assertEqual(EventNotification.objects.count(), rows)
         discord_id, body = send_dm.call_args.args
         self.assertEqual(discord_id, '80351110224678999')
-        self.assertEqual(set(body), {'embeds', 'allowed_mentions'})
+        self.assertEqual(set(body), {'content', 'allowed_mentions'})
         self.assertNotIn('@everyone', str(body))
         self.assertNotIn('<@&', str(body))
-        # the same embed as the row the worker plans and sends, only titled "Ukážka · …"
+        # the same one line as the channel gets, led by "Ukážka:" – "o …" counted from now, when the preview goes out
+        # (Gether 13. 11. 2026: "o 15 min" in a preview sent 11 h ahead), not from the planned send time
+        self.assertEqual(
+            body['content'],
+            'Ukážka: 20 GH začína piatok 30. októbra 2026 o 01:00 (o 12 h). Typ: Training Day, max. odmena 8 100 min.',
+        )
         events.plan_reminders(now=NOW)
-        planned = discord.build_payload(EventNotification.objects.get(event=self.gh))['embeds'][0]
-        embed = body['embeds'][0]
-        self.assertEqual(embed['title'], 'Ukážka · 20 GH')
-        self.assertEqual({**embed, 'title': planned['title'], 'description': planned['description']}, planned)
-        # the preview goes out now: "o …" in its text counts from now like the Začiatok field, not from the planned
-        # send time (Gether 13. 11. 2026: "o 15 min" in a preview sent 11 h ahead)
-        relative = embed['fields'][0]['value'].split(' · ')[1]
-        self.assertEqual(relative, 'o 12 h')
-        self.assertIn(f'({relative})', embed['description'])
-        self.assertIn('(o 10 min)', planned['description'])
-        self.assertEqual([field['name'] for field in embed['fields']], ['Začiatok', 'Typ', 'Max. odmena'])
+        planned = discord.build_payload(EventNotification.objects.get(event=self.gh))
+        self.assertIn('(o 10 min). Typ: Training Day', planned['content'])
 
     def test_errors(self, send_dm, _now):
         irregular = KingdomEvent.objects.create(name_sk='Silk Road', starts_at=utc(2026, 10, 1), irregular=True)
@@ -188,9 +184,11 @@ class ChannelMessageTests(TestCase):
     @override_settings(DISCORD_EVENT_ROLE_ID='42')
     def test_everyone_wins_over_the_role(self):
         payload = discord.build_payload(self.notification(mention_everyone=True))
-        self.assertEqual((payload['content'], payload['allowed_mentions']), ('@everyone', {'parse': ['everyone']}))
+        self.assertTrue(payload['content'].startswith('@everyone **20 GH** začína '), payload['content'])
+        self.assertEqual(payload['allowed_mentions'], {'parse': ['everyone']})
         payload = discord.build_payload(self.notification(name_sk='MGE'))
-        self.assertEqual((payload['content'], payload['allowed_mentions']['parse']), ('<@&42>', []))
+        self.assertTrue(payload['content'].startswith('<@&42> '), payload['content'])
+        self.assertEqual(payload['allowed_mentions']['parse'], [])
 
     def test_any_minutes_up_to_a_week_or_the_evening_before(self):
         event = KingdomEvent(name_sk='MGE', starts_at=NOW, reminders=[10, 5, EVENING_BEFORE, 7 * DAY])

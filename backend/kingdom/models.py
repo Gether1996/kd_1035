@@ -164,8 +164,8 @@ class KingdomEvent(models.Model):
         'text na Discord',
         blank=True,
         max_length=3000,
-        help_text='Môžeš použiť {name} = názov, {start} = dátum a čas začiatku, {relative} = „o 2 hodiny“, '
-        '{end} = čas konca. Discord ich každému ukáže v jeho časovom pásme.',
+        help_text='Jeden krátky riadok do kanála. Môžeš použiť {name} = názov, {start} = „piatok 13. novembra 2026 '
+        'o 20:00“, {relative} = „o 2 h“ (od odoslania), {end} = čas konca „21:30“. Prázdne = „Názov začína … (o …).“',
     )
     starts_at = models.DateTimeField(
         'prvý začiatok', help_text='Čas v Európe/Bratislave. Ďalšie termíny sa počítajú od neho.'

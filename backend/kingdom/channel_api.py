@@ -31,7 +31,7 @@ from .models import REMINDER_CHOICES, KingdomEvent, lead_order
 log = logging.getLogger(__name__)
 
 OFFERED = [minutes for minutes, _ in REMINDER_CHOICES]
-PREVIEW_PREFIX = 'Ukážka · '
+PREVIEW_PREFIX = 'Ukážka: '
 
 
 class PreviewThrottle(UserRateThrottle):
@@ -109,15 +109,13 @@ def channel_event(request, pk):
 
 
 def preview_message(event: KingdomEvent, start) -> dict:
-    """The channel message of the run as a DM: the same embed (built by the unchanged build_payload), titled
-    "Ukážka · …", without content, username, avatar or any mention."""
+    """The channel message of the run as a DM: the same line (discord.channel_line), led by "Ukážka:", without
+    username, avatar or any mention."""
     offsets = channel_offsets(event)
     # the reminder sent closest to the start; the offset only moves the embed's timestamp
     # sent now: "o …" in the text counts from now, like the Začiatok field
     row = events.notification_for(event, start, offsets[-1] if offsets else 0, at=timezone.now())
-    embed = discord.build_payload(row)['embeds'][0]
-    embed['title'] = f'{PREVIEW_PREFIX}{embed["title"]}'[:256]
-    return {'embeds': [embed], 'allowed_mentions': {'parse': []}}
+    return {'content': f'{PREVIEW_PREFIX}{discord.channel_line(row)}'[: discord.MAX_CONTENT], 'allowed_mentions': {'parse': []}}
 
 
 @never_cache

@@ -16,9 +16,15 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-13',
-    version: '1.67.2',
-    sk: ['Discord: čas v pripomienkach a budíkoch je po slovensky alebo po česky podľa tvojho jazyka – už nie podľa jazyka Discord aplikácie.'],
-    cs: ['Discord: čas v připomínkách a budících je slovensky nebo česky podle tvého jazyka – už ne podle jazyka Discord aplikace.'],
+    version: '1.67.3',
+    sk: [
+      'Discord: čas v pripomienkach a budíkoch je po slovensky alebo po česky podľa tvojho jazyka – už nie podľa jazyka Discord aplikácie.',
+      'Discord: upozornenia na eventy v kanáli sú jeden krátky riadok, kanál je prehľadnejší.',
+    ],
+    cs: [
+      'Discord: čas v připomínkách a budících je slovensky nebo česky podle tvého jazyka – už ne podle jazyka Discord aplikace.',
+      'Discord: upozornění na eventy v kanálu jsou jeden krátký řádek, kanál je přehlednější.',
+    ],
   },
   {
     date: '2026-11-12',

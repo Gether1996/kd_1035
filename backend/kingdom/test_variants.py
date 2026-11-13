@@ -304,40 +304,21 @@ class RunTypeInMessagesTests(TestCase):
     def test_the_channel_adds_the_type_set_after_the_notification_was_planned(self, _now):
         events.plan_reminders(now=utc(2026, 10, 15, 12))
         notification = self.gh.notifications.get()
-        start = {'name': 'Začiatok', 'value': 'piatok 16. októbra 2026 o 02:00 · o 8 h'}
         untyped = {
             'username': 'Kingdom 1035',
-            'content': '<@&42>',
+            'content': '<@&42> 20 GH o 8 h',
             'allowed_mentions': {'parse': [], 'roles': ['42']},
-            'embeds': [
-                {
-                    'title': '20 GH',
-                    'description': '20 GH o 8 h',
-                    'color': discord.GOLD,
-                    'timestamp': notification.send_at.isoformat(),
-                    'footer': {'text': 'KD 1035 · CZ/SK'},
-                    'fields': [start],
-                }
-            ],
         }
         self.assertEqual(json.dumps(discord.build_payload(notification)), json.dumps(untyped))
 
+        # the type joins the one line, read at send time; the ping untouched
         self.tag()
         payload = discord.build_payload(notification)
         self.assertEqual(
-            payload['embeds'][0]['fields'],
-            [
-                start,
-                {'name': 'Typ', 'value': 'Training Day'},
-                {'name': 'Max. odmena', 'value': '8 100 minút speedov na tréning jednotiek'},
-            ],
+            payload['content'], '<@&42> 20 GH o 8 h Typ: Training Day, max. odmena 8 100 minút speedov na tréning jednotiek.'
         )
-        # the title as written by the notification, the ping untouched
-        self.assertEqual(payload['embeds'][0]['title'], '20 GH')
-        for key in ('username', 'content', 'allowed_mentions'):
-            self.assertEqual(payload[key], untyped[key])
+        self.assertEqual(payload['allowed_mentions'], untyped['allowed_mentions'])
 
         self.training.max_reward_sk = ''
         self.training.save()
-        fields = discord.build_payload(notification)['embeds'][0]['fields']
-        self.assertEqual(fields, [start, {'name': 'Typ', 'value': 'Training Day'}])
+        self.assertEqual(discord.build_payload(notification)['content'], '<@&42> 20 GH o 8 h Typ: Training Day.')

@@ -169,7 +169,7 @@ class DiscordTests(TestCase):
         with mock.patch('urllib.request.urlopen') as urlopen:
             discord.post(n)
         request = urlopen.call_args.args[0]
-        self.assertIn(b'"content": "<@&42>"', request.data)
+        self.assertIn(b'"content": "<@&42> ', request.data)
         self.assertIn(b'"roles": ["42"]', request.data)
 
     @override_settings(DISCORD_WEBHOOK_URL='')
@@ -446,18 +446,26 @@ class EventPayloadTests(TestCase):
             notify_discord=True,
         )
 
-    def test_event_reminder_has_the_start_in_slovak_and_event_role(self):
+    def test_one_short_line_with_the_start_in_slovak_and_event_role(self):
+        """Gether 13. 11. 2026: "veľmi krátke, ideálne na jeden riadok … nadpis ani footer netreba, jednoduchý text."""
         events.plan_reminders(now=utc(2026, 10, 7, 12))
         n = self.event.notifications.get()
         # sent on time, an hour before
         with mock.patch('urllib.request.urlopen') as urlopen, mock.patch('django.utils.timezone.now', return_value=n.send_at):
             discord.post(n)
         payload = json.loads(urlopen.call_args.args[0].data)
-        self.assertEqual(
-            payload['embeds'][0]['fields'], [{'name': 'Začiatok', 'value': 'štvrtok 8. októbra 2026 o 20:00 · o 1 h'}]
-        )
-        self.assertEqual(payload['content'], '<@&777777>')
+        self.assertEqual(payload['content'], '<@&777777> **Ruiny** začína štvrtok 8. októbra 2026 o 20:00 (o 1 h).')
+        self.assertNotIn('embeds', payload)
         self.assertEqual(payload['allowed_mentions'], {'parse': [], 'roles': ['777777']})
+        # the event's own text when it has one, rendered when the row was planned
+        self.event.message = '{name} o chvíľu: {start} ({relative}) – {end}'
+        self.event.duration_minutes = 90
+        self.event.save()
+        events.replan(self.event, now=utc(2026, 10, 7, 12))
+        n = self.event.notifications.get()
+        self.assertEqual(
+            discord.channel_line(n), 'Ruiny o chvíľu: štvrtok 8. októbra 2026 o 20:00 (o 1 h) – 21:30'
+        )
 
     def test_role_fallback_order(self):
         n = EventNotification(title='MGE', send_at=timezone.now(), event=self.event, mention_role_id='111111')
@@ -470,22 +478,17 @@ class EventPayloadTests(TestCase):
         self.assertEqual(discord.mention_role_id(n), '42')
         n.mention_role = False
         self.assertEqual(discord.mention_role_id(n), '')
-        self.assertEqual(discord.build_payload(n)['content'], '')
+        self.assertEqual(discord.build_payload(n)['content'], '**MGE**')
 
-    def test_manual_notification_without_start_has_no_fields(self):
-        payload = discord.build_payload(EventNotification(title='MGE', send_at=timezone.now()))
-        self.assertNotIn('fields', payload['embeds'][0])
+    def test_manual_notification_without_start_is_its_text(self):
+        payload = discord.build_payload(EventNotification(title='MGE', message='Dnes MGE!', send_at=timezone.now()))
+        self.assertEqual(payload['content'], '<@&42> Dnes MGE!')
+        payload = discord.build_payload(EventNotification(title='MGE', send_at=timezone.now(), mention_role=False))
+        self.assertEqual(payload['content'], '**MGE**')
 
     def test_long_texts_are_truncated(self):
         n = EventNotification(title='x' * 300, message='y' * 5000, send_at=timezone.now())
-        embed = discord.build_payload(n)['embeds'][0]
-        self.assertEqual((len(embed['title']), len(embed['description'])), (256, 4096))
-
-    @override_settings(SITE_URL='https://kd1035.test')
-    def test_links_published_event_guide(self):
-        self.event.guide = Guide.objects.create(category='eventy', title_sk='Ruiny', slug='ruiny-test', html_sk='<p>x</p>')
-        n = EventNotification(title='Ruiny', send_at=timezone.now(), event=self.event)
-        self.assertEqual(discord.build_payload(n)['embeds'][0]['url'], 'https://kd1035.test/navody/eventy/ruiny-test')
+        self.assertEqual(len(discord.build_payload(n)['content']), discord.MAX_CONTENT)
 
 
 # admin pages link static files; the dev container has no collectstatic manifest
