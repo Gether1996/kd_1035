@@ -10,6 +10,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
+from .discord_time import until, when
 from .events import run_variant
 from .models import EventNotification
 
@@ -51,9 +52,9 @@ def build_payload(notification: EventNotification) -> dict:
         'footer': {'text': 'KD 1035 · CZ/SK'},
     }
     if notification.event_start:
-        # Discord renders <t:…> in every reader's own time zone; R = "in 2 hours"
-        unix = int(notification.event_start.timestamp())
-        embed['fields'] = [{'name': 'Začiatok', 'value': f'<t:{unix}:F> · <t:{unix}:R>'}]
+        # written out in Slovak, not Discord's <t:…> in each reader's app language (Gether 13. 11. 2026)
+        start = notification.event_start
+        embed['fields'] = [{'name': 'Začiatok', 'value': f'{when(start)} · {until(start, timezone.now())}'}]
     # the run's type, read at send time (also one set after the row was planned); the channel is Slovak
     typed = notification.event_id and notification.occurrence_start
     variant = run_variant(notification.event, notification.occurrence_start) if typed else None

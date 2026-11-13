@@ -12,6 +12,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
+from kingdom.discord_time import until, when
+
 from . import discord_bot
 from .models import Alarm
 from .reminders import GOLD, REMINDERS_PAGE, WINDOW, DiscordPaused
@@ -41,10 +43,9 @@ TEXTS = {
 
 
 def message(alarm: Alarm, lang: str) -> dict:
-    """An embed like the event reminders: the player's text as the title, the time as <t:…> (each player's own zone)."""
+    """An embed like the event reminders: the player's text as the title, the time written out in their language."""
     t = TEXTS.get(lang, TEXTS['sk'])
-    unix = int(alarm.target_at.timestamp())
-    lines = [t['at'].format(at=f'<t:{unix}:F>', relative=f'<t:{unix}:R>')]
+    lines = [t['at'].format(at=when(alarm.target_at, lang), relative=until(alarm.target_at, timezone.now(), lang))]
     if settings.SITE_URL:
         lines.append(f'[{t["manage"]}]({settings.SITE_URL}{"/cz" if lang == "cs" else ""}{REMINDERS_PAGE}#{ANCHOR})')
     embed = {

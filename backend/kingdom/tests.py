@@ -238,10 +238,10 @@ class OccurrenceTests(SimpleTestCase):
             duration_minutes=90,
             message='{name}: {start} ({relative}) – {end} {foo} {0} {',
         )
-        unix = int(utc(2026, 10, 20, 18).timestamp())
+        # in Slovak, the kingdom's time; {relative} from when the message goes out (Gether 13. 11. 2026)
         self.assertEqual(
-            events.render(event, utc(2026, 10, 20, 18)),
-            f'Ruiny: <t:{unix}:F> (<t:{unix}:R>) – <t:{unix + 5400}:t> {{foo}} {{0}} {{',
+            events.render(event, utc(2026, 10, 20, 18), at=utc(2026, 10, 20, 7)),
+            'Ruiny: utorok 20. októbra 2026 o 20:00 (o 11 h) – 21:30 {foo} {0} {',
         )
 
 
@@ -288,7 +288,7 @@ class PlanRemindersTests(TestCase):
         self.assertEqual([n.offset_minutes for n in rows], [60, 0])
         for n in rows:
             self.assertEqual((n.status, n.title, n.event_start), (Status.PENDING, 'Ruiny', utc(2026, 10, 8, 18)))
-            self.assertEqual(n.message, f'Začiatok <t:{int(utc(2026, 10, 8, 18).timestamp())}:F>')
+            self.assertEqual(n.message, 'Začiatok štvrtok 8. októbra 2026 o 20:00')
         # next week's occurrence is outside the 48 h horizon
         self.assertFalse(event.notifications.filter(occurrence_start=utc(2026, 10, 15, 18)).exists())
 
@@ -402,9 +402,10 @@ class EventValidationTests(TestCase):
             self.assertIn('reminders', ctx.exception.error_dict)
 
     def test_message_must_fit_after_expanding_times(self):
-        self.event(message='{start} ' * 200).full_clean()
+        # '{start}' → 'štvrtok 8. októbra 2026 o 20:00' (31 chars)
+        self.event(message='{start} ' * 90).full_clean()
         with self.assertRaises(ValidationError) as ctx:
-            self.event(message='{start}' * 400).full_clean()  # 2 800 chars → 6 400 on Discord
+            self.event(message='{start}' * 200).full_clean()  # 1 400 chars → 6 200 on Discord
         self.assertIn('message', ctx.exception.error_dict)
 
     def test_end_placeholder_needs_a_duration(self):
@@ -445,14 +446,16 @@ class EventPayloadTests(TestCase):
             notify_discord=True,
         )
 
-    def test_event_reminder_has_discord_timestamps_and_event_role(self):
+    def test_event_reminder_has_the_start_in_slovak_and_event_role(self):
         events.plan_reminders(now=utc(2026, 10, 7, 12))
         n = self.event.notifications.get()
-        with mock.patch('urllib.request.urlopen') as urlopen:
+        # sent on time, an hour before
+        with mock.patch('urllib.request.urlopen') as urlopen, mock.patch('django.utils.timezone.now', return_value=n.send_at):
             discord.post(n)
         payload = json.loads(urlopen.call_args.args[0].data)
-        unix = int(utc(2026, 10, 8, 18).timestamp())
-        self.assertEqual(payload['embeds'][0]['fields'], [{'name': 'Začiatok', 'value': f'<t:{unix}:F> · <t:{unix}:R>'}])
+        self.assertEqual(
+            payload['embeds'][0]['fields'], [{'name': 'Začiatok', 'value': 'štvrtok 8. októbra 2026 o 20:00 · o 1 h'}]
+        )
         self.assertEqual(payload['content'], '<@&777777>')
         self.assertEqual(payload['allowed_mentions'], {'parse': [], 'roles': ['777777']})
 
@@ -1243,3 +1246,34 @@ class EventTemplateTests(TestCase):
         with self.assertRaises(ValidationError) as ctx:
             event.full_clean()
         self.assertIn('repeat_days', ctx.exception.message_dict)
+
+
+class DiscordTimeTests(SimpleTestCase):
+    """The time in Discord messages written out in Slovak or Czech (Gether 13. 11. 2026) – not Discord's <t:…>,
+    which takes the language of each reader's app"""
+
+    def test_the_day_and_time_in_the_kingdoms_zone(self):
+        from .discord_time import when
+
+        # 19:00 UTC in November = 20:00 in Bratislava, 18:00 UTC in summer = 20:00 too
+        self.assertEqual(when(utc(2026, 11, 13, 19)), 'piatok 13. novembra 2026 o 20:00')
+        self.assertEqual(when(utc(2026, 11, 13, 19), 'cs'), 'pátek 13. listopadu 2026 v 20:00')
+        self.assertEqual(when(utc(2026, 7, 5, 18), 'cs'), 'neděle 5. července 2026 v 20:00')
+
+    def test_how_long_until_it(self):
+        from .discord_time import until
+
+        start = utc(2026, 11, 13, 19)
+        cases = [
+            (timedelta(hours=11), 'sk', 'o 11 h'),
+            (timedelta(hours=11), 'cs', 'za 11 h'),
+            (timedelta(minutes=90), 'sk', 'o 1 h 30 min'),
+            (timedelta(minutes=10), 'cs', 'za 10 min'),
+            (timedelta(days=1, hours=6, minutes=20), 'sk', 'o 1 deň 6 h'),
+            (timedelta(days=3), 'cs', 'za 3 dny'),
+            (timedelta(days=7), 'sk', 'o 7 dní'),
+            (timedelta(seconds=20), 'sk', 'teraz'),
+            (-timedelta(minutes=5), 'cs', 'teď'),
+        ]
+        for ahead, lang, text in cases:
+            self.assertEqual(until(start, start - ahead, lang), text, (ahead, lang))

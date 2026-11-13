@@ -86,7 +86,8 @@ class SendAlarmsTests(TestCase):
         discord_id, message = self.dm.call_args.args
         embed = message['embeds'][0]
         self.assertEqual((discord_id, embed['title']), (self.player.discord_id, 'Končí štít'))
-        self.assertIn(f'<t:{int(due.target_at.timestamp())}:R>', embed['description'])
+        self.assertIn('Čas: ', embed['description'])
+        self.assertNotIn('<t:', embed['description'])
         self.assertIn('https://kd1035.eu/pripomienky#budiky', embed['description'])
         due.refresh_from_db(), later.refresh_from_db(), missed.refresh_from_db()
         self.assertTrue(due.ok)

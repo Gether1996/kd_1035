@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+from .discord_time import clock, until, when
 from .models import EVENING_BEFORE, EventNotification, EventRun, EventVariant, KingdomEvent
 
 LOCAL_TZ = ZoneInfo('Europe/Bratislava')
@@ -120,15 +121,16 @@ def run_variant(event: KingdomEvent, start: datetime) -> EventVariant | None:
     return run.variant if run else None
 
 
-def render(event: KingdomEvent, occurrence: datetime) -> str:
-    """Expands {name}, {start}, {relative} and {end} into Discord timestamps; other braces stay as they are."""
-    unix = int(occurrence.timestamp())
-    end = f'<t:{unix + event.duration_minutes * 60}:t>' if event.duration_minutes else ''
+def render(event: KingdomEvent, occurrence: datetime, at: datetime | None = None) -> str:
+    """Expands {name}, {start}, {relative} and {end} in Slovak – the channel's language (Gether 13. 11. 2026; Discord's
+    <t:…> showed every reader the time in their app's language, English included). {relative} counts from `at`,
+    when the message goes out; other braces stay as they are."""
+    end = clock(occurrence + timedelta(minutes=event.duration_minutes)) if event.duration_minutes else ''
     text = event.message
     for key, value in {
         '{name}': event.name_sk,
-        '{start}': f'<t:{unix}:F>',
-        '{relative}': f'<t:{unix}:R>',
+        '{start}': when(occurrence),
+        '{relative}': until(occurrence, at or timezone.now()),
         '{end}': end,
     }.items():
         text = text.replace(key, value)
@@ -182,7 +184,7 @@ def notification_for(event: KingdomEvent, start, offset: int) -> EventNotificati
         occurrence_start=start,
         offset_minutes=offset,
         title=event.name_sk,
-        message=render(event, start),
+        message=render(event, start, send_time(start, offset)),
         send_at=send_time(start, offset),
         event_start=start,
         mention_role=event.mention_role,

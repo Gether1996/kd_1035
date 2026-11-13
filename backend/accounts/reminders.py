@@ -14,6 +14,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from kingdom.discord_time import until, when
 from kingdom.events import longest_lead, occurrences, run_variant, send_time
 from kingdom.models import KingdomEvent
 
@@ -97,11 +98,11 @@ def page_path(event: KingdomEvent, lang: str) -> str:
 
 
 def discord_message(event: KingdomEvent, start, lang: str) -> dict:
-    """An embed like the channel reminders; <t:…> shows every player the time in their own time zone. A typed run
-    adds its type to the title and what the top reward takes ('20 GH · Training Day')."""
+    """An embed like the channel reminders, all of it in the player's language – the time too, written out
+    (kingdom/discord_time.py; Discord's <t:…> took the language of the player's app). A typed run adds its type to
+    the title and what the top reward takes ('20 GH · Training Day')."""
     t = texts(lang)
-    unix = int(start.timestamp())
-    lines = [t['start'].format(start=f'<t:{unix}:F>', relative=f'<t:{unix}:R>')]
+    lines = [t['start'].format(start=when(start, lang), relative=until(start, timezone.now(), lang))]
     title = event_name(event, lang)
     variant = run_variant(event, start)
     if variant:

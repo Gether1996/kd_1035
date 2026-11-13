@@ -270,19 +270,20 @@ class RunTypeInMessagesTests(TestCase):
     def test_the_dm_of_an_untyped_run_is_unchanged(self):
         self.tag()  # 16. 10. only – the run of 30. 10. has no type
         start = utc(2026, 10, 30)
-        unix = int(start.timestamp())
         expected = {
             'embeds': [
                 {
                     'title': '20 GH',
                     'color': reminders.GOLD,
                     'footer': {'text': 'KD 1035 · pripomienku si nastavil na webe v časti Pripomienky eventov'},
-                    'description': f'Začiatok: <t:{unix}:F> (<t:{unix}:R>)\n'
+                    'description': 'Začiatok: piatok 30. októbra 2026 o 01:00 (o 1 deň)\n'
                     '[Zmeniť pripomienky](https://kd1035.test/pripomienky)',
                 }
             ]
         }
-        self.assertEqual(json.dumps(reminders.discord_message(self.gh, start, 'sk')), json.dumps(expected))
+        with mock.patch('django.utils.timezone.now', return_value=utc(2026, 10, 29)):
+            message = reminders.discord_message(self.gh, start, 'sk')
+        self.assertEqual(json.dumps(message), json.dumps(expected))
 
     @override_settings(DISCORD_BOT_TOKEN='bot-secret-token')
     def test_a_type_set_after_the_reminder_was_picked_reaches_the_dm(self):
@@ -298,11 +299,12 @@ class RunTypeInMessagesTests(TestCase):
         self.assertEqual(send_dm.call_args.args[1]['embeds'][0]['title'], '20 GH · Training Day')
 
     @override_settings(DISCORD_WEBHOOK_URL='https://discord.test/hook', DISCORD_EVENT_ROLE_ID='42', SITE_URL='')
-    def test_the_channel_adds_the_type_set_after_the_notification_was_planned(self):
+    # sent on time: 18:00 in Bratislava the evening before
+    @mock.patch('django.utils.timezone.now', return_value=utc(2026, 10, 15, 16))
+    def test_the_channel_adds_the_type_set_after_the_notification_was_planned(self, _now):
         events.plan_reminders(now=utc(2026, 10, 15, 12))
         notification = self.gh.notifications.get()
-        unix = int(self.start.timestamp())
-        start = {'name': 'Začiatok', 'value': f'<t:{unix}:F> · <t:{unix}:R>'}
+        start = {'name': 'Začiatok', 'value': 'piatok 16. októbra 2026 o 02:00 · o 8 h'}
         untyped = {
             'username': 'Kingdom 1035',
             'content': '<@&42>',
@@ -310,7 +312,7 @@ class RunTypeInMessagesTests(TestCase):
             'embeds': [
                 {
                     'title': '20 GH',
-                    'description': f'20 GH <t:{unix}:R>',
+                    'description': '20 GH o 8 h',
                     'color': discord.GOLD,
                     'timestamp': notification.send_at.isoformat(),
                     'footer': {'text': 'KD 1035 · CZ/SK'},

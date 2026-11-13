@@ -439,11 +439,14 @@ class MessageTests(TestCase):
     @override_settings(SITE_URL='https://kd1035.test')
     def test_discord_message_in_the_players_language(self):
         start = utc(2026, 10, 10, 18)
-        unix = int(start.timestamp())
-        embed = reminders.discord_message(self.event, start, 'sk')['embeds'][0]
+        # the time too in the player's language – Discord's <t:…> took the language of the app (Gether 13. 11. 2026)
+        with mock.patch('django.utils.timezone.now', return_value=utc(2026, 10, 10, 17)):
+            embed = reminders.discord_message(self.event, start, 'sk')['embeds'][0]
+            czech = reminders.discord_message(self.event, start, 'cs')['embeds'][0]
         self.assertEqual(embed['title'], 'Ruiny')
-        self.assertIn(f'<t:{unix}:F>', embed['description'])
-        self.assertIn(f'<t:{unix}:R>', embed['description'])
+        self.assertIn('Začiatok: sobota 10. októbra 2026 o 20:00 (o 1 h)', embed['description'])
+        self.assertIn('Začátek: sobota 10. října 2026 v 20:00 (za 1 h)', czech['description'])
+        self.assertNotIn('<t:', embed['description'] + czech['description'])
         self.assertIn('[Zmeniť pripomienky](https://kd1035.test/pripomienky)', embed['description'])
         self.assertEqual(
             embed['footer']['text'], 'KD 1035 · pripomienku si nastavil na webe v časti Pripomienky eventov'
