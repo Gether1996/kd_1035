@@ -15,6 +15,12 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-16',
+    version: '1.67.4',
+    sk: ['Sieň legiend: archív s jedným Ničiteľom pevností má správny týždeň 26. 10. – 1. 11. 2026.'],
+    cs: ['Síň legend: archiv s jedním Ničitelem pevností má správný týden 26. 10. – 1. 11. 2026.'],
+  },
+  {
     date: '2026-11-13',
     version: '1.67.3',
     sk: [

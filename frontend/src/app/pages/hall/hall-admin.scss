@@ -418,3 +418,24 @@
 .archive__delete {
   margin-left: auto;
 }
+
+// an archive's name and days set by hand (Gether 16. 11. 2026)
+.archive__edit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 8px 12px;
+  align-items: end;
+  width: 100%;
+}
+
+.archive__edit-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.archive__edit-state {
+  grid-column: 1 / -1;
+  margin: 0;
+}

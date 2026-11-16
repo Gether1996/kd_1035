@@ -117,4 +117,37 @@ describe('Sieň legiend', () => {
     expect(el.querySelector('.archive__label')?.textContent).toBe('KvK 3');
     expect(el.textContent).toContain('Uložené do archívu.');
   });
+
+  it('the editor sets the name and the days of a saved archive by hand (Gether 16. 11. 2026)', async () => {
+    const { fixture, http, el } = setup(HallAdmin);
+    const forts: HallArchive = { ...KVK3, label: 'Pevnosti', week_from: '2026-10-01', week_to: '2026-10-31' };
+    http.expectOne('/api/hall/').flush({ entries: [], archive: [forts], places: PLACES });
+    http.expectOne('/api/kvk/reviewers/').flush({ players: [] });
+    await tick(fixture);
+    expect(el.querySelector('.archive__meta')?.textContent).toContain('1. 10. – 31. 10. 2026');
+    el.querySelector<HTMLButtonElement>('.archive__change')!.click();
+    await tick(fixture);
+    const field = (id: string, value: string) => {
+      const input = el.querySelector<HTMLInputElement>(`#archive-7-${id}`)!;
+      input.value = value;
+    };
+    const submit = () => el.querySelector<HTMLFormElement>('.archive__edit')!.dispatchEvent(new Event('submit'));
+    // one day only, or the last before the first: not sent
+    field('to', '');
+    submit();
+    await tick(fixture);
+    expect(el.querySelector('.archive__edit-state')?.textContent).toContain('oba dátumy alebo žiadny');
+    field('from', '2026-10-26');
+    field('to', '2026-11-01');
+    submit();
+    const patch = http.expectOne('/api/hall/archive/7/');
+    expect([patch.request.method, patch.request.body]).toEqual([
+      'PATCH',
+      { label: 'Pevnosti', week_from: '2026-10-26', week_to: '2026-11-01' },
+    ]);
+    patch.flush({ archive: [{ ...forts, week_from: '2026-10-26', week_to: '2026-11-01' }] });
+    await tick(fixture);
+    expect(el.querySelector('.archive__edit')).toBeNull();
+    expect(el.querySelector('.archive__meta')?.textContent).toContain('26. 10. – 1. 11. 2026');
+  });
 });

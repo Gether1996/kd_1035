@@ -49,7 +49,7 @@ type Problem = 'name' | 'photo' | 'failed';
 type EquipmentLoad = 'idle' | 'loading' | 'preview' | 'empty' | 'failed';
 
 /** "Uložiť do archívu": no label, no category with names, the request failed */
-type ArchiveProblem = 'label' | 'categories' | 'failed';
+type ArchiveProblem = 'label' | 'categories' | 'failed' | 'dates';
 
 /** what the box of the forts week says under its buttons */
 type FortsState =
@@ -366,6 +366,28 @@ export class HallAdmin {
       this.archives.set(saved.archive);
       this.archiveLabel.set('');
       this.archivePick.set(null);
+      this.saved.set('archive');
+    });
+  }
+
+  /** the archive whose name and days are being edited by hand (Gether 16. 11. 2026) */
+  protected readonly editingArchive = signal<number | null>(null);
+
+  protected async editArchive(id: number, label: string, from: string, to: string): Promise<void> {
+    label = label.trim();
+    if (!label) return this.archiveProblem.set('label');
+    // both days or neither, the first not after the last
+    if (!!from !== !!to || (from && to < from)) return this.archiveProblem.set('dates');
+    await this.runArchive(`archive-${id}`, async () => {
+      const saved = await firstValueFrom(
+        this.http.patch<{ archive: HallArchive[] }>(`/api/hall/archive/${id}/`, {
+          label,
+          week_from: from || null,
+          week_to: to || null,
+        }),
+      );
+      this.archives.set(saved.archive);
+      this.editingArchive.set(null);
       this.saved.set('archive');
     });
   }

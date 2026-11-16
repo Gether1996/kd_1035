@@ -365,13 +365,37 @@ def archive(request):
     return Response({'archive': archives()}, status=201)
 
 
-@api_view(['DELETE'])
+class ArchiveEditSerializer(serializers.Serializer):
+    """The name and the days of a saved archive, set by hand (Gether 16. 11. 2026: "sprav mi to ručne editovateľné") –
+    any days, not only a Monday-to-Sunday week; both or neither."""
+
+    label = serializers.CharField(max_length=40, trim_whitespace=True)
+    week_from = serializers.DateField(allow_null=True)
+    week_to = serializers.DateField(allow_null=True)
+
+    def validate(self, data):
+        start, end = data['week_from'], data['week_to']
+        if bool(start) != bool(end) or (start and end < start):
+            raise serializers.ValidationError({'week': 'range'})
+        return data
+
+
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def archive_delete(request, archive_id):
-    """DELETE: the archive with all its names"""
-    get_object_or_404(HallArchive, pk=archive_id).delete()
-    return Response(status=204)
+    """PATCH {label, week_from, week_to}: the archive's name and days; DELETE: the archive with all its names"""
+    archive = get_object_or_404(HallArchive, pk=archive_id)
+    if request.method == 'DELETE':
+        archive.delete()
+        return Response(status=204)
+    serializer = ArchiveEditSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+    data = serializer.validated_data
+    archive.label, archive.week_from, archive.week_to = data['label'], data['week_from'], data['week_to']
+    archive.save(update_fields=['label', 'week_from', 'week_to'])
+    return Response({'archive': archives()})
 
 
 # ---------------------------------------------------------------- the week of the fort destroyers (Gether 7. 11. 2026)

@@ -129,6 +129,7 @@ MATRIX = [
     # Sieň legiend: read with GET /api/hall/, written by the superadmin
     ('POST',   '/api/hall/archive/',                        {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('DELETE', '/api/hall/archive/0/',                      None,    '403 403 403 403 403 403 403 403 403 403 404'),
+    ('PATCH',  '/api/hall/archive/0/',                      {},      '403 403 403 403 403 403 403 403 403 403 404'),
     # the week of the fort destroyers (7. 11. 2026): the superadmin only – no week yet to post, the one place archived
     ('PUT',    '/api/hall/forts/week/',                     {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('POST',   '/api/hall/forts/publish/',                  None,    '403 403 403 403 403 403 403 403 403 403 400'),

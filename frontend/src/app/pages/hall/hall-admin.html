@@ -63,18 +63,48 @@
             @for (a of archives(); track a.id) {
               @let k = 'archive-' + a.id;
               <li class="archive__row">
-                <span class="archive__label">{{ a.label }}</span>
-                <span class="archive__meta">{{ weekRange(a.week_from, a.week_to) || archiveDate(a.created_at) }} · {{ names(a.entries.length) }}</span>
-                @if (confirm() === k) {
-                  <span class="slot__confirm">
-                    {{ ar.confirmDelete }}
-                    <button type="button" class="danger" [disabled]="busy() === k" (click)="deleteArchive(a.id)">{{ ar.yes }}</button>
-                    <button type="button" class="pill-btn pill-btn--quiet" (click)="confirm.set(null)">{{ x.no }}</button>
-                  </span>
+                @if (editingArchive() === a.id) {
+                  <!-- the name and the days by hand (Gether 16. 11. 2026); empty days = the day it was saved -->
+                  <form class="archive__edit" novalidate (submit)="$event.preventDefault(); editArchive(a.id, editLabel.value, editFrom.value, editTo.value)">
+                    <div class="field">
+                      <label class="field__label" [for]="k + '-label'">{{ ar.label }}</label>
+                      <input #editLabel class="input" [id]="k + '-label'" maxlength="40" autocomplete="off" [value]="a.label" />
+                    </div>
+                    <div class="field">
+                      <label class="field__label" [for]="k + '-from'">{{ ar.from }}</label>
+                      <input #editFrom class="input" type="date" [id]="k + '-from'" [value]="a.week_from ?? ''" />
+                    </div>
+                    <div class="field">
+                      <label class="field__label" [for]="k + '-to'">{{ ar.to }}</label>
+                      <input #editTo class="input" type="date" [id]="k + '-to'" [value]="a.week_to ?? ''" />
+                    </div>
+                    <div class="archive__edit-actions">
+                      <button type="submit" class="pill-btn" [attr.aria-disabled]="busy() === k || null">{{ x.save }}</button>
+                      <button type="button" class="pill-btn pill-btn--quiet" (click)="editingArchive.set(null); archiveProblem.set(null)">{{ ar.cancel }}</button>
+                    </div>
+                    <p class="slot__state archive__edit-state" role="status" [class.is-error]="!!archiveProblem()">
+                      @if (archiveProblem(); as p) {
+                        {{ ar.errors[p] }}
+                      }
+                    </p>
+                  </form>
                 } @else {
-                  <button type="button" class="pill-btn pill-btn--quiet archive__delete" (click)="confirm.set(k)">
-                    <svg appIcon="trash-2"></svg>{{ ar.delete }}
-                  </button>
+                  <span class="archive__label">{{ a.label }}</span>
+                  <span class="archive__meta">{{ weekRange(a.week_from, a.week_to) || archiveDate(a.created_at) }} · {{ names(a.entries.length) }}</span>
+                  @if (confirm() === k) {
+                    <span class="slot__confirm">
+                      {{ ar.confirmDelete }}
+                      <button type="button" class="danger" [disabled]="busy() === k" (click)="deleteArchive(a.id)">{{ ar.yes }}</button>
+                      <button type="button" class="pill-btn pill-btn--quiet" (click)="confirm.set(null)">{{ x.no }}</button>
+                    </span>
+                  } @else {
+                    <button type="button" class="pill-btn pill-btn--quiet archive__change" (click)="editingArchive.set(a.id); archiveProblem.set(null)">
+                      <svg appIcon="pencil"></svg>{{ ar.edit }}
+                    </button>
+                    <button type="button" class="pill-btn pill-btn--quiet archive__delete" (click)="confirm.set(k)">
+                      <svg appIcon="trash-2"></svg>{{ ar.delete }}
+                    </button>
+                  }
                 }
               </li>
             }

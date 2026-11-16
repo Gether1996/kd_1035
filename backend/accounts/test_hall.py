@@ -205,6 +205,32 @@ class HallArchiveTests(HallBase):
         self.assertEqual(self.as_admin.delete(f'/api/hall/archive/{first}/', HTTP_X_CSRFTOKEN=self.as_admin.token).status_code, 404)
         self.assertEqual([a['label'] for a in self.as_nelly.get('/api/hall/').json()['archive']], ['KvK 2'])
 
+    def test_the_superadmin_sets_the_name_and_days_of_an_archive_by_hand(self):
+        """Gether 16. 11. 2026: "sprav mi to ručne editovateľné" – any days, both or neither"""
+        self.put(self.as_admin, '/api/hall/forts/1/', {'name': 'CrazyFox CZE', 'count': '200'})
+        self.archive(self.as_admin, {'label': 'Pevnosti', 'categories': ['forts']})
+        url = f"/api/hall/archive/{self.as_admin.get('/api/hall/').json()['archive'][0]['id']}/"
+
+        def patch(client, body):
+            return client.patch(url, body, content_type='application/json', HTTP_X_CSRFTOKEN=client.token)
+
+        body = {'label': ' Ničitelia pevností ', 'week_from': '2026-10-26', 'week_to': '2026-11-01'}
+        self.assertEqual(patch(self.as_nelly, body).status_code, 403)
+        saved = patch(self.as_admin, body)
+        self.assertEqual(saved.status_code, 200)
+        self.assertEqual(
+            [(a['label'], a['week_from'], a['week_to'], len(a['entries'])) for a in saved.json()['archive']],
+            [('Ničitelia pevností', '2026-10-26', '2026-11-01', 1)],
+        )
+        self.assertEqual(patch(self.as_admin, {**body, 'week_from': None, 'week_to': None}).json()['archive'][0]['week_from'], None)
+        for bad in (
+            {**body, 'week_to': None},
+            {**body, 'week_from': '2026-11-02', 'week_to': '2026-11-01'},
+            {**body, 'label': ' '},
+            {**body, 'week_from': 'x'},
+        ):
+            self.assertEqual(patch(self.as_admin, bad).status_code, 400, bad)
+
     def test_the_label_and_categories_are_checked(self):
         self.put(self.as_admin, '/api/hall/rally/1/', {'name': 'Maroš'})
         self.assertEqual(self.archive(self.as_admin, {'label': ' ', 'categories': ['rally']}).status_code, 400)
