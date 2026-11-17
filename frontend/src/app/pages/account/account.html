@@ -113,10 +113,12 @@
                     autocomplete="off"
                     [placeholder]="a.power.placeholder"
                     [value]="powerText(user.power ?? null)"
+                    [disabled]="!!user.power_locked && !user.is_superuser"
                     [attr.aria-invalid]="ps === 'powerInvalid' || null"
                     aria-describedby="power-hint profile-state"
                   />
-                  <span class="stats__unit" id="power-hint">{{ st.powerHint }}</span>
+                  <!-- stopped by the superadmin (Gether 18. 11. 2026) -->
+                  <span class="stats__unit" id="power-hint">{{ user.power_locked && !user.is_superuser ? st.powerLocked : st.powerHint }}</span>
                 </div>
                 <div class="field stats__field">
                   <label class="field__label stats__label" for="account-vip">{{ st.vip }}</label>

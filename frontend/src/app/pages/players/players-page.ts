@@ -4,6 +4,7 @@ import { I18n } from '../../core/i18n/i18n';
 import { Seo } from '../../core/seo';
 import { PageHeader } from '../../shared/page-header';
 import { PlayersAdmin } from './players-admin';
+import { PLAYERS_TEXTS } from './texts';
 
 /**
  * /hraci – the superadmin's list of players (Gether 20. 10. 2026: a page of its own in the account menu, before a
@@ -14,7 +15,7 @@ import { PlayersAdmin } from './players-admin';
   selector: 'app-players-page',
   imports: [PageHeader, PlayersAdmin],
   template: `
-    @let k = t().players;
+    @let k = x();
     <app-page-header [crumbs]="crumbs()" [eyebrow]="k.eyebrow" [title]="k.title" [intro]="k.lead" />
 
     <div class="container content is-wide">
@@ -34,10 +35,11 @@ export class PlayersPage {
   protected readonly i18n = inject(I18n);
   protected readonly auth = inject(Auth);
   protected readonly t = this.i18n.t;
+  protected readonly x = computed(() => PLAYERS_TEXTS[this.i18n.lang()]);
 
   protected readonly crumbs = computed(() => [
     { label: this.t().nav.home, link: this.i18n.path('home') },
-    { label: this.t().players.title, link: this.i18n.path('players') },
+    { label: this.x().title, link: this.i18n.path('players') },
   ]);
 
   constructor() {

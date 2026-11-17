@@ -247,7 +247,7 @@ export class KvkApi {
   }
 
   reviewers(when: () => boolean) {
-    return httpResource<{ players: ReviewerRow[]; auto_approve: boolean }>(() =>
+    return httpResource<{ players: ReviewerRow[]; auto_approve: boolean; power_locked: boolean }>(() =>
       this.isBrowser && when() ? '/api/kvk/reviewers/' : undefined,
     );
   }
@@ -256,6 +256,13 @@ export class KvkApi {
   setAutoApprove(value: boolean): Promise<{ auto_approve: boolean }> {
     return firstValueFrom(
       this.http.put<{ auto_approve: boolean }>('/api/kvk/reviewers/auto-approve/', { auto_approve: value }),
+    );
+  }
+
+  /** players cannot change their power on /ucet (superuser, Gether 18. 11. 2026) */
+  setPowerLock(value: boolean): Promise<{ power_locked: boolean }> {
+    return firstValueFrom(
+      this.http.put<{ power_locked: boolean }>('/api/kvk/reviewers/power-lock/', { power_locked: value }),
     );
   }
 

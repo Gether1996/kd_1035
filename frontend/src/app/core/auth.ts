@@ -34,6 +34,8 @@ export interface Player {
   /** /vyhodnocovanie: the superadmin, and the players the superadmin lets in (Gether 13. and 14. 10. 2026) – the
    * estimate with the variables, or only the published required acclaim (true with the first one too) */
   evaluation_settings?: boolean;
+  /** the superadmin stopped the players' own power changes (Gether 18. 11. 2026) */
+  power_locked?: boolean;
   /** /priestupky – yellow cards (Gether 18. 11. 2026) */
   violations?: boolean;
   evaluation_overview?: boolean;
@@ -102,7 +104,8 @@ export class Auth {
    * required, the reminder stays until it is written down */
   readonly needsPower = computed(() => {
     const user = this.user();
-    return !!user && (user.power ?? null) === null;
+    // locked by the superadmin: the player cannot write it, so nothing to remind of
+    return !!user && (user.power ?? null) === null && !user.power_locked;
   });
   /** a KvK sign-up without its survey (Gether 20. 10. 2026) – the same reminder, it leads to /kvk */
   readonly needsSurvey = computed(() => !!this.user()?.kvk_survey_missing);

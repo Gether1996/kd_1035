@@ -422,6 +422,12 @@ class PlayerSettings(models.Model):
         help_text='Nový hráč je schválený hneď pri prvom prihlásení a superadmin nedostane správu na Discord. '
         'Hráčov, ktorí už čakajú, to neschváli.',
     )
+    # Gether 18. 11. 2026: "aby sme to vedeli zastaviť a ľudia si nevedia meniť power" – e.g. while the KvK is evaluated
+    power_locked = models.BooleanField(
+        'power zamknutá',
+        default=False,
+        help_text='Hráči si na stránke Môj účet nemôžu zmeniť power. Vedenie ju vo vyhodnocovaní zapisuje ďalej.',
+    )
 
     class Meta:
         verbose_name = 'schvaľovanie hráčov'
@@ -433,6 +439,11 @@ class PlayerSettings(models.Model):
     @classmethod
     def load(cls) -> 'PlayerSettings':
         return cls.objects.get_or_create(pk=1)[0]
+
+    @classmethod
+    def power_is_locked(cls) -> bool:
+        """read without creating the row (a GET must not write)"""
+        return cls.objects.filter(pk=1, power_locked=True).exists()
 
 
 # inscription counts: at most two digits

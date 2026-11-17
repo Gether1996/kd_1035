@@ -304,6 +304,8 @@ def signed_in(request) -> dict | None:
         'kill_points': player.kill_points,
         'highest_acclaim': player.highest_acclaim,
         'stats_updated_at': player.stats_updated_at,
+        # the superadmin stopped the players' own power changes (Gether 18. 11. 2026)
+        'power_locked': PlayerSettings.power_is_locked(),
         # adds marches and KvK sign-ups (a new player waits for the superadmin, Gether 12. 10. 2026)
         'approved': player.may_post,
         # agreed to the current terms of use – else the web asks first (Gether 12. 10. 2026)

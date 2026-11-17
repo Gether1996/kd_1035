@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **18. 11. 2026 – v1.68.1:** Globálny zámok power na `/hraci` (`PlayerSettings.power_locked`, migrácia `accounts/0067`); texty `/hraci` mimo slovníkov (`pages/players/texts.ts`, úvodný bundle 620 → 614 kB).
 - **18. 11. 2026 – v1.68.0:** Priestupky (`/priestupky`) – žlté karty so stupňovaním a resetom, nastaviteľné pravidlá (superadmin), oprávnenie „Priestupky“ na `/hraci`, mazanie po `keep_days` (migrácia `accounts/0066`, Ochrana údajov).
 - **18. 11. 2026 – v1.67.6:** `/ucet` – kill points bez jednotky v miliardách, najvyšší acclaim v miliónoch (`parseGameNumber(text, bare)`, Smrťák).
 - **17. 11. 2026:** Noví pešiaci Yi To a Selim I – výber pri marchoch/prihláškach/vyhodnocovaní, portréty, páry pre pechotu a garrison podľa Chadského, páry a formácie vo vyhodnocovaní (`guides/0018`). v1.67.5.

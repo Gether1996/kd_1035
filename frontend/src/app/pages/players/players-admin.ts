@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
+import { PLAYERS_TEXTS } from './texts';
 import { KINGDOM_ZONE } from '../../core/kingdom-zone';
 import { KvkApi, PlayerFlag, ReviewerRow } from '../../core/kvk-api';
 import { fold } from '../../shared/search';
@@ -51,6 +52,23 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
             aria-describedby="auto-approve-hint"
             [checked]="autoApprove()"
             (change)="setAuto(auto)"
+          />
+        </label>
+        <!-- the players' own power changes stopped (Gether 18. 11. 2026) -->
+        <label class="auto-approve">
+          <span class="auto-approve__text">
+            <strong id="power-lock-label">{{ k.powerLock }}</strong>
+            <span id="power-lock-hint">{{ powerLocked() ? k.powerLockOn : k.powerLockOff }}</span>
+          </span>
+          <input
+            #lock
+            class="switch"
+            type="checkbox"
+            role="switch"
+            aria-labelledby="power-lock-label"
+            aria-describedby="power-lock-hint"
+            [checked]="powerLocked()"
+            (change)="setPowerLock(lock)"
           />
         </label>
         <!-- a Discord DM to the players with a wrong pair or formation (Gether 14. 10. 2026) -->
@@ -217,7 +235,7 @@ type KvkFilter = 'all' | 'any' | 'rally' | 'garrison' | 'none';
 export class PlayersAdmin {
   private readonly api = inject(KvkApi);
   protected readonly i18n = inject(I18n);
-  protected readonly t = computed(() => this.i18n.t().players);
+  protected readonly t = computed(() => PLAYERS_TEXTS[this.i18n.lang()]);
   protected readonly accessFilters: AccessFilter[] = ['all', 'r4', 'evaluation_settings', 'violations_manager', 'none'];
   protected readonly approvalFilters: ApprovalFilter[] = ['all', 'pending', 'approved'];
   protected readonly sorts: Sort[] = ['name', 'newest', 'login', 'marches'];
@@ -229,6 +247,7 @@ export class PlayersAdmin {
   protected readonly players = linkedSignal<ReviewerRow[]>(() => (this.data.hasValue() ? this.data.value().players : []));
   /** new players approved at once, no Discord message (Gether 12. 10. 2026: open for now, closed later) */
   protected readonly autoApprove = linkedSignal(() => this.data.hasValue() && this.data.value().auto_approve);
+  protected readonly powerLocked = linkedSignal(() => this.data.hasValue() && this.data.value().power_locked);
   protected readonly search = signal('');
   protected readonly access = signal<AccessFilter>('all');
   protected readonly approval = signal<ApprovalFilter>('all');
@@ -372,6 +391,17 @@ export class PlayersAdmin {
     } catch {
       this.failed.set(true);
       box.checked = !value; // the switch goes back
+    }
+  }
+
+  protected async setPowerLock(box: HTMLInputElement): Promise<void> {
+    const value = box.checked;
+    this.failed.set(false);
+    try {
+      this.powerLocked.set((await this.api.setPowerLock(value)).power_locked);
+    } catch {
+      this.failed.set(true);
+      box.checked = !value;
     }
   }
 

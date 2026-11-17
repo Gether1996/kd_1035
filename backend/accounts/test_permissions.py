@@ -92,6 +92,7 @@ MATRIX = [
     ('GET',    '/api/kvk/reviewers/',                       None,    '403 403 403 403 403 403 403 403 403 403 200'),
     ('PATCH',  '/api/kvk/reviewers/{player}/',              {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('PUT',    '/api/kvk/reviewers/auto-approve/',          {},      '403 403 403 403 403 403 403 403 403 403 400'),
+    ('PUT',    '/api/kvk/reviewers/power-lock/',            {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('POST',   '/api/kvk/reviewers/{local}/reset-code/',    None,    '403 403 403 403 403 403 403 403 403 403 200'),
     ('DELETE', '/api/kvk/reviewers/{waiting_local}/delete/', None,   '403 403 403 403 403 403 403 403 403 403 204'),
     # -------- marches: approved players with and without Discord; adding and changing one needs the terms

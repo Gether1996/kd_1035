@@ -341,7 +341,8 @@ def reviewers(request):
         ),
         key=lambda p: (p['ingame_name'] or p['name']).casefold(),
     )
-    return Response({'players': rows, 'auto_approve': PlayerSettings.load().auto_approve})
+    settings = PlayerSettings.load()
+    return Response({'players': rows, 'auto_approve': settings.auto_approve, 'power_locked': settings.power_locked})
 
 
 @never_cache
@@ -356,6 +357,21 @@ def auto_approve(request):
     PlayerSettings.objects.update_or_create(pk=1, defaults={'auto_approve': value})
     log.info('Auto-approve of new players: %s', value)
     return Response({'auto_approve': value})
+
+
+@never_cache
+@api_view(['PUT'])
+@permission_classes([IsSuperuser])
+@throttle_classes([WriteThrottle])
+def power_lock(request):
+    """PUT {power_locked: bool} – players cannot change their power on /ucet (Gether 18. 11. 2026: "aby sme to vedeli
+    zastaviť a ľudia si nevedia meniť power"); the evaluation keeps writing it."""
+    value = request.data.get('power_locked') if isinstance(request.data, dict) else None
+    if type(value) is not bool:
+        return Response({'power_locked': 'bool'}, status=400)
+    PlayerSettings.objects.update_or_create(pk=1, defaults={'power_locked': value})
+    log.info('Power of players locked: %s', value)
+    return Response({'power_locked': value})
 
 
 @never_cache

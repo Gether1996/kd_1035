@@ -7,7 +7,7 @@ from rest_framework import serializers
 from kingdom.models import is_reminder_minutes, lead_order
 
 from . import evaluation_history
-from .models import MAX_PLAYER_REMINDERS, Player, PlayerEvaluation
+from .models import MAX_PLAYER_REMINDERS, Player, PlayerEvaluation, PlayerSettings
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -32,6 +32,15 @@ class ProfileSerializer(serializers.ModelSerializer):
         # vip, kill_points, highest_acclaim: the account overview (Gether 10. and 11. 11. 2026), null = not written down
         fields = ['ingame_name', 'power', 'lang', 'vip', 'kill_points', 'highest_acclaim']
         extra_kwargs = {'ingame_name': {'allow_blank': False}}
+
+    def validate_power(self, value):
+        # the global lock (Gether 18. 11. 2026): the same value again passes, the superadmin always may
+        request = self.context.get('request')
+        if PlayerSettings.power_is_locked() and not (request and request.user.is_superuser):
+            before = PlayerEvaluation.objects.filter(player=self.instance).values_list('power', flat=True).first()
+            if value != before:
+                raise serializers.ValidationError('power_locked', code='power_locked')
+        return value
 
     def validate_ingame_name(self, value):
         # a player without Discord signs in with it (local_auth.py): it stays unique among all players

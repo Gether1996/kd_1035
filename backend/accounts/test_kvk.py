@@ -766,6 +766,20 @@ class ApprovalTests(KvkTestCase):
         self.assertTrue(admin.get('/api/auth/me/').json()['user']['approved'])
         self.assertEqual(self.sign_up(admin).status_code, 200)
 
+    def test_the_superuser_locks_the_power(self):
+        """Gether 18. 11. 2026: "aby sme to vedeli zastaviť a ľudia si nevedia meniť power" """
+        admin_player = make_player('245662824171438090')
+        admin_player.user.is_superuser = True
+        admin_player.user.save()
+        admin = self.login(admin_player.user)
+        url = '/api/kvk/reviewers/power-lock/'
+        self.assertFalse(admin.get('/api/kvk/reviewers/').json()['power_locked'])
+        self.assertEqual(self.call('put', url, {'power_locked': True}, self.client).status_code, 403)
+        self.assertEqual(self.call('put', url, {'power_locked': 'yes'}, admin).status_code, 400)
+        self.assertEqual(self.call('put', url, {'power_locked': True}, admin).json(), {'power_locked': True})
+        self.assertTrue(PlayerSettings.power_is_locked())
+        self.assertTrue(admin.get('/api/kvk/reviewers/').json()['power_locked'])
+
     def test_the_superuser_switches_auto_approve(self):
         admin_player = make_player('245662824171438090')
         admin_player.user.is_superuser = True

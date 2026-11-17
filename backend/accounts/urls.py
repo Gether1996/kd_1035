@@ -38,6 +38,7 @@ urlpatterns = [
     path('kvk/reviewers/', kvk_views.reviewers),
     path('kvk/reviewers/<int:player_id>/', kvk_views.reviewer),
     path('kvk/reviewers/auto-approve/', kvk_views.auto_approve),
+    path('kvk/reviewers/power-lock/', kvk_views.power_lock),
     path('kvk/reviewers/<int:player_id>/reset-code/', local_auth.reset_code),
     path('kvk/reviewers/<int:player_id>/delete/', local_auth.delete_local),
     path('discord/interactions/', discord_interactions.interactions),

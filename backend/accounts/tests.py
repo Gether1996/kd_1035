@@ -380,6 +380,7 @@ class MeTests(TestCase):
                     'kill_points': None,
                     'highest_acclaim': None,
                     'stats_updated_at': None,
+                    'power_locked': False,
                     'approved': False,
                     'terms_accepted': False,
                     'is_staff': False,
@@ -527,6 +528,23 @@ class IngameNameTests(TestCase):
         self.assertEqual(self.patch({'ingame_name': '   '}, token).status_code, 400)
         player.refresh_from_db()
         self.assertEqual(player.ingame_name, 'GetheR')
+
+    def test_the_superadmin_locks_the_players_power(self):
+        """Gether 18. 11. 2026: "aby sme to vedeli zastaviť a ľudia si nevedia meniť power" """
+        player = make_player()
+        PlayerEvaluation.objects.create(player=player, power=Decimal('98.4'))
+        self.client.force_login(player.user)
+        token = self.token()
+        PlayerSettings.objects.update_or_create(pk=1, defaults={'power_locked': True})
+        self.assertTrue(self.client.get('/api/auth/me/').json()['user']['power_locked'])
+        refused = self.patch({'power': 101.5}, token)
+        self.assertEqual(refused.status_code, 400)
+        self.assertIn('power_locked', str(refused.json()['power']))
+        self.assertEqual(PlayerEvaluation.objects.get(player=player).power, Decimal('98.4'))
+        # the same value again and the other numbers still save
+        self.assertEqual(self.patch({'power': 98.4, 'vip': 12}, token).status_code, 200)
+        PlayerSettings.objects.filter(pk=1).update(power_locked=False)
+        self.assertEqual(self.patch({'power': 101.5}, token).status_code, 200)
 
     def test_name_is_at_most_32_characters(self):
         player = make_player()

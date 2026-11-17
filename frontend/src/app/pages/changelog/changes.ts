@@ -16,7 +16,7 @@ export interface Change {
 export const CHANGES: Change[] = [
   {
     date: '2026-11-18',
-    version: '1.68.0',
+    version: '1.68.1',
     sk: ['Môj účet: kill points stačí napísať v miliardách (8,8) a najvyšší acclaim v miliónoch (79,5).'],
     cs: ['Můj účet: kill points stačí napsat v miliardách (8,8) a nejvyšší acclaim v milionech (79,5).'],
   },

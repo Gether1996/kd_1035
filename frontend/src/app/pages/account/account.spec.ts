@@ -250,6 +250,14 @@ describe('Account', () => {
     expect(el.querySelector('#profile-state')?.textContent).toContain('Uložené');
   });
 
+  it('the power locked by the superadmin: the field is off and says why, no reminder (Gether 18. 11. 2026)', async () => {
+    const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', power: null, power_locked: true, approved: true, terms_accepted: true, is_staff: false, is_superuser: false };
+    const el = await render({ login_enabled: true, user });
+    expect(el.querySelector<HTMLInputElement>('#account-power')!.disabled).toBe(true);
+    expect(el.querySelector('#power-hint')?.textContent).toContain('Power je teraz zamknutá');
+    expect(el.querySelector('#game-stats .ingame__ask')).toBeNull();
+  });
+
   it('VIP 1–19, the top level SVIP is a switch saved as 20 (Gether 12. 11. 2026)', async () => {
     const user = { discord_id: '1', name: 'Nelly', avatar_url: '', ingame_name: 'Nelly', vip: 19, approved: true, terms_accepted: true, is_staff: false, is_superuser: false };
     const el = await render({ login_enabled: true, user });

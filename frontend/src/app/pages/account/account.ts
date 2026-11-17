@@ -32,7 +32,7 @@ import { LocalLogin, PasswordForm } from './local-login';
  * Not indexed, not in the sitemap.
  */
 /** what the profile's save says: saved, or why not */
-type ProfileState = 'saved' | 'failed' | 'required' | 'taken' | 'powerInvalid' | 'invalid';
+type ProfileState = 'saved' | 'failed' | 'required' | 'taken' | 'powerInvalid' | 'powerLocked' | 'invalid';
 
 @Component({
   selector: 'app-account',
@@ -171,6 +171,7 @@ export class Account {
   protected profileText(state: ProfileState): string {
     const a = this.t().account;
     if (state === 'powerInvalid') return a.power.invalid;
+    if (state === 'powerLocked') return a.stats.powerLocked;
     if (state === 'invalid') return a.stats.invalid;
     return a.ingame[state];
   }
@@ -244,7 +245,9 @@ export class Account {
     } catch (error) {
       // a player without Discord signs in with the name – another player's name is refused
       const taken = error instanceof HttpErrorResponse && `${error.error?.ingame_name ?? ''}`.includes('name_taken');
-      this.profileState.set(taken ? 'taken' : 'failed');
+      // locked meanwhile by the superadmin (Gether 18. 11. 2026)
+      const locked = error instanceof HttpErrorResponse && `${error.error?.power ?? ''}`.includes('power_locked');
+      this.profileState.set(taken ? 'taken' : locked ? 'powerLocked' : 'failed');
     } finally {
       this.saving.set(false);
     }
