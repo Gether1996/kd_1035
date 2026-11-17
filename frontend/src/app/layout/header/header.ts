@@ -96,6 +96,10 @@ export class Header {
       ...(this.auth.canEvaluate()
         ? [{ label: t.evaluation, link: this.i18n.path('evaluation'), icon: 'scale' as const }]
         : []),
+      // yellow cards – the superadmin and the players let in (Gether 18. 11. 2026)
+      ...(this.auth.user()?.violations
+        ? [{ label: t.violations, link: this.i18n.path('violations'), icon: 'flag' as const }]
+        : []),
       // the superadmin's list of players (Gether 20. 10. 2026)
       ...(this.auth.user()?.is_superuser ? [{ label: t.players, link: this.i18n.path('players'), icon: 'crown' as const }] : []),
     ];

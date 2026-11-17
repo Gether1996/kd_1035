@@ -7,7 +7,7 @@ import { MarchNotices } from '../../shared/march-notices';
 import { Icon } from '../../shared/icon';
 import { EvalTip } from '../evaluation/tip';
 
-type AccessFilter = 'all' | 'r4' | 'evaluation_settings' | 'none';
+type AccessFilter = 'all' | 'r4' | 'evaluation_settings' | 'violations_manager' | 'none';
 type ApprovalFilter = 'all' | 'approved' | 'pending';
 type Sort = 'name' | 'newest' | 'login' | 'marches';
 type MarchFilter = 'all' | 'with' | 'without' | 'fix';
@@ -218,12 +218,12 @@ export class PlayersAdmin {
   private readonly api = inject(KvkApi);
   protected readonly i18n = inject(I18n);
   protected readonly t = computed(() => this.i18n.t().players);
-  protected readonly accessFilters: AccessFilter[] = ['all', 'r4', 'evaluation_settings', 'none'];
+  protected readonly accessFilters: AccessFilter[] = ['all', 'r4', 'evaluation_settings', 'violations_manager', 'none'];
   protected readonly approvalFilters: ApprovalFilter[] = ['all', 'pending', 'approved'];
   protected readonly sorts: Sort[] = ['name', 'newest', 'login', 'marches'];
   protected readonly marchFilters: MarchFilter[] = ['all', 'with', 'without', 'fix'];
   protected readonly kvkFilters: KvkFilter[] = ['all', 'any', 'rally', 'garrison', 'none'];
-  protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluation_settings', 'inactive'];
+  protected readonly flags: PlayerFlag[] = ['approved', 'reviewer', 'evaluation_settings', 'violations_manager', 'inactive'];
 
   protected readonly data = this.api.reviewers(() => true);
   protected readonly players = linkedSignal<ReviewerRow[]>(() => (this.data.hasValue() ? this.data.value().players : []));
@@ -248,11 +248,15 @@ export class PlayersAdmin {
   private readonly approved = (p: ReviewerRow) => p.approved || p.superuser;
   /** R4 and the evaluation count only while approved (taking the approval back cuts them off) – said when one is on */
   protected readonly cutOff = (p: ReviewerRow) =>
-    !this.approved(p) && (p.reviewer || p.evaluation_settings);
+    !this.approved(p) && (p.reviewer || p.evaluation_settings || p.violations_manager);
   private readonly accessMatches = (p: ReviewerRow, f: AccessFilter) =>
     f === 'all' ||
     (!p.superuser &&
-      (f === 'r4' ? p.reviewer : f === 'none' ? !p.reviewer && !p.evaluation_settings : p[f]));
+      (f === 'r4'
+        ? p.reviewer
+        : f === 'none'
+          ? !p.reviewer && !p.evaluation_settings && !p.violations_manager
+          : p[f]));
   private readonly approvalMatches = (p: ReviewerRow, f: ApprovalFilter) =>
     f === 'all' || (f === 'approved') === this.approved(p);
 

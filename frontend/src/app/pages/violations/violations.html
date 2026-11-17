@@ -1,0 +1,221 @@
+@let x = this.x();
+@if (data.error()) {
+  <p class="state">{{ x.error }}</p>
+} @else if (!data.hasValue()) {
+  <div class="placeholder" aria-hidden="true"></div>
+} @else {
+  <div class="vio">
+    <!-- the rules: how cards add up and the levels; the superadmin edits them -->
+    @if (rules(); as r) {
+      <section class="panel rules" aria-labelledby="vio-rules">
+        <div class="panel__head">
+          <h2 class="panel__title" id="vio-rules"><svg appIcon="scale"></svg>{{ x.rules.title }}</h2>
+          @if (editRules() && !editing()) {
+            <button type="button" class="pill-btn pill-btn--quiet" (click)="startEdit()">
+              <svg appIcon="pencil"></svg>{{ x.rules.edit }}
+            </button>
+          }
+        </div>
+        @if (!editing()) {
+          <p class="rules__summary">{{ summary(r) }}</p>
+          <ol class="levels">
+            @for (level of r.levels; track $index) {
+              <li class="level" [class.is-top]="$index === r.levels.length - 1 && r.levels.length > 1">
+                <span class="level__n" aria-hidden="true">{{ $index + 1 }}</span>
+                <span class="level__name">{{ level.name }}</span>
+                @if (level.penalty || level.days) {
+                  <span class="level__penalty">
+                    {{ level.penalty }}@if (level.days) {<span class="level__days"> · {{ x.rules.days.replace('{n}', '' + level.days) }}</span>}
+                  </span>
+                }
+              </li>
+            }
+          </ol>
+          <p class="rules__keep">{{ keep(r) }}</p>
+        } @else if (draft(); as d) {
+          <form class="rules__form" novalidate (submit)="saveRules($event)">
+            <div class="rules__numbers">
+              <label class="field">
+                <span class="field__label">{{ x.rules.window }}</span>
+                <input class="input" type="number" min="1" max="3650" [value]="d.window_days" (input)="setRule('window_days', $any($event.target).value)" />
+                <span class="field__hint">{{ x.rules.windowHint }}</span>
+              </label>
+              <label class="field">
+                <span class="field__label">{{ x.rules.keepLabel }}</span>
+                <input class="input" type="number" min="30" max="3650" [value]="d.keep_days" (input)="setRule('keep_days', $any($event.target).value)" />
+                <span class="field__hint">{{ x.rules.keepHint }}</span>
+              </label>
+            </div>
+            <ol class="rules__levels">
+              @for (level of d.levels; track $index) {
+                <li class="rules__level">
+                  <p class="rules__level-title">{{ x.rules.level.replace('{n}', '' + ($index + 1)) }}</p>
+                  <label class="field">
+                    <span class="field__label">{{ x.rules.name }}</span>
+                    <input class="input" type="text" maxlength="60" [value]="level.name" (input)="setLevel($index, 'name', $any($event.target).value)" />
+                  </label>
+                  <label class="field">
+                    <span class="field__label">{{ x.rules.penalty }}</span>
+                    <input class="input" type="text" maxlength="200" [value]="level.penalty" (input)="setLevel($index, 'penalty', $any($event.target).value)" />
+                  </label>
+                  <label class="field rules__days">
+                    <span class="field__label">{{ x.rules.penaltyDays }}</span>
+                    <input class="input" type="number" min="0" max="3650" [value]="level.days" (input)="setLevel($index, 'days', $any($event.target).value)" />
+                    <span class="field__hint">{{ x.rules.penaltyDaysHint }}</span>
+                  </label>
+                  @if (d.levels.length > 1) {
+                    <button
+                      type="button"
+                      class="icon-btn rules__remove"
+                      [attr.aria-label]="x.rules.removeLevel.replace('{n}', '' + ($index + 1))"
+                      [title]="x.rules.removeLevel.replace('{n}', '' + ($index + 1))"
+                      (click)="removeLevel($index)"
+                    >
+                      <svg appIcon="x"></svg>
+                    </button>
+                  }
+                </li>
+              }
+            </ol>
+            <div class="rules__actions">
+              @if (d.levels.length < 10) {
+                <button type="button" class="pill-btn pill-btn--quiet" (click)="addLevel()"><svg appIcon="plus"></svg>{{ x.rules.addLevel }}</button>
+              }
+              <span class="rules__spacer"></span>
+              <button type="button" class="pill-btn pill-btn--quiet" (click)="editing.set(false)">{{ x.rules.cancel }}</button>
+              <button type="submit" class="btn btn--gold" [disabled]="savingRules()">{{ x.rules.save }}</button>
+            </div>
+          </form>
+        }
+        <p class="state-line" role="status" [class.is-error]="rulesState() === 'invalid' || rulesState() === 'failed'">
+          @if (rulesState(); as s) {
+            {{ x.rules[s] }}
+          }
+        </p>
+      </section>
+    }
+
+    <!-- a new card: the player, the day, the reason – and the level it will get -->
+    <section class="panel add" aria-labelledby="vio-add">
+      <h2 class="panel__title" id="vio-add"><svg appIcon="flag"></svg>{{ x.add.title }}</h2>
+      <form class="add__form" novalidate (submit)="add($event)">
+        <label class="field add__player">
+          <span class="field__label">{{ x.add.player }}</span>
+          <select class="select" (change)="player.set(+$any($event.target).value || null); addState.set(null)">
+            <option value="" [selected]="!player()">{{ x.add.choose }}</option>
+            @for (p of players(); track p.id) {
+              <option [value]="p.id" [selected]="player() === p.id">{{ p.name }}</option>
+            }
+          </select>
+        </label>
+        <label class="field add__day">
+          <span class="field__label">{{ x.add.day }}</span>
+          <input class="input" type="date" [max]="today" [value]="day()" (input)="day.set($any($event.target).value); addState.set(null)" />
+        </label>
+        <label class="field add__reason">
+          <span class="field__label">{{ x.add.reason }}</span>
+          <input
+            class="input"
+            type="text"
+            maxlength="300"
+            [placeholder]="x.add.reasonPlaceholder"
+            [value]="reason()"
+            (input)="reason.set($any($event.target).value); addState.set(null)"
+          />
+        </label>
+        <div class="add__foot">
+          <p class="add__preview" aria-live="polite">{{ preview() }}</p>
+          <button type="submit" class="btn btn--gold" [disabled]="adding()">{{ x.add.submit }}</button>
+        </div>
+      </form>
+      <p class="state-line" role="status" [class.is-error]="addState() === 'invalid' || addState() === 'failed'">
+        @if (addState(); as s) {
+          {{ x.add[s] }}
+        }
+      </p>
+    </section>
+
+    <!-- the players: who has a valid card, the level, until when; the history of each -->
+    <section class="list" [attr.aria-label]="x.title">
+      <div class="list__tools">
+        <label class="field list__search">
+          <span class="sr-only">{{ x.list.search }}</span>
+          <input class="input" type="search" [placeholder]="x.list.search" [value]="search()" (input)="search.set($any($event.target).value)" />
+        </label>
+        <div class="segmented" role="group" [attr.aria-label]="x.title">
+          @for (f of filters; track f) {
+            <button type="button" [attr.aria-pressed]="filter() === f" (click)="filter.set(f)">
+              {{ x.list.filters[f] }} <span class="count">{{ counts()[f] }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (deleteFailed()) {
+        <p class="state-line is-error" role="alert">{{ x.list.deleteFailed }}</p>
+      }
+
+      <ul class="rows">
+        @for (p of shown(); track p.id) {
+          <li class="row" [class.is-active]="p.level > 0" [class.is-top]="isTop(p.level)">
+            <div class="row__main">
+              <img class="row__avatar" [src]="p.avatar_url" alt="" width="40" height="40" loading="lazy" />
+              <div class="row__who">
+                <p class="row__name">{{ p.name }}</p>
+                <p class="row__state">
+                  @if (p.level > 0) {
+                    <span class="card-tag" [class.is-red]="isTop(p.level)">{{ levelName(p.level) }}</span>
+                    <span>{{ x.list.activeUntil.replace('{date}', date(p.active_until!)) }}</span>
+                    @if (p.penalty_until) {
+                      <span class="row__penalty">{{ x.list.penaltyUntil.replace('{date}', date(p.penalty_until)) }}</span>
+                    }
+                  } @else {
+                    <span class="row__clean">{{ x.list.clean }}</span>
+                  }
+                </p>
+              </div>
+              @if (p.cards.length) {
+                <button
+                  type="button"
+                  class="pill-btn pill-btn--quiet row__toggle"
+                  [attr.aria-expanded]="open() === p.id"
+                  [attr.aria-controls]="'vio-cards-' + p.id"
+                  (click)="open.set(open() === p.id ? null : p.id)"
+                >
+                  {{ cardCount(p.cards.length) }}
+                  <svg [appIcon]="open() === p.id ? 'chevron-up' : 'chevron-down'"></svg>
+                  <span class="sr-only">{{ open() === p.id ? x.list.hide : x.list.show }}</span>
+                </button>
+              }
+            </div>
+            @if (open() === p.id) {
+              <ol class="cards" [id]="'vio-cards-' + p.id" [attr.aria-label]="x.list.history.replace('{name}', p.name)">
+                @for (c of p.cards; track c.id) {
+                  <li class="card">
+                    <span class="card-tag card-tag--small" [class.is-red]="isTop(c.level)">{{ c.level }}.</span>
+                    <div class="card__text">
+                      <p class="card__reason">{{ c.reason }}</p>
+                      <p class="card__meta">
+                        {{ date(c.day) }} · {{ levelName(c.level) }}@if (c.added_by) { · {{ x.list.addedBy.replace('{name}', c.added_by) }}}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="pill-btn pill-btn--quiet card__delete"
+                      [class.is-armed]="confirming() === c.id"
+                      (click)="remove(c.id)"
+                    >
+                      <svg appIcon="x"></svg>{{ confirming() === c.id ? x.list.confirm : x.list.delete }}
+                    </button>
+                  </li>
+                }
+              </ol>
+            }
+          </li>
+        } @empty {
+          <li class="rows__empty">{{ x.list.empty }}</li>
+        }
+      </ul>
+    </section>
+  </div>
+}

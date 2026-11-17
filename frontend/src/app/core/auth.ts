@@ -34,6 +34,8 @@ export interface Player {
   /** /vyhodnocovanie: the superadmin, and the players the superadmin lets in (Gether 13. and 14. 10. 2026) – the
    * estimate with the variables, or only the published required acclaim (true with the first one too) */
   evaluation_settings?: boolean;
+  /** /priestupky – yellow cards (Gether 18. 11. 2026) */
+  violations?: boolean;
   evaluation_overview?: boolean;
   /** R4 (and the superadmin): every sign-up and march, and "Top 5 equip" of /vyhodnocovanie (Gether 19. 10. 2026) */
   reviewer?: boolean;

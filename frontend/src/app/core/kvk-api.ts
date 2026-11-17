@@ -177,7 +177,7 @@ export interface SignupForm {
 }
 
 /** the switches of a player in Hráči (/hraci) */
-export type PlayerFlag = 'reviewer' | 'approved' | 'evaluation_settings' | 'inactive';
+export type PlayerFlag = 'reviewer' | 'approved' | 'evaluation_settings' | 'violations_manager' | 'inactive';
 
 export interface ReviewerRow {
   id: number;
@@ -193,6 +193,8 @@ export interface ReviewerRow {
   /** /vyhodnocovanie (Gether 13. and 14. 10. 2026): the estimate with the variables (the published required acclaim
    * every approved player sees, 23. 10. 2026) */
   evaluation_settings: boolean;
+  /** /priestupky – sees, adds and deletes yellow cards (Gether 18. 11. 2026) */
+  violations_manager: boolean;
   superuser: boolean;
   /** without Discord – the superadmin gives a code for a new password and deletes one waiting (Gether 17. 10. 2026) */
   local?: boolean;

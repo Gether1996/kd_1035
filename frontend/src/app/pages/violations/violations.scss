@@ -1,0 +1,415 @@
+// /priestupky – the rules, a new card, the players with their yellow cards (Gether 18. 11. 2026)
+
+:host {
+  display: block;
+}
+
+.vio {
+  display: grid;
+  gap: 16px;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+
+    .list {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.placeholder {
+  min-height: 320px;
+}
+
+.state {
+  padding: 32px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.panel {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: 700 1.125rem / 1.3 var(--font-display);
+  color: var(--gold-100);
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    color: var(--gold-400);
+  }
+}
+
+.state-line {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gold-300);
+
+  &:empty {
+    min-height: 0;
+    margin-top: -12px;
+  }
+
+  &.is-error {
+    color: var(--red-300);
+  }
+}
+
+// ---------------------------------------------------------------- the rules
+
+.rules__summary,
+.rules__keep {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.rules__keep {
+  font-size: 0.875rem;
+  color: var(--text-mute);
+}
+
+.levels {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.level {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 10px;
+}
+
+.level__n {
+  display: grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 26px;
+  height: 34px;
+  border-radius: 4px;
+  background: var(--gold-400);
+  color: var(--bg);
+  font: 700 0.875rem / 1 var(--font-body);
+}
+
+// the last level: the red card
+.level.is-top .level__n {
+  background: var(--red-500);
+  color: var(--text);
+}
+
+.level__name {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.level__penalty {
+  grid-column: 2;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.level__days {
+  color: var(--gold-300);
+}
+
+.rules__form {
+  display: grid;
+  gap: 14px;
+}
+
+.rules__numbers {
+  display: grid;
+  gap: 12px;
+
+  @media (min-width: 560px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.rules__levels {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules__level {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+
+  @media (min-width: 560px) {
+    grid-template-columns: 1fr 1.4fr 0.8fr;
+    align-items: start;
+  }
+}
+
+.rules__level-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-right: 40px;
+  font: 600 0.8125rem / 1.2 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.rules__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.rules__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  .btn {
+    margin: 0;
+  }
+}
+
+.rules__spacer {
+  flex: 1 1 auto;
+}
+
+// ---------------------------------------------------------------- a new card
+
+.add__form {
+  display: grid;
+  gap: 12px;
+
+  @media (min-width: 560px) {
+    grid-template-columns: 2fr 1fr;
+
+    .add__reason,
+    .add__foot {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.add__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+
+  .btn {
+    margin: 0 0 0 auto;
+  }
+}
+
+.add__preview {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gold-300);
+}
+
+// ---------------------------------------------------------------- the players
+
+.list {
+  display: grid;
+  gap: 12px;
+}
+
+.list__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.list__search {
+  flex: 1 1 220px;
+}
+
+.count {
+  margin-left: 4px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.rows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows__empty {
+  padding: 24px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.row {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+
+  &.is-active {
+    border-left-color: var(--gold-400);
+  }
+
+  &.is-top {
+    border-left-color: var(--red-500);
+  }
+}
+
+.row__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.row__avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.row__who {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.row__name {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.row__state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.row__penalty {
+  color: var(--red-300);
+}
+
+.row__clean {
+  color: var(--text-mute);
+}
+
+.row__toggle {
+  margin-left: auto;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// a card like the referee's: gold, the last level red
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--gold-400);
+  color: var(--bg);
+  font: 700 0.8125rem / 1.4 var(--font-body);
+
+  &.is-red {
+    background: var(--red-500);
+    color: var(--text);
+  }
+}
+
+.card-tag--small {
+  flex: none;
+  justify-content: center;
+  min-width: 28px;
+}
+
+.cards {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px 12px;
+}
+
+.card__text {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.card__reason {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.card__meta {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-mute);
+}
+
+.card__delete.is-armed {
+  border-color: color-mix(in srgb, var(--red-500) 55%, transparent);
+  color: var(--red-300);
+}

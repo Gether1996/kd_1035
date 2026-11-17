@@ -322,6 +322,7 @@ def reviewers(request):
                 'avatar_url': p.avatar_url,
                 'reviewer': p.kvk_reviewer,
                 'evaluation_settings': p.evaluation_settings,
+                'violations_manager': p.violations_manager,
                 'approved': p.approved,
                 # hidden in the list until "Zobraziť neaktívnych" (Gether 20. 10. 2026)
                 'inactive': p.inactive,
@@ -362,7 +363,7 @@ def auto_approve(request):
 @permission_classes([IsSuperuser])
 @throttle_classes([WriteThrottle])
 def reviewer(request, player_id):
-    """PATCH {reviewer?: bool, approved?: bool, evaluation_settings?: bool, inactive?:
+    """PATCH {reviewer?: bool, approved?: bool, evaluation_settings?: bool, violations_manager?: bool, inactive?:
     bool} – R4 (sees the sign-ups), approved (adds marches and sign-ups), /vyhodnocovanie (the estimate and the
     variables) and its published required acclaim only (Gether 14. 10. 2026), and "Neaktívny" – hidden in the
     superadmin's list on /hraci, nothing else (Gether 20. 10. 2026)."""
@@ -372,11 +373,13 @@ def reviewer(request, player_id):
         'reviewer': 'kvk_reviewer',
         'approved': 'approved',
         'evaluation_settings': 'evaluation_settings',
+        # the yellow cards on /priestupky (Gether 18. 11. 2026)
+        'violations_manager': 'violations_manager',
         'inactive': 'inactive',
     }
     changes = {name: body[name] for name in fields if name in body}
     if not changes:
-        return Response({'detail': 'reviewer, approved, evaluation_settings or inactive'}, status=400)
+        return Response({'detail': 'reviewer, approved, evaluation_settings, violations_manager or inactive'}, status=400)
     was_approved = player.approved
     for name, value in changes.items():
         if type(value) is not bool:

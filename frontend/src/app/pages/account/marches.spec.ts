@@ -756,11 +756,11 @@ describe('PlayersAdmin', () => {
     expect(names()).toEqual(['nova', 'Gether']);
     select('#players-kvk', 'all');
     await settle(fixture);
-    // approved, R4, the evaluation and "Neaktívny" for each player but the superuser, explained once above (the
-    // published required acclaim comes with the approval since 23. 10. 2026)
-    expect(el.querySelectorAll('.reviewer .switch').length).toBe(8);
-    expect(el.querySelectorAll('.switch-legend li').length).toBe(4);
-    expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(4);
+    // approved, R4, the evaluation, "Priestupky" and "Neaktívny" for each player but the superuser, explained once
+    // above (the published required acclaim comes with the approval since 23. 10. 2026)
+    expect(el.querySelectorAll('.reviewer .switch').length).toBe(10);
+    expect(el.querySelectorAll('.switch-legend li').length).toBe(5);
+    expect(el.querySelectorAll('.switch-legend app-eval-tip').length).toBe(5);
     const filters = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.list__filters button'));
     expect(filters().map((b) => b.textContent?.trim())).toEqual(['Všetci · 3', 'Čakajú · 1', 'Schválení · 2']);
     // by the switches; the superadmin is only under "všetci"
@@ -769,6 +769,7 @@ describe('PlayersAdmin', () => {
       'Prístup: všetci · 3',
       'R4 · 0',
       'Vyh. nastavenia · 0',
+      'Priestupky · 0',
       'Bez prístupu · 2',
     ]);
     select('#players-access', 'none');
@@ -796,17 +797,17 @@ describe('PlayersAdmin', () => {
     select('#players-access', 'none');
     await settle(fixture);
     expect(names()).toEqual(['nova', 'Nelly']);
-    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[5];
+    const r4 = () => el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
     r4().click();
     const flags = { reviewer: true, approved: true, evaluation_settings: false };
     http.expectOne('/api/kvk/reviewers/2/').flush({ id: 2, ...flags });
     await settle(fixture);
     expect(names()).toEqual(['nova', 'Nelly']);
-    expect(access()[3]).toBe('Bez prístupu · 1');
+    expect(access()[4]).toBe('Bez prístupu · 1');
     select('#players-access', 'all');
     await settle(fixture);
     // the evaluation of Nelly
-    const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[6];
+    const settings = el.querySelectorAll<HTMLInputElement>('.reviewer .switch')[7];
     expect(settings.getAttribute('aria-label')).toBe('Nastavenia vyhodnocovania – odhad acclaimu a premenné: Nelly');
     settings.click();
     const ev = http.expectOne('/api/kvk/reviewers/2/');
@@ -930,7 +931,7 @@ describe('PlayersAdmin – Neaktívny', () => {
 
     // Bela marked inactive: the row stays (tagged) until a filter changes
     const bela = el.querySelectorAll('.reviewer')[0];
-    bela.querySelectorAll<HTMLInputElement>('.switch')[3].click();
+    bela.querySelectorAll<HTMLInputElement>('.switch')[4].click();
     const req = http.expectOne('/api/kvk/reviewers/2/');
     expect(req.request.body).toEqual({ inactive: true });
     req.flush({ id: 2, inactive: true });
@@ -987,9 +988,9 @@ describe('PlayersAdmin – approval taken back', () => {
       expect(hints[0].closest('.reviewer')?.querySelector('.reviewer__name strong')?.textContent).toContain('Odišiel');
       // the switches stay clickable and point screen readers at the hint (not the approval one)
       const boxes = Array.from(hints[0].closest('.reviewer')!.querySelectorAll<HTMLInputElement>('.switch'));
-      expect(boxes.map((b) => b.disabled)).toEqual([false, false, false, false]);
+      expect(boxes.map((b) => b.disabled)).toEqual([false, false, false, false, false]);
       // "Neaktívny" is about the list only – it never points at the hint
-      expect(boxes.map((b) => b.getAttribute('aria-describedby'))).toEqual([null, 'inactive-3', 'inactive-3', null]);
+      expect(boxes.map((b) => b.getAttribute('aria-describedby'))).toEqual([null, 'inactive-3', 'inactive-3', 'inactive-3', null]);
       http.verify();
     });
   }

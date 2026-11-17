@@ -14,6 +14,7 @@ other.
 
 import shutil
 import tempfile
+from datetime import date
 from types import SimpleNamespace
 
 from django.conf import settings
@@ -26,7 +27,7 @@ from django.urls import URLResolver, get_resolver, resolve
 from kingdom.models import KingdomEvent
 
 from . import guard
-from .models import TERMS_VERSION, EventNote, ForumPost, ForumThread, HallEntry, KvkSignup, March, Player
+from .models import TERMS_VERSION, EventNote, ForumPost, ForumThread, HallEntry, KvkSignup, March, Player, Violation
 from .test_kvk import STATS
 from .test_reminders import make_player, utc
 
@@ -156,6 +157,11 @@ MATRIX = [
     ('POST',   '/api/events/manage/{event}/notes/',         {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('PATCH',  '/api/events/manage/notes/{note}/',          {},      '403 403 403 403 403 403 403 403 403 403 200'),
     ('DELETE', '/api/events/manage/notes/{note}/',          None,    '403 403 403 403 403 403 403 403 403 403 204'),
+    # yellow cards (Gether 18. 11. 2026): the superadmin and the switch "Priestupky" (nobody here has it)
+    ('GET',    '/api/violations/',                          None,    '403 403 403 403 403 403 403 403 403 403 200'),
+    ('POST',   '/api/violations/',                          {},      '403 403 403 403 403 403 403 403 403 403 400'),
+    ('PUT',    '/api/violations/settings/',                 {},      '403 403 403 403 403 403 403 403 403 403 400'),
+    ('DELETE', '/api/violations/{violation}/',              None,    '403 403 403 403 403 403 403 403 403 403 200'),
     # -------- forum moderation: the superadmin only (no role has the forum cookie of the author)
     ('PATCH',  '/api/forum/{thread}/',                      {'pinned': True},
                                                                      '403 403 403 403 403 403 403 403 403 403 200'),
@@ -268,12 +274,14 @@ class PermissionMatrixTests(TestCase):
         thread = ForumThread.objects.create(title='Pravidlá', last_post_at=utc(2026, 10, 25, 18), aliases=1)
         post = ForumPost.objects.create(thread=thread, alias=1, body='Ahoj')
         note = EventNote.objects.create(event=event, text='1. Nelly')
+        violation = Violation.objects.create(player=players['d_ok'], day=date(2026, 10, 10), reason='MGE')
         cls.ids = {
             'march': march.pk,
             'thread': thread.pk,
             'post': post.pk,
             'event': event.pk,
             'note': note.pk,
+            'violation': violation.pk,
             'irregular': irregular.pk,
             'signup': signup.pk,
             'entry': entry.pk,

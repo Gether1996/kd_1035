@@ -318,6 +318,8 @@ def signed_in(request) -> dict | None:
         'evaluation_overview': player.may_post,
         # R4 (private_images.can_review): every sign-up and march, and "Top 5 equip" of /vyhodnocovanie (Gether 19. 10. 2026)
         'reviewer': (player.kvk_reviewer and player.approved) or request.user.is_superuser,
+        # /priestupky – yellow cards (Gether 18. 11. 2026), the superadmin gives it like R4
+        'violations': (player.violations_manager and player.approved) or request.user.is_superuser,
         # KvK sign-ups without the survey of the form (from before it, 20. 10. 2026) – one survey counts for both: the
         # red "!" of the header, while the player may still change it
         'kvk_survey_missing': player.may_post

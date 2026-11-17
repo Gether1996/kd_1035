@@ -113,6 +113,13 @@ class Player(models.Model):
         'premenné výpočtu, páry a formácie commanderov (platí pre všetkých) a zverejňuje požadovaný acclaim. '
         'Nastavuje superadmin.',
     )
+    # the rule violations – yellow cards (Gether 18. 11. 2026: "nové špeciálne oprávnenie … chcem to dať len niektorým")
+    violations_manager = models.BooleanField(
+        'priestupky',
+        default=False,
+        help_text='Hráč vidí priestupky hráčov (žlté karty), pridáva ich a maže. Pravidlá mení len superadmin. '
+        'Nastavuje superadmin.',
+    )
     approved = models.BooleanField(
         'schválený',
         default=False,
@@ -335,6 +342,74 @@ class EventNote(models.Model):
     def __str__(self):
         first = self.text.strip().splitlines()[0] if self.text.strip() else ''
         return f'{self.event} · {first[:60]}'
+
+
+VIOLATION_DAYS_MAX = 3650
+MAX_VIOLATION_LEVELS = 10
+
+
+def default_violation_levels() -> list[dict]:
+    """The levels as the kingdom talked them over on Discord (17.–18. 11. 2026) – a start, leadership changes them."""
+    return [
+        {'name': 'Žltá karta', 'penalty': 'Varovanie', 'days': 0},
+        {'name': '2. žltá karta', 'penalty': 'Vylúčenie z eventov (MGE, Ark)', 'days': 14},
+        {'name': 'Červená karta', 'penalty': 'Vylúčenie z eventov (MGE, Ark)', 'days': 30},
+    ]
+
+
+class ViolationSettings(models.Model):
+    """How yellow cards add up (Gether 18. 11. 2026: "pridáš hráčovi prvú žltú kartu, tá platí X času, pokiaľ pridáš
+    ďalšiu do tohto času, zvýši sa mu trest, ak po čase, tak znova reset", "všetko dynamické a nastaviteľné"). One row,
+    changed by the superadmin on /priestupky. The level of every card is counted from the cards and these rules each
+    time (accounts/violations.py) – a change applies at once."""
+
+    window_days = models.PositiveSmallIntegerField(
+        'platnosť karty (dni)',
+        default=90,
+        validators=[MinValueValidator(1), MaxValueValidator(VIOLATION_DAYS_MAX)],
+        help_text='Ďalšia karta do tohto počtu dní od predošlej zvýši stupeň. Po tomto čase bez karty je hráč znova na nule.',
+    )
+    keep_days = models.PositiveSmallIntegerField(
+        'uchovať (dni)',
+        default=365,
+        validators=[MinValueValidator(30), MaxValueValidator(VIOLATION_DAYS_MAX)],
+        help_text='Staršie karty worker zmaže (stránka Ochrana údajov).',
+    )
+    # [{name, penalty, days}] – the n-th card in a row gets the n-th level, past the last one the last one again
+    levels = models.JSONField('stupne', default=default_violation_levels)
+    updated_at = models.DateTimeField('upravené', auto_now=True)
+
+    class Meta:
+        verbose_name = 'pravidlá priestupkov'
+        verbose_name_plural = 'pravidlá priestupkov'
+
+    def __str__(self):
+        return 'Pravidlá priestupkov'
+
+    @classmethod
+    def load(cls) -> 'ViolationSettings':
+        return cls.objects.get_or_create(pk=1)[0]
+
+
+class Violation(models.Model):
+    """A yellow card: the player broke a rule of the kingdom (an event, MGE, Ark…) on `day`. Seen by the superadmin and
+    the players with Player.violations_manager only; deleted after ViolationSettings.keep_days (worker)."""
+
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='violations', verbose_name='hráč')
+    day = models.DateField('dátum')
+    reason = models.CharField('dôvod', max_length=300)
+    added_by = models.ForeignKey(
+        Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='+', verbose_name='pridal'
+    )
+    created_at = models.DateTimeField('pridané', auto_now_add=True)
+
+    class Meta:
+        ordering = ['day', 'created_at', 'pk']
+        verbose_name = 'priestupok'
+        verbose_name_plural = 'priestupky'
+
+    def __str__(self):
+        return f'{self.player} · {self.day:%d. %m. %Y}'
 
 
 class PlayerSettings(models.Model):

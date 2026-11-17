@@ -53,6 +53,10 @@ export const cs: Dict = {
       title: 'Hráči | KD 1035',
       description: 'Seznam hráčů webu království KD 1035 pro superadmina.',
     },
+    violations: {
+      title: 'Přestupky | KD 1035',
+      description: 'Přestupky hráčů KD 1035.',
+    },
     evaluation: {
       title: 'Vyhodnocování KvK | KD 1035',
       description: 'Odhad acclaimu hráčů království KD 1035 na KvK.',
@@ -110,6 +114,7 @@ export const cs: Dict = {
     evaluation: 'Vyhodnocování',
     // the superadmin's list of players (/hraci, Gether 20. 10. 2026)
     players: 'Hráči',
+    violations: 'Přestupky',
     forum: 'Fórum',
     hall: 'Síň slávy',
     unread: 'nové zprávy',
@@ -408,6 +413,11 @@ export const cs: Dict = {
         label: 'Nastavení vyhodnocování – odhad acclaimu a proměnné',
         tip: 'Nastavení vyhodnocování: vidí odhad acclaimu schválených hráčů a jejich marche, zapisuje jim power a T4, mění proměnné, páry a formace commanderů (platí pro všechny) a zveřejňuje požadovaný acclaim.',
       },
+      violations_manager: {
+        short: 'Přestupky',
+        label: 'Přestupky',
+        tip: 'Přidává a maže žluté karty hráčů.',
+      },
       inactive: {
         short: 'Neaktivní',
         label: 'Neaktivní – skrytý v seznamu',
@@ -447,6 +457,7 @@ export const cs: Dict = {
       all: 'Přístup: všichni',
       r4: 'R4',
       evaluation_settings: 'Vyh. nastavení',
+      violations_manager: 'Přestupky',
       none: 'Bez přístupu',
     },
     kvkFilter: 'KvK rally / garrison',
@@ -1261,6 +1272,7 @@ export const cs: Dict = {
         text: 'Aby tě vedení poznalo, přišly ti připomínky, které sis zapnul, a vedení mohlo sestavit týmy na KvK.',
         list: [
           'Údaje vidí správce webu (Gether) v administraci. Když se přihlásíš poprvé, bot mu pošle na Discord tvé jméno a ID (bez Discordu jen jméno ve hře), aby tě mohl schválit.',
+          'Pokud porušíš pravidla království, vedení ti může zapsat přestupek (žlutou kartu) – datum, důvod a kdo ho zapsal. Vidí ho jen správce a vedení, kterému to povolí. Starší karty se mažou po době, kterou nastaví správce (na začátku 1 rok).',
           'Správce si může k eventům psát poznámky, například pořadí hráčů po eventu (jména ve hře a výsledky). Vidí je jen on a zůstávají, dokud je nesmaže.',
           'Přihlášky na KvK a tvé marche vidí i vedení, kterému správce povolí prohlížení (R4) – spolu s tvým jménem ve hře, Discord jménem, avatarem a ID; vidí i to, kdo se na KvK ještě nepřihlásil.',
           'Vedení si může seznam přihlášek (jméno ve hře, role, jednotky, commandeři a formace) zkopírovat do Discordu, kde plánuje KvK.',

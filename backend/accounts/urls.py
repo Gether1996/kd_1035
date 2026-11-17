@@ -13,6 +13,7 @@ from . import (
     reaction_views,
     reminder_views,
     views,
+    violations,
 )
 
 urlpatterns = [
@@ -69,6 +70,10 @@ urlpatterns = [
     path('forum/posts/<int:post_id>/', forum_views.post),
     path('forum/posts/<int:post_id>/like/', forum_views.like),
     path('reactions/<str:target>/', reaction_views.reactions),
+    # yellow cards for rule violations (Gether 18. 11. 2026); settings before <id>
+    path('violations/', violations.violations),
+    path('violations/settings/', violations.violation_settings),
+    path('violations/<int:violation_id>/', violations.violation),
     # the superadmin's notes to events, in the calendar's event dialog (Gether 12. 11. 2026)
     path('events/manage/<int:pk>/notes/', event_notes.notes),
     path('events/manage/notes/<int:note_id>/', event_notes.note),

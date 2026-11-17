@@ -387,6 +387,7 @@ class MeTests(TestCase):
                     'evaluation_settings': False,
                     'evaluation_overview': False,
                     'reviewer': False,
+                    'violations': False,
                     'kvk_survey_missing': False,
                 },
             },

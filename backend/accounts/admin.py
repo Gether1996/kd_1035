@@ -19,6 +19,8 @@ from .models import (
     Player,
     PlayerSettings,
     SentReminder,
+    Violation,
+    ViolationSettings,
 )
 from .reminders import duration
 
@@ -52,6 +54,7 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'approved',
         'kvk_reviewer',
         'evaluation_settings',
+        'violations_manager',
         'inactive',
         'terms_version',
         'terms_accepted_at',
@@ -64,7 +67,11 @@ class PlayerAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
         'created_at',
         'last_login',
     ]
-    readonly_fields = [f for f in fields if f not in ('ingame_name', 'approved', 'kvk_reviewer', 'evaluation_settings', 'inactive')]
+    readonly_fields = [
+        f
+        for f in fields
+        if f not in ('ingame_name', 'approved', 'kvk_reviewer', 'evaluation_settings', 'violations_manager', 'inactive')
+    ]
 
     def has_add_permission(self, request):
         return False
@@ -191,6 +198,31 @@ class EventReminderAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
     @admin.display(description='pripomenúť pred začiatkom')
     def times(self, obj):
         return ', '.join(REMINDER_LABELS.get(minutes) or duration(minutes, 'sk') for minutes in obj.offsets)
+
+
+@admin.register(Violation)
+class ViolationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    """Yellow cards (/priestupky) – the page counts their levels; here only to look them up or delete one."""
+
+    list_display = ['day', 'player', 'reason', 'added_by', 'created_at']
+    list_select_related = ['player', 'added_by']
+    search_fields = ['player__username', 'player__global_name', 'player__ingame_name', 'reason']
+    fields = ['player', 'day', 'reason', 'added_by', 'created_at']
+    readonly_fields = fields
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(ViolationSettings)
+class ViolationSettingsAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
+    fields = ['window_days', 'keep_days', 'levels']
+
+    def has_add_permission(self, request):
+        return not ViolationSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(EventNote)

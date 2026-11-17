@@ -11,6 +11,7 @@ from django.utils import timezone
 from accounts.alarms import prune_alarms, send_alarms
 from accounts.cleanup import sweep_files
 from accounts.evaluation_history import prune as prune_evaluation_history
+from accounts.violations import prune as prune_violations
 from accounts.newcomers import announce_new_players, send_welcomes
 from accounts.notices import send_march_notices
 from accounts.reminders import DiscordPaused, prune_sent, send_personal_reminders
@@ -118,6 +119,11 @@ class Command(BaseCommand):
                     prune_evaluation_history()
                 except Exception:
                     log.exception('Pruning the evaluation history failed')
+                try:
+                    # yellow cards after ViolationSettings.keep_days (privacy page)
+                    prune_violations()
+                except Exception:
+                    log.exception('Pruning the violations failed')
                 try:
                     # screenshot files without a row (privacy page)
                     sweep_files()

@@ -22,6 +22,7 @@ export type Page =
   | 'playersMarches'
   | 'evaluation'
   | 'players'
+  | 'violations'
   | 'forum'
   | 'hall'
   | 'guides'
@@ -51,6 +52,7 @@ const FIXED_PATHS = {
   playersMarches: '/marche',
   evaluation: '/vyhodnocovanie',
   players: '/hraci',
+  violations: '/priestupky',
   forum: '/forum',
   hall: '/sien-slavy',
 } satisfies Partial<Record<Page, string>>;

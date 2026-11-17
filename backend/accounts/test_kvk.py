@@ -750,7 +750,7 @@ class ApprovalTests(KvkTestCase):
         self.assertEqual(self.call('patch', url, {'approved': 'yes'}, admin).status_code, 400)
         self.assertEqual(self.call('patch', url, {'approved': True}, self.client).status_code, 403)
         res = self.call('patch', url, {'approved': True}, admin)
-        self.assertEqual(res.json(), {'id': self.newbie.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': False, 'inactive': False})
+        self.assertEqual(res.json(), {'id': self.newbie.pk, 'reviewer': False, 'approved': True, 'evaluation_settings': False, 'violations_manager': False, 'inactive': False})
         self.assertEqual(self.sign_up(self.new).status_code, 200)
         self.assertEqual(len(self.new.get('/api/marches/').json()['players']), 1)
         # "Neaktívny" (Gether 20. 10. 2026): only the superadmin's list knows it – the player goes on as before

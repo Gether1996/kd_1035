@@ -37,6 +37,8 @@ const pages = (): Routes => [
   // the Hall of Fame – approved players (Gether 28. 10. 2026)
   { path: 'sien-slavy', loadComponent: () => import('./pages/hall/hall-page').then((m) => m.HallPage) },
   { path: 'hraci', loadComponent: () => import('./pages/players/players-page').then((m) => m.PlayersPage) },
+  // yellow cards for rule violations – the superadmin and the players let in (Gether 18. 11. 2026)
+  { path: 'priestupky', loadComponent: () => import('./pages/violations/violations-page').then((m) => m.ViolationsPage) },
   // the superadmin's KvK evaluation (Gether 13. 10. 2026)
   {
     path: 'vyhodnocovanie',
