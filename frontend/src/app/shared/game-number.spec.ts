@@ -26,6 +26,19 @@ describe('game numbers (kill points, deads)', () => {
     for (const [text, value] of cases) expect(parseGameNumber(text), text).toBe(value);
   });
 
+  it('a plain small number in the field\'s unit: kill points in billions, the acclaim in millions (Smrťák 16. 11. 2026)', () => {
+    expect(parseGameNumber('9', 1e9)).toBe(9_000_000_000);
+    expect(parseGameNumber('8,8', 1e9)).toBe(8_800_000_000);
+    expect(parseGameNumber('79,5', 1e6)).toBe(79_500_000);
+    expect(parseGameNumber('79.5', 1e6)).toBe(79_500_000);
+    // a unit or thousands separators win
+    expect(parseGameNumber('350K', 1e6)).toBe(350_000);
+    expect(parseGameNumber('79,500,000', 1e6)).toBe(79_500_000);
+    // a whole number from the game stays as it is
+    expect(parseGameNumber('79500000', 1e6)).toBe(79_500_000);
+    expect(parseGameNumber('8.8')).toBeUndefined();
+  });
+
   it('shows them short like the game', () => {
     expect([8_800_000_000, 115_000_000, 24_000_000, 1_250_000_000_0, 350_000, 9_999, 0].map(shortGameNumber)).toEqual([
       '8.8B',

@@ -207,8 +207,9 @@ export class Account {
       return;
     }
     const level = this.svip() ? SVIP : vip.value.trim() ? Number(vip.value.trim()) : null;
-    const killPoints = parseGameNumber(kp.value);
-    const highest = parseGameNumber(acclaim.value);
+    // a plain number: kill points in billions, the acclaim in millions, as players say them
+    const killPoints = parseGameNumber(kp.value, 1e9);
+    const highest = parseGameNumber(acclaim.value, 1e6);
     // 20 only through the SVIP switch, never typed
     const vipOk = this.svip() || level === null || (Number.isInteger(level) && level >= 1 && level < SVIP);
     if (!vipOk || killPoints === undefined || highest === undefined) {

@@ -1376,7 +1376,8 @@ export const cs: Dict = {
       title: 'Údaje ze hry',
       hint: 'Power vidí i vedení při KvK, ostatní čísla jen ty.',
       powerHint: 'V milionech nebo ze hry',
-      asInGame: 'Jako ve hře, např. 8.8B',
+      kpHint: 'V miliardách (8,8) nebo 8.8B',
+      acclaimHint: 'V milionech (79,5) nebo 79.5M',
       vip: 'VIP level',
       vipPlaceholder: 'Např. 18',
       vipHint: '1–19',
@@ -1387,7 +1388,7 @@ export const cs: Dict = {
       save: 'Uložit',
       saved: 'Uloženo.',
       failed: 'Nepodařilo se uložit. Zkus to znovu.',
-      invalid: 'Zkontroluj čísla: VIP 1 až 19 (nebo zapni SVIP), kill points a acclaim jako ve hře (8.8B, 5.6M) nebo celé číslo.',
+      invalid: 'Zkontroluj čísla: VIP 1 až 19 (nebo zapni SVIP), kill points v miliardách, acclaim v milionech nebo jako ve hře (8.8B, 79.5M).',
       overview: 'Přehled účtu',
     },
     // the language of the website and of the bot's messages (Gether 17. 10. 2026)

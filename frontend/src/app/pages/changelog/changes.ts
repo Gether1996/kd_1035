@@ -15,6 +15,12 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-18',
+    version: '1.67.6',
+    sk: ['Môj účet: kill points stačí napísať v miliardách (8,8) a najvyšší acclaim v miliónoch (79,5).'],
+    cs: ['Můj účet: kill points stačí napsat v miliardách (8,8) a nejvyšší acclaim v milionech (79,5).'],
+  },
+  {
     date: '2026-11-17',
     version: '1.67.5',
     sk: ['Noví pešiaci Yi To a Selim I: dajú sa vybrať pri marchoch aj prihláškach na KvK a návody na páry pre pechotu a garrison s nimi už rátajú.'],

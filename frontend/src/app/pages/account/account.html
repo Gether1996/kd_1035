@@ -163,7 +163,7 @@
                     [attr.aria-invalid]="ps === 'invalid' || null"
                     aria-describedby="kp-hint profile-state"
                   />
-                  <span class="stats__unit" id="kp-hint">{{ st.asInGame }}</span>
+                  <span class="stats__unit" id="kp-hint">{{ st.kpHint }}</span>
                 </div>
                 <div class="field stats__field">
                   <label class="field__label stats__label" for="account-acclaim">{{ st.acclaim }}</label>
@@ -178,7 +178,7 @@
                     [attr.aria-invalid]="ps === 'invalid' || null"
                     aria-describedby="acclaim-hint profile-state"
                   />
-                  <span class="stats__unit" id="acclaim-hint">{{ st.asInGame }}</span>
+                  <span class="stats__unit" id="acclaim-hint">{{ st.acclaimHint }}</span>
                 </div>
               </div>
               <p class="field__hint">{{ st.hint }}</p>
