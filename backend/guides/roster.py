@@ -24,6 +24,7 @@ ROSTER = [
     ('Achilles', 'achilles'),
     ('Aethelflaed', 'aethelflaed'),
     ('Afonso de Albuquerque', 'afonso-de-albuquerque'),
+    ("Siyaj K'ak'", 'siyaj-k-ak'),
     ('Alexander Nevsky', 'alexander-nevsky'),
     ('Alexander the Great', 'alexander-the-great'),
     ('Alp Arslan', 'alp-arslan'),
@@ -63,6 +64,7 @@ ROSTER = [
     ('Hermann Prime', 'hermann-prime'),
     ('Honda Tadakatsu', 'honda-tadakatsu'),
     ('Huo Qubing', 'huo-qubing'),
+    ("K'inich Janaab' Pakal", 'k-inich-janaab-pakal'),
     ('Ivan IV', 'ivan-iv'),
     ('Ivar the Boneless', 'ivar'),
     ('Jadwiga', 'jadwiga'),
@@ -70,7 +72,6 @@ ROSTER = [
     ('Joan of Arc Prime', 'joan-of-arc-prime'),
     ('John Hunyadi', 'john-hunyadi'),
     ('Justinian I', 'justinian-i'),
-    ("K'inich Janaab' Pakal", 'k-inich-janaab-pakal'),
     ('Leonidas I', 'leonidas-i'),
     ('Liu Che', 'liu-che'),
     ('Lu Bu', 'lu-bu'),
@@ -89,9 +90,9 @@ ROSTER = [
     ('Sargon the Great', 'sargon-the-great'),
     ('Scipio Aemilianus', 'scipio-aemilianus'),
     ('Scipio Africanus Prime', 'scipio-africanus-prime'),
+    ('Selim I', 'selim-i'),
     ('Shajar al-Durr', 'shajar-al-durr'),
     ('Shapur I', 'shapur-i'),
-    ("Siyaj K'ak'", 'siyaj-k-ak'),
     ('Stephen III', 'stephen-iii'),
     ('Subutai', 'subutai'),
     ('Suleiman I', 'suleiman-i'),
@@ -109,6 +110,7 @@ ROSTER = [
     ('Xiang Yu', 'xiang-yu'),
     ('Yi Seong-Gye', 'yi-seong-gye'),
     ('Yi Sun-sin', 'yi-sun-sin'),
+    ('Yi To', 'yi-to'),
     ('Zenobia', 'zenobia'),
     ('Zhuge Liang', 'zhuge-liang'),
 ]
@@ -141,15 +143,15 @@ EXCLUDED = frozenset(
 )
 
 # the troop type of every commander a march may name (the game client via app.rokstats.online/commanders, "primaryBranch",
-# read 13. 10. 2026; Gonzalo de Cordoba and Gajah Mada are missing there – siege by our siege guide). Integration =
+# read 13. 10. 2026, Selim I and Yi To 17. 11. 2026; Gonzalo de Cordoba and Gajah Mada are missing there – siege by our siege guide). Integration =
 # gatherers and peacekeepers. The picker puts the meta of the march's type first, then leadership (Gether 13. 10. 2026).
 _TROOPS = {
     'infantry': (
         'Alexander the Great', 'Bai Qi', 'Bjorn Ironside', 'Charles Martel', 'Cheok Jun-gyeong', 'Constantine I',
         'Flavius Aetius', 'Gorgo', 'Guan Yu', 'Harald Sigurdsson', 'Ivar the Boneless', "K'inich Janaab' Pakal",
         'Leonidas I', 'Liu Che', 'Ragnar Lodbrok Prime', 'Richard', 'Sargon the Great', 'Scipio Aemilianus',
-        'Scipio Africanus Prime', 'Sun Tzu', 'Sun Tzu Prime', 'Tariq ibn Ziyad', 'Tokugawa Ieyasu',
-        'William Wallace', 'Zenobia',
+        'Scipio Africanus Prime', 'Selim I', 'Sun Tzu', 'Sun Tzu Prime', 'Tariq ibn Ziyad',
+        'Tokugawa Ieyasu', 'William Wallace', 'Yi To', 'Zenobia',
     ),
     'cavalry': (
         'Achilles', 'Alexander Nevsky', 'Arthur Pendragon', 'Attila', 'Baibars', 'Belisarius', 'Belisarius Prime',

@@ -53,6 +53,11 @@ CH_CITY = chadski('City Garrison Guide (01/2026)', 'V9E77itNiPY')
 CH_TRAP = chadski('I Got Swarmed! Can The Trap City Hold Up? (09/2026)', 'tpKYvffPZw8')
 CH_WEDGE = chadski('God Tier Rally and Garrison: Wedge 2.0 Is Broken (04/2026)', '4uNR257mZS8')
 CH_SHAPUR = chadski('Shapur Testing Results (07/2025)', 'mDX9tokh7m4')
+# the new infantry commanders Yi To and Selim I (Gether 17. 11. 2026); captions call Yi To "Edo"/"Ido"/"Eto"
+CH_YI_TO_TEST = chadski('Yi Do Results: He’s Good, But Worth A Must-Max? (11/2026)', 'F2zaGExDnBQ')
+CH_YI_TO = chadski('Yi To is Broken! Best Pairings, Inscriptions (10/2026)', '84ipsXi36zY')
+CH_SELIM = chadski('Selim: Is New Infantry Garrison Good? (10/2026)', 'AI1_NoYMBGM')
+CH_INF_GARRISON = chadski('Complete Change To How We Run Infantry Garrison (11/2026)', 'j6cGyUv7RcM')
 
 
 def mr_siege(title, video):
@@ -96,9 +101,9 @@ GUIDES = [
             ('pairs', ['troops', 'primary', 'secondary'], [
                 {'troops': t('Jazda – pole', 'Jízda – pole'), 'primary': 'Ivan IV', 'secondary': 'Achilles'},
                 {'troops': t('Jazda – pole, alternatíva', 'Jízda – pole, alternativa'), 'primary': 'Arthur Pendragon', 'secondary': 'Ivan IV'},
-                {'troops': t('Pechota – pole', 'Pěchota – pole'), 'primary': 'Sun Tzu Prime', 'secondary': 'Liu Che'},
+                {'troops': t('Pechota – pole', 'Pěchota – pole'), 'primary': 'Sun Tzu Prime', 'secondary': 'Yi To'},
                 {'troops': t('Lukostrelci – pole', 'Lučištníci – pole'), 'primary': 'Qin Shi Huang', 'secondary': 'Yi Seong-Gye'},
-                {'troops': t('Garrison', 'Garrison'), 'primary': 'Gorgo', 'secondary': 'Tokugawa Ieyasu'},
+                {'troops': t('Garrison', 'Garrison'), 'primary': 'Tokugawa Ieyasu', 'secondary': 'Gorgo'},
                 {'troops': t('Rally', 'Rally'), 'primary': 'Subutai', 'secondary': 'William Marshal'},
                 {'troops': t('Barbari a pevnosti', 'Barbaři a pevnosti'), 'primary': 'Minamoto', 'secondary': 'Cao Cao'},
                 {'troops': t('F2P začiatok', 'F2P začátek'), 'primary': 'Sun Tzu', 'secondary': 'Aethelflaed'},
@@ -127,7 +132,7 @@ GUIDES = [
                 t('<strong>Plánuj podľa počtu armád.</strong> Dvaja prémioví commanderi, ktorí vedia viesť vlastnú armádu, by nemali byť v jednej – napríklad Ivan IV a Achilles patria do rôznych armád, keď ich máš dve.',
                   '<strong>Plánuj podle počtu armád.</strong> Dva prémioví commandeři, kteří umí vést vlastní armádu, by neměli být v jedné – například Ivan IV a Achilles patří do různých armád, když jich máš dvě.'),
             ]),
-            ('sources', [CH_CAV, CH_LINEUPS, CH_GARRISON, CH_RALLY, CH_MARSHAL, CH_INVEST, CH_LEADERSHIP, CH_INF, CH_IVAN, AC_TIERS, AC_PAIRS]),
+            ('sources', [CH_CAV, CH_LINEUPS, CH_YI_TO_TEST, CH_INF_GARRISON, CH_GARRISON, CH_RALLY, CH_MARSHAL, CH_INVEST, CH_LEADERSHIP, CH_INF, CH_IVAN, AC_TIERS, AC_PAIRS]),
         ],
     },
     {
@@ -192,23 +197,32 @@ GUIDES = [
         'title': t('Páry commanderov pre pechotu', 'Páry commanderů pro pěchotu'),
         'blocks': [
             ('p', t(
-                'Pechota na otvorené pole stojí na Sun Tzu Prime – najlepšie s Liu Che, Bai Qim alebo Ivarom.',
-                'Pěchota na otevřené pole stojí na Sun Tzu Prime – nejlépe s Liu Che, Bai Qim nebo Ivarem.',
+                'Pechota na otvorené pole stojí na Sun Tzu Prime. Od novembra 2026 k nemu najlepšie pasuje nový Yi To, ďalej Liu Che, Bai Qi a Ivar.',
+                'Pěchota na otevřené pole stojí na Sun Tzu Prime. Od listopadu 2026 k němu nejlépe pasuje nový Yi To, dále Liu Che, Bai Qi a Ivar.',
             )),
             ('note',),
             ('pairs', OPEN_FIELD, [
-                {'primary': 'Sun Tzu Prime', 'secondary': 'Liu Che', 'talents': 'Infantry + Versatility + Smite',
-                 'why': t('Najlepšia pechota. Liu Che spomalí až päť cieľov o 40 %, takže súper neujde – ideálne do bitiek s ústupmi a návratmi.',
-                          'Nejlepší pěchota. Liu Che zpomalí až pět cílů o 40 %, takže soupeř neuteče – ideální do bitev s ústupy a návraty.')},
+                {'primary': 'Sun Tzu Prime', 'secondary': 'Yi To', 'talents': 'Infantry + Versatility + Smite',
+                 'why': t('Najlepšia samostatná pešia armáda (november 2026): v testoch 5 na 5 aj 10 na 10 vyhrala zostava s Yi To každý zápas. Máš len jednu pešiu armádu? Yi To patrí za Sun Tzu namiesto Ivara.',
+                          'Nejlepší samostatná pěší armáda (listopad 2026): v testech 5 na 5 i 10 na 10 vyhrála sestava s Yi To každý zápas. Máš jen jednu pěší armádu? Yi To patří za Sun Tzu místo Ivara.')},
                 {'primary': 'Sun Tzu Prime', 'secondary': 'Bai Qi', 'talents': 'Infantry + Versatility + Smite',
-                 'why': t('Do dlhých bitiek bez ústupu: poškodenie Bai Qiho stále dobíja Sun Tzuov rage. Sun Tzu Prime potrebuje na aktívny skill len 900 rage.',
-                          'Do dlouhých bitev bez ústupu: poškození Bai Qiho pořád dobíjí Sun Tzuův rage. Sun Tzu Prime potřebuje na aktivní skill jen 900 rage.')},
+                 'why': t('Prvá armáda k Yi To + Liu Che – spolu najlepšia dvojica peších armád. Poškodenie Bai Qiho stále dobíja Sun Tzuov rage, Sun Tzu Prime potrebuje na aktívny skill len 900 rage.',
+                          'První armáda k Yi To + Liu Che – spolu nejlepší dvojice pěších armád. Poškození Bai Qiho pořád dobíjí Sun Tzuův rage, Sun Tzu Prime potřebuje na aktivní skill jen 900 rage.')},
+                {'primary': 'Yi To', 'secondary': 'Liu Che', 'talents': 'Infantry + Versatility + Smite',
+                 'why': t('Druhá armáda k Sun Tzu + Bai Qi. Liu Che mu dodáva rage a smite, v testoch dáva rovnako veľa poškodenia ako Sun Tzu + Bai Qi.',
+                          'Druhá armáda k Sun Tzu + Bai Qi. Liu Che mu dodává rage a smite, v testech dává stejně hodně poškození jako Sun Tzu + Bai Qi.')},
+                {'primary': 'Sun Tzu Prime', 'secondary': 'Liu Che', 'talents': 'Infantry + Versatility + Smite',
+                 'why': t('Stále silný pár. Liu Che spomalí až päť cieľov o 40 %, takže súper neujde – ideálne do bitiek s ústupmi a návratmi.',
+                          'Pořád silný pár. Liu Che zpomalí až pět cílů o 40 %, takže soupeř neuteče – ideální do bitev s ústupy a návraty.')},
+                {'primary': 'Bai Qi', 'secondary': 'Yi To', 'talents': 'Infantry + Versatility + Smite',
+                 'why': t('V testoch rovnako silná ako Sun Tzu + Liu Che – keď Sun Tzu ide s Liu Che.',
+                          'V testech stejně silná jako Sun Tzu + Liu Che – když Sun Tzu jde s Liu Che.')},
                 {'primary': 'Sun Tzu Prime', 'secondary': 'Ivar the Boneless', 'talents': 'Infantry + Versatility + Smite',
-                 'why': t('Prekvapenie podľa dát RoKBattles: asi 132 % trade na 109 000 bitkách. Ivar dodá rage a plošný útok na tri ciele a stačí mu 5511.',
-                          'Překvapení podle dat RoKBattles: asi 132 % trade na 109 000 bitvách. Ivar dodá rage a plošný útok na tři cíle a stačí mu 5511.')},
+                 'why': t('Podľa dát RoKBattles asi 132 % trade na 109 000 bitkách, Ivarovi stačí 5511. Kto ju má postavenú, nemusí hneď nič meniť – keď má Yi To 5551, nahradí za Sun Tzu Ivara.',
+                          'Podle dat RoKBattles asi 132 % trade na 109 000 bitvách, Ivarovi stačí 5511. Kdo ji má postavenou, nemusí hned nic měnit – když má Yi To 5551, nahradí za Sun Tzu Ivara.')},
                 {'primary': 'Bai Qi', 'secondary': 'Liu Che', 'talents': 'Infantry + Versatility + Smite',
-                 'why': t('Druhá armáda k Sun Tzu + Ivar, spolu najlepšia dvojica peších armád. Jediná meta pechota bez Sun Tzua.',
-                          'Druhá armáda k Sun Tzu + Ivar, spolu nejlepší dvojice pěších armád. Jediná meta pěchota bez Sun Tzua.')},
+                 'why': t('Druhá armáda k Sun Tzu + Ivar. Kto má obe hotové, nemusí Yi To maxovať hneď.',
+                          'Druhá armáda k Sun Tzu + Ivar. Kdo má obě hotové, nemusí Yi To maxovat hned.')},
                 {'primary': 'Bai Qi', 'secondary': 'Hector',
                  'why': t('Pri troch armádach, keď Bai Qi a Liu Che idú každý inam. Hector za pechotou pridáva smite poškodenie.',
                           'Při třech armádách, když Bai Qi a Liu Che jdou každý jinam. Hector za pěchotou přidává smite poškození.')},
@@ -224,20 +238,25 @@ GUIDES = [
             ]),
             ('h2', t('Zostavy', 'Sestavy')),
             ('lineups', [
-                (t('Dve armády', 'Dvě armády'), [('Sun Tzu Prime', 'Ivar the Boneless'), ('Bai Qi', 'Liu Che')]),
-                (t('Tri armády', 'Tři armády'), [('Sun Tzu Prime', 'Ivar the Boneless'), ('Bai Qi', 'Hector'), ('Scipio Africanus Prime', 'Liu Che')]),
-                (t('Tri, alternatíva', 'Tři, alternativa'), [('Sun Tzu Prime', 'Ivar the Boneless'), ('Bai Qi', 'Hector'), ('Liu Che', 'Philip II')]),
+                (t('Dve armády', 'Dvě armády'), [('Sun Tzu Prime', 'Bai Qi'), ('Yi To', 'Liu Che')]),
+                (t('Dve bez Yi To', 'Dvě bez Yi To'), [('Sun Tzu Prime', 'Ivar the Boneless'), ('Bai Qi', 'Liu Che')]),
+                (t('Tri armády', 'Tři armády'), [('Sun Tzu Prime', 'Ivar the Boneless'), ('Yi To', 'Liu Che'), ('Bai Qi', 'Vercingetorix')]),
+                (t('Tri bez Yi To', 'Tři bez Yi To'), [('Sun Tzu Prime', 'Ivar the Boneless'), ('Bai Qi', 'Hector'), ('Scipio Africanus Prime', 'Liu Che')]),
             ]),
             ('h2', t('Tipy', 'Tipy')),
             ('ul', [
                 t('Sun Tzu Prime chce expertízu. Na 5511 má len asi 70 % sily.',
                   'Sun Tzu Prime chce expertízu. Na 5511 má jen asi 70 % síly.'),
+                t('Yi To: s menším rozpočtom stačí 5551, štvrtý skill je po úprave slabší. Je to dobrá investícia na roky, no nie povinná – s hotovými Sun Tzu + Ivar a Bai Qi + Liu Che sa nemusíš ponáhľať.',
+                  'Yi To: s menším rozpočtem stačí 5551, čtvrtý skill je po úpravě slabší. Je to dobrá investice na roky, ale ne povinná – s hotovými Sun Tzu + Ivar a Bai Qi + Liu Che nemusíš spěchat.'),
+                t('Yi To ide s formáciou Pincer 2.0 a celým stromom Smite. Armáde Yi To + Liu Che sa oplatí dať nápis Charge – jeho plošný smite ho spúšťa veľmi často.',
+                  'Yi To jde s formací Pincer 2.0 a celým stromem Smite. Armádě Yi To + Liu Che se vyplatí dát nápis Charge – jeho plošný smite ho spouští velmi často.'),
                 t('Do Williama Wallacea ani Vercingetorixa už neinvestuj. Wallace poslúži namiesto Ivara, ak ho už máš.',
                   'Do Williama Wallace ani Vercingetorixe už neinvestuj. Wallace poslouží místo Ivara, pokud ho už máš.'),
                 t('Ani Ragnar Lodbrok Prime sa už neoplatí kupovať – pechota na skill poškodenie zaostáva za smite pechotou.',
                   'Ani Ragnar Lodbrok Prime se už nevyplatí kupovat – pěchota na skill poškození zaostává za smite pěchotou.'),
             ]),
-            ('sources', [CH_INF, CH_LINEUPS, CH_FIELD, CH_KP, CH_INF_NEXT, CH_INVEST, CH_INVEST_MAY, ('AllClash: Sun Tzu Prime Builds', 'https://www.allclash.com/best-sun-tzu-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/')]),
+            ('sources', [CH_YI_TO_TEST, CH_YI_TO, CH_INF, CH_LINEUPS, CH_FIELD, CH_KP, CH_INF_NEXT, CH_INVEST, CH_INVEST_MAY, ('AllClash: Sun Tzu Prime Builds', 'https://www.allclash.com/best-sun-tzu-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/')]),
         ],
     },
     {
@@ -332,9 +351,15 @@ GUIDES = [
             )),
             ('note',),
             ('pairs', WITH_TROOPS, [
+                {'primary': 'Tokugawa Ieyasu', 'secondary': 'Gorgo', 'troops': INF,
+                 'why': t('Nová najlepšia obrana proti rally (november 2026): Gorgo na sekundárnom slote a formácia Pincer 2.0 s nápismi Cleaver a Dominate. Skilly oboch sa tak spúšťajú oveľa častejšie.',
+                          'Nová nejlepší obrana proti rally (listopad 2026): Gorgo na sekundárním slotu a formace Pincer 2.0 s nápisy Cleaver a Dominate. Skilly obou se tak spouštějí mnohem častěji.')},
+                {'primary': 'Selim I', 'secondary': 'Gorgo', 'troops': INF,
+                 'why': t('Nový pešiak na garrison (november 2026), zostava ako Tokugawa + Gorgo s Pincer 2.0. Pridáva protiútok, preto lepšie obstojí aj proti swarmu. Do poľa sa nehodí – v poli sú jeho skilly hlavne štíty. Zatiaľ bez veľkých testov.',
+                          'Nový pěšák na garrison (listopad 2026), sestava jako Tokugawa + Gorgo s Pincer 2.0. Přidává protiútok, proto lépe obstojí i proti swarmu. Do pole se nehodí – v poli jsou jeho skilly hlavně štíty. Zatím bez velkých testů.')},
                 {'primary': 'Gorgo', 'secondary': 'Tokugawa Ieyasu', 'troops': INF,
-                 'why': t('Najlepšia obrana proti rally, hlavne s formáciou Pincer 2.0. Gorgo patrí vždy na primárny slot. Proti swarmu slabá.',
-                          'Nejlepší obrana proti rally, hlavně s formací Pincer 2.0. Gorgo patří vždy na primární slot. Proti swarmu slabá.')},
+                 'why': t('Doterajšia klasika proti rally. Od novembra 2026 je silnejšie opačné poradie – Tokugawa primárny, Gorgo sekundárna. Proti swarmu slabá.',
+                          'Dosavadní klasika proti rally. Od listopadu 2026 je silnější opačné pořadí – Tokugawa primární, Gorgo sekundární. Proti swarmu slabá.')},
                 {'primary': 'Gorgo', 'secondary': 'Hector', 'troops': INF,
                  'why': t('Proti rally rovnako dobrá ako s Tokugawom a znesie aj trochu miešané posily, keď treba udržať vlajku.',
                           'Proti rally stejně dobrá jako s Tokugawou a snese i trochu smíšené posily, když je potřeba udržet vlajku.')},
@@ -366,7 +391,7 @@ GUIDES = [
                 t('V KvK s artefaktmi je najlepšia Gorgo + David IV s formáciou Arch.',
                   'V KvK s artefakty je nejlepší Gorgo + David IV s formací Arch.'),
             ]),
-            ('sources', [CH_SWARM, CH_GARRISON, CH_LEADERSHIP, CH_RALLY, CH_TRAP, CH_CITY]),
+            ('sources', [CH_INF_GARRISON, CH_SELIM, CH_SWARM, CH_GARRISON, CH_LEADERSHIP, CH_RALLY, CH_TRAP, CH_CITY]),
         ],
     },
     {

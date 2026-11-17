@@ -190,6 +190,7 @@ Already on our list and meta (no action needed): Sun Tzu Prime, Bai Qi, Liu Che,
 | 2026-06-22 | Elizabeth I | Engineering | **no** |
 | 2026-07-20 | Yahya ibn Khalid | Integration / gathering (1.1.10 "Starry Rendezvous") | yes |
 | 2026-08-31 (update 1.1.11 on 27 Aug 2026) | Ivan IV, William Marshal | Cavalry, combo / conquering combo | yes |
+| 2026-11-09 (MGE, bundle Sage King's Heritage 17.–24. 11. 2026) | Yi To (Sejong the Great), Selim I | Infantry smite / infantry garrison defense | yes (17. 11. 2026) |
 | UNKNOWN (client date empty) | Archimedes, Mary I | Engineering (Wheel of Fortune) | **no** |
 
 Cross-checks: the official X post of 26 Oct 2025 (next-gen cavalry late Nov 2025, next-gen infantry Jan 2026) matches David IV/Gang Gamchan (2025-11-14) and Ivar/Sun Tzu Prime (2026-02-02). The 1.1.11 news (27 Aug 2026) matches Ivan IV/William Marshal (2026-08-31). The client also has unreleased placeholders (Torgny, Wafura with a 2080 date), which are ignored here.

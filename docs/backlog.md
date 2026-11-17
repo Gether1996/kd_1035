@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **17. 11. 2026:** Noví pešiaci Yi To a Selim I – výber pri marchoch/prihláškach/vyhodnocovaní, portréty, páry pre pechotu a garrison podľa Chadského, páry a formácie vo vyhodnocovaní (`guides/0018`). v1.67.5.
 - **16. 11. 2026 – v1.67.4:** Sieň legiend – názov a dni uloženého archívu ručne editovateľné; archív „Pevnosti“ (1 meno) na týždeň 26. 10. – 1. 11. 2026 (migrácie `accounts/0064`, `0065`).
 - **13. 11. 2026 – v1.67.3:** Správa do kanála = jeden riadok obyčajného textu bez embedu (`discord.channel_line`, migrácia `kingdom/0027` – len help_text).
 - **13. 11. 2026 – v1.67.2:** Ukážka kanálovej správy počíta „o …“ v texte eventu od odoslania ukážky, nie od plánovaného času (`notification_for(at=)`).

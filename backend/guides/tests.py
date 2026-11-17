@@ -1088,3 +1088,39 @@ class ArmoryTests(TestCase):
         self.assertEqual(response['Cache-Control'], 'public, max-age=3600')
         item = next(i for i in response.json()['items'] if i['id'] == 'sacred-dominion')
         self.assertEqual((item['slot'], item['icon']), ('weapon', '/static/guides/gear/sacred-dominion.webp'))
+
+
+class NewInfantryCommandersTests(TestCase):
+    """Selim I and Yi To (Gether 17. 11. 2026): pickable as infantry, their portraits, their pairs and formations in the
+    KvK evaluation"""
+
+    def test_in_the_roster_as_infantry_with_portraits(self):
+        for name in ('Selim I', 'Yi To'):
+            self.assertIn(name, dict(roster.ROSTER))
+            self.assertEqual(roster.TROOPS[name], 'infantry')
+        self.assertNotIn('Selim I', roster.missing_portraits())
+        self.assertNotIn('Yi To', roster.missing_portraits())
+        listed = {item['name']: item for item in roster.march_commanders()}
+        # Yi To leads the infantry guide's picker, right after Sun Tzu Prime
+        self.assertEqual(listed['Yi To']['meta']['infantry'], 1)
+        self.assertTrue(listed['Selim I']['pick'])
+
+    def test_evaluation_pairs_and_formations_once(self):
+        from .models import CommanderFormation, CommanderPair
+
+        add = importlib.import_module('guides.migrations.0018_yi_to_selim').add
+        CommanderPair.objects.filter(primary__in=['Sun Tzu Prime', 'Yi To', 'Bai Qi'], secondary='Yi To').delete()
+        CommanderPair.objects.filter(primary='Yi To').delete()
+        CommanderFormation.objects.filter(commander__in=['Yi To', 'Selim I']).delete()
+        # a row the superadmin already set stays
+        CommanderPair.objects.create(primary='Bai Qi', secondary='Yi To', points=90)
+        add(django_apps, None)
+        add(django_apps, None)
+        rows = dict(
+            ((p.primary, p.secondary), p.points)
+            for p in CommanderPair.objects.filter(primary__in=['Sun Tzu Prime', 'Yi To', 'Bai Qi'])
+            if 'Yi To' in (p.primary, p.secondary)
+        )
+        self.assertEqual(rows, {('Sun Tzu Prime', 'Yi To'): 116, ('Yi To', 'Liu Che'): 110, ('Bai Qi', 'Yi To'): 90})
+        self.assertEqual(CommanderFormation.objects.get(commander='Yi To').formations, ['pincer', 'arch'])
+        self.assertEqual(CommanderFormation.objects.get(commander='Selim I').formations, ['pincer'])

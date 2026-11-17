@@ -15,6 +15,12 @@ export interface Change {
 
 export const CHANGES: Change[] = [
   {
+    date: '2026-11-17',
+    version: '1.67.5',
+    sk: ['Noví pešiaci Yi To a Selim I: dajú sa vybrať pri marchoch aj prihláškach na KvK a návody na páry pre pechotu a garrison s nimi už rátajú.'],
+    cs: ['Noví pěšáci Yi To a Selim I: dají se vybrat u marchů i přihlášek na KvK a návody na páry pro pěchotu a garrison s nimi už počítají.'],
+  },
+  {
     date: '2026-11-16',
     version: '1.67.4',
     sk: ['Sieň legiend: archív s jedným Ničiteľom pevností má správny týždeň 26. 10. – 1. 11. 2026.'],
