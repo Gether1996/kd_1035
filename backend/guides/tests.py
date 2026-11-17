@@ -1124,3 +1124,12 @@ class NewInfantryCommandersTests(TestCase):
         self.assertEqual(rows, {('Sun Tzu Prime', 'Yi To'): 116, ('Yi To', 'Liu Che'): 110, ('Bai Qi', 'Yi To'): 90})
         self.assertEqual(CommanderFormation.objects.get(commander='Yi To').formations, ['pincer', 'arch'])
         self.assertEqual(CommanderFormation.objects.get(commander='Selim I').formations, ['pincer'])
+
+
+class GuideDateTests(SimpleTestCase):
+    def test_a_guide_checked_later_than_its_module_says_so(self):
+        """Gether 17. 11. 2026: the infantry guide had the November pairs under "Stav k októbru 2026" """
+        html = {g['slug']: g['html_sk'] for g in rendered_guides([commanders])}
+        self.assertIn('Stav k novembru 2026', html['pary-pre-pechotu'])
+        self.assertIn('Stav k novembru 2026', html['pary-pre-garrison'])
+        self.assertIn('Stav k októbru 2026', html['pary-pre-jazdu'])

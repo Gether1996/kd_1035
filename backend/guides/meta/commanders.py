@@ -2,7 +2,7 @@
 
 Write every text yourself in SK and CZ – facts from the sources listed in each guide, never copied prose.
 Field, garrison and rally pairs follow the YouTube creator WarDaddyChadski (Gether, 9. 10. 2026): his dated guides,
-read as transcripts (tools/youtube/transcripts.py). Siege (engineering) pairs follow Mr Siege (@MrSiegeOfficial,
+read as transcripts (tools/youtube/transcripts.py); Sttuu's videos may back them up (Gether 17. 11. 2026). Siege (engineering) pairs follow Mr Siege (@MrSiegeOfficial,
 Gether 11. 10. 2026). Websites stay the source for PvE, F2P, gathering and talent trees.
 """
 
@@ -58,6 +58,8 @@ CH_YI_TO_TEST = chadski('Yi Do Results: He’s Good, But Worth A Must-Max? (11/2
 CH_YI_TO = chadski('Yi To is Broken! Best Pairings, Inscriptions (10/2026)', '84ipsXi36zY')
 CH_SELIM = chadski('Selim: Is New Infantry Garrison Good? (10/2026)', 'AI1_NoYMBGM')
 CH_INF_GARRISON = chadski('Complete Change To How We Run Infantry Garrison (11/2026)', 'j6cGyUv7RcM')
+# Sttuu's first look at both (Gether 17. 11. 2026: "kľudne použi video od Sttuu"); captions call Yi To "Yito"
+ST_YI_TO_SELIM = ('Sttuu: Yi To and Selim I Revealed – Skills, Pairings, First Impressions (10/2026)', 'https://www.youtube.com/watch?v=tITwvM1GymM')
 
 
 def mr_siege(title, video):
@@ -88,6 +90,7 @@ WITH_TROOPS = ['primary', 'secondary', 'troops', 'why']
 GUIDES = [
     {
         'slug': 'ako-skladat-pary-commanderov',
+        'verified': '2026-11',
         'title': t('Ako skladať páry commanderov', 'Jak skládat páry commanderů'),
         'blocks': [
             ('p', t(
@@ -194,6 +197,7 @@ GUIDES = [
     {
         'slug': 'pary-pre-pechotu',
         'specialty': 'infantry',
+        'verified': '2026-11',
         'title': t('Páry commanderov pre pechotu', 'Páry commanderů pro pěchotu'),
         'blocks': [
             ('p', t(
@@ -203,8 +207,8 @@ GUIDES = [
             ('note',),
             ('pairs', OPEN_FIELD, [
                 {'primary': 'Sun Tzu Prime', 'secondary': 'Yi To', 'talents': 'Infantry + Versatility + Smite',
-                 'why': t('Najlepšia samostatná pešia armáda (november 2026): v testoch 5 na 5 aj 10 na 10 vyhrala zostava s Yi To každý zápas. Máš len jednu pešiu armádu? Yi To patrí za Sun Tzu namiesto Ivara.',
-                          'Nejlepší samostatná pěší armáda (listopad 2026): v testech 5 na 5 i 10 na 10 vyhrála sestava s Yi To každý zápas. Máš jen jednu pěší armádu? Yi To patří za Sun Tzu místo Ivara.')},
+                 'why': t('Najlepšia samostatná pešia armáda (november 2026): v testoch 5 na 5 aj 10 na 10 vyhrala zostava s Yi To každý zápas. Máš len jednu pešiu armádu? Yi To patrí za Sun Tzu – je to vylepšenie za Ivara aj Williama Wallacea.',
+                          'Nejlepší samostatná pěší armáda (listopad 2026): v testech 5 na 5 i 10 na 10 vyhrála sestava s Yi To každý zápas. Máš jen jednu pěší armádu? Yi To patří za Sun Tzu – je to vylepšení za Ivara i Williama Wallace.')},
                 {'primary': 'Sun Tzu Prime', 'secondary': 'Bai Qi', 'talents': 'Infantry + Versatility + Smite',
                  'why': t('Prvá armáda k Yi To + Liu Che – spolu najlepšia dvojica peších armád. Poškodenie Bai Qiho stále dobíja Sun Tzuov rage, Sun Tzu Prime potrebuje na aktívny skill len 900 rage.',
                           'První armáda k Yi To + Liu Che – spolu nejlepší dvojice pěších armád. Poškození Bai Qiho pořád dobíjí Sun Tzuův rage, Sun Tzu Prime potřebuje na aktivní skill jen 900 rage.')},
@@ -256,7 +260,7 @@ GUIDES = [
                 t('Ani Ragnar Lodbrok Prime sa už neoplatí kupovať – pechota na skill poškodenie zaostáva za smite pechotou.',
                   'Ani Ragnar Lodbrok Prime se už nevyplatí kupovat – pěchota na skill poškození zaostává za smite pěchotou.'),
             ]),
-            ('sources', [CH_YI_TO_TEST, CH_YI_TO, CH_INF, CH_LINEUPS, CH_FIELD, CH_KP, CH_INF_NEXT, CH_INVEST, CH_INVEST_MAY, ('AllClash: Sun Tzu Prime Builds', 'https://www.allclash.com/best-sun-tzu-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/')]),
+            ('sources', [CH_YI_TO_TEST, CH_YI_TO, ST_YI_TO_SELIM, CH_INF, CH_LINEUPS, CH_FIELD, CH_KP, CH_INF_NEXT, CH_INVEST, CH_INVEST_MAY, ('AllClash: Sun Tzu Prime Builds', 'https://www.allclash.com/best-sun-tzu-prime-builds-talents-skill-order-pairing-equipment-in-rise-of-kingdoms/')]),
         ],
     },
     {
@@ -343,6 +347,7 @@ GUIDES = [
     {
         'slug': 'pary-pre-garrison',
         'specialty': 'garrison',
+        'verified': '2026-11',
         'title': t('Páry commanderov pre garrison', 'Páry commanderů pro garrison'),
         'blocks': [
             ('p', t(
@@ -357,6 +362,9 @@ GUIDES = [
                 {'primary': 'Selim I', 'secondary': 'Gorgo', 'troops': INF,
                  'why': t('Nový pešiak na garrison (november 2026), zostava ako Tokugawa + Gorgo s Pincer 2.0. Pridáva protiútok, preto lepšie obstojí aj proti swarmu. Do poľa sa nehodí – v poli sú jeho skilly hlavne štíty. Zatiaľ bez veľkých testov.',
                           'Nový pěšák na garrison (listopad 2026), sestava jako Tokugawa + Gorgo s Pincer 2.0. Přidává protiútok, proto lépe obstojí i proti swarmu. Do pole se nehodí – v poli jsou jeho skilly hlavně štíty. Zatím bez velkých testů.')},
+                {'primary': 'Selim I', 'secondary': 'Tokugawa Ieyasu', 'troops': INF,
+                 'why': t('Selim proti rally – pár, ktorý odporúča aj samotná hra. Zatiaľ len prvé odhady bez testov; proti swarmu je lepší Selim s Gorgo.',
+                          'Selim proti rally – pár, který doporučuje i samotná hra. Zatím jen první odhady bez testů; proti swarmu je lepší Selim s Gorgo.')},
                 {'primary': 'Gorgo', 'secondary': 'Tokugawa Ieyasu', 'troops': INF,
                  'why': t('Doterajšia klasika proti rally. Od novembra 2026 je silnejšie opačné poradie – Tokugawa primárny, Gorgo sekundárna. Proti swarmu slabá.',
                           'Dosavadní klasika proti rally. Od listopadu 2026 je silnější opačné pořadí – Tokugawa primární, Gorgo sekundární. Proti swarmu slabá.')},
@@ -391,7 +399,7 @@ GUIDES = [
                 t('V KvK s artefaktmi je najlepšia Gorgo + David IV s formáciou Arch.',
                   'V KvK s artefakty je nejlepší Gorgo + David IV s formací Arch.'),
             ]),
-            ('sources', [CH_INF_GARRISON, CH_SELIM, CH_SWARM, CH_GARRISON, CH_LEADERSHIP, CH_RALLY, CH_TRAP, CH_CITY]),
+            ('sources', [CH_INF_GARRISON, CH_SELIM, ST_YI_TO_SELIM, CH_SWARM, CH_GARRISON, CH_LEADERSHIP, CH_RALLY, CH_TRAP, CH_CITY]),
         ],
     },
     {
