@@ -216,7 +216,7 @@ class ViolationAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
 
 @admin.register(ViolationSettings)
 class ViolationSettingsAdmin(SuperuserOnlyAdmin, admin.ModelAdmin):
-    fields = ['window_days', 'keep_days', 'levels']
+    fields = ['reset_days', 'keep_days', 'description', 'levels']
 
     def has_add_permission(self, request):
         return not ViolationSettings.objects.exists()

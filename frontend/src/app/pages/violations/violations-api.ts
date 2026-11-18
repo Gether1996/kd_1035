@@ -3,19 +3,21 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-/** A level of the yellow cards: the n-th card in a row gets the n-th one, past the last one the last one again */
+/** A strike: the n-th violation in a row gets the n-th one, past the last one the last one again */
 export interface ViolationLevel {
   name: string;
   penalty: string;
-  /** how long the penalty lasts from the card's day; 0 = no time */
+  /** how long the penalty lasts from the violation's day; 0 = no time (a zero) */
   days: number;
 }
 
 export interface ViolationRules {
-  /** a card within this many days of the one before goes a level up; after it without one the player is clean */
-  window_days: number;
-  /** older cards are deleted (privacy page) */
+  /** after the penalty ended and this many days without a violation the player is clean again */
+  reset_days: number;
+  /** older violations are deleted (privacy page) */
   keep_days: number;
+  /** shown to every approved player on the Prehľad tab */
+  description: string;
   levels: ViolationLevel[];
 }
 
@@ -24,7 +26,7 @@ export interface ViolationCard {
   /** YYYY-MM-DD */
   day: string;
   reason: string;
-  /** counted by the server from the cards and the rules, 1 = the first level */
+  /** the strike counted by the server from the violations and the rules, 1 = the first */
   level: number;
   added_by: string;
   created_at: string;
@@ -34,10 +36,14 @@ export interface ViolationPlayer {
   id: number;
   name: string;
   avatar_url: string;
-  /** today: the level of the last card while it is valid, 0 = clean */
+  /** today: the strike of the last violation until the reset, 0 = clean */
   level: number;
-  active_until: string | null;
+  /** the last day of the running penalty – maybe of an earlier strike (a zero during a kick) */
   penalty_until: string | null;
+  /** its text */
+  penalty: string;
+  /** the first clean day */
+  reset_on: string | null;
   /** the newest first */
   cards: ViolationCard[];
 }
@@ -49,9 +55,21 @@ export interface ViolationData {
   edit_rules: boolean;
 }
 
+export type BoardPlayer = Omit<ViolationPlayer, 'cards'>;
+
+/** the Prehľad tab: what every approved player sees – no reasons */
+export interface ViolationBoard {
+  description: string;
+  reset_days: number;
+  levels: ViolationLevel[];
+  players: BoardPlayer[];
+  /** the Správa tab is open to this player too */
+  manage: boolean;
+}
+
 const URL = '/api/violations/';
 
-/** Yellow cards for rule violations on /priestupky (Gether 18. 11. 2026). Session + CSRF, only in the browser. */
+/** Strikes for rule violations on /priestupky (Gether 18. 11. 2026). Session + CSRF, only in the browser. */
 @Injectable({ providedIn: 'root' })
 export class ViolationsApi {
   private readonly http = inject(HttpClient);
@@ -59,6 +77,10 @@ export class ViolationsApi {
 
   data(when: () => boolean) {
     return httpResource<ViolationData>(() => (this.isBrowser && when() ? URL : undefined));
+  }
+
+  board(when: () => boolean) {
+    return httpResource<ViolationBoard>(() => (this.isBrowser && when() ? `${URL}board/` : undefined));
   }
 
   add(player: number, day: string, reason: string): Promise<ViolationPlayer> {
@@ -74,26 +96,31 @@ export class ViolationsApi {
   }
 }
 
-/**
- * The level the next card on `day` would get – the server's count (accounts/violations.py) for the preview of the form:
- * a card within `window` days of the one before goes a level up, a longer gap starts again.
- */
-export function nextLevel(cards: ViolationCard[], day: string, window: number): number {
-  const days = cards.map((c) => c.day).filter((d) => d <= day).sort();
-  let level = 0;
-  let before: string | null = null;
-  for (const d of [...days, day]) {
-    level = before !== null && daysBetween(before, d) <= window ? level + 1 : 1;
-    before = d;
-  }
-  return level;
-}
-
-export function daysBetween(from: string, to: string): number {
-  return Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000);
-}
-
-/** the n-th level, past the last one the last one again */
+/** the n-th strike, past the last one the last one again */
 export function levelOf(levels: ViolationLevel[], n: number): ViolationLevel | null {
   return n > 0 && levels.length ? levels[Math.min(n, levels.length) - 1] : null;
+}
+
+/** YYYY-MM-DD + days */
+export function addDays(day: string, days: number): string {
+  const date = new Date(day + 'T12:00:00Z');
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * The strike the next violation on `day` would get – the server's count (accounts/violations.py) for the preview of the
+ * form: before the penalty of the one before ended + reset_days the next strike, later the first again.
+ */
+export function nextLevel(cards: ViolationCard[], day: string, rules: Pick<ViolationRules, 'levels' | 'reset_days'>): number {
+  const days = cards.map((c) => c.day).filter((d) => d <= day).sort();
+  let level = 0;
+  // the latest end of the penalties so far – a shorter later one does not cut a running one short
+  let ends: string | null = null;
+  for (const d of [...days, day]) {
+    level = ends !== null && d <= addDays(ends, rules.reset_days) ? level + 1 : 1;
+    const end = addDays(d, levelOf(rules.levels, level)?.days ?? 0);
+    if (ends === null || end > (ends as string)) ends = end;
+  }
+  return level;
 }

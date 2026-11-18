@@ -349,34 +349,43 @@ MAX_VIOLATION_LEVELS = 10
 
 
 def default_violation_levels() -> list[dict]:
-    """The levels as the kingdom talked them over on Discord (17.–18. 11. 2026) – a start, leadership changes them."""
+    """Three strikes (Gether 18. 11. 2026: "prvý priestupok 1 týždeň kick z Ali, druhý kumulatívny 2 týždne, tretí
+    zero") – a start, leadership changes them."""
     return [
-        {'name': 'Žltá karta', 'penalty': 'Varovanie', 'days': 0},
-        {'name': '2. žltá karta', 'penalty': 'Vylúčenie z eventov (MGE, Ark)', 'days': 14},
-        {'name': 'Červená karta', 'penalty': 'Vylúčenie z eventov (MGE, Ark)', 'days': 30},
+        {'name': '1. strike', 'penalty': 'Kick z aliancie', 'days': 7},
+        {'name': '2. strike', 'penalty': 'Kick z aliancie', 'days': 14},
+        {'name': '3. strike', 'penalty': 'Zero', 'days': 0},
     ]
 
 
-class ViolationSettings(models.Model):
-    """How yellow cards add up (Gether 18. 11. 2026: "pridáš hráčovi prvú žltú kartu, tá platí X času, pokiaľ pridáš
-    ďalšiu do tohto času, zvýši sa mu trest, ak po čase, tak znova reset", "všetko dynamické a nastaviteľné"). One row,
-    changed by the superadmin on /priestupky. The level of every card is counted from the cards and these rules each
-    time (accounts/violations.py) – a change applies at once."""
+DEFAULT_VIOLATION_DESCRIPTION = (
+    '1. strike – týždeň kick z aliancie.\n2. strike – dva týždne kick z aliancie.\n3. strike – zero.'
+)
 
-    window_days = models.PositiveSmallIntegerField(
-        'platnosť karty (dni)',
-        default=90,
-        validators=[MinValueValidator(1), MaxValueValidator(VIOLATION_DAYS_MAX)],
-        help_text='Ďalšia karta do tohto počtu dní od predošlej zvýši stupeň. Po tomto čase bez karty je hráč znova na nule.',
+
+class ViolationSettings(models.Model):
+    """How strikes add up (Gether 18. 11. 2026: "1, 2 a tretí strike … po skončení priestupku sa to resetuje za X času",
+    "všetko dynamické a nastaviteľné"). One row, changed on the Správa tab of /priestupky. The strike of every violation
+    is counted from the violations and these rules each time (accounts/violations.py) – a change applies at once."""
+
+    # a new violation before the penalty of the last one ended + reset_days is the next strike; later it is the 1st
+    reset_days = models.PositiveSmallIntegerField(
+        'reset po treste (dni)',
+        default=30,
+        validators=[MinValueValidator(0), MaxValueValidator(VIOLATION_DAYS_MAX)],
+        help_text='Keď trest skončí a do tohto počtu dní nepríde ďalší priestupok, hráč je znova na nule.',
     )
+    # shown to every approved player on the Prehľad tab, written by leadership
+    description = models.TextField('popis', max_length=2000, blank=True, default=DEFAULT_VIOLATION_DESCRIPTION)
     keep_days = models.PositiveSmallIntegerField(
         'uchovať (dni)',
         default=365,
         validators=[MinValueValidator(30), MaxValueValidator(VIOLATION_DAYS_MAX)],
         help_text='Staršie karty worker zmaže (stránka Ochrana údajov).',
     )
-    # [{name, penalty, days}] – the n-th card in a row gets the n-th level, past the last one the last one again
-    levels = models.JSONField('stupne', default=default_violation_levels)
+    # [{name, penalty, days}] – the n-th violation in a row gets the n-th strike, past the last one the last one again;
+    # days = how long its penalty lasts (0 = none in time, e.g. a zero)
+    levels = models.JSONField('striky', default=default_violation_levels)
     updated_at = models.DateTimeField('upravené', auto_now=True)
 
     class Meta:

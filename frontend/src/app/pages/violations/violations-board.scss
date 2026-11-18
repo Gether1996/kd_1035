@@ -1,0 +1,180 @@
+// the Prehľad tab of /priestupky – the description, the strikes and who has one now (Gether 18. 11. 2026)
+
+:host {
+  display: grid;
+  gap: 16px;
+}
+
+.placeholder {
+  min-height: 320px;
+}
+
+.state {
+  margin: 0;
+  padding: 28px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.about__text {
+  margin: 0;
+  white-space: pre-line;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.about__reset {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-dim);
+}
+
+.strikes {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+.strike {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+}
+
+.strike__name {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.strike__penalty {
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.strike__days {
+  color: var(--gold-300);
+}
+
+.board {
+  display: grid;
+  gap: 12px;
+}
+
+.board__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: 700 1.25rem / 1.3 var(--font-display);
+  color: var(--gold-100);
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    color: var(--gold-400);
+  }
+}
+
+.rows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+
+  // a penalty running now
+  &.is-penalty {
+    border-left-color: var(--red-500);
+  }
+}
+
+.row__avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.row__who {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.row__name {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.row__strike {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}
+
+.row__time {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  margin: 0 0 0 auto;
+  text-align: right;
+
+  @media (max-width: 479px) {
+    justify-items: start;
+    margin: 0;
+    text-align: left;
+    flex-basis: 100%;
+  }
+}
+
+.row__left {
+  color: var(--red-300);
+  font-variant-numeric: tabular-nums;
+}
+
+.row__date {
+  font-size: 0.875rem;
+  color: var(--text-dim);
+}

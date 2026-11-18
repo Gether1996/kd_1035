@@ -1217,7 +1217,7 @@ export const sk = {
         text: 'Aby ťa vedenie spoznalo, prišli ti pripomienky, ktoré si zapol, a vedenie mohlo zostaviť tímy na KvK.',
         list: [
           'Údaje vidí správca webu (Gether) v administrácii. Keď sa prihlásiš prvýkrát, bot mu pošle na Discord tvoje meno a ID (bez Discordu iba meno v hre), aby ťa mohol schváliť.',
-          'Ak porušíš pravidlá kráľovstva, vedenie ti môže zapísať priestupok (žltú kartu) – dátum, dôvod a kto ho zapísal. Vidí ho len správca a vedenie, ktorému to povolí. Staršie karty sa mažú po čase, ktorý nastaví správca (na začiatku 1 rok).',
+          'Ak porušíš pravidlá kráľovstva, vedenie ti môže zapísať priestupok (strike) – dátum, dôvod a kto ho zapísal. Kým strike platí, všetci schválení hráči vidia na stránke Priestupky tvoje meno, avatar, strike a dokedy trvá trest; dôvod vidí len správca a vedenie, ktorému to povolí. Staršie priestupky sa mažú po čase, ktorý nastaví správca (na začiatku 1 rok).',
           'Správca si môže k eventom písať poznámky, napríklad poradie hráčov po evente (mená v hre a výsledky). Vidí ich iba on a ostávajú, kým ich nezmaže.',
           'Prihlášky na KvK a tvoje marche vidí aj vedenie, ktorému správca povolí prezeranie (R4) – spolu s tvojím menom v hre, Discord menom, avatarom a ID; vidí aj, kto sa na KvK ešte neprihlásil.',
           'Vedenie si môže zoznam prihlášok (meno v hre, rola, jednotky, commanderi a formácia) skopírovať do Discordu, kde plánuje KvK.',

@@ -4,6 +4,7 @@ Udržiava ho workflow `kd-improve` (fáza Backlog). Stav k 19. 10. 2026 – v1.3
 
 ## Hotové
 
+- **18. 11. 2026 – v1.69.0:** Priestupky ako striky (1./2./3., reset po treste, popis), záložka Prehľad pre všetkých schválených s odpočtom trestu, Správa pre vedenie (migrácia `accounts/0068`, Ochrana údajov).
 - **18. 11. 2026 – v1.68.1:** Globálny zámok power na `/hraci` (`PlayerSettings.power_locked`, migrácia `accounts/0067`); texty `/hraci` mimo slovníkov (`pages/players/texts.ts`, úvodný bundle 620 → 614 kB).
 - **18. 11. 2026 – v1.68.0:** Priestupky (`/priestupky`) – žlté karty so stupňovaním a resetom, nastaviteľné pravidlá (superadmin), oprávnenie „Priestupky“ na `/hraci`, mazanie po `keep_days` (migrácia `accounts/0066`, Ochrana údajov).
 - **18. 11. 2026 – v1.67.6:** `/ucet` – kill points bez jednotky v miliardách, najvyšší acclaim v miliónoch (`parseGameNumber(text, bare)`, Smrťák).

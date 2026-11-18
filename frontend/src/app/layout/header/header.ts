@@ -96,8 +96,9 @@ export class Header {
       ...(this.auth.canEvaluate()
         ? [{ label: t.evaluation, link: this.i18n.path('evaluation'), icon: 'scale' as const }]
         : []),
-      // yellow cards – the superadmin and the players let in (Gether 18. 11. 2026)
-      ...(this.auth.user()?.violations
+      // strikes for rule violations (Gether 18. 11. 2026)
+      // the board every approved player sees, the Správa tab for the players let in (Gether 18. 11. 2026)
+      ...(this.auth.user()?.approved || this.auth.user()?.is_superuser
         ? [{ label: t.violations, link: this.i18n.path('violations'), icon: 'flag' as const }]
         : []),
       // the superadmin's list of players (Gether 20. 10. 2026)

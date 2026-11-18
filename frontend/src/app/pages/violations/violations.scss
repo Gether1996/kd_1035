@@ -1,4 +1,4 @@
-// /priestupky – the rules, a new card, the players with their yellow cards (Gether 18. 11. 2026)
+// the Správa tab of /priestupky – the rules, a new violation, the players with their strikes (Gether 18. 11. 2026)
 
 :host {
   display: block;
@@ -86,6 +86,18 @@
   color: var(--text-dim);
 }
 
+.rules__description {
+  margin: 0;
+  white-space: pre-line;
+  color: var(--text);
+}
+
+.rules__textarea {
+  min-height: 0;
+  padding-block: 10px;
+  resize: vertical;
+}
+
 .rules__keep {
   font-size: 0.875rem;
   color: var(--text-mute);
@@ -106,22 +118,9 @@
   gap: 2px 10px;
 }
 
-.level__n {
-  display: grid;
+.level__marks {
   grid-row: span 2;
-  place-items: center;
-  width: 26px;
-  height: 34px;
-  border-radius: 4px;
-  background: var(--gold-400);
-  color: var(--bg);
-  font: 700 0.875rem / 1 var(--font-body);
-}
-
-// the last level: the red card
-.level.is-top .level__n {
-  background: var(--red-500);
-  color: var(--text);
+  --mark: 16px;
 }
 
 .level__name {
@@ -295,7 +294,8 @@
     border-left-color: var(--gold-400);
   }
 
-  &.is-top {
+  // a penalty running now
+  &.is-penalty {
     border-left-color: var(--red-500);
   }
 }
@@ -354,26 +354,9 @@
   }
 }
 
-// a card like the referee's: gold, the last level red
-.card-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: var(--gold-400);
-  color: var(--bg);
-  font: 700 0.8125rem / 1.4 var(--font-body);
-
-  &.is-red {
-    background: var(--red-500);
-    color: var(--text);
-  }
-}
-
-.card-tag--small {
+.card__marks {
   flex: none;
-  justify-content: center;
-  min-width: 28px;
+  --mark: 16px;
 }
 
 .cards {

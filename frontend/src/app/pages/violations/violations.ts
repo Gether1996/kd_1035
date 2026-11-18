@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n';
 import { Icon } from '../../shared/icon';
+import { StrikeMarks } from './strike-marks';
 import { fold } from '../../shared/search';
 import { plural } from '../reminders/format';
 import { VIOLATION_TEXTS } from './texts';
@@ -10,6 +11,7 @@ import {
   ViolationPlayer,
   ViolationRules,
   ViolationsApi,
+  addDays,
   levelOf,
   nextLevel,
 } from './violations-api';
@@ -17,13 +19,14 @@ import {
 type Filter = 'active' | 'cards' | 'all';
 
 /**
- * Yellow cards (Gether 18. 11. 2026: "pridávanie priestupkov pre hráčov s nejakým časom a stupňovaním a časovým
- * resetom, všetko dynamické a nastaviteľné"): the rules on top (the superadmin edits them), a form for a new card with
- * the level it will get, and the players with their standing and the history of their cards.
+ * The Správa tab of /priestupky (Gether 18. 11. 2026: "pridávanie priestupkov pre hráčov s nejakým časom a stupňovaním
+ * a časovým resetom, všetko dynamické a nastaviteľné"; the same day strikes instead of yellow cards): the rules and the
+ * description for the players (the superadmin edits them), a form for a new violation with the strike it will get, and
+ * the players with their standing and the history of their violations.
  */
 @Component({
   selector: 'app-violations',
-  imports: [Icon],
+  imports: [Icon, StrikeMarks],
   templateUrl: './violations.html',
   styleUrl: './violations.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,14 +72,13 @@ export class Violations {
   protected readonly reason = signal('');
   protected readonly adding = signal(false);
   protected readonly addState = signal<'added' | 'invalid' | 'failed' | null>(null);
-  /** "Bude to 2. stupeň: 2. žltá karta – Vylúčenie z eventov (14 dní)" */
+  /** "Bude to 2. strike – Kick z aliancie (14 dní)" */
   protected readonly preview = computed(() => {
     const rules = this.rules();
     const row = this.players().find((p) => p.id === this.player());
     if (!rules || !row || !this.day()) return '';
-    const n = nextLevel(row.cards, this.day(), rules.window_days);
-    const level = levelOf(rules.levels, n);
-    return level ? this.x().add.preview.replace('{n}', String(n)).replace('{level}', this.describe(level)) : '';
+    const level = levelOf(rules.levels, nextLevel(row.cards, this.day(), rules));
+    return level ? this.x().add.preview.replace('{level}', this.describe(level)) : '';
   });
 
   // ---------------------------------------------------------------- the rules
@@ -86,7 +88,7 @@ export class Violations {
   protected readonly savingRules = signal(false);
 
   protected describe(level: ViolationLevel): string {
-    const days = level.days ? ` (${this.x().rules.days.replace('{n}', String(level.days))})` : '';
+    const days = level.days ? ` (${this.x().days.replace('{n}', String(level.days))})` : '';
     return `${level.name}${level.penalty ? ' – ' + level.penalty : ''}${days}`;
   }
 
@@ -94,10 +96,18 @@ export class Violations {
     return levelOf(this.rules()?.levels ?? [], n)?.name ?? '';
   }
 
-  /** the last level is the red card */
-  protected isTop(n: number): boolean {
-    const levels = this.rules()?.levels.length ?? 0;
-    return n > 0 && n >= levels && levels > 1;
+  protected strikeCount(): number {
+    return this.rules()?.levels.length ?? 0;
+  }
+
+  protected strikeLabel(n: number): string {
+    const of = this.strikeCount();
+    return this.x().strike.replace('{n}', String(Math.min(n, of))).replace('{of}', String(of));
+  }
+
+  /** the first clean day → the last day the strike holds */
+  protected lastDay(resetOn: string): string {
+    return this.date(addDays(resetOn, -1));
   }
 
   protected date(iso: string): string {
@@ -111,7 +121,7 @@ export class Violations {
   }
 
   protected summary(rules: ViolationRules): string {
-    return this.x().rules.summary.replaceAll('{days}', String(rules.window_days));
+    return rules.reset_days ? this.x().reset.replace('{days}', String(rules.reset_days)) : this.x().resetNow;
   }
 
   protected keep(rules: ViolationRules): string {
@@ -167,8 +177,12 @@ export class Violations {
     this.editing.set(true);
   }
 
-  protected setRule(key: 'window_days' | 'keep_days', value: string): void {
+  protected setRule(key: 'reset_days' | 'keep_days', value: string): void {
     this.draft.update((d) => (d ? { ...d, [key]: Number(value) } : d));
+  }
+
+  protected setDescription(value: string): void {
+    this.draft.update((d) => (d ? { ...d, description: value } : d));
   }
 
   protected setLevel(i: number, key: keyof ViolationLevel, value: string): void {
@@ -191,7 +205,7 @@ export class Violations {
     if (!draft) return;
     const whole = (n: number, min: number) => Number.isInteger(n) && n >= min && n <= 3650;
     const ok =
-      whole(draft.window_days, 1) &&
+      whole(draft.reset_days, 0) &&
       whole(draft.keep_days, 30) &&
       draft.levels.length > 0 &&
       draft.levels.every((l) => l.name.trim() && whole(l.days, 0));
@@ -203,6 +217,7 @@ export class Violations {
     try {
       const saved = await this.api.saveRules({
         ...draft,
+        description: draft.description.trim(),
         levels: draft.levels.map((l) => ({ name: l.name.trim(), penalty: l.penalty.trim(), days: l.days })),
       });
       this.rules.set(saved);

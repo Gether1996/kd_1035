@@ -134,6 +134,8 @@ describe('Header account slot', () => {
       ['/pripomienky', 'Pripomienky eventov'],
       ['/kvk', 'KvK rally / garrison'],
       ['/forum', 'Fórum'],
+      // the strikes board every approved player sees (Gether 18. 11. 2026)
+      ['/priestupky', 'Priestupky'],
     ]);
     expect(link?.querySelector('.alert-badge')).not.toBeNull();
     expect(link?.textContent).toContain('Chýba ti meno v hre');
@@ -146,6 +148,7 @@ describe('Header account slot', () => {
       '/pripomienky',
       '/kvk',
       '/forum',
+      '/priestupky',
     ]);
   });
 

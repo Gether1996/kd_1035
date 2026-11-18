@@ -74,6 +74,7 @@ urlpatterns = [
     # yellow cards for rule violations (Gether 18. 11. 2026); settings before <id>
     path('violations/', violations.violations),
     path('violations/settings/', violations.violation_settings),
+    path('violations/board/', violations.board),
     path('violations/<int:violation_id>/', violations.violation),
     # the superadmin's notes to events, in the calendar's event dialog (Gether 12. 11. 2026)
     path('events/manage/<int:pk>/notes/', event_notes.notes),

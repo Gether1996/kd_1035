@@ -162,6 +162,7 @@ MATRIX = [
     ('GET',    '/api/violations/',                          None,    '403 403 403 403 403 403 403 403 403 403 200'),
     ('POST',   '/api/violations/',                          {},      '403 403 403 403 403 403 403 403 403 403 400'),
     ('PUT',    '/api/violations/settings/',                 {},      '403 403 403 403 403 403 403 403 403 403 400'),
+    ('GET',    '/api/violations/board/',                    None,    '403 403 200 200 403 200 200 200 403 200 200'),
     ('DELETE', '/api/violations/{violation}/',              None,    '403 403 403 403 403 403 403 403 403 403 200'),
     # -------- forum moderation: the superadmin only (no role has the forum cookie of the author)
     ('PATCH',  '/api/forum/{thread}/',                      {'pinned': True},

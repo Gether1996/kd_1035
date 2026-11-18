@@ -17,28 +17,36 @@
           }
         </div>
         @if (!editing()) {
-          <p class="rules__summary">{{ summary(r) }}</p>
+          @if (r.description) {
+            <p class="rules__description">{{ r.description }}</p>
+          }
           <ol class="levels">
             @for (level of r.levels; track $index) {
-              <li class="level" [class.is-top]="$index === r.levels.length - 1 && r.levels.length > 1">
-                <span class="level__n" aria-hidden="true">{{ $index + 1 }}</span>
+              <li class="level">
+                <app-strike-marks class="level__marks" [level]="$index + 1" [of]="r.levels.length" />
                 <span class="level__name">{{ level.name }}</span>
                 @if (level.penalty || level.days) {
                   <span class="level__penalty">
-                    {{ level.penalty }}@if (level.days) {<span class="level__days"> · {{ x.rules.days.replace('{n}', '' + level.days) }}</span>}
+                    {{ level.penalty }}@if (level.days) {<span class="level__days"> · {{ x.days.replace('{n}', '' + level.days) }}</span>}
                   </span>
                 }
               </li>
             }
           </ol>
+          <p class="rules__summary">{{ summary(r) }}</p>
           <p class="rules__keep">{{ keep(r) }}</p>
         } @else if (draft(); as d) {
           <form class="rules__form" novalidate (submit)="saveRules($event)">
+            <label class="field">
+              <span class="field__label">{{ x.rules.description }}</span>
+              <textarea class="input rules__textarea" rows="4" maxlength="2000" [value]="d.description" (input)="setDescription($any($event.target).value)"></textarea>
+              <span class="field__hint">{{ x.rules.descriptionHint }}</span>
+            </label>
             <div class="rules__numbers">
               <label class="field">
-                <span class="field__label">{{ x.rules.window }}</span>
-                <input class="input" type="number" min="1" max="3650" [value]="d.window_days" (input)="setRule('window_days', $any($event.target).value)" />
-                <span class="field__hint">{{ x.rules.windowHint }}</span>
+                <span class="field__label">{{ x.rules.resetLabel }}</span>
+                <input class="input" type="number" min="0" max="3650" [value]="d.reset_days" (input)="setRule('reset_days', $any($event.target).value)" />
+                <span class="field__hint">{{ x.rules.resetHint }}</span>
               </label>
               <label class="field">
                 <span class="field__label">{{ x.rules.keepLabel }}</span>
@@ -157,18 +165,19 @@
 
       <ul class="rows">
         @for (p of shown(); track p.id) {
-          <li class="row" [class.is-active]="p.level > 0" [class.is-top]="isTop(p.level)">
+          <li class="row" [class.is-active]="p.level > 0" [class.is-penalty]="!!p.penalty_until">
             <div class="row__main">
               <img class="row__avatar" [src]="p.avatar_url" alt="" width="40" height="40" loading="lazy" />
               <div class="row__who">
                 <p class="row__name">{{ p.name }}</p>
                 <p class="row__state">
                   @if (p.level > 0) {
-                    <span class="card-tag" [class.is-red]="isTop(p.level)">{{ levelName(p.level) }}</span>
-                    <span>{{ x.list.activeUntil.replace('{date}', date(p.active_until!)) }}</span>
+                    <app-strike-marks [level]="p.level" [of]="strikeCount()" [label]="strikeLabel(p.level)" />
+                    <span>{{ levelName(p.level) }}</span>
                     @if (p.penalty_until) {
                       <span class="row__penalty">{{ x.list.penaltyUntil.replace('{date}', date(p.penalty_until)) }}</span>
                     }
+                    <span>{{ x.list.resetOn.replace('{date}', date(p.reset_on!)) }}</span>
                   } @else {
                     <span class="row__clean">{{ x.list.clean }}</span>
                   }
@@ -192,7 +201,7 @@
               <ol class="cards" [id]="'vio-cards-' + p.id" [attr.aria-label]="x.list.history.replace('{name}', p.name)">
                 @for (c of p.cards; track c.id) {
                   <li class="card">
-                    <span class="card-tag card-tag--small" [class.is-red]="isTop(c.level)">{{ c.level }}.</span>
+                    <app-strike-marks class="card__marks" [level]="c.level" [of]="strikeCount()" [label]="strikeLabel(c.level)" />
                     <div class="card__text">
                       <p class="card__reason">{{ c.reason }}</p>
                       <p class="card__meta">
