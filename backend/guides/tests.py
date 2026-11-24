@@ -372,7 +372,7 @@ class MetaSyncTests(TestCase):
                 'pary-pre-rally': 'conquering', 'pary-na-barbarov-a-pevnosti': 'peacekeeping',
                 'pary-na-zber-surovin': 'gathering', 'vybava-pre-jazdu': 'cavalry', 'vybava-pre-pechotu': 'infantry',
                 'vybava-pre-lukostrelcov': 'archer', 'vybava-pre-leadership': 'leadership',
-                'maximum-speedupov-z-fortov': 'barbarian-fort',
+                'maximum-speedupov-z-fortov': 'barbarian-fort', 'armady-na-zber': 'gathering',
             },
         )  # fmt: skip
 
