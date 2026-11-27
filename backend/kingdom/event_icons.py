@@ -35,6 +35,8 @@ ICONS = {
     'now-or-never': (None, 'Now Or Never (typ 20 GH)'),
     # the knight with a target of Lord of War, the third type of 20 GH (Gether's screenshot, 12. 11. 2026)
     'lord-of-war': (None, 'Lord of War (typ 20 GH)'),
+    # the sword with an arrow of Game of Power, the fourth type of 20 GH (Gether's screenshot, 27. 11. 2026)
+    'game-of-power': (None, 'Game of Power (typ 20 GH)'),
     'golden-kingdom': ('golden_kingdom', 'Golden Kingdom'),
     'ceroli': ('ceroli', 'Ceroli / Karuak'),
     'realm-of-mystique': ('realm_of_mystique', 'Realm of Mystique'),
@@ -57,6 +59,7 @@ GUESSES = [
     ('training day', 'training-day'),
     ('now or never', 'now-or-never'),
     ('lord of war', 'lord-of-war'),
+    ('game of power', 'game-of-power'),
     ('20 gh', 'gold-head'),
     ('gold head', 'gold-head'),
     ('golden kingdom', 'golden-kingdom'),

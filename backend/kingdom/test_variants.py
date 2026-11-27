@@ -189,6 +189,30 @@ class NowOrNeverMigrationTests(TestCase):
         self.assertEqual(entered.max_reward_sk, '50 000 min')
 
 
+class GameOfPowerMigrationTests(TestCase):
+    game_of_power = staticmethod(import_module('kingdom.migrations.0028_game_of_power').game_of_power)
+
+    def test_20_gh_gets_game_of_power_and_its_run_of_27_november(self):
+        """Gether 27. 11. 2026: the fourth type of 20 GH, the top reward 910 000 power"""
+        gh = make_gh(starts_at=utc(2026, 10, 16))
+        moved = make_gh(starts_at=utc(2026, 10, 17))
+        self.game_of_power(apps, None)
+        self.game_of_power(apps, None)  # once only
+        variant = EventVariant.objects.get(event=gh)
+        self.assertEqual(
+            (variant.name_sk, variant.icon, variant.max_reward_sk, variant.max_reward_cs),
+            ('Game of Power', 'game-of-power', '910 000 power', '910 000 power'),
+        )
+        self.assertEqual(list(EventRun.objects.values_list('event', 'start', 'variant')), [(gh.pk, utc(2026, 11, 27), variant.pk)])
+        self.assertTrue(EventVariant.objects.filter(event=moved, name_sk='Game of Power').exists())
+
+    def test_its_icon_is_known(self):
+        from .event_icons import ICONS, guess
+
+        self.assertIn('game-of-power', ICONS)
+        self.assertEqual(guess('Game of Power'), 'game-of-power')
+
+
 class LordOfWarMigrationTests(TestCase):
     lord_of_war = staticmethod(import_module('kingdom.migrations.0026_lord_of_war').lord_of_war)
 

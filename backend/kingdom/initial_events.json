@@ -325,6 +325,14 @@
     "is_active": true,
     "variants": [
       {
+        "name_sk": "Game of Power",
+        "name_cs": "",
+        "icon": "game-of-power",
+        "max_reward_sk": "910 000 power",
+        "max_reward_cs": "910 000 power",
+        "order": 0
+      },
+      {
         "name_sk": "Lord of War",
         "name_cs": "",
         "icon": "lord-of-war",
